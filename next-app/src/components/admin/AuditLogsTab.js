@@ -240,7 +240,7 @@ export default function AuditLogsTab({
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
           <PageHeader
             icon="Shield01Icon"
             title="Activity History"

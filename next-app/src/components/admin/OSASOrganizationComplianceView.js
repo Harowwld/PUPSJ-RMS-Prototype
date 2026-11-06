@@ -776,7 +776,7 @@ export default function OSASOrganizationComplianceView({
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* Unified Single Card Container: Header, Stats, Toolbar, Table & Footer */}
-        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="Analytics01Icon"
@@ -1176,7 +1176,7 @@ export default function OSASOrganizationComplianceView({
           ) : null}
 
           {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
-          <DataViewToolbar label="Organization compliance search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+          <DataViewToolbar label="Organization compliance search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
             {/* Left: Category Segmented Tabs */}
             <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
               {CATEGORIES.map((cat) => {

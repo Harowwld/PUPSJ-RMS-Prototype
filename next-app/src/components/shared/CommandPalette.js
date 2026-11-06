@@ -1402,6 +1402,13 @@ export default function CommandPalette({
       if (item.action === "toggle-contrast") {
         const next = toggleHighContrastPreference(authUser?.id);
         setIsHighContrast(next);
+        if (authUser?.id) {
+          fetch("/api/auth/preferences", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ preferences: { high_contrast: next } }),
+          }).catch(() => {});
+        }
         toast.success(next ? "High Contrast Enabled" : "High Contrast Disabled", {
           description: next
             ? "Tactile borders and maximum contrast readability active."
@@ -1413,6 +1420,13 @@ export default function CommandPalette({
       if (item.action === "toggle-motion") {
         const next = toggleReduceMotionPreference(authUser?.id);
         setIsReduceMotion(next);
+        if (authUser?.id) {
+          fetch("/api/auth/preferences", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ preferences: { reduce_motion: next } }),
+          }).catch(() => {});
+        }
         toast.success(next ? "Reduce Motion Enabled" : "Reduce Motion Disabled", {
           description: next
             ? "Interface animations minimized and spring overshoot eliminated."

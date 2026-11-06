@@ -9,12 +9,23 @@ import { cn } from "@/lib/utils";
 const TablePreferencesContext = createContext({ density: "normal", setDensity: () => {}, ready: false });
 
 function readDensity(key) {
-  try { return key ? normalizeTableDensity(localStorage.getItem(key)) : "normal"; }
-  catch { return "normal"; }
+  try {
+    if (key && typeof window !== "undefined" && window.localStorage) {
+      const val = localStorage.getItem(key);
+      if (val) return normalizeTableDensity(val);
+    }
+    if (typeof window !== "undefined" && window.localStorage) {
+      const globalVal = localStorage.getItem("pup_table_density");
+      if (globalVal) return normalizeTableDensity(globalVal);
+    }
+    return "normal";
+  } catch {
+    return "normal";
+  }
 }
 
 export function TablePreferencesProvider({ children, user }) {
-  const [preference, setPreference] = useState({ key: null, density: "normal" });
+  const [preference, setPreference] = useState(() => ({ key: null, density: readDensity(null) }));
   useEffect(() => {
     const selectUser = (principal) => {
       const key = tablePreferenceKey(principal);
@@ -32,7 +43,7 @@ export function TablePreferencesProvider({ children, user }) {
 
   useEffect(() => {
     const sync = (event) => {
-      if (event.key === preference.key || event.key === null) {
+      if (event.key === preference.key || event.key === "pup_table_density" || event.key === null) {
         setPreference((previous) => ({ ...previous, density: readDensity(previous.key) }));
       }
     };
@@ -42,12 +53,18 @@ export function TablePreferencesProvider({ children, user }) {
 
   const setDensity = (value) => {
     const density = normalizeTableDensity(value);
-    if (!preference.key) return;
-    try { localStorage.setItem(preference.key, density); } catch { /* Keep the current session usable when storage is unavailable. */ }
-    setPreference({ key: preference.key, density });
+    const key = preference.key || "pup_table_density";
+    try {
+      localStorage.setItem(key, density);
+      localStorage.setItem("pup_table_density", density);
+    } catch { /* Keep the current session usable when storage is unavailable. */ }
+    setPreference((previous) => ({ ...previous, density }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("storage"));
+    }
   };
 
-  return <TablePreferencesContext.Provider value={{ density: preference.density, setDensity, ready: Boolean(preference.key) }}>{children}</TablePreferencesContext.Provider>;
+  return <TablePreferencesContext.Provider value={{ density: preference.density, setDensity, ready: true }}>{children}</TablePreferencesContext.Provider>;
 }
 
 export function useTablePreferences() { return useContext(TablePreferencesContext); }
@@ -61,6 +78,7 @@ export function TableDensityControl({ className, label = "Row density" }) {
         aria-label={label}
         value={density}
         onChange={(event) => setDensity(event.target.value)}
+        onValueChange={(val) => setDensity(val)}
         disabled={!ready}
         className="h-8 w-36 text-xs"
         options={Object.entries(TABLE_DENSITIES).map(([value, { label: name }]) => ({ value, label: name }))}

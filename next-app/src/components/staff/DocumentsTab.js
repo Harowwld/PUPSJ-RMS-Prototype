@@ -1444,7 +1444,26 @@ export default function DocumentsTab({
             </div>
           </DialogContent>
         </Dialog>
-        <PDFPreviewModal open={!!pdfPreview} onClose={() => setPdfPreview(null)} preview={pdfPreview} />
+        <PDFPreviewModal
+          open={!!pdfPreview}
+          onClose={() => setPdfPreview(null)}
+          preview={pdfPreview}
+          onUpdate={
+            selectedDoc?.doc?.id && !selectedDoc?.doc?.source_type && onRescan
+              ? () => {
+                  setPdfPreview(null);
+                  setDetailModalOpen(false);
+                  onRescan(
+                    selectedDoc.student_no,
+                    selectedDoc.doc_type,
+                    selectedDoc.doc.id,
+                    selectedDoc.doc.original_filename,
+                    selectedDoc.doc.mime_type
+                  );
+                }
+              : undefined
+          }
+        />
       </div>
     </TooltipProvider>
   );

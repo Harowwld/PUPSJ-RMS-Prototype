@@ -1,7 +1,7 @@
 export { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
 
 /**
- * ocrClient.js: Offline OCR pipeline for PUPSJ Records Management System
+ * ocrClient.js: Offline OCR pipeline for PUPSJ Records Keeping System
  *
  * Exports consumed by staff/page.js and useHotFolderInbox.js:
  *   - scanFileForSuggestion({ file, docTypes, rotation })   → extracted fields and strict name candidates

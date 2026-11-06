@@ -1,6 +1,6 @@
 "use client";
 
-
+import { useState } from "react";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Button } from "@/components/ui/button";
 import CopyButton from "@/components/shared/CopyButton";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
-import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon } from "hugeicons-react";
+import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
@@ -109,6 +109,15 @@ export default function LogDetailSheet({
   totalCount,
   hideActor = false,
 }) {
+  const [copiedField, setCopiedField] = useState(null);
+  const handleCopyField = (text, label, fieldKey) => {
+    if (!text) return;
+    handleCopy?.(text, label);
+    if (fieldKey) {
+      setCopiedField(fieldKey);
+      setTimeout(() => setCopiedField((curr) => (curr === fieldKey ? null : curr)), 2000);
+    }
+  };
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
   const formattedDescription = (() => {
@@ -274,11 +283,15 @@ export default function LogDetailSheet({
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopy?.(String(selectedLog.id), "Log ID")}
+                      onClick={() => handleCopyField(String(selectedLog.id), "Log ID", "log_id")}
                       className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy Log ID"
                     >
-                      <Copy01Icon size="1em" className="text-[11px]" />
+                      {copiedField === "log_id" ? (
+                        <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                      ) : (
+                        <Copy01Icon size="1em" className="text-[11px]" />
+                      )}
                     </button>
                   </div>
                 </InfoRow>
@@ -347,11 +360,15 @@ export default function LogDetailSheet({
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleCopy?.(selectedLog.entityId, "Reference ID")}
+                            onClick={() => handleCopyField(selectedLog.entityId, "Reference ID", "ref_id")}
                             className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                             title="Copy Reference ID"
                           >
-                            <Copy01Icon size="1em" className="text-[11px]" />
+                            {copiedField === "ref_id" ? (
+                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                            ) : (
+                              <Copy01Icon size="1em" className="text-[11px]" />
+                            )}
                           </button>
                         </div>
                       </InfoRow>
@@ -378,11 +395,23 @@ export default function LogDetailSheet({
                     {selectedLog.details && (
                       <button
                         type="button"
-                        onClick={() => handleCopy?.(formatLogDetails(selectedLog.details), "Description")}
+                        onClick={() => handleCopyField(formatLogDetails(selectedLog.details), "Description", "details")}
+                        aria-live="polite"
                         className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer pt-0.5"
                       >
-                        <Copy01Icon size="1em" className="text-xs" />
-                        <span>Copy full narrative</span>
+                        {copiedField === "details" ? (
+                          <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
+                        ) : (
+                          <Copy01Icon size="1em" className="text-xs" />
+                        )}
+                        <span className="inline-grid grid-cols-1 grid-rows-1 items-center">
+                          <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-100" : "opacity-0 pointer-events-none")}>
+                            Copied full narrative
+                          </span>
+                          <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-0 pointer-events-none" : "opacity-100")}>
+                            Copy full narrative
+                          </span>
+                        </span>
                       </button>
                     )}
                   </div>
@@ -423,11 +452,15 @@ export default function LogDetailSheet({
                       )}
                       <button
                         type="button"
-                        onClick={() => handleCopy?.(selectedLog.ip, "IP Address")}
+                        onClick={() => handleCopyField(selectedLog.ip, "IP Address", "ip")}
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy IP"
                       >
-                        <Copy01Icon size="1em" className="text-[11px]" />
+                        {copiedField === "ip" ? (
+                          <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                        ) : (
+                          <Copy01Icon size="1em" className="text-[11px]" />
+                        )}
                       </button>
                     </div>
                   </div>

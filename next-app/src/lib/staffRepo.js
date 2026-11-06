@@ -424,7 +424,12 @@ export async function updateStaffPreferences(staffId, prefs) {
     navigation_layout: "sidebar",
     skip_registration_confirmation: false,
     high_contrast: false,
+    reduce_motion: false,
     zoom_node: 3,
+    default_home_view: "default",
+    display_name_format: "full_name",
+    font_size: "default",
+    pointer_cursor: true,
   };
 
   const currentPrefs = parseStaffPreferences(staff.preferences);
@@ -441,8 +446,16 @@ export async function updateStaffPreferences(staffId, prefs) {
 
 export function getStaffDisplayName(staff) {
   if (!staff) return "System";
-  const fname = staff.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname : "";
-  const lname = staff.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname : "";
+  const fname = staff.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : "";
+  const lname = staff.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : "";
+  const prefs = parseStaffPreferences(staff.preferences);
+  const fmt = prefs?.display_name_format;
+  if (fname && lname) {
+    if (fmt === "first_only") return fname;
+    if (fmt === "last_only") return lname;
+    if (fmt === "last_first") return `${lname}, ${fname}`;
+    return `${fname} ${lname}`;
+  }
   const fullName = `${fname} ${lname}`.trim();
   if (fullName) return fullName;
   if (staff.email && !staff.email.startsWith("enc:v1:")) return staff.email;

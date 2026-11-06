@@ -23,29 +23,9 @@ export default function RecoveryCodesModal({
   onCopy,
   onDownload,
 }) {
-  const [copied, setCopied] = useState(false);
-
   const handleClose = () => {
     onOpenChange?.(false);
     onClose?.();
-  };
-
-  const handleCopy = () => {
-    if (onCopy) {
-      onCopy();
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      return;
-    }
-    const text = recoveryCodes.join("\n");
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success("Copied to Clipboard", {
-        description: "Recovery codes have been saved to your clipboard.",
-      });
-    }
   };
 
   const handleDownload = () => {

@@ -10,7 +10,7 @@ export default function StaffDirectorySkeleton({ rowCount = 8 }) {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* Main Single Card Container */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* Header */}
         <PageHeader
           icon="UserSearch01Icon"
@@ -29,11 +29,17 @@ export default function StaffDirectorySkeleton({ rowCount = 8 }) {
         />
 
         {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-card">
           {/* Left: Active vs Archived Tabs */}
-          <div className="flex items-center gap-6 shrink-0">
-            <Skeleton className="h-5 w-20 rounded dark:bg-muted" />
-            <Skeleton className="h-5 w-24 rounded dark:bg-muted" />
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs">
+              <span>Active</span>
+              <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
+            </div>
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full text-gray-500 dark:text-zinc-400">
+              <span>Archived</span>
+              <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
+            </div>
           </div>
 
           {/* Right: Search, Filter, Scroll Controls */}

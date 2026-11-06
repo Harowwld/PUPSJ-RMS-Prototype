@@ -906,11 +906,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     if (allowedTabs.has(tab)) {
       setView(tab)
     } else {
-      setView("review")
+      const prefDefault = authUser?.preferences?.default_home_view
+      if (prefDefault && allowedTabs.has(prefDefault)) {
+        setView(prefDefault)
+      } else {
+        setView("review")
+      }
     }
     setLogsMineOnly(mine)
     if (mine) setLogPage(1)
-  }, [searchParams, setLogPage])
+  }, [searchParams, setLogPage, authUser?.preferences?.default_home_view])
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -1892,7 +1897,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       <div
         className={cn(
-          "flex min-h-0 overflow-hidden",
+          "flex-1 h-full w-full flex min-h-0 overflow-hidden",
           authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-col md:flex-row"
         )}
         style={zoomStyle}
@@ -1952,10 +1957,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-slate-50/50 dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
           <div 
             className={cn(
-              "p-2 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]",
+              "p-2 flex flex-[1_0_auto] min-h-full flex-col w-full [&>*]:flex-[1_0_auto]",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1"
             )}
           >

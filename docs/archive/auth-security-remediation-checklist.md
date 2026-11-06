@@ -1,8 +1,8 @@
-# PUPSJ-RMS Authentication, Middleware, and Authorization Remediation Checklist
+# PUPSJ-RKS Authentication, Middleware, and Authorization Remediation Checklist
 
 ## Objective
 
-Make authentication, middleware, and authorization consistent and production-safe across the PUPSJ Records Management System prototype.
+Make authentication, middleware, and authorization consistent and production-safe across the PUPSJ Records Keeping System prototype.
 
 The target state is:
 

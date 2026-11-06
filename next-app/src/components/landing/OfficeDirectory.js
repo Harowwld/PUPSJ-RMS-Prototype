@@ -235,7 +235,7 @@ export default function OfficeDirectory() {
                 >
                   <AppIcon
                     className={` ${
-                      copiedKey === "address" ? "Tick01Icon text-emerald-600" : "Copy01Icon text-zinc-400"
+                      copiedKey === "address" ? "Tick01Icon text-gray-700" : "Copy01Icon text-zinc-400"
                     } text-xs`}
                   />
                   <span>{copiedKey === "address" ? "Copied" : "Copy"}</span>
@@ -428,7 +428,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy Registrar email"
                   >
-                    <AppIcon  className={` ${copiedKey === "reg-email" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
+                    <AppIcon  className={` ${copiedKey === "reg-email" ? "Tick01Icon text-zinc-700" : "Copy01Icon"}`} />
                   </button>
                 </div>
 
@@ -451,7 +451,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy OSAS email"
                   >
-                    <AppIcon  className={` ${copiedKey === "osas-email" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
+                    <AppIcon  className={` ${copiedKey === "osas-email" ? "Tick01Icon text-zinc-700" : "Copy01Icon"}`} />
                   </button>
                 </div>
 
@@ -471,7 +471,7 @@ export default function OfficeDirectory() {
                     className="p-2 rounded-xl text-xs text-zinc-500  hover:bg-white :bg-zinc-700 transition-colors shrink-0 cursor-pointer"
                     title="Copy trunkline phone"
                   >
-                    <AppIcon  className={` ${copiedKey === "trunkline" ? "Tick01Icon text-emerald-600" : "Copy01Icon"}`} />
+                    <AppIcon  className={` ${copiedKey === "trunkline" ? "Tick01Icon text-zinc-700" : "Copy01Icon"}`} />
                   </button>
                 </div>
               </div>

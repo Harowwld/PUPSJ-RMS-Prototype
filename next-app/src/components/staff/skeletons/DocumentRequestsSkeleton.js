@@ -7,7 +7,7 @@ import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/Document
 export default function DocumentRequestsSkeleton() {
   return (
     <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Page Header */}
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -24,7 +24,7 @@ export default function DocumentRequestsSkeleton() {
         </div>
 
         {/* 2. Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex items-center gap-6">
             <Skeleton className="h-4 w-20 rounded" />
             <Skeleton className="h-4 w-16 rounded" />

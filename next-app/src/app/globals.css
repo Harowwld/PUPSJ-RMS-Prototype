@@ -1242,6 +1242,8 @@ button,
   --ring: #000000 !important;
   --sidebar-border: #000000 !important;
   --sidebar-foreground: #000000 !important;
+  --brand-accent: #000000 !important;
+  --brand-foreground: #ffffff !important;
 }
 
 .high-contrast.dark {
@@ -1264,6 +1266,8 @@ button,
   --ring: #ffffff !important;
   --sidebar-border: #ffffff !important;
   --sidebar-foreground: #ffffff !important;
+  --brand-accent: #ffffff !important;
+  --brand-foreground: #000000 !important;
 }
 
 .high-contrast * {
@@ -1537,26 +1541,213 @@ input[type="search"]::-webkit-search-results-decoration {
   outline-offset: 2px !important;
 }
 
-/* 6. Outline & Secondary Buttons */
-.high-contrast button[class*="border"],
-.high-contrast button[class*="outline"],
-.high-contrast [role="button"][class*="border"] {
+/* 6. Solid & Primary Buttons (High Contrast: crisp text and icon legibility) */
+.high-contrast [data-slot="button"][data-variant="default"],
+.high-contrast [data-slot="button"][data-variant="success"],
+.high-contrast [data-slot="button"][data-variant="warning"],
+.high-contrast [data-slot="button"][data-variant="danger"],
+.high-contrast [data-slot="button"]:not([data-variant="outline"]):not([data-variant="secondary"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="destructive"]),
+.high-contrast .btn-brand-red,
+.high-contrast button[class*="bg-pup-maroon"],
+.high-contrast button[class*="bg-black"],
+.high-contrast button[class*="bg-slate-900"],
+.high-contrast button[class*="bg-zinc-900"],
+.high-contrast button[class*="bg-gray-900"],
+.high-contrast button[class*="bg-emerald-"],
+.high-contrast button[class*="bg-green-"],
+.high-contrast button[class*="bg-red-"],
+.high-contrast button[class*="bg-rose-"],
+.high-contrast button[class*="bg-amber-"],
+.high-contrast button[class*="text-white"],
+.high-contrast [role="button"][class*="bg-black"],
+.high-contrast [role="button"][class*="bg-pup-maroon"],
+.high-contrast [role="button"][class*="bg-slate-900"],
+.high-contrast [role="button"][class*="bg-zinc-900"],
+.high-contrast [role="button"][class*="bg-gray-900"],
+.high-contrast [role="button"][class*="text-white"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
   border-color: #000000 !important;
   border-width: 2px !important;
+  border-style: solid !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure ALL labels, icons, spans, and child elements inside solid buttons in light high contrast are pure white */
+.high-contrast [data-slot="button"][data-variant="default"] *,
+.high-contrast [data-slot="button"][data-variant="success"] *,
+.high-contrast [data-slot="button"][data-variant="warning"] *,
+.high-contrast [data-slot="button"][data-variant="danger"] *,
+.high-contrast [data-slot="button"]:not([data-variant="outline"]):not([data-variant="secondary"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="destructive"]) *,
+.high-contrast .btn-brand-red *,
+.high-contrast button[class*="bg-pup-maroon"] *,
+.high-contrast button[class*="bg-black"] *,
+.high-contrast button[class*="bg-slate-900"] *,
+.high-contrast button[class*="bg-zinc-900"] *,
+.high-contrast button[class*="bg-gray-900"] *,
+.high-contrast button[class*="bg-emerald-"] *,
+.high-contrast button[class*="bg-green-"] *,
+.high-contrast button[class*="bg-red-"] *,
+.high-contrast button[class*="bg-rose-"] *,
+.high-contrast button[class*="bg-amber-"] *,
+.high-contrast button[class*="text-white"] *,
+.high-contrast [role="button"][class*="bg-black"] *,
+.high-contrast [role="button"][class*="bg-pup-maroon"] *,
+.high-contrast [role="button"][class*="bg-slate-900"] *,
+.high-contrast [role="button"][class*="bg-zinc-900"] *,
+.high-contrast [role="button"][class*="bg-gray-900"] *,
+.high-contrast [role="button"][class*="text-white"] * {
+  color: #ffffff !important;
+  fill: currentColor !important;
+}
+
+.high-contrast.dark [data-slot="button"][data-variant="default"],
+.high-contrast.dark [data-slot="button"][data-variant="success"],
+.high-contrast.dark [data-slot="button"][data-variant="warning"],
+.high-contrast.dark [data-slot="button"][data-variant="danger"],
+.high-contrast.dark [data-slot="button"]:not([data-variant="outline"]):not([data-variant="secondary"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="destructive"]),
+.high-contrast.dark .btn-brand-red,
+.high-contrast.dark button[class*="bg-pup-maroon"],
+.high-contrast.dark button[class*="bg-black"],
+.high-contrast.dark button[class*="bg-slate-900"],
+.high-contrast.dark button[class*="bg-zinc-900"],
+.high-contrast.dark button[class*="bg-gray-900"],
+.high-contrast.dark button[class*="bg-emerald-"],
+.high-contrast.dark button[class*="bg-green-"],
+.high-contrast.dark button[class*="bg-red-"],
+.high-contrast.dark button[class*="bg-rose-"],
+.high-contrast.dark button[class*="bg-amber-"],
+.high-contrast.dark [role="button"][class*="bg-black"],
+.high-contrast.dark [role="button"][class*="bg-pup-maroon"],
+.high-contrast.dark [role="button"][class*="bg-slate-900"],
+.high-contrast.dark [role="button"][class*="bg-zinc-900"],
+.high-contrast.dark [role="button"][class*="bg-gray-900"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure ALL labels, icons, spans, and child elements inside solid buttons in dark high contrast are pure black */
+.high-contrast.dark [data-slot="button"][data-variant="default"] *,
+.high-contrast.dark [data-slot="button"][data-variant="success"] *,
+.high-contrast.dark [data-slot="button"][data-variant="warning"] *,
+.high-contrast.dark [data-slot="button"][data-variant="danger"] *,
+.high-contrast.dark [data-slot="button"]:not([data-variant="outline"]):not([data-variant="secondary"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="destructive"]) *,
+.high-contrast.dark .btn-brand-red *,
+.high-contrast.dark button[class*="bg-pup-maroon"] *,
+.high-contrast.dark button[class*="bg-black"] *,
+.high-contrast.dark button[class*="bg-slate-900"] *,
+.high-contrast.dark button[class*="bg-zinc-900"] *,
+.high-contrast.dark button[class*="bg-gray-900"] *,
+.high-contrast.dark button[class*="bg-emerald-"] *,
+.high-contrast.dark button[class*="bg-green-"] *,
+.high-contrast.dark button[class*="bg-red-"] *,
+.high-contrast.dark button[class*="bg-rose-"] *,
+.high-contrast.dark button[class*="bg-amber-"] *,
+.high-contrast.dark [role="button"][class*="bg-black"] *,
+.high-contrast.dark [role="button"][class*="bg-pup-maroon"] *,
+.high-contrast.dark [role="button"][class*="bg-slate-900"] *,
+.high-contrast.dark [role="button"][class*="bg-zinc-900"] *,
+.high-contrast.dark [role="button"][class*="bg-gray-900"] * {
+  color: #000000 !important;
+  fill: currentColor !important;
+}
+
+/* 7. Outline & Secondary Buttons */
+.high-contrast [data-slot="button"][data-variant="outline"],
+.high-contrast [data-slot="button"][data-variant="secondary"],
+.high-contrast [data-slot="button"][data-variant="ghost"],
+.high-contrast [data-slot="button"][data-variant="link"],
+.high-contrast [data-slot="button"][data-variant="destructive"],
+.high-contrast button[class*="border-border"],
+.high-contrast button[class*="border-gray"],
+.high-contrast button[class*="border-zinc"],
+.high-contrast button[class*="border-slate"],
+.high-contrast button[class*="border-pup-border"],
+.high-contrast button[class*="border-input"],
+.high-contrast button[class*="outline"],
+.high-contrast [role="button"][class*="border-border"],
+.high-contrast [role="button"][class*="border-gray"],
+.high-contrast [role="button"][class*="border-zinc"],
+.high-contrast [role="button"][class*="border-slate"],
+.high-contrast [role="button"][class*="outline"] {
+  background-color: #ffffff !important;
+  border-color: #000000 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
   color: #000000 !important;
   font-weight: 600 !important;
 }
 
-.high-contrast.dark button[class*="border"],
+.high-contrast [data-slot="button"][data-variant="outline"] *,
+.high-contrast [data-slot="button"][data-variant="secondary"] *,
+.high-contrast [data-slot="button"][data-variant="ghost"] *,
+.high-contrast [data-slot="button"][data-variant="link"] *,
+.high-contrast [data-slot="button"][data-variant="destructive"] *,
+.high-contrast button[class*="border-border"] *,
+.high-contrast button[class*="border-gray"] *,
+.high-contrast button[class*="border-zinc"] *,
+.high-contrast button[class*="border-slate"] *,
+.high-contrast button[class*="border-pup-border"] *,
+.high-contrast button[class*="border-input"] *,
+.high-contrast button[class*="outline"] *,
+.high-contrast [role="button"][class*="border-border"] *,
+.high-contrast [role="button"][class*="border-gray"] *,
+.high-contrast [role="button"][class*="border-zinc"] *,
+.high-contrast [role="button"][class*="border-slate"] *,
+.high-contrast [role="button"][class*="outline"] * {
+  color: #000000 !important;
+}
+
+.high-contrast.dark [data-slot="button"][data-variant="outline"],
+.high-contrast.dark [data-slot="button"][data-variant="secondary"],
+.high-contrast.dark [data-slot="button"][data-variant="ghost"],
+.high-contrast.dark [data-slot="button"][data-variant="link"],
+.high-contrast.dark [data-slot="button"][data-variant="destructive"],
+.high-contrast.dark button[class*="border-border"],
+.high-contrast.dark button[class*="border-gray"],
+.high-contrast.dark button[class*="border-zinc"],
+.high-contrast.dark button[class*="border-slate"],
+.high-contrast.dark button[class*="border-pup-border"],
+.high-contrast.dark button[class*="border-input"],
 .high-contrast.dark button[class*="outline"],
-.high-contrast.dark [role="button"][class*="border"] {
+.high-contrast.dark [role="button"][class*="border-border"],
+.high-contrast.dark [role="button"][class*="border-gray"],
+.high-contrast.dark [role="button"][class*="border-zinc"],
+.high-contrast.dark [role="button"][class*="border-slate"],
+.high-contrast.dark [role="button"][class*="outline"] {
+  background-color: #000000 !important;
   border-color: #ffffff !important;
   border-width: 2px !important;
+  border-style: solid !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
 
-/* 7. Status Badges & Pills */
+.high-contrast.dark [data-slot="button"][data-variant="outline"] *,
+.high-contrast.dark [data-slot="button"][data-variant="secondary"] *,
+.high-contrast.dark [data-slot="button"][data-variant="ghost"] *,
+.high-contrast.dark [data-slot="button"][data-variant="link"] *,
+.high-contrast.dark [data-slot="button"][data-variant="destructive"] *,
+.high-contrast.dark button[class*="border-border"] *,
+.high-contrast.dark button[class*="border-gray"] *,
+.high-contrast.dark button[class*="border-zinc"] *,
+.high-contrast.dark button[class*="border-slate"] *,
+.high-contrast.dark button[class*="border-pup-border"] *,
+.high-contrast.dark button[class*="border-input"] *,
+.high-contrast.dark button[class*="outline"] *,
+.high-contrast.dark [role="button"][class*="border-border"] *,
+.high-contrast.dark [role="button"][class*="border-gray"] *,
+.high-contrast.dark [role="button"][class*="border-zinc"] *,
+.high-contrast.dark [role="button"][class*="border-slate"] *,
+.high-contrast.dark [role="button"][class*="outline"] * {
+  color: #ffffff !important;
+}
+
+/* 8. Status Badges & Pills */
 .high-contrast [class*="rounded-full"][class*="px-2"],
 .high-contrast [class*="rounded-full"][class*="px-2.5"],
 .high-contrast [class*="badge"],
@@ -1682,6 +1873,235 @@ input[type="search"]::-webkit-search-results-decoration {
 
 .high-contrast.dark ::-webkit-scrollbar-thumb {
   background: #ffffff !important;
+}
+
+/* ==========================================================================
+   Dynamic Typography & Font Scaling System
+   Supports: "smaller", "small", "default", "large", "larger"
+   ========================================================================== */
+html {
+  --app-font-scale: 1;
+}
+
+html[data-font-size="smaller"],
+html.font-size-smaller {
+  --app-font-scale: 0.88;
+  --font-size-micro: 9px;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-base: 12px;
+  --font-size-lg: 13.5px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 16px;
+  --font-size-3xl: 16px;
+  font-size: 88%;
+}
+
+html[data-font-size="small"],
+html.font-size-small {
+  --app-font-scale: 0.94;
+  --font-size-micro: 9.5px;
+  --font-size-xs: 10.5px;
+  --font-size-sm: 11.5px;
+  --font-size-base: 12.5px;
+  --font-size-lg: 14px;
+  --font-size-xl: 17px;
+  --font-size-2xl: 17px;
+  --font-size-3xl: 17px;
+  font-size: 94%;
+}
+
+html[data-font-size="default"],
+html.font-size-default {
+  --app-font-scale: 1;
+  --font-size-micro: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 18px;
+  --font-size-3xl: 18px;
+  font-size: 100%;
+}
+
+html[data-font-size="large"],
+html.font-size-large {
+  --app-font-scale: 1.06;
+  --font-size-micro: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16.5px;
+  --font-size-xl: 19.5px;
+  --font-size-2xl: 19.5px;
+  --font-size-3xl: 19.5px;
+  font-size: 106%;
+}
+
+html[data-font-size="larger"],
+html.font-size-larger {
+  --app-font-scale: 1.14;
+  --font-size-micro: 11.5px;
+  --font-size-xs: 13px;
+  --font-size-sm: 14px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 21px;
+  --font-size-2xl: 21px;
+  --font-size-3xl: 21px;
+  font-size: 114%;
+}
+
+/* ==========================================================================
+   Sidebar Font Scaling System
+   Ensures sidebar typography responds dynamically to global font scale
+   ========================================================================== */
+.rms-sidebar,
+aside[class*="rms-sidebar"],
+[data-sidebar] {
+  --sidebar-font-scale: var(--app-font-scale, 1);
+}
+
+.rms-sidebar [data-sidebar-label],
+.rms-sidebar span[class*="text-[14px]"] {
+  font-size: calc(14px * var(--app-font-scale, 1)) !important;
+}
+
+.rms-sidebar [data-sidebar-header],
+.rms-sidebar span[class*="text-[11.5px]"] {
+  font-size: calc(11.5px * var(--app-font-scale, 1)) !important;
+}
+
+.rms-sidebar [data-sidebar-title],
+.rms-sidebar span[class*="text-[17px]"] {
+  font-size: calc(17px * var(--app-font-scale, 1)) !important;
+}
+
+.rms-sidebar [data-sidebar-user-name],
+.rms-sidebar span[class*="text-[13px]"] {
+  font-size: calc(13px * var(--app-font-scale, 1)) !important;
+}
+
+.rms-sidebar [data-sidebar-user-role],
+.rms-sidebar span[class*="text-[11px]"] {
+  font-size: calc(11px * var(--app-font-scale, 1)) !important;
+}
+
+/* ==========================================================================
+   Interactive Pointer Cursor System
+   - When ENABLED: Interactive controls display hand pointer (cursor: pointer),
+     text inputs display I-beam (cursor: text), disabled show not-allowed.
+   - When DISABLED: All hoverable/clickable elements revert strictly to arrow
+     pointer (cursor: default), text inputs retain standard I-beam (cursor: text).
+   ========================================================================== */
+
+/* State 1: Pointer Cursor ENABLED */
+.pointer-cursor button:not(:disabled),
+.pointer-cursor [role="button"]:not([aria-disabled="true"]),
+.pointer-cursor [data-slot="button"]:not([data-disabled]),
+.pointer-cursor a,
+.pointer-cursor select:not(:disabled),
+.pointer-cursor [data-slot="select-trigger"]:not([data-disabled]),
+.pointer-cursor [role="combobox"],
+.pointer-cursor [role="listbox"],
+.pointer-cursor [role="tab"],
+.pointer-cursor [data-slot="tabs-trigger"],
+.pointer-cursor input[type="checkbox"]:not(:disabled),
+.pointer-cursor input[type="radio"]:not(:disabled),
+.pointer-cursor [data-slot="switch"]:not([data-disabled]),
+.pointer-cursor [role="switch"]:not([aria-disabled="true"]),
+.pointer-cursor input[type="button"]:not(:disabled),
+.pointer-cursor input[type="submit"]:not(:disabled),
+.pointer-cursor [role="menuitem"],
+.pointer-cursor [role="option"],
+.pointer-cursor label,
+.pointer-cursor summary,
+.pointer-cursor [data-interactive="true"],
+.pointer-cursor [tabindex="0"]:not(input):not(textarea),
+.pointer-cursor tr[class*="cursor-pointer"],
+.pointer-cursor div[class*="cursor-pointer"],
+.pointer-cursor span[class*="cursor-pointer"],
+.pointer-cursor button[class*="cursor-pointer"],
+html[data-pointer-cursor="true"] button:not(:disabled),
+html[data-pointer-cursor="true"] [role="button"]:not([aria-disabled="true"]),
+html[data-pointer-cursor="true"] [data-slot="button"]:not([data-disabled]),
+html[data-pointer-cursor="true"] a,
+html[data-pointer-cursor="true"] select:not(:disabled),
+html[data-pointer-cursor="true"] [data-slot="select-trigger"]:not([data-disabled]),
+html[data-pointer-cursor="true"] [role="combobox"],
+html[data-pointer-cursor="true"] [role="listbox"],
+html[data-pointer-cursor="true"] [role="tab"],
+html[data-pointer-cursor="true"] [data-slot="tabs-trigger"],
+html[data-pointer-cursor="true"] input[type="checkbox"]:not(:disabled),
+html[data-pointer-cursor="true"] input[type="radio"]:not(:disabled),
+html[data-pointer-cursor="true"] [data-slot="switch"]:not([data-disabled]),
+html[data-pointer-cursor="true"] [role="switch"]:not([aria-disabled="true"]),
+html[data-pointer-cursor="true"] input[type="button"]:not(:disabled),
+html[data-pointer-cursor="true"] input[type="submit"]:not(:disabled),
+html[data-pointer-cursor="true"] [role="menuitem"],
+html[data-pointer-cursor="true"] [role="option"],
+html[data-pointer-cursor="true"] label,
+html[data-pointer-cursor="true"] summary,
+html[data-pointer-cursor="true"] [data-interactive="true"],
+html[data-pointer-cursor="true"] [tabindex="0"]:not(input):not(textarea),
+html[data-pointer-cursor="true"] tr[class*="cursor-pointer"],
+html[data-pointer-cursor="true"] div[class*="cursor-pointer"],
+html[data-pointer-cursor="true"] span[class*="cursor-pointer"],
+html[data-pointer-cursor="true"] button[class*="cursor-pointer"] {
+  cursor: pointer !important;
+}
+
+.pointer-cursor :disabled,
+.pointer-cursor [aria-disabled="true"],
+.pointer-cursor [data-disabled="true"],
+html[data-pointer-cursor="true"] :disabled,
+html[data-pointer-cursor="true"] [aria-disabled="true"],
+html[data-pointer-cursor="true"] [data-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* State 2: Pointer Cursor DISABLED (Revert strictly to default arrow cursor) */
+html[data-pointer-cursor="false"] button,
+html[data-pointer-cursor="false"] a,
+html[data-pointer-cursor="false"] [role="button"],
+html[data-pointer-cursor="false"] [data-slot="button"],
+html[data-pointer-cursor="false"] select,
+html[data-pointer-cursor="false"] [data-slot="select-trigger"],
+html[data-pointer-cursor="false"] [role="combobox"],
+html[data-pointer-cursor="false"] [role="listbox"],
+html[data-pointer-cursor="false"] [role="tab"],
+html[data-pointer-cursor="false"] [data-slot="tabs-trigger"],
+html[data-pointer-cursor="false"] input[type="checkbox"],
+html[data-pointer-cursor="false"] input[type="radio"],
+html[data-pointer-cursor="false"] [data-slot="switch"],
+html[data-pointer-cursor="false"] [role="switch"],
+html[data-pointer-cursor="false"] input[type="button"],
+html[data-pointer-cursor="false"] input[type="submit"],
+html[data-pointer-cursor="false"] [role="menuitem"],
+html[data-pointer-cursor="false"] [role="option"],
+html[data-pointer-cursor="false"] label,
+html[data-pointer-cursor="false"] summary,
+html[data-pointer-cursor="false"] [data-interactive="true"],
+html[data-pointer-cursor="false"] [tabindex="0"],
+html[data-pointer-cursor="false"] .cursor-pointer,
+html[data-pointer-cursor="false"] [class*="cursor-pointer"] {
+  cursor: default !important;
+}
+
+/* Text inputs and textareas ALWAYS retain standard I-beam in both modes */
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+textarea,
+[contenteditable="true"],
+[contenteditable=""] {
+  cursor: text !important;
+}
+
+html[data-pointer-cursor="false"] input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+html[data-pointer-cursor="false"] textarea,
+html[data-pointer-cursor="false"] [contenteditable="true"],
+html[data-pointer-cursor="false"] [contenteditable=""] {
+  cursor: text !important;
 }
 
 /* Unified Refresh Button Loading State Animation */
@@ -1832,35 +2252,61 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 [data-sonner-toast] {
-  animation: apple-toast-slide-down 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-  transition: none !important;
+  animation: apple-toast-slide-down 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease !important;
+  transform-origin: top center !important;
 }
 
 [data-sonner-toast][data-removed="true"] {
-  animation: apple-toast-slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: apple-toast-slide-up 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
   transition: none !important;
 }
 
+/* Apple Dynamic Island / iOS notification banner fluid spring drop-and-settle entry */
 @keyframes apple-toast-slide-down {
-  from {
-    transform: translateY(-40px) scale(0.95);
+  0% {
+    transform: translate3d(0, -32px, 0) scale(0.90);
     opacity: 0;
   }
-  to {
-    transform: translateY(0) scale(1);
+  60% {
+    transform: translate3d(0, 3px, 0) scale(1.018);
+    opacity: 1;
+  }
+  82% {
+    transform: translate3d(0, -1px, 0) scale(0.996);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
 }
 
+/* Apple notification banner swift retraction exit */
 @keyframes apple-toast-slide-up {
-  from {
-    transform: translateY(0) scale(1);
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
-  to {
-    transform: translateY(-40px) scale(0.95);
+  100% {
+    transform: translate3d(0, -28px, 0) scale(0.88);
     opacity: 0;
   }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast],
+  .rms-toast {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.reduce-motion [data-sonner-toast],
+.reduce-motion .rms-toast {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
 }
 
 

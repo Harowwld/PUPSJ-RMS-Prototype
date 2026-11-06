@@ -49,6 +49,7 @@
     "@hugeicons/core-free-icons": "^4.3.3",
     "@hugeicons/react": "^1.1.10",
     "@marcosdemik/liquidglass": "^2.0.5",
+    "@mesh-gradient/react": "^2.0.2",
     "adm-zip": "^0.6.1",
     "better-sqlite3": "^12.11.1",
     "boring-avatars": "^2.0.4",

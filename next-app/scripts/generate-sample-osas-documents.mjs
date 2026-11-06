@@ -126,7 +126,7 @@ function drawFooter(page, fonts, formCode) {
     thickness: 0.5,
     color: BorderGray,
   });
-  page.drawText(`Form ${formCode || "OSAS"} · Records Management System (RMS) · PUP San Juan OSAS Archival Repository`, {
+  page.drawText(`Form ${formCode || "OSAS"} · Records Keeping System (RKS) · PUP San Juan OSAS Archival Repository`, {
     x: 40,
     y: 34,
     size: 7,

@@ -1,6 +1,6 @@
 # Component Styling & Design System Standards Guide
 
-This guide establishes the mandatory UI/UX standards, component blueprints, and styling patterns for the **PUPSJ Records Management System**. All agents and engineers developing new features must follow these patterns to preserve visual harmony, Apple Human Interface Guidelines (HIG) compliance, and consistent interaction behaviors across portals.
+This guide establishes the mandatory UI/UX standards, component blueprints, and styling patterns for the **PUPSJ Records Keeping System**. All agents and engineers developing new features must follow these patterns to preserve visual harmony, Apple Human Interface Guidelines (HIG) compliance, and consistent interaction behaviors across portals.
 
 ---
 

@@ -673,7 +673,7 @@ export default function DigitalRecordsReviewTab({
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="CheckmarkBadge01Icon"
             title="Records Review"
@@ -958,7 +958,7 @@ export default function DigitalRecordsReviewTab({
           ) : null}
 
         {/* Navigation Toolbar */}
-        <DataViewToolbar label="Digital records search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Digital records search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-white dark:bg-card">
           {/* Search */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
             <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></Search01Icon>

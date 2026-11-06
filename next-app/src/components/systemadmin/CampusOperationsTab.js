@@ -45,7 +45,7 @@ import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
-import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon } from "hugeicons-react";
+import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const OPERATION_COLUMNS = ["department", "requester", "title", "details", "status", "submitted", "updatedAt"]
 
@@ -170,19 +170,24 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   // Request Details Sheet
   const [selectedItem, setSelectedItem] = useState(null)
   const [sheetItem, setSheetItem] = useState(null)
+  const [copiedField, setCopiedField] = useState(null)
 
   const handleOpenDetails = useCallback((item) => {
     setSheetItem(item)
     setSelectedItem(item)
   }, [setSheetItem, setSelectedItem])
 
-  const handleCopy = useCallback((text, label) => {
+  const handleCopy = useCallback((text, label, fieldKey) => {
     if (!text) return
     navigator.clipboard?.writeText(String(text))
     showToast?.({
       title: "Copied to Clipboard",
       description: `${label} has been successfully copied to your clipboard.`,
     })
+    if (fieldKey) {
+      setCopiedField(fieldKey)
+      setTimeout(() => setCopiedField((curr) => curr === fieldKey ? null : curr), 2000)
+    }
   }, [showToast])
 
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
@@ -499,7 +504,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   return (
     <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Table & Pagination */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* Header */}
         <PageHeader
           icon=" Activity01Icon"
@@ -512,8 +517,8 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           actions={<RefreshButton onRefresh={() => fetchHealth(true)} isLoading={refreshing} title="Refresh Campus Operations" className="h-9 w-9" />}
         />
 
-        <div role="group" aria-label="Operation lifecycle" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+        <div role="group" aria-label="Operation lifecycle" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
             {[["all", "All", lifecycleCounts.all], ["open", "Open", lifecycleCounts.open], ["closed", "Closed", lifecycleCounts.closed]].map(([key, label, count]) => {
               const isSelected = lifecycle === key;
               return (
@@ -523,7 +528,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   onClick={() => setLifecycle(key)}
                   aria-pressed={isSelected}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
+                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
                     isSelected
                       ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
@@ -547,7 +552,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         </div>
 
         {/* Navigation Toolbar */}
-        <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-gray-50/40 p-4 dark:bg-zinc-900/30 sm:px-5 sm:py-3">
+        <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
             {/* Search Input with Clear Button & Record Count */}
             <DashboardSearch value={search} onChange={setSearch} count={filteredTransactions.length} loading={loading} label="Search campus operations" placeholder="Search student, document, or org..." />
@@ -571,7 +576,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         </DataViewToolbar>
 
         {/* Full Top-Level Turnaround Standards Institutional Banner */}
-        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 text-xs transition-colors">
+        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card text-xs transition-colors">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
               <Timer01Icon size="1em" className="text-lg" />
@@ -1095,11 +1100,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopy(formatTransactionId(sheetItem), "Transaction ID")}
+                      onClick={() => handleCopy(formatTransactionId(sheetItem), "Transaction ID", "tx_id")}
                       className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy Transaction ID"
                     >
-                      <Copy01Icon size="1em" className="text-[11px]" />
+                      {copiedField === "tx_id" ? (
+                        <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                      ) : (
+                        <Copy01Icon size="1em" className="text-[11px]" />
+                      )}
                     </button>
                   </div>
                 </InfoRow>
@@ -1147,11 +1156,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     {sheetItem?.studentName && (
                       <button
                         type="button"
-                        onClick={() => handleCopy(sheetItem.studentName, "Requester Name")}
+                        onClick={() => handleCopy(sheetItem.studentName, "Requester Name", "name")}
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy Requester Name"
                       >
-                        <Copy01Icon size="1em" className="text-[11px]" />
+                        {copiedField === "name" ? (
+                          <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                        ) : (
+                          <Copy01Icon size="1em" className="text-[11px]" />
+                        )}
                       </button>
                     )}
                   </div>
@@ -1168,11 +1181,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     {sheetItem?.studentNo && (
                       <button
                         type="button"
-                        onClick={() => handleCopy(sheetItem.studentNo, "Student Number")}
+                        onClick={() => handleCopy(sheetItem.studentNo, "Student Number", "student_no")}
                         className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                         title="Copy Student Number"
                       >
-                        <Copy01Icon size="1em" className="text-[11px]" />
+                        {copiedField === "student_no" ? (
+                          <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                        ) : (
+                          <Copy01Icon size="1em" className="text-[11px]" />
+                        )}
                       </button>
                     )}
                   </div>

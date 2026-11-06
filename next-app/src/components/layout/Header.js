@@ -168,6 +168,13 @@ export default function Header({ authUser, onLogout, children }) {
   const cleanUsername = authUser?.username && !authUser.username.startsWith("enc:v1:") ? authUser.username.trim() : "";
 
   const displayName = (() => {
+    const fmt = authUser?.preferences?.display_name_format;
+    if (cleanFirst && cleanLast) {
+      if (fmt === "first_only") return cleanFirst;
+      if (fmt === "last_only") return cleanLast;
+      if (fmt === "last_first") return `${cleanLast}, ${cleanFirst}`;
+      return `${cleanFirst} ${cleanLast}`;
+    }
     const fromParts = [cleanFirst, cleanLast].filter(Boolean).join(" ").trim();
     if (fromParts) return fromParts;
     if (cleanName) return cleanName;

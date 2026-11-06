@@ -27,6 +27,7 @@ function PDFPreviewContent({
   onPrint,
   onPrintError,
   headerActions,
+  onUpdate,
 }) {
   const frameRef = useRef(null)
   const fullscreenButtonRef = useRef(null)
@@ -47,6 +48,7 @@ function PDFPreviewContent({
   const context = description || preview?.subtitle || [preview?.studentName, preview?.studentNo].filter(Boolean).join(" · ")
   const FullscreenIcon = isFullscreen ? ArrowShrink01Icon : ArrowExpand01Icon
   const originalAvailable = source && fileState === "ready" && (!activeFile || activeFile.isConverted) && !isPreparing && !error
+  const handleUpdate = onUpdate || preview?.onUpdate
 
   useEffect(() => {
     if (isFullscreen) exitFullscreenRef.current?.focus()
@@ -150,6 +152,18 @@ function PDFPreviewContent({
           <div className="ml-auto flex min-w-0 flex-1 flex-wrap justify-end gap-2.5 max-sm:[&_[data-slot=button]]:min-h-11">
             <Button variant="outline" onClick={onClose} className="px-4">Close</Button>
             {originalAvailable && <Button asChild variant="outline"><a href={source} download={originalName}>{PDF_ACTION_LABELS.original}</a></Button>}
+            {handleUpdate && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onClose?.()
+                  handleUpdate()
+                }}
+                className="px-4"
+              >
+                {PDF_ACTION_LABELS.update}
+              </Button>
+            )}
             <Button variant="outline" disabled={!ready} onClick={print} className="px-4">{PDF_ACTION_LABELS.print}</Button>
             {onDownload ? (
               <Button onClick={onDownload} disabled={!ready}>{PDF_ACTION_LABELS.download}</Button>

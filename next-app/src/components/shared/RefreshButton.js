@@ -2,6 +2,7 @@
 
 import { Loading03Icon, RefreshIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function RefreshButton({
   onRefresh,
@@ -24,7 +25,10 @@ export function RefreshButton({
       aria-busy={isLoading || undefined}
       disabled={disabled || isLoading}
       onClick={onRefresh}
-      className={`rounded-xl text-gray-500 transition-colors hover:border-[color:var(--brand-accent,#800000)] hover:text-[color:var(--brand-accent,#800000)] dark:text-zinc-400 ${className || ""}`}
+      className={cn(
+        "rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all",
+        className
+      )}
     >
       <Icon size={18} aria-hidden="true" className={isLoading ? "animate-spin" : undefined} />
     </Button>

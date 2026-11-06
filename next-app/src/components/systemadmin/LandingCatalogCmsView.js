@@ -492,15 +492,15 @@ export default function LandingCatalogCmsView({ showToast }) {
                           className={cn(
                             "p-3.5 rounded-2xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer flex items-center gap-3.5 select-none",
                             isSelected
-                              ? "border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/25 dark:ring-red-500/30 bg-white dark:bg-zinc-900 shadow-sm"
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
                               : "border-border dark:border-border bg-white dark:bg-zinc-900/50 hover:bg-gray-50/80 dark:hover:bg-zinc-800/60"
                           )}
                         >
                           <div
                             className={cn(
-                              "w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-full flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
+                              "w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 dark:focus-visible:ring-zinc-100 rounded-full flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 transition-colors",
                               isSelected
-                                ? "bg-pup-maroon text-white dark:bg-red-500 dark:text-white shadow-xs"
+                                ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                                 : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400"
                             )}
                           >
@@ -513,7 +513,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                                 className={cn(
                                   "text-xs font-semibold truncate transition-colors",
                                   isSelected
-                                    ? "text-pup-maroon dark:text-red-400"
+                                    ? "text-gray-950 dark:text-zinc-50 font-bold"
                                     : "text-gray-900 dark:text-zinc-100"
                                 )}
                               >

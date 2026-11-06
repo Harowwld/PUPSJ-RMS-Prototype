@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  * Text-only interactive Copy Button following Apple HIG & RMS Component Standards (Approach A).
  * - Zero static icons (typographic clarity).
  * - Standard Verb + Noun in idle state: `Copy [Entity]`
- * - Explicit transient confirmation state: `[Entity] Copied!` with soft emerald tint.
+ * - Explicit transient confirmation state: `[Entity] Copied!` without color change.
  * - CSS Grid overlay ensures zero layout shift / button width jitter during label transitions.
  * - Auto-reverts after 2000ms with cleanup on unmount.
  * - Fully accessible via `aria-live="polite"`.
@@ -86,10 +86,7 @@ export function CopyButton({
       onClick={handleCopy}
       aria-live="polite"
       className={cn(
-        "h-10 px-4 text-xs font-semibold rounded-xl transition-all select-none active:scale-95 cursor-pointer",
-        copied
-          ? "border-emerald-300/90 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-950/60 shadow-xs"
-          : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs",
+        "h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all select-none active:scale-95 cursor-pointer",
         className
       )}
       {...props}

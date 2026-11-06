@@ -25,7 +25,7 @@ export default function BackupFilters({
 }) {
   const Wrapper = inline ? DataViewToolbar : "div"
   return (
-    <Wrapper {...(inline ? { label: "Platform backup search and controls" } : {})} className={inline ? "gap-2 bg-gray-50/40 px-5 py-3 dark:bg-zinc-900/30" : "border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30 flex-wrap"}>
+    <Wrapper {...(inline ? { label: "Platform backup search and controls" } : {})} className={inline ? "gap-2 bg-white px-5 py-3 dark:bg-card" : "border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap"}>
       {/* Left side: Search Bar & Scroll Controls */}
       <div className="flex min-w-0 items-center gap-2">
         <DashboardSearch

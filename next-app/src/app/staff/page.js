@@ -163,7 +163,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
     const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"])
-    const targetTab = allowedTabs.has(tab) ? tab : "requests"
+    const prefDefault = authUser?.preferences?.default_home_view
+    const fallbackTab = prefDefault && allowedTabs.has(prefDefault) ? prefDefault : "requests"
+    const targetTab = allowedTabs.has(tab) ? tab : fallbackTab
     if (authUser?.enabled_modules) {
       const enabledSet = new Set(authUser.enabled_modules);
       const mod = {
@@ -1104,11 +1106,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }
       }
 
+      const matchedDoc = id ? allDocs.find((d) => String(d.id) === strId) : null;
+
       setPreview({
         docType,
         studentName: name,
         studentNo: no,
         docId: id,
+        originalFilename: matchedDoc?.original_filename || null,
+        mimeType: matchedDoc?.mime_type || null,
+        sourceType: matchedDoc?.source_type || null,
         fileUrl,
         url: fileUrl,
         refId: `DOC-${Date.now()}`,
@@ -1763,23 +1770,24 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const handleRescan = useCallback(async (targetId, docType, docId, filename, mimeType) => {
     const isOsas = authUser?.office_id === "osas";
-    const cleanTargetId = String(targetId || "").trim().toUpperCase();
     const cleanDocType = String(docType || "").trim().toUpperCase();
     const matchedDoc = docId
       ? allDocs.find((d) => String(d.id) === String(docId)) || null
       : allDocs.find(
           (d) =>
-            (String(d.student_no || "").trim().toUpperCase() === cleanTargetId ||
-             String(d.organization_id || "").trim().toUpperCase() === cleanTargetId) &&
+            (String(d.student_no || "").trim().toUpperCase() === String(targetId || "").trim().toUpperCase() ||
+             String(d.organization_id || "").trim().toUpperCase() === String(targetId || "").trim().toUpperCase()) &&
             String(d.doc_type || "").trim().toUpperCase() === cleanDocType &&
             String(d.approval_status || "").toLowerCase() !== "declined"
         ) || null;
+    const resolvedTargetId = targetId || matchedDoc?.student_no || matchedDoc?.organization_id || "";
+    const cleanTargetId = String(resolvedTargetId).trim().toUpperCase();
     const isReplacement = Boolean(docId || matchedDoc);
 
     if (isReplacement) {
       setRescanContext({
-        targetId,
-        docType,
+        targetId: resolvedTargetId,
+        docType: docType || matchedDoc?.doc_type || "",
         docId: docId || matchedDoc?.id || null,
         filename: filename || matchedDoc?.original_filename || null,
         mimeType: mimeType || matchedDoc?.mime_type || null,
@@ -1795,21 +1803,21 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       const allOrgsPool = [...organizations, ...archivedOrganizations];
       const org = allOrgsPool.find(
         (x) =>
-          String(x.id || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
-          String(x.name || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase() ||
-          String(x.acronym || "").trim().toLowerCase() === String(targetId || "").trim().toLowerCase()
+          String(x.id || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase() ||
+          String(x.name || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase() ||
+          String(x.acronym || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase()
       );
       if (org) {
-        applyStudentToPdfForm(org, docType);
+        applyStudentToPdfForm(org, docType || matchedDoc?.doc_type);
         setUploadStudentIsExisting(true);
       } else {
         setNewRec((p) => ({
           ...p,
-          organizationId: targetId || "",
-          name: matchedDoc?.organization_name || matchedDoc?.student_name || targetId || "",
-          docType: docType || "",
+          organizationId: resolvedTargetId || "",
+          name: matchedDoc?.organization_name || matchedDoc?.student_name || resolvedTargetId || "",
+          docType: docType || matchedDoc?.doc_type || "",
         }));
-        setUploadStudentIsExisting(Boolean(targetId));
+        setUploadStudentIsExisting(Boolean(resolvedTargetId));
       }
     } else {
       const allStudentsPool = [...students, ...archivedStudents];
@@ -1817,16 +1825,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         (x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === cleanTargetId
       );
       if (s) {
-        applyStudentToPdfForm(s, docType);
+        applyStudentToPdfForm(s, docType || matchedDoc?.doc_type);
         setUploadStudentIsExisting(true);
       } else {
         setNewRec((p) => ({
           ...p,
-          studentNo: targetId || "",
+          studentNo: resolvedTargetId || "",
           name: matchedDoc?.student_name || p.name || "",
-          docType: docType || "",
+          docType: docType || matchedDoc?.doc_type || "",
         }));
-        setUploadStudentIsExisting(Boolean(targetId));
+        setUploadStudentIsExisting(Boolean(resolvedTargetId));
       }
     }
     clearAllUploadFieldErrors();
@@ -1959,7 +1967,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
       <div
         className={cn(
-          "gap-0 relative flex min-h-0 overflow-hidden",
+          "flex-1 h-full w-full gap-0 relative flex min-h-0 overflow-hidden",
           authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-col md:flex-row"
         )}
         style={zoomStyle}
@@ -2019,12 +2027,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
+        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
             className={cn(
               "p-2 flex flex-col w-full",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1",
-              view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-w-0 [&>*]:flex-[1_0_auto]"
+              view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
             )}
           >
             <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", view === "batch_review" ? "h-full flex-1" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
@@ -2307,6 +2315,23 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         preview={preview}
+        onUpdate={
+          preview?.docType &&
+          (preview?.studentNo || preview?.docId) &&
+          !preview?.sourceType &&
+          !String(preview?.docId || "").startsWith("event-proposal-")
+            ? () => {
+                setPreviewOpen(false);
+                handleRescan(
+                  preview.studentNo,
+                  preview.docType,
+                  preview.docId,
+                  preview.originalFilename || preview.filename,
+                  preview.mimeType
+                );
+              }
+            : undefined
+        }
       />
       <ConfirmModal
         open={duplicateConfirmOpen}

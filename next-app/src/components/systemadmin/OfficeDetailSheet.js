@@ -5,6 +5,7 @@ import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { useEffect, useState, useMemo, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
+import CopyButton from "@/components/shared/CopyButton";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -343,7 +344,7 @@ export default function OfficeDetailSheet({
                       title="Copy Department Code"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "code" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "code" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
@@ -385,7 +386,7 @@ export default function OfficeDetailSheet({
                       title="Copy Default Admin Email"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "email" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "email" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
@@ -458,7 +459,7 @@ export default function OfficeDetailSheet({
                       title="Copy Inbound Folder Path"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                     >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "inbound" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "inbound" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
@@ -480,7 +481,7 @@ export default function OfficeDetailSheet({
                       title="Copy Storage Partition"
                       className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                     >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "storage" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
+                      <AppIcon className={cn("text-[11px] ", copiedField === "storage" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
                     </button>
                   </div>
                 }
@@ -500,7 +501,7 @@ export default function OfficeDetailSheet({
                         title="Copy Station Bearer Token"
                         className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                       >
-                        <AppIcon className={cn("text-[11px] ", copiedField === "token" ? "Tick01Icon text-emerald-600 dark:text-emerald-400" : "Copy01Icon")} />
+                        <AppIcon className={cn("text-[11px] ", copiedField === "token" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
                       </button>
                     </div>
                   ) : (
@@ -699,6 +700,17 @@ export default function OfficeDetailSheet({
                 description="This department operates with standard institutional defaults."
               />
             )}
+          </div>
+
+          <div className="pt-2">
+            <CopyButton
+              textToCopy={() => JSON.stringify(displayOffice, null, 2)}
+              entityName="Department Data"
+              idleLabel="Copy Department Data"
+              size="sm"
+              title="Copy department metadata"
+              className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            />
           </div>
         </div>
 

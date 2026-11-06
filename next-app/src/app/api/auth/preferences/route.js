@@ -10,7 +10,12 @@ const PREFERENCE_VALIDATORS = {
   navigation_layout: (value) => ["sidebar", "topbar"].includes(value),
   skip_registration_confirmation: (value) => typeof value === "boolean",
   high_contrast: (value) => typeof value === "boolean",
+  reduce_motion: (value) => typeof value === "boolean",
   zoom_node: (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 6,
+  default_home_view: (value) => typeof value === "string" && value.length <= 50,
+  display_name_format: (value) => ["full_name", "first_only", "last_only", "last_first"].includes(value),
+  font_size: (value) => ["smaller", "small", "default", "large", "larger"].includes(value),
+  pointer_cursor: (value) => typeof value === "boolean",
 };
 
 export async function GET(req) {
@@ -23,7 +28,12 @@ export async function GET(req) {
       navigation_layout: "sidebar",
       skip_registration_confirmation: false,
       high_contrast: false,
+      reduce_motion: false,
       zoom_node: 3,
+      default_home_view: "default",
+      display_name_format: "full_name",
+      font_size: "default",
+      pointer_cursor: true,
     };
 
     if (access.user.principalType !== "staff") {
@@ -68,7 +78,12 @@ export async function POST(req) {
       navigation_layout: "sidebar",
       skip_registration_confirmation: false,
       high_contrast: false,
+      reduce_motion: false,
       zoom_node: 3,
+      default_home_view: "default",
+      display_name_format: "full_name",
+      font_size: "default",
+      pointer_cursor: true,
     };
 
     if (access.user.principalType !== "staff") {

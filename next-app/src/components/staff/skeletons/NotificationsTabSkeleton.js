@@ -7,7 +7,7 @@ import NotificationsListSkeleton from "@/components/staff/skeletons/Notification
 export default function NotificationsTabSkeleton() {
   return (
     <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Header */}
         <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -25,10 +25,16 @@ export default function NotificationsTabSkeleton() {
         </div>
 
         {/* 2. Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
-          <div className="flex items-center gap-6">
-            <Skeleton className="h-4 w-20 rounded" />
-            <Skeleton className="h-4 w-16 rounded" />
+        <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs">
+              <span>Unread</span>
+              <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
+            </div>
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full text-gray-500 dark:text-zinc-400">
+              <span>Read</span>
+              <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
+            </div>
           </div>
           <div className="flex items-center gap-2.5">
             <Skeleton className="h-10 w-60 rounded-xl" />

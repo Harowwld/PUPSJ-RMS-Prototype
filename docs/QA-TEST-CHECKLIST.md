@@ -1,6 +1,6 @@
 # PUP E-Manage QA Test Checklist
 
-Use this checklist for a complete manual QA pass of the local PUPSJ Records Management System. It is organized by user role and source component so every visible control, dialog, sheet, workflow, and data state has an owner.
+Use this checklist for a complete manual QA pass of the local PUPSJ Records Keeping System. It is organized by user role and source component so every visible control, dialog, sheet, workflow, and data state has an owner.
 
 ## How to record a result
 

@@ -544,6 +544,13 @@ export default function StudentDirectoryTab({
     }
   };
 
+  const handleCopyStudentNumbers = useCallback(() => {
+    const numbers = Array.from(selectedIds);
+    if (numbers.length === 0) return;
+    navigator.clipboard?.writeText(numbers.join(", "));
+    showToast?.(`Copied ${numbers.length} student number${numbers.length === 1 ? "" : "s"} to clipboard`);
+  }, [selectedIds, showToast]);
+
   // Single Archive
   const handleConfirmArchive = async () => {
     if (!archiveTarget) return;
@@ -668,7 +675,7 @@ export default function StudentDirectoryTab({
       >
         {/* ONE Single Card Container encapsulating Header, Metrics, Filters, Table & Pagination */}
         <Card
-          className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
+          className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
         >
           {/* 1. Page Header */}
           <PageHeader
@@ -1028,9 +1035,9 @@ export default function StudentDirectoryTab({
           </Reorder.Group>
 
           {/* 3. Navigation & Filters Toolbar */}
-          <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+          <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card select-none">
             {/* Status Segmented Tabs */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
+            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
               <button
                 type="button"
                 onClick={() => {
@@ -1038,7 +1045,7 @@ export default function StudentDirectoryTab({
                   setPage(1);
                 }}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "active"
                     ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                     : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -1064,7 +1071,7 @@ export default function StudentDirectoryTab({
                   setPage(1);
                 }}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                   activeTab === "archived"
                     ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                     : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -1482,18 +1489,28 @@ export default function StudentDirectoryTab({
         {/* Floating Bulk Action Bar */}
         <FloatingActionBar
           selectedCount={selectedIds.size}
+          entityName="students"
           onCancel={() => setSelectedIds(new Set())}
-          actionLabel={activeTab === "active" ? "Archive Students" : "Restore Students"}
-          actionVariant={activeTab === "active" ? "danger" : "success"}
-          onAction={() => {
-            if (activeTab === "active") {
-              setBulkActionType("archive");
-              setBulkActionOpen(true);
-            } else if (activeTab === "archived") {
-              setBulkActionType("restore");
-              setBulkActionOpen(true);
-            }
+          primaryAction={{
+            label: activeTab === "active" ? "Archive Students" : "Restore Students",
+            variant: activeTab === "active" ? "danger" : "success",
+            onClick: () => {
+              if (activeTab === "active") {
+                setBulkActionType("archive");
+                setBulkActionOpen(true);
+              } else if (activeTab === "archived") {
+                setBulkActionType("restore");
+                setBulkActionOpen(true);
+              }
+            },
           }}
+          secondaryActions={[
+            {
+              label: "Copy Student Numbers",
+              copiedLabel: "Copied Numbers",
+              onClick: handleCopyStudentNumbers,
+            },
+          ]}
         />
 
         {/* Register Student Modal */}

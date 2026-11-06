@@ -24,7 +24,7 @@ export default function OsasMonitoringSkeleton() {
         </div>
 
         {/* Toolbar Skeleton */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex gap-1.5 overflow-x-auto">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-20 rounded-lg shrink-0" />

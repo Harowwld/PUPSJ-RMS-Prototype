@@ -303,7 +303,7 @@ export default function BackupTab({
         <div className="relative flex flex-[1_0_auto] min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 flex flex-col">
-            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
               <PageHeader
                 icon="CloudServerIcon"
                 title="Office Partition Backup & Archive"
@@ -504,9 +504,24 @@ export default function BackupTab({
           selectedCount={effectiveSelectedBackupIds.length}
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
-          onAction={() => onDeleteBackup(effectiveSelectedBackupIds)}
-          actionLabel="Delete"
-          actionIcon="Delete01Icon"
+          primaryAction={{
+            label: "Delete Backups",
+            variant: "danger",
+            onClick: () => onDeleteBackup(effectiveSelectedBackupIds),
+          }}
+          secondaryActions={[
+            {
+              label: "Copy Filenames",
+              copiedLabel: "Copied Filenames",
+              onClick: () => {
+                const selected = backups.filter((b) => effectiveSelectedBackupIds.includes(b.id))
+                const filenames = selected.map((b) => b.filename).filter(Boolean)
+                if (filenames.length === 0) return
+                navigator.clipboard?.writeText(filenames.join("\n"))
+                showToast?.(`Copied ${filenames.length} archive filename${filenames.length === 1 ? "" : "s"} to clipboard`)
+              },
+            },
+          ]}
         />
       </div>
     </TooltipProvider>

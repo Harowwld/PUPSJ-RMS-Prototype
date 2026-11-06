@@ -243,7 +243,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   return (
     <div data-light-only className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         <PageHeader
           icon="Analytics01Icon"
           title="Request Analysis"
@@ -509,7 +509,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         onPrint={() => onLogAction?.({ action: "Print Report", details: "opened print dialog for " + previewReportType + " report", entityType: "Report" })}
         onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
         headerActions={
-          <div role="group" aria-label="Report type" className="inline-flex max-w-full flex-wrap items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
+          <div role="group" aria-label="Report type" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
             {[
               ["sla", "On-Time Processing"],
               ["csm", "Client Ratings (CSM)"],
@@ -524,7 +524,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   disabled={isGeneratingPdf}
                   aria-pressed={isSelected}
                   className={cn(
-                    "min-h-11 sm:min-h-7.5 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.98]",
+                    "min-h-11 sm:min-h-7.5 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.98] inline-flex items-center justify-center text-center",
                     isSelected
                       ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                       : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"

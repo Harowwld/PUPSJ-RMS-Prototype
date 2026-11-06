@@ -174,7 +174,7 @@ async function generateProposalPdf({ title, orgName, eventDate, venue, desc, stu
   page.drawText("DR. SANDRA GOMEZ", { x: 440, y: 240, size: 8, font: fontBold, color: maroon });
 
   // Footer
-  page.drawText("Polytechnic University of the Philippines San Juan | Records Management System - OSAS Archival Copy", { x: 50, y: 155, size: 7, font: fontOblique, color: lightGray });
+  page.drawText("Polytechnic University of the Philippines San Juan | Records Keeping System - OSAS Archival Copy", { x: 50, y: 155, size: 7, font: fontOblique, color: lightGray });
 
   return Buffer.from(await doc.save());
 }

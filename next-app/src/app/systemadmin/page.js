@@ -80,6 +80,26 @@ const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/Secu
 
 const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing", "activity", "settings"]
 
+const SUPERADMIN_VIEW_ALIASES = {
+  campus_operations: "health",
+  campus_health: "health",
+  operations: "health",
+  departments: "offices",
+  stations: "offices",
+}
+
+function resolveSuperAdminView(rawView, defaultPref = null) {
+  const normalized = SUPERADMIN_VIEW_ALIASES[rawView] || rawView
+  if (normalized && VALID_VIEWS.includes(normalized)) {
+    return normalized
+  }
+  const prefNormalized = SUPERADMIN_VIEW_ALIASES[defaultPref] || defaultPref
+  if (prefNormalized && VALID_VIEWS.includes(prefNormalized)) {
+    return prefNormalized
+  }
+  return "offices"
+}
+
 function SystemAdminLoadingSkeleton() {
   return (
     <DashboardShellSkeleton items={SYSTEMADMIN_NAV_ITEMS}>
@@ -97,9 +117,10 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   const [loading, setLoading] = useState(!initialAuth)
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser)
 
-  const initialView = VALID_VIEWS.includes(searchParams?.get("view"))
-    ? searchParams.get("view")
-    : "offices"
+  const initialView = resolveSuperAdminView(
+    searchParams?.get("view"),
+    initialAuth?.preferences?.default_home_view
+  )
 
   const [view, setView] = useState(initialView)
   const [selectedOfficeId, setSelectedOfficeId] = useState(() => searchParams?.get("office") || "")
@@ -226,14 +247,14 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
   useEffect(() => {
     const rawTab = searchParams?.get("view")
-    const tab = VALID_VIEWS.includes(rawTab) ? rawTab : "offices"
+    const tab = resolveSuperAdminView(rawTab, authUser?.preferences?.default_home_view)
     if (currentViewRef.current === "branding" && brandingDirtyRef.current && tab !== "branding") {
       setPendingBrandingView({ view: tab })
       router.replace(`${window.location.pathname}?view=branding`, { scroll: false })
       return
     }
     setView(tab)
-  }, [searchParams, router])
+  }, [searchParams, router, authUser?.preferences?.default_home_view])
 
   useEffect(() => {
     if (initialAuth) {
@@ -253,11 +274,16 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
         }
         setAuthUser(session.data)
         setLoading(false)
+        const prefDefault = session.data?.preferences?.default_home_view
+        if (!searchParams?.get("view") && prefDefault) {
+          const resolved = resolveSuperAdminView(null, prefDefault)
+          if (resolved) setView(resolved)
+        }
       } catch (err) {
         console.error("[SuperAdminPage] Profile fetch failed:", err)
       }
     })()
-  }, [initialAuth, router])
+  }, [initialAuth, router, searchParams])
 
   const switchView = useCallback((nextView, officeId) => {
     if (view === "branding" && brandingDirty && nextView !== "branding") {
@@ -308,7 +334,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
 
 
       <div
-        className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+        className="flex-1 h-full w-full flex min-h-0 overflow-hidden flex-col md:flex-row"
         style={zoomStyle}
       >
         <Sidebar
@@ -323,9 +349,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
           authUser={authUser}
         />
 
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xl flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-slate-50/50 dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
           <div
-            className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]"
+            className="p-2 md:pl-1 flex flex-[1_0_auto] min-h-full flex-col w-full [&>*]:flex-[1_0_auto]"
           >
             <ContentSwap id={view} className="flex flex-[1_0_auto] flex-col w-full [&>*]:flex-[1_0_auto]">
               {view === "offices" && <OfficeManagementTab showToast={showToast} onSwitchTab={switchView} />}

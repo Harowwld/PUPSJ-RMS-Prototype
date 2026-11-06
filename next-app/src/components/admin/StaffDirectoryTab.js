@@ -6,6 +6,7 @@ import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -541,6 +542,22 @@ export default function StaffDirectoryTab({
     }
   }, [filteredStaff, selectedIds, onSelectionChange])
 
+  const handleCopyEmails = useCallback(() => {
+    const emails = Array.from(selectedIds)
+      .map((id) => (Array.isArray(staff) ? staff : []).find((s) => s.id === id)?.email)
+      .filter(Boolean)
+    if (emails.length === 0) return
+    navigator.clipboard?.writeText(emails.join("; "))
+    toast.success(`Copied ${emails.length} email${emails.length > 1 ? "s" : ""} to clipboard`)
+  }, [selectedIds, staff])
+
+  const handleCopyIds = useCallback(() => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) return
+    navigator.clipboard?.writeText(ids.join(", "))
+    toast.success(`Copied ${ids.length} Employee ID${ids.length > 1 ? "s" : ""} to clipboard`)
+  }, [selectedIds])
+
   const toggleSelectAll = (checked) => {
     if (checked) {
       onSelectionChange(
@@ -628,7 +645,7 @@ export default function StaffDirectoryTab({
         tabIndex={0}
       >
       {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="UserSearch01Icon"
           title={
@@ -663,14 +680,14 @@ export default function StaffDirectoryTab({
         />
 
         {/* Navigation Toolbar */}
-        <DataViewToolbar label="Staff search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Staff search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
           {/* Left: Active vs Archived Segmented Tabs */}
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
+          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
             <button
               type="button"
               onClick={() => handleTabChange("active")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                 activeTab === "active"
                   ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                   : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -692,7 +709,7 @@ export default function StaffDirectoryTab({
               type="button"
               onClick={() => handleTabChange("archived")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
+                "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
                 activeTab === "archived"
                   ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
                   : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
@@ -1010,16 +1027,31 @@ export default function StaffDirectoryTab({
 
       <FloatingActionBar
         selectedCount={selectedIds.size}
+        entityName="personnel"
         onCancel={() => onSelectionChange(new Set())}
-        onAction={() => {
-          if (activeTab === "active") {
-            onBulkArchive(Array.from(selectedIds))
-          } else {
-            onBulkRestore(Array.from(selectedIds))
-          }
+        primaryAction={{
+          label: activeTab === "active" ? "Archive Staff" : "Restore Staff",
+          variant: activeTab === "active" ? "danger" : "success",
+          onClick: () => {
+            if (activeTab === "active") {
+              onBulkArchive(Array.from(selectedIds))
+            } else {
+              onBulkRestore(Array.from(selectedIds))
+            }
+          },
         }}
-        actionLabel={activeTab === "active" ? "Archive Staff" : "Restore Staff"}
-        actionVariant={activeTab === "active" ? "danger" : "success"}
+        secondaryActions={[
+          {
+            label: "Copy Emails",
+            copiedLabel: "Copied Emails",
+            onClick: handleCopyEmails,
+          },
+          {
+            label: "Copy Employee IDs",
+            copiedLabel: "Copied IDs",
+            onClick: handleCopyIds,
+          },
+        ]}
       />
     </div>
     </TooltipProvider>

@@ -1028,7 +1028,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     <TooltipProvider delayDuration={200}>
       <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up">
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Active Filters, Content & Footer */}
-        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           {/* 1. Page Header */}
           <PageHeader
             icon="Building01Icon"
@@ -1483,7 +1483,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </div>
 
           {/* 3. Navigation Toolbar: Category Navigation Slider & Search/Status Controls */}
-          <DataViewToolbar label="Organization search, views, and filters" className="border-t border-border dark:border-border p-5 gap-3 bg-gray-50/40 dark:bg-zinc-900/30">
+          <DataViewToolbar label="Organization search, views, and filters" className="border-t border-border dark:border-border p-5 gap-3 bg-white dark:bg-card">
             {/* Left: Category Navigation Slider */}
             <div className="relative min-w-[220px] flex-1 max-w-full overflow-hidden flex items-center">
               {/* Left Gradient Mask & Chevron */}

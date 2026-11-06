@@ -462,7 +462,7 @@ export default function StudentComplianceTab({ authUser }) {
         </div>
 
         {/* C. Toolbar & Section Header */}
-        <DataViewToolbar label="Compliance search, views, and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <DataViewToolbar label="Compliance search, views, and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
           {/* Left: Table Header & Total Count */}
           <div className="flex items-center gap-3 shrink-0">
             <div>

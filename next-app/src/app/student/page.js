@@ -1246,7 +1246,7 @@ function StudentDashboard() {
           <div className="liquid-blob liquid-blob-3" />
         </div>
         <div
-          className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+          className="flex-1 h-full w-full flex min-h-0 overflow-hidden flex-col md:flex-row"
           style={zoomStyle}
         >
         <Sidebar
@@ -1273,9 +1273,9 @@ function StudentDashboard() {
             />
           }
         />
-          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
+          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col">
             <div
-              className="p-2 md:pl-1 flex flex-[1_0_auto] flex-col w-full"
+              className="p-2 md:pl-1 flex flex-[1_0_auto] min-h-full flex-col w-full"
             >
               <div className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
                 <ContentSwap id={view} className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
@@ -1671,7 +1671,7 @@ function StudentDashboard() {
                     )}
 
                     {/* 3. Toolbar & Request History Header */}
-                    <DataViewToolbar label="Request history search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+                    <DataViewToolbar label="Request history search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
                       {/* Left: Heading and count */}
                       <div className="flex items-center gap-3 shrink-0">
                         <div>

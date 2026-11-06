@@ -78,7 +78,7 @@ export default function LandingFaqSkeleton() {
                 <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
               </div>
 
-              <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-gray-50/40 px-4 py-3 dark:bg-zinc-900/30">
+              <DataViewToolbar label="FAQ search and category filter" className="w-full gap-2 border-t border-border dark:border-border bg-white px-4 py-3 dark:bg-card">
                 <div className="relative w-72 sm:w-80 shrink-0"><Skeleton className="h-9 w-full rounded-xl dark:bg-muted" /><Skeleton className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded dark:bg-muted" /></div>
                 <div className="ml-auto flex shrink-0 items-center gap-2">
                   <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
