@@ -12,6 +12,7 @@ import { canAccessResource } from "../../../lib/resourceAuthorization";
 import { dbGet } from "../../../lib/postgresCompat";
 import { getStorageLayout } from "../../../lib/storageLayoutRepo";
 import { canonicalizeCabinetId, areCabinetsEqual } from "../../../lib/storageLayoutUtils";
+import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL } from "../../../lib/uploadLimits";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,13 @@ export async function POST(req) {
     return NextResponse.json(
       { ok: false, error: "Only PDF files are allowed" },
       { status: 400 }
+    );
+  }
+
+  if (file.size > DOCUMENT_MAX_SIZE_BYTES) {
+    return NextResponse.json(
+      { ok: false, error: `Document file size exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit.` },
+      { status: 413 }
     );
   }
 

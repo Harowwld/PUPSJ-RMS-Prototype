@@ -14,6 +14,7 @@ import { requireAuth, createAuthErrorResponse, getPrincipalOfficeId } from "../.
 import { isSystemAdminRole, isStudentRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "../../../../lib/resourceAuthorization";
 import { FILE_SECURITY_HEADERS } from "../../../../lib/fileSecurityHeaders";
+import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL } from "../../../../lib/uploadLimits";
 
 export const runtime = "nodejs";
 
@@ -213,6 +214,13 @@ export async function PATCH(req, ctx) {
 
   if (replacementFile && replacementFile.type !== "application/pdf") {
     return NextResponse.json({ ok: false, error: "Only PDF files are allowed" }, { status: 400 });
+  }
+
+  if (replacementFile && (replacementFile.size > DOCUMENT_MAX_SIZE_BYTES || (replacementBuffer && replacementBuffer.length > DOCUMENT_MAX_SIZE_BYTES))) {
+    return NextResponse.json(
+      { ok: false, error: `Replacement document file size exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit.` },
+      { status: 413 }
+    );
   }
 
   if (approvalStatus !== undefined) {

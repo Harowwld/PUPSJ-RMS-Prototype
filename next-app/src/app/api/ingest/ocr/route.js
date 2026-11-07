@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { performNativeOcrWithRetry } from "../../../../lib/appleVisionOcr";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -28,6 +29,13 @@ export async function POST(req) {
       return NextResponse.json(
         { ok: false, error: "Missing or invalid file" },
         { status: 400 }
+      );
+    }
+
+    if (file.size > DOCUMENT_MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { ok: false, error: `File exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit for OCR processing.` },
+        { status: 413 }
       );
     }
 
