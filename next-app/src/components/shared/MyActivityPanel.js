@@ -1,16 +1,15 @@
 "use client";
-import useViewPreference from "@/hooks/useViewPreference";
 
-
-import useUrlPage from "@/hooks/useUrlPage";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import useViewPreference from "@/hooks/useViewPreference";
+import useUrlPage from "@/hooks/useUrlPage";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import { FilterPopover } from "@/components/systemadmin/OfficeTableControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import {
@@ -25,10 +24,10 @@ import {
 } from "@/lib/timeFormat";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
+import NarrativeText from "@/components/shared/NarrativeText";
 import { cn, formatLogDetails } from "@/lib/utils";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import TablePagination from "@/components/shared/TablePagination";
-import LogStatCards from "@/components/admin/audit-logs/StatCards";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
 import {
   Empty,
@@ -38,8 +37,31 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Clock01Icon as EmptyClock01Icon, Search01Icon as EmptySearch01Icon , ViewIcon, Search01Icon} from "hugeicons-react";
+import {
+  Alert01Icon,
+  Alert02Icon,
+  AlertCircleIcon as EmptyAlertCircleIcon,
+  Building01Icon,
+  Cancel01Icon,
+  Clock01Icon as EmptyClock01Icon,
+  DatabaseIcon,
+  Download01Icon,
+  FileUploadIcon,
+  FilterIcon,
+  InformationCircleIcon,
+  Key01Icon,
+  Login01Icon,
+  Logout01Icon,
+  Search01Icon as EmptySearch01Icon,
+  Settings01Icon,
+  ShieldKeyIcon,
+  StudentIcon,
+  Tick01Icon,
+  UserCircleIcon,
+  ViewIcon,
+} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+
 function parseDateLocal(str) {
   if (!str) return undefined;
   const [y, m, d] = str.split("-").map(Number);
@@ -47,69 +69,209 @@ function parseDateLocal(str) {
   return new Date(y, m - 1, d);
 }
 
-function getSeverityVisual(sev) {
-  const s = String(sev || "").toUpperCase();
-  if (s === "CRITICAL") {
+/**
+ * Action-aware semantic event visuals following Apple HIG and RMS standards.
+ * Provides distinct Hugeicons and soft pastel badge backgrounds based on action and severity.
+ */
+function getActivityVisual(log) {
+  const sev = String(log?.severity || "").toUpperCase();
+  const act = String(log?.action || "").toLowerCase();
+
+  // 1. Critical / Security Severity Overrides
+  if (sev === "CRITICAL" || sev === "SECURITY" || act.includes("unauthorized") || act.includes("security")) {
     return {
       label: "Critical",
-      icon: "Alert01Icon",
-      avatarClass: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60",
-      chipClass: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+      Icon: Alert01Icon,
+      avatarClass:
+        "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60",
+      chipClass:
+        "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40",
     };
   }
-  if (s === "WARNING") {
+
+  // 2. Warning Severity Overrides
+  if (sev === "WARNING" || act.includes("invalid") || act.includes("failed") || act.includes("decline")) {
     return {
-      label: "Warning",
-      icon: "Alert02Icon",
-      avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
-      chipClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+      label: sev === "WARNING" ? "Warning" : "Declined",
+      Icon: act.includes("decline") ? Cancel01Icon : Alert02Icon,
+      avatarClass: act.includes("decline")
+        ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60"
+        : "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
+      chipClass: act.includes("decline")
+        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40"
+        : "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
     };
   }
+
+  // 3. Action-Specific Visuals
+  if (act.includes("login") || act.includes("sign in") || act.includes("authenticated")) {
+    return {
+      label: "Login",
+      Icon: Login01Icon,
+      avatarClass:
+        "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60",
+      chipClass:
+        "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40",
+    };
+  }
+
+  if (act.includes("logout") || act.includes("sign out")) {
+    return {
+      label: "Logout",
+      Icon: Logout01Icon,
+      avatarClass:
+        "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+      chipClass:
+        "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+    };
+  }
+
+  if (act.includes("password") || act.includes("rotate") || act.includes("credential")) {
+    return {
+      label: "Security",
+      Icon: Key01Icon,
+      avatarClass:
+        "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60",
+      chipClass:
+        "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40",
+    };
+  }
+
+  if (act.includes("avatar") || act.includes("profile")) {
+    return {
+      label: "Profile",
+      Icon: UserCircleIcon,
+      avatarClass:
+        "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60",
+      chipClass:
+        "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/40",
+    };
+  }
+
+  if (act.includes("student")) {
+    return {
+      label: "Records",
+      Icon: StudentIcon,
+      avatarClass:
+        "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60",
+      chipClass:
+        "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/40",
+    };
+  }
+
+  if (act.includes("organization") || act.includes("org")) {
+    return {
+      label: "Organization",
+      Icon: Building01Icon,
+      avatarClass:
+        "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60",
+      chipClass:
+        "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40",
+    };
+  }
+
+  if (act.includes("upload") || act.includes("document") || act.includes("file")) {
+    return {
+      label: "Document",
+      Icon: FileUploadIcon,
+      avatarClass:
+        "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
+      chipClass:
+        "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
+    };
+  }
+
+  if (act.includes("approve")) {
+    return {
+      label: "Approved",
+      Icon: Tick01Icon,
+      avatarClass:
+        "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60",
+      chipClass:
+        "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40",
+    };
+  }
+
+  if (act.includes("backup")) {
+    return {
+      label: "Backup",
+      Icon: DatabaseIcon,
+      avatarClass:
+        "bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/60",
+      chipClass:
+        "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-900/40",
+    };
+  }
+
+  if (act.includes("export") || act.includes("download")) {
+    return {
+      label: "Export",
+      Icon: Download01Icon,
+      avatarClass:
+        "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60",
+      chipClass:
+        "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/40",
+    };
+  }
+
+  if (act.includes("setting") || act.includes("config")) {
+    return {
+      label: "System",
+      Icon: Settings01Icon,
+      avatarClass:
+        "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+      chipClass:
+        "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+    };
+  }
+
+  // 4. Default Informational Event
   return {
     label: "Info",
-    icon: "CovidInfoIcon",
-    avatarClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60",
-    chipClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+    Icon: InformationCircleIcon,
+    avatarClass:
+      "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60",
+    chipClass:
+      "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/40",
   };
 }
 
-export default function MyActivityPanel({ embedded = false }) {
+/**
+ * Formats audit narrative descriptions, rendering Apple-style tokens for mentions, IDs, and entities.
+ */
+function renderFormattedDetails(details, onMentionClick) {
+  return <NarrativeText text={details} mode="full" onMentionClick={onMentionClick} />;
+}
+
+export default function MyActivityPanel() {
   const [search, setSearch] = useState("");
   const [localSearch, setLocalSearch] = useViewPreference("activity", "localSearch", "");
-  const [severityFilter, setSeverityFilter] = useViewPreference("activity", "severityFilter", "All");
+  const [filterRules, setFilterRules] = useViewPreference("activity", "filterRules", []);
   const [startDate, setStartDate] = useViewPreference("activity", "startDate", "");
   const [endDate, setEndDate] = useViewPreference("activity", "endDate", "");
   const [page, setPage] = useUrlPage();
-  const [perPage, setPerPage] = useViewPreference("activity", "perPage", 10);
+  const [perPage, setPerPage] = useViewPreference("activity", "perPage", 50);
 
-  const selectedSeverities = useMemo(() => {
-    if (!severityFilter || severityFilter === "All") return [];
-    return severityFilter.split(",").map((s) => s.trim()).filter(Boolean);
-  }, [severityFilter]);
-
-  const filterCriteriaGroups = useMemo(() => [
-    {
-      id: "severity",
-      label: "Severity",
-      options: [
-        { id: "INFO", label: "Information", dotColor: "bg-blue-500" },
-        { id: "WARNING", label: "Warnings", dotColor: "bg-amber-500" },
-        { id: "CRITICAL", label: "Critical", dotColor: "bg-rose-500" },
-      ],
-      selected: selectedSeverities,
-      onChange: (vals) => {
-        setSeverityFilter(vals.length === 0 ? "All" : vals.join(","));
-        setPage(1);
+  const activityFilterFields = useMemo(
+    () => [
+      {
+        key: "severity",
+        label: "Severity",
+        icon: FilterIcon,
+        options: [
+          { value: "INFO", label: "Information" },
+          { value: "WARNING", label: "Warning" },
+          { value: "CRITICAL", label: "Critical" },
+        ],
       },
-    },
-  ], [selectedSeverities, setPage, setSeverityFilter]);
+    ],
+    []
+  );
 
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
-
   const [selectedLog, setSelectedLog] = useState(null);
 
   const refresh = useCallback(async () => {
@@ -117,12 +279,20 @@ export default function MyActivityPanel({ embedded = false }) {
     setError("");
     try {
       const offset = (page - 1) * perPage;
-      const sevQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : "";
+      const includeSeverities = filterRules
+        .filter((r) => r.fieldKey === "severity" && r.operator !== "is_not" && r.value)
+        .flatMap((r) => (Array.isArray(r.value) ? r.value : [String(r.value)]));
+      const excludeSeverities = filterRules
+        .filter((r) => r.fieldKey === "severity" && r.operator === "is_not" && r.value)
+        .flatMap((r) => (Array.isArray(r.value) ? r.value : [String(r.value)]));
+
+      const sevQuery = includeSeverities.length > 0 ? `&severity=${encodeURIComponent(includeSeverities.join(","))}` : "";
+      const excludeSevQuery = excludeSeverities.length > 0 ? `&excludeSeverity=${encodeURIComponent(excludeSeverities.join(","))}` : "";
       const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : "";
       const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : "";
 
       const res = await fetch(
-        `/api/audit-logs?mine=1&limit=${perPage}&offset=${offset}&search=${encodeURIComponent(search)}${sevQuery}${startQuery}${endQuery}&sortBy=created_at&sortOrder=DESC`,
+        `/api/audit-logs?mine=1&limit=${perPage}&offset=${offset}&search=${encodeURIComponent(search)}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=created_at&sortOrder=DESC`,
         { cache: "no-store" }
       );
       const json = await res.json().catch(() => null);
@@ -136,21 +306,11 @@ export default function MyActivityPanel({ embedded = false }) {
     } finally {
       setLoading(false);
     }
-  }, [page, perPage, search, severityFilter, startDate, endDate]);
-
-  const refreshStats = useCallback(async () => {
-    try {
-      const res = await fetch("/api/audit-logs/stats?mine=1");
-      const json = await res.json();
-      if (res.ok && json?.ok) {
-        setStats(json.data);
-      }
-    } catch { /* ignore */ }
-  }, []);
+  }, [page, perPage, search, filterRules, startDate, endDate]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(), refreshStats()]);
-  }, [refresh, refreshStats]);
+    await refresh();
+  }, [refresh]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -165,20 +325,19 @@ export default function MyActivityPanel({ embedded = false }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
-    refreshStats();
-  }, [refresh, refreshStats]);
+  }, [refresh]);
 
   const handleClearFilters = () => {
     setLocalSearch("");
     setSearch("");
-    setSeverityFilter("All");
+    setFilterRules([]);
     setStartDate("");
     setEndDate("");
     setPage(1);
   };
 
   const hasActiveFilters = Boolean(
-    localSearch !== "" || severityFilter !== "All" || startDate !== "" || endDate !== ""
+    localSearch !== "" || filterRules.length > 0 || startDate !== "" || endDate !== ""
   );
 
   const groupedRows = useMemo(() => {
@@ -234,88 +393,63 @@ export default function MyActivityPanel({ embedded = false }) {
     toast.success("Copied to Clipboard", { description: `${label} has been successfully copied.` });
   };
 
-
   const totalPages = Math.max(1, Math.ceil(total / perPage) || 1);
   const displayPage = Math.min(page, totalPages);
+
   return (
     <TooltipProvider delayDuration={200}>
-      <div
-        className={cn(
-          "animate-in fade-in duration-normal",
-          !embedded &&
-            "flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
-        )}
-      >
+      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta animate-fade-up">
         {/* 1. Page Header */}
-        {embedded ? (
-          <div className="px-6 py-4 flex items-start flex-wrap justify-between gap-3">
-            <div>
-              <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                My Activity
-              </h3>
-              <p className="mt-1 text-[13px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                A personal audit trail of every action your account takes on the system.
-              </p>
+        <PageHeader
+          icon="Time01Icon"
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>My Activity</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {total.toLocaleString()} records
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <RefreshButton onRefresh={handleRefresh} isLoading={loading} title="Refresh Activity" />
-            </div>
-          </div>
-        ) : (
-          <PageHeader
-            icon="Time01Icon"
-            title="My Activity"
-            description="A personal audit trail of every action your account takes on the system."
-            showBorder={false}
-            className="p-6"
-            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-            actions={
-              <RefreshButton onRefresh={handleRefresh} isLoading={loading} title="Refresh Activity" />
-            }
-          />
-        )}
+          }
+          description="A personal audit trail of every action your account takes on the system."
+          showBorder={false}
+          className="p-6"
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          actions={
+            <RefreshButton onRefresh={handleRefresh} isLoading={loading} title="Refresh Activity" className="h-9 w-9" />
+          }
+        />
 
-        {/* 2. KPI Stat Cards */}
-        <div className="px-6 py-5 border-t border-border dark:border-border">
-          <LogStatCards
-            isLoading={loading && !stats}
-            logStats={stats}
-            sublabelOverrides={{
-              total: "Cumulative personal logs",
-              today: "Events recorded today",
-              auth: "Logins & access events",
-            }}
-          />
-        </div>
-
-        {/* 3. Search & Filter Toolbar */}
+        {/* 2. Search & Filter Toolbar */}
         <DataViewToolbar label="Personal activity search, severity filter, and date range" className="gap-2 border-t border-border dark:border-border bg-white px-5 py-3 dark:bg-card">
-          <DashboardSearch
-            value={localSearch}
-            onChange={setLocalSearch}
-            onClear={() => {
-              setLocalSearch("");
-              setSearch("");
-              setPage(1);
-            }}
-            placeholder="Search action, details, IP..."
-            label="Search personal activity history"
-            count={total}
-            loading={loading && total === 0}
-            className="flex-1 sm:w-64 min-w-[200px] max-w-sm"
-          />
-
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <MultiCriteriaFilter
-              title="Filter Logs"
-              buttonLabel="Filter"
-              groups={filterCriteriaGroups}
-              align="end"
-              onReset={() => {
-                setSeverityFilter("All");
+          {/* Left Group */}
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch
+              value={localSearch}
+              onChange={setLocalSearch}
+              onClear={() => {
+                setLocalSearch("");
+                setSearch("");
                 setPage(1);
               }}
+              placeholder="Search action, details, IP..."
+              label="Search personal activity history"
+              count={total}
+              loading={loading && total === 0}
+              className="w-72 sm:w-80 shrink-0"
+            />
+          </div>
+
+          {/* Right Group: Canonical Filter Control & Date Range */}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <FilterPopover
+              fields={activityFilterFields}
+              filters={filterRules}
+              onFiltersChange={(rules) => {
+                setFilterRules(rules);
+                setPage(1);
+              }}
+              entityLabel="activity"
             />
 
             <DateRangeFilterButton
@@ -336,39 +470,47 @@ export default function MyActivityPanel({ embedded = false }) {
           </div>
         </DataViewToolbar>
 
-        {/* Active Filter Chips */}
-        <ActiveFilterChips
-          groups={filterCriteriaGroups}
-          selected={{ severity: selectedSeverities }}
-          onRemove={(groupId, val) => {
-            const next = selectedSeverities.filter((v) => v !== val);
-            setSeverityFilter(next.length === 0 ? "All" : next.join(","));
-            setPage(1);
-          }}
-          searchQuery={localSearch}
-          onClearSearch={() => {
-            setLocalSearch("");
-            setSearch("");
-            setPage(1);
-          }}
-          extraChips={[
-            ...(startDate || endDate
-              ? [
-                  {
-                    groupLabel: "Date Range",
-                    label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
-                    onClear: () => {
-                      setStartDate("");
-                      setEndDate("");
-                      setPage(1);
+        {/* 3. Active Filter Chips */}
+        {hasActiveFilters && (
+          <ActiveFilterChips
+            chips={filterRules.map((rule) => {
+              const field = activityFilterFields.find((f) => f.key === rule.fieldKey);
+              const valLabel =
+                field?.options?.find((opt) => String(opt.value) === String(rule.value))?.label || rule.value;
+              return {
+                id: rule.id,
+                label: `${field?.label || rule.fieldKey} ${rule.operator === "is_not" ? "is not" : "is"} ${valLabel}`,
+                onRemove: () => {
+                  setFilterRules(filterRules.filter((r) => r.id !== rule.id));
+                  setPage(1);
+                },
+              };
+            })}
+            searchQuery={localSearch}
+            onClearSearch={() => {
+              setLocalSearch("");
+              setSearch("");
+              setPage(1);
+            }}
+            extraChips={[
+              ...(startDate || endDate
+                ? [
+                    {
+                      groupLabel: "Date Range",
+                      label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
+                      onClear: () => {
+                        setStartDate("");
+                        setEndDate("");
+                        setPage(1);
+                      },
                     },
-                  },
-                ]
-              : []),
-          ]}
-          onClearAll={handleClearFilters}
-          className="border-t border-border dark:border-border px-6 py-2.5"
-        />
+                  ]
+                : []),
+            ]}
+            onClearAll={handleClearFilters}
+            className="border-t border-border dark:border-border bg-white dark:bg-card px-5 sm:px-6 py-2.5"
+          />
+        )}
 
         {/* 5. Grouped Activity Feed / Skeleton / States */}
         {loading && !rows.length ? (
@@ -416,7 +558,7 @@ export default function MyActivityPanel({ embedded = false }) {
                     variant="outline"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -427,7 +569,7 @@ export default function MyActivityPanel({ embedded = false }) {
         ) : (
           <div
             className={cn(
-              "flex flex-[1_0_auto] flex-col gap-6 px-6 py-5 border-t border-border dark:border-border transition-all duration-slow",
+              "flex flex-[1_0_auto] flex-col gap-6 px-6 py-5 border-t border-border dark:border-border bg-white dark:bg-card transition-all duration-slow",
               loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}
           >
@@ -437,14 +579,15 @@ export default function MyActivityPanel({ embedded = false }) {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
                     {group.key}
                   </span>
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
                     {group.items.length} {group.items.length === 1 ? "event" : "events"}
                   </span>
                 </div>
 
-                <div className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-xs divide-y divide-border/60 dark:divide-border/60">
+                <div className="rounded-2xl border border-border bg-white dark:bg-card overflow-hidden shadow-2xs divide-y divide-black/[0.04] dark:divide-white/[0.06]">
                   {group.items.map((log) => {
-                    const visuals = getSeverityVisual(log.severity);
+                    const visuals = getActivityVisual(log);
+                    const ActionIcon = visuals.Icon;
                     const actionTitle =
                       log.action === "Rotate Password" ? "Password Rotated" : log.action || "Unknown Event";
 
@@ -457,11 +600,11 @@ export default function MyActivityPanel({ embedded = false }) {
                         <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                           <div
                             className={cn(
-                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base transition-transform group-hover:scale-105",
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base transition-transform group-hover:scale-105 shadow-2xs",
                               visuals.avatarClass
                             )}
                           >
-                            <AppIcon className={cn(" text-base", visuals.icon)} />
+                            <ActionIcon size={18} aria-hidden="true" />
                           </div>
 
                           <div className="flex flex-col min-w-0 flex-1">
@@ -474,7 +617,7 @@ export default function MyActivityPanel({ embedded = false }) {
                               </h4>
                               <span
                                 className={cn(
-                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                  "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border select-none shrink-0",
                                   visuals.chipClass
                                 )}
                               >
@@ -483,13 +626,13 @@ export default function MyActivityPanel({ embedded = false }) {
                             </div>
 
                             <p
-                              className="text-xs text-muted-foreground mt-0.5 line-clamp-1 break-words font-normal"
+                              className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed break-words font-normal"
                               title={formatLogDetails(log.details) || "No known description"}
                             >
-                              {formatLogDetails(log.details) || "No known description"}
+                              {renderFormattedDetails(log.details, handleSearchSimilar)}
                             </p>
 
-                            <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400 dark:text-zinc-500">
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400 dark:text-zinc-500 tabular-nums">
                               <span>{formatNotificationTimeAgo(log.created_at || log.time)}</span>
                               {log.ip && (
                                 <>
@@ -529,7 +672,18 @@ export default function MyActivityPanel({ embedded = false }) {
         )}
 
         {/* 6. Pagination Footer */}
-        {!error && <TablePagination label="My activity pages" page={displayPage} pageSize={perPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setPerPage} loading={loading} />}
+        {!error && (
+          <TablePagination
+            label="My activity pages"
+            page={displayPage}
+            pageSize={perPage}
+            totalCount={total}
+            displayedCount={rows.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPerPage}
+            loading={loading}
+          />
+        )}
 
         {/* Log Detail Sheet */}
         <LogDetailSheet
@@ -545,7 +699,7 @@ export default function MyActivityPanel({ embedded = false }) {
           totalCount={rows.length}
           hideActor={true}
         />
-      </div>
+      </Card>
     </TooltipProvider>
   );
 }
