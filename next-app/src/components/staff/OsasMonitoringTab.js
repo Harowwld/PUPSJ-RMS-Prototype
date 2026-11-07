@@ -6,6 +6,7 @@ import useUrlPage from "@/hooks/useUrlPage";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -18,12 +19,19 @@ import OsasProposalReviewSheet from "@/components/staff/osas/OsasProposalReviewS
 import OsasPostEventReviewSheet from "@/components/staff/osas/OsasPostEventReviewSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import PDFPreview from "@/components/shared/PDFPreview";
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import OsasRecordList from "@/components/staff/osas/OsasRecordList";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import {
   Tooltip,
@@ -132,24 +140,21 @@ export const POST_EVENT_KANBAN_COLUMNS = [
 export function getProposalStatusBadgeClass(status) {
   const s = String(status || "").toLowerCase().trim();
   if (s === "approved" || s === "completed" || s === "ready") {
-    return "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    return BADGE_PALETTES.emerald;
   }
   if (s === "under review" || s === "inprogress" || s === "processing") {
-    return "bg-sky-50/70 text-slate-800 border-sky-200/60 dark:bg-sky-950/20 dark:text-zinc-200 dark:border-sky-900/30";
+    return BADGE_PALETTES.blue;
   }
   if (s === "needs revision" || s === "revision") {
-    return "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    return BADGE_PALETTES.orange;
   }
   if (s === "declined" || s === "cancelled" || s === "rejected") {
-    return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    return BADGE_PALETTES.rose;
   }
   if (s === "submitted" || s === "pending") {
-    return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
+    return BADGE_PALETTES.amber;
   }
-  if (s === "archived") {
-    return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
-  }
-  return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
+  return BADGE_PALETTES.gray;
 }
 
 export function getProposalStatusDotClass(status) {
@@ -164,19 +169,19 @@ export function getProposalStatusDotClass(status) {
 
 export function getPostEventStatusBadgeClass(status) {
   const s = String(status || "").toLowerCase().trim();
-  if (s === "cleared") {
-    return "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+  if (s === "cleared" || s === "completed" || s === "approved") {
+    return BADGE_PALETTES.emerald;
   }
   if (s === "under review" || s === "underreview" || s === "processing") {
-    return "bg-sky-50/70 text-slate-800 border-sky-200/60 dark:bg-sky-950/20 dark:text-zinc-200 dark:border-sky-900/30";
+    return BADGE_PALETTES.blue;
   }
   if (s === "needs revision" || s === "revision") {
-    return "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    return BADGE_PALETTES.orange;
   }
   if (s === "declined" || s === "rejected") {
-    return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    return BADGE_PALETTES.rose;
   }
-  return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
+  return BADGE_PALETTES.gray;
 }
 
 export function getPostEventStatusDotClass(status) {
@@ -208,157 +213,6 @@ export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, su
       </div>
       <PDFPreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)} preview={{ url: previewUrl, title: title || "Official submission PDF", subtitle: "Review the complete submitted document." }} />
     </>
-  );
-}
-
-function OsasRecordList({ items, stream, onSelect, onReview }) {
-  const isPostEvent = stream === "post_events";
-  const columns = isPostEvent ? POST_EVENT_KANBAN_COLUMNS : KANBAN_COLUMNS;
-  const [collapsedGroups, setCollapsedGroups] = useState({});
-  const groupedItems = useMemo(() => {
-    const groups = new Map(columns.map((column) => [column.key, { ...column, items: [] }]));
-
-    items.forEach((item) => {
-      const normalizedStatus = isPostEvent
-        ? item.status || "Submitted"
-        : normalizeProposalStatus(item.status);
-      const group = groups.get(normalizedStatus);
-      if (group) {
-        group.items.push(item);
-        return;
-      }
-
-      const unknownGroup = groups.get("Other") || {
-        key: "Other",
-        label: "Other",
-        items: [],
-      };
-      unknownGroup.items.push(item);
-      groups.set("Other", unknownGroup);
-    });
-
-    return [...groups.values()].filter((group) => group.items.length > 0);
-  }, [columns, isPostEvent, items]);
-
-  return (
-    <div className="border-t border-border dark:border-border">
-      {groupedItems.map((group) => {
-        const isExpanded = collapsedGroups[group.key] !== true;
-        const groupId = `osas-${stream}-list-${group.key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-        const groupDotClass = isPostEvent
-          ? getPostEventStatusDotClass(group.key)
-          : getProposalStatusDotClass(group.key);
-
-        return (
-          <section key={group.key} aria-labelledby={`${groupId}-heading`}>
-            <h3 id={`${groupId}-heading`} className="border-b border-border/70 bg-gray-50/80 dark:border-border dark:bg-zinc-900/70">
-              <button
-                type="button"
-                aria-expanded={isExpanded}
-                aria-controls={`${groupId}-items`}
-                onClick={() => setCollapsedGroups((current) => ({ ...current, [group.key]: !isExpanded }))}
-                className="flex min-h-11 w-full items-center gap-2.5 px-5 text-left transition-colors hover:bg-gray-100/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:hover:bg-zinc-800/80 dark:focus-visible:ring-red-400 sm:px-6"
-              >
-                <ArrowDown01Icon
-                  size="1em"
-                  className={cn("shrink-0 text-sm text-gray-500 transition-transform dark:text-zinc-400", !isExpanded && "-rotate-90")}
-                  aria-hidden="true"
-                />
-                <span className={cn("h-2 w-2 shrink-0 rounded-full", groupDotClass)} aria-hidden="true" />
-                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100">{group.label}</span>
-                <span className="text-[11px] font-medium tabular-nums text-gray-500 dark:text-zinc-400">{group.items.length}</span>
-              </button>
-            </h3>
-            {isExpanded && (
-              <div id={`${groupId}-items`} role="list">
-                {group.items.map((item) => {
-        const title = isPostEvent ? item.event_title : item.title;
-        const organization = isPostEvent
-          ? item.organization_name
-          : item.verified_org_name || item.organization_name;
-        const submittedBy = item.student_name || item.submitted_by_name || "Unknown submitter";
-        const submitterId = item.submitted_by_email || item.student_no;
-        const status = item.status || (isPostEvent ? "Submitted" : "");
-        const statusClass = isPostEvent
-          ? getPostEventStatusBadgeClass(status)
-          : getProposalStatusBadgeClass(status);
-        const date = item.created_at
-          ? new Date(item.created_at).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "Date unavailable";
-        const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
-        const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
-
-        return (
-          <div
-            key={item.id}
-            role="listitem"
-            className="flex items-center gap-4 border-b border-border/70 px-5 py-4 last:border-b-0 dark:border-border sm:px-6"
-          >
-            <button
-              type="button"
-              onClick={() => onSelect(item)}
-              className="group min-w-0 flex-1 cursor-pointer text-left"
-              aria-label={`Open ${isPostEvent ? "report" : "proposal"} ${title || `#${item.id}`}`}
-            >
-              <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                <span className="shrink-0 font-sans text-[11px] font-semibold tabular-nums text-gray-400 dark:text-zinc-500">
-                  #{item.id}
-                </span>
-                <span className="truncate text-[13px] font-semibold text-gray-900 transition-colors group-hover:text-pup-maroon dark:text-zinc-100 dark:group-hover:text-red-400">
-                  {title || "Untitled submission"}
-                </span>
-                <span className="truncate text-xs text-gray-600 dark:text-zinc-400">
-                  {item.org_acronym ? `${item.org_acronym} · ` : ""}{organization || "Organization unavailable"}
-                </span>
-              </div>
-              <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-zinc-500">
-                <span className="truncate">{submittedBy}{submitterId ? ` · ${submitterId}` : ""}</span>
-                {isPostEvent ? (
-                  <span className="tabular-nums">
-                    {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
-                  </span>
-                ) : (
-                  <>
-                    {item.officer_position && <span>{item.officer_position}</span>}
-                    {item.has_bylaws != null && <span>CBL {item.has_bylaws ? "active" : "missing"}</span>}
-                    {item.post_event_status && item.status === "Approved" && <span>Post-event: {item.post_event_status}</span>}
-                  </>
-                )}
-              </div>
-            </button>
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", statusClass)}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", isPostEvent ? getPostEventStatusDotClass(status) : getProposalStatusDotClass(status))} />
-                {status}
-              </span>
-              <span className="hidden text-[11px] text-gray-500 dark:text-zinc-500 sm:inline">{date}</span>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => onReview(item)}
-                  aria-label={`Review ${isPostEvent ? "report" : "proposal"} ${item.id}`}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-400"
-                >
-                  <ClipboardIcon size={16} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{isPostEvent ? "Review Clearance" : "Review Proposal"}</TooltipContent>
-            </Tooltip>
-          </div>
-        );
-                })}
-              </div>
-            )}
-          </section>
-        );
-      })}
-    </div>
   );
 }
 
@@ -423,21 +277,56 @@ export default function OsasMonitoringTab({ showToast }) {
   }, []);
 
   const [activeStream, setActiveStream] = useState("proposals"); // "proposals" | "post_events"
-  const [viewMode, setViewMode] = useState("table"); // "list" | "table" | "kanban"
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("pup_osas_view_mode_v2");
+        if (saved === "list" || saved === "table" || saved === "kanban") return saved;
+        const legacySaved = localStorage.getItem("pup_osas_view_mode");
+        if (legacySaved === "list" || legacySaved === "kanban") {
+          const migratedMode = legacySaved === "list" ? "table" : "kanban";
+          localStorage.setItem("pup_osas_view_mode_v2", migratedMode);
+          return migratedMode;
+        }
+      } catch {}
+    }
+    return "table";
+  });
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
+  const [filterRules, setFilterRules] = useState([]);
   const [statusFilters, setStatusFilters] = useState([]);
   const [orgFilters, setOrgFilters] = useState([]);
+  const [groupBy, setGroupBy] = useState("status");
+  const [visibleColumns, setVisibleColumns] = useState([
+    "id",
+    "event",
+    "proponent",
+    "attendance",
+    "status",
+    "submitted",
+    "actions",
+  ]);
   const [searchQuery, setSearchQuery] = useState("");
   const [tableSortBy, setTableSortBy] = useState("");
   const [tableSortOrder, setTableSortOrder] = useState("ASC");
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
+
+  const handleStreamChange = useCallback((stream) => {
+    setActiveStream(stream);
+    setFilterRules([]);
+    setStatusFilters([]);
+    setOrgFilters([]);
+    setSearchQuery("");
+    setPage(1);
+  }, [setPage]);
 
   // Table and Kanban board scroll containers
   const tableContainerRef = useRef(null);
@@ -488,23 +377,6 @@ export default function OsasMonitoringTab({ showToast }) {
   const [dragOverPostEventColumn, setDragOverPostEventColumn] = useState(null);
   const isDraggingPostEventRef = useRef(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-    try {
-      const saved = localStorage.getItem("pup_osas_view_mode_v2");
-      const legacySaved = localStorage.getItem("pup_osas_view_mode");
-      if (saved === "list" || saved === "table" || saved === "kanban") {
-        setViewMode(saved);
-      } else if (legacySaved === "list" || legacySaved === "kanban") {
-        const migratedMode = legacySaved === "list" ? "table" : "kanban";
-        setViewMode(migratedMode);
-        localStorage.setItem("pup_osas_view_mode_v2", migratedMode);
-      }
-    } catch {}
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
     setPage(1);
@@ -513,9 +385,13 @@ export default function OsasMonitoringTab({ showToast }) {
     } catch {}
   };
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isManual = false) => {
     try {
-      setLoading(true);
+      if (isManual) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       const [proposalsRes, postEventsRes] = await Promise.allSettled([
         fetch("/api/osas/event-proposals", { cache: "no-store" }),
         fetch("/api/osas/post-event-reports", { cache: "no-store" }),
@@ -539,6 +415,7 @@ export default function OsasMonitoringTab({ showToast }) {
       );
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   }, [showToast]);
 
@@ -964,58 +841,138 @@ export default function OsasMonitoringTab({ showToast }) {
     return filterTabs;
   }, [activeStream, postEventFilterTabs, filterTabs]);
 
-  const filterGroups = useMemo(() => {
-    const filterRecords = activeStream === "post_events" ? postEventReports : rows;
-    const statusColors = {
-      Submitted: "bg-blue-500",
-      "Under Review": "bg-amber-500",
-      "Needs Revision": "bg-purple-500",
-      Approved: "bg-emerald-500",
-      Cleared: "bg-emerald-500",
-      Declined: "bg-rose-500",
-    };
-    const organizations = Array.from(
-      new Set(filterRecords.map((record) => record.organization_name).filter(Boolean))
-    ).sort();
+  const proposalTableColumns = useMemo(() => [
+    { key: "id", label: "Proposal ID" },
+    { key: "event", label: "Event & Organization" },
+    { key: "proponent", label: "Proponent" },
+    { key: "status", label: "Status" },
+    { key: "submitted", label: "Date Submitted" },
+    { key: "actions", label: "Actions" },
+  ], []);
 
+  const postEventTableColumns = useMemo(() => [
+    { key: "id", label: "Report ID" },
+    { key: "event", label: "Event & Organization" },
+    { key: "proponent", label: "Proponent" },
+    { key: "attendance", label: "Attendance & Spend" },
+    { key: "status", label: "Clearance Status" },
+    { key: "submitted", label: "Date Submitted" },
+    { key: "actions", label: "Actions" },
+  ], []);
+
+  const currentTableColumns = useMemo(() => {
+    return activeStream === "proposals" ? proposalTableColumns : postEventTableColumns;
+  }, [activeStream, proposalTableColumns, postEventTableColumns]);
+
+  const proposalTableColumnsConfig = useMemo(() => {
+    const cols = [];
+    if (visibleColumns.includes("id")) cols.push("identifier");
+    if (visibleColumns.includes("event")) cols.push({ kind: "text", maxWidth: 340 });
+    if (visibleColumns.includes("proponent")) cols.push("text");
+    if (visibleColumns.includes("status")) cols.push("status");
+    if (visibleColumns.includes("submitted")) cols.push("date");
+    if (visibleColumns.includes("actions")) cols.push("actions");
+    return cols;
+  }, [visibleColumns]);
+
+  const postEventTableColumnsConfig = useMemo(() => {
+    const cols = [];
+    if (visibleColumns.includes("id")) cols.push("identifier");
+    if (visibleColumns.includes("event")) cols.push({ kind: "text", maxWidth: 340 });
+    if (visibleColumns.includes("proponent")) cols.push("text");
+    if (visibleColumns.includes("attendance")) cols.push("number");
+    if (visibleColumns.includes("status")) cols.push("status");
+    if (visibleColumns.includes("submitted")) cols.push("date");
+    if (visibleColumns.includes("actions")) cols.push("actions");
+    return cols;
+  }, [visibleColumns]);
+
+  const proposalFilterFields = useMemo(() => {
+    const orgs = Array.from(new Set(rows.map((r) => r.verified_org_name || r.organization_name).filter(Boolean))).sort();
     return [
       {
-        id: "status",
+        key: "status",
         label: "Review Status",
-        options: currentFilterTabs
-          .filter((tab) => tab.key !== "All")
-          .map((tab) => ({
-            value: tab.key,
-            label: tab.label,
-            count: tab.count,
-            indicatorColor: statusColors[tab.key],
-          })),
+        options: [
+          { value: "Submitted", label: "Submitted" },
+          { value: "Under Review", label: "Under Review" },
+          { value: "Needs Revision", label: "Needs Revision" },
+          { value: "Approved", label: "Approved" },
+          { value: "Declined", label: "Declined" },
+        ],
       },
       {
-        id: "org",
+        key: "organization",
         label: "Organization",
-        options: organizations.map((org) => ({
-          value: org,
-          label: org,
-          count: filterRecords.filter((record) => record.organization_name === org).length,
-        })),
+        options: orgs.map((org) => ({ value: org, label: org })),
+      },
+      {
+        key: "has_bylaws",
+        label: "Constitution & By-Laws",
+        options: [
+          { value: "Active", label: "CBL Active" },
+          { value: "No CBL", label: "No CBL" },
+        ],
       },
     ];
-  }, [activeStream, currentFilterTabs, rows, postEventReports]);
+  }, [rows]);
 
-  const filterValues = useMemo(() => ({
-    status: statusFilters,
-    org: orgFilters,
-  }), [statusFilters, orgFilters]);
+  const postEventFilterFields = useMemo(() => {
+    const orgs = Array.from(new Set(postEventReports.map((r) => r.organization_name).filter(Boolean))).sort();
+    return [
+      {
+        key: "status",
+        label: "Clearance Status",
+        options: [
+          { value: "Submitted", label: "Submitted" },
+          { value: "Under Review", label: "Under Review" },
+          { value: "Needs Revision", label: "Needs Revision" },
+          { value: "Cleared", label: "Cleared" },
+          { value: "Declined", label: "Declined" },
+        ],
+      },
+      {
+        key: "organization",
+        label: "Organization",
+        options: orgs.map((org) => ({ value: org, label: org })),
+      },
+    ];
+  }, [postEventReports]);
 
-  const handleFilterChange = useCallback((groupId, values) => {
-    if (groupId === "status") setStatusFilters(values);
-    else if (groupId === "org") setOrgFilters(values);
-    setPage(1);
-  }, [setPage]);
+  const currentFilterFields = useMemo(() => {
+    return activeStream === "proposals" ? proposalFilterFields : postEventFilterFields;
+  }, [activeStream, proposalFilterFields, postEventFilterFields]);
+
+  const proposalSortOptions = useMemo(() => [
+    { key: "id", label: "Proposal ID" },
+    { key: "event", label: "Event Title" },
+    { key: "proponent", label: "Proponent" },
+    { key: "status", label: "Review Status" },
+    { key: "submitted", label: "Date Submitted" },
+  ], []);
+
+  const postEventSortOptions = useMemo(() => [
+    { key: "id", label: "Report ID" },
+    { key: "event", label: "Event Title" },
+    { key: "proponent", label: "Proponent" },
+    { key: "attendance", label: "Attendance & Spend" },
+    { key: "status", label: "Clearance Status" },
+    { key: "submitted", label: "Date Submitted" },
+  ], []);
+
+  const currentSortOptions = useMemo(() => {
+    return activeStream === "proposals" ? proposalSortOptions : postEventSortOptions;
+  }, [activeStream, proposalSortOptions, postEventSortOptions]);
+
+  const groupOptions = useMemo(() => [
+    { key: "status", label: "Group by Status" },
+    { key: "organization", label: "Group by Organization" },
+    { key: "none", label: "No Grouping" },
+  ], []);
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery("");
+    setFilterRules([]);
     setStatusFilters([]);
     setOrgFilters([]);
     setPage(1);
@@ -1030,6 +987,19 @@ export default function OsasMonitoringTab({ showToast }) {
         onRemove: () => { setSearchQuery(""); setPage(1); },
       });
     }
+    filterRules.forEach((rule) => {
+      const field = currentFilterFields.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const optionLabel = field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
+      chips.push({
+        id: rule.id,
+        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${optionLabel}`,
+        onRemove: () => {
+          setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
+          setPage(1);
+        },
+      });
+    });
     statusFilters.forEach((st) => {
       chips.push({
         id: `status-${st}`,
@@ -1045,10 +1015,10 @@ export default function OsasMonitoringTab({ showToast }) {
       });
     });
     return chips;
-  }, [searchQuery, statusFilters, orgFilters, setPage]);
+  }, [searchQuery, filterRules, currentFilterFields, statusFilters, orgFilters, setPage]);
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() || statusFilters.length > 0 || orgFilters.length > 0
+    searchQuery.trim() || filterRules.length > 0 || statusFilters.length > 0 || orgFilters.length > 0
   );
 
   const filteredRows = useMemo(() => {
@@ -1062,19 +1032,37 @@ export default function OsasMonitoringTab({ showToast }) {
         );
         if (!matchesStatus) return false;
       }
-      if (orgFilters.length > 0 && !orgFilters.includes(item.organization_name)) return false;
+      if (orgFilters.length > 0 && !orgFilters.includes(item.verified_org_name || item.organization_name)) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchTitle = (item.title || "").toLowerCase().includes(q);
-        const matchOrg = (item.organization_name || "").toLowerCase().includes(q);
+        const matchOrg = (item.organization_name || "").toLowerCase().includes(q) || (item.verified_org_name || "").toLowerCase().includes(q);
         const matchStudent =
           (item.student_name || "").toLowerCase().includes(q) ||
           (item.student_no || "").toLowerCase().includes(q);
         if (!matchTitle && !matchOrg && !matchStudent) return false;
       }
+      if (filterRules.length > 0) {
+        const matchesRules = filterRules.every((rule) => {
+          let actual = "";
+          if (rule.fieldKey === "status") {
+            actual = normalizeProposalStatus(item.status);
+          } else if (rule.fieldKey === "organization") {
+            actual = item.verified_org_name || item.organization_name || "";
+          } else if (rule.fieldKey === "has_bylaws") {
+            actual = item.has_bylaws ? "Active" : "No CBL";
+          } else {
+            actual = item[rule.fieldKey] || "";
+          }
+          const ruleVal = String(rule.value || "").toLowerCase();
+          const actVal = String(actual || "").toLowerCase();
+          return rule.operator === "is_not" ? actVal !== ruleVal : actVal === ruleVal;
+        });
+        if (!matchesRules) return false;
+      }
       return true;
     });
-  }, [rows, statusFilters, orgFilters, searchQuery]);
+  }, [rows, statusFilters, orgFilters, searchQuery, filterRules]);
 
   const filteredPostEvents = useMemo(() => {
     return postEventReports.filter((item) => {
@@ -1089,12 +1077,29 @@ export default function OsasMonitoringTab({ showToast }) {
         const matchOrg = (item.organization_name || "").toLowerCase().includes(q);
         const matchStudent =
           (item.student_name || "").toLowerCase().includes(q) ||
-          (item.student_no || "").toLowerCase().includes(q);
+          (item.student_no || "").toLowerCase().includes(q) ||
+          (item.submitted_by_email || "").toLowerCase().includes(q);
         if (!matchTitle && !matchOrg && !matchStudent) return false;
+      }
+      if (filterRules.length > 0) {
+        const matchesRules = filterRules.every((rule) => {
+          let actual = "";
+          if (rule.fieldKey === "status") {
+            actual = item.status || "Submitted";
+          } else if (rule.fieldKey === "organization") {
+            actual = item.organization_name || "";
+          } else {
+            actual = item[rule.fieldKey] || "";
+          }
+          const ruleVal = String(rule.value || "").toLowerCase();
+          const actVal = String(actual || "").toLowerCase();
+          return rule.operator === "is_not" ? actVal !== ruleVal : actVal === ruleVal;
+        });
+        if (!matchesRules) return false;
       }
       return true;
     });
-  }, [postEventReports, statusFilters, orgFilters, searchQuery]);
+  }, [postEventReports, statusFilters, orgFilters, searchQuery, filterRules]);
 
   const sortedRows = useMemo(
     () => sortTableRecords(filteredRows, "proposals", tableSortBy, tableSortOrder),
@@ -1243,7 +1248,7 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  if (loading) {
+  if (loading && rows.length === 0 && postEventReports.length === 0) {
     return <OsasMonitoringSkeleton />;
   }
 
@@ -1254,7 +1259,14 @@ export default function OsasMonitoringTab({ showToast }) {
         {/* 1. Page Header */}
         <PageHeader
           icon="CalendarCheckIn01Icon"
-          title="OSAS Monitoring"
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>OSAS Monitoring</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {activeFilteredList.length.toLocaleString()} {activeStream === "proposals" ? "proposals" : "reports"}
+              </span>
+            </div>
+          }
           description="Review student organization event proposals and post-event liquidation reports."
           showBorder={false}
           className="p-6"
@@ -1262,420 +1274,404 @@ export default function OsasMonitoringTab({ showToast }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <RefreshButton onRefresh={load} isLoading={loading} title="Refresh OSAS Queue" />
+              <RefreshButton
+                onRefresh={() => load(true)}
+                isLoading={isRefreshing}
+                title="Refresh OSAS Queue"
+                className="h-9 w-9"
+              />
             </div>
           }
         />
 
-        {/* 2. Stream, Search, Filter, and Horizontal Scroll Toolbar */}
-        <DataViewToolbar label="OSAS stream, search, and filters" className="border-t border-border dark:border-border bg-white px-5 py-3 dark:bg-card gap-3">
-          <div className="grid grid-flow-col auto-cols-fr items-center gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-gray-200/60 p-1 scrollbar-none dark:border-border dark:bg-zinc-800/80 xl:w-fit">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStream("proposals");
-                setStatusFilters([]);
-                setOrgFilters([]);
-                setSearchQuery("");
-                setPage(1);
-              }}
-              aria-pressed={activeStream === "proposals"}
-              className={cn(
-                "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                activeStream === "proposals"
-                  ? "bg-pup-maroon text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-              )}
-            >
-              <CalendarCheckIn01Icon size="1em" className="text-sm" />
-              <span>Pre-Event Proposals</span>
-              <span className={cn("min-w-4.5 rounded-full px-1.5 py-0.2 text-center text-[10px] font-bold", activeStream === "proposals" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300")}>
-                {rows.length}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStream("post_events");
-                setStatusFilters([]);
-                setOrgFilters([]);
-                setSearchQuery("");
-                setPage(1);
-              }}
-              aria-pressed={activeStream === "post_events"}
-              className={cn(
-                "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                activeStream === "post_events"
-                  ? "bg-pup-maroon text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-              )}
-            >
-              <ClipboardIcon size="1em" className="text-sm" />
-              <span>Post-Event & Liquidation</span>
-              <span className={cn("min-w-4.5 rounded-full px-1.5 py-0.2 text-center text-[10px] font-bold", activeStream === "post_events" ? "bg-white/20 text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300")}>
-                {postEventReports.length}
-              </span>
-            </button>
-          </div>
+        {/* 2. Connected Segmented Tabs Row (Stream Scope & View Mode Switcher) */}
+        <div
+          role="group"
+          aria-label="OSAS submissions stream and view mode"
+          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4"
+        >
+          {/* Left: Stream Scope Tabs */}
+          <SegmentedControl
+            value={activeStream}
+            onValueChange={handleStreamChange}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              {
+                value: "proposals",
+                label: "Pre-Event Proposals",
+                icon: <CalendarCheckIn01Icon size="1em" className="text-sm" />,
+                badge: rows.length,
+              },
+              {
+                value: "post_events",
+                label: "Post-Event & Liquidation",
+                icon: <ClipboardIcon size="1em" className="text-sm" />,
+                badge: postEventReports.length,
+              },
+            ]}
+          />
 
-          <div className="flex min-w-0 flex-nowrap items-center gap-2">
-            <div className="relative w-full shrink-0 group sm:w-60 md:w-64">
-              <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
-              </div>
-              <Input
-                type="text"
-                placeholder={
-                  activeStream === "proposals"
-                    ? "Search proposals, students, orgs..."
-                    : activeStream === "post_events"
-                    ? "Search event reports, orgs..."
-                    : "Search CBL revisions, orgs..."
-                }
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                {activeFilteredList.length.toLocaleString()}
-              </div>
-            </div>
-
-            {(activeStream === "proposals" || activeStream === "post_events") && (
-              <SegmentedControl
-                value={viewMode}
-                onValueChange={handleViewModeChange}
-                variant="capsule"
-                className="inline-grid grid-flow-col auto-cols-fr"
-                items={[
-                  {
-                    value: "list",
-                    label: "List",
-                    icon: <ViewModeIcon mode="list" className="text-sm" />,
-                  },
-                  {
-                    value: "table",
-                    label: "Table",
-                    icon: <ViewModeIcon mode="table" className="text-sm" />,
-                  },
-                  {
-                    value: "kanban",
-                    label: "Kanban",
-                    icon: <ViewModeIcon mode="kanban" className="text-sm" />,
-                  },
-                ]}
-              />
-            )}
-
-            <MultiCriteriaFilter
-              title={activeStream === "proposals" ? "Filter Proposals" : "Filter Post-Event Reports"}
-              buttonLabel={activeStream === "proposals" ? "Filter Events" : "Filter Reports"}
-              headerTitle={activeStream === "proposals" ? "Filter Proposals" : "Filter Post-Event Reports"}
-              groups={filterGroups}
-              selectedValues={filterValues}
-              onChange={handleFilterChange}
-              onClearAll={handleClearFilters}
+          {/* Right: View Mode Switcher */}
+          <div className="ml-auto shrink-0">
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={handleViewModeChange}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                {
+                  value: "kanban",
+                  label: "Kanban",
+                  icon: <ViewModeIcon mode="kanban" className="text-sm" />,
+                },
+                {
+                  value: "list",
+                  label: "List",
+                  icon: <ViewModeIcon mode="list" className="text-sm" />,
+                },
+                {
+                  value: "table",
+                  label: "Table",
+                  icon: <ViewModeIcon mode="table" className="text-sm" />,
+                },
+              ]}
             />
+          </div>
+        </div>
 
+        {/* 3. DataViewToolbar */}
+        <DataViewToolbar
+          label="OSAS submissions search, filters, sorting, grouping, and columns"
+          className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between"
+        >
+          {/* Left Group */}
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch
+              value={searchQuery}
+              onChange={(val) => {
+                setSearchQuery(val);
+                setPage(1);
+              }}
+              count={activeFilteredList.length}
+              loading={loading && rows.length === 0 && postEventReports.length === 0}
+              label="Search submissions"
+              placeholder={
+                activeStream === "proposals"
+                  ? "Search proposals, students, orgs..."
+                  : "Search event reports, orgs..."
+              }
+            />
             {viewMode === "table" && (
-              <TableScrollControls scrollContainerRef={tableContainerRef}
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
                 isScrolledX={isScrolledX}
-                label="Scroll columns:"
-                scrollTargetLabel="table"
                 onResetScroll={resetTableScroll}
                 onScrollLeft={(amount) => scrollActiveView("left", amount)}
                 onScrollRight={(amount) => scrollActiveView("right", amount)}
+                controlSize="md"
+              />
+            )}
+          </div>
+
+          {/* Right Group: Reused UI components */}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <FilterPopover
+              fields={currentFilterFields}
+              filters={filterRules}
+              onFiltersChange={(newRules) => {
+                setFilterRules(newRules);
+                setPage(1);
+              }}
+              entityLabel={activeStream === "proposals" ? "proposals" : "reports"}
+            />
+            <SortPopover
+              options={currentSortOptions}
+              sortBy={tableSortBy}
+              onSortByChange={(val) => {
+                setTableSortBy(val);
+                setTableSortOrder("ASC");
+              }}
+              sortOrder={tableSortOrder}
+              onSortOrderChange={setTableSortOrder}
+            />
+            <GroupPopover
+              options={groupOptions}
+              groupBy={groupBy}
+              onGroupByChange={setGroupBy}
+            />
+            {viewMode === "table" && (
+              <ColumnsPopover
+                columns={currentTableColumns}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
+                minVisible={2}
               />
             )}
           </div>
         </DataViewToolbar>
 
-        {/* 3. Active Filter Chips */}
-        <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-          <div className="flex-1 min-w-0">
-            <ActiveFilterChips
-              chips={activeChips}
-              onClearAll={handleClearFilters}
-              className="p-0 border-0"
-            />
-          </div>
-        </div>
-
-        {/* 4. Stream Content */}
-        {/* STREAM 1: Pre-Event Proposals */}
-        {activeStream === "proposals" && (
-          <>
-            {viewMode === "table" ? (
-              filteredRows.length === 0 ? (
-                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyMedia><EmptyCalendarCheckIn01Icon size="1em" /></EmptyMedia>
-                      <EmptyTitle>
-                        No Event Proposals Found
-                      </EmptyTitle>
-                      <EmptyDescription>
-                        {hasActiveFilters
-                          ? "Try adjusting your search criteria or resetting active filters."
-                          : "Student organizations have not submitted any event proposals yet."}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    {hasActiveFilters && (
-                      <EmptyContent>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleClearFilters}
-                          title="Reset Filters"
-                          className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
-                        >
-                    Reset Filters
-                  </Button>
-                      </EmptyContent>
-                    )}
-                  </Empty>
-                </div>
-              ) : (
-                <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-                  <div
-                    ref={tableContainerRef}
-                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-                  >
-                  <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "status", "date", "actions"]} className="min-w-[1300px]">
-                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                      <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th
-                          aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
-                          className={cn(
-                            "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
-                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
-                              <span>Proposal ID</span>
-                              <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
-                            </button>
-                            {isScrolledX && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={resetTableScroll}
-                                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                    aria-label="Reset scroll to start"
-                                  >
-                                    <ReloadIcon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </th>
-                        <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[36%] whitespace-nowrap" />
-                        <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[21%] whitespace-nowrap" />
-                        <SortableTableHeader column="status" label="Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap" />
-                        <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell" />
-                        <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                      {paginatedRows.map((item) => (
-                        <tr
-                          key={item.id}
-                          onClick={() => select(item)}
-                          className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
-                        >
-                          <td className={cn(
-                            "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
-                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                          )}>
-                            <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                              #{item.id}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
-                              {item.title}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
-                              {item.org_acronym && (
-                                <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                  {item.org_acronym}
-                                </span>
-                              )}
-                              <span className="truncate" title={item.verified_org_name || item.organization_name}>{item.verified_org_name || item.organization_name}</span>
-                              {item.has_bylaws ? (
-                                <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30 shrink-0">
-                                  CBL Active
-                                </span>
-                              ) : (
-                                <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30 shrink-0">
-                                  No CBL
-                                </span>
-                              )}
-                              {item.post_event_status && item.status === "Approved" && (
-                                <span className={cn(
-                                  "ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded border shrink-0",
-                                  getPostEventStatusBadgeClass(item.post_event_status)
-                                )}>
-                                  Post-Event: {item.post_event_status}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
-                              <span className="truncate" title={item.student_name}>{item.student_name}</span>
-                              {item.officer_position && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal shrink-0">
-                                  {item.officer_position}
-                                </span>
-                              )}
-                            </div>
-                            <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
-                              {item.submitted_by_email || item.student_no}
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <span
-                              className={cn(
-                                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                                getProposalStatusBadgeClass(item.status)
-                              )}
-                            >
-                              <span className={cn("w-1.5 h-1.5 rounded-full", getProposalStatusDotClass(item.status))} />
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString(undefined, {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
-                              : "N/A"}
-                          </td>
-                          <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => select(item)}
-                                    aria-label="Review Proposal"
-                                    className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                  >
-                                    <ClipboardIcon size="1em" className="text-[16px]" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Review Proposal</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              </div>
-            )) : viewMode === "list" ? (
-              filteredRows.length === 0 ? (
-              <div className="flex w-full flex-1 items-center justify-center border-t border-border dark:border-border">
-                  <EmptyState
-                    icon={hasActiveFilters ? Search01Icon : EmptyCalendarCheckIn01Icon}
-                    title={hasActiveFilters ? "No Proposals Found" : "No Event Proposals Yet"}
-                    description={hasActiveFilters
-                      ? "Adjust your search or reset your filters."
-                      : "Student organization event proposals will appear here after submission."}
-                  >
-                    {hasActiveFilters && (
-                      <Button type="button" variant="outline" onClick={handleClearFilters} className="h-10 rounded-xl px-5 text-xs font-semibold">
-                        Reset Filters
-                      </Button>
-                    )}
-                  </EmptyState>
-                </div>
-              ) : (
-                <OsasRecordList items={paginatedRows} stream="proposals" onSelect={select} onReview={select} />
-              )
-            ) : filteredRows.length === 0 ? (
-              <div className="w-full flex-1 flex flex-col items-center justify-center border-t border-border dark:border-border bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyMedia><ViewModeIcon mode="kanban" /></EmptyMedia>
-                    <EmptyTitle>
-                      No Proposals in Pipeline
-                    </EmptyTitle>
-                    <EmptyDescription>
-                      {hasActiveFilters
-                        ? "No proposals match your active search terms or filters."
-                        : "There are currently no event proposals in the pipeline."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  {hasActiveFilters && (
-                    <EmptyContent>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleClearFilters}
-                        title="Reset Filters"
-                        className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
-                      >
-                    Reset Filters
-                  </Button>
-                    </EmptyContent>
-                  )}
-                </Empty>
-              </div>
-            ) : (
-              /* Kanban Pipeline Board */
-              <OsasKanbanPipeline
-                stream="proposals"
-                columns={KANBAN_COLUMNS}
-                items={filteredRows}
-                onSelectItem={select}
-                onDropItem={handleDrop}
-                draggingItem={draggingProposal}
-                setDraggingItem={setDraggingProposal}
-                dragOverColumn={dragOverColumn}
-                setDragOverColumn={setDragOverColumn}
-                allowedTransitions={ALLOWED_TRANSITIONS}
-                normalizeStatus={normalizeProposalStatus}
-                scrollRef={kanbanScrollRef}
-                onScrollBoundsChange={handleKanbanScrollBoundsChange}
-                isItemLocked={(item) => {
-                  const s = normalizeProposalStatus(item.status);
-                  return s === "Approved" || s === "Declined";
-                }}
+        {/* 4. Active Filter Chips */}
+        {activeChips.length > 0 && (
+          <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+            <div className="flex-1 min-w-0">
+              <ActiveFilterChips
+                chips={activeChips}
+                onClearAll={handleClearFilters}
+                className="p-0 border-0"
               />
-            )}
-          </>
+            </div>
+          </div>
         )}
 
-        {/* STREAM 2: Post-Event & Liquidation Reports */}
-        {activeStream === "post_events" && (
-          <>
-            {viewMode === "table" ? (
-              filteredPostEvents.length === 0 ? (
-                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
+        {/* 5. Main Content Area */}
+        <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", activeFilteredList.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          {/* STREAM 1: Pre-Event Proposals */}
+          {activeStream === "proposals" && (
+            <>
+              {viewMode === "table" ? (
+                filteredRows.length === 0 ? (
+                  <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia><EmptyCalendarCheckIn01Icon size="1em" /></EmptyMedia>
+                        <EmptyTitle>No Event Proposals Found</EmptyTitle>
+                        <EmptyDescription>
+                          {hasActiveFilters
+                            ? "Try adjusting your search criteria or resetting active filters."
+                            : "Student organizations have not submitted any event proposals yet."}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      {hasActiveFilters && (
+                        <EmptyContent>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClearFilters}
+                            title="Reset Filters"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl"
+                          >
+                            Reset Filters
+                          </Button>
+                        </EmptyContent>
+                      )}
+                    </Empty>
+                  </div>
+                ) : (
+                  <div className="w-full flex-[1_0_auto] flex flex-col">
+                    <div
+                      ref={tableContainerRef}
+                      className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
+                    >
+                      <Table columns={proposalTableColumnsConfig} className="min-w-[1100px]">
+                        <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                          <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                            {visibleColumns.includes("id") && (
+                              <th
+                                aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
+                                className={cn(
+                                  "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
+                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                )}
+                              >
+                                <div className="flex items-center justify-between gap-1">
+                                  <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
+                                    <span>Proposal ID</span>
+                                    <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
+                                  </button>
+                                  {isScrolledX && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={resetTableScroll}
+                                          className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                          aria-label="Reset scroll to start"
+                                        >
+                                          <ReloadIcon size="1em" className="text-xs" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </th>
+                            )}
+                            {visibleColumns.includes("event") && (
+                              <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[36%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("proponent") && (
+                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[21%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("status") && (
+                              <SortableTableHeader column="status" label="Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("submitted") && (
+                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell" />
+                            )}
+                            {visibleColumns.includes("actions") && (
+                              <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                          {paginatedRows.map((item) => (
+                            <tr
+                              key={item.id}
+                              onClick={() => select(item)}
+                              className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
+                            >
+                              {visibleColumns.includes("id") && (
+                                <td className={cn(
+                                  "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
+                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                )}>
+                                  <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
+                                    #{item.id}
+                                  </span>
+                                </td>
+                              )}
+                              {visibleColumns.includes("event") && (
+                                <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
+                                    {item.title}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
+                                    {item.org_acronym && (
+                                      <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                        {item.org_acronym}
+                                      </span>
+                                    )}
+                                    <span className="truncate" title={item.verified_org_name || item.organization_name}>{item.verified_org_name || item.organization_name}</span>
+                                    {item.has_bylaws ? (
+                                      <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30 shrink-0">
+                                        CBL Active
+                                      </span>
+                                    ) : (
+                                      <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30 shrink-0">
+                                        No CBL
+                                      </span>
+                                    )}
+                                    {item.post_event_status && item.status === "Approved" && (
+                                      <span className={cn(
+                                        "ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded border shrink-0",
+                                        getPostEventStatusBadgeClass(item.post_event_status)
+                                      )}>
+                                        Post-Event: {item.post_event_status}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                              )}
+                              {visibleColumns.includes("proponent") && (
+                                <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
+                                    <span className="truncate" title={item.student_name}>{item.student_name}</span>
+                                    {item.officer_position && (
+                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal shrink-0">
+                                        {item.officer_position}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                                    {item.submitted_by_email || item.student_no}
+                                  </div>
+                                </td>
+                              )}
+                              {visibleColumns.includes("status") && (
+                                <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none",
+                                      getProposalStatusBadgeClass(item.status)
+                                    )}
+                                  >
+                                    {item.status}
+                                  </span>
+                                </td>
+                              )}
+                              {visibleColumns.includes("submitted") && (
+                                <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
+                                  {item.created_at
+                                    ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })
+                                    : "N/A"}
+                                </td>
+                              )}
+                              {visibleColumns.includes("actions") && (
+                                <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => select(item)}
+                                          aria-label="Review Proposal"
+                                          className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                                        >
+                                          <ClipboardIcon size="1em" className="text-[16px]" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Review Proposal</TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </div>
+                )
+              ) : viewMode === "list" ? (
+                filteredRows.length === 0 ? (
+                  <div className="flex w-full flex-1 items-center justify-center min-h-[420px]">
+                    <EmptyState
+                      icon={hasActiveFilters ? Search01Icon : EmptyCalendarCheckIn01Icon}
+                      title={hasActiveFilters ? "No Proposals Found" : "No Event Proposals Yet"}
+                      description={
+                        hasActiveFilters
+                          ? "Adjust your search or reset your filters."
+                          : "Student organization event proposals will appear here after submission."
+                      }
+                    >
+                      {hasActiveFilters && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearFilters}
+                          className="h-9 rounded-xl px-4 text-xs font-semibold"
+                        >
+                          Reset Filters
+                        </Button>
+                      )}
+                    </EmptyState>
+                  </div>
+                ) : (
+                  <OsasRecordList
+                    items={paginatedRows}
+                    stream="proposals"
+                    groupBy={groupBy}
+                    onSelect={select}
+                    onReview={select}
+                  />
+                )
+              ) : filteredRows.length === 0 ? (
+                <div className="w-full flex-1 flex flex-col items-center justify-center bg-gray-50/20 dark:bg-zinc-900/10 min-h-[420px]">
                   <Empty>
                     <EmptyHeader>
-                      <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
-                      <EmptyTitle>
-                        No Post-Event Reports Found
-                      </EmptyTitle>
+                      <EmptyMedia><ViewModeIcon mode="kanban" /></EmptyMedia>
+                      <EmptyTitle>No Proposals in Pipeline</EmptyTitle>
                       <EmptyDescription>
                         {hasActiveFilters
-                          ? "No reports match your active search or filter criteria."
-                          : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
+                          ? "No proposals match your active search terms or filters."
+                          : "There are currently no event proposals in the pipeline."}
                       </EmptyDescription>
                     </EmptyHeader>
                     {hasActiveFilters && (
@@ -1686,182 +1682,49 @@ export default function OsasMonitoringTab({ showToast }) {
                           size="sm"
                           onClick={handleClearFilters}
                           title="Reset Filters"
-                          className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl"
                         >
-                    Reset Filters
-                  </Button>
+                          Reset Filters
+                        </Button>
                       </EmptyContent>
                     )}
                   </Empty>
                 </div>
               ) : (
-                <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-                  <div
-                    ref={tableContainerRef}
-                    className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-                  >
-                  <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "number", "status", "date", "actions"]} className="min-w-[1300px]">
-                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                      <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th
-                          aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
-                          className={cn(
-                            "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
-                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
-                              <span>Report ID</span>
-                              <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
-                            </button>
-                            {isScrolledX && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={resetTableScroll}
-                                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                    aria-label="Reset scroll to start"
-                                  >
-                                    <ReloadIcon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </th>
-                        <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[31%] whitespace-nowrap" />
-                        <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[19%] whitespace-nowrap" />
-                        <SortableTableHeader column="attendance" label="Attendance & Spend" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[17%] whitespace-nowrap" />
-                        <SortableTableHeader column="status" label="Clearance Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[13%] whitespace-nowrap" />
-                        <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell" />
-                        <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                      {paginatedPostEvents.map((item) => {
-                        const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
-                        const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
-                        return (
-                          <tr
-                            key={item.id}
-                            onClick={() => selectPostEvent(item)}
-                            className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
-                          >
-                            <td className={cn(
-                              "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}>
-                              <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                                #{item.id}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
-                                {item.event_title}
-                              </div>
-                              <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
-                                {item.org_acronym && (
-                                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                    {item.org_acronym}
-                                  </span>
-                                )}
-                                <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
-                                {item.student_name}
-                              </div>
-                              <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
-                                {item.submitted_by_email || item.student_no}
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <div className="font-semibold text-gray-900 dark:text-zinc-100">
-                                {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "N/A"}
-                              </div>
-                              <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
-                                ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                                  getPostEventStatusBadgeClass(item.status)
-                                )}
-                              >
-                                <span className={cn("w-1.5 h-1.5 rounded-full", getPostEventStatusDotClass(item.status))} />
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
-                              {item.created_at
-                                ? new Date(item.created_at).toLocaleDateString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
-                                : "N/A"}
-                            </td>
-                            <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={() => selectPostEvent(item)}
-                                      aria-label="Review Clearance"
-                                      className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
-                                    >
-                                      <ClipboardIcon size="1em" className="text-[16px]" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Review Clearance</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
-                </div>
-              </div>
-            )) : viewMode === "list" ? (
-              filteredPostEvents.length === 0 ? (
-              <div className="flex w-full flex-1 items-center justify-center border-t border-border dark:border-border">
-                  <EmptyState
-                    icon={hasActiveFilters ? Search01Icon : EmptyClipboardIcon}
-                    title={hasActiveFilters ? "No Reports Found" : "No Post-Event Reports Yet"}
-                    description={hasActiveFilters
-                      ? "Adjust your search or reset your filters."
-                      : "Post-event liquidation reports will appear here after submission."}
-                  >
-                    {hasActiveFilters && (
-                      <Button type="button" variant="outline" onClick={handleClearFilters} className="h-10 rounded-xl px-5 text-xs font-semibold">
-                        Reset Filters
-                      </Button>
-                    )}
-                  </EmptyState>
-                </div>
-              ) : (
-                <OsasRecordList items={paginatedPostEvents} stream="post_events" onSelect={selectPostEvent} onReview={selectPostEvent} />
-              )
-            ) : (
-              /* KANBAN BOARD VIEW FOR POST-EVENTS */
-              <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 border-t border-border dark:border-border bg-white/50 dark:bg-card/50">
-                {filteredPostEvents.length === 0 ? (
+                /* Kanban Pipeline Board */
+                <OsasKanbanPipeline
+                  stream="proposals"
+                  columns={KANBAN_COLUMNS}
+                  items={filteredRows}
+                  onSelectItem={select}
+                  onDropItem={handleDrop}
+                  draggingItem={draggingProposal}
+                  setDraggingItem={setDraggingProposal}
+                  dragOverColumn={dragOverColumn}
+                  setDragOverColumn={setDragOverColumn}
+                  allowedTransitions={ALLOWED_TRANSITIONS}
+                  normalizeStatus={normalizeProposalStatus}
+                  scrollRef={kanbanScrollRef}
+                  onScrollBoundsChange={handleKanbanScrollBoundsChange}
+                  isItemLocked={(item) => {
+                    const s = normalizeProposalStatus(item.status);
+                    return s === "Approved" || s === "Declined";
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          {/* STREAM 2: Post-Event & Liquidation Reports */}
+          {activeStream === "post_events" && (
+            <>
+              {viewMode === "table" ? (
+                filteredPostEvents.length === 0 ? (
                   <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                     <Empty>
                       <EmptyHeader>
                         <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
-                        <EmptyTitle>
-                          No Post-Event Reports Found
-                        </EmptyTitle>
+                        <EmptyTitle>No Post-Event Reports Found</EmptyTitle>
                         <EmptyDescription>
                           {hasActiveFilters
                             ? "No reports match your active search or filter criteria."
@@ -1876,43 +1739,284 @@ export default function OsasMonitoringTab({ showToast }) {
                             size="sm"
                             onClick={handleClearFilters}
                             title="Reset Filters"
-                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl"
                           >
-                    Reset Filters
-                  </Button>
+                            Reset Filters
+                          </Button>
                         </EmptyContent>
                       )}
                     </Empty>
                   </div>
                 ) : (
-                  <OsasKanbanPipeline
+                  <div className="w-full flex-[1_0_auto] flex flex-col">
+                    <div
+                      ref={tableContainerRef}
+                      className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
+                    >
+                      <Table columns={postEventTableColumnsConfig} className="min-w-[1100px]">
+                        <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                          <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                            {visibleColumns.includes("id") && (
+                              <th
+                                aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
+                                className={cn(
+                                  "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
+                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                )}
+                              >
+                                <div className="flex items-center justify-between gap-1">
+                                  <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
+                                    <span>Report ID</span>
+                                    <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
+                                  </button>
+                                  {isScrolledX && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={resetTableScroll}
+                                          className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                          aria-label="Reset scroll to start"
+                                        >
+                                          <ReloadIcon size="1em" className="text-xs" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </th>
+                            )}
+                            {visibleColumns.includes("event") && (
+                              <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[31%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("proponent") && (
+                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[19%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("attendance") && (
+                              <SortableTableHeader column="attendance" label="Attendance & Spend" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[17%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("status") && (
+                              <SortableTableHeader column="status" label="Clearance Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[13%] whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("submitted") && (
+                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell" />
+                            )}
+                            {visibleColumns.includes("actions") && (
+                              <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                          {paginatedPostEvents.map((item) => {
+                            const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
+                            const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
+                            return (
+                              <tr
+                                key={item.id}
+                                onClick={() => selectPostEvent(item)}
+                                className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
+                              >
+                                {visibleColumns.includes("id") && (
+                                  <td className={cn(
+                                    "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
+                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                  )}>
+                                    <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
+                                      #{item.id}
+                                    </span>
+                                  </td>
+                                )}
+                                {visibleColumns.includes("event") && (
+                                  <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                    <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
+                                      {item.event_title}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
+                                      {item.org_acronym && (
+                                        <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
+                                          {item.org_acronym}
+                                        </span>
+                                      )}
+                                      <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
+                                    </div>
+                                  </td>
+                                )}
+                                {visibleColumns.includes("proponent") && (
+                                  <td className="py-3.5 px-6 whitespace-nowrap overflow-hidden border-r border-border/70 dark:border-border/70">
+                                    <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
+                                      {item.student_name}
+                                    </div>
+                                    <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                                      {item.submitted_by_email || item.student_no}
+                                    </div>
+                                  </td>
+                                )}
+                                {visibleColumns.includes("attendance") && (
+                                  <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                    <div className="font-semibold text-gray-900 dark:text-zinc-100">
+                                      {attendees != null ? `${Number(attendees).toLocaleString()} attendees` : "N/A"}
+                                    </div>
+                                    <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
+                                      ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                                    </div>
+                                  </td>
+                                )}
+                                {visibleColumns.includes("status") && (
+                                  <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none",
+                                        getPostEventStatusBadgeClass(item.status)
+                                      )}
+                                    >
+                                      {item.status}
+                                    </span>
+                                  </td>
+                                )}
+                                {visibleColumns.includes("submitted") && (
+                                  <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
+                                    {item.created_at
+                                      ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })
+                                      : "N/A"}
+                                  </td>
+                                )}
+                                {visibleColumns.includes("actions") && (
+                                  <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
+                                    <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => selectPostEvent(item)}
+                                            aria-label="Review Clearance"
+                                            className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                                          >
+                                            <ClipboardIcon size="1em" className="text-[16px]" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Review Clearance</TooltipContent>
+                                      </Tooltip>
+                                    </div>
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </div>
+                )
+              ) : viewMode === "list" ? (
+                filteredPostEvents.length === 0 ? (
+                  <div className="flex w-full flex-1 items-center justify-center min-h-[420px]">
+                    <EmptyState
+                      icon={hasActiveFilters ? Search01Icon : EmptyClipboardIcon}
+                      title={hasActiveFilters ? "No Reports Found" : "No Post-Event Reports Yet"}
+                      description={
+                        hasActiveFilters
+                          ? "Adjust your search or reset your filters."
+                          : "Post-event liquidation reports will appear here after submission."
+                      }
+                    >
+                      {hasActiveFilters && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearFilters}
+                          className="h-9 rounded-xl px-4 text-xs font-semibold"
+                        >
+                          Reset Filters
+                        </Button>
+                      )}
+                    </EmptyState>
+                  </div>
+                ) : (
+                  <OsasRecordList
+                    items={paginatedPostEvents}
                     stream="post_events"
-                    columns={POST_EVENT_KANBAN_COLUMNS}
-                    items={filteredPostEvents}
-                    onSelectItem={selectPostEvent}
-                    onDropItem={handlePostEventDrop}
-                    onOpenPdfPreview={handleOpenPdfPreview}
-                    draggingItem={draggingPostEvent}
-                    setDraggingItem={setDraggingPostEvent}
-                    dragOverColumn={dragOverPostEventColumn}
-                    setDragOverColumn={setDragOverPostEventColumn}
-                    allowedTransitions={POST_EVENT_ALLOWED_TRANSITIONS}
-                    normalizeStatus={(s) => s || "Submitted"}
-                    scrollRef={kanbanScrollRef}
-                    onScrollBoundsChange={handleKanbanScrollBoundsChange}
-                    isItemLocked={(item) => {
-                      const s = item.status || "Submitted";
-                      return s === "Cleared" || s === "Declined";
-                    }}
+                    groupBy={groupBy}
+                    onSelect={selectPostEvent}
+                    onReview={selectPostEvent}
                   />
-                )}
-              </div>
-            )}
-          </>
-        )}
+                )
+              ) : (
+                /* KANBAN BOARD VIEW FOR POST-EVENTS */
+                <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 bg-white/50 dark:bg-card/50">
+                  {filteredPostEvents.length === 0 ? (
+                    <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
+                          <EmptyTitle>No Post-Event Reports Found</EmptyTitle>
+                          <EmptyDescription>
+                            {hasActiveFilters
+                              ? "No reports match your active search or filter criteria."
+                              : "Student organizations will submit narrative and liquidation reports after their approved events conclude."}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        {hasActiveFilters && (
+                          <EmptyContent>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleClearFilters}
+                              title="Reset Filters"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl"
+                            >
+                              Reset Filters
+                            </Button>
+                          </EmptyContent>
+                        )}
+                      </Empty>
+                    </div>
+                  ) : (
+                    <OsasKanbanPipeline
+                      stream="post_events"
+                      columns={POST_EVENT_KANBAN_COLUMNS}
+                      items={filteredPostEvents}
+                      onSelectItem={selectPostEvent}
+                      onDropItem={handlePostEventDrop}
+                      onOpenPdfPreview={handleOpenPdfPreview}
+                      draggingItem={draggingPostEvent}
+                      setDraggingItem={setDraggingPostEvent}
+                      dragOverColumn={dragOverPostEventColumn}
+                      setDragOverColumn={setDragOverPostEventColumn}
+                      allowedTransitions={POST_EVENT_ALLOWED_TRANSITIONS}
+                      normalizeStatus={(s) => s || "Submitted"}
+                      scrollRef={kanbanScrollRef}
+                      onScrollBoundsChange={handleKanbanScrollBoundsChange}
+                      isItemLocked={(item) => {
+                        const s = item.status || "Submitted";
+                        return s === "Cleared" || s === "Declined";
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-        {/* 5. Apple HIG Pagination Footer (Unified for both record views) */}
-        {viewMode !== "kanban" && <TablePagination label="OSAS monitoring pages" page={page} pageSize={itemsPerPage} totalCount={activeFilteredList.length} displayedCount={Math.max(0, Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage))} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />}
+        {/* 6. Apple HIG Pagination Footer (Unified for both record views) */}
+        {viewMode !== "kanban" && (
+          <TablePagination
+            label="OSAS monitoring pages"
+            page={page}
+            pageSize={itemsPerPage}
+            totalCount={activeFilteredList.length}
+            displayedCount={Math.max(0, Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage))}
+            onPageChange={setPage}
+            onPageSizeChange={setItemsPerPage}
+          />
+        )}
       </Card>
 
       {/* Slide-Over Review Sheet for Event Proposals */}

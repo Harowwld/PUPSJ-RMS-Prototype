@@ -1,7 +1,7 @@
 const columns = {
   offices: ["department", "office", "station", "staff", "modules", "status", "created_at", "updated_at"],
   staff: ["name", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
-  operations: ["department", "requester", "title", "details", "status", "submitted", "updatedAt"],
+  operations: ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"],
   logs: ["severity", "actor", "office_id", "details", "ip"],
   backups: ["size", "created", "type", "status", "external", "offsite"],
 };
@@ -10,15 +10,15 @@ const enums = {
   officeFilter: ["Active", "Archived"],
   lifecycle: ["all", "open", "closed"],
   scope: ["all", "required", "optional"],
-  layoutView: ["grid", "table"],
-  viewMode: ["office", "matrix"],
+  layoutView: ["grid", "table", "list"],
+  viewMode: ["office", "matrix", "table", "list"],
   sortOrder: ["ASC", "DESC"],
   matrixSortOrder: ["ASC", "DESC"],
 };
 const sortKeys = {
   offices: ["short_name", "name", "station_name", "staff_count", "module_count", "status", "created_at", "updated_at"],
   staff: ["name", "id", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
-  operations: ["createdAt", "id", "officeId", "studentName", "title", "organizationName", "status", "updatedAt"],
+  operations: ["createdAt", "id", "officeId", "studentName", "title", "organizationName", "status", "slaStatus", "updatedAt"],
   logs: ["created_at", "severity", "actor", "office_id", "action"],
   backups: ["created_at", "filename", "size_bytes", "backup_type", "status_local"],
 };

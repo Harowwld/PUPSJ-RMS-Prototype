@@ -38,7 +38,9 @@ test("Codebase views use 'Grid' label and equal-width segmented controls", () =>
     "src/components/staff/StudentOrganizationsTab.js",
     "src/components/staff/RecordsArchiveTab.js",
     "src/components/staff/OsasMonitoringTab.js",
+    "src/components/staff/DocumentRequestsTab.js",
     "src/components/student/StudentComplianceTab.js",
+    "src/components/systemadmin/CampusOperationsTab.js",
   ];
 
   for (const relPath of filesToCheck) {
@@ -57,6 +59,65 @@ test("Codebase views use 'Grid' label and equal-width segmented controls", () =>
       content,
       /label:\s*["']Cards["']/,
       `${relPath} should use 'Grid' label instead of 'Cards'`
+    );
+  }
+});
+
+test("Codebase views adhere to canonical view sequence: kanban, grid, list, table", () => {
+  const CANONICAL_ORDER = ["kanban", "grid", "card", "list", "table"];
+
+  const filesWithViewSwitchers = [
+    {
+      file: "src/components/admin/DigitalRecordsReviewTab.js",
+      expected: ["kanban", "list", "table"],
+    },
+    {
+      file: "src/components/staff/DocumentRequestsTab.js",
+      expected: ["kanban", "list", "table"],
+    },
+    {
+      file: "src/components/staff/OsasMonitoringTab.js",
+      expected: ["kanban", "list", "table"],
+    },
+    {
+      file: "src/components/student/StudentComplianceTab.js",
+      expected: ["grid", "table"],
+    },
+    {
+      file: "src/components/staff/StudentOrganizationsTab.js",
+      expected: ["grid", "table"],
+    },
+    {
+      file: "src/components/staff/RecordsArchiveTab.js",
+      expected: ["card", "table"],
+    },
+    {
+      file: "src/components/systemadmin/OfficeManagementTab.js",
+      expected: ["grid", "table"],
+    },
+    {
+      file: "src/components/systemadmin/CampusOperationsTab.js",
+      expected: ["list", "table"],
+    },
+  ];
+
+  for (const { file, expected } of filesWithViewSwitchers) {
+    const fullPath = path.resolve(__dirname, "..", file);
+    const content = fs.readFileSync(fullPath, "utf-8");
+
+    // Extract the items array that defines the view modes (contains ViewModeIcon)
+    const itemsMatch = content.match(/items=\{\[\s*([\s\S]*?ViewModeIcon[\s\S]*?)\s*\]\}/);
+
+    assert.ok(itemsMatch, `${file} should contain an items array with ViewModeIcon for view switcher`);
+    const valuesInFile = [...itemsMatch[1].matchAll(/value:\s*["']([^"']+)["']/g)].map((m) => m[1]);
+    
+    // Filter to only views in CANONICAL_ORDER
+    const detectedViews = valuesInFile.filter((v) => CANONICAL_ORDER.includes(v));
+
+    assert.deepStrictEqual(
+      detectedViews,
+      expected,
+      `${file} view modes sequence should strictly match canonical order: ${expected.join(", ")}`
     );
   }
 });
