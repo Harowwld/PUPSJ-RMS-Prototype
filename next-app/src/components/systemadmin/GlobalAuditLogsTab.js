@@ -1,7 +1,7 @@
 "use client"
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
-import { Table, TableStatus } from "@/components/ui/table";
+import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
 
@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
+import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
   Empty,
@@ -44,9 +45,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
+import NarrativeText from "@/components/shared/NarrativeText"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Loading01Icon, UserIcon, ViewIcon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -127,6 +130,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
   const logsRequest = useRef(0)
   const [error, setError] = useState(null)
   const [isManualLoading, setIsManualLoading] = useState(false)
@@ -151,7 +155,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const initialPageFromUrl = parseInt(searchParams?.get("page") || "1", 10)
   const initialSearchFromUrl = searchParams?.get("search") || ""
   const [page, setPage] = useState(!isNaN(initialPageFromUrl) && initialPageFromUrl >= 1 ? initialPageFromUrl : 1)
-  const [limit, setLimit] = useViewPreference("logs", "limit", 20)
+  const [limit, setLimit] = useViewPreference("logs", "limit", 50)
   const [search, setSearch] = useState(initialSearchFromUrl)
   const [localSearch, setLocalSearch] = useViewPreference("logs", "localSearch", initialSearchFromUrl)
   useEffect(() => {
@@ -364,6 +368,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           setLogs(cached.logs)
           setTotal(cached.total)
           setLoading(false)
+          setInitialLoading(false)
         }
       }
 
@@ -399,8 +404,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
             const off = officeList.find((o) => o.id === r.office_id)
             const scopeLabel = off ? off.short_name : "Global"
             const officeName = off ? off.short_name : "Global (Platform)"
+            const prefix = r.office_id ? `global-${r.office_id}` : "global"
             return {
-              id: `${r.log_source || "global"}-${r.office_id || "global"}-${r.id}`,
+              id: `${prefix}-${r.id}`,
               rawId: r.id,
               time: formatPHDateTime(r.created_at),
               user: r.actor,
@@ -408,6 +414,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               actor_id: r.actor_id,
               role: r.role,
               office_id: r.office_id,
+              office_accent: off?.accent_color || "#800000",
               officeName,
               scope: scopeLabel,
               action: r.action,
@@ -445,6 +452,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       } finally {
         if (request === logsRequest.current) {
           setLoading(false)
+          setInitialLoading(false)
           setIsManualLoading(false)
         }
       }
@@ -472,6 +480,20 @@ export default function GlobalAuditLogsTab({ showToast }) {
       [id]: !prev[id],
     }))
   }, [])
+
+  const allExpanded = logs.length > 0 && logs.every((l) => Boolean(expandedRows[l.id]))
+
+  const toggleExpandAll = useCallback(() => {
+    if (allExpanded) {
+      setExpandedRows({})
+    } else {
+      const next = {}
+      for (const log of logs) {
+        next[log.id] = true
+      }
+      setExpandedRows(next)
+    }
+  }, [allExpanded, logs])
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -694,6 +716,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
     startDate !== "" ||
     endDate !== ""
 
+  if (initialLoading) return <GlobalAuditLogsSkeleton />
+
   return (
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full min-w-0 gap-6">
@@ -717,7 +741,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex shrink-0 items-center gap-2">
                 <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
@@ -732,31 +756,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
           />
 
           <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
-            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-              {[["", "All Levels"], ["INFO", "Information"], ["WARNING", "Warning"], ["CRITICAL", "Critical"]].map(([value, label]) => {
-                const isActive = (logFilters.severity[0] || "") === value
-                return (
-                  <button
-                    key={value || "all"}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => {
-                      setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
-                      setPage(1)
-                      updateUrl(1, search)
-                    }}
-                    className={cn(
-                      "inline-flex items-center justify-center px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                      isActive
-                        ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                    )}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+            <SegmentedControl
+              value={logFilters.severity[0] || ""}
+              onValueChange={(value) => {
+                setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
+                setPage(1)
+                updateUrl(1, search)
+              }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr"
+              items={[
+                { value: "", label: "All Levels" },
+                { value: "INFO", label: "Information" },
+                { value: "WARNING", label: "Warning" },
+                { value: "CRITICAL", label: "Critical" },
+              ]}
+            />
           </div>
 
           <DataViewToolbar label="Platform activity search, filters, sorting, columns, and dates" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
@@ -929,6 +944,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <th
                         className="w-12 min-w-12 max-w-12 px-2.5 py-4 text-center"
                       >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={toggleExpandAll}
+                              disabled={logs.length === 0}
+                              aria-label={allExpanded ? "Collapse all rows" : "Expand all rows"}
+                              className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <AppIcon className={cn("text-[14px]", allExpanded ? "MinusSignIcon" : "Add01Icon")} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            {allExpanded ? "Collapse all rows" : "Expand all rows"}
+                          </TooltipContent>
+                        </Tooltip>
                       </th>
                       <th className="p-4 w-[14%]" aria-sort={sortBy === "created_at" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
                         <button
@@ -1090,7 +1121,22 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
                             {/* Scope */}
                             {showColumn("office_id") && <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                              <TableStatus value={log.scope} tone={log.office_id ? "neutral" : "info"} className="text-[11px]" title={log.officeName} />
+                              {log.office_id ? (
+                                <span
+                                  className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-[11px] font-medium border-0 select-none"
+                                  style={{ "--office-accent": log.office_accent || "#800000" }}
+                                  title={log.officeName}
+                                >
+                                  {log.scope}
+                                </span>
+                              ) : (
+                                <span
+                                  className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none"
+                                  title={log.officeName}
+                                >
+                                  Platform Level
+                                </span>
+                              )}
                             </td>}
 
                             {/* Action */}
@@ -1103,14 +1149,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300" title={formatLogDetails(log.details) || "N/A"}>
-                                    {formatLogDetails(log.details) || "N/A"}
+                                    <NarrativeText text={log.details} mode="compact" />
                                   </span>
                                 </TooltipTrigger>
                                 <TooltipContent
                                   side="top"
                                   className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
                                 >
-                                  {formatLogDetails(log.details) || "N/A"}
+                                  <NarrativeText text={log.details} mode="full" />
                                 </TooltipContent>
                               </Tooltip>
                             </td>}

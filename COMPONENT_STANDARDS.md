@@ -67,8 +67,8 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
         {/* 3. Body: Standard padding (p-6), structured layout */}
         <div className="p-6 space-y-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-              Field Label <span className="text-red-500">*</span>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+              Field Label <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
             </label>
             <Input
               type="text"
@@ -250,17 +250,20 @@ import { TableActions } from "@/components/shared/TableActions";
 ## 5. Form Controls, Inputs & Selectors
 
 ### 5.1 Labels & Text Inputs
+Use Title Case labels (`text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5`). Do not append red asterisks (`*`) to required fields; instead, mark only optional fields with `<span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>`.
+
+All `<Input>` and `<Textarea>` controls share a standardized 1px border + 1px ring focus style (`focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80`) inherited directly from the shared UI primitives. Never pass raw `focus-visible:ring-pup-maroon` without `ring-1` or introduce 3px thick focus rings.
 ```jsx
 <div>
-  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-    Full Name <span className="text-red-500">*</span>
+  <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+    Full Name
   </label>
   <Input
     type="text"
     placeholder="e.g. Dela Cruz, Juan"
     value={name}
     onChange={(e) => setName(e.target.value)}
-    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
+    className="h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-xs"
   />
 </div>
 ```
@@ -645,6 +648,31 @@ import { Textarea } from "@/components/ui/textarea"
 <Input variant="verification" id="verificationCode" autoComplete="one-time-code" />
 ```
 
+### 5.13 Selectable Cards, Icon Tiles & Preset Chips
+
+All selectable cards, preset cards, checklist cards, icon picker tiles, and preset filter/suggestion chips across dashboards, modals, and sheets must use the single **Crisp Outline & Soft Gray Surface** selection standard instead of competing solid black fills or maroon borders:
+
+- **Selected State**: `border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20`
+- **Unselected State**: `border-border dark:border-border bg-white dark:bg-zinc-900/40 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60`
+- **Inner Index / Count Badges** (when present inside a selectable or expandable card):
+  - Selected: `bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs`
+  - Unselected: `bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400` (or `bg-gray-200/80 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300`)
+
+```jsx
+<button
+  type="button"
+  onClick={() => onSelect(item.id)}
+  className={cn(
+    "rounded-xl border p-3.5 text-left transition-all cursor-pointer select-none",
+    isSelected
+      ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+      : "border-border dark:border-border bg-white dark:bg-zinc-900/40 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
+  )}
+>
+  {children}
+</button>
+```
+
 ## 6. Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
 
 Use `@/components/shared/NoticeBanner` with `tone="info|warning|success|danger"`, an optional `action`, and a stable entity-specific `dismissKey` for session persistence. Existing parent-owned dismissal can use `onDismiss` instead. Place the component directly in the unpadded card/sheet/dialog shell between content tiers, not inside the padded form body. It supplies direct Hugeicons, semantic status/alert roles, shared colors, and an accessible dismiss control. Structured fields, guardian details, previews, and verification panels remain form/data groups.
@@ -907,3 +935,26 @@ Skeletons use `Table` and the same semantic column order, control widths, minimu
 Preserve specific no-records, no-matches, loading, and error states from section 5.10. Spanning state/detail rows are exempt from ordinary data-row height. Keep the pagination footer visible for an empty paginated result; show recovery actions where relevant.
 
 Verify every changed table in both themes and high contrast, at desktop and mobile widths and application zoom. Include long/unbroken text, missing fields, large counts, partial and empty pages, density persistence/account isolation, keyboard actions, selection, sticky intersections, and request races. Run `node --test test/table-presentation.test.mjs test/table-inventory.test.mjs` and `node e2e/table-standards.browser.mjs` for shared behavior, then the relevant feature checks and production build. The inventory check rejects native tables outside the primitive, missing column declarations, and mismatched static headers.
+
+---
+
+## 10. Notification & Toast Standards (`sonner` / `rms-toast`)
+
+All in-app alerts and notifications displayed via `@/components/ui/sonner` must adhere to these Apple-inspired physical standards:
+
+### 10.1 Desktop Max-Width & Responsive Bounds
+- **Standard Width**: Constrained to `max-width: min(620px, calc(100vw - 32px))`.
+- **Purpose**: Provides ~510px of readable horizontal text width, allowing 2–3 sentence phrases in Plus Jakarta Sans to comfortably fit in 2 to at most 3 clean lines without awkward word breaks.
+- **Mobile Viewports**: Safely constrained by `calc(100vw - 32px)` with 16px margins on each side.
+
+### 10.2 Adaptive Geometry: Capsule Pill vs. Apple Card Squircle
+- **Single-Line Status Alerts** (e.g. *"Record updated successfully"*):
+  - Retain the sleek horizontal capsule pill with `rounded-full` and `items-center` (height ~44px).
+- **Multi-Sentence & Descriptive Alerts** (when a `description` exists or title exceeds 70 characters / spans multiple sentences):
+  - Adapt geometry to a squircle card with `.is-card` and `rounded-2xl sm:rounded-[20px]`.
+  - Align elements with `items-start` (`p-3 sm:p-3.5 px-4`) so status icons and dismiss buttons anchor to the top header line rather than floating awkwardly in the vertical midpoint.
+  - This eliminates the "bloated capsule" distortion where tall multi-line toasts produce giant semicircular corner gaps.
+
+### 10.3 Long Technical Identifiers & Delimiter Line-Breaking
+- **The Issue**: Under Unicode Line Breaking Algorithm (UAX #14) rules, browsers treat a hyphen followed by a digit (e.g. `-2026-11-07`) as an unbreakable negative number prefix. Long compound tokens (e.g. backup package filenames like `PUP-SYSTEM-GOVERNANCE-BACKUP-2026-11-07...`, UUIDs, hashes) fail to wrap after digits, causing the layout engine to push the entire 50+ character block to the next line and leaving a large empty void on the line before it.
+- **The Solution**: Toast titles and descriptions pass through `renderBreakableText`, which inserts native `<wbr />` line-break opportunities after technical delimiters (`-`, `_`, `.`, `/`) in tokens longer than 12 characters, backed by `overflow-wrap: anywhere` on `.rms-toast`. This allows lines to wrap naturally at logical boundaries, eliminates empty gaps on preceding lines, and preserves clipboard purity when copied.

@@ -504,7 +504,7 @@ export default function StudentOverviewTab({
               <Button
                 type="button"
                 onClick={onNewRequest}
-                className="flex h-10 px-5 cursor-pointer border-0"
+                className="h-9 shrink-0 px-4 cursor-pointer"
               >
                 Request Document
               </Button>

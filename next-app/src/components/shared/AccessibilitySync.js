@@ -19,6 +19,14 @@ import {
   setPointerCursorPreference,
   POINTER_CURSOR_EVENT,
 } from "@/lib/accessibility";
+import {
+  getSoundEnabledPreference,
+  setSoundEnabledPreference,
+  getSoundVolumePreference,
+  setSoundVolumePreference,
+  getSoundCategoriesPreference,
+  setSoundCategoriesPreference,
+} from "@/lib/soundPreferences";
 import { getClientSession } from "@/lib/clientAuth";
 
 export default function AccessibilitySync() {
@@ -77,6 +85,34 @@ export default function AccessibilitySync() {
         if (dbPc !== undefined && dbPc !== null) {
           if (currentLocalPc !== dbPc) {
             setPointerCursorPreference(Boolean(dbPc), user.id);
+          }
+        }
+
+        // Sync interface sounds (master enabled, volume, categories)
+        const dbSoundEnabled = user.preferences?.sound_enabled;
+        const currentLocalSoundEnabled = getSoundEnabledPreference(user.id);
+        if (dbSoundEnabled !== undefined && dbSoundEnabled !== null) {
+          if (currentLocalSoundEnabled !== Boolean(dbSoundEnabled)) {
+            setSoundEnabledPreference(Boolean(dbSoundEnabled), user.id);
+          }
+        }
+
+        const dbSoundVolume = user.preferences?.sound_volume;
+        const currentLocalSoundVolume = getSoundVolumePreference(user.id);
+        if (typeof dbSoundVolume === "number" && Number.isFinite(dbSoundVolume)) {
+          if (currentLocalSoundVolume !== dbSoundVolume) {
+            setSoundVolumePreference(dbSoundVolume, user.id);
+          }
+        }
+
+        const dbSoundCategories = user.preferences?.sound_categories;
+        if (dbSoundCategories && typeof dbSoundCategories === "object") {
+          const currentLocalCategories = getSoundCategoriesPreference(user.id);
+          const needsCategorySync = Object.keys(dbSoundCategories).some(
+            (k) => currentLocalCategories[k] !== dbSoundCategories[k]
+          );
+          if (needsCategorySync) {
+            setSoundCategoriesPreference(dbSoundCategories, user.id);
           }
         }
       })

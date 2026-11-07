@@ -83,6 +83,7 @@ export function CopyButton({
       type="button"
       variant={variant}
       size={size}
+      data-sound="copy"
       onClick={handleCopy}
       aria-live="polite"
       className={cn(

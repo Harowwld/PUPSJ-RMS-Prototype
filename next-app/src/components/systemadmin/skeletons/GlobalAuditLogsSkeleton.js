@@ -45,7 +45,7 @@ export default function GlobalAuditLogsSkeleton() {
             {["w-20", "w-28", "w-24", "w-32"].map((width, i) => <Skeleton key={i} className={`h-9 shrink-0 rounded-xl ${width}`} />)}
           </div>
         </div>
-        <AuditLogsTableSkeleton rowCount={20} embedded showScope />
+        <AuditLogsTableSkeleton rowCount={50} embedded showScope />
       </Card>
     </div>
   )

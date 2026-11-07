@@ -2,6 +2,7 @@
 
 
 import { useState, useEffect, useCallback } from "react"
+import useViewPreference from "@/hooks/useViewPreference"
 import { cn } from "@/lib/utils"
 import { Select } from "@/components/ui/select"
 import { formatErrorMessage } from "@/lib/errorUtils"
@@ -102,7 +103,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useViewPreference("backups", "automaticScheduleExpanded", true)
 
   // Fetch current schedule
   const fetchSchedule = useCallback(async () => {
@@ -324,15 +325,15 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
             </div>
 
             {/* Apple Segmented Tabs */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
+            <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
               <button
                 type="button"
                 onClick={() => handleFrequencySelect("daily")}
                 disabled={isSaving}
                 className={cn(
-                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
+                  "px-3.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer select-none",
                   schedule.frequency === "daily"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >
@@ -343,9 +344,9 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 onClick={() => handleFrequencySelect("weekly")}
                 disabled={isSaving}
                 className={cn(
-                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none",
+                  "px-3.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer select-none",
                   schedule.frequency === "weekly"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
+                    ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-xs"
                     : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                 )}
               >

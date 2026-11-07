@@ -11,6 +11,8 @@ import LandingCatalogSkeleton from "@/components/systemadmin/skeletons/LandingCa
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import useCmsDraft from "@/hooks/useCmsDraft"
+import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
 import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -125,11 +127,12 @@ const CLIENT_PILLS = [
   "Graduates & Alumni",
 ]
 
-export default function LandingCatalogCmsView({ showToast }) {
+export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-catalog", "activeTab", "content") // 'content' | 'preview'
   const [catalogData, setCatalogData] = useState(DEFAULT_CATALOG_CONTENT)
+  const { isDirty, savedData, markSaved } = useCmsDraft(catalogData, onDirtyChange)
 
   // Card editor states
   const [selectedCardIdx, setSelectedCardIdx] = useState(0)
@@ -159,6 +162,7 @@ export default function LandingCatalogCmsView({ showToast }) {
         if (ignore) return
         if (res.ok && json.ok && json.data) {
           setCatalogData(json.data)
+          markSaved(json.data)
         } else {
           notify(json.error || "Failed to load document catalog configuration", true)
         }
@@ -174,13 +178,14 @@ export default function LandingCatalogCmsView({ showToast }) {
     return () => {
       ignore = true
     }
-  }, [notify])
+  }, [notify, markSaved])
 
   const currentItems = catalogData.items || []
   const safeSelectedIdx = selectedCardIdx < currentItems.length ? selectedCardIdx : 0
   const currentCard = currentItems[safeSelectedIdx] || currentItems[0] || {}
 
   const handleSave = async () => {
+    if (!isDirty || saving) return
     if (!catalogData.heading?.trim()) {
       notify("Section Heading cannot be blank", true)
       return
@@ -201,6 +206,7 @@ export default function LandingCatalogCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setCatalogData(json.data)
+        markSaved(json.data)
         notify("Document catalog configuration saved successfully")
       } else {
         notify(json.error || "Failed to save catalog configuration", true)
@@ -224,6 +230,7 @@ export default function LandingCatalogCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setCatalogData(json.data)
+        markSaved(json.data)
         setSelectedCardIdx(0)
         notify("Document catalog reverted to default")
       } else {
@@ -346,13 +353,14 @@ export default function LandingCatalogCmsView({ showToast }) {
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{catalogData.items.length} documents · Academic Document Catalog</span>
+              <LandingCmsDraftStatus isDirty={isDirty} />
             </div>
           }
           description="Configure authentic university credentials, document codes, client eligibility tags, and filing requirements for the Apple-style carousel."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
@@ -366,35 +374,31 @@ export default function LandingCatalogCmsView({ showToast }) {
 
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                disabled={saving}
-                className="h-9 px-4"
-              >
-                Restore Defaults
-              </Button>
-
-              <Button
-                type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Catalog Content"}
               </Button>
             </div>
           }
+          secondaryActions={
+            <>
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setCatalogData(savedData); notify("Draft changes discarded. Reverted to saved catalog content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+            </>
+          }
         />
 
         {/* Navigation Tabs */}
-        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Catalog Content" />
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Catalog Content" contentCount={catalogData.items.length} />
 
         <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           {/* TAB 1: Catalog Content (Section Header + Document Cards) */}
           {activeTab === "content" && (
             <div className="space-y-6">
               {/* Section Header & Subtitle */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Header &amp; Description
@@ -422,7 +426,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       }
                       placeholder="e.g. Academic Document Catalog"
                       maxLength={50}
-                      className="bg-white dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
 
@@ -444,7 +448,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                       }
                       placeholder="Explore authentic credentials, university clearance protocols..."
                       maxLength={200}
-                      className="w-full min-h-[72px] resize-y"
+                      className="w-full min-h-[72px] resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
                 </div>
@@ -563,7 +567,7 @@ export default function LandingCatalogCmsView({ showToast }) {
 
                 {/* RIGHT COLUMN: ACTIVE CARD EDITOR & LIVE CARD MINI-PREVIEW */}
                 <div className="lg:col-span-7 flex flex-col gap-6">
-                  <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
+                  <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs flex flex-col gap-5">
                     <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                       <div className="space-y-0.5">
                         <span className="text-[10px] font-sans tabular-nums uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">
@@ -594,7 +598,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         onChange={(e) => updateCardField("title", e.target.value)}
                         placeholder="e.g. Transcript of Records"
                         maxLength={60}
-                        className="h-10 w-full rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs font-semibold"
+                        className="h-10 w-full rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3.5 text-xs font-semibold focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
 
@@ -608,20 +612,29 @@ export default function LandingCatalogCmsView({ showToast }) {
                         value={currentCard.client || ""}
                         onChange={(e) => updateCardField("client", e.target.value)}
                         placeholder="e.g. Student & Alumni"
-                        className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs mb-2 font-medium"
+                        className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3.5 text-xs mb-2 font-medium focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-[10px] text-gray-400 font-sans tabular-nums">Suggestions:</span>
-                        {CLIENT_PILLS.map((pill) => (
-                          <button
-                            key={pill}
-                            type="button"
-                            onClick={() => updateCardField("client", pill)}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-sans tabular-nums bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-600 dark:text-zinc-300 hover:border-pup-maroon hover:text-pup-maroon transition-colors cursor-pointer"
-                          >
-                            {pill}
-                          </button>
-                        ))}
+                        {CLIENT_PILLS.map((pill) => {
+                          const isSelected =
+                            (currentCard.client || "").trim().toLowerCase() === pill.toLowerCase()
+                          return (
+                            <button
+                              key={pill}
+                              type="button"
+                              onClick={() => updateCardField("client", pill)}
+                              className={cn(
+                                "px-2.5 py-0.5 rounded-lg text-[10px] font-sans tabular-nums border transition-all cursor-pointer",
+                                isSelected
+                                  ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                                  : "bg-white dark:bg-zinc-900 border-border dark:border-border text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                              )}
+                            >
+                              {pill}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
 
@@ -636,7 +649,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                         value={currentCard.description || ""}
                         onChange={(e) => updateCardField("description", e.target.value)}
                         placeholder="Official comprehensive academic transcript for employment, PRC board examinations..."
-                        className="w-full resize-none"
+                        className="w-full resize-none rounded-xl border border-border bg-white px-3.5 py-2 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-zinc-900 focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
 
@@ -661,7 +674,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                               aria-label={`Filing requirement ${rIdx + 1}`}
                               value={req}
                               onChange={(e) => updateRequirement(rIdx, e.target.value)}
-                              className="h-9 flex-1 bg-white dark:bg-card"
+                              className="h-9 flex-1 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                             <button
                               type="button"
@@ -688,7 +701,7 @@ export default function LandingCatalogCmsView({ showToast }) {
                             }
                           }}
                           placeholder="Add required document or clearance (e.g. Valid Student ID)..."
-                          className="h-9 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-xs flex-1"
+                          className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3 text-xs flex-1 focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                         <Button
                           type="button"
@@ -762,7 +775,7 @@ export default function LandingCatalogCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Carousel Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Apple-Style Document Carousel

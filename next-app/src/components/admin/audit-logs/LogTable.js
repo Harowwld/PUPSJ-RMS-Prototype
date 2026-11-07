@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
+import NarrativeText from "@/components/shared/NarrativeText"
 
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
@@ -177,14 +178,14 @@ const LogRow = React.memo(function LogRow({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="block truncate max-w-[260px] text-xs font-normal text-gray-500 dark:text-zinc-400">
-                {formatLogDetails(log.details) || "No known description"}
+                <NarrativeText text={log.details} mode="compact" />
               </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
               className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
             >
-              {formatLogDetails(log.details) || "No known description"}
+              <NarrativeText text={log.details} mode="full" />
             </TooltipContent>
           </Tooltip>
         </td>
@@ -266,6 +267,20 @@ export default function LogTable({
       [id]: !prev[id]
     }))
   }, [])
+
+  const allExpanded = displayLogs.length > 0 && displayLogs.every((l) => Boolean(expandedRows[l.id]))
+
+  const toggleExpandAll = useCallback(() => {
+    if (allExpanded) {
+      setExpandedRows({})
+    } else {
+      const next = {}
+      for (const log of displayLogs) {
+        next[log.id] = true
+      }
+      setExpandedRows(next)
+    }
+  }, [allExpanded, displayLogs])
 
   if (isLoading && (!displayLogs || displayLogs.length === 0)) {
     return <AuditLogsTableSkeleton rowCount={8} embedded={embedded} />
@@ -365,21 +380,22 @@ export default function LogTable({
                       "w-12 min-w-12 max-w-12 px-2.5 py-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                       isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                     )}>
-                      {isScrolledX && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={resetScroll}
-                              aria-label="Reset scroll to start"
-                              className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
-                            >
-                              <AppIcon className=" ArrowLeft01Icon text-xs" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Reset scroll to start</TooltipContent>
-                        </Tooltip>
-                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={toggleExpandAll}
+                            disabled={displayLogs.length === 0}
+                            aria-label={allExpanded ? "Collapse all rows" : "Expand all rows"}
+                            className="mx-auto flex h-7 w-7 rounded-lg items-center justify-center bg-transparent border-none text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer active:scale-95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <AppIcon className={cn("text-[14px]", allExpanded ? "MinusSignIcon" : "Add01Icon")} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          {allExpanded ? "Collapse all rows" : "Expand all rows"}
+                        </TooltipContent>
+                      </Tooltip>
                     </th>
                     <th className="p-4 w-[16%]">
                       <button

@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import OfficeGridSkeleton from "@/components/systemadmin/skeletons/OfficeGridSkeleton"
+import OfficeManagementPageSkeleton from "@/components/systemadmin/skeletons/OfficeManagementPageSkeleton"
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
+import { SegmentedControl } from "@/components/ui/tabs"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
@@ -883,6 +885,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     return Math.min(availableModules.length, sysCount + customCount)
   }, [availableModules, form.selectedModules])
 
+  if (loading) return <OfficeManagementPageSkeleton />
+
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
@@ -905,7 +909,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2">
               <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Offices & Modules" className="h-9 w-9" />
@@ -915,59 +919,28 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         />
 
         <div className="flex items-center justify-between gap-4 overflow-x-auto px-6 py-2.5 scrollbar-none border-b border-border bg-white dark:bg-card dark:border-white/10">
-          <div role="group" aria-label="Department status" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[{ key: "Active", label: "Active", count: stats.active }, { key: "Inactive", label: "Archived", count: stats.inactive }].map(({ key, label, count }) => {
-              const isSelected = statusFilter === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setStatusFilter(key)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <span>{label}</span>
-                  {loading ? (
-                    <Skeleton aria-hidden="true" className="h-3 w-5 rounded-full dark:bg-muted" />
-                  ) : (
-                    <span className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                      isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                    )}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr"
+            items={[
+              { value: "Active", label: "Active", badge: stats.active },
+              { value: "Inactive", label: "Archived", badge: stats.inactive },
+            ]}
+          />
 
-          <div role="group" aria-label="Department display" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
-            {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => {
-              const isSelected = layoutView === mode;
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setLayoutView(mode)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
+          <div className="ml-auto">
+            <SegmentedControl
+              value={layoutView}
+              onValueChange={setLayoutView}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr"
+              items={[
+                { value: "grid", label: "Grid", icon: <ViewModeIcon mode="grid" className="text-sm" /> },
+                { value: "table", label: "Table", icon: <ViewModeIcon mode="table" className="text-sm" /> },
+              ]}
+            />
           </div>
         </div>
 
@@ -1039,33 +1012,41 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         : "There are currently no administrative or academic campus departments configured in the system.")}
                   </EmptyDescription>
                 </EmptyHeader>
-                {(searchQuery || filterClauses.length > 0 || statusFilter === "Active") && (
-                  <EmptyContent>
-                    {searchQuery || filterClauses.length > 0 ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
-                        title="Reset Filters"
-                        className="flex h-10 items-center justify-center gap-2 px-5"
-                      >
-                        Reset Filters
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleOpenCreate}
-                        title="Create Department"
-                        className="flex h-10 items-center justify-center px-5 cursor-pointer"
-                      >
-                        Create Department
-                      </Button>
-                    )}
-                  </EmptyContent>
-                )}
+                <EmptyContent>
+                  {searchQuery || filterClauses.length > 0 ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
+                      title="Reset Filters"
+                      className="flex h-10 items-center justify-center gap-2 px-5"
+                    >
+                      Reset Filters
+                    </Button>
+                  ) : statusFilter === "Inactive" && stats.active > 0 ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => setStatusFilter("Active")}
+                      title="View Active Departments"
+                      className="flex h-10 items-center justify-center px-5"
+                    >
+                      View Active Departments
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleOpenCreate}
+                      title="Create Department"
+                      className="flex h-10 items-center justify-center px-5 cursor-pointer"
+                    >
+                      Create Department
+                    </Button>
+                  )}
+                </EmptyContent>
               </Empty>
             </div>
           ) : layoutView === "grid" ? (
             <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content-start">
                 {paginatedOffices.map((office) => {
                   const accent = office.accent_color || "#800000"
                   const isActive = String(office.status || "").trim().toLowerCase() === "active"
@@ -1074,7 +1055,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     <Card
                       key={office.id}
                       className={cn(
-                        "group overflow-hidden border relative shadow-xs rounded-2xl flex flex-col justify-between p-0 py-0 gap-0",
+                        "group overflow-hidden border relative shadow-xs rounded-2xl flex flex-col p-0 py-0 gap-0",
                         isActive
                           ? "border-border dark:border-border bg-white dark:bg-card"
                           : "border-dashed border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/40 opacity-80 dark:opacity-75"
@@ -1106,7 +1087,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               >
                                 {office.short_name}
                               </h3>
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
+                              <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
                                 {office.id}
                               </span>
                             </div>
@@ -1135,7 +1116,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
                       </div>
 
-                      <CardContent className="p-5 pt-3 flex flex-col h-full justify-between gap-4">
+                      <CardContent className="p-5 pt-3 flex flex-col flex-1 gap-3.5">
                         <div className="space-y-3">
                           <p
                             className="w-full min-w-0 truncate text-xs leading-4 text-gray-600 dark:text-zinc-400"
@@ -1189,7 +1170,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         </div>
 
                         {/* Metrics (Pill Chips, No Dotted Underlines) & Primary Action */}
-                        <div className="space-y-3 pt-3 border-t border-border">
+                        <div className="pt-3 border-t border-border mt-auto">
                           <div className="flex items-center justify-between gap-2">
                             {/* Native HIG Metric Chips */}
                             <div className="flex min-w-0 items-center gap-2">
@@ -1257,11 +1238,11 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <button
                     type="button"
                     onClick={handleOpenCreate}
-                    className="group flex min-h-[300px] w-full cursor-pointer select-none flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 text-gray-500 shadow-2xs transition-all hover:border-pup-maroon/40 hover:bg-pup-maroon/5 hover:text-pup-maroon dark:border-border dark:hover:bg-red-500/5 dark:hover:text-red-400"
+                    className="group flex min-h-[200px] w-full cursor-pointer select-none flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 text-gray-500 shadow-2xs transition-all hover:border-gray-900/40 hover:bg-gray-100/60 hover:text-gray-950 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
                     aria-label="Add a department"
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-xl shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
-                      <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                      <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
                     </span>
                     <span className="text-center">
                       <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Add Department</span>
@@ -1599,7 +1580,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Department Acronym / Short Name *
+                    Department Acronym / Short Name
                   </label>
                   <Input
                     value={form.short_name}
@@ -1623,20 +1604,20 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                       })
                     }}
                     placeholder="e.g. Registrar, OSAS, Library"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
                 </div>
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Full Name of the Department *
+                    Full Name of the Department
                   </label>
                   <Input
                     value={form.name}
                     onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g. Office of the University Library Services"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
                 </div>
@@ -1645,7 +1626,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               {/* Row 2: Description */}
               <div>
                 <label htmlFor="office-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                  Description
+                  Description <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                 </label>
                 <Textarea
                   id="office-description"
@@ -1653,7 +1634,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Describe the department's institutional role and functions..."
-                  className="w-full min-h-[72px] resize-y"
+                  className="w-full min-h-[72px] resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
               </div>
 
@@ -1728,13 +1709,13 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Workstation Name (Optional)
+                    Workstation Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                   </label>
                   <Input
                     value={form.station_name}
                     onChange={(e) => setForm(prev => ({ ...prev, station_name: e.target.value }))}
                     placeholder="e.g. Registrar Archive PC (leave blank to assign automatically)"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                   />
                   <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1 block">
                     This name appears on staff pages and activity history. Storage locations are set up automatically.
@@ -1846,9 +1827,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                 className={cn(
                                   "flex items-start gap-2.5 p-2.5 rounded-xl text-xs transition-all border select-none",
                                   isChecked
-                                    ? "border-pup-maroon/20 bg-pup-maroon/5 dark:border-border dark:bg-white/5"
-                                    : "border-border bg-gray-50/50 dark:border-border dark:bg-zinc-900/40",
-                                  isSystem ? "opacity-80 cursor-default" : "hover:border-pup-maroon/40 cursor-pointer"
+                                    ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                                    : "border-border bg-white dark:border-border dark:bg-zinc-900/40",
+                                  isSystem ? "opacity-80 cursor-default" : "hover:bg-gray-50 dark:hover:bg-zinc-800/60 cursor-pointer"
                                 )}
                               >
                                 <input
@@ -1856,7 +1837,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   checked={isChecked}
                                   disabled={isSystem}
                                   onChange={() => handleModuleToggle(mod.id)}
-                                  className="mt-0.5 rounded text-pup-maroon focus:ring-pup-maroon h-3.5 w-3.5"
+                                  className="mt-0.5 rounded accent-gray-950 dark:accent-zinc-100 focus:ring-gray-950 dark:focus:ring-zinc-100 h-3.5 w-3.5"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between gap-1">
@@ -1934,10 +1915,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                           title={opt.label}
                           onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
                           className={cn(
-                            "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer shadow-2xs",
+                            "h-10 w-full flex items-center justify-center rounded-xl border text-lg transition-all cursor-pointer",
                             selected
-                              ? "border-slate-900 bg-slate-900 text-white dark:border-border dark:bg-zinc-100 dark:text-zinc-900 scale-105"
-                              : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                              : "border-border bg-white text-gray-600 hover:border-border hover:bg-gray-100 dark:border-border dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 shadow-2xs"
                           )}
                         >
                           <AppIcon className={opt.value}></AppIcon>
@@ -2112,7 +2093,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         secondaryActions={[
           {
             label: "Copy Codes",
-            copiedLabel: "Copied Codes",
+            copiedLabel: "Codes Copied!",
             onClick: handleCopyCodes,
           },
         ]}

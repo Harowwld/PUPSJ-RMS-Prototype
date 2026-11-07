@@ -27,10 +27,10 @@ export default function LandingWorkflowSkeleton() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
           }
         />
@@ -41,7 +41,7 @@ export default function LandingWorkflowSkeleton() {
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-6">
             {/* Section Title & Narrative Copy Skeleton */}
-            <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
+            <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -65,7 +65,7 @@ export default function LandingWorkflowSkeleton() {
             </div>
 
             {/* Header Bar with Curve Style & Add Step Buttons */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -89,8 +89,8 @@ export default function LandingWorkflowSkeleton() {
             {/* Workflow Steps Accordion */}
             <div className="space-y-4">
               {/* STEP 1 ACCORDION: EXPANDED */}
-              <div className="rounded-xl border border-pup-maroon/40 dark:border-red-500/40 bg-white dark:bg-card shadow-xs overflow-hidden">
-                <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
+              <div className="rounded-2xl border border-pup-maroon/40 dark:border-red-500/40 bg-white dark:bg-card shadow-xs overflow-hidden">
+                <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-2xl">
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                       01
@@ -126,9 +126,9 @@ export default function LandingWorkflowSkeleton() {
               {["02", "03", "04"].map((stepNum) => (
                 <div
                   key={stepNum}
-                  className="rounded-xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs overflow-hidden"
+                  className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs overflow-hidden"
                 >
-                  <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-2xl">
                     <div className="flex items-center gap-3.5 min-w-0">
                       <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                         {stepNum}

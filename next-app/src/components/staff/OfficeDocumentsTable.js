@@ -80,7 +80,7 @@ export default function OfficeDocumentsTable({
         </div>
         <div className="flex items-center gap-3">
           <div className="relative w-full max-w-xs group">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
               <Search01Icon size="1em" className="text-sm text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
             </div>
             <Input
@@ -89,7 +89,7 @@ export default function OfficeDocumentsTable({
               placeholder="Search this office's documents"
               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {rows.length.toLocaleString()}
             </div>
           </div>

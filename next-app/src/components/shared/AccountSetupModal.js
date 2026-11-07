@@ -565,7 +565,7 @@ export default function AccountSetupModal({ authUser }) {
                 {/* Live Stage Preview */}
                 <div className="flex flex-col items-center justify-center gap-2 py-1">
                   <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-inner ring-4 ring-gray-100 dark:ring-zinc-800 flex items-center justify-center bg-gray-50 dark:bg-zinc-800">
-                    <div className="w-full h-full flex items-center justify-center scale-[2.4]">
+                    <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
                       {DEFAULT_AVATARS.find((a) => a.id === selectedAvatarId)?.svg}
                     </div>
                   </div>
@@ -603,7 +603,7 @@ export default function AccountSetupModal({ authUser }) {
                                 : "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700"
                             )}
                           >
-                            <div className="w-full h-full flex items-center justify-center scale-[1.5]">
+                            <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
                               {avatar.svg}
                             </div>
                           </div>

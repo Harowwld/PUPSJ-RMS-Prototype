@@ -56,6 +56,7 @@ import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Copy01Icon, Loading01Icon, Search01Icon, Archive01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -80,6 +81,34 @@ const getStaffCleanName = (staff) => {
 const getStaffCleanEmail = (staff) => {
   if (staff?.email && !staff.email.startsWith("enc:v1:")) return staff.email
   return "N/A"
+}
+
+function InfoRow({ icon, label, value, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          typeof icon === "string" ? (
+            <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          ) : (
+            <span className="text-gray-400 dark:text-zinc-500 text-sm shrink-0 flex items-center">
+              {icon}
+            </span>
+          )
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
+      </div>
+    </div>
+  )
 }
 
 export default function GlobalStaffTab({ authUser, showToast }) {
@@ -894,7 +923,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2">
               <RefreshButton onRefresh={handleManualRefresh} isLoading={isManualLoading} title="Refresh Staff Directory" className="h-9 w-9" />
@@ -904,33 +933,16 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         />
 
         <div role="group" aria-label="Personnel status" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
-          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[["Active", "Active", stats.active], ["Inactive", "Archived", stats.inactive]].map(([value, label, count]) => {
-              const isSelected = statusFilter === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => setStatusFilter(value)}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <span>{label}</span>
-                  <span className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                  )}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr"
+            items={[
+              { value: "Active", label: "Active", badge: stats.active },
+              { value: "Inactive", label: "Archived", badge: stats.inactive },
+            ]}
+          />
         </div>
 
         <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
@@ -993,28 +1005,36 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         : "There are currently no personnel accounts registered in the directory.")}
                   </EmptyDescription>
                 </EmptyHeader>
-                {(hasActiveFilters || statusFilter === "Active") && (
-                  <EmptyContent>
-                    {hasActiveFilters ? (
-                      <Button
-                        variant="outline"
-                        onClick={handleClearFilters}
-                        title="Reset Filters"
-                        className="flex h-10 items-center justify-center gap-2 px-5"
-                      >
-                        Reset Filters
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleOpenCreate}
-                        title="Register Personnel"
-                        className="h-10 px-5 cursor-pointer"
-                      >
-                        Register Personnel
-                      </Button>
-                    )}
-                  </EmptyContent>
-                )}
+                <EmptyContent>
+                  {hasActiveFilters ? (
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      title="Reset Filters"
+                      className="flex h-10 items-center justify-center gap-2 px-5"
+                    >
+                      Reset Filters
+                    </Button>
+                  ) : statusFilter === "Inactive" && stats.active > 0 ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => setStatusFilter("Active")}
+                      title="View Active Personnel"
+                      className="flex h-10 items-center justify-center px-5"
+                    >
+                      View Active Personnel
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleOpenCreate}
+                      title="Register Personnel"
+                      className="h-10 px-5 cursor-pointer"
+                    >
+                      Register Personnel
+                    </Button>
+                  )}
+                </EmptyContent>
               </Empty>
             </div>
           ) : (
@@ -1134,7 +1154,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-[#1c1c1e]">
+                  <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {groupedStaff.map(([groupLabel, members]) => <Fragment key={groupLabel || "all"}>
                       {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 3} className="bg-gray-50/90 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">{groupLabel} <span className="ml-2 font-sans tabular-nums font-normal text-gray-400 dark:text-zinc-500">{members.length}</span></td></tr>}
                       {members.map((member) => {
@@ -1305,28 +1325,28 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               {/* Row 1: Editable Full Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    First Name *
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    First Name
                   </label>
                   <Input
                     ref={fnameRef}
                     value={form.fname}
                     onChange={(e) => setForm(prev => ({ ...prev, fname: e.target.value }))}
                     placeholder="Elias"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Last Name *
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Last Name
                   </label>
                   <Input
                     value={form.lname}
                     onChange={(e) => setForm(prev => ({ ...prev, lname: e.target.value }))}
                     placeholder="Austria"
-                    className="h-10 rounded-xl bg-white border border-border text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-border dark:text-white"
+                    className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
                 </div>
@@ -1335,8 +1355,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               {/* Row 2: Editable Office Scope & Privilege Level */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Assigned Office / Department {form.role !== "SystemAdmin" && "*"}
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Assigned Office / Department {form.role === "SystemAdmin" && <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>}
                   </label>
                   <Select
                     value={form.office_id}
@@ -1362,8 +1382,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Privilege Level *
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    Privilege Level
                   </label>
                   <Select
                     value={form.role}
@@ -1391,7 +1411,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               {/* Row 3: System-Generated Identifiers (Grouped Read-Only Section) */}
               <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     System-Generated Credentials
                   </span>
                   <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
@@ -1402,7 +1422,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Employee ID */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
                       Employee ID
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
@@ -1414,7 +1434,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {/* Official Email Address */}
                   <div>
-                    <label className="block text-[10px] font-semibold text-gray-500 dark:text-zinc-400 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
                       Official Email Address
                     </label>
                     <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
@@ -1718,63 +1738,94 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                       <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                         Identity & Access Metadata
-                      </h4>
+                      </h3>
                     </div>
-                    <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400">Employee ID</span>
+                    <div className="divide-y-0">
+                      <InfoRow
+                        icon=" Contact01Icon"
+                        label="Employee ID"
+                      >
                         <div className="flex items-center gap-2">
-                          <span className="font-sans tabular-nums font-semibold text-gray-900 dark:text-zinc-100 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800">
+                          <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
                             {inspectMember.id}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopyInspectField(inspectMember.id, "id", "Employee ID")}
-                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                             title="Copy Employee ID"
                           >
                             {copiedInspectField === "id" ? (
-                              <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
+                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
                             ) : (
-                              <Copy01Icon size="1em" className="text-xs" />
+                              <Copy01Icon size="1em" className="text-[11px]" />
                             )}
                           </button>
                         </div>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between text-xs gap-3">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400 shrink-0">Official Email</span>
+                      </InfoRow>
+                      <InfoRow
+                        icon=" Mail01Icon"
+                        label="Official Email"
+                      >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-sans tabular-nums text-gray-900 dark:text-zinc-100 truncate text-[11px]" title={inspectMember.email}>
+                          <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 truncate text-xs font-medium" title={inspectMember.email}>
                             {getStaffCleanEmail(inspectMember)}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopyInspectField(getStaffCleanEmail(inspectMember), "email", "Email address")}
-                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                             title="Copy Email"
                           >
                             {copiedInspectField === "email" ? (
-                              <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
+                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
                             ) : (
-                              <Copy01Icon size="1em" className="text-xs" />
+                              <Copy01Icon size="1em" className="text-[11px]" />
                             )}
                           </button>
                         </div>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400">Authorization Role</span>
-                        <span className="font-medium text-gray-900 dark:text-zinc-100">
-                          {isSysAdmin ? "Platform System Administrator" : getOfficeRoleLabel(inspectMember.role, inspectMember, offices)}
-                        </span>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400">Administrative Section</span>
-                        <span className="font-medium text-gray-900 dark:text-zinc-100">
-                          {inspectMember.section || "General Administration"}
-                        </span>
-                      </div>
+                      </InfoRow>
+                      <InfoRow
+                        icon=" Shield01Icon"
+                        label="Authorization Role"
+                        value={
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border select-none",
+                              isSysAdmin
+                                ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
+                                : inspectMember.role === "Admin"
+                                  ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
+                                  : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
+                            )}
+                          >
+                            {isSysAdmin ? "Platform System Administrator" : getOfficeRoleLabel(inspectMember.role, inspectMember, offices)}
+                          </span>
+                        }
+                      />
+                      <InfoRow
+                        icon=" Shield01Icon"
+                        label="Two-step Verification"
+                        value={
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium select-none",
+                              inspectMember.totp_enabled
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                                : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+                            )}
+                          >
+                            {inspectMember.totp_enabled ? "Enabled" : "Not enabled"}
+                          </span>
+                        }
+                      />
+                      <InfoRow
+                        icon=" Building01Icon"
+                        label="Administrative Section"
+                        value={<span className="font-medium text-gray-800 dark:text-zinc-200">{inspectMember.section || "General Administration"}</span>}
+                      />
                     </div>
                   </div>
 
@@ -1782,23 +1833,21 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                       <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                         System Activity & Registration
-                      </h4>
+                      </h3>
                     </div>
-                    <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400">Registered On</span>
-                        <span className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300">
-                          {inspectMember.created_at ? formatPHDateTime(inspectMember.created_at) : "N/A"}
-                        </span>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="font-medium text-gray-500 dark:text-zinc-400">Last Active Session</span>
-                        <span className="font-sans tabular-nums text-[11px] text-gray-700 dark:text-zinc-300">
-                          {inspectMember.last_active ? formatPHDateTime(inspectMember.last_active) : "Never logged in"}
-                        </span>
-                      </div>
+                    <div className="divide-y-0">
+                      <InfoRow
+                        icon=" Calendar01Icon"
+                        label="Registered On"
+                        value={<span className="font-sans tabular-nums text-xs font-medium text-gray-800 dark:text-zinc-200">{inspectMember.created_at ? formatPHDateTime(inspectMember.created_at) : "N/A"}</span>}
+                      />
+                      <InfoRow
+                        icon=" Clock01Icon"
+                        label="Last Active Session"
+                        value={<span className="font-sans tabular-nums text-xs font-medium text-gray-800 dark:text-zinc-200">{inspectMember.last_active ? formatPHDateTime(inspectMember.last_active) : "Never logged in"}</span>}
+                      />
                     </div>
                   </div>
 
@@ -1827,26 +1876,28 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       View History
                     </Button>
                   </div>
-
-                  <CopyButton
-                    textToCopy={() => JSON.stringify(inspectMember, null, 2)}
-                    entityName="Personnel Data"
-                    idleLabel="Copy Personnel Data"
-                    size="sm"
-                    title="Copy personnel record data"
-                    className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  />
                 </div>
 
-                <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setInspectMember(null)}
-                    className="h-10 px-4"
-                  >
-                    Close
-                  </Button>
+                <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setInspectMember(null)}
+                      className="h-10 px-4"
+                    >
+                      Close
+                    </Button>
+                    <CopyButton
+                      textToCopy={() => JSON.stringify(inspectMember, null, 2)}
+                      entityName="Personnel Data"
+                      idleLabel="Copy Data"
+                      copiedLabel="Data Copied!"
+                      size="sm"
+                      title="Copy personnel record data"
+                      className="h-10 px-3.5"
+                    />
+                  </div>
 
                   {!isSelf && (
                     <div className="flex items-center gap-2">
@@ -1918,12 +1969,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         secondaryActions={[
           {
             label: "Copy Emails",
-            copiedLabel: "Copied Emails",
+            copiedLabel: "Emails Copied!",
             onClick: handleCopyEmails,
           },
           {
             label: "Copy Employee IDs",
-            copiedLabel: "Copied IDs",
+            copiedLabel: "IDs Copied!",
             onClick: handleCopyIds,
           },
         ]}

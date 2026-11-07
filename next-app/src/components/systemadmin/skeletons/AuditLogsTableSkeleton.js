@@ -43,8 +43,8 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>}
               {showScope && has("ip") && <th><Skeleton className="h-3.5 w-24" /></th>}
-              <th className="py-3 px-4 pr-6 text-right w-20">
-                <Skeleton className="h-3.5 w-14 ml-auto dark:bg-muted" />
+              <th className="w-12 min-w-12 max-w-12 px-2 text-center">
+                <Skeleton className="h-3.5 w-7 mx-auto rounded dark:bg-muted" />
               </th>
             </tr>
           </thead>
@@ -85,9 +85,9 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                   />
                 </td>}
                 {showScope && has("ip") && <td><Skeleton className="h-3.5 w-24" /></td>}
-                <td className="py-3 px-4 pr-6 align-middle text-right whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-1">
-                    <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted" />
+                <td className="w-12 min-w-12 max-w-12 px-2 align-middle text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center">
+                    <Skeleton className="h-7 w-7 rounded-lg mx-auto dark:bg-muted" />
                   </div>
                 </td>
               </tr>

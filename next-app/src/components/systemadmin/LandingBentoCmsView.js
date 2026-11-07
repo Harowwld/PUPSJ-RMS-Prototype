@@ -10,6 +10,7 @@ import LandingBentoSkeleton from "@/components/systemadmin/skeletons/LandingBent
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { Agreement01Icon, Archive01Icon, ArrowDown01Icon, CalendarCheckIn01Icon, Cursor01Icon, File02Icon, LaptopIcon, Loading01Icon, Notification02Icon, SentIcon, Shield01Icon, Target01Icon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_BENTO = {
@@ -181,32 +182,23 @@ export default function LandingBentoCmsView({ showToast }) {
           description="Manage public portal bento grid features, interactive animation simulation steps, archive retrieval nodes, and statutory compliance tags."
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => window.open("/#about", "_blank")}
-                className="flex h-10 items-center justify-center px-4"
+                className="h-9 px-4"
               >
-                Preview
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                className="flex h-10 items-center justify-center px-4"
-              >
-                Reset
+                Preview Portal
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex h-10 items-center justify-center cursor-pointer px-5"
+                className="h-9 px-4 cursor-pointer"
               >
                 {saving ? (
                   <>
@@ -219,50 +211,32 @@ export default function LandingBentoCmsView({ showToast }) {
               </Button>
             </div>
           }
+          secondaryActions={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setResetModalOpen(true)}
+              disabled={saving}
+              className="h-9 px-4"
+            >
+              Restore Defaults
+            </Button>
+          }
         />
 
         {/* Navigation Tabs */}
-        <div className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30 overflow-x-auto scrollbar-none">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setActiveTab("cards")}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
-                activeTab === "cards"
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              Bento Cards (5)
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("header")}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
-                activeTab === "header"
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              Header &amp; Overview
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 whitespace-nowrap active:scale-[0.98]",
-                activeTab === "preview"
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              Interactive Bento Preview
-            </button>
-          </div>
+        <div role="group" aria-label="Bento CMS section" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+          <SegmentedControl
+            value={activeTab}
+            onValueChange={setActiveTab}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              { value: "cards", label: "Bento Cards", badge: 5 },
+              { value: "header", label: "Header & Overview" },
+              { value: "preview", label: "Interactive Bento Preview" },
+            ]}
+          />
         </div>
 
         {/* Content Body */}
@@ -271,18 +245,30 @@ export default function LandingBentoCmsView({ showToast }) {
           {activeTab === "cards" && (
             <div className="space-y-4">
               {/* ACCORDION CARD 1 */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div
+                className={cn(
+                  "rounded-xl border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all",
+                  activeCardTab === 1
+                    ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                    : "border-border dark:border-border"
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 1 ? null : 1)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer border-0 select-none group transition-colors",
+                    activeCardTab === 1
+                      ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                      : "bg-transparent hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 1
-                          ? "bg-pup-maroon text-white"
+                          ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
@@ -419,18 +405,30 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 2 */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div
+                className={cn(
+                  "rounded-xl border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all",
+                  activeCardTab === 2
+                    ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                    : "border-border dark:border-border"
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 2 ? null : 2)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer border-0 select-none group transition-colors",
+                    activeCardTab === 2
+                      ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                      : "bg-transparent hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 2
-                          ? "bg-pup-maroon text-white"
+                          ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
@@ -578,18 +576,30 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 3 */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div
+                className={cn(
+                  "rounded-xl border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all",
+                  activeCardTab === 3
+                    ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                    : "border-border dark:border-border"
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 3 ? null : 3)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer border-0 select-none group transition-colors",
+                    activeCardTab === 3
+                      ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                      : "bg-transparent hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 3
-                          ? "bg-pup-maroon text-white"
+                          ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
@@ -707,18 +717,30 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 4 */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div
+                className={cn(
+                  "rounded-xl border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all",
+                  activeCardTab === 4
+                    ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                    : "border-border dark:border-border"
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 4 ? null : 4)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer border-0 select-none group transition-colors",
+                    activeCardTab === 4
+                      ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                      : "bg-transparent hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 4
-                          ? "bg-pup-maroon text-white"
+                          ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
@@ -836,18 +858,30 @@ export default function LandingBentoCmsView({ showToast }) {
               </div>
 
               {/* ACCORDION CARD 5 */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all">
+              <div
+                className={cn(
+                  "rounded-xl border bg-gray-50/50 dark:bg-zinc-900/30 overflow-hidden transition-all",
+                  activeCardTab === 5
+                    ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                    : "border-border dark:border-border"
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setActiveCardTab(activeCardTab === 5 ? null : 5)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer bg-transparent border-0 select-none group transition-colors hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left cursor-pointer border-0 select-none group transition-colors",
+                    activeCardTab === 5
+                      ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                      : "bg-transparent hover:bg-gray-100/60 dark:hover:bg-white/5"
+                  )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
                         activeCardTab === 5
-                          ? "bg-pup-maroon text-white"
+                          ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
                           : "bg-gray-200/80 dark:bg-zinc-800 text-gray-900 dark:text-zinc-300"
                       )}
                     >
@@ -987,7 +1021,7 @@ export default function LandingBentoCmsView({ showToast }) {
           {/* TAB 2: Section Header & Overview */}
           {activeTab === "header" && (
             <div className="w-full space-y-6">
-              <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-5">
+              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                 <div className="border-b border-border dark:border-border pb-3">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                     Editorial Header &amp; Subtitle
@@ -1048,7 +1082,7 @@ export default function LandingBentoCmsView({ showToast }) {
           {/* TAB 3: Interactive Bento Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Bento Grid (5-Card Layout)
@@ -1282,10 +1316,12 @@ export default function LandingBentoCmsView({ showToast }) {
       <ConfirmModal
         open={resetModalOpen}
         onOpenChange={setResetModalOpen}
-        title="Reset Bento Grid Settings?"
-        description="Are you sure you want to reset all bento grid features, editorial headlines, and simulation labels back to institutional defaults? This action cannot be undone."
-        confirmText="Reset to Defaults"
+        onCancel={() => setResetModalOpen(false)}
+        title="Restore Default Bento Grid Settings"
+        message="Are you sure you want to reset all bento grid features, editorial headlines, and simulation labels back to institutional defaults? This action cannot be undone."
+        confirmLabel="Restore Defaults"
         confirmVariant="destructive"
+        variant="warning"
         onConfirm={handleReset}
       />
     </div>

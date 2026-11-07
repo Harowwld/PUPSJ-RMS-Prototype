@@ -430,11 +430,33 @@ export async function updateStaffPreferences(staffId, prefs) {
     display_name_format: "full_name",
     font_size: "default",
     pointer_cursor: true,
+    sound_enabled: false,
+    sound_volume: 0.5,
+    sound_categories: {
+      presses: true,
+      toggles: true,
+      surfaces: true,
+      values: true,
+      outcomes: true,
+      notifications: true,
+    },
   };
 
   const currentPrefs = parseStaffPreferences(staff.preferences);
+  const mergedCategories = prefs?.sound_categories
+    ? {
+        ...defaultPreferences.sound_categories,
+        ...(currentPrefs.sound_categories || {}),
+        ...prefs.sound_categories,
+      }
+    : currentPrefs.sound_categories || defaultPreferences.sound_categories;
 
-  const nextPrefs = { ...defaultPreferences, ...currentPrefs, ...prefs };
+  const nextPrefs = {
+    ...defaultPreferences,
+    ...currentPrefs,
+    ...prefs,
+    sound_categories: mergedCategories,
+  };
   
   await dbRun(
     "UPDATE staff SET preferences = ?, updated_at = datetime('now') WHERE id = ?",

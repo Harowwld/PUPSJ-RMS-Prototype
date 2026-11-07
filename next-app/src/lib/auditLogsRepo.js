@@ -31,6 +31,7 @@ export async function countAuditLogs(options) {
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
+  const excludeSeverity = opt.excludeSeverity || "";
   const startDate = opt.startDate || "";
   const endDate = opt.endDate || "";
 
@@ -78,6 +79,17 @@ export async function countAuditLogs(options) {
     }
   }
 
+  if (excludeSeverity) {
+    const sevList = Array.isArray(excludeSeverity) ? excludeSeverity : String(excludeSeverity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("(severity IS NULL OR severity <> ?)");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`(severity IS NULL OR severity NOT IN (${sevList.map(() => "?").join(", ")}))`);
+      params.push(...sevList);
+    }
+  }
+
   if (startDate) {
     if (startDate.includes("T") || startDate.includes(":")) {
       whereClauses.push("created_at >= ?::timestamptz");
@@ -119,6 +131,7 @@ export async function listAuditLogs(options) {
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
+  const excludeSeverity = opt.excludeSeverity || "";
   const startDate = opt.startDate || "";
   const endDate = opt.endDate || "";
   const sortBy = opt.sortBy || "created_at";
@@ -167,6 +180,17 @@ export async function listAuditLogs(options) {
       params.push(sevList[0]);
     } else if (sevList.length > 1) {
       whereClauses.push(`severity IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
+  }
+
+  if (excludeSeverity) {
+    const sevList = Array.isArray(excludeSeverity) ? excludeSeverity : String(excludeSeverity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("(severity IS NULL OR severity <> ?)");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`(severity IS NULL OR severity NOT IN (${sevList.map(() => "?").join(", ")}))`);
       params.push(...sevList);
     }
   }
@@ -385,6 +409,17 @@ function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, excludeO
       params.push(sevList[0]);
     } else if (sevList.length > 1) {
       whereClauses.push(`severity IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
+  }
+
+  if (excludeSeverity) {
+    const sevList = Array.isArray(excludeSeverity) ? excludeSeverity : String(excludeSeverity).split(",").map((s) => s.trim()).filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("(severity IS NULL OR severity <> ?)");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`(severity IS NULL OR severity NOT IN (${sevList.map(() => "?").join(", ")}))`);
       params.push(...sevList);
     }
   }

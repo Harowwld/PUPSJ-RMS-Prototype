@@ -172,7 +172,7 @@ function OfficeCardSkeleton({ archived, index }) {
   return (
     <Card
       className={cn(
-        "group relative flex flex-col justify-between gap-0 overflow-hidden rounded-2xl border p-0 py-0 shadow-xs",
+        "group relative flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 py-0 shadow-xs",
         archived
           ? "border-dashed border-border bg-gray-50/70 opacity-80 dark:border-border dark:bg-zinc-900/40 dark:opacity-75"
           : "border-border bg-white dark:border-border dark:bg-card"
@@ -198,7 +198,7 @@ function OfficeCardSkeleton({ archived, index }) {
         </div>
       </div>
 
-      <CardContent className="flex h-full flex-col justify-between gap-4 p-5 pt-3">
+      <CardContent className="flex flex-1 flex-col gap-3.5 p-5 pt-3">
         <div className="space-y-3">
           <Skeleton className="h-3 w-full rounded dark:bg-muted" />
           <div className="space-y-1.5 rounded-xl border border-border bg-gray-50/80 p-2.5 dark:border-border dark:bg-zinc-800/50">
@@ -222,7 +222,7 @@ function OfficeCardSkeleton({ archived, index }) {
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-border pt-3">
+        <div className="mt-auto space-y-3 border-t border-border pt-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <Skeleton className="h-7 w-20 rounded-lg dark:bg-muted" />
@@ -254,7 +254,7 @@ export default function OfficeGridSkeleton({
 
   return (
     <div aria-hidden="true" className="flex-[1_0_auto] rounded-b-2xl bg-gray-50/30 p-6 dark:bg-zinc-900/20">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 content-start">
         {Array.from({ length: count }).map((_, index) => (
           <OfficeCardSkeleton key={index} archived={statusFilter === "Inactive"} index={index} />
         ))}

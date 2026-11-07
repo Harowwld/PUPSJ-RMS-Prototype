@@ -4,12 +4,27 @@ import test from "node:test";
 import { ZOOM_SCALES, ZOOM_PERCENTAGES, DEFAULT_ZOOM_NODE } from "../src/hooks/useLayoutZoom.js";
 
 async function loadRouteHandler(path, method, bindings) {
+  const defaultBindings = {
+    DEFAULT_SOUND_VOLUME: 0.5,
+    DEFAULT_SOUND_CATEGORIES: {
+      presses: true,
+      toggles: true,
+      surfaces: true,
+      values: true,
+      outcomes: true,
+      notifications: true,
+    },
+    isValidSoundCategoriesPreference: () => true,
+    queryOne: async () => null,
+    query: async () => [],
+  };
+  const mergedBindings = { ...defaultBindings, ...bindings };
   const source = await readFile(new URL(`../src/app/api/auth/${path}/route.js`, import.meta.url), "utf8");
   const code = source
     .replace(/^import\s+[\s\S]*?\s+from\s+["'][^"']+["'];\s*/gm, "")
     .replace(/^export\s+const\s+runtime\s*=\s*["'][^"']+["'];\s*/gm, "")
     .replace(/^export /gm, "");
-  return new Function(...Object.keys(bindings), `${code}\nreturn ${method};`)(...Object.values(bindings));
+  return new Function(...Object.keys(mergedBindings), `${code}\nreturn ${method};`)(...Object.values(mergedBindings));
 }
 
 test("ZOOM_SCALES has 75% at node 0 and 100% at node 3", () => {

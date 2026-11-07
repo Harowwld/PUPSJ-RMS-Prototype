@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import {
   Empty,
@@ -1020,79 +1020,34 @@ export default function SystemConfigTab({
           <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none w-full flex flex-[1_0_auto] flex-col isolate font-jakarta">
             {/* Top Section Switcher Bar inside One-Card Container */}
             <div className="flex items-center px-6 py-3.5 border-b border-border dark:border-border bg-white dark:bg-card rounded-t-2xl">
-              <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("document-types")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                    activeSubTab === "document-types"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
+              <TabsList variant="capsule" className="w-fit select-none overflow-x-auto max-w-full scrollbar-hide">
+                <TabsTrigger value="document-types">
                   <Files01Icon size="1em" className="text-sm" />
                   <span>Document Types</span>
-                </button>
+                </TabsTrigger>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("degree-programs")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                    activeSubTab === "degree-programs"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
+                <TabsTrigger value="degree-programs">
                   <GraduationScrollIcon size="1em" className="text-sm" />
                   <span>Degree Programs</span>
-                </button>
+                </TabsTrigger>
 
                 {!isOsas && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveSubTab("course-blocks")}
-                    className={cn(
-                      "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                      activeSubTab === "course-blocks"
-                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                    )}
-                  >
+                  <TabsTrigger value="course-blocks">
                     <UserSearch01Icon size="1em" className="text-sm" />
                     <span>Course Blocks</span>
-                  </button>
+                  </TabsTrigger>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("bulk-import")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                    activeSubTab === "bulk-import"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
+                <TabsTrigger value="bulk-import">
                   <FileUploadIcon size="1em" className="text-sm" />
                   <span>Imports</span>
-                </button>
+                </TabsTrigger>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("recognition-templates")}
-                  className={cn(
-                    "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                    activeSubTab === "recognition-templates"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                  )}
-                >
+                <TabsTrigger value="recognition-templates">
                   <FingerPrintScanIcon size="1em" className="text-sm" />
                   <span>OCR Configuration</span>
-                </button>
-              </div>
+                </TabsTrigger>
+              </TabsList>
             </div>
 
             <div className="relative flex flex-[1_0_auto] flex-col p-0 w-full">

@@ -25,7 +25,7 @@ function readDensity(key) {
 }
 
 export function TablePreferencesProvider({ children, user }) {
-  const [preference, setPreference] = useState(() => ({ key: null, density: readDensity(null) }));
+  const [preference, setPreference] = useState(() => ({ key: null, density: "normal" }));
   useEffect(() => {
     const selectUser = (principal) => {
       const key = tablePreferenceKey(principal);

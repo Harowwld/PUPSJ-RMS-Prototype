@@ -36,6 +36,7 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { SegmentedControl } from "@/components/ui/tabs"
 import useTableScroll from "@/hooks/useTableScroll"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { matchesSearchQuery } from "@/lib/searchUtils"
@@ -671,7 +672,7 @@ export default function StaffDirectoryTab({
               <Button
                 onClick={() => onSwitchView("create")}
                 disabled={activeTab === "archived" || isLoading}
-                className="flex h-10 items-center justify-center disabled:opacity-50 cursor-pointer px-5"
+                className="h-9 shrink-0 px-4"
               >
                 Register Staff
               </Button>
@@ -682,57 +683,28 @@ export default function StaffDirectoryTab({
         {/* Navigation Toolbar */}
         <DataViewToolbar label="Staff search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
           {/* Left: Active vs Archived Segmented Tabs */}
-          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => handleTabChange("active")}
-              className={cn(
-                "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                activeTab === "active"
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span
-                className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                  activeTab === "active"
-                    ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                    : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                )}
-              >
-                {officeStaff.filter((s) => s.status !== "Archived").length}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange("archived")}
-              className={cn(
-                "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                activeTab === "archived"
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span
-                className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                  activeTab === "archived"
-                    ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                    : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                )}
-              >
-                {officeStaff.filter((s) => s.status === "Archived").length}
-              </span>
-            </button>
-          </div>
+          <SegmentedControl
+            value={activeTab}
+            onValueChange={handleTabChange}
+            variant="capsule"
+            items={[
+              {
+                value: "active",
+                label: "Active",
+                badge: officeStaff.filter((s) => s.status !== "Archived").length,
+              },
+              {
+                value: "archived",
+                label: "Archived",
+                badge: officeStaff.filter((s) => s.status === "Archived").length,
+              },
+            ]}
+          />
 
           {/* Right: Search & Role Filter */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <Search01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
               <Input
                 type="text"
                 placeholder="Search name, email or ID..."
@@ -741,7 +713,7 @@ export default function StaffDirectoryTab({
                 onChange={(e) => setLocalSearch(e.target.value)}
                 disabled={isLoading}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 {filteredStaff.length.toLocaleString()}
               </div>
             </div>
@@ -1043,12 +1015,12 @@ export default function StaffDirectoryTab({
         secondaryActions={[
           {
             label: "Copy Emails",
-            copiedLabel: "Copied Emails",
+            copiedLabel: "Emails Copied!",
             onClick: handleCopyEmails,
           },
           {
             label: "Copy Employee IDs",
-            copiedLabel: "Copied IDs",
+            copiedLabel: "IDs Copied!",
             onClick: handleCopyIds,
           },
         ]}

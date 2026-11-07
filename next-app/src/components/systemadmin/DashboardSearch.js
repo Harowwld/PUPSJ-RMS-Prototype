@@ -28,7 +28,7 @@ export default function DashboardSearch({
 
   return (
     <div className={cn("group relative w-72 sm:w-80 shrink-0", className)}>
-      <Search01Icon size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-red-400" />
+      <Search01Icon size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-red-400" />
       <Input
         type="search"
         value={value}
@@ -37,11 +37,11 @@ export default function DashboardSearch({
         aria-label={resolvedLabel}
         placeholder={placeholder}
         className={cn(
-          "h-9 w-full max-w-none border-gray-200 bg-white pl-8 text-xs shadow-none dark:border-white/10 dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden",
+          "h-9 w-full max-w-none border-border bg-white pl-8 text-xs shadow-none dark:border-border dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
           value ? "pr-20" : "pr-12"
         )}
       />
-      <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center gap-1">
+      <div className="pointer-events-none absolute inset-y-0 right-2.5 z-10 flex items-center gap-1">
         {Boolean(value) && (
           <button
             type="button"

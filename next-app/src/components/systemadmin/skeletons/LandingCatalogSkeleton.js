@@ -24,10 +24,10 @@ export default function LandingCatalogSkeleton() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
           }
         />
@@ -38,7 +38,7 @@ export default function LandingCatalogSkeleton() {
         <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           <div className="space-y-6">
             {/* Section Header & Subtitle Skeleton */}
-            <div className="p-5 sm:p-6 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 space-y-4">
+            <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
               <div className="space-y-1">
                 <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -125,7 +125,7 @@ export default function LandingCatalogSkeleton() {
 
               {/* RIGHT COLUMN: ACTIVE CARD EDITOR */}
               <div className="lg:col-span-7 flex flex-col gap-6">
-                <div className="p-5 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col gap-5">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs flex flex-col gap-5">
                   <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border">
                     <div className="space-y-1">
                       <span className="text-[10px] font-sans tabular-nums uppercase font-bold text-pup-maroon dark:text-red-400 tracking-wider">

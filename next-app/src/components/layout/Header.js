@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon , ArrowDown01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon} from "hugeicons-react";
+import { Search01Icon , ArrowDown01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, Home01Icon} from "hugeicons-react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
-import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
+import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges, getDefaultHomeView } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
 import { matchesSearchQuery } from "@/lib/searchUtils";
@@ -220,15 +220,25 @@ export default function Header({ authUser, onLogout, children }) {
     router.push(viewKey === "systemadmin" || viewKey === "superadmin" ? "/systemadmin" : (viewKey === "admin" ? "/admin" : "/staff"));
   };
 
+  const defaultHome = useMemo(() => {
+    return getDefaultHomeView(authUser, activeView);
+  }, [authUser, activeView]);
+
   const handleMainDashboardClick = () => {
-    if (isStudent) {
-      router.push("/student");
-    } else if (isSuperAdmin) {
-      router.push("/systemadmin");
-    } else if (hasAdminRights) {
-      router.push(activeView === "admin" ? "/admin" : "/staff");
+    const onDashboard = ["/student", "/staff", "/admin", "/systemadmin"].some(
+      (p) => pathname?.startsWith(p)
+    );
+    const onSamePortal = pathname?.startsWith(defaultHome.basePath);
+
+    if (onDashboard && onSamePortal) {
+      window.dispatchEvent(
+        new CustomEvent("switch-view", {
+          detail: { view: defaultHome.view },
+        })
+      );
+      router.push(defaultHome.path, { scroll: false });
     } else {
-      router.push("/staff");
+      router.push(defaultHome.path);
     }
   };
 
@@ -299,6 +309,18 @@ export default function Header({ authUser, onLogout, children }) {
     (searchParams?.get("view") === "activity" &&
       ["/student", "/staff", "/admin", "/systemadmin"].some((p) => pathname?.startsWith(p))) ||
     (pathname === "/account" && searchParams?.get("tab") === "activity");
+
+  const isAtDefaultHome = useMemo(() => {
+    if (pathname === "/account" || isSettingsActive || isActivityActive) {
+      return false;
+    }
+    const onBasePath = pathname?.startsWith(defaultHome.basePath);
+    if (!onBasePath) {
+      return false;
+    }
+    const currentV = searchParams?.get("view");
+    return currentV ? currentV === defaultHome.view : true;
+  }, [pathname, isSettingsActive, isActivityActive, defaultHome, searchParams]);
 
   const openMyActivity = () => {
     const onDashboard = ["/student", "/staff", "/admin", "/systemadmin"].some(
@@ -409,6 +431,27 @@ export default function Header({ authUser, onLogout, children }) {
     if (activeView === "systemadmin") {
       candidateGroups = [
         {
+          id: "sys_ops",
+          title: "Campus Operations",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Campus Operations",
+              view: "health",
+              icon: " Activity01Icon",
+              breadcrumb: "Campus Operations • View",
+              keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
+            },
+            {
+              label: "Processing Time Standards",
+              view: "standards",
+              icon: " HourglassIcon",
+              breadcrumb: "Campus Operations • View",
+              keywords: "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
+            },
+          ],
+        },
+        {
           id: "sys_gov",
           title: "Institutional Governance",
           badge: "System Admin",
@@ -426,27 +469,6 @@ export default function Header({ authUser, onLogout, children }) {
               icon: " LayoutGridIcon",
               breadcrumb: "Institutional Governance • View",
               keywords: "features matrix permissions feature flags modules config toggle access roles supervisor staff tools category registrar osas",
-            },
-          ],
-        },
-        {
-          id: "sys_ops",
-          title: "Campus Operations",
-          badge: "System Admin",
-          items: [
-            {
-              label: "Processing Time Standards",
-              view: "standards",
-              icon: " HourglassIcon",
-              breadcrumb: "Campus Operations • View",
-              keywords: "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
-            },
-            {
-              label: "Campus Operations",
-              view: "health",
-              icon: " Activity01Icon",
-              breadcrumb: "Campus Operations • View",
-              keywords: "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
             },
           ],
         },
@@ -899,13 +921,13 @@ export default function Header({ authUser, onLogout, children }) {
             keywords: "switch to admin view administrator management toggle role governance",
           }
         ] : []),
-          ...((pathname === "/account") ? [
+        ...(!isAtDefaultHome ? [
           {
-            label: "Return to Dashboard",
+            label: `Return to Home View (${defaultHome.label})`,
             action: "return-dashboard",
-            icon: " DashboardSquare01Icon",
+            icon: " Home01Icon",
             breadcrumb: "Navigation • Action",
-            keywords: "return back dashboard home main view exit settings leave",
+            keywords: `return back home default view dashboard exit settings leave ${defaultHome.label.toLowerCase()}`,
           }
         ] : []),
       ],
@@ -957,7 +979,7 @@ export default function Header({ authUser, onLogout, children }) {
       filteredGroups: filtered,
       flatSuggestions: filtered.flatMap((g) => g.items),
     };
-  }, [searchQuery, activeView, authUser, isStudent, isSuperAdmin, hasAdminRights, isMac, pathname, isHighContrast]);
+  }, [searchQuery, activeView, authUser, isStudent, isSuperAdmin, hasAdminRights, isMac, pathname, isHighContrast, isAtDefaultHome, defaultHome]);
 
   const handleSelectSuggestion = (item) => {
     setSearchQuery("");
@@ -1091,6 +1113,7 @@ export default function Header({ authUser, onLogout, children }) {
             className="flex items-center gap-2 cursor-pointer group/logo select-none"
             onClick={handleMainDashboardClick}
             onDoubleClick={(e) => e.preventDefault()}
+            title={`eManage - Return to ${defaultHome.label}`}
           >
             <img 
               src={branding.iconSrc}
@@ -1172,6 +1195,22 @@ export default function Header({ authUser, onLogout, children }) {
 
               {/* 2. Body Zone */}
               <DropdownMenuGroup className="p-1 flex flex-col gap-0.5">
+                {!isAtDefaultHome && (
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-lg flex items-center justify-between gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+                    onClick={handleMainDashboardClick}
+                    title={`Return to default home view (${defaultHome.label})`}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Home01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
+                      <span className="truncate">Return to Home View</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-gray-400 dark:text-zinc-500 truncate max-w-[90px] shrink-0 text-right">
+                      {defaultHome.label}
+                    </span>
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuItem
                   className={cn(
                     "cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 transition-colors outline-none",

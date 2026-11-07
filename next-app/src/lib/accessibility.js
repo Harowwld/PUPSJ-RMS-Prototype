@@ -329,9 +329,13 @@ export function toggleReduceMotionPreference(userId = null) {
  */
 export function useAppReducedMotion(userId = null) {
   const osReduced = useReducedMotion();
-  const [prefReduced, setPrefReduced] = useState(() => getReduceMotionPreference(userId));
+  const [mounted, setMounted] = useState(false);
+  const [prefReduced, setPrefReduced] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setPrefReduced(getReduceMotionPreference(userId));
+
     const handleCustomChange = (e) => {
       if (typeof e.detail?.enabled === "boolean") {
         setPrefReduced(e.detail.enabled);
@@ -356,6 +360,10 @@ export function useAppReducedMotion(userId = null) {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [userId]);
+
+  if (!mounted) {
+    return false;
+  }
 
   return Boolean(osReduced || prefReduced);
 }

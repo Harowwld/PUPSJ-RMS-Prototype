@@ -354,10 +354,11 @@
   align-items: center !important;
   gap: 10px !important;
   width: max-content;
-  max-width: min(500px, calc(100vw - 32px));
+  max-width: min(620px, calc(100vw - 32px));
   pointer-events: auto;
   overflow: hidden;
   isolation: isolate;
+  overflow-wrap: anywhere;
 
   /* Solid white background for layered stacking */
   background: #ffffff;
@@ -378,6 +379,12 @@
 
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+}
+
+.rms-toast.is-card {
+  border-radius: 20px !important;
+  padding: 12px 16px 12px 12px !important;
+  align-items: flex-start !important;
 }
 
 .dark .rms-toast {
@@ -1516,6 +1523,16 @@ input[type="search"]::-webkit-search-results-decoration {
   -webkit-appearance: none;
   appearance: none;
   display: none;
+}
+
+/* Ensure leading and trailing input adornments/icons stay visible above inputs forming stacking contexts (e.g. backdrop-blur-sm) */
+.relative > svg.absolute,
+.relative > .pointer-events-none[class*="left-"],
+.relative > .pointer-events-none[class*="right-"],
+.group.relative > svg.absolute,
+.group.relative > .pointer-events-none[class*="left-"],
+.group.relative > .pointer-events-none[class*="right-"] {
+  z-index: 10;
 }
 
 /* Focus Outlines */

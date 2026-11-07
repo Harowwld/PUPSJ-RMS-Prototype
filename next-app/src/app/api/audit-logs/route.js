@@ -17,6 +17,7 @@ export async function GET(req) {
   const search = searchParams.get("search") || "";
   const role = searchParams.get("role") || "";
   const severity = searchParams.get("severity") || "";
+  const excludeSeverity = searchParams.get("excludeSeverity") || "";
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
   const sortBy = searchParams.get("sortBy") || "created_at";
@@ -63,6 +64,7 @@ export async function GET(req) {
       officeId,
       role: isStudent ? "Student" : role,
       severity,
+      excludeSeverity,
       startDate,
       endDate,
       sortBy,
@@ -74,6 +76,7 @@ export async function GET(req) {
       officeId,
       role: isStudent ? "Student" : role,
       severity,
+      excludeSeverity,
       startDate,
       endDate,
     }),

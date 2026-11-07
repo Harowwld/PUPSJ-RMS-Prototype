@@ -275,7 +275,7 @@ export default function SectionsTab({
             <Button
               onClick={() => setIsAddSectionOpen(true)}
               disabled={showArchived}
-              className="flex h-10 items-center justify-center px-5 disabled:opacity-50 cursor-pointer border-0"
+              className="h-9 shrink-0 px-4"
             >
               Add Block
             </Button>
@@ -361,7 +361,7 @@ export default function SectionsTab({
             </div>
 
             <div className="flex-1 max-w-md relative group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                 <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
               </div>
               <Input
@@ -371,7 +371,7 @@ export default function SectionsTab({
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                 {filteredSectionsFull.length}
               </div>
             </div>

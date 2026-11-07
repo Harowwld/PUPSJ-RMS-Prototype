@@ -22,6 +22,12 @@ function tableChildren(children) {
   });
 }
 
+function presentationColumn(column) {
+  if (!column || typeof column !== "object") return column;
+  const { growthWeight, ...presentation } = column;
+  return presentation;
+}
+
 function Table({ className, columns = [], density: overrideDensity, layout = "content", style, children, ...props }) {
   const { density } = useTablePreferences();
   const tableRef = React.useRef(null);
@@ -80,7 +86,7 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
     const index = selectionIndex;
     selectionIndex += Number(child.props.colSpan) || 1;
     const column = columns[index];
-    const config = typeof column === "string" ? { kind: column } : column;
+    const config = typeof column === "string" ? { kind: column } : (presentationColumn(column) || { kind: "text" });
     return config?.kind === "selection" && hasCheckedCheckbox(child.props.children);
   });
   const ariaSelected = props["aria-selected"] === true || props["aria-selected"] === "true";
@@ -90,7 +96,7 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
     const index = columnIndex;
     columnIndex += Number(child.props.colSpan) || 1;
     const column = child.props.colSpan > 1 ? {} : columns[index];
-    const config = typeof column === "string" ? { kind: column } : column;
+    const config = typeof column === "string" ? { kind: column } : (presentationColumn(column) || { kind: "text" });
     if (!["td", "th", TableCell, TableHead].includes(child.type)) return React.cloneElement(child, { tableColumn: config });
     const Cell = child.type === "th" || child.type === TableHead ? TableHead : TableCell;
     return <Cell key={cellIndex} {...config} {...child.props} />;
@@ -160,8 +166,13 @@ function getContentColumnWidths(columns, children, availableWidth, className = "
   const desiredWidth = Math.max(availableWidth || 0, declaredMinWidth, widths.reduce((sum, width) => sum + width, 0));
   let remaining = Math.min(desiredWidth, maxWidths.reduce((sum, width) => sum + width, 0)) - widths.reduce((sum, width) => sum + width, 0);
   while (remaining > 0.5) {
-    const growable = widths.map((width, index) => ({ index, capacity: maxWidths[index] - width, weight: Math.max(1, width - minWidths[index] + 24) }))
-      .filter((column) => column.capacity > 0.5);
+    const growable = widths.map((width, index) => ({
+      index,
+      capacity: maxWidths[index] - width,
+      weight: schemas[index].growthWeight == null
+        ? Math.max(1, width - minWidths[index] + 24)
+        : Math.max(0, Number(schemas[index].growthWeight) || 0),
+    })).filter((column) => column.capacity > 0.5 && column.weight > 0);
     if (!growable.length) break;
     const totalWeight = growable.reduce((sum, column) => sum + column.weight, 0);
     let distributed = 0;
@@ -176,7 +187,10 @@ function getContentColumnWidths(columns, children, availableWidth, className = "
   const roundedWidths = widths.map((width) => Math.round(width));
   const roundingDifference = Math.round(desiredWidth) - roundedWidths.reduce((sum, width) => sum + width, 0);
   if (roundingDifference) {
-    const flexibleIndex = maxWidths.findIndex((maxWidth, index) => maxWidth - widths[index] > Math.abs(roundingDifference));
+    const flexibleIndex = maxWidths.findIndex((maxWidth, index) =>
+      maxWidth - widths[index] > Math.abs(roundingDifference) &&
+      (schemas[index].growthWeight == null || Number(schemas[index].growthWeight) > 0)
+    );
     if (flexibleIndex >= 0) roundedWidths[flexibleIndex] += roundingDifference;
   }
   return roundedWidths;

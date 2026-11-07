@@ -25,7 +25,7 @@ export default function SystemBackupsSkeleton({ rowCount = 8 }) {
           actions={
             <div className="flex shrink-0 items-center gap-2">
               <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
             </div>
@@ -45,7 +45,6 @@ export default function SystemBackupsSkeleton({ rowCount = 8 }) {
         <div className="flex items-center justify-between border-t border-border bg-white p-5 dark:bg-card"><Skeleton className="h-5 w-36" /><Skeleton className="h-9 w-28 rounded-xl" /></div>
         <BackupTableSkeleton embedded scope="platform" rowCount={rowCount} />
       </Card>
-      <div className="hidden w-[350px] shrink-0 rounded-2xl border border-border bg-white p-6 xl:block dark:bg-card"><Skeleton className="h-5 w-32" /><div className="mt-5 space-y-4">{[1, 2, 3].map((item) => <Skeleton key={item} className="h-20 w-full rounded-xl" />)}</div></div>
     </div>
   </div>
 }

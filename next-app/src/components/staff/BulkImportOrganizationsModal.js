@@ -485,7 +485,7 @@ export default function BulkImportOrganizationsModal({
 
               <div className="flex items-center gap-3">
                 <div className="relative w-56 sm:w-64">
-                  <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 text-xs" />
                   <Input
                     type="text"
                     value={localCsvSearch}

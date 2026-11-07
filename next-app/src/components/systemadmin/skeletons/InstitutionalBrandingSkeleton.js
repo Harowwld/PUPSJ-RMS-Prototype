@@ -24,9 +24,9 @@ export default function InstitutionalBrandingSkeleton() {
           actions={
             <div aria-hidden="true" className="flex shrink-0 items-center gap-2">
               <Skeleton className="h-8 w-44 shrink-0 rounded-full dark:bg-muted" />
+              <Skeleton className="h-9 w-9 shrink-0 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-32 shrink-0 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-9 w-28 shrink-0 rounded-xl dark:bg-muted" />
             </div>
           }
         />

@@ -47,6 +47,8 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
+import { SegmentedControl } from "@/components/ui/tabs"
 import useTableScroll from "@/hooks/useTableScroll"
 import StudentProfileSheet from "./StudentProfileSheet"
 import StudentDriveFilesView from "./StudentDriveFilesView"
@@ -819,7 +821,7 @@ export default function RecordsArchiveTab({
             {/* 1. Search Input Box (First) */}
             <div className="w-full sm:w-64 md:w-72 relative group shrink-0">
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -829,7 +831,7 @@ export default function RecordsArchiveTab({
                   value={quickQuery}
                   onChange={(e) => setQuickQuery(e.target.value)}
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {quickMatchCount.toLocaleString()}
                 </div>
               </div>
@@ -1035,38 +1037,26 @@ export default function RecordsArchiveTab({
               </Button>
             )}
 
-            {/* 4. View Mode Segmented Control: Card vs Table */}
+            {/* 4. View Mode Segmented Control: Grid vs Table */}
             {isLeafLevel && (
-              <div className="flex items-center bg-gray-100/90 dark:bg-zinc-800/80 p-0.5 rounded-xl border border-border/60 dark:border-border shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setListType("card")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                    listType === "card"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  title="Show each record as a card"
-                >
-                  <LayoutGridIcon size="1em" className="text-xs" />
-                  <span>Cards</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setListType("table")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                    listType === "table"
-                      ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  title="Show records in rows and columns"
-                >
-                  <Menu01Icon size="1em" className="text-xs" />
-                  <span>Table</span>
-                </button>
-              </div>
+              <SegmentedControl
+                value={listType}
+                onValueChange={setListType}
+                variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr"
+                items={[
+                  {
+                    value: "card",
+                    label: "Grid",
+                    icon: <ViewModeIcon mode="card" className="text-sm" />,
+                  },
+                  {
+                    value: "table",
+                    label: "Table",
+                    icon: <ViewModeIcon mode="table" className="text-sm" />,
+                  },
+                ]}
+              />
             )}
             </>
           )}

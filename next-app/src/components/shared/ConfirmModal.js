@@ -273,7 +273,7 @@ export default function ConfirmModal({
                     isPersonnelModal ? (
                       <div
                         className={cn(
-                          "border-[0.5px] border-gray-250 dark:border-border rounded-[8px] p-0 bg-white dark:bg-card overflow-y-auto",
+                          "border-[0.5px] border-gray-250 dark:border-border rounded-xl p-0 bg-white dark:bg-card overflow-y-auto",
                           selectedItems.length > 5 ? "max-h-[220px]" : ""
                         )}
                       >
@@ -297,7 +297,7 @@ export default function ConfirmModal({
                       </div>
                     ) : (
                       <div
-                        className="border-[0.5px] border-gray-250 dark:border-border rounded-[8px] p-[10px_14px] bg-white dark:bg-card max-h-32 overflow-y-auto space-y-1.5"
+                        className="border-[0.5px] border-gray-250 dark:border-border rounded-xl p-[10px_14px] bg-white dark:bg-card max-h-32 overflow-y-auto space-y-1.5"
                       >
                         {selectedItems.map((item, idx) => (
                           <div
@@ -318,11 +318,11 @@ export default function ConfirmModal({
                       </div>
                     )
                   ) : (
-                    <div className="max-h-32 overflow-y-auto rounded-lg border border-border bg-gray-50 p-2 space-y-1 custom-scrollbar pb-6 w-full dark:border-border dark:bg-white/5">
+                    <div className="max-h-32 overflow-y-auto rounded-xl border border-border bg-gray-50 p-2 space-y-1 custom-scrollbar pb-6 w-full dark:border-border dark:bg-white/5">
                       {selectedItems.map((item, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-border shadow-sm overflow-hidden w-full dark:bg-card dark:border-border"
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white border border-border shadow-sm overflow-hidden w-full dark:bg-card dark:border-border"
                         >
                           <div className={cn(
                             "w-1.5 h-1.5 shrink-0 rounded-full",
@@ -343,7 +343,7 @@ export default function ConfirmModal({
 
             {isVerificationEnabled && (
               isDeleteBackup ? (
-                <div className="bg-white dark:bg-card p-0 flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-4 rounded-xl border border-black/[0.04] bg-gray-50/70 p-4 dark:border-white/[0.06] dark:bg-zinc-800/50">
                   <div className="text-center w-full flex flex-col items-center">
                     <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400 text-center">
                       Security Authorization Code

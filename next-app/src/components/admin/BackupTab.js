@@ -314,35 +314,6 @@ export default function BackupTab({
                 actions={
                   <div className="flex items-center gap-2">
                     <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleToggleStatusSidebar()}
-                      className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
-                    >
-                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        restoreFileRef.current &&
-                        restoreFileRef.current.click()
-                      }
-                      disabled={localLoading.uploading}
-                      className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                    >
-                      {localLoading.uploading ? (
-                        <span className="flex items-center gap-1.5">
-                          <Loading01Icon size="1em" className="animate-spin text-xs" />
-                          <span>Restoring...</span>
-                        </span>
-                      ) : (
-                        "Restore Backup"
-                      )}
-                    </Button>
-                    <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
                       className="flex h-10 items-center justify-center px-5 cursor-pointer border-0"
@@ -364,6 +335,16 @@ export default function BackupTab({
                       onChange={handleRestoreFileChangeLocal}
                     />
                   </div>
+                }
+                secondaryActions={
+                  <>
+                    <Button type="button" variant="outline" onClick={() => handleToggleStatusSidebar()} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all" title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}>
+                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => restoreFileRef.current?.click()} disabled={localLoading.uploading} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
+                      {localLoading.uploading ? <span className="flex items-center gap-1.5"><Loading01Icon size="1em" className="animate-spin text-xs" /><span>Restoring...</span></span> : "Restore Backup"}
+                    </Button>
+                  </>
                 }
               />
 
@@ -512,7 +493,7 @@ export default function BackupTab({
           secondaryActions={[
             {
               label: "Copy Filenames",
-              copiedLabel: "Copied Filenames",
+              copiedLabel: "Filenames Copied!",
               onClick: () => {
                 const selected = backups.filter((b) => effectiveSelectedBackupIds.includes(b.id))
                 const filenames = selected.map((b) => b.filename).filter(Boolean)

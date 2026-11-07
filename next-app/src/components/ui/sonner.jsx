@@ -5,60 +5,22 @@ import { toast as hotToast, useToaster } from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
 import React, { useEffect } from "react";
 import { Alert02Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Tick01Icon } from "hugeicons-react";
+import { playSoundCue } from "@/lib/soundPatch";
 
+// 1. Play Tone logic (synthesized Kobra outcome cues governed by user Sound preferences)
+const PORTAL_SOUND_PREFIXES = ["/admin", "/staff", "/systemadmin", "/student", "/account"];
 
-// 1. Play Tone logic (warning/error digital beeps)
 const playTone = (type) => {
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const now = ctx.currentTime;
-    
-    if (type === "error") {
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(320, now);
-      gain1.gain.setValueAtTime(0.08, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.12);
+    if (typeof window === "undefined") return;
+    const pathname = window.location?.pathname || "";
+    const inPortal = PORTAL_SOUND_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
+    if (!inPortal) return;
 
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(240, now + 0.10);
-      gain2.gain.setValueAtTime(0.08, now + 0.10);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.10);
-      osc2.stop(now + 0.25);
-    } else if (type === "warning") {
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(440, now);
-      gain1.gain.setValueAtTime(0.06, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.08);
-
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(440, now + 0.09);
-      gain2.gain.setValueAtTime(0.06, now + 0.09);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.09);
-      osc2.stop(now + 0.18);
+    if (type === "error" || type === "warning" || type === "success") {
+      playSoundCue({ sound: type });
     }
   } catch (e) {
     console.error("[Toast Audio] Playback failed:", e);
@@ -78,6 +40,46 @@ const extractText = (node) => {
     if (typeof node.title === "string") return node.title;
   }
   return "";
+};
+
+// Helper to render technical identifiers (filenames, archive packages, UUIDs, hashes, paths)
+// with native <wbr /> line-break opportunities after hyphens, underscores, dots, and slashes.
+// This prevents browser layout engines from treating hyphens followed by digits (e.g. -2026-11-07)
+// as unbreakable negative numbers under Unicode UAX #14, which otherwise leaves large empty voids
+// on the preceding line.
+const renderBreakableText = (content) => {
+  if (typeof content !== "string" && typeof content !== "number") return content;
+  const text = String(content);
+  if (!text || text.length <= 12 || !/[-_./]/.test(text)) return text;
+
+  // Split on whitespace while preserving whitespace tokens
+  const tokens = text.split(/(\s+)/);
+  let keyIdx = 0;
+
+  return tokens.map((token, i) => {
+    // If it's whitespace or short token without technical delimiters, return as-is
+    if (i % 2 === 1 || token.length <= 12 || !/[-_./]/.test(token)) {
+      return token;
+    }
+
+    // For long technical tokens, insert <wbr /> break opportunities after delimiters
+    const parts = token.split(/([-_./])/g);
+    return (
+      <React.Fragment key={`wbr-tok-${keyIdx++}`}>
+        {parts.map((part, pIdx) => {
+          if (pIdx % 2 === 1) {
+            return (
+              <React.Fragment key={`p-${pIdx}`}>
+                {part}
+                <wbr />
+              </React.Fragment>
+            );
+          }
+          return part;
+        })}
+      </React.Fragment>
+    );
+  });
 };
 
 // 2. Custom Hot Toast trigger implementing Apple's 5 Dynamic Stages
@@ -102,9 +104,13 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
   const rawDescText = extractText(descContent);
   const lowerTitle = `${rawTitleText} ${rawDescText}`.toLowerCase();
   
-  // Play Tone if Warning or Error
-  if (type === "error" || type === "warning" || lowerTitle.includes("fail") || lowerTitle.includes("error") || lowerTitle.includes("warning")) {
-    playTone(type === "error" ? "error" : "warning");
+  // Play Tone if Success, Warning, or Error
+  if (type === "error" || lowerTitle.includes("fail") || lowerTitle.includes("error")) {
+    playTone("error");
+  } else if (type === "warning" || lowerTitle.includes("warning")) {
+    playTone("warning");
+  } else if (type === "success") {
+    playTone("success");
   }
 
   // Determine Stage
@@ -174,6 +180,11 @@ const ToastItem = ({
   const dragStartY = React.useRef(null);
   const isDraggingRef = React.useRef(false);
 
+  // Compute if multi-sentence or rich descriptive toast requiring Apple card squircle geometry
+  const rawTitle = typeof titleContent === "string" ? titleContent : "";
+  const isMultiSentence = rawTitle.length > 70 || (rawTitle.match(/[.!?]\s+[A-Za-z0-9]/g) || []).length >= 1;
+  const isCard = Boolean(descContent || isMultiSentence);
+
   const handlePointerDown = (e) => {
     // Prevent drag if touching an interactive button or link
     if (e.target.closest("button") || e.target.closest("a")) return;
@@ -234,11 +245,11 @@ const ToastItem = ({
         transition: isDragging ? "none" : "transform 260ms cubic-bezier(0.16, 1, 0.3, 1)",
         touchAction: "none",
       }}
-      className={`rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
+      className={`rms-toast ${isCard ? "is-card rounded-2xl sm:rounded-[20px]" : "rounded-full"} flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
     >
       {/* Left Icon (Stage 2, 3, 5) */}
       {(stage === 2 || stage === 3 || stage === 5) && (
-        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${
+        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${isCard ? "mt-0.5" : ""} ${
           type === "error" || type === "warning" ? "bg-[#e30000]" :
           type === "info" ? "bg-blue-500" :
           type === "loading" ? "bg-zinc-800 dark:bg-zinc-700" :
@@ -262,13 +273,13 @@ const ToastItem = ({
           titleContent
         ) : (
           <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
-            {titleContent}
+            {renderBreakableText(titleContent)}
           </span>
         )}
         {descContent && (
           typeof descContent === "string" || typeof descContent === "number" ? (
-            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-snug break-words">
-              {descContent}
+            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-normal break-words">
+              {renderBreakableText(descContent)}
             </span>
           ) : (
             descContent
@@ -285,9 +296,7 @@ const ToastItem = ({
             safeOptions.action.onClick?.(e);
             hotToast.dismiss(t.id);
           }}
-          className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ${
-            (stage === 3 || isDismissable) ? "ml-auto" : "ml-auto"
-          }`}
+          className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ml-auto ${isCard ? "mt-0.5" : ""}`}
         >
           <span className={
             String(safeOptions.action.label || "").toLowerCase() === "undo"
@@ -311,7 +320,7 @@ const ToastItem = ({
           }}
           className={`relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ${
             safeOptions.action ? "ml-1" : "ml-auto"
-          } border-none outline-none transition-all`}
+          } border-none outline-none transition-all ${isCard ? "mt-0.5" : ""}`}
           aria-label="Dismiss notification"
         >
           <Cancel01Icon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
@@ -422,7 +431,7 @@ const Toaster = () => {
     >
       {/* Invisible hover bridge to prevent jitter when moving mouse between expanded toasts */}
       {expanded && visibleToasts.length > 1 && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[320px] pointer-events-auto bg-transparent z-0" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] max-w-[calc(100vw-32px)] h-[340px] pointer-events-auto bg-transparent z-0" />
       )}
       {toasts.map((toastItem) => {
         const stackIndex = visibleToasts.findIndex(t => t.id === toastItem.id);
@@ -433,22 +442,25 @@ const Toaster = () => {
 
         // Apple fluid spring depth calculation:
         // Stacked: index 0 is full size; index 1 peeks down 10px with 0.94 scale; index 2 peeks 20px with 0.88 scale
-        // Expanded (on hover): toasts cascade downward with 58px step, full scale (1.0), and full brightness
+        // Expanded (on hover): toasts cascade downward with 64px step, full scale (1.0), and full brightness
         const scale = isVisible ? (expanded ? 1 : Math.max(0.86, 1 - (effIndex * 0.06))) : 0.90;
-        const translateY = isVisible ? (expanded ? effIndex * 58 : effIndex * 10) : -24;
+        const translateY = isVisible ? (expanded ? effIndex * 64 : effIndex * 10) : -24;
         const opacity = isVisible ? (effIndex >= 3 && !expanded ? 0 : (expanded ? 1 : Math.max(0.70, 1 - effIndex * 0.14))) : 0;
         const zIndex = 100 - effIndex;
         const filter = isVisible && !expanded && effIndex > 0
           ? `brightness(${Math.max(0.85, 1 - effIndex * 0.05)})`
           : "none";
 
+        const rawMsg = typeof toastItem.message === "string" ? toastItem.message : String(toastItem.message || "");
+        const rawIsCard = rawMsg.length > 70 || (rawMsg.match(/[.!?]\s+[A-Za-z0-9]/g) || []).length >= 1;
+
         const content = typeof toastItem.message === "function"
           ? toastItem.message(toastItem)
           : (
-            <div className="rms-toast flex flex-row flex-nowrap items-center gap-[10px] rounded-full w-max max-w-[min(500px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]">
+            <div className={`rms-toast ${rawIsCard ? "is-card rounded-2xl sm:rounded-[20px]" : "rounded-full"} flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]`}>
               <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
                 <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
-                  {typeof toastItem.message === "string" ? toastItem.message : String(toastItem.message || "")}
+                  {renderBreakableText(rawMsg)}
                 </span>
               </div>
             </div>

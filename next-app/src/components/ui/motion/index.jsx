@@ -47,6 +47,7 @@ export function ContentSwap({ children, className, id, style, ...props }) {
           willChange: shouldReduceMotion ? undefined : "opacity, transform",
           ...style,
         }}
+        suppressHydrationWarning
         {...props}
       >
         {children}
@@ -88,6 +89,7 @@ export function ContentReveal({
         },
       }}
       className={className}
+      suppressHydrationWarning
       {...props}
     >
       {children}
@@ -112,6 +114,7 @@ export function PageTransition({ children, className, ...props }) {
         ease: EASE_OUT,
       }}
       className={className}
+      suppressHydrationWarning
       {...props}
     >
       {children}
@@ -142,6 +145,7 @@ export function FadeIn({
         ease: EASE_OUT,
       }}
       className={className}
+      suppressHydrationWarning
       {...props}
     >
       {children}
@@ -173,6 +177,7 @@ export function SlideUp({
         ease: EASE_OUT,
       }}
       className={className}
+      suppressHydrationWarning
       {...props}
     >
       {children}
@@ -210,6 +215,7 @@ export function StaggerContainer({
       initial="hidden"
       animate="show"
       className={className}
+      suppressHydrationWarning
       {...props}
     >
       {children}
@@ -241,7 +247,7 @@ export function StaggerItem({
   };
 
   return (
-    <motion.div variants={itemVariants} className={className} {...props}>
+    <motion.div variants={itemVariants} className={className} suppressHydrationWarning {...props}>
       {children}
     </motion.div>
   );

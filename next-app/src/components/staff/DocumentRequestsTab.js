@@ -948,7 +948,7 @@ export default function DocumentRequestsTab({
                       type="button"
                       onClick={() => setCreateOpen(true)}
                       title="Create Document Request"
-                      className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
+                      className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-50"
                     >
                       Create Request
                     </Button>
@@ -997,7 +997,7 @@ export default function DocumentRequestsTab({
               <div className="flex flex-nowrap items-center gap-3 shrink-0">
                 {/* Search Input */}
                 <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                     <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
                   </div>
                   <Input
@@ -1009,7 +1009,7 @@ export default function DocumentRequestsTab({
                     placeholder="Search student, name, program..."
                     className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+                  <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                     {total > 0 ? `${total.toLocaleString()}` : "0"}
                   </div>
                 </div>
@@ -1479,7 +1479,7 @@ export default function DocumentRequestsTab({
                           Search Student (Name or Number)
                         </label>
                         <div className="relative group">
-                          <Search01Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none" />
+                          <Search01Icon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}

@@ -1,5 +1,6 @@
 import SessionRefresh from "@/components/shared/SessionRefresh";
 import AccessibilitySync from "@/components/shared/AccessibilitySync";
+import SoundEffects from "@/components/shared/SoundEffects";
 import ScrollIndicator from "@/components/shared/ScrollIndicator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }) {
         >
           <SessionRefresh />
           <AccessibilitySync />
+          <SoundEffects />
           <DynamicFavicon />
           <ScrollIndicator />
           <TooltipProvider><TablePreferencesProvider>{children}</TablePreferencesProvider></TooltipProvider>

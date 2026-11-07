@@ -18,10 +18,12 @@ import LandingFooterCmsView from "./LandingFooterCmsView"
 import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import LandingCmsSectionTabs, { LANDING_CMS_SECTIONS } from "./LandingCmsSectionTabs"
 import { cn } from "@/lib/utils"
+import useCmsDraft from "@/hooks/useCmsDraft"
+import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { Add01Icon, Alert01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, Camera01Icon, Delete01Icon, DragDropIcon, Loading01Icon, Timer01Icon } from "hugeicons-react";
 
 
-export default function LandingPageCmsTab({ showToast, initialSection }) {
+export default function LandingPageCmsTab({ showToast, initialSection, onDirtyChange }) {
   const [currentSection, setCurrentSection] = useState(() => LANDING_CMS_SECTIONS.includes(initialSection) ? initialSection : "hero")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -38,6 +40,16 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
     autoRotateInterval: 5500,
     slides: [],
   })
+  const { isDirty, savedData, markSaved } = useCmsDraft(heroData)
+  const [sectionDirty, setSectionDirty] = useState(false)
+  const [pendingSection, setPendingSection] = useState(null)
+  const activeDirty = currentSection === "hero" ? isDirty : sectionDirty
+  const activeDirtyRef = useRef(activeDirty)
+  const currentSectionRef = useRef(currentSection)
+  useEffect(() => { activeDirtyRef.current = activeDirty }, [activeDirty])
+  useEffect(() => { currentSectionRef.current = currentSection }, [currentSection])
+  const reportSectionDirty = useCallback((dirty) => setSectionDirty(dirty), [])
+  useEffect(() => { onDirtyChange?.(activeDirty) }, [activeDirty, onDirtyChange])
 
   // Modal States
   const [resetModalOpen, setResetModalOpen] = useState(false)
@@ -59,26 +71,25 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
     [showToast]
   )
 
-  // Synchronize section from URL or switch-view events (Command Palette & deep linking)
+  // Synchronize section from URL and command palette navigation.
   useEffect(() => {
-    const urlSection = new URLSearchParams(window.location.search).get("section")
-    if (urlSection && ["hero", "workflow", "catalog", "faq", "footer"].includes(urlSection)) {
-      queueMicrotask(() => {
-        setCurrentSection(urlSection)
-      })
+    if (!LANDING_CMS_SECTIONS.includes(initialSection) || initialSection === currentSectionRef.current) return
+    if (activeDirtyRef.current) {
+      setPendingSection(initialSection)
+      const params = new URLSearchParams(window.location.search)
+      params.set("section", currentSectionRef.current)
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
+      return
     }
-
-    const handleSwitch = (e) => {
-      const targetSec = e.detail?.section
-      if (targetSec && ["hero", "workflow", "catalog", "faq", "footer"].includes(targetSec)) {
-        setCurrentSection(targetSec)
-      }
-    }
-    window.addEventListener("switch-view", handleSwitch)
-    return () => window.removeEventListener("switch-view", handleSwitch)
-  }, [])
+    setCurrentSection(initialSection)
+  }, [initialSection])
 
   const handleSelectSection = (sec) => {
+    if (sec === currentSection) return
+    if (activeDirty) {
+      setPendingSection(sec)
+      return
+    }
     setCurrentSection(sec)
     const params = new URLSearchParams(window.location.search)
     params.set("section", sec)
@@ -92,6 +103,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
       const json = await res.json()
       if (res.ok && json.ok && json.data) {
         setHeroData(json.data)
+        markSaved(json.data)
       } else {
         notify(json.error || "Failed to load hero configuration", true)
       }
@@ -101,7 +113,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
     } finally {
       setLoading(false)
     }
-  }, [notify])
+  }, [notify, markSaved])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -110,6 +122,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
 
   // Handle Save
   const handleSave = async () => {
+    if (!isDirty || saving) return
     if (!heroData.headlineLine1.trim() || !heroData.headlineLine2.trim()) {
       notify("Headline lines cannot be blank", true)
       return
@@ -129,6 +142,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setHeroData(json.data)
+        markSaved(json.data)
         notify("Landing page configuration saved successfully")
       } else {
         notify(json.error || "Failed to update landing hero", true)
@@ -153,6 +167,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setHeroData(json.data)
+        markSaved(json.data)
         notify("Landing page hero reverted to institutional defaults")
       } else {
         notify(json.error || "Failed to reset landing hero", true)
@@ -318,10 +333,10 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
       <Card className="flex min-w-0 flex-[1_0_auto] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
       <LandingCmsSectionTabs section={currentSection} onSelect={handleSelectSection} />
 
-      {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} />}
-      {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} />}
-      {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} />}
-      {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} />}
+      {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
+      {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
+      {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
+      {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "hero" && loading && <LandingHeroSkeleton />}
       {currentSection === "hero" && !loading && (
         <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
@@ -331,13 +346,14 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span>Landing Page CMS</span>
                 <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{heroData.slides.length} photos · Hero Section</span>
+                <LandingCmsDraftStatus isDirty={isDirty} />
               </div>
             }
             description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex shrink-0 items-center gap-2 flex-wrap">
                 <Button
@@ -351,28 +367,24 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
 
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => setResetModalOpen(true)}
-                  disabled={saving}
-                  className="h-9 px-4"
-                >
-                  Restore Defaults
-                </Button>
-
-                <Button
-                  type="button"
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || !isDirty}
                   className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "Saving Changes..." : "Save Landing Content"}
                 </Button>
               </div>
             }
+            secondaryActions={
+              <>
+                <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
+                {isDirty && <Button type="button" variant="outline" onClick={() => { setHeroData(savedData); notify("Draft changes discarded. Reverted to saved hero content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              </>
+            }
           />
 
           {/* SuperAdmin Navigation Segmented Tabs */}
-          <LandingCmsViewTabs activeTab={activeTab === "slides" ? "content" : activeTab} onChange={(tab) => setActiveTab(tab === "content" ? "slides" : "preview")} contentLabel="Hero Content" />
+          <LandingCmsViewTabs activeTab={activeTab === "slides" ? "content" : activeTab} onChange={(tab) => setActiveTab(tab === "content" ? "slides" : "preview")} contentLabel="Hero Content" contentCount={heroData.slides.length} />
 
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
             {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
@@ -412,7 +424,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
                           }
                           placeholder="e.g. Tanglaw ng Bayan,"
                           maxLength={45}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
 
@@ -436,7 +448,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
                           }
                           placeholder="e.g. Dambana ng Kagitingan."
                           maxLength={45}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
                     </div>
@@ -462,7 +474,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
                         rows={3}
                         maxLength={280}
                         placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
-                        className="w-full"
+                        className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
                   </div>
@@ -594,10 +606,10 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
                         setDragOverSlideIdx(null)
                       }
                     }}
-                    className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-[color,background-color,border-color,box-shadow,opacity,transform] p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 min-h-[300px] cursor-pointer group select-none shadow-2xs"
+                    className="rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-gray-900/40 dark:hover:border-white/30 hover:bg-gray-100/60 dark:hover:bg-zinc-800/50 transition-[color,background-color,border-color,box-shadow,opacity,transform] p-8 flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-gray-950 dark:hover:text-zinc-100 min-h-[300px] cursor-pointer group select-none shadow-2xs"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-2xs">
-                      <Add01Icon size={16} className="text-gray-500 group-hover:text-pup-maroon dark:group-hover:text-red-400" />
+                      <Add01Icon size={16} className="text-gray-500 group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
                     </div>
                     <div className="text-center">
                       <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">
@@ -662,7 +674,7 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
                 </div>
 
                 {/* Miniature Hero Simulator Matching LandingHero.js */}
-                <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-white dark:bg-zinc-900/50 shadow-sm flex flex-col select-none font-jakarta">
+                <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-white dark:bg-card shadow-sm flex flex-col select-none font-jakarta">
                   {/* Hero Image & Content Frame */}
                   <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
                     {/* Background Images */}
@@ -754,6 +766,26 @@ export default function LandingPageCmsTab({ showToast, initialSection }) {
       )}
 
       </Card>
+
+      <ConfirmModal
+        open={pendingSection !== null}
+        title="Unsaved Changes"
+        message="You have unsaved landing page changes. Navigating away will discard them."
+        confirmLabel="Discard Changes"
+        variant="warning"
+        isUnsavedChangesModal={true}
+        onCancel={() => setPendingSection(null)}
+        onConfirm={() => {
+          const nextSection = pendingSection
+          setPendingSection(null)
+          if (currentSection === "hero") setHeroData(savedData)
+          setSectionDirty(false)
+          setCurrentSection(nextSection)
+          const params = new URLSearchParams(window.location.search)
+          params.set("section", nextSection)
+          window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`)
+        }}
+      />
 
       {/* Reset Confirmation Modal */}
       <ConfirmModal
@@ -863,7 +895,7 @@ function SlideCard({
         }
       }}
       className={cn(
-        "group rounded-2xl border bg-white dark:bg-zinc-900/50 overflow-hidden shadow-2xs hover:shadow-xs transition-[color,background-color,border-color,box-shadow,opacity,transform] flex flex-col justify-between select-none relative",
+        "group rounded-2xl border bg-white dark:bg-card overflow-hidden shadow-2xs hover:shadow-xs transition-[color,background-color,border-color,box-shadow,opacity,transform] flex flex-col justify-between select-none relative",
         isDragging
           ? "opacity-35 scale-[0.98] border-dashed border-pup-maroon/60 bg-pup-maroon/5 ring-2 ring-pup-maroon/20 cursor-grabbing"
           : isDragTarget

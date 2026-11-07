@@ -239,14 +239,26 @@ test("AccountSettingsPanel implements 4x1 Bento grid, in-situ avatar picker, tac
     "Profile tab must render Apple floating dynamic save capsule dock with Discard and Save buttons when isDirty"
   );
 
-  // 6. Avatar picker modal width and visible name cards
+  // 6. Avatar picker modal width, visible name cards, and default no-avatar profile
   assert.ok(
-    code.includes("max-w-4xl") && code.includes("lg:grid-cols-6"),
-    "Avatar picker modal must use increased width (max-w-4xl) with responsive 6-column grid"
+    code.includes("max-w-md sm:max-w-lg") && (code.includes("grid-cols-3 sm:grid-cols-4") || code.includes("sm:grid-cols-4")),
+    "Avatar picker modal must use compact reduced width (max-w-md sm:max-w-lg) with responsive 4-column grid"
+  );
+  assert.ok(
+    code.includes("size-10 sm:size-11"),
+    "Avatar picker must use reduced circular avatar dimensions"
   );
   assert.ok(
     code.includes("{avatar.name}") && !code.includes("Avatar {avatar.id}"),
     "Avatar picker modal must display clean avatar name without Avatar ID subtitle"
+  );
+  assert.ok(
+    code.includes("avatarChoices") && code.includes('name: "Default"') && code.includes("id: 0"),
+    "Avatar picker must feature Default profile (no avatar) as first choice replacing 1 illustrated avatar"
+  );
+  assert.ok(
+    code.includes("avatar.id === 0") && code.includes("<UserIcon"),
+    "Avatar picker must render default user profile icon for avatar 0"
   );
   assert.ok(
     profileSection.includes("PUPSJ Records Keeping System"),
@@ -349,21 +361,52 @@ test("AccountSettingsPanel establishes dedicated Two-Factor Auth sidebar tab and
   );
 });
 
-test("AccountSettingsPanel Preferences tab implements elevated Apple HIG layout, default home view, and display name formats", () => {
+test("AccountSettingsPanel Preferences and Accessibility tabs implement streamlined Apple HIG layout, default home view, and dedicated accommodations", () => {
   const code = fs.readFileSync(SETTINGS_PANEL_PATH, "utf8");
+
+  // 1. Sidebar includes both Preferences and Accessibility tabs
+  assert.ok(
+    code.includes('id: "preferences"') && code.includes('id: "accessibility"') && code.includes('GlassesIcon'),
+    "AccountSettingsPanel sidebar must include dedicated Preferences and Accessibility tabs"
+  );
 
   const preferencesSection = code.substring(
     code.indexOf('<TabsContent value="preferences"'),
-    code.indexOf('<TabsContent value="activity"')
+    code.indexOf('<TabsContent value="accessibility"')
   );
 
-  // 1. Bento Grid Summary (3x1 desktop strip)
+  const accessibilitySection = code.substring(
+    code.indexOf('<TabsContent value="accessibility"'),
+    code.includes('<TabsContent value="activity"')
+      ? code.indexOf('<TabsContent value="activity"')
+      : code.indexOf('</Tabs>')
+  );
+
+  const securitySection = code.substring(
+    code.indexOf('<TabsContent value="security"'),
+    code.indexOf('<TabsContent value="two-factor"')
+  );
+
+  const twoFactorSection = code.substring(
+    code.indexOf('<TabsContent value="two-factor"'),
+    code.indexOf('<TabsContent value="preferences"')
+  );
+
+  // 2. Redundant summary strips removed from Security, 2FA, and Preferences
   assert.ok(
-    preferencesSection.includes("sm:grid-cols-3") && preferencesSection.includes("Start Page") && preferencesSection.includes("Display Name"),
-    "Preferences tab must feature a 3x1 Bento summary strip (Start Page, Display Name, Display & Scale)"
+    !securitySection.includes("Bento Strip for Security") && !securitySection.includes("Credential Architecture"),
+    "Security tab must not contain redundant vanity summary strip"
+  );
+  assert.ok(
+    !twoFactorSection.includes("Bento Strip for Two-Factor") && !twoFactorSection.includes("Security Posture"),
+    "Two-Factor tab must not contain redundant vanity summary strip"
+  );
+  assert.ok(
+    !preferencesSection.includes("Bento Strip for Preferences"),
+    "Preferences tab must not contain redundant vanity summary strip"
   );
 
-  // 2. Default Home View section & role-aware options with Apple Select dropdown
+  // 3. Default Home View section & role-aware options with Apple Select dropdown in Preferences
   assert.ok(
     preferencesSection.includes("Default Home View") && preferencesSection.includes("availableHomeViews.map"),
     "Preferences tab must contain Default Home View section rendering availableHomeViews"
@@ -373,7 +416,7 @@ test("AccountSettingsPanel Preferences tab implements elevated Apple HIG layout,
     "Preferences tab must render a Select dropdown for default_home_view changes"
   );
 
-  // 3. Display Name Format section & live previews with Apple Select dropdown
+  // 4. Display Name Format section & live previews with Apple Select dropdown in Preferences
   assert.ok(
     preferencesSection.includes("Display Name Format") && preferencesSection.includes("displayNameFormats.map"),
     "Preferences tab must contain Display Name Format section rendering displayNameFormats"
@@ -383,11 +426,7 @@ test("AccountSettingsPanel Preferences tab implements elevated Apple HIG layout,
     "Preferences tab must handle display_name_format changes"
   );
 
-  // 4. Interface Layout Zoom and Table Density
-  assert.ok(
-    preferencesSection.includes("Interface Layout Zoom") && preferencesSection.includes("ZOOM_PERCENTAGES.map"),
-    "Preferences tab must contain Interface Layout Zoom segmented selector"
-  );
+  // 5. Table Row Density and Profile Avatar in Preferences
   assert.ok(
     preferencesSection.includes("Table Row Density") && preferencesSection.includes("TABLE_DENSITY_OPTIONS.map"),
     "Preferences tab must contain Table Row Density card selection buttons"
@@ -396,31 +435,35 @@ test("AccountSettingsPanel Preferences tab implements elevated Apple HIG layout,
     code.includes("handleTableDensityChange"),
     "Preferences tab must handle table density card selection"
   );
-
-  // 5. Accessibility toggles (High Contrast, Reduce Motion, and Interactive Pointer Cursor)
-  assert.ok(
-    preferencesSection.includes("High Contrast") && preferencesSection.includes("Reduce Motion") && preferencesSection.includes("Interactive Pointer Cursor"),
-    "Preferences tab must contain accessibility toggles for High Contrast, Reduce Motion, and Interactive Pointer Cursor"
-  );
-  assert.ok(
-    code.includes('handleAccessibilityToggle("pointer_cursor"'),
-    "Preferences tab must support toggling interactive pointer cursor"
-  );
-
-  // 6. Text & Font Size 5-step Segmented Control
-  assert.ok(
-    preferencesSection.includes("Text & Font Size") && preferencesSection.includes("FONT_SIZE_OPTIONS.map"),
-    "Preferences tab must contain Text & Font Size segmented control"
-  );
-  assert.ok(
-    code.includes("handleFontSizePreferenceChange"),
-    "Preferences tab must handle font size changes"
-  );
-
-  // 7. Profile Avatar Preview and In-Situ modal trigger
   assert.ok(
     preferencesSection.includes("Profile Avatar") && preferencesSection.includes("Choose Avatar..."),
     "Preferences tab must include Profile Avatar section with Choose Avatar button triggering modal"
+  );
+
+  // 6. Text & Font Size 5-step Segmented Control in Accessibility
+  assert.ok(
+    accessibilitySection.includes("Text & Font Size") && accessibilitySection.includes("FONT_SIZE_OPTIONS.map"),
+    "Accessibility tab must contain Text & Font Size segmented control"
+  );
+  assert.ok(
+    code.includes("handleFontSizePreferenceChange"),
+    "Accessibility tab must handle font size changes"
+  );
+
+  // 7. Interface Layout Zoom in Accessibility
+  assert.ok(
+    accessibilitySection.includes("Interface Layout Zoom") && accessibilitySection.includes("ZOOM_PERCENTAGES.map"),
+    "Accessibility tab must contain Interface Layout Zoom segmented selector"
+  );
+
+  // 8. Accessibility toggles (High Contrast, Reduce Motion, and Interactive Pointer Cursor) in Accessibility
+  assert.ok(
+    accessibilitySection.includes("High Contrast") && accessibilitySection.includes("Reduce Motion") && accessibilitySection.includes("Interactive Pointer Cursor"),
+    "Accessibility tab must contain accessibility toggles for High Contrast, Reduce Motion, and Interactive Pointer Cursor"
+  );
+  assert.ok(
+    code.includes('handleAccessibilityToggle("pointer_cursor"'),
+    "Accessibility tab must support toggling interactive pointer cursor"
   );
 
   // 8. Verify API and staffRepo support for preferences

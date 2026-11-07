@@ -59,10 +59,11 @@ export default function HealthSidebar({
   onToggleSimulation = null,
   isRescanning = false,
   onToggleCollapse = null,
+  embedded = false,
 }) {
   if (isLoading && !isManualLoading) {
     return (
-      <div className="w-[350px] shrink-0 flex flex-col gap-4">
+      <div className={cn("w-full shrink-0 flex flex-col gap-4", !embedded && "max-w-[350px]")}>
         <Card className="flex flex-col border border-black/[0.08] dark:border-white/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] h-full rounded-2xl overflow-hidden p-6 space-y-6 dark:bg-card dark:shadow-none">
            <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
            <Skeleton className="h-[180px] w-full rounded-2xl dark:bg-muted" />
@@ -91,10 +92,15 @@ export default function HealthSidebar({
   const extUsedText = extTotalBytes > 0 ? formatBytes(extUsedBytes) : null
 
   return (
-    <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
-      <Card className="flex flex-col p-0 gap-0 border border-black/[0.08] dark:border-white/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] rounded-2xl overflow-hidden dark:bg-card dark:shadow-none isolate">
+    <div className={cn("w-full shrink-0 flex flex-col gap-4", !embedded && "max-w-[350px] h-fit")}>
+      <Card className={cn(
+        "flex flex-col p-0 gap-0 isolate",
+        embedded
+          ? "border-0 rounded-none bg-transparent shadow-none dark:bg-transparent"
+          : "border border-black/[0.08] dark:border-white/10 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] rounded-2xl overflow-hidden dark:bg-card dark:shadow-none"
+      )}>
         {/* Page Header */}
-        <PageHeader
+        {!embedded && <PageHeader
           icon="PieChartIcon"
           title="System Status"
           description="Storage, memory, and system resources."
@@ -115,9 +121,9 @@ export default function HealthSidebar({
               </Button>
             )
           }
-        />
+        />}
 
-        <div className="border-t border-border dark:border-border p-6 space-y-6">
+        <div className={cn("space-y-6", embedded ? "p-0" : "border-t border-border dark:border-border p-6")}>
           {/* Storage Section */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">

@@ -6,10 +6,12 @@ import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import { cn, formatTitleCase } from "@/lib/utils";
+import NarrativeText from "@/components/shared/NarrativeText";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { SegmentedControl } from "@/components/ui/tabs";
 import {
   formatPHDateTime,
   formatPHDateTimeParts,
@@ -555,7 +557,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={unreadCount <= 0}
                     onClick={markAllRead}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                    className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
                     <TickDouble01Icon size={16} className="mr-1.5" />
                     Mark All as Read
@@ -565,7 +567,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={total <= 0}
                     onClick={markAllUnread}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                    className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
                     <Mail01Icon size={16} className="mr-1.5" />
                     Mark All as Unread
@@ -578,58 +580,29 @@ export default function NotificationsTab({
           {/* 2. Navigation Toolbar: Read / Unread Tabs ONLY */}
           <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
             {/* Left: Segmented Control Tabs */}
-            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setActiveTab("unread")}
-                className={cn(
-                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                  activeTab === "unread"
-                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <span>Unread</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                    activeTab === "unread"
-                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                  )}
-                >
-                  {unreadCount}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("read")}
-                className={cn(
-                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                  activeTab === "read"
-                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <span>Read</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                    activeTab === "read"
-                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                  )}
-                >
-                  {readCount}
-                </span>
-              </button>
-            </div>
+            <SegmentedControl
+              value={activeTab}
+              onValueChange={setActiveTab}
+              variant="capsule"
+              items={[
+                {
+                  value: "unread",
+                  label: "Unread",
+                  badge: unreadCount,
+                },
+                {
+                  value: "read",
+                  label: "Read",
+                  badge: readCount,
+                },
+              ]}
+            />
 
             {/* Right: Search Input & Multi-Criteria Filter Group */}
             <div className="flex flex-wrap items-center gap-2.5 max-w-full">
               {/* Search Input */}
               <div className="w-full sm:w-60 md:w-64 relative group min-w-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -638,7 +611,7 @@ export default function NotificationsTab({
                   placeholder="Search notifications, student..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500">
                   {total > 0 ? `${total.toLocaleString()}` : "0"}
                 </div>
               </div>
@@ -786,7 +759,7 @@ export default function NotificationsTab({
                                 className="text-xs text-muted-foreground mt-0.5 line-clamp-1 break-words font-normal"
                                 title={n.message}
                               >
-                                {n.message}
+                                <NarrativeText text={n.message} mode="compact" />
                               </p>
 
                               {/* Metadata line: Category / Office · Relative Time */}
@@ -961,7 +934,7 @@ export default function NotificationsTab({
                   </div>
                   <div className="pt-2">
                     <p className="text-xs text-gray-700 dark:text-zinc-200 leading-relaxed font-medium">
-                      {selectedNotif.message}
+                      <NarrativeText text={selectedNotif.message} mode="full" />
                     </p>
 
                     {/* Rejection Note Banner */}

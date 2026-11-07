@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
+import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
@@ -44,6 +45,7 @@ import { getCachedData, setCachedData } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { SegmentedControl } from "@/components/ui/tabs"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
 import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -501,6 +503,8 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
     Boolean(search?.trim()) ||
     operationFilters.length > 0
 
+  if (loading) return <CampusOperationsSkeleton />
+
   return (
     <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Table & Pagination */}
@@ -518,37 +522,17 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         />
 
         <div role="group" aria-label="Operation lifecycle" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
-          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[["all", "All", lifecycleCounts.all], ["open", "Open", lifecycleCounts.open], ["closed", "Closed", lifecycleCounts.closed]].map(([key, label, count]) => {
-              const isSelected = lifecycle === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setLifecycle(key)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <span>{label}</span>
-                  {loading ? (
-                    <Skeleton aria-hidden="true" className="h-3 w-5 rounded-full dark:bg-muted" />
-                  ) : (
-                    <span className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                      isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                    )}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={lifecycle}
+            onValueChange={setLifecycle}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr"
+            items={[
+              { value: "all", label: "All", badge: lifecycleCounts.all },
+              { value: "open", label: "Open", badge: lifecycleCounts.open },
+              { value: "closed", label: "Closed", badge: lifecycleCounts.closed },
+            ]}
+          />
         </div>
 
         {/* Navigation Toolbar */}
@@ -820,7 +804,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
-                          <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-zinc-700/60">
+                          <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-zinc-700/60">
                             {formatTransactionId(tx)}
                           </span>
                         </td>
@@ -934,7 +918,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           )}
 
           {/* Pagination Footer */}
-          {!loading && <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
+          {!loading && sortedTransactions.length > 0 && <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
         </div>
       </Card>
 

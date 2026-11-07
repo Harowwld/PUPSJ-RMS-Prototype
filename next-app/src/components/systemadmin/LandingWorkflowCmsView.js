@@ -14,6 +14,8 @@ import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingW
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import useCmsDraft from "@/hooks/useCmsDraft"
+import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
 import { ArrowDown01Icon, ArrowRight02Icon, ArrowUp01Icon, Cancel01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -111,12 +113,13 @@ function getStepCurveClass(idx, total, curveStyle = "gentle", autoCurve = true) 
 export const MAX_STEPS = 7
 export const MIN_STEPS = 2
 
-export default function LandingWorkflowCmsView({ showToast }) {
+export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
   const shouldReduceMotion = useAppReducedMotion()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-workflow", "activeTab", "content") // 'content' | 'preview'
   const [workflowData, setWorkflowData] = useState(DEFAULT_WORKFLOW)
+  const { isDirty, savedData, markSaved } = useCmsDraft(workflowData, onDirtyChange)
 
   // Step deletion & reset modal states
   const [deleteStepIndex, setDeleteStepIndex] = useState(null)
@@ -145,6 +148,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
         if (ignore) return
         if (res.ok && json.ok && json.data) {
           setWorkflowData(json.data)
+          markSaved(json.data)
         } else {
           notify(json.error || "Failed to load workflow configuration", true)
         }
@@ -160,9 +164,10 @@ export default function LandingWorkflowCmsView({ showToast }) {
     return () => {
       ignore = true
     }
-  }, [notify])
+  }, [notify, markSaved])
 
   const handleSave = async () => {
+    if (!isDirty || saving) return
     if (!workflowData.headingLine1.trim() || !workflowData.headingLine2.trim()) {
       notify("Section heading lines cannot be blank", true)
       return
@@ -189,6 +194,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setWorkflowData(json.data)
+        markSaved(json.data)
         notify("Workflow & How-to-Request configuration saved successfully")
       } else {
         notify(json.error || "Failed to save workflow settings", true)
@@ -212,6 +218,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setWorkflowData(json.data)
+        markSaved(json.data)
         notify("Workflow steps reverted to institutional defaults")
       } else {
         notify(json.error || "Failed to reset workflow settings", true)
@@ -334,13 +341,14 @@ export default function LandingWorkflowCmsView({ showToast }) {
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">{workflowData.steps.length} steps · Workflow &amp; Steps</span>
+              <LandingCmsDraftStatus isDirty={isDirty} />
             </div>
           }
           description="Manage public portal process workflow, student application steps, and left-column narrative."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
@@ -354,28 +362,24 @@ export default function LandingWorkflowCmsView({ showToast }) {
 
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                disabled={saving}
-                className="h-9 px-4"
-              >
-                Restore Defaults
-              </Button>
-
-              <Button
-                type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Workflow Content"}
               </Button>
             </div>
           }
+          secondaryActions={
+            <>
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setWorkflowData(savedData); notify("Draft changes discarded. Reverted to saved workflow content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+            </>
+          }
         />
 
         {/* Standard Navigation Segmented Tabs */}
-        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Workflow Content" />
+        <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Workflow Content" contentCount={workflowData.steps.length} />
 
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
 
@@ -383,7 +387,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
           {activeTab === "content" && (
             <div className="space-y-6">
               {/* Section Title & Narrative Copy */}
-              <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 sm:p-6 space-y-5">
+              <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Section Title &amp; Narrative Copy
@@ -415,7 +419,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         }
                         placeholder="e.g. How to Request"
                         maxLength={40}
-                        className="bg-white dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
 
@@ -439,7 +443,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                         }
                         placeholder="e.g. Your Documents."
                         maxLength={40}
-                        className="bg-white dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
                   </div>
@@ -465,14 +469,14 @@ export default function LandingWorkflowCmsView({ showToast }) {
                       rows={3}
                       maxLength={320}
                       placeholder="A straightforward guide for students and alumni..."
-                      className="w-full"
+                      className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Header Bar with Curve Style & Add Step Buttons */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Sequential Application Process</span>
@@ -532,20 +536,32 @@ export default function LandingWorkflowCmsView({ showToast }) {
                     <div
                       key={idx}
                       className={cn(
-                        "rounded-xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 bg-white dark:bg-card shadow-2xs",
+                        "rounded-2xl border transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 bg-white dark:bg-card overflow-hidden shadow-2xs",
                         isExpanded
-                          ? "border-pup-maroon/40 dark:border-red-500/40 shadow-xs"
+                          ? "border-gray-950 dark:border-white shadow-xs ring-1 ring-black/10 dark:ring-white/20"
                           : "border-border dark:border-border hover:border-border dark:hover:border-white/20"
                       )}
                     >
                       {/* Step Header Accordion Bar */}
                       <div
                         onClick={() => setExpandedStepIndex(isExpanded ? null : idx)}
-                        className="flex items-center justify-between p-4 cursor-pointer select-none bg-gray-50/40 dark:bg-zinc-900/20 rounded-xl"
+                        className={cn(
+                          "flex items-center justify-between p-4 cursor-pointer select-none transition-colors",
+                          isExpanded
+                            ? "bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50"
+                            : "bg-gray-50/40 dark:bg-zinc-900/20 hover:bg-gray-50/80 dark:hover:bg-zinc-800/50"
+                        )}
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
                           {/* Step Number Badge */}
-                          <div className="w-9 h-9 rounded-full bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                          <div
+                            className={cn(
+                              "w-9 h-9 rounded-full font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 transition-colors",
+                              isExpanded
+                                ? "bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs"
+                                : "bg-gray-200/80 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300"
+                            )}
+                          >
                             {String(idx + 1).padStart(2, "0")}
                           </div>
 
@@ -640,7 +656,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               onChange={(e) => updateStep(idx, "title", e.target.value)}
                               placeholder="e.g. Sign In to Portal"
                               maxLength={60}
-                              className="bg-white dark:bg-card"
+                              className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
@@ -661,14 +677,14 @@ export default function LandingWorkflowCmsView({ showToast }) {
                               rows={3}
                               maxLength={280}
                               placeholder="Explain what the student or personnel does at this phase..."
-                              className="w-full"
+                              className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
                           {/* Tag Chips Manager */}
                           <div className="space-y-2 pt-1">
-                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                              Requirement Tags &amp; Metadata Badges
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                              Requirement Tags &amp; Metadata Badges <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                             </label>
 
                             {/* Active tags pills */}
@@ -708,12 +724,12 @@ export default function LandingWorkflowCmsView({ showToast }) {
                   type="button"
                   onClick={addNewStep}
                   title={`Add Another Workflow Step (${currentSteps.length}/${MAX_STEPS})`}
-                  className="w-full py-4 rounded-xl border-2 border-dashed border-border dark:border-border hover:border-pup-maroon/40 hover:bg-pup-maroon/5 dark:hover:bg-red-500/5 transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 cursor-pointer select-none"
+                  className="w-full py-4 rounded-2xl border-2 border-dashed border-border dark:border-border hover:border-gray-900/40 dark:hover:border-white/30 hover:bg-gray-100/60 dark:hover:bg-zinc-800/50 transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold text-gray-600 hover:text-gray-950 dark:text-zinc-400 dark:hover:text-zinc-100 cursor-pointer select-none shadow-2xs"
                 >
                   Add Step
                 </button>
               ) : (
-                <div className="w-full py-3.5 px-4 rounded-xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2">
+                <div className="w-full py-3.5 px-4 rounded-2xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-900/30 text-center text-xs text-gray-900 dark:text-zinc-300 flex items-center justify-center gap-2 shadow-2xs">
                   <CovidInfoIcon size={16}  className="text-pup-maroon dark:text-red-400" />
                   <span>Maximum limit reached ({MAX_STEPS} of {MAX_STEPS} steps). Process workflows are capped at {MAX_STEPS} steps for optimal student readability and mobile layout stability.</span>
                 </div>
@@ -724,7 +740,7 @@ export default function LandingWorkflowCmsView({ showToast }) {
           {/* TAB 2: INTERACTIVE LIVE PREVIEW */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Simulated Workflow Section Preview
@@ -919,7 +935,7 @@ function StepTagInput({ onAddTag }) {
         title="Add Tag"
         className="inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-medium text-gray-500 hover:text-pup-maroon dark:hover:text-red-400 border border-dashed border-border dark:border-border hover:border-pup-maroon cursor-pointer transition-colors"
       >
-        Add
+        Add Tag
       </button>
     )
   }
@@ -942,7 +958,7 @@ function StepTagInput({ onAddTag }) {
         }}
         onBlur={handleCommit}
         placeholder="Type tag & Enter"
-        className="h-7 px-2.5 rounded-full text-[11px] bg-white dark:bg-zinc-950 border border-pup-maroon focus:outline-hidden"
+        className="h-7 px-2.5 rounded-full text-[11px] bg-white dark:bg-zinc-950 border border-border dark:border-border focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
       />
     </div>
   )
