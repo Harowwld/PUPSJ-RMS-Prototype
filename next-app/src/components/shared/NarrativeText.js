@@ -1,0 +1,191 @@
+"use client";
+
+import React, { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import {
+  parseNarrativeTokens,
+  getDeterministicColor,
+} from "@/lib/narrativeParser";
+
+export { parseNarrativeTokens };
+
+/**
+ * NarrativeText Component
+ * Renders rich Apple-style entity tokens for audit descriptions, notification narratives,
+ * and activity history.
+ *
+ * @param {string} text - Raw or formatted audit details
+ * @param {"compact" | "full"} [mode="full"] - "compact" for table rows; "full" for cards/sheets
+ * @param {function} [onMentionClick] - Callback when a mention/avatar pill is clicked
+ * @param {string} [className] - Optional custom CSS classes
+ */
+export default function NarrativeText({
+  text,
+  mode = "full",
+  onMentionClick,
+  className,
+}) {
+  const tokens = useMemo(() => parseNarrativeTokens(text), [text]);
+
+  if (!tokens || tokens.length === 0) {
+    return <span className={cn("text-muted-foreground", className)}>No activity description recorded.</span>;
+  }
+
+  return (
+    <span className={cn("inline leading-relaxed", className)}>
+      {tokens.map((token, index) => {
+        const key = `token-${index}-${token.type}`;
+
+        switch (token.type) {
+          case "mention": {
+            if (mode === "compact") {
+              return (
+                <span
+                  key={key}
+                  onClick={
+                    onMentionClick
+                      ? (e) => {
+                          e.stopPropagation();
+                          onMentionClick(token.value);
+                        }
+                      : undefined
+                  }
+                  className={cn(
+                    "font-semibold text-pup-maroon dark:text-red-400 select-text",
+                    onMentionClick && "hover:underline cursor-pointer"
+                  )}
+                  title={`User: ${token.value}`}
+                >
+                  @{token.value}
+                </span>
+              );
+            }
+
+            // Full mode: Apple Inset capsule with initial avatar
+            const initial = (token.value || "U")[0].toUpperCase();
+            return (
+              <span
+                key={key}
+                onClick={
+                  onMentionClick
+                    ? (e) => {
+                        e.stopPropagation();
+                        onMentionClick(token.value);
+                      }
+                    : undefined
+                }
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text shadow-2xs mx-0.5",
+                  onMentionClick && "hover:bg-black/[0.08] dark:hover:bg-white/[0.1] cursor-pointer active:scale-95"
+                )}
+                title={`User: ${token.value}`}
+              >
+                <span
+                  className={cn(
+                    "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold uppercase",
+                    getDeterministicColor(token.value)
+                  )}
+                  aria-hidden="true"
+                >
+                  {initial}
+                </span>
+                <span className="truncate max-w-[200px]">{token.value}</span>
+              </span>
+            );
+          }
+
+          case "record_id": {
+            if (mode === "compact") {
+              return (
+                <span
+                  key={key}
+                  className="font-mono text-[11px] font-semibold text-gray-800 dark:text-zinc-200 tabular-nums select-text"
+                >
+                  {token.value}
+                </span>
+              );
+            }
+            return (
+              <span
+                key={key}
+                className="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[11px] font-medium bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-gray-800 dark:text-zinc-200 tabular-nums select-text mx-0.5"
+              >
+                {token.value}
+              </span>
+            );
+          }
+
+          case "transition": {
+            const isNegative = /declined|cancelled|rejected|failed/i.test(token.to);
+            const isPositive = /approved|ready|completed|active|success/i.test(token.to);
+
+            const toColor = isNegative
+              ? "text-rose-600 dark:text-rose-400 font-semibold"
+              : isPositive
+                ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                : "text-sky-600 dark:text-sky-400 font-semibold";
+
+            if (mode === "compact") {
+              return (
+                <span key={key} className="inline-flex items-center gap-1 font-medium text-gray-600 dark:text-zinc-400">
+                  <span className="line-through opacity-70">{token.from}</span>
+                  <span className="text-gray-400">→</span>
+                  <span className={toColor}>{token.to}</span>
+                </span>
+              );
+            }
+
+            return (
+              <span
+                key={key}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.04] dark:border-white/[0.06] text-[11px] font-medium select-text mx-0.5"
+              >
+                <span className="text-gray-500 dark:text-zinc-400 line-through opacity-75">{token.from}</span>
+                <span className="text-gray-400 dark:text-zinc-500 font-bold">→</span>
+                <span className={toColor}>{token.to}</span>
+              </span>
+            );
+          }
+
+          case "key_value": {
+            return (
+              <span key={key} className="inline-flex items-baseline gap-1 select-text mx-0.5">
+                <span className="text-gray-400 dark:text-zinc-500 font-medium text-[11px]">{token.key}:</span>
+                <span className="font-semibold text-gray-900 dark:text-zinc-100">{token.value}</span>
+              </span>
+            );
+          }
+
+          case "quoted_entity": {
+            return (
+              <span
+                key={key}
+                className={cn(
+                  "font-semibold text-gray-950 dark:text-zinc-50 select-text",
+                  mode === "full" && "border-b border-black/15 dark:border-white/15 pb-[0.5px]"
+                )}
+              >
+                {token.value}
+              </span>
+            );
+          }
+
+          case "ip_address": {
+            return (
+              <span
+                key={key}
+                className="font-mono text-[11px] text-gray-500 dark:text-zinc-400 tabular-nums select-text"
+              >
+                {token.value}
+              </span>
+            );
+          }
+
+          case "text":
+          default:
+            return <React.Fragment key={key}>{token.value}</React.Fragment>;
+        }
+      })}
+    </span>
+  );
+}
