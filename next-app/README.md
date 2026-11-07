@@ -408,23 +408,25 @@ Run `pnpm db:verify` first. The sample seed is designed to update existing sampl
 <table align="center">
   <tr>
     <td align="center" width="20%">
-      <a href="https://github.com/icodecedd">
-        <img src="https://github.com/icodecedd.png" width="80" alt="Cedrick Joseph Mariano"/><br />
-        <sub><b>Cedrick Joseph Mariano</b></sub>
-      </a><br />
-      <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
-    </td>
-    <td align="center" width="20%">
       <a href="https://github.com/Harowwld">
-        <img src="https://github.com/Harowwld.png" width="80" alt="Harold Prince dela Peña"/><br />
-        <sub><b>Harold Prince dela Peña</b></sub>
+        <img src="https://github.com/Harowwld.png" width="80" alt="Harold dela Peña"/><br />
+        <sub><b>Harold dela Peña</b></sub>
       </a><br />
       <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
     </td>
     <td align="center" width="20%">
-      <img src="https://ui-avatars.com/api/?name=Joshue+Poche&background=800000&color=fff&size=160&bold=true&rounded=true" width="80" alt="Joshue Poche"/><br />
-      <sub><b>Joshue Poche</b></sub><br />
-      <img src="https://img.shields.io/badge/QA-2ea44f?style=flat" alt="Quality Assurance" />
+      <a href="https://github.com/rjjackflorida">
+        <img src="https://github.com/rjjackflorida.png" width="80" alt="Rj Jack Florida"/><br />
+        <sub><b>Rj Jack Florida</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Documentation-f68a1e?style=flat" alt="Technical Documentation" />
+    </td>
+    <td align="center" width="20%">
+      <a href="https://github.com/icodecedd">
+        <img src="https://github.com/icodecedd.png" width="80" alt="Cedrick Mariano"/><br />
+        <sub><b>Cedrick Mariano</b></sub>
+      </a><br />
+      <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
     </td>
     <td align="center" width="20%">
       <a href="https://github.com/paulomscln">
@@ -434,11 +436,11 @@ Run `pnpm db:verify` first. The sample seed is designed to update existing sampl
       <img src="https://img.shields.io/badge/Frontend-0969da?style=flat" alt="Frontend" />
     </td>
     <td align="center" width="20%">
-      <a href="https://github.com/rjjackflorida">
-        <img src="https://github.com/rjjackflorida.png" width="80" alt="Rj Jack Florida"/><br />
-        <sub><b>Rj Jack Florida</b></sub>
+      <a href="https://github.com/Poche15">
+        <img src="https://github.com/Poche15.png" width="80" alt="Joshua Poche"/><br />
+        <sub><b>Joshua Poche</b></sub>
       </a><br />
-      <img src="https://img.shields.io/badge/Documentation-f68a1e?style=flat" alt="Technical Documentation" />
+      <img src="https://img.shields.io/badge/QA-2ea44f?style=flat" alt="Quality Assurance" />
     </td>
   </tr>
 </table>
@@ -447,10 +449,10 @@ Run `pnpm db:verify` first. The sample seed is designed to update existing sampl
 
 | Developer | Role | Focus Area |
 |:---:|:---:|:---:|
-| [**Cedrick Joseph Mariano**](https://github.com/icodecedd) | `Full Stack` | System Architecture, Authentication & Security |
-| [**Harold Prince dela Peña**](https://github.com/Harowwld) | `Full Stack` | Database Architecture, Backend Repositories & Ingest |
-| **Joshue Poche** | `Quality Assurance` | System Testing, Process Auditing & Quality Verification |
-| [**Paulo Masculino**](https://github.com/paulomscln) | `Frontend` | UI/UX Design System, Dashboard Views & Component Polish |
+| [**Harold dela Peña**](https://github.com/Harowwld) | `Full Stack` | Database Architecture, Backend Repositories & Ingest |
 | [**Rj Jack Florida**](https://github.com/rjjackflorida) | `Documentation` | Technical Writing, Operational Manuals & System Records |
+| [**Cedrick Mariano**](https://github.com/icodecedd) | `Full Stack` | System Architecture, Authentication & Security |
+| [**Paulo Masculino**](https://github.com/paulomscln) | `Frontend` | UI/UX Design System, Dashboard Views & Component Polish |
+| [**Joshua Poche**](https://github.com/Poche15) | `Quality Assurance` | System Testing, Process Auditing & Quality Verification |
 
 </div>
