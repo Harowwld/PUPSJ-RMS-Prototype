@@ -13,6 +13,7 @@ import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
+import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
@@ -20,7 +21,6 @@ import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAu
 import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 import OfficeManagementPageSkeleton from "@/components/systemadmin/skeletons/OfficeManagementPageSkeleton"
 import LandingCmsLoadingSkeleton from "@/components/systemadmin/skeletons/LandingCmsLoadingSkeleton"
-import { getClientSession } from "@/lib/clientAuth"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { ContentSwap } from "@/components/ui/motion"
@@ -28,12 +28,12 @@ import { ContentSwap } from "@/components/ui/motion"
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 
 const SYSTEMADMIN_NAV_ITEMS = [
+  { type: "header", label: "Campus Operations" },
+  { key: "health", label: "Campus Operations", iconClass: " Activity01Icon" },
+
   { type: "header", label: "Institutional Governance" },
   { key: "offices", label: "Departments & Stations", iconClass: " Building01Icon" },
   { key: "modules", label: "Department Features", iconClass: " LayoutGridIcon" },
-
-  { type: "header", label: "Campus Operations" },
-  { key: "health", label: "Campus Operations", iconClass: " Activity01Icon" },
 
   { type: "header", label: "Public Portal & Identity" },
   { key: "branding", label: "Institutional Identity", iconClass: " Certificate01Icon" },
@@ -49,22 +49,22 @@ const SYSTEMADMIN_NAV_ITEMS = [
 ]
 
 const OfficeManagementTab = dynamic(() => import("@/components/systemadmin/OfficeManagementTab"), {
-  loading: () => <OfficeManagementPageSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="offices" />,
 })
 const InstitutionalBrandingTab = dynamic(() => import("@/components/systemadmin/InstitutionalBrandingTab"), {
-  loading: () => <InstitutionalBrandingSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="branding" />,
 })
 const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
-  loading: () => <GlobalStaffSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="staff" />,
 })
 const GlobalAuditLogsTab = dynamic(() => import("@/components/systemadmin/GlobalAuditLogsTab"), {
-  loading: () => <GlobalAuditLogsSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="logs" />,
 })
 const CampusOperationsTab = dynamic(() => import("@/components/systemadmin/CampusOperationsTab"), {
-  loading: () => <CampusOperationsSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="health" />,
 })
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
-  loading: () => <SystemBackupsSkeleton rowCount={20} />,
+  loading: () => <SystemAdminContentSkeleton view="backups" />,
 })
 const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
   loading: () => <LandingCmsDynamicFallback />,
@@ -72,10 +72,10 @@ const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/Landing
 
 function LandingCmsDynamicFallback() {
   const searchParams = useSearchParams()
-  return <LandingCmsLoadingSkeleton section={searchParams?.get("section")} />
+  return <SystemAdminContentSkeleton view="landing" section={searchParams?.get("section")} />
 }
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
-  loading: () => <SecurityQuestionsSkeleton />,
+  loading: () => <SystemAdminContentSkeleton view="security" />,
 })
 
 const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing", "activity", "settings"]
@@ -88,49 +88,69 @@ const SUPERADMIN_VIEW_ALIASES = {
   stations: "offices",
 }
 
-function resolveSuperAdminView(rawView, defaultPref = null) {
+function resolveRequestedView(rawView) {
   const normalized = SUPERADMIN_VIEW_ALIASES[rawView] || rawView
-  if (normalized && VALID_VIEWS.includes(normalized)) {
-    return normalized
-  }
-  const prefNormalized = SUPERADMIN_VIEW_ALIASES[defaultPref] || defaultPref
-  if (prefNormalized && VALID_VIEWS.includes(prefNormalized)) {
-    return prefNormalized
-  }
-  return "offices"
+  return VALID_VIEWS.includes(normalized) ? normalized : null
 }
 
-function SystemAdminLoadingSkeleton() {
+function resolveSuperAdminView(rawView, defaultPref = null) {
+  return resolveRequestedView(rawView) || resolveRequestedView(defaultPref) || "health"
+}
+
+function hasUnsavedChanges(activeView, brandingDirty, securityDirty, landingDirty) {
+  return (activeView === "branding" && brandingDirty) || (activeView === "security" && securityDirty) || (activeView === "landing" && landingDirty)
+}
+
+function SystemAdminContentSkeleton({ view, section }) {
+  switch (view) {
+    case "offices": return <OfficeManagementPageSkeleton />
+    case "branding": return <InstitutionalBrandingSkeleton />
+    case "modules": return <ModuleConfigSkeleton />
+    case "staff": return <GlobalStaffSkeleton />
+    case "security": return <SecurityQuestionsSkeleton />
+    case "logs": return <GlobalAuditLogsSkeleton />
+    case "health":
+    case "standards": return <CampusOperationsSkeleton />
+    case "backups": return <SystemBackupsSkeleton rowCount={20} />
+    case "landing": return <LandingCmsLoadingSkeleton section={section} />
+    default: return null
+  }
+}
+
+function SystemAdminLoadingSkeleton({ view, section }) {
   return (
     <DashboardShellSkeleton items={SYSTEMADMIN_NAV_ITEMS}>
-      <OfficeManagementPageSkeleton />
+      <SystemAdminContentSkeleton view={view} section={section} />
     </DashboardShellSkeleton>
   )
 }
 
-function SystemAdminPageContent({ authUser: propAuthUser }) {
-  const contextUser = useAuthUser()
+function SystemAdminPageContent() {
+  const authUser = useAuthUser()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const initialAuth = propAuthUser || contextUser || null
-  const [authUser, setAuthUser] = useState(initialAuth)
-  const [loading, setLoading] = useState(!initialAuth)
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser)
 
   const initialView = resolveSuperAdminView(
     searchParams?.get("view"),
-    initialAuth?.preferences?.default_home_view
+    authUser?.preferences?.default_home_view
   )
 
   const [view, setView] = useState(initialView)
   const [selectedOfficeId, setSelectedOfficeId] = useState(() => searchParams?.get("office") || "")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [brandingDirty, setBrandingDirty] = useState(false)
-  const [pendingBrandingView, setPendingBrandingView] = useState(null)
+  const [securityDirty, setSecurityDirty] = useState(false)
+  const [landingDirty, setLandingDirty] = useState(false)
+  const [pendingView, setPendingView] = useState(null)
   const currentViewRef = useRef(view)
   const brandingDirtyRef = useRef(brandingDirty)
+  const securityDirtyRef = useRef(securityDirty)
+  const landingDirtyRef = useRef(landingDirty)
   useEffect(() => { currentViewRef.current = view }, [view])
   useEffect(() => { brandingDirtyRef.current = brandingDirty }, [brandingDirty])
+  useEffect(() => { securityDirtyRef.current = securityDirty }, [securityDirty])
+  useEffect(() => { landingDirtyRef.current = landingDirty }, [landingDirty])
 
   useEffect(() => {
     const handleToggle = () => setSidebarOpen((prev) => !prev)
@@ -142,8 +162,8 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     const handleSwitch = (e) => {
       const { view: targetView, officeId, section } = e.detail || {}
       if (targetView) {
-        if (view === "branding" && brandingDirty && targetView !== "branding") {
-          setPendingBrandingView({ view: targetView, officeId, section })
+        if (hasUnsavedChanges(view, brandingDirty, securityDirty, landingDirty) && targetView !== view) {
+          setPendingView({ view: targetView, officeId, section })
           return
         }
         setView(targetView)
@@ -163,7 +183,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     }
     window.addEventListener("switch-view", handleSwitch)
     return () => window.removeEventListener("switch-view", handleSwitch)
-  }, [router, view, brandingDirty])
+  }, [router, view, brandingDirty, securityDirty, landingDirty])
 
   const showToast = useCallback((msg, typeOrIsError = false, autoHide = true) => {
     if (msg instanceof Error) {
@@ -248,46 +268,21 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
   useEffect(() => {
     const rawTab = searchParams?.get("view")
     const tab = resolveSuperAdminView(rawTab, authUser?.preferences?.default_home_view)
-    if (currentViewRef.current === "branding" && brandingDirtyRef.current && tab !== "branding") {
-      setPendingBrandingView({ view: tab })
-      router.replace(`${window.location.pathname}?view=branding`, { scroll: false })
+    const activeView = currentViewRef.current
+    const activeViewDirty = (activeView === "branding" && brandingDirtyRef.current)
+      || (activeView === "security" && securityDirtyRef.current)
+      || (activeView === "landing" && landingDirtyRef.current)
+    if (activeViewDirty && tab !== activeView) {
+      setPendingView({ view: tab })
+      router.replace(`${window.location.pathname}?view=${activeView}`, { scroll: false })
       return
     }
     setView(tab)
   }, [searchParams, router, authUser?.preferences?.default_home_view])
 
-  useEffect(() => {
-    if (initialAuth) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAuthUser(initialAuth)
-      setLoading(false)
-      return
-    }
-    ; (async () => {
-      try {
-        const session = await getClientSession()
-        if (!session.ok || !session.data) {
-          if (session.status === 401) {
-            router.replace("/login")
-          }
-          return
-        }
-        setAuthUser(session.data)
-        setLoading(false)
-        const prefDefault = session.data?.preferences?.default_home_view
-        if (!searchParams?.get("view") && prefDefault) {
-          const resolved = resolveSuperAdminView(null, prefDefault)
-          if (resolved) setView(resolved)
-        }
-      } catch (err) {
-        console.error("[SuperAdminPage] Profile fetch failed:", err)
-      }
-    })()
-  }, [initialAuth, router, searchParams])
-
   const switchView = useCallback((nextView, officeId) => {
-    if (view === "branding" && brandingDirty && nextView !== "branding") {
-      setPendingBrandingView({ view: nextView, officeId })
+    if (hasUnsavedChanges(view, brandingDirty, securityDirty, landingDirty) && nextView !== view) {
+      setPendingView({ view: nextView, officeId })
       return
     }
     setView(nextView)
@@ -300,13 +295,15 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
       params.set("office", officeId)
     }
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
-  }, [router, view, brandingDirty])
+  }, [router, view, brandingDirty, securityDirty, landingDirty])
 
-  const discardBrandingChanges = useCallback(() => {
-    if (!pendingBrandingView) return
-    const { view: nextView, officeId, section } = pendingBrandingView
+  const discardChanges = useCallback(() => {
+    if (!pendingView) return
+    const { view: nextView, officeId, section } = pendingView
     setBrandingDirty(false)
-    setPendingBrandingView(null)
+    setSecurityDirty(false)
+    setLandingDirty(false)
+    setPendingView(null)
     setView(nextView)
     if (officeId) setSelectedOfficeId(officeId)
     const params = new URLSearchParams()
@@ -314,13 +311,9 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
     if (officeId) params.set("office", officeId)
     if (section) params.set("section", section)
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false })
-  }, [pendingBrandingView, router])
+  }, [pendingView, router])
 
   const sidebarItems = SYSTEMADMIN_NAV_ITEMS
-
-  if (loading) {
-    return <SystemAdminLoadingSkeleton />
-  }
 
   return (
     <div className="systemadmin-dashboard font-jakarta flex h-dvh overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300" style={{ "--brand-accent": getRoleBranding(authUser).color, "--brand-foreground": getRoleBranding(authUser).foreground }}>
@@ -358,7 +351,7 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
               {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
               {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
               {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
-              {view === "security" && <SecurityQuestionsTab showToast={showToast} />}
+              {view === "security" && <SecurityQuestionsTab showToast={showToast} onDirtyChange={setSecurityDirty} />}
               {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
               {(view === "health" || view === "standards") && (
                 <CampusOperationsTab
@@ -367,24 +360,43 @@ function SystemAdminPageContent({ authUser: propAuthUser }) {
                 />
               )}
               {view === "backups" && <SystemBackupsTab showToast={showToast} />}
-              {view === "landing" && <LandingPageCmsTab showToast={showToast} initialSection={searchParams?.get("section")} />}
+              {view === "landing" && <LandingPageCmsTab showToast={showToast} initialSection={searchParams?.get("section")} onDirtyChange={setLandingDirty} />}
               {view === "activity" && <MyActivityPanel />}
               {view === "settings" && <AccountSettingsPanel />}
             </ContentSwap>
           </div>
         </main>
       </div>
-      <ConfirmModal open={Boolean(pendingBrandingView)} title="Unsaved Changes" message="You have unsaved institutional identity changes. Navigating away will discard them." confirmLabel="Discard Changes" variant="warning" onConfirm={discardBrandingChanges} onCancel={() => setPendingBrandingView(null)} isUnsavedChangesModal={true} />
+      <ConfirmModal open={Boolean(pendingView)} title="Unsaved Changes" message={`You have unsaved ${view === "security" ? "security question" : view === "landing" ? "landing page" : "institutional identity"} changes. Navigating away will discard them.`} confirmLabel="Discard Changes" variant="warning" onConfirm={discardChanges} onCancel={() => setPendingView(null)} isUnsavedChangesModal={true} />
     </div>
+  )
+}
+
+function SystemAdminPageWithView() {
+  const searchParams = useSearchParams()
+  const requestedView = resolveRequestedView(searchParams?.get("view"))
+  // These layouts depend on saved preferences that become available with the authenticated user.
+  const loadingView = requestedView === "offices" || requestedView === "modules" ? null : requestedView
+  const fallback = (
+    <SystemAdminLoadingSkeleton
+      view={loadingView}
+      section={searchParams?.get("section")}
+    />
+  )
+
+  return (
+    <SystemAdminGuard fallback={fallback}>
+      <Suspense fallback={fallback}>
+        <SystemAdminPageContent />
+      </Suspense>
+    </SystemAdminGuard>
   )
 }
 
 export default function SystemAdminPage() {
   return (
-    <SystemAdminGuard fallback={<SystemAdminLoadingSkeleton />}>
-      <Suspense fallback={<SystemAdminLoadingSkeleton />}>
-        <SystemAdminPageContent />
-      </Suspense>
-    </SystemAdminGuard>
+    <Suspense fallback={<SystemAdminLoadingSkeleton />}>
+      <SystemAdminPageWithView />
+    </Suspense>
   )
 }

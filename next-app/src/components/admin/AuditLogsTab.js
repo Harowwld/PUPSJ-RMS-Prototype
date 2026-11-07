@@ -63,7 +63,7 @@ export default function AuditLogsTab({
 }) {
   const logs = displayLogs || []
   const [localSearch, setLocalSearch] = useState(logSearch || "")
-  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
+  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 50)
   const [isExporting, setIsExporting] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
@@ -261,22 +261,10 @@ export default function AuditLogsTab({
 
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
-                    onClick={handleDownloadCSV}
-                    disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
-                  >
-                    {isExporting ? (
-                      <Loading01Icon size="1em"  className="animate-spin text-[16px]"></Loading01Icon>
-                    ) : (
-                      "Export CSV"
-                    )}
-                  </Button>
-                  <Button
                     type="button"
                     onClick={handlePreviewPDF}
                     disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="flex h-10 items-center justify-center disabled:opacity-50 cursor-pointer px-5 border-0"
+                    className="h-9 shrink-0 px-4 text-xs"
                   >
                     {isGeneratingPdf ? (
                       <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
@@ -286,6 +274,16 @@ export default function AuditLogsTab({
                   </Button>
                 </div>
               </div>
+            }
+            secondaryActions={
+              <Button
+                variant="outline"
+                onClick={handleDownloadCSV}
+                disabled={logTotal === 0 || isExporting || isGeneratingPdf}
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                {isExporting ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
+              </Button>
             }
           />
 

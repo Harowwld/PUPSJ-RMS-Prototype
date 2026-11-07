@@ -26,18 +26,21 @@ import PlatformBackupTable, { PLATFORM_BACKUP_COLUMNS } from "@/components/syste
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
+import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import RestoreModal from "@/components/shared/RestoreModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import useTableScroll from "@/hooks/useTableScroll"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
-import { AlertCircleIcon as EmptyAlertCircleIcon, CheckmarkCircle01Icon, Database01Icon, HardDriveIcon, Loading01Icon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, CheckmarkCircle01Icon, Database01Icon, HardDriveIcon, Loading01Icon, PieChartIcon } from "hugeicons-react";
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -58,6 +61,7 @@ export default function SystemBackupsTab({ showToast }) {
   })
 
   const [isLoading, setIsLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [isManualLoading, setIsManualLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -101,23 +105,7 @@ export default function SystemBackupsTab({ showToast }) {
   const [restoreLoading, setRestoreLoading] = useState(false)
   const [restoreMode, setRestoreMode] = useState("merge")
 
-  const [statusSidebarOpen, setStatusSidebarOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pupsj_backup_status_sidebar")
-      if (saved !== null) return saved === "true"
-    }
-    return true
-  })
-
-  const handleToggleStatusSidebar = (forcedState) => {
-    setStatusSidebarOpen((prev) => {
-      const next = typeof forcedState === "boolean" ? forcedState : !prev
-      if (typeof window !== "undefined") {
-        localStorage.setItem("pupsj_backup_status_sidebar", String(next))
-      }
-      return next
-    })
-  }
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false)
 
   // TOTP Challenge Modal state
   const [totpModalOpen, setTotpModalOpen] = useState(false)
@@ -262,6 +250,7 @@ export default function SystemBackupsTab({ showToast }) {
       if (Array.isArray(cachedBackups)) {
         setBackups(cachedBackups)
         setIsLoading(false)
+        setInitialLoading(false)
       }
       if (cachedHealth) {
         setSystemHealth(cachedHealth)
@@ -306,6 +295,7 @@ export default function SystemBackupsTab({ showToast }) {
       setError(err.message)
     } finally {
       setIsLoading(false)
+      setInitialLoading(false)
       if (isManual) setIsManualLoading(false)
     }
   }, [backupSearch, backupStartDate, backupEndDate])
@@ -357,6 +347,18 @@ export default function SystemBackupsTab({ showToast }) {
   }
 
   const backupTypes = useMemo(() => [...new Set(backups.map((backup) => backup.backup_type).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [backups])
+  const backupTypeTabs = useMemo(() => {
+    const defaults = [
+      { value: "Manual", label: "Manual" },
+      { value: "Scheduled", label: "Automated" },
+    ]
+    const known = new Set(defaults.map(({ value }) => value.toLowerCase()))
+    return [
+      { value: "all", label: "All Types", count: backups.length },
+      ...defaults.map((item) => ({ ...item, count: backups.filter((backup) => backup.backup_type === item.value).length })),
+      ...backupTypes.filter((type) => !known.has(String(type).toLowerCase())).map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length })),
+    ]
+  }, [backups, backupTypes])
   const filterFields = useMemo(() => [
     { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon, options: [...new Set(backups.map((backup) => backup.status_local).filter(Boolean))].map((value) => ({ value, label: value })) },
     { key: "size_bytes", label: "Size (bytes)", icon: HardDriveIcon, type: "number" },
@@ -389,6 +391,19 @@ export default function SystemBackupsTab({ showToast }) {
     }
     return [...grouped].map(([label, items]) => ({ label, items }))
   }, [groupBy, sortedAndPaginatedBackups])
+
+  const handleDownloadBackup = (id, filename) => {
+    const backup = backups.find((b) => b?.id === id)
+    const targetFilename = backup?.filename || filename || "backup.zip.enc"
+    const link = document.createElement("a")
+    link.href = `/api/system/backup/download?id=${id}`
+    link.download = targetFilename
+    link.click()
+    showToast?.({
+      title: "Download Initiated",
+      description: "Streaming governance backup package to your local workstation.",
+    })
+  }
 
   // Backup Creation with optional TOTP
   const handleGenerateBackup = async (totpToken = "") => {
@@ -443,11 +458,15 @@ export default function SystemBackupsTab({ showToast }) {
         throw new Error(json?.error || "Failed to create governance backup")
       }
 
+      if (json?.data?.id) {
+        window.location.assign(`/api/system/backup/download?id=${encodeURIComponent(json.data.id)}`)
+      }
+
       invalidateDataCache("systemadmin_backups")
       await fetchData()
       showToast?.({
         title: "Backup Successful",
-        description: `Platform archive '${json?.data?.filename || "package"}' has been secured.`,
+        description: `Platform archive '${json?.data?.filename || "package"}' has been secured and its download has started.`,
       })
     } catch (err) {
       if (totpModalOpen) {
@@ -532,20 +551,6 @@ export default function SystemBackupsTab({ showToast }) {
     } finally {
       setLocalLoading((prev) => ({ ...prev, syncingId: null, syncStatus: "" }))
     }
-  }
-
-  // Download backup
-  const handleDownloadBackup = (id, filename) => {
-    const backup = backups.find((b) => b?.id === id)
-    const targetFilename = backup?.filename || filename || "backup.zip.enc"
-    const link = document.createElement("a")
-    link.href = `/api/system/backup/download?id=${id}`
-    link.download = targetFilename
-    link.click()
-    showToast?.({
-      title: "Download Initiated",
-      description: "Streaming governance backup package to your local workstation.",
-    })
   }
 
   // Delete Prompt
@@ -738,6 +743,8 @@ export default function SystemBackupsTab({ showToast }) {
     setPage(1)
   }
 
+  if (initialLoading) return <SystemBackupsSkeleton rowCount={20} />
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
@@ -760,7 +767,7 @@ export default function SystemBackupsTab({ showToast }) {
                 showBorder={false}
                 className="p-6"
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-                descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+                descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
                   <div className="flex shrink-0 items-center gap-2">
                     <RefreshButton
@@ -769,24 +776,20 @@ export default function SystemBackupsTab({ showToast }) {
                       title="Refresh Governance Backups"
                       className="h-9 w-9"
                     />
-
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => handleToggleStatusSidebar()}
-                      className="h-9 px-4"
-                      title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}
+                      onClick={() => setStatusSheetOpen(true)}
+                      className="h-9 w-9 p-0"
+                      aria-label="Open System Status"
+                      title="System Status"
                     >
-                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
+                      <PieChartIcon size={16} aria-hidden="true" />
                     </Button>
-
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() =>
-                        restoreFileRef.current &&
-                        restoreFileRef.current.click()
-                      }
+                      onClick={() => restoreFileRef.current?.click()}
                       disabled={localLoading.uploading}
                       className="h-9 px-4"
                     >
@@ -799,6 +802,7 @@ export default function SystemBackupsTab({ showToast }) {
                         "Restore Backup"
                       )}
                     </Button>
+
                     <Button
                       onClick={() => handleGenerateBackup()}
                       disabled={localLoading.generating}
@@ -824,33 +828,20 @@ export default function SystemBackupsTab({ showToast }) {
                 }
               />
               <div role="group" aria-label="Backup type" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
-                <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-                  {[{ value: "all", label: "All Types", count: backups.length }, ...backupTypes.map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length }))].map(({ value, label, count }) => {
-                    const isSelected = backupTypeFilter === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => { setBackupTypeFilter(value); setPage(1) }}
-                        className={cn(
-                          "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                          isSelected
-                            ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                            : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                        )}
-                      >
-                        <span>{label}</span>
-                        <span className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                          isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                        )}>
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <SegmentedControl
+                  value={backupTypeFilter}
+                  onValueChange={(val) => {
+                    setBackupTypeFilter(val);
+                    setPage(1);
+                  }}
+                  variant="capsule"
+                  className="inline-grid grid-flow-col auto-cols-fr"
+                  items={backupTypeTabs.map(({ value, label, count }) => ({
+                    value,
+                    label,
+                    badge: count,
+                  }))}
+                />
               </div>
               {/* Standard Filter Toolbar */}
               <BackupFilters
@@ -904,7 +895,7 @@ export default function SystemBackupsTab({ showToast }) {
               )}
 
               {isLoading && !isManualLoading ? (
-                <BackupTableSkeleton embedded={true} scope="platform" visibleColumns={visibleColumns} rowCount={itemsPerPage} />
+                <BackupTableSkeleton embedded={true} scope="platform" visibleColumns={visibleColumns} rowCount={itemsPerPage} scrollRef={tableScrollRef} />
               ) : error ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
@@ -936,32 +927,33 @@ export default function SystemBackupsTab({ showToast }) {
             </Card>
           </div>
 
-          {/* RIGHT SIDEBAR: System Status */}
-          {statusSidebarOpen ? (
-            <HealthSidebar
-              systemHealth={systemHealth}
-              lastBackupTime={lastBackupTime}
-              isLoading={isLoading}
-              isManualLoading={isManualLoading}
-              externalDrive={externalDrive}
-              onRescanDrive={rescanExternalDrive}
-              onToggleSimulation={toggleExternalDriveSimulation}
-              isRescanning={isRescanning}
-              onToggleCollapse={() => handleToggleStatusSidebar(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => handleToggleStatusSidebar(true)}
-              title="Show System Status"
-              className="hidden md:flex flex-col items-center justify-center w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
-            >
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
-                Status
-              </span>
-            </button>
-          )}
         </div>
+
+        <Sheet open={statusSheetOpen} onOpenChange={setStatusSheetOpen}>
+          <SheetContent side="right" className="w-[480px] sm:w-[540px] max-w-[90vw] p-0">
+            <SheetHeader className="px-6 py-5 pr-14">
+              <SheetTitle>System Status</SheetTitle>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <HealthSidebar
+                systemHealth={systemHealth}
+                lastBackupTime={lastBackupTime}
+                isLoading={isLoading}
+                isManualLoading={isManualLoading}
+                externalDrive={externalDrive}
+                onRescanDrive={rescanExternalDrive}
+                onToggleSimulation={toggleExternalDriveSimulation}
+                isRescanning={isRescanning}
+                embedded
+              />
+            </div>
+            <SheetFooter className="shrink-0 p-4 px-6">
+              <SheetClose asChild>
+                <Button type="button" variant="outline" className="h-10 px-5">Close</Button>
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         {/* Floating Action Bar for batch deletion & utilities */}
         <FloatingActionBar
@@ -976,7 +968,7 @@ export default function SystemBackupsTab({ showToast }) {
           secondaryActions={[
             {
               label: "Copy Filenames",
-              copiedLabel: "Copied Filenames",
+              copiedLabel: "Filenames Copied!",
               onClick: () => {
                 const selectedBackups = backups.filter((b) => selectedBackupIds.includes(b.id))
                 const filenames = selectedBackups.map((b) => b.filename).filter(Boolean)

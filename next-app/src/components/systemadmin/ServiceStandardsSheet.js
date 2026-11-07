@@ -367,7 +367,7 @@ export default function ServiceStandardsSheet({
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                     <LayoutGridIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       Turnaround Framework Presets
                     </h3>
                   </div>
@@ -393,7 +393,7 @@ export default function ServiceStandardsSheet({
                             )}>
                               {p.name}
                             </span>
-                            <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
+                            <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                               {p.simpleDays}-{p.complexDays}-{p.highlyTechnicalDays}d
                             </span>
                           </div>
@@ -410,7 +410,7 @@ export default function ServiceStandardsSheet({
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                     <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       Policy & Calendar Configuration
                     </h3>
                   </div>
@@ -429,7 +429,7 @@ export default function ServiceStandardsSheet({
                         }))
                       }
                       placeholder="e.g. Citizen's Charter (ARTA RA 11032)"
-                      className="h-10 text-xs rounded-xl border-border dark:border-border focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                      className="h-10 text-xs rounded-xl border-border dark:border-border focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                       Displayed on official reports, document queue headers, and client receipts.
@@ -463,7 +463,7 @@ export default function ServiceStandardsSheet({
                 <div className="space-y-2.5 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                     <HourglassIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       Turnaround Rules & Tier Thresholds
                     </h3>
                   </div>
@@ -552,7 +552,7 @@ export default function ServiceStandardsSheet({
                 <div className="space-y-2.5 pt-2">
                   <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                     <CalendarCheckIn01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       Fulfillment Schedule Simulation
                     </h3>
                   </div>

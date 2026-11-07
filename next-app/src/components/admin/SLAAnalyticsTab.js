@@ -11,6 +11,7 @@ import {
 import SlaKpiSkeleton from "@/components/admin/skeletons/SlaKpiSkeleton"
 import SlaChartsSkeleton from "@/components/admin/skeletons/SlaChartsSkeleton"
 import { Button } from "@/components/ui/button"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
@@ -268,7 +269,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                       type="button"
                       variant="outline"
                       disabled={loading || !data || isExportingCsv}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
+                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
                     >
                       {isExportingCsv ? (
                         <Loading01Icon size="1em" className="animate-spin text-[16px]" />
@@ -509,32 +510,16 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         onPrint={() => onLogAction?.({ action: "Print Report", details: "opened print dialog for " + previewReportType + " report", entityType: "Report" })}
         onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
         headerActions={
-          <div role="group" aria-label="Report type" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[
-              ["sla", "On-Time Processing"],
-              ["csm", "Client Ratings (CSM)"],
-              ["comprehensive", "Combined"],
-            ].map(([type, label]) => {
-              const isSelected = previewReportType === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => handleSwitchPreviewReport(type)}
-                  disabled={isGeneratingPdf}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "min-h-11 sm:min-h-7.5 cursor-pointer rounded-full px-3.5 py-1 text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.98] inline-flex items-center justify-center text-center",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={previewReportType}
+            onValueChange={handleSwitchPreviewReport}
+            variant="capsule"
+            items={[
+              { value: "sla", label: "On-Time Processing" },
+              { value: "csm", label: "Client Ratings (CSM)" },
+              { value: "comprehensive", label: "Combined" },
+            ]}
+          />
         }
       />
     </div>

@@ -13,6 +13,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
+import NarrativeText from "@/components/shared/NarrativeText";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -120,22 +121,6 @@ export default function LogDetailSheet({
   };
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
-  const formattedDescription = (() => {
-    if (!selectedLog) return "";
-    const text = formatLogDetails(selectedLog.details) || "No known description";
-    const parts = text.split(/'([^']+)'/g);
-    if (parts.length === 1) return text;
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        return (
-          <span key={i} className="font-semibold text-gray-900 dark:text-zinc-50">
-            {part}
-          </span>
-        );
-      }
-      return part;
-    });
-  })();
 
   const isNavigable = typeof totalCount === "number" && totalCount > 1;
 
@@ -232,15 +217,15 @@ export default function LogDetailSheet({
               <div className="flex items-center gap-3.5 min-w-0">
                 <AuditActorAvatar
                   log={selectedLog}
-                  className="size-11 border border-pup-maroon/20"
-                  fallbackClassName="font-bold text-sm bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+                  className="size-11 border border-black/10 dark:border-white/10"
+                  fallbackClassName="font-bold text-sm"
                 />
                 <div className="min-w-0">
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
-                    {hideActor ? "Account Activity" : (selectedLog.user || "System")}
+                    {hideActor ? "Account Activity" : (selectedLog.user || selectedLog.actor || "System")}
                   </span>
                   <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
-                    {hideActor ? selectedLog.user : (selectedLog.role || "System")}
+                    {hideActor ? (selectedLog.user || selectedLog.actor) : (selectedLog.role || "System")}
                     {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
                   </p>
                 </div>
@@ -248,7 +233,7 @@ export default function LogDetailSheet({
 
               <div className="flex items-center gap-2 shrink-0">
                 <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
-                  #LOG-{selectedLog.id}
+                  #LOG-{selectedLog.rawId ?? selectedLog.id}
                 </span>
                 {severityInfo && (
                   <span
@@ -267,7 +252,7 @@ export default function LogDetailSheet({
             <div className="space-y-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                 <Shield01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                   Event Specification
                 </h3>
               </div>
@@ -279,11 +264,11 @@ export default function LogDetailSheet({
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
-                      #{selectedLog.id}
+                      #{selectedLog.rawId ?? selectedLog.id}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopyField(String(selectedLog.id), "Log ID", "log_id")}
+                      onClick={() => handleCopyField(String(selectedLog.rawId ?? selectedLog.id), "Log ID", "log_id")}
                       className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy Log ID"
                     >
@@ -333,7 +318,7 @@ export default function LogDetailSheet({
                     label="Responsible Actor"
                   >
                     <span>
-                      {selectedLog.user}
+                      {selectedLog.user || selectedLog.actor}
                       <span className="text-gray-500 dark:text-zinc-400 font-normal ml-1">
                         ({selectedLog.role || "User"}{selectedLog.officeName ? ` • ${selectedLog.officeName}` : ""})
                       </span>
@@ -390,7 +375,7 @@ export default function LogDetailSheet({
                 >
                   <div className="space-y-1">
                     <div className="text-xs text-gray-800 dark:text-zinc-200 leading-relaxed font-normal">
-                      {formattedDescription}
+                      <NarrativeText text={selectedLog.details} mode="full" />
                     </div>
                     {selectedLog.details && (
                       <button
@@ -406,7 +391,7 @@ export default function LogDetailSheet({
                         )}
                         <span className="inline-grid grid-cols-1 grid-rows-1 items-center">
                           <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-100" : "opacity-0 pointer-events-none")}>
-                            Copied full narrative
+                            Narrative Copied!
                           </span>
                           <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-0 pointer-events-none" : "opacity-100")}>
                             Copy full narrative
@@ -423,7 +408,7 @@ export default function LogDetailSheet({
             <div className="space-y-2">
               <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
                 <GlobeIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
                   Forensic & Network Origin
                 </h3>
               </div>

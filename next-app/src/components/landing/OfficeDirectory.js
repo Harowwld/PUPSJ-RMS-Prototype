@@ -238,7 +238,7 @@ export default function OfficeDirectory() {
                       copiedKey === "address" ? "Tick01Icon text-gray-700" : "Copy01Icon text-zinc-400"
                     } text-xs`}
                   />
-                  <span>{copiedKey === "address" ? "Copied" : "Copy"}</span>
+                  <span>{copiedKey === "address" ? "Copied!" : "Copy"}</span>
                 </button>
 
                 <a

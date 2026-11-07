@@ -12,6 +12,8 @@ import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import useCmsDraft from "@/hooks/useCmsDraft"
+import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import LandingFooterSkeleton from "./skeletons/LandingFooterSkeleton"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch";
@@ -85,11 +87,12 @@ const CONTACT_TYPE_OPTIONS = [
   { value: "phone", label: "Phone Number / Trunkline" },
 ]
 
-export default function LandingFooterCmsView({ showToast }) {
+export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-footer", "activeTab", "content") // 'content' | 'preview'
   const [footerData, setFooterData] = useState(DEFAULT_FOOTER_CONTENT)
+  const { isDirty, savedData, markSaved } = useCmsDraft(footerData, onDirtyChange)
 
   // Modals
   const [resetModalOpen, setResetModalOpen] = useState(false)
@@ -114,6 +117,7 @@ export default function LandingFooterCmsView({ showToast }) {
         if (ignore) return
         if (res.ok && json.ok && json.data) {
           setFooterData(json.data)
+          markSaved(json.data)
         } else {
           notify(json.error || "Failed to load footer configuration", true)
         }
@@ -129,10 +133,11 @@ export default function LandingFooterCmsView({ showToast }) {
     return () => {
       ignore = true
     }
-  }, [notify])
+  }, [notify, markSaved])
 
   // Save changes
   const handleSave = async () => {
+    if (!isDirty || saving) return
     if (!footerData.locationHall?.trim() || !footerData.locationAddress?.trim()) {
       notify("Campus hall and street address cannot be blank", true)
       return
@@ -155,6 +160,7 @@ export default function LandingFooterCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setFooterData(json.data)
+        markSaved(json.data)
         notify("Landing page footer configuration saved successfully")
       } else {
         notify(json.error || "Failed to update footer configuration", true)
@@ -179,6 +185,7 @@ export default function LandingFooterCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setFooterData(json.data)
+        markSaved(json.data)
         notify("Landing page footer reverted to institutional defaults")
       } else {
         notify(json.error || "Failed to reset footer", true)
@@ -310,13 +317,14 @@ export default function LandingFooterCmsView({ showToast }) {
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">Footer Section</span>
+              <LandingCmsDraftStatus isDirty={isDirty} />
             </div>
           }
           description="Customize campus archive location, registrar window schedules, contacts, ambient watermark, and copyright."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Button
@@ -330,23 +338,19 @@ export default function LandingFooterCmsView({ showToast }) {
 
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                disabled={saving}
-                className="h-9 px-4"
-              >
-                Restore Defaults
-              </Button>
-
-              <Button
-                type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Footer Content"}
               </Button>
             </div>
+          }
+          secondaryActions={
+            <>
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setFooterData(savedData); notify("Draft changes discarded. Reverted to saved footer content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+            </>
           }
         />
 
@@ -360,7 +364,7 @@ export default function LandingFooterCmsView({ showToast }) {
               {/* Left Column (lg:col-span-6): Location, Maps, Watermark & Copyright */}
               <div className="lg:col-span-6 space-y-5">
                 {/* Physical Archive Location & Mission */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-5">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Physical Archive Location &amp; Mission
@@ -392,7 +396,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         rows={3}
                         maxLength={250}
                         placeholder="Polytechnic University of the Philippines, San Juan Campus Records Keeping & Online Document Request Platform."
-                        className="w-full"
+                        className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
 
@@ -406,7 +410,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         </span>
                       </div>
                       <div className="relative">
-                        <Location01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                        <Location01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 text-sm" />
                         <Input
                         id="footer-hall"
                         value={footerData.locationHall}
@@ -418,7 +422,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           }
                           placeholder="Ground Floor, Admin & Records Hall"
                           maxLength={80}
-                          className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-medium dark:border-border dark:bg-card"
+                          className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
                     </div>
@@ -443,14 +447,14 @@ export default function LandingFooterCmsView({ showToast }) {
                         }
                         placeholder="223 Ortega Street, cor. A. Mabini Street, Barangay Addition Hills, San Juan City, Metro Manila 1500"
                         maxLength={200}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Google Maps Configuration */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -479,7 +483,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           Google Maps Destination URL
                     </label>
                     <div className="relative">
-                      <Link01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <Link01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 text-sm" />
                       <Input
                         id="footer-maps"
                         value={footerData.mapsUrl}
@@ -491,14 +495,14 @@ export default function LandingFooterCmsView({ showToast }) {
                           }))
                         }
                         placeholder="https://maps.google.com/?q=..."
-                        className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-sans tabular-nums dark:border-border dark:bg-card disabled:opacity-50"
+                        className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-sans tabular-nums dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:opacity-50 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Giant Brand Watermark */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -538,7 +542,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       }
                       placeholder="EMANAGE"
                       maxLength={20}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums font-bold uppercase tracking-wider dark:border-border dark:bg-card disabled:opacity-50"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums font-bold uppercase tracking-wider dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:opacity-50 transition-all"
                     />
                   </div>
 
@@ -550,7 +554,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Sub-Footer & Copyright */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                       Sub-Footer &amp; Copyright
@@ -575,7 +579,7 @@ export default function LandingFooterCmsView({ showToast }) {
                           }))
                         }
                         placeholder="© 2026 PUP San Juan Campus · All rights reserved."
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
                   </div>
@@ -584,7 +588,7 @@ export default function LandingFooterCmsView({ showToast }) {
 
               {/* RIGHT COLUMN (6 cols): Registrar Schedule & Direct Contact Channels */}
               <div className="lg:col-span-6 space-y-5">
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -602,7 +606,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       disabled={footerData.scheduleItems.length >= MAX_SCHEDULE_ITEMS}
                       className="h-8 px-3 cursor-pointer disabled:opacity-40"
                     >
-                      Add
+                      Add Window
                     </Button>
                   </div>
 
@@ -621,7 +625,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }))
                       }
                       placeholder="Registrar Schedule"
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
 
@@ -682,7 +686,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateScheduleItem(idx, "label", e.target.value)
                               }
                               placeholder="e.g. Monday – Friday"
-                              className="h-9 rounded-xl text-xs"
+                              className="h-9 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
@@ -697,7 +701,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateScheduleItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. 8:00 AM – 5:00 PM"
-                              className="h-9 rounded-xl text-xs font-sans tabular-nums"
+                              className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
@@ -728,7 +732,7 @@ export default function LandingFooterCmsView({ showToast }) {
                 </div>
 
                 {/* Direct Inquiry Channels Card */}
-                <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-5 space-y-4">
+                <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
@@ -746,7 +750,7 @@ export default function LandingFooterCmsView({ showToast }) {
                       disabled={footerData.contactItems.length >= MAX_CONTACT_ITEMS}
                       className="h-8 px-3 cursor-pointer disabled:opacity-40"
                     >
-                      Add
+                      Add Channel
                     </Button>
                   </div>
 
@@ -765,7 +769,7 @@ export default function LandingFooterCmsView({ showToast }) {
                         }))
                       }
                       placeholder="Official Desk"
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:border-border dark:bg-card"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
 
@@ -826,7 +830,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateContactItem(idx, "label", e.target.value)
                               }
                               placeholder="e.g. Registrar Inquiries"
-                              className="h-9 rounded-xl text-xs"
+                              className="h-9 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
@@ -841,7 +845,7 @@ export default function LandingFooterCmsView({ showToast }) {
                                 updateContactItem(idx, "value", e.target.value)
                               }
                               placeholder="e.g. info@pup.edu.ph"
-                              className="h-9 rounded-xl text-xs font-sans tabular-nums"
+                              className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
 
@@ -877,7 +881,7 @@ export default function LandingFooterCmsView({ showToast }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4">
+              <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                     Live Portal Footer Simulator
@@ -893,7 +897,7 @@ export default function LandingFooterCmsView({ showToast }) {
                   onClick={() => window.open("/#office", "_blank")}
                   className=""
                 >
-                  Test
+                  Test Link
                 </Button>
               </div>
 

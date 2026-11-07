@@ -18,10 +18,9 @@ export default function ServiceStandardsSkeleton() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-10 w-10 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+            <div className="flex shrink-0 items-center gap-2">
+              <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
             </div>
           }
         />

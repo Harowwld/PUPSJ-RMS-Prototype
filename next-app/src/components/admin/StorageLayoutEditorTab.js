@@ -1565,7 +1565,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             <Button
               onClick={saveLayout}
               disabled={saving || hasAnyCollisions}
-              className="h-10 px-5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <Loading01Icon size="1em" className="animate-spin text-xs" />

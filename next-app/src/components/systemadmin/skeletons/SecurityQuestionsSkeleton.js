@@ -11,7 +11,13 @@ export default function SecurityQuestionsSkeleton() {
       <Card className="isolate flex h-auto w-full flex-[1_0_auto] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
         <PageHeader
           icon=" Shield01Icon"
-          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Security Questions</span><Skeleton aria-hidden="true" className="h-3.5 w-36 rounded" /></div>}
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>Security Questions</span>
+              <Skeleton aria-hidden="true" className="h-3.5 w-36 rounded dark:bg-muted" />
+              <Skeleton aria-hidden="true" className="h-4 w-28 rounded-full dark:bg-muted" />
+            </div>
+          }
           description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
           showBorder={false}
           className="p-6"

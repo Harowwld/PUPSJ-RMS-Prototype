@@ -59,6 +59,7 @@ export async function GET(req) {
           sip.last_name,
           sip.client_type,
           sa.avatar_filename,
+          sa.preferences,
           sa.status AS account_status,
           COALESCE(sip.display_name, s.name) AS name,
           s.status AS student_status, 
@@ -113,6 +114,34 @@ export async function GET(req) {
 
       const clientType = student.client_type || (student.course_code === "ALUMNI" ? "Alumni" : "Student");
 
+      const defaultStudentPreferences = {
+        theme: "light",
+        navigation_layout: "sidebar",
+        skip_registration_confirmation: false,
+        high_contrast: false,
+        reduce_motion: false,
+        zoom_node: 3,
+        default_home_view: "default",
+        display_name_format: "full_name",
+        font_size: "default",
+        pointer_cursor: true,
+        sound_enabled: false,
+        sound_volume: 0.5,
+        sound_categories: {
+          presses: true,
+          toggles: true,
+          surfaces: true,
+          values: true,
+          outcomes: true,
+          notifications: true,
+        },
+      };
+
+      const studentPreferences = {
+        ...defaultStudentPreferences,
+        ...parseStaffPreferences(student.preferences),
+      };
+
       return addSecurityHeaders(NextResponse.json({
         ok: true,
         data: {
@@ -134,7 +163,7 @@ export async function GET(req) {
           section: student.section || "",
           avatar_filename: student.avatar_filename || null,
           enabled_modules: [],
-          preferences: { theme: "light", navigation_layout: "sidebar", zoom_node: 3 },
+          preferences: studentPreferences,
         },
       }));
     }
@@ -203,6 +232,20 @@ export async function GET(req) {
       high_contrast: false,
       reduce_motion: false,
       zoom_node: 3,
+      default_home_view: "default",
+      display_name_format: "full_name",
+      font_size: "default",
+      pointer_cursor: true,
+      sound_enabled: false,
+      sound_volume: 0.5,
+      sound_categories: {
+        presses: true,
+        toggles: true,
+        surfaces: true,
+        values: true,
+        outcomes: true,
+        notifications: true,
+      },
     };
 
     const preferences = {

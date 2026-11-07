@@ -62,7 +62,7 @@ function FloatingSecondaryActionButton({ act, isBusy }) {
     Boolean(act.textToCopy) ||
     act.label?.trim().toLowerCase().startsWith("copy")
 
-  const resolvedCopiedLabel = act.copiedLabel || "Copied"
+  const resolvedCopiedLabel = act.copiedLabel || "Copied!"
 
   const handleClick = async (e) => {
     if (actDisabled) return

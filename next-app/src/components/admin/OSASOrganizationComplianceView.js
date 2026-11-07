@@ -795,26 +795,11 @@ export default function OSASOrganizationComplianceView({
                   title="Refresh Compliance"
                 />
 
-                {/* Secondary Action: Export */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleExportCsv}
-                  disabled={loading || organizations.length === 0 || isExportingCsv}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  {isExportingCsv ? (
-                    <Loading01Icon size="1em" className="animate-spin text-[16px]" />
-                  ) : (
-                    "Export CSV"
-                  )}
-                </Button>
-
                 <Button
                   type="button"
                   onClick={handleOpenPdfReport}
                   disabled={loading || organizations.length === 0 || isGeneratingPdf}
-                  className="h-10 px-5 cursor-pointer"
+                  className="h-9 shrink-0 px-4 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
                     <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
@@ -823,6 +808,11 @@ export default function OSASOrganizationComplianceView({
                   )}
                 </Button>
               </div>
+            }
+            secondaryActions={
+              <Button type="button" variant="outline" onClick={handleExportCsv} disabled={loading || organizations.length === 0 || isExportingCsv} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
+                {isExportingCsv ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
+              </Button>
             }
           />
 
@@ -1203,7 +1193,7 @@ export default function OSASOrganizationComplianceView({
             <div className="flex flex-nowrap items-center gap-3 shrink-0">
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -1212,7 +1202,7 @@ export default function OSASOrganizationComplianceView({
                   placeholder="Search org, acronym, adviser..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500">
                   {filteredOrganizations.length}
                 </div>
               </div>
@@ -1735,7 +1725,7 @@ export default function OSASOrganizationComplianceView({
                 {/* In-Sheet Search Filter */}
                 {selectedOrgForOfficers?.officers && selectedOrgForOfficers.officers.length > 2 && (
                   <div className="relative">
-                    <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                    <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 text-xs" />
                     <Input
                       value={officerSearch}
                       onChange={(e) => setOfficerSearch(e.target.value)}
@@ -1837,7 +1827,7 @@ export default function OSASOrganizationComplianceView({
                                     if (!officer.email) return;
                                     navigator.clipboard.writeText(officer.email);
                                     showToast?.({
-                                      title: "Email Copied",
+                                      title: "Email Copied!",
                                       description: `${officer.name || "Officer"}'s email copied to clipboard.`,
                                     });
                                   }}

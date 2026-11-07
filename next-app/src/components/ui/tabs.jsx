@@ -11,6 +11,7 @@ import { useAppReducedMotion, SPRING_LAYOUT } from "@/lib/motion";
 const TabsContext = React.createContext({
   variant: "default",
   size: "default",
+  listId: "default",
 });
 
 function Tabs({
@@ -33,7 +34,7 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "inline-flex w-fit items-center justify-center p-1 select-none transition-all duration-150 data-[orientation=vertical]:flex-col",
+  "inline-flex w-fit items-center justify-center p-1 select-none transition-all duration-150 data-[orientation=vertical]:flex-col relative",
   {
     variants: {
       variant: {
@@ -64,10 +65,14 @@ function TabsList({
   className,
   variant = "default",
   size = "default",
+  id: idProp,
   ...props
 }) {
+  const generatedId = React.useId();
+  const listId = idProp || generatedId;
+
   return (
-    <TabsContext.Provider value={{ variant, size }}>
+    <TabsContext.Provider value={{ variant, size, listId }}>
       <TabsPrimitive.List
         data-slot="tabs-list"
         data-variant={variant}
@@ -81,19 +86,13 @@ function TabsList({
 const tabsTriggerVariants = cva(
   [
     "relative inline-flex flex-1 items-center justify-center gap-1.5 border border-transparent whitespace-nowrap select-none",
-    "font-medium tracking-[-0.01em] transition-all duration-150 cursor-pointer",
+    "font-semibold tracking-[-0.01em] transition-all duration-150 cursor-pointer",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/30 dark:focus-visible:ring-red-500/40",
     "disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
     "active:scale-[0.98]",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     "data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start",
-    // Default active state: Apple macOS / iOS segmented control elevated pill
-    "data-active:bg-white dark:data-active:bg-zinc-800 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800",
-    "data-active:text-gray-950 dark:data-active:text-white data-[state=active]:text-gray-950 dark:data-[state=active]:text-white",
-    "data-active:font-semibold data-[state=active]:font-semibold",
-    "data-active:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-active:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]",
-    // Inactive text
-    "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100",
+    "text-gray-900 dark:text-zinc-100",
   ],
   {
     variants: {
@@ -101,7 +100,7 @@ const tabsTriggerVariants = cva(
         default: "h-8 px-3.5 py-1 text-xs sm:text-[13px] rounded-[9px]",
         sm: "h-7 px-2.5 py-0.5 text-xs rounded-md",
         lg: "h-9 px-4 py-1.5 text-sm rounded-lg",
-        capsule: "h-8 px-3.5 py-1 text-xs sm:text-[13px] rounded-full",
+        capsule: "px-3.5 py-1 text-xs rounded-full",
       },
     },
     defaultVariants: {
@@ -115,10 +114,12 @@ function TabsTrigger({
   children,
   className,
   size: sizeProp,
+  pillClassName,
   ...props
 }) {
   const context = React.useContext(TabsContext);
   const resolvedSize = sizeProp || (context.variant === "capsule" ? "capsule" : context.size);
+  const shouldReduceMotion = useAppReducedMotion();
 
   const sharedClassName = cn(
     tabsTriggerVariants({ size: resolvedSize }),
@@ -136,14 +137,48 @@ function TabsTrigger({
     );
   }
 
+  const isCapsule = context.variant === "capsule" || resolvedSize === "capsule";
+
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={sharedClassName}
+      render={(tabProps, state) => {
+        const isActive = Boolean(state.active);
+        return (
+          <button
+            {...tabProps}
+            className={cn(
+              sharedClassName,
+              "relative z-0",
+              tabProps.className
+            )}
+          >
+            {isActive && (
+              <motion.span
+                layoutId={`tabs-pill-${context.listId}`}
+                transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                className={cn(
+                  "absolute inset-0 z-0 bg-white dark:bg-zinc-800 pointer-events-none",
+                  isCapsule ? "rounded-full" : "rounded-[9px]",
+                  "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]",
+                  pillClassName
+                )}
+              />
+            )}
+            <span
+              className={cn(
+                "relative z-10 flex items-center justify-center gap-1.5 transition-opacity duration-200 ease-out w-full",
+                isActive ? "opacity-100" : "opacity-50 hover:opacity-80"
+              )}
+            >
+              {children}
+            </span>
+          </button>
+        );
+      }}
       {...props}
-    >
-      {children}
-    </TabsPrimitive.Tab>
+    />
   );
 }
 
@@ -168,13 +203,12 @@ function SegmentedControl({
   onValueChange,
   items = [],
   variant = "segmented",
-  size = "default",
+  size: sizeProp,
   className,
+  pillClassName,
   ...props
 }) {
-  const generatedId = React.useId();
-  const shouldReduceMotion = useAppReducedMotion();
-
+  const resolvedSize = sizeProp || (variant === "capsule" ? "capsule" : "default");
   return (
     <Tabs
       value={value}
@@ -182,42 +216,24 @@ function SegmentedControl({
       className={cn("w-auto", className)}
       {...props}
     >
-      <TabsList variant={variant} size={size}>
-        {items.map((item) => {
-          const isSelected = value === item.value;
-          return (
-            <TabsTrigger
-              key={item.value}
-              value={item.value}
-              disabled={item.disabled}
-              className={cn(
-                "relative z-0",
-                isSelected && "data-active:shadow-none dark:data-active:shadow-none data-[state=active]:shadow-none dark:data-[state=active]:shadow-none"
-              )}
-            >
-              {isSelected && (
-                <motion.span
-                  layoutId={`segmented-pill-${generatedId}`}
-                  transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
-                  className={cn(
-                    "absolute inset-0 z-0 bg-white dark:bg-zinc-800",
-                    variant === "capsule" ? "rounded-full" : "rounded-[9px]",
-                    "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  )}
-                />
-              )}
-              <span className="relative z-10 flex items-center justify-center gap-1.5">
-                {item.icon && <span className="shrink-0">{item.icon}</span>}
-                <span>{item.label}</span>
-                {item.badge !== undefined && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/10">
-                    {item.badge}
-                  </span>
-                )}
+      <TabsList variant={variant} size={resolvedSize}>
+        {items.map((item) => (
+          <TabsTrigger
+            key={item.value}
+            value={item.value}
+            disabled={item.disabled}
+            size={resolvedSize}
+            pillClassName={pillClassName}
+          >
+            {item.icon && <span className="shrink-0">{item.icon}</span>}
+            <span>{item.label}</span>
+            {item.badge !== undefined && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/10 tabular-nums">
+                {item.badge}
               </span>
-            </TabsTrigger>
-          );
-        })}
+            )}
+          </TabsTrigger>
+        ))}
       </TabsList>
     </Tabs>
   );

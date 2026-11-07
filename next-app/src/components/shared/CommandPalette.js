@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import CopyButton from "@/components/shared/CopyButton";
 import AppIcon from "@/components/ui/app-icon";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { getDefaultHomeView } from "@/lib/roleUtils";
 import {
   Search01Icon,
   Cancel01Icon,
@@ -38,6 +39,7 @@ import {
   Settings01Icon,
   Logout01Icon,
   DashboardSquare01Icon,
+  Home01Icon,
   Building01Icon,
   Task01Icon,
   FingerPrintScanIcon,
@@ -290,14 +292,32 @@ export default function CommandPalette({
     }
   }, [pathname, isPaletteOpen]);
 
-  const defaultTab = isStudent
-    ? "odrs"
-    : activeView === "systemadmin"
-      ? "offices"
-      : activeView === "admin"
-        ? "review"
-        : "requests";
+  const defaultHome = useMemo(() => {
+    return getDefaultHomeView(authUser, activeView);
+  }, [authUser, activeView]);
+
+  const defaultTab = defaultHome.view;
   const activeTabKey = currentTab || defaultTab;
+
+  const isSettingsActive =
+    (searchParams?.get("view") === "settings" &&
+      ["/student", "/staff", "/admin", "/systemadmin"].some((p) => pathname?.startsWith(p))) ||
+    pathname === "/account";
+  const isActivityActive =
+    (searchParams?.get("view") === "activity" &&
+      ["/student", "/staff", "/admin", "/systemadmin"].some((p) => pathname?.startsWith(p))) ||
+    (pathname === "/account" && searchParams?.get("tab") === "activity");
+
+  const isAtDefaultHome = useMemo(() => {
+    if (pathname === "/account" || isSettingsActive || isActivityActive) {
+      return false;
+    }
+    const onBasePath = pathname?.startsWith(defaultHome.basePath);
+    if (!onBasePath) {
+      return false;
+    }
+    return activeTabKey === defaultHome.view;
+  }, [pathname, isSettingsActive, isActivityActive, defaultHome, activeTabKey]);
 
   // ---------------------------------------------------------------------------
   // LIVE DATABASE ASYNCHRONOUS SEARCH (STUDENTS & REQUESTS)
@@ -401,6 +421,37 @@ export default function CommandPalette({
     if (activeView === "systemadmin") {
       candidateGroups = [
         {
+          id: "sys_ops",
+          title: "Campus Operations",
+          badge: "System Admin",
+          items: [
+            {
+              id: "sys-health",
+              label: "Campus Operations & Telemetry",
+              view: "health",
+              icon: Activity01Icon,
+              scope: "system",
+              breadcrumb: "Campus Operations • View",
+              keywords:
+                "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
+              description:
+                "Live database connections, server metrics, process health, and queue latency telemetry.",
+            },
+            {
+              id: "sys-standards",
+              label: "Processing Time Standards",
+              view: "standards",
+              icon: HourglassIcon,
+              scope: "navigation",
+              breadcrumb: "Campus Operations • View",
+              keywords:
+                "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
+              description:
+                "Set ARTA Citizen's Charter SLA benchmarks, processing windows, and document fulfillment standards.",
+            },
+          ],
+        },
+        {
           id: "sys_gov",
           title: "Institutional Governance",
           badge: "System Admin",
@@ -428,37 +479,6 @@ export default function CommandPalette({
                 "features matrix permissions feature flags modules config toggle access roles supervisor staff tools category registrar osas",
               description:
                 "Configure role-based feature matrices, module enablement, and operational permissions.",
-            },
-          ],
-        },
-        {
-          id: "sys_ops",
-          title: "Campus Operations",
-          badge: "System Admin",
-          items: [
-            {
-              id: "sys-standards",
-              label: "Processing Time Standards",
-              view: "standards",
-              icon: HourglassIcon,
-              scope: "navigation",
-              breadcrumb: "Campus Operations • View",
-              keywords:
-                "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
-              description:
-                "Set ARTA Citizen's Charter SLA benchmarks, processing windows, and document fulfillment standards.",
-            },
-            {
-              id: "sys-health",
-              label: "Campus Operations & Telemetry",
-              view: "health",
-              icon: Activity01Icon,
-              scope: "system",
-              breadcrumb: "Campus Operations • View",
-              keywords:
-                "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
-              description:
-                "Live database connections, server metrics, process health, and queue latency telemetry.",
             },
           ],
         },
@@ -1121,17 +1141,17 @@ export default function CommandPalette({
                   },
             ]
           : []),
-        ...(pathname === "/account"
+        ...(!isAtDefaultHome
           ? [
               {
                 id: "ctrl-return-dash",
-                label: "Return to Dashboard",
+                label: `Return to Home View (${defaultHome.label})`,
                 action: "return-dashboard",
-                icon: DashboardSquare01Icon,
+                icon: Home01Icon,
                 scope: "actions",
                 breadcrumb: "Navigation • Action",
-                keywords: "return back dashboard home main view exit settings leave",
-                description: "Exit account settings and return to your primary operational workspace.",
+                keywords: `return back home default view dashboard exit settings leave ${defaultHome.label.toLowerCase()}`,
+                description: `Return to your configured default home view (${defaultHome.label}).`,
               },
             ]
           : []),
@@ -1284,6 +1304,8 @@ export default function CommandPalette({
     isReduceMotion,
     liveStudents,
     liveRequests,
+    isAtDefaultHome,
+    defaultHome,
   ]);
 
   // Save selected item to recents
@@ -1464,15 +1486,7 @@ export default function CommandPalette({
         if (onMainDashboard) {
           onMainDashboard();
         } else {
-          router.push(
-            isStudent
-              ? "/student"
-              : isSuperAdmin
-                ? "/systemadmin"
-                : activeView === "admin"
-                  ? "/admin"
-                  : "/staff"
-          );
+          router.push(defaultHome.path);
         }
         return;
       }
@@ -1716,6 +1730,7 @@ export default function CommandPalette({
                   </span>
                   <button
                     type="button"
+                    data-sound="chirp"
                     onClick={clearRecentCommands}
                     className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
                   >
@@ -1727,6 +1742,7 @@ export default function CommandPalette({
                     <button
                       key={`recent-${item.id}-${idx}`}
                       type="button"
+                      data-sound="command"
                       onClick={() => handleSelectSuggestion(item)}
                       className="w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-gray-700 dark:text-zinc-300 hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-all cursor-pointer group"
                     >
@@ -1797,6 +1813,7 @@ export default function CommandPalette({
                             id={`command-item-${globalIdx}`}
                             key={itemKey}
                             type="button"
+                            data-sound="command"
                             onClick={() => handleSelectSuggestion(item)}
                             onMouseEnter={() => setFocusedIndex(globalIdx)}
                             className={cn(

@@ -61,6 +61,8 @@ try {
   dev.on("exit", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
 } catch (error) {
   console.error(`[dev] ${error.message}`);
-  console.error("[dev] Make sure Docker Desktop is running and try pnpm dev again.");
+  if (error.message.includes("Docker")) {
+    console.error("[dev] Make sure Docker Engine or Docker Desktop is running and try pnpm dev again.");
+  }
   process.exit(1);
 }

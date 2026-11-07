@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import { SegmentedControl } from "@/components/ui/tabs";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
@@ -1053,7 +1054,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   variant="outline"
                   onClick={() => setBulkImportOpen(true)}
                   title="Import Organizations"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Import Organizations
                 </Button>
@@ -1063,7 +1064,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   type="button"
                   onClick={openCreateModal}
                   title="Register Organization"
-                  className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
+                  className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-50"
                 >
                   Register Organization
                 </Button>
@@ -1578,7 +1579,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             <div className="flex flex-nowrap items-center gap-3 shrink-0">
               {/* Search Bar with live count badge */}
               <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -1587,33 +1588,29 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   placeholder="Search org name, acronym, adviser..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {filteredOrganizations.length.toLocaleString()}
                 </div>
               </div>
 
-              <div role="group" aria-label="Organization view" className="inline-flex shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-                {[{ mode: "grid", label: "Cards" }, { mode: "table", label: "Table" }].map(({ mode, label }) => {
-                  const isSelected = viewMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setViewMode(mode)}
-                      aria-pressed={isSelected}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                        isSelected
-                          ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                      )}
-                    >
-                      <ViewModeIcon mode={mode === "grid" ? "cards" : "table"} className="text-sm" />
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <SegmentedControl
+                value={viewMode}
+                onValueChange={setViewMode}
+                variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr"
+                items={[
+                  {
+                    value: "grid",
+                    label: "Grid",
+                    icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                  },
+                  {
+                    value: "table",
+                    label: "Table",
+                    icon: <ViewModeIcon mode="table" className="text-sm" />,
+                  },
+                ]}
+              />
 
               {/* Multi-Criteria Filter Popover */}
               <MultiCriteriaFilter

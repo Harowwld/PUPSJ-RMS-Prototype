@@ -254,7 +254,7 @@ export default function BulkImportTab({
           </div>
           <DataViewToolbar label="Import preview search and table controls" className="gap-4">
               <div className="relative group w-[220px]">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
                 </div>
                 <Input
@@ -267,7 +267,7 @@ export default function BulkImportTab({
                     setCurrentPage(1)
                   }}
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                   {filteredImportRows.length.toLocaleString()}
                 </div>
               </div>

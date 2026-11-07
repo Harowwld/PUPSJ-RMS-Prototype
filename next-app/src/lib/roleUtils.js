@@ -326,3 +326,91 @@ export function canAccessPage(pathname, role, { authenticated = true } = {}) {
 
   return true;
 }
+
+/**
+ * Resolves the default home view (key, label, basePath, path) for a given user.
+ * Aligns with userPreferences.default_home_view and role-specific workspace navigation.
+ * 
+ * @param {object} authUser - The authenticated user object (role, preferences, office_id, section, enabled_modules)
+ * @param {string} [activeViewRole] - Optional current view role ("admin" | "staff" | "systemadmin" | "student")
+ * @returns {{ view: string, label: string, basePath: string, path: string }}
+ */
+export function getDefaultHomeView(authUser, activeViewRole = null) {
+  const role = normalizeRole(authUser?.role);
+  const isStudent = role === "Student";
+  const isSysAdmin = isSystemAdminRole(role);
+  const pref = authUser?.preferences?.default_home_view;
+
+  if (isStudent) {
+    if (pref === "compliance") {
+      return { view: "compliance", label: "Requirements & Compliance", basePath: "/student", path: "/student?view=compliance" };
+    }
+    if (pref === "requests" || pref === "odrs") {
+      return { view: "odrs", label: "Document Requests", basePath: "/student", path: "/student?view=odrs" };
+    }
+    return { view: "overview", label: "Overview & Compliance", basePath: "/student", path: "/student?view=overview" };
+  }
+
+  if (isSysAdmin) {
+    const sysadminViews = {
+      health: { view: "health", label: "Campus Operations" },
+      campus_operations: { view: "health", label: "Campus Operations" },
+      standards: { view: "health", label: "Campus Operations" },
+      offices: { view: "offices", label: "Departments & Stations" },
+      modules: { view: "modules", label: "Department Features" },
+      branding: { view: "branding", label: "Institutional Identity" },
+      landing: { view: "landing", label: "Landing Page CMS" },
+      staff: { view: "staff", label: "Global Directory" },
+      security: { view: "security", label: "Security Questions" },
+      logs: { view: "logs", label: "Platform Activity History" },
+      backups: { view: "backups", label: "Platform Backups" },
+    };
+    const resolved = sysadminViews[pref] || sysadminViews.health;
+    return { ...resolved, basePath: "/systemadmin", path: `/systemadmin?view=${resolved.view}` };
+  }
+
+  const effectiveRole = activeViewRole === "staff" ? "Staff" : activeViewRole === "admin" ? "Admin" : role;
+
+  if (effectiveRole === "Admin") {
+    const adminViews = {
+      review: { view: "review", label: "Records Review" },
+      digitization: { view: "digitization", label: "Compliance Analytics" },
+      request_analytics: { view: "request_analytics", label: "SLA Analytics" },
+      storage_layout: { view: "storage_layout", label: "Storage Room Layout" },
+      directory: { view: "directory", label: "Staff Directory" },
+      logs: { view: "logs", label: "Activity History" },
+      system_data: { view: "system_data", label: "System Configuration" },
+      system: { view: "system", label: "Backup & Recovery" },
+      backup: { view: "system", label: "Backup & Recovery" },
+    };
+    const resolved = adminViews[pref] || adminViews.review;
+    return { ...resolved, basePath: "/admin", path: `/admin?view=${resolved.view}` };
+  }
+
+  // Staff role
+  const isOsas = authUser?.office_id === "osas" || authUser?.section === "OSAS";
+  if (isOsas) {
+    const osasViews = {
+      osas_monitoring: { view: "osas_monitoring", label: "Organization Monitoring" },
+      organizations: { view: "organizations", label: "Student Organizations" },
+      documents: { view: "documents", label: "Office Documents" },
+      requests: { view: "requests", label: "Document Requests" },
+      notifications: { view: "notifications", label: "Notifications" },
+    };
+    const resolved = osasViews[pref] || osasViews.osas_monitoring;
+    return { ...resolved, basePath: "/staff", path: `/staff?view=${resolved.view}` };
+  }
+
+  const staffViews = {
+    requests: { view: "requests", label: "Document Requests" },
+    upload: { view: "upload", label: "Scan & Upload" },
+    batch_review: { view: "batch_review", label: "Batch Review" },
+    students: { view: "students", label: "Student Directory" },
+    search: { view: "search", label: "Records & Archive" },
+    storage: { view: "storage", label: "Storage Explorer" },
+    documents: { view: "documents", label: "Student Documents" },
+    notifications: { view: "notifications", label: "Notifications" },
+  };
+  const resolved = staffViews[pref] || staffViews.requests;
+  return { ...resolved, basePath: "/staff", path: `/staff?view=${resolved.view}` };
+}

@@ -961,7 +961,7 @@ export default function DigitalRecordsReviewTab({
         <DataViewToolbar label="Digital records search, filters, and dates" className="border-t border-border dark:border-border p-5 gap-3 bg-white dark:bg-card">
           {/* Search */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none"></Search01Icon>
+            <Search01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
             <Input
               type="text"
               placeholder="Search Student"
@@ -969,7 +969,7 @@ export default function DigitalRecordsReviewTab({
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {sortedRecords.length.toLocaleString()}
             </div>
           </div>

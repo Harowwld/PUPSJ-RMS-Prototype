@@ -385,6 +385,9 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">
                 {hasSecondaryLogo ? "Dual-seal letterhead" : "Single-seal letterhead"} · {reportFontLabel}
               </span>
+              <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-normal leading-4", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
+                {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
+              </span>
             </div>
           }
           description="Configure your official university seal, school credentials, administrative letterhead, and color theme for all official reports."
@@ -394,10 +397,6 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex flex-wrap items-center gap-2">
-              <span className={cn("inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-semibold", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
-                {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
-              </span>
-
               <Button
                 type="button"
                 variant="outline"
@@ -410,28 +409,6 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setResetModalOpen(true)}
-                disabled={saving}
-                className="h-9 px-4"
-              >
-                Restore Defaults
-              </Button>
-
-              {isDirty && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDiscardDraft}
-                  disabled={saving}
-                  className="h-9 px-4"
-                >
-                  Discard Draft
-                </Button>
-              )}
-
-              <Button
-                type="button"
                 onClick={handleSave}
                 disabled={saving || !isDirty}
                 className="h-9 px-4"
@@ -439,6 +416,12 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                 {saving ? "Saving Changes..." : "Save Branding"}
               </Button>
             </div>
+          }
+          secondaryActions={
+            <>
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={handleDiscardDraft} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+            </>
           }
         />
 
@@ -616,7 +599,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label htmlFor="identity-jurisdiction" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Super-header / jurisdiction line (optional)
+                        Super-Header / Jurisdiction Line <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         CHED / SUC Standard
@@ -633,14 +616,14 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                       }
                       placeholder="e.g. Republic of the Philippines"
                       maxLength={100}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
 
                   {/* School / Institution Name */}
                   <div>
                     <label htmlFor="identity-institution" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                      School / institution name
+                      School / Institution Name
                     </label>
                     <Input
                       id="identity-institution"
@@ -654,7 +637,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                       }
                       placeholder="e.g. Polytechnic University of the Philippines"
                       maxLength={120}
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                      className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                     {!branding.institutionName?.trim() && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">Institution name is required.</p>}
                   </div>
@@ -663,7 +646,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="identity-campus" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Campus / branch
+                        Campus / Branch <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                       </label>
                       <Input
                         id="identity-campus"
@@ -676,13 +659,13 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         }
                         placeholder="e.g. San Juan City Campus"
                         maxLength={100}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="identity-office-header" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Administrative office subheader
+                        Administrative Office Subheader <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                       </label>
                       <Input
                         id="identity-office-header"
@@ -701,7 +684,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                         }
                         placeholder="e.g. OFFICIAL ACADEMIC ARCHIVES & RECORDS"
                         maxLength={100}
-                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                        className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
                   </div>
@@ -732,7 +715,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="pt-3 border-t border-border dark:border-border space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Signatory Titles (Optional Overrides)
+                        Signatory Titles <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         Leave blank for intelligent auto-defaults
@@ -742,7 +725,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                       <div>
                         <label htmlFor="identity-preparer-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          1. Prepared by
+                          1. Prepared By
                         </label>
                         <Input
                           id="identity-preparer-title"
@@ -761,13 +744,13 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                           }
                           placeholder="Default: ADMINISTRATIVE STAFF"
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
 
                       <div>
                         <label htmlFor="identity-registrar-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          2. Reviewed by
+                          2. Reviewed By
                         </label>
                         <Input
                           id="identity-registrar-title"
@@ -786,13 +769,13 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS REGISTRAR" : "Default: REGISTRAR"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
 
                       <div>
                         <label htmlFor="identity-head-title" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          3. Noted by
+                          3. Noted By
                         </label>
                         <Input
                           id="identity-head-title"
@@ -811,7 +794,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                           }
                           placeholder={branding.campusName ? "Default: CAMPUS DIRECTOR" : "Default: HEAD OF INSTITUTION"}
                           maxLength={60}
-                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                          className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                       </div>
                     </div>

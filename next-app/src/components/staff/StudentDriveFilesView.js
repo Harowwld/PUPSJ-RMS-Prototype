@@ -188,8 +188,8 @@ export default function StudentDriveFilesView({
             </Tooltip>
           )}
 
-          {/* View Mode Toggle: Cards vs List (Integrated into top header) */}
-          <div className="flex items-center gap-1 bg-gray-100/90 dark:bg-zinc-800/80 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 shrink-0">
+          {/* View Mode Toggle: Grid vs List (Integrated into top header) */}
+          <div role="group" aria-label="Drive file view" className="inline-grid grid-flow-col auto-cols-fr shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -197,17 +197,17 @@ export default function StudentDriveFilesView({
                   onClick={() => setViewMode("grid")}
                   aria-pressed={viewMode === "grid"}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                    "w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95",
                     viewMode === "grid"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-2xs font-bold"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
-                  aria-label="Show files as cards"
+                  aria-label="Show files as grid"
                 >
-                  <ViewModeIcon mode="cards" className="text-sm" />
+                  <ViewModeIcon mode="grid" className="text-sm" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Show files as cards</TooltipContent>
+              <TooltipContent>Show files as grid</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -217,10 +217,10 @@ export default function StudentDriveFilesView({
                   onClick={() => setViewMode("list")}
                   aria-pressed={viewMode === "list"}
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                    "w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95",
                     viewMode === "list"
-                      ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-2xs font-bold"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
+                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
                   )}
                   aria-label="Show files as separate rows"
                 >

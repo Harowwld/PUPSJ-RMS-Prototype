@@ -49,7 +49,7 @@ export default function UserGuideModal({ open, onClose }) {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-150 whitespace-nowrap lg:whitespace-normal data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-gray-950 dark:data-active:text-white data-active:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-active:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-gray-950 dark:data-[state=active]:text-white data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:data-[state=active]:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-black/[0.02] dark:hover:bg-white/[0.04] border-0 justify-start w-full cursor-pointer active:scale-[0.98]"
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-150 whitespace-nowrap lg:whitespace-normal border-0 justify-start w-full cursor-pointer active:scale-[0.98]"
                 >
                   <AppIcon className={`${tab.icon} text-base shrink-0`} />
                   <span>{tab.label}</span>

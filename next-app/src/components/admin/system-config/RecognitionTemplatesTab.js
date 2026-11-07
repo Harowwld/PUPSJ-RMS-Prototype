@@ -497,7 +497,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
+                className="h-9 shrink-0 px-4 rounded-xl border border-border bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing || loading}
               >
@@ -506,7 +506,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
+                className="h-9 shrink-0 px-4 rounded-xl border border-border bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 active:scale-95 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 cursor-pointer"
                 onClick={exportTemplates}
                 disabled={templates.length === 0 || importing || loading}
               >

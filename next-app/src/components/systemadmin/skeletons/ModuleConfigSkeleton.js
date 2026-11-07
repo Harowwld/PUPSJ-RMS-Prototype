@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react"
 import { Building01Icon, TableIcon } from "hugeicons-react"
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table } from "@/components/ui/table"
@@ -196,16 +197,16 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
         <div aria-hidden="true" className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border px-6 py-2.5 bg-white dark:bg-card scrollbar-none dark:border-white/10">
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
             {["Active", "Archived"].map((label) => (
-              <div key={label} className={cn("inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", officeFilter === label ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+              <div key={label} className={cn("w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", officeFilter === label ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
                 <span>{label}</span>
                 <Placeholder className="h-3 w-5 rounded-full" />
               </div>
             ))}
           </div>
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] ml-auto">
-            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => (
-              <div key={mode} className={cn("inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", viewMode === mode ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
-                <Icon size={14} aria-hidden="true" />
+            {[{ mode: "office", label: "By Department" }, { mode: "matrix", label: "Compare Features" }].map(({ mode, label }) => (
+              <div key={mode} className={cn("w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full", viewMode === mode ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400")}>
+                <ViewModeIcon mode={mode} className="text-sm" />
                 <span>{label}</span>
               </div>
             ))}

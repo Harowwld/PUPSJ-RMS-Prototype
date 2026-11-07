@@ -34,6 +34,7 @@ import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import { Skeleton } from "@/components/ui/skeleton";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import { SegmentedControl } from "@/components/ui/tabs";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
 import {
   getInstitutionalBranding,
@@ -106,7 +107,7 @@ export default function StudentComplianceTab({ authUser }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState([]); // Array of strings: "missing", "submitted"
   const [categoryFilters, setCategoryFilters] = useState([]); // Array of category names e.g. ["Admission", "Identity"]
-  const [viewMode, setViewMode] = useState("table"); // "table" | "cards"
+  const [viewMode, setViewMode] = useState("table"); // "table" | "grid"
   const [sortConfig, setSortConfig] = useState({ column: "priority", direction: "asc" }); // column: "priority" | "docType" | "category" | "status"
   const [selectedRequirement, setSelectedRequirement] = useState(null);
 
@@ -433,7 +434,7 @@ export default function StudentComplianceTab({ authUser }) {
                 variant="outline"
                 onClick={handleDownloadPdf}
                 disabled={downloadingPdf || loading}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
               >
                 {downloadingPdf ? (
                   <span className="flex items-center gap-1.5">
@@ -486,7 +487,7 @@ export default function StudentComplianceTab({ authUser }) {
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* Search Input */}
             <div className="relative w-full sm:w-60 lg:w-64 group">
-              <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+              <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
               <Input
                 type="text"
                 placeholder="Search requirements..."
@@ -494,7 +495,7 @@ export default function StudentComplianceTab({ authUser }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 z-10 text-[11px] text-gray-400 dark:text-zinc-500">
                 {loading ? (
                   <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
                 ) : (
@@ -634,41 +635,25 @@ export default function StudentComplianceTab({ authUser }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* View Mode Toggle: Table vs Cards */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewMode("table")}
-                title="Show requirements in table format"
-                aria-label="Show requirements in table format"
-                aria-pressed={viewMode === "table"}
-                className={cn(
-                  "h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                  viewMode === "table"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                <ViewModeIcon mode="table" className="text-sm" />
-                <span>Table</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("cards")}
-                title="Show each requirement as a card"
-                aria-label="Show each requirement as a card"
-                aria-pressed={viewMode === "cards"}
-                className={cn(
-                  "h-7 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                  viewMode === "cards"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                <ViewModeIcon mode="cards" className="text-sm" />
-                <span>Cards</span>
-              </button>
-            </div>
+            {/* View Mode Toggle: Table vs Grid */}
+            <SegmentedControl
+              value={viewMode === "cards" ? "grid" : viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr"
+              items={[
+                {
+                  value: "table",
+                  label: "Table",
+                  icon: <ViewModeIcon mode="table" className="text-sm" />,
+                },
+                {
+                  value: "grid",
+                  label: "Grid",
+                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                },
+              ]}
+            />
 
             {viewMode === "table" && (
               <TableScrollControls scrollContainerRef={tableContainerRef}

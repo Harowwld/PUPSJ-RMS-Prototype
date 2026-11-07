@@ -23,6 +23,7 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import { SegmentedControl } from "@/components/ui/tabs";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import {
   Tooltip,
@@ -1319,7 +1320,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
           <div className="flex min-w-0 flex-nowrap items-center gap-2">
             <div className="relative w-full shrink-0 group sm:w-60 md:w-64">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                 <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 text-xs transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
               </div>
               <Input
@@ -1338,34 +1339,35 @@ export default function OsasMonitoringTab({ showToast }) {
                 }}
                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
               />
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                 {activeFilteredList.length.toLocaleString()}
               </div>
             </div>
 
             {(activeStream === "proposals" || activeStream === "post_events") && (
-              <div role="group" aria-label="OSAS submission view" className="inline-grid grid-flow-col auto-cols-fr shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-                {[{ mode: "list", label: "List" }, { mode: "table", label: "Table" }, { mode: "kanban", label: "Kanban" }].map(({ mode, label }) => {
-                  const isSelected = viewMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => handleViewModeChange(mode)}
-                      aria-pressed={isSelected}
-                      className={cn(
-                        "inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                        isSelected
-                          ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                      )}
-                    >
-                      <ViewModeIcon mode={mode} className="text-sm" />
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <SegmentedControl
+                value={viewMode}
+                onValueChange={handleViewModeChange}
+                variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr"
+                items={[
+                  {
+                    value: "list",
+                    label: "List",
+                    icon: <ViewModeIcon mode="list" className="text-sm" />,
+                  },
+                  {
+                    value: "table",
+                    label: "Table",
+                    icon: <ViewModeIcon mode="table" className="text-sm" />,
+                  },
+                  {
+                    value: "kanban",
+                    label: "Kanban",
+                    icon: <ViewModeIcon mode="kanban" className="text-sm" />,
+                  },
+                ]}
+              />
             )}
 
             <MultiCriteriaFilter

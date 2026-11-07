@@ -662,7 +662,8 @@ function StudentDashboard() {
 
   const switchView = useCallback((nextView) => {
     const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
-    const target = allowed.has(nextView) ? nextView : "overview";
+    const normalized = nextView === "default" ? "overview" : nextView === "requests" ? "odrs" : nextView;
+    const target = allowed.has(normalized) ? normalized : "overview";
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
@@ -683,11 +684,20 @@ function StudentDashboard() {
 
   // Synchronize view from URL parameter
   useEffect(() => {
-    const tab = searchParams?.get("view");
+    const rawTab = searchParams?.get("view");
     const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
-    const timer = setTimeout(() => setView(allowed.has(tab) ? tab : "overview"), 0);
+    const normalizeStudentTab = (v) => {
+      if (!v) return null;
+      if (v === "default") return "overview";
+      if (v === "requests") return "odrs";
+      return allowed.has(v) ? v : null;
+    };
+    const tab = normalizeStudentTab(rawTab);
+    const prefTab = normalizeStudentTab(authUser?.preferences?.default_home_view);
+    const target = tab || prefTab || "overview";
+    const timer = setTimeout(() => setView(target), 0);
     return () => clearTimeout(timer);
-  }, [searchParams, router]);
+  }, [searchParams, router, authUser?.preferences?.default_home_view]);
 
   const load = useCallback(async () => {
     try {
@@ -1690,7 +1700,7 @@ function StudentDashboard() {
                       {/* Right: Search & Filter Group */}
                       <div className="flex flex-nowrap items-center gap-3 w-full lg:w-auto">
                         <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                          <Search01Icon size="1em"  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                          <Search01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
                           <Input
                             type="text"
                             placeholder="Search ticket, document, notes..."
@@ -1701,7 +1711,7 @@ function StudentDashboard() {
                               setCurrentPage(1);
                             }}
                           />
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500">
+                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 z-10 text-[11px] text-gray-400 dark:text-zinc-500">
                             {loading ? (
                               <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
                             ) : (
@@ -2292,7 +2302,7 @@ function StudentDashboard() {
 
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                           <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                            <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+                            <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
                             <Input
                               type="text"
                               placeholder="Search proposals..."
@@ -2300,7 +2310,7 @@ function StudentDashboard() {
                               value={proposalSearch}
                               onChange={(e) => setProposalSearch(e.target.value)}
                             />
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+                            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
                               {filteredProposals.length.toLocaleString()}
                             </div>
                           </div>

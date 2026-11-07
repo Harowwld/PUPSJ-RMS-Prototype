@@ -147,7 +147,7 @@ export default function RestoreModal({
 
           {/* Restoration Strategy Segmented Control */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold uppercase tracking-[0.05em] text-gray-500 dark:text-zinc-400">
+            <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
               Restoration Strategy
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -199,7 +199,7 @@ export default function RestoreModal({
           {/* Table Diff Preview */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.05em] text-gray-500 dark:text-zinc-400">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                 Data Impact Preview
               </label>
               {previewLoading && (

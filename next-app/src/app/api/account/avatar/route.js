@@ -195,7 +195,7 @@ export async function POST(req) {
       }
     }
 
-    if (!defaultAvatarId && (!file || typeof file === "string")) {
+    if (defaultAvatarId === null && (!file || typeof file === "string")) {
       return NextResponse.json({ ok: false, error: "No avatar selection or file provided" }, { status: 400 });
     }
 
@@ -209,6 +209,17 @@ export async function POST(req) {
       if (prev?.avatar_filename) oldFilename = prev.avatar_filename;
     }
 
+    // If defaultAvatarId === 0, revert to default profile (no avatar)
+    if (defaultAvatarId !== null && Number(defaultAvatarId) === 0) {
+      if (sessionUser.type === "student") {
+        await query("UPDATE student_accounts SET avatar_filename = NULL WHERE id = $1", [sessionUser.account_id]);
+      } else {
+        await updateStaff(sessionUser.id, { avatar_filename: null });
+      }
+      if (oldFilename) removeAvatarFile(oldFilename);
+      return NextResponse.json({ ok: true, avatar_filename: null });
+    }
+
     const identifier = sessionUser.type === "student" ? `STUDENT_${sessionUser.account_id}` : sessionUser.id;
     const safeId = String(identifier).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
     let filename;
@@ -216,7 +227,7 @@ export async function POST(req) {
 
     if (defaultAvatarId) {
       if (!isDefaultAvatarId(defaultAvatarId)) {
-        return NextResponse.json({ ok: false, error: "Invalid default avatar ID. Must be between 1 and 4." }, { status: 400 });
+        return NextResponse.json({ ok: false, error: "Invalid default avatar ID." }, { status: 400 });
       }
       const svgMarkup = getDefaultAvatarSvg(defaultAvatarId);
       if (!svgMarkup) {

@@ -28,10 +28,10 @@ export default function LandingFaqSkeleton() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
           }
         />
@@ -42,7 +42,7 @@ export default function LandingFaqSkeleton() {
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           <div className="space-y-5">
             {/* Section Header & Subtitle Skeleton */}
-            <div className="w-full rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 p-4 sm:p-5 space-y-4">
+            <div className="w-full rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs space-y-5">
               <div className="space-y-1.5">
                 <Skeleton className="h-4 w-52 rounded dark:bg-muted" />
                 <Skeleton className="h-3 w-80 rounded dark:bg-muted" />
@@ -59,7 +59,7 @@ export default function LandingFaqSkeleton() {
               </div>
             </div>
             {/* Header Action Bar */}
-            <div className="flex min-w-0 flex-col rounded-xl border border-border bg-white dark:bg-card overflow-hidden">
+            <div className="flex min-w-0 flex-col rounded-2xl border border-border dark:border-border bg-white dark:bg-card overflow-hidden shadow-2xs">
               <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="shrink-0">
                   <div className="flex items-center gap-2">

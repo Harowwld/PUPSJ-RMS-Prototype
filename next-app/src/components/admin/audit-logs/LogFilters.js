@@ -73,7 +73,7 @@ export default function LogFilters({
     <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
       {/* Search Input with Pure Number Count (Left side) */}
       <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+        <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
           <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
         </div>
         <Input
@@ -84,7 +84,7 @@ export default function LogFilters({
           onChange={handleSearchChange}
           disabled={isLoading}
         />
-        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+        <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
           {logTotal.toLocaleString()}
         </div>
       </div>

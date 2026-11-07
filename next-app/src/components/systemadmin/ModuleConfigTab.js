@@ -30,6 +30,8 @@ import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCac
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Contact01Icon, Shield01Icon, TableIcon, Tick01Icon, UserSwitchIcon, Search01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -723,62 +725,35 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <RefreshButton onRefresh={() => { fetchMatrix(true); loadDemoAccountSetting() }} isLoading={refreshing} title="Refresh Features & Permissions" className="h-9 w-9" />
           }
         />
 
         <div className="flex items-center justify-between gap-4 overflow-x-auto border-b border-border px-6 py-2.5 bg-white dark:bg-card scrollbar-none dark:border-white/10">
-          <div role="group" aria-label="Department status" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[{ key: "Active", count: officeFilterCounts.active }, { key: "Archived", count: officeFilterCounts.archived }].map(({ key, count }) => {
-              const isSelected = officeFilter === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => selectOfficeScope(key)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <span>{key}</span>
-                  <span className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                  )}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={officeFilter}
+            onValueChange={selectOfficeScope}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr"
+            items={[
+              { value: "Active", label: "Active", badge: officeFilterCounts.active },
+              { value: "Archived", label: "Archived", badge: officeFilterCounts.archived },
+            ]}
+          />
 
-          <div role="group" aria-label="Feature display" className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none ml-auto">
-            {[{ mode: "office", label: "By Department", icon: Building01Icon }, { mode: "matrix", label: "Compare Features", icon: TableIcon }].map(({ mode, label, icon: Icon }) => {
-              const isSelected = viewMode === mode;
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setViewMode(mode)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <Icon size={14} aria-hidden="true" />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
+          <div className="ml-auto">
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr"
+              items={[
+                { value: "office", label: "By Department", icon: <ViewModeIcon mode="office" className="text-sm" /> },
+                { value: "matrix", label: "Compare Features", icon: <ViewModeIcon mode="matrix" className="text-sm" /> },
+              ]}
+            />
           </div>
         </div>
 
@@ -885,18 +860,16 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                           : "No departments matching your current filter were found."}
                       </EmptyDescription>
                     </EmptyHeader>
-                    {officeFilter === "Archived" && (
-                      <EmptyContent>
-                        <Button
-                          variant="outline"
-                          onClick={() => selectOfficeScope("Active")}
-                          title="View Active Departments"
-                          className="flex h-10 items-center justify-center px-5"
-                        >
-                          View Active Departments
-                        </Button>
-                      </EmptyContent>
-                    )}
+                    <EmptyContent>
+                      <Button
+                        variant="outline"
+                        onClick={() => selectOfficeScope(officeFilter === "Archived" ? "Active" : "Archived")}
+                        title={officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
+                        className="flex h-10 items-center justify-center px-5"
+                      >
+                        {officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
+                      </Button>
+                    </EmptyContent>
                   </Empty>
                 </div>
           ) : (
@@ -1314,18 +1287,16 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       : "No departments matching your current filter were found."}
                   </EmptyDescription>
                 </EmptyHeader>
-                {officeFilter === "Archived" && (
-                  <EmptyContent>
-                    <Button
-                      variant="outline"
-                      onClick={() => selectOfficeScope("Active")}
-                      title="View Active Departments"
-                      className="flex h-10 items-center justify-center px-5"
-                    >
-                      View Active Departments
-                    </Button>
-                  </EmptyContent>
-                )}
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={() => selectOfficeScope(officeFilter === "Archived" ? "Active" : "Archived")}
+                    title={officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
+                    className="flex h-10 items-center justify-center px-5"
+                  >
+                    {officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
+                  </Button>
+                </EmptyContent>
               </Empty>
             </div>
           ) : filteredModules.length === 0 ? (

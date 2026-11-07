@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SegmentedControl } from "@/components/ui/tabs"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
@@ -21,12 +22,32 @@ import {
 import { cn } from "@/lib/utils"
 import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon, Search01Icon } from "hugeicons-react";
 
+function normalizeQuestions(items) {
+  const list = items.map((item, idx) => typeof item === "string"
+    ? { id: idx + 1, question: item, is_required: idx < 2 }
+    : {
+        id: item.id || idx + 1,
+        question: item.question || "",
+        is_required: item.is_required !== undefined ? Boolean(item.is_required) : true,
+      })
+  while (list.length < 2) {
+    list.push({ id: list.length + 1, question: "", is_required: true })
+  }
+  return list
+}
 
-export default function SecurityQuestionsTab({ showToast }) {
+function questionSnapshot(items) {
+  return JSON.stringify(items.map(({ id, question, is_required }) => [id, question, Boolean(is_required)]))
+}
+
+
+export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
   const [questions, setQuestions] = useState([
     { id: 1, question: "", is_required: true },
     { id: 2, question: "", is_required: true },
   ])
+  const [savedQuestions, setSavedQuestions] = useState(null)
+  const isDirty = savedQuestions !== null && questionSnapshot(questions) !== questionSnapshot(savedQuestions)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [totpModalOpen, setTotpModalOpen] = useState(false)
@@ -46,24 +67,9 @@ export default function SecurityQuestionsTab({ showToast }) {
       }
 
       if (Array.isArray(json.data)) {
-        const list = json.data.map((item, idx) => {
-          if (typeof item === "string") {
-            return { id: idx + 1, question: item, is_required: idx < 2 }
-          }
-          return {
-            id: item.id || idx + 1,
-            question: item.question || "",
-            is_required: item.is_required !== undefined ? Boolean(item.is_required) : true,
-          }
-        })
-        while (list.length < 2) {
-          list.push({
-            id: list.length + 1,
-            question: "",
-            is_required: true,
-          })
-        }
+        const list = normalizeQuestions(json.data)
         setQuestions(list)
+        setSavedQuestions(list)
       }
     } catch (err) {
       showToast?.({
@@ -80,13 +86,32 @@ export default function SecurityQuestionsTab({ showToast }) {
     queueMicrotask(loadQuestions)
   }, [loadQuestions])
 
+  useEffect(() => { onDirtyChange?.(isDirty) }, [isDirty, onDirtyChange])
+
+  useEffect(() => {
+    if (!isDirty) return
+    const warnBeforeLeaving = (event) => { event.preventDefault(); event.returnValue = "" }
+    window.addEventListener("beforeunload", warnBeforeLeaving)
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving)
+  }, [isDirty])
+
   const handleAddQuestion = () => {
     setScope("all")
     setSearch("")
     setQuestions((prev) => [
       ...prev,
-      { id: Date.now(), question: "", is_required: false },
+      { id: `draft-${crypto.randomUUID()}`, question: "", is_required: false },
     ])
+  }
+
+  const handleDiscardDraft = () => {
+    if (!savedQuestions) return
+    setQuestions(normalizeQuestions(savedQuestions))
+    setFocusedIndex(null)
+    showToast?.({
+      title: "Draft Changes Discarded",
+      description: "Reverted to saved security questions.",
+    })
   }
 
   const handleRemoveQuestion = (index) => {
@@ -122,10 +147,11 @@ export default function SecurityQuestionsTab({ showToast }) {
       if (nonEmpties.length === 0) {
         return newQuestions.map((q, idx) => ({
           ...q,
+          id: `draft-${crypto.randomUUID()}`,
           is_required: idx === 0 ? true : Boolean(q.is_required),
         }))
       }
-      return [...prev, ...newQuestions]
+      return [...prev, ...newQuestions.map((q) => ({ ...q, id: `draft-${crypto.randomUUID()}` }))]
     })
 
     showToast?.({
@@ -216,8 +242,10 @@ export default function SecurityQuestionsTab({ showToast }) {
         description: "Institutional account recovery questions have been successfully saved.",
       })
 
+      const savedList = normalizeQuestions(json.data)
+      setQuestions(savedList)
+      setSavedQuestions(savedList)
       setTotpModalOpen(false)
-      loadQuestions()
     } catch (err) {
       if (totpToken) throw err
       showToast?.({
@@ -259,50 +287,66 @@ export default function SecurityQuestionsTab({ showToast }) {
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         <PageHeader
           icon=" Shield01Icon"
-          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Security Questions</span><span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">{counts.all} questions · {counts.required} required</span></div>}
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>Security Questions</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {counts.all} questions · {counts.required} required
+              </span>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-normal leading-4",
+                  isDirty
+                    ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200"
+                    : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+                )}
+                role="status"
+                aria-live="polite"
+              >
+                {isDirty ? "Unsaved question changes" : "All questions saved"}
+              </span>
+            </div>
+          }
           description="Define institutional verification challenges for staff account recovery. Mark mandatory challenges as Required (minimum 10 characters)."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 rounded-xl px-4">Import Questions</Button>
-              <Button size="sm" onClick={() => handleSave()} disabled={saving} className="h-9 rounded-xl px-4">
+              <Button type="button" variant="outline" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 px-4">Import Questions</Button>
+              <Button onClick={() => handleSave()} disabled={saving || !isDirty} className="h-9 px-4 cursor-pointer">
                 {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
               </Button>
             </div>
           }
+          secondaryActions={
+            isDirty ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDiscardDraft}
+                disabled={saving}
+                className="h-9 px-4"
+              >
+                Discard Draft
+              </Button>
+            ) : null
+          }
         />
 
         <div role="group" aria-label="Question scope" className="flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
-          <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            {[["all", "All"], ["required", "Required"], ["optional", "Optional"]].map(([key, label]) => {
-              const isSelected = scope === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setScope(key)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-[0.98]",
-                    isSelected
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <span>{label}</span>
-                  <span className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums min-w-4 text-center",
-                    isSelected ? "bg-black/5 dark:bg-white/10 text-gray-900 dark:text-zinc-100" : "bg-black/5 dark:bg-white/5 text-gray-400 dark:text-zinc-500"
-                  )}>
-                    {counts[key]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            value={scope}
+            onValueChange={setScope}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr"
+            items={[
+              { value: "all", label: "All", badge: counts.all },
+              { value: "required", label: "Required", badge: counts.required },
+              { value: "optional", label: "Optional", badge: counts.optional },
+            ]}
+          />
         </div>
 
         <DataViewToolbar label="Security question search" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
@@ -349,14 +393,14 @@ export default function SecurityQuestionsTab({ showToast }) {
 
                       <div className="flex items-center gap-2">
                         {/* Clear Segmented Control [ Required | Optional ] */}
-                        <div className="inline-flex items-center bg-gray-200/70 dark:bg-zinc-800 p-0.5 rounded-xl border border-border dark:border-border">
+                        <div className="inline-flex items-center bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
                           <button
                             type="button"
                             onClick={() => !q.is_required && handleToggleRequired(i)}
                             className={cn(
-                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
+                              "px-3 py-1 text-[11px] font-semibold rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
                               q.is_required
-                                ? "bg-white dark:bg-zinc-700 text-pup-maroon dark:text-red-400 shadow-xs"
+                                ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-xs"
                                 : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                             )}
                           >
@@ -366,9 +410,9 @@ export default function SecurityQuestionsTab({ showToast }) {
                             type="button"
                             onClick={() => q.is_required && handleToggleRequired(i)}
                             className={cn(
-                              "px-3 py-1 text-[11px] font-semibold rounded-lg transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
+                              "px-3 py-1 text-[11px] font-semibold rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer",
                               !q.is_required
-                                ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 shadow-xs"
+                                ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-xs"
                                 : "text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                             )}
                           >
@@ -407,9 +451,9 @@ export default function SecurityQuestionsTab({ showToast }) {
                       onChange={(e) => handleQuestionChange(i, e.target.value)}
                       aria-label={`Question ${i + 1} text`}
                       className={cn(
-                        "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-[color,background-color,border-color,box-shadow,opacity,transform] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
+                        "h-10.5 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3.5 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-2xs",
                         isWeak
-                          ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
+                          ? "border-amber-400 dark:border-amber-600 focus:ring-amber-500 focus-visible:ring-amber-500"
                           : "border-border dark:border-border"
                       )}
                     />
@@ -452,7 +496,7 @@ export default function SecurityQuestionsTab({ showToast }) {
                   type="button"
                   onClick={handleAddQuestion}
                   title="Add Security Question"
-                  className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 hover:bg-pup-maroon/5 dark:bg-zinc-900/20 dark:hover:bg-pup-maroon/10 text-gray-600 dark:text-zinc-400 hover:text-pup-maroon dark:hover:text-pup-maroon transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
+                  className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-gray-900/40 dark:border-border dark:hover:border-white/30 bg-gray-50/40 hover:bg-gray-100/60 dark:bg-zinc-900/20 dark:hover:bg-zinc-800/50 text-gray-600 dark:text-zinc-400 hover:text-gray-950 dark:hover:text-zinc-100 transition-[color,background-color,border-color,box-shadow,opacity,transform] flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer active:scale-[0.99]"
                 >
                   Add Security Question
                 </button>

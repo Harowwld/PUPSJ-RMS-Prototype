@@ -273,16 +273,15 @@ export default function ServiceStandardsTab({ showToast }) {
           showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2">
-
+            <div className="flex shrink-0 items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setConfirmResetOpen(true)}
                 disabled={saving}
-                className="h-10 px-5"
+                className="h-9 px-4"
               >
                 Restore Defaults
               </Button>
@@ -291,7 +290,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 type="button"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving}
-                className="h-10 px-5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Standards"}
               </Button>
@@ -365,7 +364,7 @@ export default function ServiceStandardsTab({ showToast }) {
                     }))
                   }
                   placeholder="Citizen's Charter (ARTA RA 11032) or University processing-time standard"
-                  className="h-10 text-xs rounded-xl border-border dark:border-border focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon"
+                  className="h-10 text-xs rounded-xl border-border dark:border-border focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                   Displayed on official reports, document queue headers, and client request receipts.

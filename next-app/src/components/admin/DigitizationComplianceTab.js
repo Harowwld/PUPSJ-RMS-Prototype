@@ -543,23 +543,9 @@ function DigitizationComplianceContent({
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={downloadCsv}
-                  disabled={loading || !data || isExportingCsv}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  {isExportingCsv ? (
-                    <Loading01Icon size="1em"  className="animate-spin text-[16px]"></Loading01Icon>
-                  ) : (
-                    "Export CSV"
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="h-10 px-5 cursor-pointer"
+                  className="h-9 shrink-0 px-4 cursor-pointer"
                 >
                   {isGeneratingPdf ? (
                     <Loading01Icon size="1em"  className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
@@ -569,6 +555,11 @@ function DigitizationComplianceContent({
                 </Button>
               </div>
             </div>
+          }
+          secondaryActions={
+            <Button type="button" variant="outline" onClick={downloadCsv} disabled={loading || !data || isExportingCsv} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
+              {isExportingCsv ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
+            </Button>
           }
         />
 
@@ -826,7 +817,7 @@ function DigitizationComplianceContent({
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
           {/* Search Input (Left side) */}
           <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <Search01Icon size="1em" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs pointer-events-none" />
+            <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
             <Input
               type="text"
               placeholder="Search Program"
@@ -834,7 +825,7 @@ function DigitizationComplianceContent({
               value={tableSearch}
               onChange={(e) => setTableSearch(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
+            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
               {sortedByCourse.length}
             </div>
           </div>

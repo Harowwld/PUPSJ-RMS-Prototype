@@ -2,7 +2,7 @@
 
 
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon, UnfoldMoreIcon, DashboardSquare01Icon, LayoutLeftIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon } from "hugeicons-react";
+import { Search01Icon, UnfoldMoreIcon, DashboardSquare01Icon, LayoutLeftIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, VolumeHighIcon, VolumeMute01Icon, Home01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -15,12 +15,18 @@ import {
   getOfficeRoleLabel,
   isSystemAdminRole,
   hasAdminPrivileges,
+  getDefaultHomeView,
 } from "@/lib/roleUtils";
 import {
   getHighContrastPreference,
   toggleHighContrastPreference,
   HIGH_CONTRAST_EVENT,
 } from "@/lib/accessibility";
+import {
+  setSoundEnabledPreference,
+} from "@/lib/soundPreferences";
+import { useSoundPreferences } from "@/hooks/useSoundPreferences";
+import { playSoundCue } from "@/lib/soundPatch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -223,6 +229,62 @@ export default function Sidebar({
       ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
     );
 
+  const { enabled: soundEnabled } = useSoundPreferences(authUser?.id || null);
+
+  const handleToggleSoundFromMenu = useCallback(
+    async (e) => {
+      e?.preventDefault?.();
+      const next = !soundEnabled;
+      setSoundEnabledPreference(next, authUser?.id || null);
+      if (next) {
+        playSoundCue({ sound: "swoosh" }, { force: true, userId: authUser?.id || null });
+      }
+      try {
+        const res = await fetch("/api/auth/preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ preferences: { sound_enabled: next } }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save preference");
+      } catch {
+        setSoundEnabledPreference(!next, authUser?.id || null);
+      }
+    },
+    [soundEnabled, authUser?.id]
+  );
+
+  // Play gentle chime on incoming live notification increases (skipping initial backlog and coalescing bursts)
+  const prevNotificationBadgeRef = useRef(null);
+  const lastNotificationSoundAtRef = useRef(0);
+  const notificationBadgeCount = useMemo(() => {
+    const notifItem = Array.isArray(items)
+      ? items.find((it) => it && it.key === "notifications")
+      : null;
+    const raw = notifItem?.badge;
+    return typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
+  }, [items]);
+
+  useEffect(() => {
+    if (!authUser?.id) {
+      prevNotificationBadgeRef.current = null;
+      return;
+    }
+    if (prevNotificationBadgeRef.current === null) {
+      prevNotificationBadgeRef.current = notificationBadgeCount;
+      return;
+    }
+    const prev = prevNotificationBadgeRef.current;
+    prevNotificationBadgeRef.current = notificationBadgeCount;
+    if (notificationBadgeCount > prev) {
+      const now = Date.now();
+      if (now - lastNotificationSoundAtRef.current >= 4000) {
+        lastNotificationSoundAtRef.current = now;
+        playSoundCue({ sound: "notification" }, { userId: authUser.id });
+      }
+    }
+  }, [notificationBadgeCount, authUser?.id]);
+
   const roleBranding = getRoleBranding(
     authUser || {
       role: isSuperAdmin ? "SuperAdmin" : isStaff ? "Staff" : "Admin",
@@ -330,15 +392,27 @@ export default function Sidebar({
 
   const displayRole = isSuperAdmin ? "System Administrator" : currentViewRole;
 
+  const defaultHome = useMemo(() => {
+    return getDefaultHomeView(authUser, activeView);
+  }, [authUser, activeView]);
+
   const handleMainDashboardClick = () => {
-    if (isStudent) {
-      router.push("/student");
-    } else if (isSuperAdmin) {
-      router.push("/systemadmin");
-    } else if (hasAdminRights) {
-      router.push(activeView === "admin" ? "/admin" : "/staff");
+    const onDashboard = ["/student", "/staff", "/admin", "/systemadmin"].some(
+      (p) => pathname?.startsWith(p)
+    );
+    const onSamePortal = pathname?.startsWith(defaultHome.basePath);
+
+    setCurrentTab(defaultHome.view);
+
+    if (onDashboard && onSamePortal) {
+      window.dispatchEvent(
+        new CustomEvent("switch-view", {
+          detail: { view: defaultHome.view },
+        })
+      );
+      router.push(defaultHome.path, { scroll: false });
     } else {
-      router.push("/staff");
+      router.push(defaultHome.path);
     }
   };
 
@@ -495,14 +569,19 @@ export default function Sidebar({
     return () => clearTimeout(timer);
   }, [pathname, commandOpen]);
 
-  const defaultTab = isStudent
-    ? "odrs"
-    : activeView === "systemadmin"
-      ? "offices"
-      : activeView === "admin"
-        ? "review"
-        : "requests";
+  const defaultTab = defaultHome.view;
   const activeTabKey = currentTab || defaultTab;
+
+  const isAtDefaultHome = useMemo(() => {
+    if (pathname === "/account" || isSettingsActive || isActivityActive) {
+      return false;
+    }
+    const onBasePath = pathname?.startsWith(defaultHome.basePath);
+    if (!onBasePath) {
+      return false;
+    }
+    return (activeKey || activeTabKey) === defaultHome.view;
+  }, [pathname, isSettingsActive, isActivityActive, defaultHome, activeKey, activeTabKey]);
 
   // Structured Navigation items for Mobile Drawer
   const filteredGroups = useMemo(() => {
@@ -514,6 +593,29 @@ export default function Sidebar({
 
     if (activeView === "systemadmin") {
       candidateGroups = [
+        {
+          id: "sys_ops",
+          title: "Campus Operations",
+          badge: "System Admin",
+          items: [
+            {
+              label: "Campus Operations",
+              view: "health",
+              icon: " Activity01Icon",
+              breadcrumb: "Campus Operations • View",
+              keywords:
+                "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
+            },
+            {
+              label: "Processing Time Standards",
+              view: "standards",
+              icon: " HourglassIcon",
+              breadcrumb: "Campus Operations • View",
+              keywords:
+                "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
+            },
+          ],
+        },
         {
           id: "sys_gov",
           title: "Institutional Governance",
@@ -534,29 +636,6 @@ export default function Sidebar({
               breadcrumb: "Institutional Governance • View",
               keywords:
                 "features matrix permissions feature flags modules config toggle access roles supervisor staff tools category registrar osas",
-            },
-          ],
-        },
-        {
-          id: "sys_ops",
-          title: "Campus Operations",
-          badge: "System Admin",
-          items: [
-            {
-              label: "Processing Time Standards",
-              view: "standards",
-              icon: " HourglassIcon",
-              breadcrumb: "Campus Operations • View",
-              keywords:
-                "service standards sla citizen charter arta ra 11032 turnaround time processing benchmark deadlines commitments fast-track university standard",
-            },
-            {
-              label: "Campus Operations",
-              view: "health",
-              icon: " Activity01Icon",
-              breadcrumb: "Campus Operations • View",
-              keywords:
-                "campus operations system health telemetry status memory database ping metrics activity monitoring registrar queue osas proposals transactions live operations",
             },
           ],
         },
@@ -1052,14 +1131,14 @@ export default function Sidebar({
               },
           ]
           : []),
-        ...(pathname === "/account"
+        ...(!isAtDefaultHome
           ? [
             {
-              label: "Return to Dashboard",
+              label: `Return to Home View (${defaultHome.label})`,
               action: "return-dashboard",
-              icon: " DashboardSquare01Icon",
+              icon: " Home01Icon",
               breadcrumb: "Navigation • Action",
-              keywords: "return back dashboard home main view exit settings leave",
+              keywords: `return back home default view dashboard exit settings leave ${defaultHome.label.toLowerCase()}`,
             },
           ]
           : []),
@@ -1106,6 +1185,8 @@ export default function Sidebar({
     isMac,
     pathname,
     isHighContrast,
+    isAtDefaultHome,
+    defaultHome,
   ]);
 
   const handleSelectSuggestion = (item) => {
@@ -1229,13 +1310,19 @@ export default function Sidebar({
 
       {/* 2. Body Zone */}
       <DropdownMenuGroup className="p-1 flex flex-col gap-0.5">
-        {(isSettingsActive || isActivityActive) && (
+        {!isAtDefaultHome && (
           <DropdownMenuItem
-            className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+            className="cursor-pointer rounded-lg flex items-center justify-between gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
             onClick={handleMainDashboardClick}
+            title={`Return to default home view (${defaultHome.label})`}
           >
-            <DashboardSquare01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
-            <span>Return to Dashboard</span>
+            <span className="flex items-center gap-2 min-w-0">
+              <Home01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
+              <span className="truncate">Return to Home View</span>
+            </span>
+            <span className="text-[10px] font-normal text-gray-400 dark:text-zinc-500 truncate max-w-[90px] shrink-0 text-right">
+              {defaultHome.label}
+            </span>
           </DropdownMenuItem>
         )}
 
@@ -1261,6 +1348,31 @@ export default function Sidebar({
             <span>My Activity</span>
           </DropdownMenuItem>
         )}
+
+        <DropdownMenuItem
+          data-sound="swoosh"
+          onClick={handleToggleSoundFromMenu}
+          className="cursor-pointer rounded-lg flex items-center justify-between gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            {soundEnabled ? (
+              <VolumeHighIcon size="1em" className="text-sm text-emerald-600 dark:text-emerald-400 shrink-0" />
+            ) : (
+              <VolumeMute01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+            )}
+            <span className="truncate">Interface Sounds</span>
+          </span>
+          <span
+            className={cn(
+              "text-[10px] font-semibold px-1.5 py-0.5 rounded-md tabular-nums shrink-0",
+              soundEnabled
+                ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                : "bg-black/[0.04] text-gray-500 dark:bg-white/[0.06] dark:text-zinc-400"
+            )}
+          >
+            {soundEnabled ? "On" : "Muted"}
+          </span>
+        </DropdownMenuItem>
 
         {!isSuperAdmin && hasAdminRights && (
           <DropdownMenuItem
@@ -1313,6 +1425,7 @@ export default function Sidebar({
           <div
             className="flex items-center gap-2 cursor-pointer select-none"
             onClick={handleMainDashboardClick}
+            title={`eManage - Return to ${defaultHome.label}`}
           >
             <img
               data-sidebar-logo={isSuperAdmin || undefined}
@@ -1396,7 +1509,7 @@ export default function Sidebar({
             <div
               className="flex items-center cursor-pointer group/logo select-none min-w-0"
               onClick={handleMainDashboardClick}
-              title="eManage Dashboard"
+              title={`eManage - Return to ${defaultHome.label}`}
             >
               <span className="relative w-[38px] h-[38px] flex items-center justify-center shrink-0">
                 <img

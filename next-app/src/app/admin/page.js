@@ -184,7 +184,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [logsLoading, setLogsLoading] = useState(false)
   const [logPage, setLogPage] = useUrlPage({ enabled: view === "logs" })
   const [logTotal, setLogTotal] = useState(0)
-  const [logsPerPage, setLogsPerPage] = useState(20)
+  const [logsPerPage, setLogsPerPage] = useState(50)
   const [logSearch, setLogSearch] = useState("")
   const [logRoleFilter, setLogRoleFilter] = useState("All")
   const [logSeverityFilter, setLogSeverityFilter] = useState("All")

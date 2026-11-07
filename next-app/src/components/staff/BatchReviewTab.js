@@ -471,7 +471,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     size="sm"
                     disabled={clearingAll || loading}
                     onClick={handleClearAllFailed}
-                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
+                    className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
                     {clearingAll ? "Clearing..." : "Clear All Failed"}
                   </Button>
@@ -516,7 +516,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             {/* Right: Search Input & MultiCriteriaFilter */}
             <div className="flex min-w-0 flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:shrink-0">
               <div className="w-full sm:w-[min(260px,40vw)] lg:w-[300px] relative group min-w-0 sm:shrink-0">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -527,7 +527,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   placeholder="Search filename or OCR text..."
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {total > 0 ? `${total.toLocaleString()}` : "0"}
                 </div>
               </div>

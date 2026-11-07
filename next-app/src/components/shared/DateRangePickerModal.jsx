@@ -391,7 +391,7 @@ export function DateRangePickerContent({
                 <div className="relative flex items-center">
                   <Calendar01Icon
                     size={14}
-                    className="absolute left-2.5 text-gray-400 dark:text-zinc-500 pointer-events-none"
+                    className="pointer-events-none absolute left-2.5 z-10 text-gray-400 dark:text-zinc-500"
                   />
                   <Input
                     type="text"
@@ -416,7 +416,7 @@ export function DateRangePickerContent({
                 <div className="relative flex items-center">
                   <Calendar01Icon
                     size={14}
-                    className="absolute left-2.5 text-gray-400 dark:text-zinc-500 pointer-events-none"
+                    className="pointer-events-none absolute left-2.5 z-10 text-gray-400 dark:text-zinc-500"
                   />
                   <Input
                     type="text"

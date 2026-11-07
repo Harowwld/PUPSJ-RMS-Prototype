@@ -1,10 +1,11 @@
 "use client"
 
+import { useEffect, useId, useRef, useState } from "react"
 
 import { Input } from "@/components/ui/input"
 import { CardTitle, CardDescription } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { Search01Icon } from "hugeicons-react";
+import { MoreHorizontalIcon, Search01Icon } from "hugeicons-react";
 
 
 /**
@@ -19,6 +20,7 @@ import { Search01Icon } from "hugeicons-react";
  * @param {function} onSearchChange - Change handler for search
  * @param {React.ReactNode} filters - Slot for filter controls (e.g., segmented toggles)
  * @param {React.ReactNode} actions - Slot for action buttons (e.g., Add, Export, Refresh)
+ * @param {React.ReactNode} secondaryActions - Less frequent actions revealed beside the main actions
  */
 export default function PageHeader({
   title,
@@ -31,11 +33,42 @@ export default function PageHeader({
   onSearchChange,
   filters,
   actions,
+  secondaryActions,
   showBorder = true,
   titleClassName,
   descriptionClassName,
   className,
 }) {
+  const [showSecondaryActions, setShowSecondaryActions] = useState(false)
+  const secondaryActionsId = useId()
+  const secondaryActionsRef = useRef(null)
+  const moreActionsRef = useRef(null)
+
+  useEffect(() => {
+    if (!showSecondaryActions) return
+
+    secondaryActionsRef.current?.querySelector("button:not(:disabled)")?.focus()
+
+    const closeOnOutsideClick = (event) => {
+      if (!secondaryActionsRef.current?.contains(event.target)) {
+        setShowSecondaryActions(false)
+      }
+    }
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") {
+        setShowSecondaryActions(false)
+        requestAnimationFrame(() => moreActionsRef.current?.focus())
+      }
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick)
+    document.addEventListener("keydown", closeOnEscape)
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick)
+      document.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [showSecondaryActions])
+
   return (
     <div className={cn(
       "bg-transparent rounded-t-brand select-none transition-colors duration-normal dark:bg-transparent",
@@ -92,7 +125,7 @@ export default function PageHeader({
                     )}
                   </div>
                   <div className="relative transition-colors group">
-                    <Search01Icon size={16}  className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 pointer-events-none"></Search01Icon>
+                    <Search01Icon size={16}  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
                     <Input
                       placeholder={searchPlaceholder || "Search..."}
                       className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
@@ -105,8 +138,37 @@ export default function PageHeader({
             </div>
 
             {/* Actions */}
-            {actions && (
-              <div className="flex shrink-0 items-center gap-3">
+            {(actions || secondaryActions) && (
+              <div className="flex max-w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto lg:overflow-visible">
+                {secondaryActions && (
+                  <div
+                    id={secondaryActionsId}
+                    ref={secondaryActionsRef}
+                    role="group"
+                    aria-label="More actions"
+                    onClickCapture={() => setShowSecondaryActions(false)}
+                    className={cn(
+                      "shrink-0 items-center gap-2",
+                      showSecondaryActions ? "flex animate-in fade-in zoom-in-95 duration-150" : "hidden"
+                    )}
+                  >
+                    {secondaryActions}
+                  </div>
+                )}
+                {secondaryActions && !showSecondaryActions && (
+                  <button
+                    ref={moreActionsRef}
+                    type="button"
+                    aria-expanded={false}
+                    aria-controls={secondaryActionsId}
+                    aria-label="Show more actions"
+                    title="More actions"
+                    onClick={() => setShowSecondaryActions(true)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer active:scale-95"
+                  >
+                    <MoreHorizontalIcon size={16} aria-hidden="true" />
+                  </button>
+                )}
                 {actions}
               </div>
             )}

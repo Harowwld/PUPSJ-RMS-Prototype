@@ -37,6 +37,7 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import { SegmentedControl } from "@/components/ui/tabs";
 import useTableScroll from "@/hooks/useTableScroll";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
@@ -703,7 +704,7 @@ export default function StudentDirectoryTab({
                       variant="outline"
                       onClick={handleExportCSV}
                       disabled={filteredStudents.length === 0}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Export CSV
                     </Button>
@@ -713,7 +714,7 @@ export default function StudentDirectoryTab({
                     type="button"
                     variant="outline"
                     onClick={() => setBulkImportOpen(true)}
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Import Students
                   </Button>
@@ -721,7 +722,7 @@ export default function StudentDirectoryTab({
                   <Button
                     type="button"
                     onClick={() => setRegisterOpen(true)}
-                    className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
+                    className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-50"
                   >
                     Register Student
                   </Button>
@@ -1037,65 +1038,32 @@ export default function StudentDirectoryTab({
           {/* 3. Navigation & Filters Toolbar */}
           <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card select-none">
             {/* Status Segmented Tabs */}
-            <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("active");
-                  setPage(1);
-                }}
-                className={cn(
-                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                  activeTab === "active"
-                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <span>Active</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                    activeTab === "active"
-                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                  )}
-                >
-                  {students.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("archived");
-                  setPage(1);
-                }}
-                className={cn(
-                  "inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 active:scale-[0.98]",
-                  activeTab === "archived"
-                    ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                    : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-                )}
-              >
-                <span>Archived</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center tabular-nums transition-colors",
-                    activeTab === "archived"
-                      ? "bg-gray-100 text-gray-900 dark:bg-zinc-700 dark:text-zinc-200"
-                      : "bg-black/[0.05] text-gray-600 dark:bg-white/[0.08] dark:text-zinc-300"
-                  )}
-                >
-                  {archivedStudents.length}
-                </span>
-              </button>
-            </div>
+            <SegmentedControl
+              value={activeTab}
+              onValueChange={(tab) => {
+                setActiveTab(tab);
+                setPage(1);
+              }}
+              variant="capsule"
+              items={[
+                {
+                  value: "active",
+                  label: "Active",
+                  badge: students.length,
+                },
+                {
+                  value: "archived",
+                  label: "Archived",
+                  badge: archivedStudents.length,
+                },
+              ]}
+            />
 
             {/* Filter Selects & Search Bar */}
             <div className="flex flex-nowrap items-center gap-2.5 flex-1 lg:justify-end">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64 group">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
@@ -1108,7 +1076,7 @@ export default function StudentDirectoryTab({
                   }}
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                   {filteredStudents.length.toLocaleString()}
                 </div>
               </div>
@@ -1507,7 +1475,7 @@ export default function StudentDirectoryTab({
           secondaryActions={[
             {
               label: "Copy Student Numbers",
-              copiedLabel: "Copied Numbers",
+              copiedLabel: "Numbers Copied!",
               onClick: handleCopyStudentNumbers,
             },
           ]}

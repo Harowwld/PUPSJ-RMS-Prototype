@@ -8,6 +8,10 @@ This directory contains technical specifications, architectural references, and 
 
 | Document | Description |
 | :--- | :--- |
+| [`SYSTEM.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/SYSTEM.md) | **Systems Architecture:** Engineering intake, scale math, concurrency floor, component maps, and 11 concept decisions with labeled metrics. |
+| [`MODULES.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/MODULES.md) | **High-Risk Subsystem Contracts:** Strict contracts for `backup_disaster_recovery` and `identity_and_student_records`. |
+| [`adr/001-modular-monolith-and-disaster-recovery.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/adr/001-modular-monolith-and-disaster-recovery.md) | **Architectural Decision Record:** Decision rationale for unified PostgreSQL modular monolith and 3-2-1 append-only disaster recovery. |
+| [`system-design.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/system-design.md) | **System Design Framework:** Multi-agent engineering protocol, Phase 1/Phase 2 gates, and test-first design law. |
 | [`FEATURE_REQUIREMENT_MATRIX.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/FEATURE_REQUIREMENT_MATRIX.md) | **Core Spec:** End-to-end traceability mapping Features (F1–F15) to PostgreSQL migrations, API endpoints, backend repositories, and UI components. |
 | [`FEATURE_REQUIREMENT_MATRIX_AUDIT.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/FEATURE_REQUIREMENT_MATRIX_AUDIT.md) | **Academic / Thesis Audit:** Comprehensive alignment audit between the capstone manuscript (Table 5) and the 15 enterprise modules implemented. |
 | [`QA-TEST-CHECKLIST.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/docs/QA-TEST-CHECKLIST.md) | **Quality Assurance:** Active, role-based manual testing checklist across SuperAdmin, Registrar, Staff, and Student workflows. |

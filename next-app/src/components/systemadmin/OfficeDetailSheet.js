@@ -286,7 +286,7 @@ export default function OfficeDetailSheet({
                   borderColor: `color-mix(in srgb, ${accent} 28%, transparent)`,
                 }}
               >
-                <Building01Icon size={16} className={displayOffice.icon || ""} />
+                <AppIcon className={cn(displayOffice.icon || "Building02Icon", "text-xl")} fallback="Building02Icon" />
               </div>
 
               <div className="min-w-0">
@@ -578,7 +578,7 @@ export default function OfficeDetailSheet({
                             </span>
                             <span
                               className={cn(
-                                "text-[10px] px-1.5 py-0.2 rounded font-medium",
+                                "text-[10px] px-2 py-0.5 rounded-full font-medium",
                                 staff.role === "Admin"
                                     ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40"
                                     : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40"
@@ -594,7 +594,7 @@ export default function OfficeDetailSheet({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0 ml-2">
-                        <span className="font-sans tabular-nums text-[10px] text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-gray-200/60 dark:border-white/10">
+                        <span className="font-sans tabular-nums text-[10px] text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-gray-200/60 dark:border-white/10">
                           {staff.id}
                         </span>
                       </div>
@@ -663,14 +663,14 @@ export default function OfficeDetailSheet({
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="w-6 h-6 rounded-full bg-pup-maroon/10 dark:bg-white/10 text-pup-maroon dark:text-zinc-200 flex items-center justify-center shrink-0">
-                          <Tick01Icon size={16} className={mod.icon || ""} />
+                          <AppIcon className={cn(mod.icon || "Tick01Icon", "text-xs")} fallback="Tick01Icon" />
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate">
                           {mod.name || mod.id}
                         </span>
                       </div>
                       {mod.is_system && (
-                        <span className="text-[9px] font-sans tabular-nums px-1.5 py-0.2 rounded bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 uppercase shrink-0">
+                        <span className="text-[9px] font-sans tabular-nums px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 uppercase shrink-0">
                           Core
                         </span>
                       )}
@@ -701,29 +701,29 @@ export default function OfficeDetailSheet({
               />
             )}
           </div>
-
-          <div className="pt-2">
-            <CopyButton
-              textToCopy={() => JSON.stringify(displayOffice, null, 2)}
-              entityName="Department Data"
-              idleLabel="Copy Department Data"
-              size="sm"
-              title="Copy department metadata"
-              className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-            />
-          </div>
         </div>
 
         {/* Executive Action Bar Footer */}
-        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            className="h-10"
-          >
-            Close
-          </Button>
+        <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="h-10 px-4"
+            >
+              Close
+            </Button>
+            <CopyButton
+              textToCopy={() => JSON.stringify(displayOffice, null, 2)}
+              entityName="Department Data"
+              idleLabel="Copy Data"
+              copiedLabel="Data Copied!"
+              size="sm"
+              title="Copy department metadata"
+              className="h-10 px-3.5"
+            />
+          </div>
 
           {isActive ? (
             onConfigure && (

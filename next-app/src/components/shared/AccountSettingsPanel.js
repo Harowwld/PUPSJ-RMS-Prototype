@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/empty";
 import RecoveryCodesModal from "@/components/shared/RecoveryCodesModal";
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
-import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 import {
@@ -50,6 +49,19 @@ import {
   setPointerCursorPreference,
   FONT_SIZE_LEVELS,
 } from "@/lib/accessibility";
+import {
+  DEFAULT_SOUND_CATEGORIES,
+  DEFAULT_SOUND_VOLUME,
+  SOUND_CATEGORY_DEFINITIONS,
+  getSoundEnabledPreference,
+  setSoundEnabledPreference,
+  getSoundVolumePreference,
+  setSoundVolumePreference,
+  getSoundCategoriesPreference,
+  setSoundCategoriesPreference,
+  normalizeSoundCategories,
+} from "@/lib/soundPreferences";
+import { playSoundCue } from "@/lib/soundPatch";
 
 const FONT_SIZE_OPTIONS = [
   { id: "smaller", label: "Smaller", scale: "88%", glyphClass: "text-xs font-semibold", desc: "Compact density" },
@@ -91,6 +103,7 @@ import {
   UserIcon,
   ViewIcon,
   ViewOffIcon,
+  ReloadIcon,
 } from "hugeicons-react";
 import AppleProfileCover from "@/components/shared/AppleProfileCover";
 import { Switch } from "@/components/ui/switch";
@@ -135,11 +148,23 @@ export default function AccountSettingsPanel() {
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [selectedDefaultAvatarId, setSelectedDefaultAvatarId] = useState(1);
+  const [selectedDefaultAvatarId, setSelectedDefaultAvatarId] = useState(0);
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [showAllAvatars, setShowAllAvatars] = useState(false);
   const avatarsExpanded = showAllAvatars;
   const visibleAvatars = avatarsExpanded ? DEFAULT_AVATARS : DEFAULT_AVATARS.slice(0, DEFAULT_AVATAR_VISIBLE_COUNT);
+
+  const avatarChoices = useMemo(() => {
+    return [
+      {
+        id: 0,
+        name: "Default",
+        alt: "Default Profile",
+        isDefaultProfile: true,
+      },
+      ...DEFAULT_AVATARS.slice(0, 47),
+    ];
+  }, []);
 
   // Profile Form State
   const [fname, setFname] = useState("");
@@ -191,7 +216,7 @@ export default function AccountSettingsPanel() {
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== "undefined") {
       const tab = new URLSearchParams(window.location.search).get("tab");
-      const validTabs = ["profile", "security", "two-factor", "preferences", "activity"];
+      const validTabs = ["profile", "security", "two-factor", "preferences", "sound", "accessibility", "activity"];
       if (tab && (validTabs.includes(tab) || tab === "2fa")) {
         return tab === "2fa" ? "two-factor" : tab;
       }
@@ -241,9 +266,12 @@ export default function AccountSettingsPanel() {
             const savedAvatarId = parseInt(match[1], 10);
             setSelectedDefaultAvatarId(savedAvatarId);
             if (savedAvatarId > DEFAULT_AVATAR_VISIBLE_COUNT) setShowAllAvatars(true);
+          } else {
+            setSelectedDefaultAvatarId(null);
           }
         } else {
           setAvatarUrl(null);
+          setSelectedDefaultAvatarId(0);
         }
         setFname(user.fname || "");
         setLname(user.lname || "");
@@ -416,6 +444,113 @@ export default function AccountSettingsPanel() {
     });
   };
 
+  // Interface Sound Preferences Handlers
+  const soundEnabled =
+    userPreferences.sound_enabled !== undefined
+      ? Boolean(userPreferences.sound_enabled)
+      : getSoundEnabledPreference(authUser?.id);
+
+  const soundVolume =
+    typeof userPreferences.sound_volume === "number" && Number.isFinite(userPreferences.sound_volume)
+      ? Math.min(1, Math.max(0, userPreferences.sound_volume))
+      : getSoundVolumePreference(authUser?.id);
+
+  const soundCategories = useMemo(
+    () => normalizeSoundCategories(userPreferences.sound_categories || getSoundCategoriesPreference(authUser?.id)),
+    [userPreferences.sound_categories, authUser?.id]
+  );
+
+  const handleSoundMasterToggle = async (checked) => {
+    const boolVal = Boolean(checked);
+    const oldPrefs = { ...userPreferences };
+    setUserPreferences((prev) => ({ ...prev, sound_enabled: boolVal }));
+    setSoundEnabledPreference(boolVal, authUser?.id);
+
+    try {
+      const res = await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { sound_enabled: boolVal } }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      toast.success(boolVal ? "Interface Sounds Enabled" : "Interface Sounds Muted", {
+        description: boolVal
+          ? "Synthesized audio cues will play across portal controls."
+          : "All interface sound effects have been muted.",
+      });
+    } catch (error) {
+      setUserPreferences(oldPrefs);
+      setSoundEnabledPreference(Boolean(oldPrefs.sound_enabled), authUser?.id);
+      const errInfo = formatErrorMessage(error, {
+        title: "Sound Preference Failed",
+        description: "Could not update your sound setting.",
+      });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
+    }
+  };
+
+  const handleSoundVolumeInput = (nextVolume) => {
+    const clamped = Math.round(Math.min(1, Math.max(0, Number(nextVolume))) * 100) / 100;
+    setUserPreferences((prev) => ({ ...prev, sound_volume: clamped }));
+    setSoundVolumePreference(clamped, authUser?.id);
+  };
+
+  const handleSoundVolumeCommit = async (nextVolume) => {
+    const clamped = Math.round(Math.min(1, Math.max(0, Number(nextVolume))) * 100) / 100;
+    setSoundVolumePreference(clamped, authUser?.id);
+    try {
+      const res = await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { sound_volume: clamped } }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+    } catch (error) {
+      const errInfo = formatErrorMessage(error, {
+        title: "Volume Update Failed",
+        description: "Could not save your master volume level.",
+      });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
+    }
+  };
+
+  const handleSoundCategoryToggle = async (categoryId, checked) => {
+    const boolVal = Boolean(checked);
+    const oldPrefs = { ...userPreferences };
+    const nextCategories = { ...soundCategories, [categoryId]: boolVal };
+    setUserPreferences((prev) => ({ ...prev, sound_categories: nextCategories }));
+    setSoundCategoriesPreference(nextCategories, authUser?.id);
+
+    try {
+      const res = await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferences: { sound_categories: { [categoryId]: boolVal } },
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      const catDef = SOUND_CATEGORY_DEFINITIONS.find((c) => c.id === categoryId);
+      toast.success("Sound Category Updated", {
+        description: `${catDef?.label || "Category"} sounds ${boolVal ? "enabled" : "muted"}.`,
+      });
+    } catch (error) {
+      setUserPreferences(oldPrefs);
+      setSoundCategoriesPreference(
+        normalizeSoundCategories(oldPrefs.sound_categories || DEFAULT_SOUND_CATEGORIES),
+        authUser?.id
+      );
+      const errInfo = formatErrorMessage(error, {
+        title: "Sound Category Failed",
+        description: "Could not update sound category preference.",
+      });
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
+    }
+  };
+
   const availableHomeViews = useMemo(() => {
     if (authUser?.role === "Student") {
       return [
@@ -514,10 +649,36 @@ export default function AccountSettingsPanel() {
 
   const handleSelectDefaultAvatar = async (avatarId) => {
     if (avatarSaving) return;
-    if (selectedDefaultAvatarId === avatarId && authUser?.avatar_filename) return;
+    if (avatarId === 0 && !authUser?.avatar_filename) return;
+    if (avatarId > 0 && selectedDefaultAvatarId === avatarId && authUser?.avatar_filename) return;
     setAvatarSaving(true);
     setSelectedDefaultAvatarId(avatarId);
     try {
+      if (avatarId === 0) {
+        const res = await fetch("/api/account/avatar", {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok) {
+          throw new Error(json.error || "Failed to reset avatar");
+        }
+
+        setAvatarLoaded(false);
+        setAvatarUrl(null);
+        setAuthUser((prev) => ({ ...prev, avatar_filename: null }));
+
+        window.dispatchEvent(
+          new CustomEvent("avatar-changed", {
+            detail: { avatar_filename: null },
+          })
+        );
+
+        toast.success("Avatar Reverted", {
+          description: "Profile reverted to default system avatar.",
+        });
+        return;
+      }
+
       const res = await fetch("/api/account/avatar", {
         method: "POST",
         headers: {
@@ -1059,12 +1220,15 @@ export default function AccountSettingsPanel() {
                       { id: "profile", label: "Profile", icon: "UserCircleIcon" },
                       { id: "security", label: "Security", icon: "Shield01Icon" },
                       { id: "two-factor", label: "Two-Factor Auth", icon: "SmartPhone01Icon" },
-                      { id: "preferences", label: "Preferences", icon: "Settings01Icon" }
+                      { id: "preferences", label: "Preferences", icon: "Settings01Icon" },
+                      { id: "sound", label: "Sound", icon: "VolumeHighIcon" },
+                      { id: "accessibility", label: "Accessibility", icon: "GlassesIcon" },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
-                        className="group flex items-center justify-start gap-3 w-full h-[40px] px-3.5 rounded-xl text-[13.5px] font-medium outline-none cursor-pointer transition-colors duration-150 select-none border border-transparent data-active:bg-pup-maroon data-active:text-white dark:data-active:bg-zinc-800 dark:data-active:text-white data-active:font-semibold data-active:shadow-xs data-[state=active]:bg-pup-maroon data-[state=active]:text-white dark:data-[state=active]:bg-zinc-800 dark:data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-xs text-gray-700 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:scale-[0.98]"
+                        pillClassName="bg-pup-maroon dark:bg-zinc-800 text-white shadow-xs rounded-xl"
+                        className="group flex items-center justify-start gap-3 w-full h-[40px] px-3.5 rounded-xl text-[13.5px] font-medium outline-none cursor-pointer select-none border border-transparent text-gray-700 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:scale-[0.98]"
                       >
                         <AppIcon className={cn(
                           "text-[18px] shrink-0 transition-colors",
@@ -1287,7 +1451,7 @@ export default function AccountSettingsPanel() {
                                         className="inline-block size-5 rounded-full ring-2 ring-white dark:ring-zinc-800 overflow-hidden bg-gray-100 dark:bg-zinc-700 shadow-2xs"
                                         title={av.name}
                                       >
-                                        <div className="w-full h-full scale-150 flex items-center justify-center">
+                                        <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
                                           {av.svg}
                                         </div>
                                       </div>
@@ -1499,9 +1663,8 @@ export default function AccountSettingsPanel() {
                               <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 onClick={handleDiscardProfileChanges}
-                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08]"
+                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Discard
                               </Button>
@@ -1509,7 +1672,7 @@ export default function AccountSettingsPanel() {
                             <Button
                               type="submit"
                               disabled={profileLoading || !isDirty}
-                              className="h-9 px-4.5 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
                             >
                               {profileLoading && (
                                 <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -1539,7 +1702,7 @@ export default function AccountSettingsPanel() {
                               variant="outline"
                               size="sm"
                               onClick={handleDiscardProfileChanges}
-                              className="h-7.5 px-3 text-xs font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white border-white/15 active:scale-95 transition-all cursor-pointer"
+                              className="h-8 px-3.5 text-xs font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white border-white/15 active:scale-95 transition-all cursor-pointer"
                             >
                               Discard
                             </Button>
@@ -1548,7 +1711,7 @@ export default function AccountSettingsPanel() {
                               size="sm"
                               disabled={profileLoading}
                               onClick={submitProfile}
-                              className="h-7.5 px-3.5 text-xs font-semibold rounded-full bg-white text-zinc-900 hover:bg-zinc-100 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                              className="h-8 px-3.5 text-xs font-semibold rounded-full bg-white text-zinc-900 hover:bg-zinc-100 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                             >
                               {profileLoading ? (
                                 <>
@@ -1585,76 +1748,8 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
-                {/* 3x1 Bento Strip for Security */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Card 1: Password Status */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/15 dark:text-red-400 flex items-center justify-center shrink-0">
-                          <LockPasswordIcon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Password</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400 select-none">
-                        Active
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      Protected
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      {authUser?.password_last_changed
-                        ? `Rotated ${new Date(authUser.password_last_changed).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-                        : "Standard rotation policy"}
-                    </p>
-                  </div>
-
-                  {/* Card 2: Security Recovery Questions */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                          <SquareLock01Icon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Recovery Questions</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 select-none">
-                        {globalQuestions.filter(q => q.hasAnswer).length}/{globalQuestions.length || 2} Set
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {hasSetSecurity ? "Configured" : "Incomplete"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Encrypted secondary recovery
-                    </p>
-                  </div>
-
-                  {/* Card 3: Credential Architecture */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                          <Key01Icon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Credential Tier</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 select-none">
-                        bcrypt
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      Enterprise
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Salted password hash security
-                    </p>
-                  </div>
-                </div>
-
                 {/* Password Rotation Section */}
-                <div className="pt-2">
+                <div>
                   <div className="mb-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                       Password Rotation
@@ -1790,7 +1885,7 @@ export default function AccountSettingsPanel() {
                       <Button
                         type="submit"
                         disabled={pwLoading || !pwCurrent || pwNext.length < 8 || pwNext !== pwConfirm}
-                        className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {pwLoading && (
                           <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -1900,7 +1995,7 @@ export default function AccountSettingsPanel() {
                         <Button
                           type="submit"
                           disabled={secLoading}
-                          className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           {secLoading && (
                             <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -1936,72 +2031,6 @@ export default function AccountSettingsPanel() {
                         2FA Not Configured
                       </span>
                     )}
-                  </div>
-                </div>
-
-                {/* 3x1 Bento Strip for Two-Factor Authentication */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Card 1: Authenticator App */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                          <SmartPhone01Icon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Authenticator App</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 select-none">
-                        {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "TOTP Active" : "Not Set"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Rotating 30s verification codes
-                    </p>
-                  </div>
-
-                  {/* Card 2: Backup Recovery Codes */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                          <Shield01Icon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Backup Recovery</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 select-none">
-                        {recoveryCodesCount > 0 ? `${recoveryCodesCount} Left` : "None"}
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {recoveryCodesCount > 0 ? `${recoveryCodesCount} Codes` : "Inactive"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Single-use emergency recovery
-                    </p>
-                  </div>
-
-                  {/* Card 3: Security Posture */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                          <SecurityCheckIcon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Security Posture</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400 select-none">
-                        {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "Enforced" : "Standard"}
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "Protected" : "Action Needed"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Institutional 2FA defense
-                    </p>
                   </div>
                 </div>
 
@@ -2103,13 +2132,13 @@ export default function AccountSettingsPanel() {
                           />
                         </div>
 
-                        <div className="pt-6 mt-6 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-end gap-2.5">
+                        <div className="pt-6 mt-6 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-end gap-2">
                           <Button
                             type="button"
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                           >
                             Cancel
                           </Button>
@@ -2117,7 +2146,7 @@ export default function AccountSettingsPanel() {
                             type="button"
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {totpLoading && (
                               <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -2168,7 +2197,7 @@ export default function AccountSettingsPanel() {
                               type="button"
                               onClick={() => setTotpStep("disable-flow")}
                               variant="outline"
-                              className="h-10 px-5 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable 2FA
                             </Button>
@@ -2177,7 +2206,7 @@ export default function AccountSettingsPanel() {
                               type="button"
                               onClick={startTOTPSetup}
                               disabled={totpSetupLoading}
-                              className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {totpSetupLoading && (
                                 <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -2220,12 +2249,12 @@ export default function AccountSettingsPanel() {
                             />
                           </div>
 
-                          <div className="flex justify-end gap-2.5 pt-2">
+                          <div className="flex justify-end gap-2 pt-2">
                             <Button
                               type="button"
                               onClick={() => { setTotpStep("idle"); setTotpToken(""); }}
                               variant="outline"
-                              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Cancel
                             </Button>
@@ -2237,7 +2266,7 @@ export default function AccountSettingsPanel() {
                               }}
                               disabled={totpLoading || totpToken.length !== 6}
                               variant="destructive"
-                              className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {totpLoading && (
                                 <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -2274,7 +2303,7 @@ export default function AccountSettingsPanel() {
                             </p>
                           </div>
                         </div>
-                        <div className="shrink-0 flex sm:self-center justify-end gap-2.5">
+                        <div className="shrink-0 flex sm:self-center justify-end gap-2">
                           {recoveryCodesCount > 0 && (
                             <Button
                               type="button"
@@ -2305,7 +2334,7 @@ export default function AccountSettingsPanel() {
                               }}
                               disabled={recoveryCodesLoading}
                               variant="outline"
-                              className="h-10 px-5 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable Codes
                             </Button>
@@ -2314,7 +2343,7 @@ export default function AccountSettingsPanel() {
                             type="button"
                             onClick={generateNewRecoveryCodes}
                             disabled={recoveryCodesLoading}
-                            className="h-10 px-5 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {recoveryCodesLoading && (
                               <Loading01Icon size="1em" className="animate-spin text-xs" />
@@ -2338,7 +2367,7 @@ export default function AccountSettingsPanel() {
                       System Preferences
                     </h3>
                     <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                      Customize your dashboard experience, default landing page, name formatting, display density, and accessibility options.
+                      Customize your startup workspace view, name presentation, data density, and profile identity.
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
@@ -2348,74 +2377,8 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
-                {/* 3x1 Bento Strip for Preferences */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Card 1: Start Page (Default Home View) */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/15 dark:text-red-400 flex items-center justify-center shrink-0">
-                          <Home01Icon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Start Page</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400 select-none">
-                        Default
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 truncate">
-                      {activeHomeView?.label || "Overview"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      Active view upon sign-in
-                    </p>
-                  </div>
-
-                  {/* Card 2: Display Name Format */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                          <UserCircleIcon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Display Name</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400 select-none">
-                        Format
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 truncate">
-                      {activeNameFormat?.label || "Full Name"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate font-mono">
-                      {activeNameFormat?.preview}
-                    </p>
-                  </div>
-
-                  {/* Card 3: Display & Scale */}
-                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                          <GlassesIcon size="0.75em" />
-                        </div>
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Display Scale</span>
-                      </div>
-                      <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 select-none">
-                        {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
-                      </span>
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {activeZoomNode === 3 ? "Standard" : `${ZOOM_PERCENTAGES[activeZoomNode]}% Zoom`} — {FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.label || "Default"}
-                    </div>
-                    <p className="text-[11.5px] font-medium text-gray-500 dark:text-zinc-400 mt-2 truncate">
-                      {userPreferences.pointer_cursor !== false ? "Pointer Cursor Active" : "Standard Cursor"} — {userPreferences.reduce_motion ? "Reduced Motion" : "Fluid Motion"}
-                    </p>
-                  </div>
-                </div>
-
                 {/* Section 1: Default Home View */}
-                <div className="pt-2">
+                <div>
                   <div className="mb-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                       Default Home View
@@ -2498,95 +2461,7 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
-                {/* Section 3: Interface Layout Zoom */}
-                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Interface Layout Zoom
-                      </h4>
-                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                        Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
-                      </p>
-                    </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
-                      Active: {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                    {ZOOM_PERCENTAGES.map((pct, idx) => {
-                      const isSelected = activeZoomNode === idx;
-                      return (
-                        <button
-                          key={pct}
-                          type="button"
-                          onClick={() => handleZoomPreferenceChange(idx)}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer select-none",
-                            isSelected
-                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                          )}
-                        >
-                          <span className="text-base font-bold tracking-tight">{pct}%</span>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
-                            {idx === 0 ? "Compact" : idx === 3 ? "Default" : idx === 6 ? "Large" : `Node ${idx}`}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
-                    <CovidInfoIcon size="1em" className="text-sm" />
-                    <span>You can also dynamically adjust this scale at any time from the zoom slider in the sidebar.</span>
-                  </p>
-                </div>
-
-                {/* Section 4: Text & Font Size */}
-                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Text & Font Size
-                      </h4>
-                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                        Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
-                      </p>
-                    </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
-                      Active: {FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.label || "Default"} ({FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.scale})
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {FONT_SIZE_OPTIONS.map((opt) => {
-                      const isSelected = (userPreferences.font_size || "default") === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => handleFontSizePreferenceChange(opt.id)}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer select-none",
-                            isSelected
-                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                          )}
-                        >
-                          <span className={cn("leading-none transition-transform", opt.glyphClass)}>A</span>
-                          <span className="text-[13px] font-bold tracking-tight mt-2">{opt.label}</span>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
-                            {opt.scale} ({opt.desc})
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Section 5: Table Row Density */}
+                {/* Section 3: Table Row Density */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <div>
@@ -2657,14 +2532,408 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
-                {/* Section 6: Accessibility & Display */}
+                {/* Section 4: Profile Avatar Card */}
+                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs">
+                    <div className="flex items-center gap-4">
+                      <div className="relative size-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-zinc-700 border border-black/[0.06] dark:border-white/[0.1] shrink-0">
+                        {authUser?.avatar_filename && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId) ? (
+                          <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                            {DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.svg}
+                          </div>
+                        ) : (
+                          <UserIcon size="1.5em" className="text-gray-400 dark:text-zinc-500" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 font-jakarta">
+                            Profile Avatar
+                          </h4>
+                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
+                            {authUser?.avatar_filename && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)
+                              ? DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.name
+                              : "Default (No Avatar)"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                          Personalize your appearance across system tables, header menus, and user directory.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAvatarModal(true)}
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                    >
+                      Choose Avatar...
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Dedicated Sound & Audio Feedback Tab */}
+            <TabsContent value="sound" className="m-0 border-0 focus-visible:ring-0">
+              <div className="p-8 space-y-8">
+                {/* Header with Apple Live Status Pill */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-6 border-b border-black/[0.06] dark:border-white/[0.08]">
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Sound & Audio Feedback
+                    </h3>
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Configure synthesized interface sound effects, output volume, and per-category acoustic cues across portals.
+                    </p>
+                  </div>
+                  <div className="self-start sm:self-auto shrink-0">
+                    <span
+                      className={cn(
+                        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors",
+                        soundEnabled
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40"
+                          : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border-border"
+                      )}
+                    >
+                      {soundEnabled ? "Active" : "Muted"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Section 1: Master Interface Sounds & Volume */}
+                <div>
+                  <div className="mb-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      Master Output
+                    </h4>
+                    <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Enable or mute synthesized Web Audio feedback for buttons, toggles, dialogs, and alerts. Off by default for shared office counters.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] divide-y divide-black/[0.06] dark:divide-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs overflow-hidden">
+                    {/* Play User Interface Sound Effects */}
+                    <div className="p-4 sm:p-5 flex items-center justify-between gap-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
+                            Play User Interface Sound Effects
+                          </h5>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
+                            Web Audio Synth
+                          </span>
+                        </div>
+                        <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                          Plays responsive tactile audio cues across SuperAdmin, Admin, Staff, and Student portals. Never active on public landing or sign-in pages.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={soundEnabled}
+                        onCheckedChange={handleSoundMasterToggle}
+                        aria-label="Play User Interface Sound Effects"
+                        data-sound="swoosh"
+                      />
+                    </div>
+
+                    {/* Alert & Interface Volume Slider (macOS Stepped Capsule Track + Reset to Default) */}
+                    <div
+                      className={cn(
+                        "p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-opacity",
+                        !soundEnabled && "opacity-60"
+                      )}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
+                            Interface Volume
+                          </h5>
+                        </div>
+                        <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                          Adjusts master gain for all synthesized cues. Drag the slider to hear precision step ticks.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                        {/* Wide Rounded-Rectangle Slider Track with Internal Tick Marks & Vertical Bar Indicator */}
+                        <div
+                          data-slot="slider-track"
+                          className="relative h-8 w-full sm:w-60 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.1] overflow-hidden flex items-center select-none shadow-2xs"
+                        >
+                          {/* Active Fill */}
+                          <div
+                            className="absolute inset-y-0 left-0 bg-gray-200/90 dark:bg-zinc-700/85 pointer-events-none transition-[width] duration-75 ease-out"
+                            style={{ width: `${Math.round(soundVolume * 100)}%` }}
+                          />
+
+                          {/* Internal Tick Marks (9 evenly spaced ticks across 10%-90%) */}
+                          <div className="relative z-10 w-full flex items-center justify-between px-4 pointer-events-none">
+                            {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((tickPct) => (
+                              <span
+                                key={tickPct}
+                                className={cn(
+                                  "w-[1.5px] h-1.5 rounded-full transition-colors",
+                                  Math.round(soundVolume * 100) >= tickPct
+                                    ? "bg-gray-500/70 dark:bg-zinc-400/70"
+                                    : "bg-gray-400/45 dark:bg-zinc-600/70"
+                                )}
+                              />
+                            ))}
+                          </div>
+
+                          {/* Vertical Bar Indicator at Current Value Edge */}
+                          <div
+                            className="absolute top-1.5 bottom-1.5 w-[2.5px] rounded-full bg-gray-900 dark:bg-zinc-100 shadow-2xs pointer-events-none z-20 -translate-x-1/2 transition-[left] duration-75 ease-out"
+                            style={{
+                              left: `clamp(5px, ${Math.round(soundVolume * 100)}%, calc(100% - 5px))`,
+                            }}
+                          />
+
+                          {/* Native Range Input Overlay for Full Drag, Keyboard & SoundEffectListener Support */}
+                          <input
+                            type="range"
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            value={soundVolume}
+                            aria-label="Interface Volume"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.round(soundVolume * 100)}
+                            onChange={(e) => handleSoundVolumeInput(parseFloat(e.target.value))}
+                            onMouseUp={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
+                            onTouchEnd={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
+                            onKeyUp={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30 m-0"
+                          />
+                        </div>
+
+                        {/* Percentage Readout */}
+                        <span className="text-xs font-semibold tabular-nums text-gray-700 dark:text-zinc-300 w-10 text-right select-none shrink-0">
+                          {Math.round(soundVolume * 100)}%
+                        </span>
+
+                        {/* Back to Default (50%) Icon Button */}
+                        <button
+                          type="button"
+                          disabled={Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)}
+                          onClick={() => {
+                            handleSoundVolumeInput(DEFAULT_SOUND_VOLUME);
+                            handleSoundVolumeCommit(DEFAULT_SOUND_VOLUME);
+                            playSoundCue(
+                              { sound: "tick" },
+                              { force: true, volumeOverride: DEFAULT_SOUND_VOLUME, userId: authUser?.id }
+                            );
+                          }}
+                          title={`Reset volume to default (${Math.round(DEFAULT_SOUND_VOLUME * 100)}%)`}
+                          aria-label={`Reset volume to default (${Math.round(DEFAULT_SOUND_VOLUME * 100)}%)`}
+                          className={cn(
+                            "size-7 rounded-lg flex items-center justify-center transition-all shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/30",
+                            Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)
+                              ? "text-gray-300 dark:text-zinc-600 cursor-default opacity-50"
+                              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/[0.05] dark:hover:bg-white/[0.06] cursor-pointer active:scale-95"
+                          )}
+                        >
+                          <ReloadIcon size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Per-Category Sound Toggles */}
+                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Sound Categories
+                      </h4>
+                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Choose which interaction groups play sound effects. Use the preview button on any row to audition its cue.
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0 tabular-nums">
+                      Active: {Object.values(soundCategories).filter(Boolean).length} of {SOUND_CATEGORY_DEFINITIONS.length}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] divide-y divide-black/[0.06] dark:divide-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs overflow-hidden">
+                    {SOUND_CATEGORY_DEFINITIONS.map((cat) => {
+                      const isCatEnabled = soundCategories[cat.id] !== false;
+                      return (
+                        <div
+                          key={cat.id}
+                          className={cn(
+                            "p-4 sm:p-5 flex items-center justify-between gap-4 transition-opacity",
+                            !soundEnabled && "opacity-55"
+                          )}
+                        >
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
+                                {cat.label}
+                              </h5>
+                            </div>
+                            <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-lg">
+                              {cat.description}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              data-sound="none"
+                              onClick={() =>
+                                playSoundCue(
+                                  { sound: cat.sampleCue },
+                                  { force: true, volumeOverride: soundVolume || DEFAULT_SOUND_VOLUME, userId: authUser?.id }
+                                )
+                              }
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                            >
+                              Preview Sound
+                            </Button>
+
+                            <Switch
+                              checked={isCatEnabled}
+                              disabled={!soundEnabled}
+                              onCheckedChange={(checked) => handleSoundCategoryToggle(cat.id, checked)}
+                              aria-label={cat.label}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
+                    <CovidInfoIcon size="1em" className="text-sm shrink-0" />
+                    <span>
+                      Interface sounds operate independently of Reduce Motion so users who minimize visual motion can still receive clear acoustic confirmation. You can also quickly mute or unmute sounds from the profile menu in the sidebar.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Dedicated Accessibility & Display Tab */}
+            <TabsContent value="accessibility" className="m-0 border-0 focus-visible:ring-0">
+              <div className="p-8 space-y-8">
+                {/* Header with Apple Live Status Pill */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-6 border-b border-black/[0.06] dark:border-white/[0.08]">
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
+                      Accessibility & Display
+                    </h3>
+                    <p className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
+                      Adjust typography scale, interface zoom, visual contrast, motion behavior, and interactive cursor feedback.
+                    </p>
+                  </div>
+                  <div className="self-start sm:self-auto shrink-0">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                      Accommodations
+                    </span>
+                  </div>
+                </div>
+
+                {/* Section 1: Text & Font Size */}
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Text & Font Size
+                      </h4>
+                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                      Active: {FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.label || "Default"} ({FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.scale})
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {FONT_SIZE_OPTIONS.map((opt) => {
+                      const isSelected = (userPreferences.font_size || "default") === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleFontSizePreferenceChange(opt.id)}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer select-none",
+                            isSelected
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          )}
+                        >
+                          <span className={cn("leading-none transition-transform", opt.glyphClass)}>A</span>
+                          <span className="text-[13px] font-bold tracking-tight mt-2">{opt.label}</span>
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
+                            {opt.scale} ({opt.desc})
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Section 2: Interface Layout Zoom */}
+                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Interface Layout Zoom
+                      </h4>
+                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                      Active: {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                    {ZOOM_PERCENTAGES.map((pct, idx) => {
+                      const isSelected = activeZoomNode === idx;
+                      return (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => handleZoomPreferenceChange(idx)}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer select-none",
+                            isSelected
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                          )}
+                        >
+                          <span className="text-base font-bold tracking-tight">{pct}%</span>
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
+                            {idx === 0 ? "Compact" : idx === 3 ? "Default" : idx === 6 ? "Large" : `Node ${idx}`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
+                    <CovidInfoIcon size="1em" className="text-sm" />
+                    <span>You can also dynamically adjust this scale at any time from the zoom slider in the sidebar.</span>
+                  </p>
+                </div>
+
+                {/* Section 3: Visual & Motor Accommodations */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="mb-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Accessibility & Display
+                      Visual & Motor Accommodations
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Display settings to improve text contrast, boundary visibility, and interface interaction.
+                      Display settings to improve text contrast, boundary visibility, motion comfort, and cursor affordance.
                     </p>
                   </div>
 
@@ -2720,67 +2989,28 @@ export default function AccountSettingsPanel() {
                     </div>
                   </div>
                 </div>
-
-                {/* Section 7: Profile Avatar Card */}
-                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs">
-                    <div className="flex items-center gap-4">
-                      <div className="relative size-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-zinc-700 border border-black/[0.06] dark:border-white/[0.1] shrink-0">
-                        {selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId) ? (
-                          <div className="w-full h-full flex items-center justify-center scale-[1.7]">
-                            {DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.svg}
-                          </div>
-                        ) : (
-                          <UserIcon size="1.5em" className="text-gray-400 dark:text-zinc-500" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 font-jakarta">
-                            Profile Avatar
-                          </h4>
-                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
-                            {DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.name || `Avatar ${selectedDefaultAvatarId || 1}`}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                          Personalize your appearance across system tables, header menus, and user directory.
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowAvatarModal(true)}
-                      className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
-                    >
-                      Choose Avatar...
-                    </Button>
-                  </div>
-                </div>
               </div>
-            </TabsContent>
-            <TabsContent value="activity" className="m-0 border-0 focus-visible:ring-0">
-              <MyActivityPanel embedded />
             </TabsContent>
           </div>
         </Tabs>
 
         {/* Global Apple Avatar Picker Dialog (Accessible from Profile & Preferences) */}
         <Dialog open={showAvatarModal} onOpenChange={setShowAvatarModal}>
-          <DialogContent className="w-full max-w-4xl sm:max-w-4xl p-5 sm:p-6 rounded-[22px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-jakarta">
+          <DialogContent className="w-full max-w-md sm:max-w-lg p-4 sm:p-5 rounded-[20px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-jakarta">
             <DialogHeader className="pr-6">
-              <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-base font-bold tracking-tight text-gray-900 dark:text-zinc-50">
                 Choose Profile Avatar
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
                 Select an institutional avatar representing your identity across the records system.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-4 max-h-[58vh] overflow-y-auto pr-1">
-              {DEFAULT_AVATARS.map((avatar) => {
-                const isSelected = selectedDefaultAvatarId === avatar.id;
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-3.5 max-h-[48vh] overflow-y-auto pr-1">
+              {avatarChoices.map((avatar) => {
+                const isSelected = avatar.id === 0
+                  ? !authUser?.avatar_filename || selectedDefaultAvatarId === 0
+                  : Boolean(authUser?.avatar_filename) && selectedDefaultAvatarId === avatar.id;
                 return (
                   <button
                     key={avatar.id}
@@ -2791,36 +3021,40 @@ export default function AccountSettingsPanel() {
                       setShowAvatarModal(false);
                     }}
                     className={cn(
-                      "group relative flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-2xl border text-center transition-all duration-150 cursor-pointer select-none active:scale-95",
+                      "group relative flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border text-center transition-all duration-150 cursor-pointer select-none active:scale-95",
                       isSelected
-                        ? "bg-white dark:bg-zinc-800 border-pup-maroon dark:border-red-500 ring-2 ring-pup-maroon/20 dark:ring-red-500/20 shadow-xs"
-                        : "border-black/[0.06] dark:border-white/[0.08] bg-black/[0.015] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:border-black/15 dark:hover:border-white/20",
+                        ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                        : "border-black/[0.06] dark:border-white/[0.08] bg-black/[0.015] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:border-black/15 dark:hover:border-white/20 text-gray-700 dark:text-zinc-300",
                       avatarSaving && "opacity-70 cursor-wait"
                     )}
-                    title={avatar.name}
+                    title={avatar.id === 0 ? "Default Profile (No Avatar)" : avatar.name}
                   >
                     {/* Circular Avatar Preview */}
                     <div className={cn(
-                      "relative size-14 sm:size-15 rounded-full overflow-hidden flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105",
-                      isSelected ? "ring-2 ring-pup-maroon dark:ring-red-500" : "bg-gray-100 dark:bg-zinc-700"
+                      "relative size-10 sm:size-11 rounded-full overflow-hidden flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105",
+                      isSelected ? "ring-2 ring-gray-950 dark:ring-white bg-gray-200 dark:bg-zinc-700" : "bg-gray-100 dark:bg-zinc-800"
                     )}>
-                      <div className="w-full h-full flex items-center justify-center scale-[1.7]">
-                        {avatar.svg}
-                      </div>
+                      {avatar.id === 0 ? (
+                        <UserIcon size="1.25em" className={cn("transition-colors", isSelected ? "text-gray-950 dark:text-zinc-100" : "text-gray-400 dark:text-zinc-500")} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                          {avatar.svg}
+                        </div>
+                      )}
                     </div>
 
                     {/* Name */}
                     <span className={cn(
-                      "text-xs font-semibold mt-2.5 truncate max-w-full px-1",
-                      isSelected ? "text-pup-maroon dark:text-red-400 font-bold" : "text-gray-800 dark:text-zinc-200"
+                      "text-[11px] sm:text-xs mt-1.5 truncate max-w-full px-0.5",
+                      isSelected ? "text-gray-950 dark:text-zinc-50 font-bold" : "text-gray-700 dark:text-zinc-300 font-medium"
                     )}>
                       {avatar.name}
                     </span>
 
                     {/* Selected Checkmark Pill */}
                     {isSelected && (
-                      <div className="absolute top-2 right-2 size-4.5 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs">
-                        <Tick01Icon size="0.75em" />
+                      <div className="absolute top-1.5 right-1.5 size-4 rounded-full bg-gray-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-xs">
+                        <Tick01Icon size="0.65em" />
                       </div>
                     )}
                   </button>
@@ -2828,12 +3062,12 @@ export default function AccountSettingsPanel() {
               })}
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-3.5 flex justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowAvatarModal(false)}
-                className="h-8.5 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08]"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Done
               </Button>

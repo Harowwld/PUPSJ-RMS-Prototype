@@ -369,8 +369,8 @@ export default function BulkImportQuestionsModal({
                 className={cn(
                   "rounded-2xl border-2 border-dashed p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer",
                   isDragActive
-                    ? "border-pup-maroon bg-pup-maroon/5 dark:bg-pup-maroon/10"
-                    : "border-border hover:border-pup-maroon/60 dark:border-border dark:hover:border-pup-maroon/60 bg-gray-50/40 dark:bg-zinc-900/20"
+                    ? "border-gray-950 bg-gray-100/80 dark:border-white dark:bg-zinc-800/80"
+                    : "border-border hover:border-gray-900/40 hover:bg-gray-100/60 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 bg-gray-50/40 dark:bg-zinc-900/20"
                 )}
               >
                 <div className="flex flex-col items-center gap-1.5">
@@ -463,11 +463,11 @@ export default function BulkImportQuestionsModal({
                           onChange={(e) => handleRowChange(index, e.target.value)}
                           placeholder="Challenge question text..."
                           className={cn(
-                            "h-9 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-2xs",
+                            "h-9 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-2xs",
                             isInvalid
-                              ? "border-amber-400 dark:border-amber-600 focus-visible:ring-amber-500"
+                              ? "border-amber-400 dark:border-amber-600 focus:ring-amber-500 focus-visible:ring-amber-500"
                               : isValid
-                              ? "border-emerald-300 dark:border-emerald-700 focus-visible:ring-emerald-500"
+                              ? "border-emerald-300 dark:border-emerald-700 focus:ring-emerald-500 focus-visible:ring-emerald-500"
                               : "border-border dark:border-border"
                           )}
                         />

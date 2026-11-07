@@ -25,10 +25,10 @@ export default function LandingBentoSkeleton() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-28 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-32 rounded-xl dark:bg-muted" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
           }
         />
