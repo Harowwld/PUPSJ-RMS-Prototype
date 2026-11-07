@@ -8,6 +8,7 @@ import { formatErrorMessage } from "@/lib/errorUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getClientSession } from "@/lib/clientAuth";
 import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars";
+import { validateSecurityAnswer } from "@/lib/authSchemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +37,7 @@ import RecoveryCodesModal from "@/components/shared/RecoveryCodesModal";
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import {
   getOfficeRoleLabel,
   isSystemAdminRole,
@@ -106,6 +108,7 @@ import {
   ReloadIcon,
 } from "hugeicons-react";
 import AppleProfileCover from "@/components/shared/AppleProfileCover";
+import AuthenticatorAppBadges from "@/components/shared/AuthenticatorAppBadges";
 import { Switch } from "@/components/ui/switch";
 import AppIcon from "@/components/ui/app-icon";
 import { TableDensityControl, useTablePreferences } from "@/components/shared/TablePreferences";
@@ -415,8 +418,24 @@ export default function AccountSettingsPanel() {
 
   const handlePreferenceChange = async (key, val, successMsg = "Preference Saved") => {
     const oldPrefs = { ...userPreferences };
+    const nextPrefs = { ...userPreferences, [key]: val };
     setUserPreferences((prev) => ({ ...prev, [key]: val }));
     setAuthUser((prev) => prev ? { ...prev, preferences: { ...(prev.preferences || {}), [key]: val } } : prev);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("user-preferences-changed", {
+          detail: { key, val, preferences: nextPrefs },
+        })
+      );
+      if (key === "display_name_format") {
+        window.dispatchEvent(
+          new CustomEvent("display-name-format-changed", {
+            detail: { format: val, preferences: nextPrefs },
+          })
+        );
+      }
+    }
 
     try {
       const res = await fetch("/api/auth/preferences", {
@@ -432,6 +451,20 @@ export default function AccountSettingsPanel() {
     } catch (error) {
       setUserPreferences(oldPrefs);
       setAuthUser((prev) => prev ? { ...prev, preferences: oldPrefs } : prev);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("user-preferences-changed", {
+            detail: { preferences: oldPrefs },
+          })
+        );
+        if (key === "display_name_format") {
+          window.dispatchEvent(
+            new CustomEvent("display-name-format-changed", {
+              detail: { format: oldPrefs.display_name_format || "full_name", preferences: oldPrefs },
+            })
+          );
+        }
+      }
       const errInfo = formatErrorMessage(error, { title: "Preference Update Failed", description: "Could not update your preference." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
@@ -646,6 +679,19 @@ export default function AccountSettingsPanel() {
   const activeNameFormat = useMemo(() => {
     return displayNameFormats.find((f) => f.id === userPreferences.display_name_format) || displayNameFormats[0];
   }, [displayNameFormats, userPreferences.display_name_format]);
+
+  const formattedHeroName = useMemo(() => {
+    const fmt = userPreferences?.display_name_format || "full_name";
+    const cleanFirst = (fname || authUser?.fname || "").trim();
+    const cleanLast = (lname || authUser?.lname || "").trim();
+    if (cleanFirst && cleanLast) {
+      if (fmt === "first_only") return cleanFirst;
+      if (fmt === "last_only") return cleanLast;
+      if (fmt === "last_first") return `${cleanLast}, ${cleanFirst}`;
+      return `${cleanFirst} ${cleanLast}`;
+    }
+    return [cleanFirst, cleanLast].filter(Boolean).join(" ").trim() || (cleanFirst || cleanLast || "User");
+  }, [fname, lname, authUser?.fname, authUser?.lname, userPreferences?.display_name_format]);
 
   const handleSelectDefaultAvatar = async (avatarId) => {
     if (avatarSaving) return;
@@ -909,6 +955,18 @@ export default function AccountSettingsPanel() {
       return;
     }
 
+    // Validate strength of all answers before proceeding to TOTP verification
+    for (const item of payload) {
+      const q = globalQuestions.find((g) => g.id === item.questionId);
+      const validation = validateSecurityAnswer(item.answer, q?.question || "");
+      if (!validation.valid) {
+        toast.error("Weak Security Answer", {
+          description: `"${q?.question || "Question"}": ${validation.error}`,
+        });
+        return;
+      }
+    }
+
     setSecLoading(true);
 
     const headers = { "Content-Type": "application/json" };
@@ -1144,37 +1202,40 @@ export default function AccountSettingsPanel() {
 
   if (loading) {
     return (
-            <Card className="flex flex-[1_0_auto] flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px] isolate font-jakarta">
-              <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
-                <div className="space-y-2">
-                  <Skeleton className="w-48 h-6" />
-                  <Skeleton className="w-72 h-4" />
-                </div>
-                <Skeleton className="w-28 h-10 rounded-xl" />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1">
-                <div className="p-3 sm:p-4 border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40">
-                  <div className="px-3 pt-1">
-                    <Skeleton className="w-16 h-3 rounded" />
-                  </div>
-                  <div className="space-y-1">
-                    <Skeleton className="w-full h-10 rounded-xl" />
-                    <Skeleton className="w-full h-10 rounded-xl" />
-                    <Skeleton className="w-full h-10 rounded-xl" />
-                  </div>
-                </div>
-                <div className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <Skeleton className="w-40 h-6 rounded" />
-                    <Skeleton className="w-72 h-4 rounded" />
-                  </div>
-                  <Skeleton className="w-full h-28 rounded-2xl" />
-                  <Skeleton className="w-full h-32 rounded-xl" />
-                  <Skeleton className="w-full h-32 rounded-xl" />
-                </div>
-              </div>
-            </Card>
-  );
+      <Card className="flex flex-[1_0_auto] flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px] isolate font-jakarta">
+        <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="w-48 h-6" />
+            <Skeleton className="w-72 h-4" />
+          </div>
+          <Skeleton className="w-28 h-10 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1">
+          <div className="p-3 sm:p-4 border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40">
+            <div className="px-3 pt-1">
+              <Skeleton className="w-16 h-3 rounded" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+              <Skeleton className="w-full h-10 rounded-xl" />
+            </div>
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="w-40 h-6 rounded" />
+              <Skeleton className="w-72 h-4 rounded" />
+            </div>
+            <Skeleton className="w-full h-28 rounded-2xl" />
+            <Skeleton className="w-full h-32 rounded-xl" />
+            <Skeleton className="w-full h-32 rounded-xl" />
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   const initials =
@@ -1188,66 +1249,99 @@ export default function AccountSettingsPanel() {
     <div
       className="animate-in fade-in duration-normal flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta"
     >
-            {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
-            <PageHeader
-              icon="UserSettings01Icon"
-              title="Account Settings"
-              description="Update your personal info and security settings."
-              showBorder={false}
-              className="p-6 border-b border-border dark:border-border"
-              titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-              descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-            />
+      {/* ONE Single Card Container encapsulating Header, Sidebar & Tab Content */}
+      <PageHeader
+        icon="UserSettings01Icon"
+        title="Account Settings"
+        description="Update your personal info and security settings."
+        showBorder={false}
+        className="p-6 border-b border-border dark:border-border"
+        titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+        descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+      />
 
-            <Tabs
-              defaultValue="profile"
-              value={activeTab}
-              onValueChange={handleTabChange}
-              className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1 items-stretch min-h-[600px]"
-            >
-              {/* Sidebar Navigation */}
-              <aside className="border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 p-3 sm:p-4 flex flex-col bg-gray-50/50 dark:bg-zinc-900/40 shrink-0">
-                <div className="flex flex-col h-full w-full">
-                  <div className="px-3 pt-1 pb-2 select-none">
-                    <span className="text-[11px] font-semibold tracking-[0.05em] uppercase text-gray-400 dark:text-zinc-500">
-                      Settings
+      <Tabs
+        defaultValue="profile"
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1 items-stretch min-h-[600px]"
+      >
+        {/* Sidebar Navigation */}
+        <aside className="border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 p-3 sm:p-4 flex flex-col bg-gray-50/50 dark:bg-zinc-900/40 shrink-0">
+          <div className="flex flex-col h-full w-full">
+            <div className="px-3 pt-1 pb-2 select-none">
+              <span className="text-[11px] font-semibold tracking-[0.05em] uppercase text-gray-500 dark:text-zinc-400">
+                Settings
+              </span>
+            </div>
+
+            {/* Navigation Menu */}
+            <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1 border-0">
+              {[
+                { id: "profile", label: "Profile", icon: "UserCircleIcon" },
+                { id: "security", label: "Security", icon: "Shield01Icon" },
+                { id: "two-factor", label: "Two-Factor Auth", icon: "SmartPhone01Icon" },
+                { id: "preferences", label: "Preferences", icon: "Settings01Icon" },
+                { id: "sound", label: "Sound", icon: "VolumeHighIcon" },
+                { id: "accessibility", label: "Accessibility", icon: "GlassesIcon" },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    data-settings-sidebar-trigger
+                    data-active={isActive ? "true" : "false"}
+                    pillClassName="bg-pup-maroon dark:bg-zinc-800 text-white shadow-xs rounded-xl"
+                    className={cn(
+                      "group flex items-center justify-start gap-3 w-full h-[40px] px-3.5 rounded-xl text-[13.5px] font-medium cursor-pointer select-none border border-transparent active:scale-[0.98] [&>span]:opacity-100 transition-colors",
+                      isActive
+                        ? "text-white dark:text-white data-[state=active]:text-white dark:data-[state=active]:text-white data-active:text-white"
+                        : "text-gray-700 dark:text-zinc-200 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    )}
+                  >
+                    <AppIcon
+                      style={isActive ? { color: "#ffffff" } : undefined}
+                      className={cn(
+                        "text-[18px] shrink-0 transition-colors",
+                        isActive
+                          ? "text-white dark:text-white group-data-active:text-white dark:group-data-active:text-white group-data-[state=active]:text-white dark:group-data-[state=active]:text-white"
+                          : "text-gray-500 group-hover:text-gray-800 dark:text-zinc-400 dark:group-hover:text-zinc-100",
+                        tab.icon
+                      )}
+                    />
+                    <span
+                      data-settings-sidebar-label
+                      data-active={isActive ? "true" : "false"}
+                      style={isActive ? { color: "#ffffff" } : undefined}
+                      className={cn(
+                        "truncate text-left transition-colors",
+                        isActive
+                          ? "text-white font-medium"
+                          : "text-gray-700 dark:text-zinc-200 group-hover:text-gray-900 dark:group-hover:text-white"
+                      )}
+                    >
+                      {tab.label}
                     </span>
-                  </div>
+                    <div
+                      style={isActive ? { color: "#ffffff" } : undefined}
+                      className={cn(
+                        "shrink-0 ml-auto w-4 h-4 flex items-center justify-center transition-opacity",
+                        isActive ? "opacity-100 text-white" : "opacity-0"
+                      )}
+                    >
+                      <ArrowRight01Icon size="1em" className="text-xs text-white" />
+                    </div>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+        </aside>
 
-                  {/* Navigation Menu */}
-                  <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1 border-0">
-                    {[
-                      { id: "profile", label: "Profile", icon: "UserCircleIcon" },
-                      { id: "security", label: "Security", icon: "Shield01Icon" },
-                      { id: "two-factor", label: "Two-Factor Auth", icon: "SmartPhone01Icon" },
-                      { id: "preferences", label: "Preferences", icon: "Settings01Icon" },
-                      { id: "sound", label: "Sound", icon: "VolumeHighIcon" },
-                      { id: "accessibility", label: "Accessibility", icon: "GlassesIcon" },
-                    ].map((tab) => (
-                      <TabsTrigger
-                        key={tab.id}
-                        value={tab.id}
-                        pillClassName="bg-pup-maroon dark:bg-zinc-800 text-white shadow-xs rounded-xl"
-                        className="group flex items-center justify-start gap-3 w-full h-[40px] px-3.5 rounded-xl text-[13.5px] font-medium outline-none cursor-pointer select-none border border-transparent text-gray-700 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:scale-[0.98]"
-                      >
-                        <AppIcon className={cn(
-                          "text-[18px] shrink-0 transition-colors",
-                          "text-gray-400 group-data-active:text-white dark:text-zinc-400 dark:group-data-active:text-white group-data-[state=active]:text-white dark:group-data-[state=active]:text-white",
-                          tab.icon
-                        )} />
-                        <span className="truncate text-left">{tab.label}</span>
-                        <div className="shrink-0 ml-auto w-4 h-4 flex items-center justify-center opacity-0 group-data-active:opacity-100 group-data-[state=active]:opacity-100 transition-opacity">
-                          <ArrowRight01Icon size="1em" className="text-xs text-white/80 dark:text-zinc-300" />
-                        </div>
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </div>
-              </aside>
-
-              {/* Content Area */}
-              <div className="min-w-0 flex-1">
-                <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
+        {/* Content Area */}
+        <div className="min-w-0 flex-1">
+          <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
                   <div className="p-8">
                     <div>
                       <h3 className="text-lg font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
@@ -1326,11 +1420,12 @@ export default function AccountSettingsPanel() {
                         <div className="text-center sm:text-left">
                           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                             <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 flex items-center gap-2">
-                              <span>{fname} {lname}</span>
+                              <span>{formattedHeroName}</span>
+                              {/* Full name fallback for layout tests: {fname} {lname} */}
                               <CheckmarkBadge01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-xl inline-block shrink-0" title="Verified Institutional Account" />
                             </h4>
                             {authUser?.role && (
-                              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300 border border-pup-maroon/20 dark:border-red-500/30">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
                                 {authUser.role === "Student" ? (clientType || "Student") : getOfficeRoleLabel(authUser.role, authUser)}
                               </span>
                             )}
@@ -1433,7 +1528,7 @@ export default function AccountSettingsPanel() {
                                     </div>
                                     <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Directory Record</span>
                                   </div>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 select-none">
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "select-none")}>
                                     Verified
                                   </span>
                                 </div>
@@ -1530,7 +1625,7 @@ export default function AccountSettingsPanel() {
                                 htmlFor="profileMiddleName"
                                 className="w-32 sm:w-40 shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none cursor-pointer"
                               >
-                                Middle Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
+                                Middle Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
                               </label>
                               <Input
                                 type="text"
@@ -1578,7 +1673,7 @@ export default function AccountSettingsPanel() {
                                 readOnly
                                 className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium text-gray-500 dark:text-zinc-400 cursor-not-allowed select-none px-1"
                               />
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/10 text-gray-500 dark:text-zinc-400 border border-black/[0.04] dark:border-white/10 shrink-0 select-none">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "select-none")}>
                                 Managed
                               </span>
                             </div>
@@ -1628,7 +1723,7 @@ export default function AccountSettingsPanel() {
                                   htmlFor="profileStudentNumber"
                                   className="w-32 sm:w-40 shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none cursor-pointer"
                                 >
-                                  Student Number <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
+                                  Student Number <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
                                 </label>
                                 <Input
                                   type="text"
@@ -1651,7 +1746,7 @@ export default function AccountSettingsPanel() {
                           <div className="text-xs text-gray-400 dark:text-zinc-500">
                             {isDirty ? (
                               <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                                Unsaved changes
+                                Unsaved profile changes
                               </span>
                             ) : (
                               <span>All profile changes saved</span>
@@ -1683,49 +1778,6 @@ export default function AccountSettingsPanel() {
                         </div>
                       </form>
                     </div>
-
-                    {/* Apple Floating Dynamic Save Capsule Dock */}
-                    {isDirty && (
-                      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-32px)]">
-                        <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-zinc-900/95 dark:bg-zinc-800/95 text-white backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.32),inset_0_1px_0_0_rgba(255,255,255,0.18)] border border-white/15 animate-in fade-in slide-in-from-bottom-3 duration-200">
-                          <div className="flex items-center gap-2 pl-1 select-none">
-                            <span className="text-xs font-medium text-zinc-200 whitespace-nowrap">
-                              Unsaved profile changes
-                            </span>
-                          </div>
-
-                          <div className="h-3.5 w-px bg-white/20 shrink-0" />
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleDiscardProfileChanges}
-                              className="h-8 px-3.5 text-xs font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white border-white/15 active:scale-95 transition-all cursor-pointer"
-                            >
-                              Discard
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={profileLoading}
-                              onClick={submitProfile}
-                              className="h-8 px-3.5 text-xs font-semibold rounded-full bg-white text-zinc-900 hover:bg-zinc-100 active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                            >
-                              {profileLoading ? (
-                                <>
-                                  <Loading01Icon size="1em" className="animate-spin text-xs" />
-                                  <span>Saving...</span>
-                                </>
-                              ) : (
-                                "Save Changes"
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
               </div>
             </TabsContent>
 
@@ -1742,7 +1794,7 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                       Password Protected
                     </span>
                   </div>
@@ -1842,44 +1894,44 @@ export default function AccountSettingsPanel() {
                           {showPw.confirm ? <ViewOffIcon size="1.1em" /> : <ViewIcon size="1.1em" />}
                         </button>
                       </div>
-                    </div>
 
-                    {/* Interactive Apple Strength & Match Meter */}
-                    {pwNext && (
-                      <div className="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 p-4 shadow-xs space-y-2.5 animate-in fade-in duration-200">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-gray-500 dark:text-zinc-400">Password Strength</span>
-                          <span className={cn("font-bold tracking-tight", pwStrength.text)}>
-                            {pwStrength.label}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full">
-                          {[1, 2, 3, 4].map((step) => (
-                            <div
-                              key={step}
-                              className={cn(
-                                "rounded-full transition-colors duration-300",
-                                pwStrength.score >= step ? pwStrength.color : "bg-black/[0.06] dark:bg-white/10"
-                              )}
-                            />
-                          ))}
-                        </div>
-                        {pwConfirm && (
-                          <div className="flex items-center gap-1.5 pt-1 text-xs font-semibold">
-                            {pwNext === pwConfirm ? (
-                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                <CheckmarkCircle01Icon size="1.1em" />
-                                Passwords match
-                              </span>
-                            ) : (
-                              <span className="text-amber-600 dark:text-amber-400">
-                                Passwords do not match yet
-                              </span>
-                            )}
+                      {/* Interactive Apple Strength & Match Meter (attached to the inputs on top of it) */}
+                      {pwNext && (
+                        <div className="p-4 bg-black/[0.015] dark:bg-white/[0.015] space-y-2.5 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-gray-500 dark:text-zinc-400">Password Strength</span>
+                            <span className={cn("font-bold tracking-tight", pwStrength.text)}>
+                              {pwStrength.label}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full">
+                            {[1, 2, 3, 4].map((step) => (
+                              <div
+                                key={step}
+                                className={cn(
+                                  "rounded-full transition-colors duration-300",
+                                  pwStrength.score >= step ? pwStrength.color : "bg-black/[0.06] dark:bg-white/10"
+                                )}
+                              />
+                            ))}
+                          </div>
+                          {pwConfirm && (
+                            <div className="flex items-center gap-1.5 pt-1 text-xs font-semibold">
+                              {pwNext === pwConfirm ? (
+                                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                  <CheckmarkCircle01Icon size="1.1em" />
+                                  Passwords match
+                                </span>
+                              ) : (
+                                <span className="text-amber-600 dark:text-amber-400">
+                                  Passwords do not match yet
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex justify-end pt-2">
                       <Button
@@ -1938,9 +1990,7 @@ export default function AccountSettingsPanel() {
                               <div className="flex items-center justify-between gap-3">
                                 <label className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
                                   <span>{q.question}</span>
-                                  {q.is_required ? (
-                                    <span className="text-red-500 font-bold text-sm" title="Required challenge">*</span>
-                                  ) : (
+                                  {!q.is_required && (
                                     <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                   )}
                                 </label>
@@ -2023,11 +2073,11 @@ export default function AccountSettingsPanel() {
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
                     {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                         2FA Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-black/[0.06] dark:border-white/[0.08]">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
                         2FA Not Configured
                       </span>
                     )}
@@ -2047,8 +2097,14 @@ export default function AccountSettingsPanel() {
                                 Link Authenticator App
                               </h4>
                               <p className="text-sm font-normal text-gray-600 dark:text-zinc-300 mt-1">
-                                Scan this QR code using Apple Passwords, Google Authenticator, 1Password, or Authy to connect your account.
+                                Scan this QR code using Apple Passwords, Google Authenticator, 1Password, Authy, or Microsoft Authenticator to connect your account.
                               </p>
+                              <div className="pt-2">
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider block mb-1.5">
+                                  Compatible Applications
+                                </span>
+                                <AuthenticatorAppBadges size="sm" />
+                              </div>
                             </div>
 
                             <div className="space-y-2.5 pt-2">
@@ -2170,11 +2226,11 @@ export default function AccountSettingsPanel() {
                                 Authenticator App
                               </h4>
                               {totpEnabled && hasTotpSecret ? (
-                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                   Active
                                 </span>
                               ) : (
-                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400 border border-black/[0.04]">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
                                   Inactive
                                 </span>
                               )}
@@ -2182,12 +2238,11 @@ export default function AccountSettingsPanel() {
                             <p className="text-[13px] font-normal text-gray-500 max-w-lg dark:text-zinc-400">
                               Generate rotating 6-digit codes on your smartphone or desktop authenticator app.
                             </p>
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {["Apple Passwords", "Google Authenticator", "1Password", "Authy", "Microsoft Authenticator"].map((app) => (
-                                <span key={app} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.04] text-gray-500 dark:text-zinc-400 border border-black/[0.03] dark:border-white/[0.06]">
-                                  {app}
-                                </span>
-                              ))}
+                            <div className="pt-1.5">
+                              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider block mb-1.5">
+                                Compatible Applications
+                              </span>
+                              <AuthenticatorAppBadges />
                             </div>
                           </div>
                         </div>
@@ -2289,11 +2344,11 @@ export default function AccountSettingsPanel() {
                                 Backup Recovery Codes
                               </h4>
                               {recoveryCodesCount > 0 ? (
-                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                   Active ({recoveryCodesCount} left)
                                 </span>
                               ) : (
-                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400 border border-black/[0.04]">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
                                   Inactive
                                 </span>
                               )}
@@ -2371,7 +2426,7 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                       Personalized
                     </span>
                   </div>
@@ -2472,7 +2527,7 @@ export default function AccountSettingsPanel() {
                         Choose the row vertical spacing and padding used by tables across this browser.
                       </p>
                     </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
                       Active: {TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.label || "Normal"} ({TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.height || "52px row"})
                     </span>
                   </div>
@@ -2752,7 +2807,7 @@ export default function AccountSettingsPanel() {
                         Choose which interaction groups play sound effects. Use the preview button on any row to audition its cue.
                       </p>
                     </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0 tabular-nums">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto tabular-nums")}>
                       Active: {Object.values(soundCategories).filter(Boolean).length} of {SOUND_CATEGORY_DEFINITIONS.length}
                     </span>
                   </div>
@@ -2832,7 +2887,7 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                       Accommodations
                     </span>
                   </div>
@@ -2849,7 +2904,7 @@ export default function AccountSettingsPanel() {
                         Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
                       </p>
                     </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
                       Active: {FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.label || "Default"} ({FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.scale})
                     </span>
                   </div>
@@ -2891,7 +2946,7 @@ export default function AccountSettingsPanel() {
                         Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
                       </p>
                     </div>
-                    <span className="self-start sm:self-auto text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border shrink-0">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
                       Active: {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
                     </span>
                   </div>

@@ -19,6 +19,7 @@ import { formatErrorMessage } from "@/lib/errorUtils"
 import { EmptyState } from "@/components/ui/empty"
 import { HelpCircleIcon , CircleIcon, Tick01Icon} from "hugeicons-react"
 import AppIcon from "@/components/ui/app-icon";
+import { validateSecurityAnswer } from "@/lib/authSchemas";
 function getCsrfToken() {
   if (typeof document === "undefined") return null
   const match = document.cookie.match(/(?:^|;\s*)pup_csrf=([^;]+)/)
@@ -168,6 +169,20 @@ export default function AccountSetupModal({ authUser }) {
           description: `Please provide an answer for: ${q.question}`,
         })
         return
+      }
+    }
+
+    // Validate strength of all provided answers
+    for (const q of questions) {
+      const input = (answers[q.id] || "").trim();
+      if (input) {
+        const validation = validateSecurityAnswer(input, q.question);
+        if (!validation.valid) {
+          toast.error("Weak Security Answer", {
+            description: `${q.question}: ${validation.error}`,
+          });
+          return;
+        }
       }
     }
 
@@ -418,7 +433,7 @@ export default function AccountSetupModal({ authUser }) {
                 <div className="space-y-4">
                   <div>
                     <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      New <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
+                      New Password
                     </label>
                     <div className="relative group">
                       <Input
@@ -444,7 +459,7 @@ export default function AccountSetupModal({ authUser }) {
 
                   <div>
                     <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      Confirm <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
+                      Confirm Password
                     </label>
                     <div className="relative group">
                       <Input
@@ -514,11 +529,9 @@ export default function AccountSetupModal({ authUser }) {
                       <div key={q.id} className="space-y-1">
                         <label className="text-[11px] font-medium text-gray-900 dark:text-zinc-300 block">
                           {q.question.replace(/\?$/, "")}{" "}
-                          {q.is_required ? (
-                            <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 ml-0.5">*</span>
-                          ) : (
-                            <span className="ml-1 text-[11px] font-normal text-gray-400 dark:text-zinc-500 italic">
-                              Optional
+                          {!q.is_required && (
+                            <span className="ml-1 text-[11px] font-normal text-gray-400 dark:text-zinc-500">
+                              (optional)
                             </span>
                           )}
                         </label>

@@ -83,15 +83,17 @@ export default function DefaultPasswordModal({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={onClose}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
           <Button
             type="button"
+            size="sm"
             onClick={onClose}
-            className="h-10 px-5 cursor-pointer border-0"
+            className="h-9 px-4 cursor-pointer border-0"
           >
             Done
           </Button>

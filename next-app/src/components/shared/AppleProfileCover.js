@@ -168,7 +168,7 @@ export default function AppleProfileCover({
                         </span>
                       </div>
                       {isSelected && (
-                        <span className="text-[9.5px] font-semibold px-2 py-0.2 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300 border border-pup-maroon/20 dark:border-red-500/30 shrink-0">
+                        <span className="text-[9.5px] font-semibold px-2 py-0.2 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300 shrink-0">
                           Active
                         </span>
                       )}

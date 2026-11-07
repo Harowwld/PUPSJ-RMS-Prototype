@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { isDefaultAvatarId, getDefaultAvatarSvg, getDefaultAvatar } from "@/lib/defaultAvatars";
+import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
 export const runtime = "nodejs";
 
@@ -238,8 +239,8 @@ export async function POST(req) {
       fs.writeFileSync(absPath, svgMarkup, "utf8");
     } else {
       // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        return NextResponse.json({ ok: false, error: "File size exceeds 5MB limit" }, { status: 400 });
+      if (file.size > AVATAR_MAX_SIZE_BYTES) {
+        return NextResponse.json({ ok: false, error: `Avatar file size exceeds the ${AVATAR_MAX_SIZE_LABEL} limit.` }, { status: 413 });
       }
 
       // Validate content type
