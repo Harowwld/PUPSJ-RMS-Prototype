@@ -18,6 +18,7 @@ import {
 import { cn, formatTitleCase } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
+import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
@@ -25,26 +26,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { Attachment01Icon, Clock01Icon, Alert02Icon, Calendar01Icon, Cancel01Icon, CheckmarkCircle01Icon, File02Icon, LockIcon, Time01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export function getRequestStatusBadgeClass(status) {
-  const s = String(status || "").toUpperCase();
-  if (s === "PENDING") {
-    return "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40";
-  }
-  if (s === "PENDINGPAYMENT" || s === "DEFICIENT") {
-    return "bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/40";
-  }
-  if (s === "PROCESSING" || s === "INPROGRESS") {
-    return "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40";
-  }
-  if (s === "READY" || s === "DONE" || s === "COMPLETED") {
-    return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40";
-  }
-  if (s === "CANCELLED") {
-    return "bg-gray-100 text-gray-600 dark:bg-zinc-800/50 dark:text-zinc-400 border border-gray-200/60 dark:border-zinc-700/60";
-  }
-  if (s === "SHREDDED") {
-    return "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400 border border-red-200/60 dark:border-red-900/40";
-  }
-  return "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300 border border-gray-200/60 dark:border-zinc-700/60";
+  return getStatusBadgeClass(status);
 }
 
 export function getRequestStatusDotClass(status) {
@@ -399,11 +381,11 @@ export default function DocumentRequestDetailSheet({
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                               SPA Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                               Verification Pending
                             </span>
                           )}
@@ -461,7 +443,7 @@ export default function DocumentRequestDetailSheet({
                           <span className="font-semibold text-gray-900 dark:text-zinc-100">
                             {charter.deadlineFormatted}
                           </span>
-                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold", charter.badgeClass)}>
+                          <span className={cn(BADGE_BASE, charter.badgeClass)}>
                             {charter.label}
                           </span>
                         </div>
@@ -471,7 +453,7 @@ export default function DocumentRequestDetailSheet({
                         icon=" DashboardSpeed01Icon"
                         label="Service Standard"
                       >
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold", charter.tier.badgeClass)}>
+                        <span className={cn(BADGE_BASE, charter.tier.badgeClass)}>
                           {charter.tier.name} ({charter.tier.days} {slaStandards?.workingDaysOnly !== false ? "working days" : "calendar days"})
                         </span>
                       </InfoRow>
@@ -738,8 +720,9 @@ export default function DocumentRequestDetailSheet({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
@@ -749,15 +732,17 @@ export default function DocumentRequestDetailSheet({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleResetEdits}
                 disabled={saving}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Reset Changes
               </Button>
               <Button
                 type="button"
-                className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                size="sm"
+                className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 onClick={handleManualSave}
                 disabled={saving}
               >

@@ -4,6 +4,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import { cn, formatTitleCase } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -28,6 +29,13 @@ import { splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+import {
+  DOCUMENT_MAX_SIZE_BYTES,
+  DOCUMENT_PAGE_MAX_SIZE_BYTES,
+  DOCUMENT_MAX_SIZE_LABEL,
+  DOCUMENT_PAGE_MAX_SIZE_LABEL,
+  formatBytes,
+} from "@/lib/uploadLimits";
 const COORDINATE_REGION_LABELS = {
   firstName: { label: "First name", color: "#2563eb" },
   middleName: { label: "Middle name", color: "#9333ea" },
@@ -424,9 +432,32 @@ export default function ScanUploadTab({
 
   const handlePdfFileSelect = useCallback((files) => {
     if (!files) return
+    const fileList = Array.from(files)
+    const oversizedFiles = []
+    const validFiles = []
+
+    for (const f of fileList) {
+      const isImg = String(f.type || "").startsWith("image/")
+      const limit = isImg ? DOCUMENT_PAGE_MAX_SIZE_BYTES : DOCUMENT_MAX_SIZE_BYTES
+      const label = isImg ? DOCUMENT_PAGE_MAX_SIZE_LABEL : DOCUMENT_MAX_SIZE_LABEL
+      if (f.size > limit) {
+        oversizedFiles.push(`${f.name || "File"} (${formatBytes(f.size)} exceeds ${label} limit)`)
+      } else {
+        validFiles.push(f)
+      }
+    }
+
+    if (oversizedFiles.length > 0) {
+      showToast({
+        title: "File Too Large",
+        description: `Upload rejected. File size limits are ${DOCUMENT_MAX_SIZE_LABEL} for documents and ${DOCUMENT_PAGE_MAX_SIZE_LABEL} per page image:\n${oversizedFiles.join("; ")}`,
+      }, true)
+      if (validFiles.length === 0) return
+    }
+
     hf.clearIngestSelection()
-    onFileSelect(files)
-  }, [hf, onFileSelect])
+    onFileSelect(validFiles)
+  }, [hf, onFileSelect, showToast])
 
   const handleClearPdf = useCallback(() => {
     hf.clearIngestSelection()
@@ -1805,7 +1836,7 @@ export default function ScanUploadTab({
                             <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
                               <span>Digitization Destination</span>
                             </span>
-                            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                               Local Partition
                             </span>
                           </div>
@@ -1820,6 +1851,7 @@ export default function ScanUploadTab({
 
                         <Button
                           type="button"
+                          size="sm"
                           onClick={() =>
                             processSubmission({
                               onSuccess: (ids) => {
@@ -1831,12 +1863,7 @@ export default function ScanUploadTab({
                               },
                             })
                           }
-                          className={cn(
-                            "w-full h-10 px-5 disabled:opacity-50 cursor-pointer",
-                            isReplaceMode || rescanContext
-                              ? ""
-                              : ""
-                          )}
+                          className="w-full h-9 px-4 disabled:opacity-50 cursor-pointer"
                         >
                           {isReplaceMode || rescanContext ? "Replace Existing Document" : "Upload Document"}
                         </Button>

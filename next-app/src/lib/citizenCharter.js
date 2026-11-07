@@ -8,6 +8,8 @@
  * - Highly Technical Transactions: 20 working days (480h)
  */
 
+import { BADGE_PALETTES } from "./badgeStyles.js";
+
 export const DEFAULT_SLA_STANDARDS = {
   frameworkName: "Citizen's Charter (ARTA RA 11032)",
   frameworkType: "ARTA",
@@ -35,8 +37,7 @@ export function buildSlaTiers(standards = DEFAULT_SLA_STANDARDS) {
       hours: simpleDays * 24,
       shortLabel: `Simple · ${simpleDays}${unit}`,
       description: "Standard clerical checking & direct generation from digital records",
-      badgeClass:
-        "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30",
+      badgeClass: BADGE_PALETTES.emerald,
     },
     COMPLEX: {
       key: "Complex",
@@ -45,8 +46,7 @@ export function buildSlaTiers(standards = DEFAULT_SLA_STANDARDS) {
       hours: complexDays * 24,
       shortLabel: `Complex · ${complexDays}${unit}`,
       description: "Multi-stage archive vault retrieval, course evaluation, and multi-signatory endorsements",
-      badgeClass:
-        "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30",
+      badgeClass: BADGE_PALETTES.amber,
     },
     HIGHLY_TECHNICAL: {
       key: "HighlyTechnical",
@@ -55,8 +55,7 @@ export function buildSlaTiers(standards = DEFAULT_SLA_STANDARDS) {
       hours: techDays * 24,
       shortLabel: `Technical · ${techDays}${unit}`,
       description: "Multi-agency validation, board resolutions, legal affidavits, or archival reconstruction",
-      badgeClass:
-        "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30",
+      badgeClass: BADGE_PALETTES.purple,
     },
   };
 }
@@ -209,7 +208,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: false,
       isDueSoon: false,
       isCompliant: true,
-      badgeClass: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400",
+      badgeClass: BADGE_PALETTES.gray,
     };
   }
 
@@ -237,8 +236,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
         isOverdue: false,
         isDueSoon: false,
         isCompliant: true,
-        badgeClass:
-          "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/30",
+        badgeClass: BADGE_PALETTES.emerald,
         icon: "CheckmarkBadge01Icon",
       };
     }
@@ -255,8 +253,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: true,
       isDueSoon: false,
       isCompliant: false,
-      badgeClass:
-        "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30",
+      badgeClass: BADGE_PALETTES.amber,
       icon: "Clock01Icon",
     };
   }
@@ -272,7 +269,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: false,
       isDueSoon: false,
       isCompliant: true,
-      badgeClass: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400",
+      badgeClass: BADGE_PALETTES.gray,
       icon: "CancelCircleIcon",
     };
   }
@@ -295,8 +292,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: true,
       isDueSoon: false,
       isCompliant: false,
-      badgeClass:
-        "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200/50 dark:border-red-800/30",
+      badgeClass: BADGE_PALETTES.rose,
       icon: "Alert01Icon",
     };
   }
@@ -317,8 +313,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: false,
       isDueSoon: true,
       isCompliant: true,
-      badgeClass:
-        "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30",
+      badgeClass: BADGE_PALETTES.amber,
       icon: "HourglassIcon",
     };
   }
@@ -333,8 +328,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
     isOverdue: false,
     isDueSoon: false,
     isCompliant: true,
-    badgeClass:
-      "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30",
+    badgeClass: BADGE_PALETTES.blue,
     icon: "Clock01Icon",
   };
 }

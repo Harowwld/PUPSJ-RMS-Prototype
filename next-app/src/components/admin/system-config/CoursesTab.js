@@ -39,6 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Delete01Icon, PencilEdit01Icon, Search01Icon, Archive01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ sortState, column }) {
@@ -318,7 +319,7 @@ export default function CoursesTab({
                 className={cn(
                   "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   !showArchived
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                    ? BADGE_PALETTES.emerald
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                 )}
               >
@@ -343,7 +344,7 @@ export default function CoursesTab({
                 className={cn(
                   "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   showArchived
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                    ? BADGE_PALETTES.amber
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                 )}
               >
@@ -421,20 +422,22 @@ export default function CoursesTab({
                   {totalInView > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         setCourseSearch("")
                         setLocalSearch("")
                       }}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
                   ) : (
                     !showArchived && (
                       <Button
+                        size="sm"
                         onClick={() => setIsAddCourseOpen(true)}
-                        className="flex h-10 px-5 cursor-pointer"
+                        className="flex h-9 px-4 cursor-pointer"
                       >
                         Add Program
                       </Button>
@@ -608,7 +611,7 @@ export default function CoursesTab({
                                         setIsEditCourseOpen(true)
                                       }}
                                       aria-label="Edit Degree Program"
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                     >
                                       <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
                                     </button>
@@ -637,7 +640,7 @@ export default function CoursesTab({
                                       setConfirmOpen(true)
                                     }}
                                     aria-label="Restore Degree Program"
-                                    className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
                                   </button>
@@ -663,7 +666,7 @@ export default function CoursesTab({
                                       setConfirmOpen(true)
                                     }}
                                     aria-label="Archive Degree Program"
-                                    className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
                                   </button>
@@ -722,7 +725,7 @@ export default function CoursesTab({
             <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Code
                 </label>
                 <Input
                   type="text"
@@ -737,7 +740,7 @@ export default function CoursesTab({
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Designation
                 </label>
                 <Input
                   type="text"
@@ -752,7 +755,7 @@ export default function CoursesTab({
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Course Blocks
+                    Course Blocks <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
                   </label>
                   <Button
                     type="button"
@@ -805,6 +808,7 @@ export default function CoursesTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={repeat.saving}
                 onClick={() => {
                   setIsAddCourseOpen(false)
@@ -812,14 +816,15 @@ export default function CoursesTab({
                   setNewCourseName("")
                   setNewCourseBlocks([""])
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={repeat.saving}
-                className="h-10 px-5 cursor-pointer border-0"
+                className="h-9 px-4 cursor-pointer border-0"
               >
                 {repeat.saving ? "Creating Program…" : "Create Program"}
               </Button>
@@ -856,7 +861,7 @@ export default function CoursesTab({
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Code <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                    Code
                   </label>
                   <Input
                     type="text"
@@ -873,7 +878,7 @@ export default function CoursesTab({
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Program Designation <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                    Program Designation
                   </label>
                   <Input
                     type="text"
@@ -893,7 +898,7 @@ export default function CoursesTab({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Manage Course Blocks
+                    Manage Course Blocks <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
                   </label>
                   <Button
                     type="button"
@@ -947,18 +952,20 @@ export default function CoursesTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setIsEditCourseOpen(false)
                   setEditCourse({ id: null, code: "", name: "" })
                   setEditCourseBlocks([""])
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 cursor-pointer border-0"
+                size="sm"
+                className="h-9 px-4 cursor-pointer border-0"
               >
                 Save Changes
               </Button>

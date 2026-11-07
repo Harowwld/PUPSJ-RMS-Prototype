@@ -1139,8 +1139,9 @@ export default function NotificationsTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setSheetOpen(false)}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
@@ -1150,17 +1151,19 @@ export default function NotificationsTab({
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={() => {
                       setSheetOpen(false);
                       onNavigateTab("requests");
                     }}
-                    className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
                     Open in Requests
                   </Button>
                 ) : selectedNotif?.approval_status === "Declined" && onRescan ? (
                   <Button
                     type="button"
+                    size="sm"
                     onClick={() => {
                       setSheetOpen(false);
                       onRescan(
@@ -1171,7 +1174,7 @@ export default function NotificationsTab({
                         selectedNotif.mime_type
                       );
                     }}
-                    className="h-10 px-5 cursor-pointer flex items-center gap-1.5"
+                    className="h-9 px-4 cursor-pointer flex items-center gap-1.5"
                   >
                     <span>Rescan Document</span>
                   </Button>
@@ -1182,7 +1185,7 @@ export default function NotificationsTab({
                     href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
                     download={selectedNotif.original_filename || "document.pdf"}
                     rel="noreferrer"
-                    className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-5 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-4 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     {selectedNotif?.mime_type?.startsWith("image/") ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}
                   </a>

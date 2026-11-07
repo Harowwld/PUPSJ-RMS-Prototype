@@ -126,7 +126,7 @@ export default function OfficeDocumentsTable({
                   size="sm"
                   onClick={() => setQuery("")}
                   title="Clear Search"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-xs"
                 >
                   Clear Search
                 </Button>
@@ -153,7 +153,7 @@ export default function OfficeDocumentsTable({
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {visibleRows.map((document) => (
-                  <tr key={document.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
+                  <tr key={document.id} className="group transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
                     <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {officeLabel === "OSAS" ? (
                         <span
@@ -205,7 +205,7 @@ export default function OfficeDocumentsTable({
                                   )
                                 }
                                 aria-label="Re-scan Document"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                className="table-action-button rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 active:scale-95 cursor-pointer"
                               >
                                 <ReloadIcon size="1em" className="text-[15px]" />
                               </button>
@@ -219,7 +219,7 @@ export default function OfficeDocumentsTable({
                               type="button"
                               onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
                               aria-label={PDF_ACTION_LABELS.preview}
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                              className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                             >
                               <ViewIcon size="1em" className="text-[16px]" />
                             </button>

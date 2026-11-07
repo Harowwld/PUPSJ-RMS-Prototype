@@ -8,6 +8,7 @@ import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Reorder } from "framer-motion";
 import { cn, formatTitleCase } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -1283,7 +1284,7 @@ export default function DocumentsTab({
                         Document Category
                       </label>
                       <div className="mt-1.5">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "gap-1.5")}>
                           <File01Icon size="1em" className="text-[11px]" />
                           {selectedDoc?.doc_type}
                         </span>
@@ -1416,13 +1417,15 @@ export default function DocumentsTab({
               <div className="flex items-center gap-2.5">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Close
                 </Button>
 
                 <Button
+                  size="sm"
                   onClick={async () => {
                     setDetailModalOpen(false);
                     if (selectedDoc?.doc?.id && !selectedDoc?.doc?.source_type) {
@@ -1436,7 +1439,7 @@ export default function DocumentsTab({
                     }
                   }}
                   disabled={!selectedDoc?.doc?.id || !!selectedDoc?.doc?.source_type}
-                  className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   Update Document
                 </Button>

@@ -226,7 +226,7 @@ export default function ModuleConfigSkeleton({ viewMode = "office", officeFilter
           <div className="flex min-w-0 items-center gap-3.5">
             <Placeholder className="h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0 space-y-1.5">
-              <div className="flex items-center gap-2"><span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Public Login Demo Accounts</span><span className="rounded-full border border-amber-200/60 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/30 dark:text-amber-300">Prototype Access</span></div>
+              <div className="flex items-center gap-2"><span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Public Login Demo Accounts</span><span className="rounded-full bg-amber-100/80 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Prototype Access</span></div>
               <p className="text-xs text-gray-500 dark:text-zinc-400">Show or hide the 1-click demo persona switcher on the public login page. Disabling also blocks demo sign-in requests.</p>
             </div>
           </div>

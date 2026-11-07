@@ -19,7 +19,7 @@ export default function PersonnelActionsMenu({ member, name, isSelf, onViewProfi
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" onClick={(event) => event.stopPropagation()} aria-label={`More actions for ${name}`} aria-expanded={open} className="table-action-button">
+        <button type="button" onClick={(event) => event.stopPropagation()} aria-label={`More actions for ${name}`} aria-expanded={open} className="table-action-button rounded-lg active:scale-95 cursor-pointer">
           <MoreHorizontalIcon size={16} aria-hidden="true" />
         </button>
       </PopoverTrigger>

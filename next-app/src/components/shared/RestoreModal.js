@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { FileZipIcon, Loading01Icon } from "hugeicons-react";
 
 
@@ -163,7 +164,7 @@ export default function RestoreModal({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold">Safe Merge</span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
                     Recommended
                   </span>
                 </div>
@@ -184,7 +185,7 @@ export default function RestoreModal({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold">Full Overwrite</span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200/60 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.rose, "text-[10px]")}>
                     Disaster Rollback
                   </span>
                 </div>
@@ -264,20 +265,20 @@ export default function RestoreModal({
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">
                               {isSafeMerge ? (
                                 delta > 0 ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
                                     +{delta} missing restored
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border">
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "text-[10px]")}>
                                     {t.liveRows} preserved
                                   </span>
                                 )
                               ) : delta < 0 ? (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200/60 dark:border-red-800/40">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.rose, "text-[10px]")}>
                                   {Math.abs(delta)} modern erased
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "text-[10px]")}>
                                   {t.backupRows} restored
                                 </span>
                               )}
@@ -306,18 +307,20 @@ export default function RestoreModal({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={handleCancelAction}
             disabled={isLoading}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>
           <Button
             type="button"
+            size="sm"
             onClick={handleConfirmAction}
             disabled={isLoading || previewLoading}
             className={cn(
-              "h-10 px-5 text-xs font-semibold rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer border-0 text-white inline-flex items-center justify-center",
+              "h-9 px-4 text-xs font-semibold rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer border-0 text-white inline-flex items-center justify-center",
               mode === "merge"
                 ? "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500"
                 : "bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-600 dark:hover:bg-red-500"

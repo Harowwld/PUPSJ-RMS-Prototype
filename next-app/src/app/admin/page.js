@@ -291,6 +291,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     }
   }, [brandAccent, brandForeground])
 
+  useEffect(() => {
+    const handlePreferencesChanged = (e) => {
+      if (e?.detail?.preferences) {
+        setAuthUser((prev) =>
+          prev ? { ...prev, preferences: { ...(prev.preferences || {}), ...e.detail.preferences } } : prev
+        );
+      }
+    };
+    window.addEventListener("user-preferences-changed", handlePreferencesChanged);
+    return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+  }, []);
+
   const sidebarItems = useMemo(() => {
     if (!authUser?.enabled_modules) return []
     const enabled = new Set(authUser.enabled_modules)
@@ -2469,18 +2481,20 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               {extDriveEvent?.type === "connected" ? "Dismiss" : "Acknowledge"}
             </Button>
             {extDriveEvent?.type === "connected" && (
               <Button
+                size="sm"
                 onClick={() => {
                   setExtDriveModalOpen(false)
                   switchView("backup")
                 }}
-                className="h-10 px-5 cursor-pointer"
+                className="h-9 px-4 cursor-pointer"
               >
                 View Backups
               </Button>

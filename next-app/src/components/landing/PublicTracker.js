@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 export default function PublicTracker() {
   const [ticketInput, setTicketInput] = useState("");
@@ -41,15 +43,15 @@ export default function PublicTracker() {
   const getStatusBadge = (status) => {
     const s = String(status || "").toLowerCase();
     if (s === "approved" || s === "completed" || s === "ready") {
-      return "bg-emerald-50 text-emerald-800 border-emerald-200/80   ";
+      return BADGE_PALETTES.emerald;
     }
     if (s === "inprogress") {
-      return "bg-blue-50 text-blue-800 border-blue-200/80   ";
+      return BADGE_PALETTES.blue;
     }
     if (s === "cancelled" || s === "declined" || s === "shredded") {
-      return "bg-rose-50 text-rose-800 border-rose-200/80   ";
+      return BADGE_PALETTES.rose;
     }
-    return "bg-amber-50 text-amber-800 border-amber-200/80   ";
+    return BADGE_PALETTES.amber;
   };
 
   const getStepProgress = (status) => {
@@ -151,7 +153,7 @@ export default function PublicTracker() {
                     <span className="text-sm font-sans tabular-nums font-bold text-gray-950 ">Ticket #{result.id}</span>
                     <span className="text-gray-300 ">·</span>
                     <span className="text-sm font-semibold text-gray-900 ">{result.doc_type}</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadge(result.status)}`}>
+                    <span className={cn(BADGE_BASE, getStatusBadge(result.status))}>
                       {result.status === "InProgress" || result.status?.toLowerCase() === "inprogress"
                         ? "In Progress"
                         : result.status

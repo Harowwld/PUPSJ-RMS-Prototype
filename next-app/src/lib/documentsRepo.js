@@ -5,6 +5,13 @@ import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
 import { getLocalDataDir, getOfficeUploadsDir } from "./officePaths.js";
+import {
+  DOCUMENT_MAX_SIZE_BYTES,
+  DOCUMENT_MAX_SIZE_LABEL,
+  HOT_FOLDER_MAX_SIZE_BYTES,
+  HOT_FOLDER_MAX_SIZE_LABEL,
+  formatBytes,
+} from "./uploadLimits.js";
 
 function decryptDocumentRow(row) {
   if (!row) return row;
@@ -97,6 +104,16 @@ export async function createDocument({
 }) {
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
+
+  const effectiveSizeBytes = Number(sizeBytes ?? buffer?.length ?? 0);
+  const maxAllowedBytes = sourceIngestId ? HOT_FOLDER_MAX_SIZE_BYTES : DOCUMENT_MAX_SIZE_BYTES;
+  const maxLabel = sourceIngestId ? HOT_FOLDER_MAX_SIZE_LABEL : DOCUMENT_MAX_SIZE_LABEL;
+  if (effectiveSizeBytes > maxAllowedBytes) {
+    const error = new Error(`Document file size (${formatBytes(effectiveSizeBytes)}) exceeds the ${maxLabel} limit.`);
+    error.status = 413;
+    error.code = "PAYLOAD_TOO_LARGE";
+    throw error;
+  }
 
   let effectiveOrgId = organizationId ? String(organizationId).trim() : null;
   let effectiveStudentNo = studentNo ? String(studentNo).trim().toUpperCase() : null;
@@ -448,6 +465,14 @@ export async function replaceDocumentFile(
   { officeId } = {},
 ) {
   await ensureReviewColumns();
+  const effectiveSizeBytes = Number(sizeBytes ?? buffer?.length ?? 0);
+  if (effectiveSizeBytes > DOCUMENT_MAX_SIZE_BYTES) {
+    const error = new Error(`Replacement document file size (${formatBytes(effectiveSizeBytes)}) exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit.`);
+    error.status = 413;
+    error.code = "PAYLOAD_TOO_LARGE";
+    throw error;
+  }
+
   const scopedOfficeId = requireOfficeId(officeId);
   const existing = await getDocumentById(id, { officeId: scopedOfficeId });
   if (!existing) return null;

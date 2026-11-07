@@ -16,10 +16,11 @@ import { listDocuments } from "../../../lib/documentsRepo";
 import { getPrincipalOfficeId, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { PersonNameSchema, PhoneSchema, StudentNoSchema } from "@/lib/validationSchemas";
+import { ATTACHMENT_MAX_SIZE_BYTES, ATTACHMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
 export const runtime = "nodejs";
 
-const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_ATTACHMENT_SIZE = ATTACHMENT_MAX_SIZE_BYTES;
 const ALLOWED_ATTACHMENT_TYPES = new Map([
   ["application/pdf", ".pdf"],
   ["image/png", ".png"],
@@ -186,7 +187,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Attachments must be PDF, PNG, JPG, or WEBP files." }, { status: 415 });
     }
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      return NextResponse.json({ ok: false, error: "Each attachment must be 10 MB or smaller." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: `Each attachment must be ${ATTACHMENT_MAX_SIZE_LABEL} or smaller.` }, { status: 413 });
     }
     if (clientType === "Parent" && !["spa", "valid_id"].includes(attachmentType)) {
       return NextResponse.json({ ok: false, error: "Parent or guardian attachments must be categorized as SPA / authorization or valid government ID." }, { status: 400 });

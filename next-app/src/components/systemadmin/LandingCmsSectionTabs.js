@@ -20,6 +20,7 @@ export default function LandingCmsSectionTabs({ section, onSelect, className }) 
     <div
       role="group"
       aria-label="Landing page section"
+      suppressHydrationWarning
       className={cn(
         "flex items-center px-6 py-2.5 border-b border-border/80 dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none",
         className

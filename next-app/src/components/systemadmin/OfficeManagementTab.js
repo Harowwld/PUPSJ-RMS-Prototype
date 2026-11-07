@@ -42,6 +42,7 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { fetchJsonOnce } from "@/lib/clientRequest"
 import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
@@ -1087,7 +1088,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               >
                                 {office.short_name}
                               </h3>
-                              <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 border border-border shrink-0">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums uppercase tracking-wider shrink-0")}>
                                 {office.id}
                               </span>
                             </div>
@@ -1474,7 +1475,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                       e.stopPropagation()
                                       handleCopyStoragePath(office.storage_path || `.local/storage/${office.id}`, office.id)
                                     }}
-                                    className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                                    className="p-0.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                                     title="Copy storage path"
                                   >
                                     {copiedStorageId === office.id ? (
@@ -1626,7 +1627,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               {/* Row 2: Description */}
               <div>
                 <label htmlFor="office-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                  Description <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                  Description <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                 </label>
                 <Textarea
                   id="office-description"
@@ -1644,7 +1645,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     {isEditing ? "System Identifier" : "System-Generated Identifiers & Default Admin"}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                     {isEditing ? "Read-only" : "Auto-assigned"}
                   </span>
                 </div>
@@ -1709,7 +1710,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Workstation Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                    Workstation Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                   </label>
                   <Input
                     value={form.station_name}
@@ -1958,15 +1959,17 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setDialogOpen(false)}
-                className="h-10 px-4"
+                className="h-9 px-4"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={submitLoading}
-                className="h-10 px-5 cursor-pointer"
+                className="h-9 px-4 cursor-pointer"
               >
                 {submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Department"}
               </Button>

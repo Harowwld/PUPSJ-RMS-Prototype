@@ -16,12 +16,12 @@ export default function RecordsReviewTableSkeleton({ rowCount = 8, embedded = fa
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <Table columns={["selection", "identifier", "text", "text", "text", "status", "date", "actions"]} className="min-w-[1380px]">
-          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+          <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="w-12 py-3 px-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="w-12 py-3 px-4 text-center sticky left-0 z-20 bg-white dark:bg-card">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90">
+              <th className="py-3 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
               <th className="py-3 px-4 w-[220px] min-w-[220px]">

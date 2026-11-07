@@ -152,6 +152,20 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
     };
   }, []);
 
+  useEffect(() => {
+    const handlePreferencesChanged = (e) => {
+      if (e?.detail?.preferences) {
+        setCurrentUser((prev) =>
+          prev ? { ...prev, preferences: { ...(prev.preferences || {}), ...e.detail.preferences } } : prev
+        );
+      }
+    };
+    window.addEventListener("user-preferences-changed", handlePreferencesChanged);
+    return () => {
+      window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+    };
+  }, []);
+
   // Show loading skeleton while checking authentication — mirrors the actual
   // dashboard layout (sidebar + workspace, no page header). Pages pass their
   // own page-matched skeleton via the `fallback` prop.

@@ -12,7 +12,7 @@ export default function ServiceStandardsSkeleton() {
         <PageHeader
           icon="HourglassIcon"
           title="Processing Time Standards"
-          description="Configure turnaround time standards and compliance rules for document processing."
+          description="Configure target processing times, deadline rules, and working day schedules for student document requests."
           showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"

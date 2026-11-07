@@ -25,6 +25,7 @@ import RecognitionTemplateSkeleton from "@/components/admin/skeletons/Recognitio
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone"
 import { detectDocType } from "@/lib/ocrClient"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { BoundingBoxIcon as EmptyBoundingBoxIcon, Upload01Icon as EmptyUpload01Icon , Archive01Icon, Cursor01Icon, Delete01Icon, ReloadIcon, Tick01Icon} from "hugeicons-react";
 
@@ -607,11 +608,11 @@ export default function RecognitionTemplatesTab({ showToast }) {
                         <span>{label}</span>
                       </div>
                       {plotted ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1")}>
                           <Tick01Icon size="1em"  className="text-[10px]" /> Plotted
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-normal text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-normal")}>
                           Not set
                         </span>
                       )}
@@ -779,7 +780,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <EmptyContent>
                   <Button
                     type="button"
-                    className="h-10 px-5 cursor-pointer border-0"
+                    size="sm"
+                    className="h-9 px-4 cursor-pointer border-0"
                     onClick={chooseSampleFile}
                   >
                     Upload Sample Document

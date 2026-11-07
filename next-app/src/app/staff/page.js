@@ -15,6 +15,13 @@ import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
+import {
+  DOCUMENT_MAX_SIZE_BYTES,
+  DOCUMENT_PAGE_MAX_SIZE_BYTES,
+  DOCUMENT_MAX_SIZE_LABEL,
+  DOCUMENT_PAGE_MAX_SIZE_LABEL,
+  formatBytes,
+} from "@/lib/uploadLimits";
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
@@ -152,6 +159,18 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       document.documentElement.style.setProperty("--brand-foreground", brandForeground);
     }
   }, [brandAccent, brandForeground]);
+
+  useEffect(() => {
+    const handlePreferencesChanged = (e) => {
+      if (e?.detail?.preferences) {
+        setAuthUser((prev) =>
+          prev ? { ...prev, preferences: { ...(prev.preferences || {}), ...e.detail.preferences } } : prev
+        );
+      }
+    };
+    window.addEventListener("user-preferences-changed", handlePreferencesChanged);
+    return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+  }, []);
 
   const switchView = useCallback((nextView) => {
     setView(nextView);
@@ -1279,6 +1298,25 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
     if (incomingFiles.length === 0) return;
 
+    const oversized = incomingFiles.filter((f) => {
+      const isImg = String(f.type || "").startsWith("image/");
+      const limit = isImg ? DOCUMENT_PAGE_MAX_SIZE_BYTES : DOCUMENT_MAX_SIZE_BYTES;
+      return f.size > limit;
+    });
+    if (oversized.length > 0) {
+      const details = oversized.map((f) => {
+        const isImg = String(f.type || "").startsWith("image/");
+        const label = isImg ? DOCUMENT_PAGE_MAX_SIZE_LABEL : DOCUMENT_MAX_SIZE_LABEL;
+        return `${f.name || "File"} (${formatBytes(f.size)} > ${label})`;
+      }).join(", ");
+      showToast({
+        title: "File Too Large",
+        description: `File size exceeds the permitted limit: ${details}`,
+      }, true);
+      incomingFiles = incomingFiles.filter((f) => !oversized.includes(f));
+      if (incomingFiles.length === 0) return;
+    }
+
     if (!skipQueue) {
       let newFiles = [];
       setUploadedFiles((prev) => {
@@ -1613,6 +1651,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
     } catch (e) {
       console.error("[Rename Error]", e);
+    }
+
+    if (fileToUpload && fileToUpload.size > DOCUMENT_MAX_SIZE_BYTES) {
+      showToast({
+        title: "Document Exceeds Size Limit",
+        description: `The prepared document (${formatBytes(fileToUpload.size)}) exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit. Please compress or optimize the document before uploading.`,
+      }, true);
+      return;
     }
 
     const payload = new FormData();

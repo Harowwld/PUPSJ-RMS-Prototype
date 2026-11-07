@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon, Search01Icon } from "hugeicons-react";
 
 function normalizeQuestions(items) {
@@ -381,11 +382,11 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                           Question {i + 1}
                         </span>
                         {q.is_required ? (
-                          <span className="text-[10px] font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-900/50">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.rose)}>
                             Required
                           </span>
                         ) : (
-                          <span className="text-xs font-medium text-gray-900 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 inline-flex min-h-6 items-center px-2.5 rounded-full border border-border dark:border-border">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
                             Optional
                           </span>
                         )}

@@ -39,6 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ClipboardIcon, CursorPointer01Icon, PencilEdit01Icon, Search01Icon, Archive01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ sortState, column }) {
@@ -309,7 +310,7 @@ export default function DocTypesTab({
                   className={cn(
                     "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     !showArchived
-                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                      ? BADGE_PALETTES.emerald
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                   )}
                 >
@@ -334,7 +335,7 @@ export default function DocTypesTab({
                   className={cn(
                     "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                     showArchived
-                      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                      ? BADGE_PALETTES.amber
                       : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                   )}
                 >
@@ -462,20 +463,22 @@ export default function DocTypesTab({
                   {totalInView > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         setDocSearch("")
                         setLocalSearch("")
                       }}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
                   ) : (
                     !showArchived && (
                       <Button
+                        size="sm"
                         onClick={() => setIsAddDocTypeOpen(true)}
-                        className="flex h-10 px-5 cursor-pointer"
+                        className="flex h-9 px-4 cursor-pointer"
                       >
                         Add Document Type
                       </Button>
@@ -599,19 +602,19 @@ export default function DocTypesTab({
                           <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {dt.is_requestable && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "gap-1")}>
                                   <CursorPointer01Icon size="1em" className="text-[10px]" />
                                   Requestable
                                 </span>
                               )}
                               {dt.is_compliance && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "gap-1")}>
                                   <ClipboardIcon size="1em" className="text-[10px]" />
                                   Compliance
                                 </span>
                               )}
                               {!dt.is_requestable && !dt.is_compliance && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1 font-medium")}>
                                   General
                                 </span>
                               )}
@@ -648,7 +651,7 @@ export default function DocTypesTab({
                                         setIsEditDocTypeOpen(true)
                                       }}
                                       aria-label="Edit Document Type"
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                     >
                                       <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
                                     </button>
@@ -677,7 +680,7 @@ export default function DocTypesTab({
                                       setConfirmOpen(true)
                                     }}
                                     aria-label="Restore Document Type"
-                                    className="w-7 h-7 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
                                   </button>
@@ -703,7 +706,7 @@ export default function DocTypesTab({
                                       setConfirmOpen(true)
                                     }}
                                     aria-label="Archive Document Type"
-                                    className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
                                   </button>
@@ -757,7 +760,7 @@ export default function DocTypesTab({
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
                 <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                  Document Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Document Name
                 </label>
                 <Input
                   type="text"
@@ -812,6 +815,7 @@ export default function DocTypesTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={repeat.saving}
                 onClick={() => {
                   setIsAddDocTypeOpen(false)
@@ -819,14 +823,15 @@ export default function DocTypesTab({
                   setNewDocTypeIsRequestable(false)
                   setNewDocTypeIsCompliance(true)
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-9 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={repeat.saving}
-                className="h-10 px-5 disabled:opacity-50 cursor-pointer border-0"
+                className="h-9 px-4 disabled:opacity-50 cursor-pointer border-0"
               >
                 {repeat.saving ? "Adding Document Type…" : "Add Document Type"}
               </Button>
@@ -859,7 +864,7 @@ export default function DocTypesTab({
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
                 <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                  Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Document Type Name
                 </label>
                 <Input
                   type="text"
@@ -923,19 +928,21 @@ export default function DocTypesTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setIsAddDocTypeOpen(false)
                   setIsEditDocTypeOpen(false)
                   setNewDocTypeName("")
                   setEditDocType({ id: null, name: "", isRequestable: false, isCompliance: false })
                 }}
-                className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                className="flex h-9 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 disabled:opacity-50 cursor-pointer border-0"
+                size="sm"
+                className="h-9 px-4 disabled:opacity-50 cursor-pointer border-0"
               >
                 Save Changes
               </Button>

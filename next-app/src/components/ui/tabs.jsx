@@ -148,6 +148,8 @@ function TabsTrigger({
         return (
           <button
             {...tabProps}
+            data-active={isActive ? "" : undefined}
+            data-state={isActive ? "active" : "inactive"}
             className={cn(
               sharedClassName,
               "relative z-0",
@@ -156,7 +158,7 @@ function TabsTrigger({
           >
             {isActive && (
               <motion.span
-                layoutId={`tabs-pill-${context.listId}`}
+                layoutId={`segmented-pill-${context.listId}`}
                 transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                 className={cn(
                   "absolute inset-0 z-0 bg-white dark:bg-zinc-800 pointer-events-none",

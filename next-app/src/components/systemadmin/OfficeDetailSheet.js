@@ -17,6 +17,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { EmptyState } from "@/components/ui/empty";
 import { UserGroupIcon, LayoutGridIcon, Building01Icon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
@@ -294,7 +295,7 @@ export default function OfficeDetailSheet({
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
                     {displayOffice.short_name}
                   </span>
-                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs")}>
                     #{displayOffice.id}
                   </span>
                 </div>
@@ -310,10 +311,10 @@ export default function OfficeDetailSheet({
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs select-none",
+                  BADGE_BASE,
                   isActive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40"
-                    : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700"
+                    ? BADGE_PALETTES.emerald
+                    : BADGE_PALETTES.gray
                 )}
               >
                 {isActive ? "Active" : "Archived"}
@@ -418,10 +419,10 @@ export default function OfficeDetailSheet({
                         {displayOffice.station_name}
                       </span>
                       <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium",
+                        BADGE_BASE,
                         displayOffice.scanner_watching
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60"
-                          : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+                          ? BADGE_PALETTES.emerald
+                          : BADGE_PALETTES.gray
                       )}>
                         {displayOffice.scanner_watching ? "Watching" : "Not watching"}
                       </span>
@@ -578,10 +579,11 @@ export default function OfficeDetailSheet({
                             </span>
                             <span
                               className={cn(
-                                "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                                BADGE_BASE,
+                                "text-[10px]",
                                 staff.role === "Admin"
-                                    ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40"
-                                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40"
+                                  ? BADGE_PALETTES.rose
+                                  : BADGE_PALETTES.blue
                               )}
                             >
                               {staff.role}
@@ -594,7 +596,7 @@ export default function OfficeDetailSheet({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0 ml-2">
-                        <span className="font-sans tabular-nums text-[10px] text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-gray-200/60 dark:border-white/10">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-[10px]")}>
                           {staff.id}
                         </span>
                       </div>
@@ -709,8 +711,9 @@ export default function OfficeDetailSheet({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={handleClose}
-              className="h-10 px-4"
+              className="h-9 px-4"
             >
               Close
             </Button>
@@ -721,7 +724,7 @@ export default function OfficeDetailSheet({
               copiedLabel="Data Copied!"
               size="sm"
               title="Copy department metadata"
-              className="h-10 px-3.5"
+              className="h-9 px-3.5"
             />
           </div>
 
@@ -729,11 +732,12 @@ export default function OfficeDetailSheet({
             onConfigure && (
               <Button
                 type="button"
+                size="sm"
                 onClick={() => {
                   handleClose()
                   onConfigure(displayOffice)
                 }}
-                className="h-10"
+                className="h-9 px-4"
               >
                 Configure Department
               </Button>
@@ -743,11 +747,12 @@ export default function OfficeDetailSheet({
               <Button
                 type="button"
                 variant="success"
+                size="sm"
                 onClick={() => {
                   handleClose()
                   onRestore(displayOffice)
                 }}
-                className="h-10"
+                className="h-9 px-4"
               >
                 Restore Department
               </Button>

@@ -46,6 +46,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Clock01Icon, Copy01Icon, CovidInfoIcon, DragDropIcon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const CATEGORIES = ["All", "Academic", "Non-Academic"];
@@ -56,14 +57,14 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-blue-700 via-blue-600 to-indigo-600 text-white",
       ring: "ring-blue-500/30 dark:ring-blue-400/30",
-      badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/50",
+      badge: BADGE_PALETTES.blue,
     };
   }
   if (pos.includes("vice")) {
     return {
       gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
       ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
-      badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
+      badge: BADGE_PALETTES.indigo,
       icon: " Shield01Icon",
     };
   }
@@ -71,7 +72,7 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
       ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
-      badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
+      badge: BADGE_PALETTES.emerald,
       icon: " Notebook01Icon",
     };
   }
@@ -79,7 +80,7 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
       ring: "ring-amber-500/30 dark:ring-amber-400/30",
-      badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
+      badge: BADGE_PALETTES.amber,
       icon: " Coins01Icon",
     };
   }
@@ -87,14 +88,14 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
       ring: "ring-purple-500/30 dark:ring-purple-400/30",
-      badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
+      badge: BADGE_PALETTES.purple,
       icon: " JusticeScale01Icon",
     };
   }
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
-    badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
+    badge: BADGE_PALETTES.gray,
     icon: " UserCheck01Icon",
   };
 }
@@ -1482,19 +1483,18 @@ export default function OSASOrganizationComplianceView({
                                 <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
                                   {score}%
                                 </span>
-                                <Badge
-                                  variant="outline"
+                                            <span
                                   className={cn(
-                                    "text-[10px] font-semibold rounded-full px-2 py-0.5 border shadow-2xs",
+                                    BADGE_BASE,
                                     isFullyCompliant
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
+                                      ? BADGE_PALETTES.emerald
                                       : isPartiallyCompliant
-                                      ? "bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
-                                      : "bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
+                                      ? BADGE_PALETTES.amber
+                                      : BADGE_PALETTES.rose
                                   )}
                                 >
                                   {org.complianceStatus}
-                                </Badge>
+                                </span>
                               </div>
                               {org.missingRequirements?.length > 0 && (
                                 <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
@@ -1704,7 +1704,7 @@ export default function OSASOrganizationComplianceView({
                   />
 
                   <InfoRow icon="PieChartIcon" label="Accreditation Status">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                       {selectedOrgForOfficers?.status || "Active"}
                     </span>
                   </InfoRow>
@@ -1803,15 +1803,14 @@ export default function OSASOrganizationComplianceView({
                                 <h5 className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate">
                                   {officer.name}
                                 </h5>
-                                <Badge
-                                  variant="outline"
+                                <span
                                   className={cn(
-                                    "text-[9px] font-semibold px-2 py-0 rounded-full border",
+                                    BADGE_BASE,
                                     roleStyle.badge
                                   )}
                                 >
                                   {officer.position}
-                                </Badge>
+                                </span>
                               </div>
 
                               <div className="mt-0.5 flex items-center gap-2 flex-wrap text-[11px] text-gray-500 dark:text-zinc-400">
@@ -1862,11 +1861,12 @@ export default function OSASOrganizationComplianceView({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setSelectedOrgForOfficers(null);
                   setOfficerSearch("");
                 }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>

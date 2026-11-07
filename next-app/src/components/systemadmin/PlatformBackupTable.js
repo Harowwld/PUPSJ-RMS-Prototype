@@ -57,7 +57,7 @@ function BackupActionsMenu({ backup, onDownload, onDelete }) {
           onClick={(event) => event.stopPropagation()}
           aria-label={`Actions for ${backup.filename}`}
           aria-expanded={open}
-          className="table-action-button"
+          className="table-action-button rounded-lg active:scale-95 cursor-pointer"
         >
           <MoreHorizontalIcon size={16} aria-hidden="true" />
         </button>

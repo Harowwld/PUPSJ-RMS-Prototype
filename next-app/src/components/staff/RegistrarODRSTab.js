@@ -28,6 +28,8 @@ import {
   ALLOWED_REOPEN_TRANSITIONS,
 } from "@/lib/constants";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Cursor01Icon as EmptyCursor01Icon, InboxIcon as EmptyInboxIcon , Attachment01Icon, CheckmarkCircle01Icon, Clock01Icon, LockIcon, Shield01Icon, StarIcon} from "hugeicons-react";
 
 const statuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready", "Completed", "Cancelled", "Shredded"];
@@ -199,15 +201,15 @@ export default function RegistrarODRSTab({ showToast }) {
   const getStatusBadgeClass = (s) => {
     const st = String(s || "").toLowerCase();
     if (st === "approved" || st === "completed" || st === "ready") {
-      return "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+      return BADGE_PALETTES.emerald;
     }
     if (st === "inprogress") {
-      return "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+      return BADGE_PALETTES.blue;
     }
     if (st === "declined" || st === "cancelled") {
-      return "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+      return BADGE_PALETTES.rose;
     }
-    return "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    return BADGE_PALETTES.amber;
   };
 
   if (loading) {
@@ -282,12 +284,12 @@ export default function RegistrarODRSTab({ showToast }) {
                         <strong className="text-gray-900 dark:text-zinc-100 font-semibold">{item.doc_type}</strong>
                         <div className="flex items-center gap-1.5">
                           {item.feedback && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/40 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1")}>
                               <StarIcon size="1em" className="text-[11px] text-amber-500" />
                               <span>{item.feedback.rating}/5</span>
                             </span>
                           )}
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(item.status)}`}>
+                          <span className={cn(BADGE_BASE, getStatusBadgeClass(item.status))}>
                             {item.status}
                           </span>
                         </div>
@@ -297,13 +299,14 @@ export default function RegistrarODRSTab({ showToast }) {
                         <span>·</span>
                         <span>{item.student_no || "No Student ID"}</span>
                         {item.client_type && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                          <span className={cn(
+                            BADGE_BASE,
                             item.client_type === "Parent"
-                              ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
+                              ? BADGE_PALETTES.amber
                               : item.client_type === "Alumni"
-                              ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
-                              : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
-                          }`}>
+                              ? BADGE_PALETTES.purple
+                              : BADGE_PALETTES.blue
+                          )}>
                             {item.client_type === "Parent" ? "Parent/Guardian" : item.client_type}
                           </span>
                         )}
@@ -335,13 +338,14 @@ export default function RegistrarODRSTab({ showToast }) {
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-900 dark:text-zinc-300">
                     <span>Requester: <strong className="text-gray-800 dark:text-zinc-200">{selected.student_name}</strong> {selected.student_no ? `(${selected.student_no})` : <span className="italic text-gray-400">(No Student ID)</span>}</span>
                     {selected.client_type && (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                      <span className={cn(
+                        BADGE_BASE,
                         selected.client_type === "Parent"
-                          ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
+                          ? BADGE_PALETTES.amber
                           : selected.client_type === "Alumni"
-                          ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800/40"
-                          : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40"
-                      }`}>
+                          ? BADGE_PALETTES.purple
+                          : BADGE_PALETTES.blue
+                      )}>
                         {selected.client_type === "Parent" ? "Parent/Guardian" : selected.client_type}
                       </span>
                     )}
@@ -357,12 +361,12 @@ export default function RegistrarODRSTab({ showToast }) {
                         Parent / Legal Guardian
                       </span>
                       {selected.spa_verified ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1")}>
                           <CheckmarkCircle01Icon size="1em" className="text-[10px]" />
                           SPA Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1")}>
                           <Clock01Icon size="1em" className="text-[10px]" />
                           SPA Pending
                         </span>
@@ -603,7 +607,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                  Written Justification / Reason <span className="text-red-500">*</span>
+                  Written Justification / Reason
                 </label>
                 <span className="text-[11px] text-gray-400">
                   {reopenReason.trim().length}/5 chars min
@@ -627,7 +631,8 @@ export default function RegistrarODRSTab({ showToast }) {
             <Button
               type="button"
               variant="outline"
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              size="sm"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               onClick={() => setReopenModalOpen(false)}
               disabled={reopenSubmitting}
             >
@@ -635,7 +640,8 @@ export default function RegistrarODRSTab({ showToast }) {
             </Button>
             <Button
               type="button"
-              className="h-10 px-5 cursor-pointer disabled:opacity-50"
+              size="sm"
+              className="h-9 px-4 cursor-pointer disabled:opacity-50"
               onClick={handleConfirmReopen}
               disabled={reopenSubmitting || reopenReason.trim().length < 5}
             >

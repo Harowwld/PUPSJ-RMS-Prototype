@@ -26,6 +26,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { cn, formatLogDetails } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import TablePagination from "@/components/shared/TablePagination";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
@@ -84,8 +85,7 @@ function getActivityVisual(log) {
       Icon: Alert01Icon,
       avatarClass:
         "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60",
-      chipClass:
-        "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40",
+      chipClass: BADGE_PALETTES.rose,
     };
   }
 
@@ -97,9 +97,7 @@ function getActivityVisual(log) {
       avatarClass: act.includes("decline")
         ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60"
         : "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
-      chipClass: act.includes("decline")
-        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40"
-        : "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
+      chipClass: act.includes("decline") ? BADGE_PALETTES.rose : BADGE_PALETTES.amber,
     };
   }
 
@@ -110,8 +108,7 @@ function getActivityVisual(log) {
       Icon: Login01Icon,
       avatarClass:
         "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60",
-      chipClass:
-        "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40",
+      chipClass: BADGE_PALETTES.blue,
     };
   }
 
@@ -121,8 +118,7 @@ function getActivityVisual(log) {
       Icon: Logout01Icon,
       avatarClass:
         "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
-      chipClass:
-        "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+      chipClass: BADGE_PALETTES.gray,
     };
   }
 
@@ -132,8 +128,7 @@ function getActivityVisual(log) {
       Icon: Key01Icon,
       avatarClass:
         "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60",
-      chipClass:
-        "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40",
+      chipClass: BADGE_PALETTES.purple,
     };
   }
 
@@ -143,8 +138,7 @@ function getActivityVisual(log) {
       Icon: UserCircleIcon,
       avatarClass:
         "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60",
-      chipClass:
-        "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/40",
+      chipClass: BADGE_PALETTES.indigo,
     };
   }
 
@@ -154,8 +148,7 @@ function getActivityVisual(log) {
       Icon: StudentIcon,
       avatarClass:
         "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60",
-      chipClass:
-        "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/40",
+      chipClass: BADGE_PALETTES.indigo,
     };
   }
 
@@ -165,8 +158,7 @@ function getActivityVisual(log) {
       Icon: Building01Icon,
       avatarClass:
         "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60",
-      chipClass:
-        "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40",
+      chipClass: BADGE_PALETTES.emerald,
     };
   }
 
@@ -176,8 +168,7 @@ function getActivityVisual(log) {
       Icon: FileUploadIcon,
       avatarClass:
         "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60",
-      chipClass:
-        "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
+      chipClass: BADGE_PALETTES.amber,
     };
   }
 
@@ -187,8 +178,7 @@ function getActivityVisual(log) {
       Icon: Tick01Icon,
       avatarClass:
         "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60",
-      chipClass:
-        "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40",
+      chipClass: BADGE_PALETTES.emerald,
     };
   }
 
@@ -198,8 +188,7 @@ function getActivityVisual(log) {
       Icon: DatabaseIcon,
       avatarClass:
         "bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/60",
-      chipClass:
-        "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-900/40",
+      chipClass: BADGE_PALETTES.cyan,
     };
   }
 
@@ -209,8 +198,7 @@ function getActivityVisual(log) {
       Icon: Download01Icon,
       avatarClass:
         "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60",
-      chipClass:
-        "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/40",
+      chipClass: BADGE_PALETTES.blue,
     };
   }
 
@@ -220,8 +208,7 @@ function getActivityVisual(log) {
       Icon: Settings01Icon,
       avatarClass:
         "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
-      chipClass:
-        "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+      chipClass: BADGE_PALETTES.gray,
     };
   }
 
@@ -231,8 +218,7 @@ function getActivityVisual(log) {
     Icon: InformationCircleIcon,
     avatarClass:
       "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60",
-    chipClass:
-      "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/40",
+    chipClass: BADGE_PALETTES.blue,
   };
 }
 
@@ -530,8 +516,9 @@ export default function MyActivityPanel() {
               <EmptyContent>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={handleRefresh}
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Retry Loading
                 </Button>
@@ -556,9 +543,10 @@ export default function MyActivityPanel() {
                 <EmptyContent>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
@@ -617,7 +605,8 @@ export default function MyActivityPanel() {
                               </h4>
                               <span
                                 className={cn(
-                                  "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border select-none shrink-0",
+                                  BADGE_BASE,
+                                  "tracking-wide select-none shrink-0",
                                   visuals.chipClass
                                 )}
                               >
@@ -653,7 +642,7 @@ export default function MyActivityPanel() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedLog(log)}
-                                className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-900 dark:text-zinc-500 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                                className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                 aria-label="View Details"
                               >
                                 <ViewIcon size="1em" className="text-[16px]" />

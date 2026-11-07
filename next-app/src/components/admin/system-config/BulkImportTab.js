@@ -5,6 +5,7 @@ import TablePagination from "@/components/shared/TablePagination";
 
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { CardTitle, CardDescription } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
@@ -527,12 +528,12 @@ export default function BulkImportTab({
                               {String(row.category || "").toLowerCase() === "documenttype" && (row.isCompliance || row.isRequestable) && (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {row.isCompliance && (
-                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                       Compliance
                                     </span>
                                   )}
                                   {row.isRequestable && (
-                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                                       Requestable
                                     </span>
                                   )}
@@ -635,7 +636,7 @@ export default function BulkImportTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => startEdit(row)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>
@@ -653,7 +654,7 @@ export default function BulkImportTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => startEdit(row)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>
@@ -902,8 +903,9 @@ export default function BulkImportTab({
           <div className="mt-6 flex justify-end">
             <Button
               type="button"
+              size="sm"
               onClick={() => setShowInstructions(false)}
-              className="h-10 px-5 cursor-pointer border-0"
+              className="h-9 px-4 cursor-pointer border-0"
             >
               Done
             </Button>

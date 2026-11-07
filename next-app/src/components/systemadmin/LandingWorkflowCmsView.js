@@ -684,7 +684,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                           {/* Tag Chips Manager */}
                           <div className="space-y-2 pt-1">
                             <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                              Requirement Tags &amp; Metadata Badges <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                              Requirement Tags &amp; Metadata Badges <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                             </label>
 
                             {/* Active tags pills */}

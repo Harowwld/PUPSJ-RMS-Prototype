@@ -209,7 +209,7 @@ const StaffTableRow = React.memo(({
                     )
                   }
                   aria-label="My Account Settings"
-                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                  className="table-action-button rounded-lg text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 active:scale-95 cursor-pointer"
                 >
                   <Settings01Icon size="1em"  className="text-[16px]"></Settings01Icon>
                 </button>
@@ -224,7 +224,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onEditUser(s.id)}
                       aria-label="Edit Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="table-action-button rounded-lg text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 active:scale-95 cursor-pointer"
                     >
                       <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
                     </button>
@@ -239,7 +239,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onRestoreUser(s.id)}
                       aria-label="Restore Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="table-action-button rounded-lg text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 active:scale-95 cursor-pointer"
                     >
                       <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
                     </button>
@@ -252,7 +252,7 @@ const StaffTableRow = React.memo(({
                     <button
                       onClick={() => onDeleteUser(s.id)}
                       aria-label="Archive Staff Member"
-                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                      className="table-action-button rounded-lg text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 active:scale-95 cursor-pointer"
                     >
                       <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
                     </button>
@@ -545,12 +545,12 @@ export default function StaffDirectoryTab({
 
   const handleCopyEmails = useCallback(() => {
     const emails = Array.from(selectedIds)
-      .map((id) => (Array.isArray(staff) ? staff : []).find((s) => s.id === id)?.email)
+      .map((id) => (Array.isArray(staffData) ? staffData : []).find((s) => s.id === id)?.email)
       .filter(Boolean)
     if (emails.length === 0) return
     navigator.clipboard?.writeText(emails.join("; "))
     toast.success(`Copied ${emails.length} email${emails.length > 1 ? "s" : ""} to clipboard`)
-  }, [selectedIds, staff])
+  }, [selectedIds, staffData])
 
   const handleCopyIds = useCallback(() => {
     const ids = Array.from(selectedIds)
@@ -818,17 +818,19 @@ export default function StaffDirectoryTab({
                 {hasActiveFilters || search !== "" ? (
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                   >
                     Reset Filters
                   </Button>
                 ) : (
                   activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                     <Button
+                      size="sm"
                       onClick={() => onSwitchView("create")}
-                      className="flex h-10 px-5 cursor-pointer"
+                      className="flex h-9 px-4 cursor-pointer"
                     >
                       Register Staff
                     </Button>

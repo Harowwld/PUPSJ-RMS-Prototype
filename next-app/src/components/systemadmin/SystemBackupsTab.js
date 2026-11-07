@@ -949,7 +949,7 @@ export default function SystemBackupsTab({ showToast }) {
             </div>
             <SheetFooter className="shrink-0 p-4 px-6">
               <SheetClose asChild>
-                <Button type="button" variant="outline" className="h-10 px-5">Close</Button>
+                <Button type="button" variant="outline" size="sm" className="h-9 px-4">Close</Button>
               </SheetClose>
             </SheetFooter>
           </SheetContent>

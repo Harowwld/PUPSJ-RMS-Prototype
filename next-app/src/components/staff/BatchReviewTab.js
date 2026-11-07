@@ -1050,7 +1050,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       <Dialog open={confirmBulkDismiss} onOpenChange={setConfirmBulkDismiss}>
         <DialogContent className="flex flex-col gap-0 sm:max-w-md rounded-2xl bg-white p-0 dark:bg-zinc-900">
           <DialogHeader className="p-6 pb-0 text-left">
-            <DialogTitle>Dismiss selected files?</DialogTitle>
+            <DialogTitle>Dismiss Selected Files?</DialogTitle>
           </DialogHeader>
           <div className="p-6 text-sm text-gray-600 dark:text-zinc-300">
             This will dismiss up to {selectedIds.length} selected files that are still eligible. Other files will be skipped and listed in the results.
@@ -1064,7 +1064,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       <Dialog open={Boolean(bulkResults)} onOpenChange={(open) => !open && setBulkResults(null)}>
         <DialogContent className="flex flex-col gap-0 sm:max-w-xl rounded-2xl bg-white p-0 dark:bg-zinc-900">
           <DialogHeader className="p-6 pb-0 text-left">
-            <DialogTitle>Bulk action results</DialogTitle>
+            <DialogTitle>Bulk Action Results</DialogTitle>
           </DialogHeader>
           {bulkResults && (
             <div className="space-y-3 p-6">

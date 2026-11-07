@@ -330,8 +330,9 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   <DropdownMenuTrigger asChild>
                     <Button
                       type="button"
+                      size="sm"
                       disabled={loading || !data || isGeneratingPdf}
-                      className="h-10 px-5 cursor-pointer gap-1.5"
+                      className="h-9 px-4 cursor-pointer gap-1.5"
                     >
                       {isGeneratingPdf ? (
                         <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />

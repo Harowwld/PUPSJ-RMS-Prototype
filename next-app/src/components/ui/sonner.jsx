@@ -180,11 +180,6 @@ const ToastItem = ({
   const dragStartY = React.useRef(null);
   const isDraggingRef = React.useRef(false);
 
-  // Compute if multi-sentence or rich descriptive toast requiring Apple card squircle geometry
-  const rawTitle = typeof titleContent === "string" ? titleContent : "";
-  const isMultiSentence = rawTitle.length > 70 || (rawTitle.match(/[.!?]\s+[A-Za-z0-9]/g) || []).length >= 1;
-  const isCard = Boolean(descContent || isMultiSentence);
-
   const handlePointerDown = (e) => {
     // Prevent drag if touching an interactive button or link
     if (e.target.closest("button") || e.target.closest("a")) return;
@@ -245,11 +240,11 @@ const ToastItem = ({
         transition: isDragging ? "none" : "transform 260ms cubic-bezier(0.16, 1, 0.3, 1)",
         touchAction: "none",
       }}
-      className={`rms-toast ${isCard ? "is-card rounded-2xl sm:rounded-[20px]" : "rounded-full"} flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
+      className={`rms-toast rounded-full flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
     >
       {/* Left Icon (Stage 2, 3, 5) */}
       {(stage === 2 || stage === 3 || stage === 5) && (
-        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${isCard ? "mt-0.5" : ""} ${
+        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${
           type === "error" || type === "warning" ? "bg-[#e30000]" :
           type === "info" ? "bg-blue-500" :
           type === "loading" ? "bg-zinc-800 dark:bg-zinc-700" :
@@ -278,7 +273,7 @@ const ToastItem = ({
         )}
         {descContent && (
           typeof descContent === "string" || typeof descContent === "number" ? (
-            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-1 leading-normal break-words">
+            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal break-words">
               {renderBreakableText(descContent)}
             </span>
           ) : (
@@ -296,7 +291,7 @@ const ToastItem = ({
             safeOptions.action.onClick?.(e);
             hotToast.dismiss(t.id);
           }}
-          className={`relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ml-auto ${isCard ? "mt-0.5" : ""}`}
+          className="relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ml-auto"
         >
           <span className={
             String(safeOptions.action.label || "").toLowerCase() === "undo"
@@ -318,9 +313,7 @@ const ToastItem = ({
             e.stopPropagation();
             hotToast.dismiss(t.id);
           }}
-          className={`relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ${
-            safeOptions.action ? "ml-1" : "ml-auto"
-          } border-none outline-none transition-all ${isCard ? "mt-0.5" : ""}`}
+          className="relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-all"
           aria-label="Dismiss notification"
         >
           <Cancel01Icon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
@@ -452,12 +445,11 @@ const Toaster = () => {
           : "none";
 
         const rawMsg = typeof toastItem.message === "string" ? toastItem.message : String(toastItem.message || "");
-        const rawIsCard = rawMsg.length > 70 || (rawMsg.match(/[.!?]\s+[A-Za-z0-9]/g) || []).length >= 1;
 
         const content = typeof toastItem.message === "function"
           ? toastItem.message(toastItem)
           : (
-            <div className={`rms-toast ${rawIsCard ? "is-card rounded-2xl sm:rounded-[20px]" : "rounded-full"} flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]`}>
+            <div className="rms-toast rounded-full flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]">
               <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
                 <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
                   {renderBreakableText(rawMsg)}

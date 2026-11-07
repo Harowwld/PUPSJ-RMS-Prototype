@@ -30,12 +30,11 @@ export const SPRING_PRESS = {
 };
 
 // SPRING_LAYOUT: Shared surfaces, active indicators, and tabs preserving spatial continuity
-// Configured with stiffness 260 and damping ratio 0.725 (c = 2 * 0.725 * sqrt(260 * 1) ≈ 23.4)
 export const SPRING_LAYOUT = {
   type: "spring",
-  stiffness: 260,
-  damping: 23.4,
-  mass: 1,
+  stiffness: 420,
+  damping: 38,
+  mass: 0.8,
 };
 
 // SIDEBAR_MORPH_TRANSITION: Critically damped desktop rail expansion/collapse

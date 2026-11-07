@@ -132,6 +132,7 @@ export async function listDocumentRequests({
 
   const validSortCols = {
     id: "dr.id",
+    student_no: "dr.student_no",
     student: "COALESCE(dr.requester_name, s.name, sip.last_name, sip.first_name, sip.email)",
     doc_type: "dr.doc_type",
     status: "dr.status",

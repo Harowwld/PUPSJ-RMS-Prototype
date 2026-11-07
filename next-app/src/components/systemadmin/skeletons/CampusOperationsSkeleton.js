@@ -17,9 +17,15 @@ export default function CampusOperationsSkeleton() {
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="mt-[4px] text-[13px] font-normal text-gray-900 dark:text-zinc-300"
-          actions={<Skeleton aria-hidden="true" className="h-9 w-9 shrink-0 rounded-xl dark:bg-muted" />}
+          actions={
+            <div className="flex shrink-0 items-center gap-2">
+              <Skeleton aria-hidden="true" className="h-9 w-9 shrink-0 rounded-xl dark:bg-muted" />
+              <Skeleton aria-hidden="true" className="h-9 w-24 shrink-0 rounded-xl dark:bg-muted" />
+              <Skeleton aria-hidden="true" className="h-9 w-24 shrink-0 rounded-xl dark:bg-muted" />
+            </div>
+          }
         />
-        <div aria-hidden="true" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+        <div aria-hidden="true" className="flex items-center justify-between gap-4 px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
             {["All", "Open", "Closed"].map((label, index) => (
               <div key={label} className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full ${index === 0 ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400"}`}>
@@ -27,6 +33,11 @@ export default function CampusOperationsSkeleton() {
                 <Skeleton className="h-3 w-5 rounded-full dark:bg-muted" />
               </div>
             ))}
+          </div>
+
+          <div className="ml-auto inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+            <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
+            <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
           </div>
         </div>
         <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">

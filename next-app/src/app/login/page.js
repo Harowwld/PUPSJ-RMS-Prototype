@@ -1066,9 +1066,9 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Middle Name (Optional) */}
+                      {/* Middle Name (optional) */}
                       <div className={`field-wrapper border-b border-border dark:border-border/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
-                        <label>Middle Name (Optional)</label>
+                        <label>Middle Name (optional)</label>
                         <Input variant="floating"
                           type="text"
                           placeholder=" "
@@ -1336,9 +1336,10 @@ export default function Home() {
               <div className="flex flex-col gap-2 pt-2">
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={twoFactorLoading}
                   title="Verify & Log In"
-                  className="w-full h-10 disabled:opacity-50 group"
+                  className="w-full h-9 disabled:opacity-50 group"
                 >
                   {twoFactorLoading ? (
                     <>
@@ -1352,12 +1353,13 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     setShow2FAModal(false);
                     setTwoFactorCode("");
                     setTwoFactorError("");
                   }}
-                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>

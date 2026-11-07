@@ -2,6 +2,7 @@ import { createReportDocument } from "./reportDocument.js"
 import { formatPHDateTime } from "./timeFormat.js"
 import { formatLogDetails } from "./auditLogFormatting.js"
 import { getReportFont } from "./reportFontOptions.js"
+import { getRequestCharterStatus, buildSlaTiers } from "./citizenCharter.js"
 
 export { DEFAULT_BRANDING_LOGO, OFFICIAL_FALLBACK_LOGO, getInstitutionalBranding, deriveDocumentPrefix, hexToRgb, getLogoAsPng } from "./institutionalBranding.js"
 export { drawReportHeader as addPUPReportHeader } from "./reportDocument.js"
@@ -228,5 +229,102 @@ export async function generateStudentComplianceSlipPdf(student = {}, requirement
     requirement?.status === "Submitted" || requirement?.submitted ? "Submitted" : "Not Submitted",
   ]), { empty: "No requirements are configured for this record.", columnStyles: { 0: { cellWidth: 225 } } })
   report.paragraph("Source: The student's recorded document requirements. Submission status does not replace verification of the uploaded documents.", { size: 9 })
+  return report.finish()
+}
+
+export async function generateCampusOperationsPdf(transactions = [], options = {}) {
+  const report = await createReportDocument({
+    title: "Campus Operations & Turnaround Standards Report",
+    branding: options.branding,
+    orientation: "landscape",
+  })
+
+  const slaStandards = options.slaStandards || {
+    frameworkName: "Citizen's Charter (ARTA RA 11032)",
+    simpleDays: 3,
+    complexDays: 7,
+    highlyTechnicalDays: 20,
+    workingDaysOnly: true,
+  }
+  const tiers = buildSlaTiers(slaStandards)
+
+  report.metadata([
+    ["Framework", slaStandards.frameworkName || "Citizen's Charter (ARTA RA 11032)"],
+    ["Lifecycle Scope", options.lifecycle ? String(options.lifecycle).toUpperCase() : "ALL OPERATIONS"],
+    ["Total Records", count(list(transactions).length)],
+    ["Target SLA Tiers", `${slaStandards.simpleDays || 3}d Simple · ${slaStandards.complexDays || 7}d Complex · ${slaStandards.highlyTechnicalDays || 20}d Technical`],
+    ["Generated At", formatPHDateTime(new Date().toISOString())],
+    ["Active Filters", options.search || options.filters || "None"],
+  ])
+
+  report.section(
+    "Campus Operations Activity Stream",
+    `${count(list(transactions).length)} transactions matching the selected scope across University Registrar and OSAS departments.`
+  )
+
+  const head = [
+    "ID",
+    "Department",
+    "Student Requester",
+    "Document / Proposal Title",
+    "Stage Status",
+    "Citizen's Charter SLA",
+    "Submitted",
+  ]
+
+  const body = list(transactions).map((tx) => {
+    const charter = getRequestCharterStatus(
+      {
+        doc_type: tx.title,
+        tier: tx.type === "event_proposal" ? tiers.COMPLEX : undefined,
+        created_at: tx.createdAt,
+        updated_at: tx.updatedAt,
+        status: tx.status,
+      },
+      slaStandards
+    )
+
+    const num = tx.originalId ?? (typeof tx.id === "string" ? tx.id.replace(/^[a-z]+-/, "") : tx.id)
+    const padded = String(num || 0).padStart(3, "0")
+    const txId = (tx.officeId === "registrar" || tx.type === "document_request")
+      ? `#ODRS-${padded}`
+      : (tx.officeId === "osas" || tx.type === "event_proposal")
+      ? `#OSAS-${padded}`
+      : `#TX-${padded}`
+
+    const dept = tx.officeName || (tx.officeId === "registrar" ? "Registrar" : "OSAS")
+    const requester = tx.studentName && !tx.studentName.startsWith("enc:")
+      ? tx.studentName
+      : (tx.studentNo ? `Student (${tx.studentNo})` : "Student")
+
+    return [
+      txId,
+      dept,
+      requester,
+      tx.title || "Untitled",
+      tx.status || "Pending",
+      charter.label || charter.status || "Standard",
+      tx.createdAt ? formatPHDateTime(tx.createdAt) : "Not recorded",
+    ]
+  })
+
+  report.table(head, body, {
+    fontSize: 8,
+    columnStyles: {
+      0: { cellWidth: 50 },
+      1: { cellWidth: 75 },
+      2: { cellWidth: 85 },
+      3: { cellWidth: 120 },
+      4: { cellWidth: 65 },
+      5: { cellWidth: 75 },
+      6: { cellWidth: 80 },
+    },
+  })
+
+  report.paragraph(
+    "Source: Official PUPSJ Records Keeping System - SuperAdmin Campus Operations & SLA Compliance Telemetry. This report reflects recorded transactions at the time of generation.",
+    { size: 8 }
+  )
+
   return report.finish()
 }

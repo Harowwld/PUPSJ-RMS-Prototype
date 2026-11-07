@@ -24,6 +24,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { formatBytes } from "@/lib/utils"
 import BackupPagination from "./BackupPagination"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Database01Icon as EmptyDatabase01Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, Delete01Icon, Download01Icon, HardDriveIcon, Plug01Icon, RefreshIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -41,28 +42,28 @@ function getBackupTypeBadge(backup) {
   const type = String(backup?.backup_type || "").trim().toLowerCase();
   if (type === "pre-restore safety" || type === "safety snapshot") {
     return (
-      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
         Safety Snapshot
       </span>
     );
   }
   if (type === "manual") {
     return (
-      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
         Manual
       </span>
     );
   }
   if (type === "scheduled") {
     return (
-      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40">
+      <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
         Scheduled
       </span>
     );
   }
   if (type === "governance") {
     return (
-      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40">
+      <span className={cn(BADGE_BASE, BADGE_PALETTES.purple)}>
         Governance
       </span>
     );
@@ -128,16 +129,18 @@ export default function BackupTable({
               {isFilterActive ? (
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={onClearFilters}
                   title="Reset Filters"
-                  className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Reset Filters
                 </Button>
               ) : (
                 <Button
+                  size="sm"
                   onClick={handleGenerateBackup}
-                  className="h-10 px-5 cursor-pointer"
+                  className="h-9 px-4 cursor-pointer"
                 >
                   Create Backup
                 </Button>
@@ -363,7 +366,7 @@ export default function BackupTable({
                             {b.status_external === "Success" ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/40">
+                                  <div className={cn(BADGE_BASE, BADGE_PALETTES.blue, "gap-1 select-none")}>
                                     <CheckmarkCircle01Icon size="1em"  className="text-[11px]" />
                                     <span>External Drive</span>
                                   </div>
@@ -378,7 +381,7 @@ export default function BackupTable({
                             ) : !externalDriveConnected ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500 border border-border dark:border-border cursor-not-allowed">
+                                  <div className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1 select-none cursor-not-allowed")}>
                                     <Plug01Icon size="1em"  className="text-[11px]" />
                                     <span>Drive Offline</span>
                                   </div>
@@ -441,7 +444,7 @@ export default function BackupTable({
                               <button
                                 onClick={() => onDownloadBackup(b.id, b.filename)}
                                 aria-label="Download Backup"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                                className="table-action-button rounded-lg text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 active:scale-95 cursor-pointer"
                               >
                                 <Download01Icon size="1em"  className="text-[16px]"></Download01Icon>
                               </button>
@@ -455,7 +458,7 @@ export default function BackupTable({
                               <button
                                 onClick={() => onDeleteBackup(b.id)}
                                 aria-label="Delete Backup"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 border-0 bg-transparent text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                                className="table-action-button rounded-lg text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                               >
                                 <Delete01Icon size="1em"  className="text-[16px]"></Delete01Icon>
                               </button>

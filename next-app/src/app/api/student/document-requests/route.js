@@ -8,10 +8,11 @@ import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validationSchemas";
+import { ATTACHMENT_MAX_SIZE_BYTES, ATTACHMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
 export const runtime = "nodejs";
 
-const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_ATTACHMENT_SIZE = ATTACHMENT_MAX_SIZE_BYTES;
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   "application/pdf",
   "image/png",
@@ -183,7 +184,7 @@ export async function POST(req) {
   }
   for (const { file } of uploadedFiles) {
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      return NextResponse.json({ ok: false, error: "Each attachment must be 10 MB or smaller." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: `Each attachment must be ${ATTACHMENT_MAX_SIZE_LABEL} or smaller.` }, { status: 413 });
     }
     if (!ALLOWED_ATTACHMENT_TYPES.has(String(file.type || "").toLowerCase())) {
       return NextResponse.json({ ok: false, error: "Attachments must be PDF, PNG, JPG, or WEBP files." }, { status: 415 });

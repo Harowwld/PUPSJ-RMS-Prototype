@@ -18,6 +18,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { BADGE_PALETTES } from "@/lib/badgeStyles"
 import {
   Tooltip,
   TooltipTrigger,
@@ -305,7 +306,7 @@ export default function SectionsTab({
                 className={cn(
                   "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   !showArchived
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
+                    ? BADGE_PALETTES.emerald
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                 )}
               >
@@ -330,7 +331,7 @@ export default function SectionsTab({
                 className={cn(
                   "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
                   showArchived
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
+                    ? BADGE_PALETTES.amber
                     : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
                 )}
               >
@@ -439,21 +440,23 @@ export default function SectionsTab({
                   {totalInView > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         setSectionSearch("")
                         setLocalSearch("")
                         setSelectedCourseFilter("")
                       }}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       Reset Filters
                     </Button>
                   ) : (
                     !showArchived && (
                       <Button
+                        size="sm"
                         onClick={() => setIsAddSectionOpen(true)}
-                        className="flex h-10 px-5 cursor-pointer"
+                        className="flex h-9 px-4 cursor-pointer"
                       >
                         Add Block
                       </Button>
@@ -618,7 +621,7 @@ export default function SectionsTab({
                                         })
                                         setIsEditSectionOpen(true)
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                     >
                                       <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                     </button>
@@ -650,7 +653,7 @@ export default function SectionsTab({
                                       })
                                       setConfirmOpen(true)
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive02Icon size="1em"  className="text-sm"></Archive02Icon>
                                   </button>
@@ -680,7 +683,7 @@ export default function SectionsTab({
                                       })
                                       setConfirmOpen(true)
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
                                   >
                                     <Archive01Icon size="1em"  className="text-sm"></Archive01Icon>
                                   </button>
@@ -738,7 +741,7 @@ export default function SectionsTab({
             <div className="p-6 pb-4 flex flex-col gap-4">
               <div className="w-full min-w-0">
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Degree Program
                 </label>
                 <Select
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
@@ -756,7 +759,7 @@ export default function SectionsTab({
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Block Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Block Name
                 </label>
                 <Input
                   type="text"
@@ -774,20 +777,22 @@ export default function SectionsTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={repeat.saving}
                 onClick={() => {
                   setIsAddSectionOpen(false)
                   setNewSectionName("")
                   setSecCourseCode("")
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={repeat.saving}
-                className="h-10 px-5 cursor-pointer border-0"
+                className="h-9 px-4 cursor-pointer border-0"
               >
                 {repeat.saving ? "Adding Section…" : "Add Section"}
               </Button>
@@ -820,7 +825,7 @@ export default function SectionsTab({
             <div className="p-6 pb-4 space-y-4">
               <div className="w-full min-w-0">
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Degree Program
                 </label>
                 <Select
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
@@ -843,7 +848,7 @@ export default function SectionsTab({
               </div>
               <div className="min-w-0">
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Block Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Block Name
                 </label>
                 <Input
                   type="text"
@@ -863,17 +868,19 @@ export default function SectionsTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setIsEditSectionOpen(false)
                   setEditSection({ id: null, name: "", courseCode: "" })
                 }}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 cursor-pointer border-0"
+                size="sm"
+                className="h-9 px-4 cursor-pointer border-0"
               >
                 Save Changes
               </Button>

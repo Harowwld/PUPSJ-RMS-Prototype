@@ -13,6 +13,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import NarrativeText from "@/components/shared/NarrativeText";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
@@ -48,20 +49,20 @@ function getSeverityInfo(sev) {
   if (s === "CRITICAL") {
     return {
       label: "Critical",
-      classes: "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/40",
+      classes: BADGE_PALETTES.rose,
       dotClass: "bg-red-500",
     };
   }
   if (s === "WARNING") {
     return {
       label: "Warning",
-      classes: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40",
+      classes: BADGE_PALETTES.amber,
       dotClass: "bg-amber-500",
     };
   }
   return {
     label: "Info",
-    classes: "bg-sky-50 text-sky-800 dark:bg-blue-950/40 dark:text-blue-400 border-sky-200/60 dark:border-blue-900/40",
+    classes: BADGE_PALETTES.blue,
     dotClass: "bg-sky-500",
   };
 }
@@ -232,13 +233,13 @@ export default function LogDetailSheet({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs")}>
                   #LOG-{selectedLog.rawId ?? selectedLog.id}
                 </span>
                 {severityInfo && (
                   <span
                     className={cn(
-                      "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                      BADGE_BASE,
                       severityInfo.classes
                     )}
                   >
@@ -294,7 +295,7 @@ export default function LogDetailSheet({
                   {severityInfo && (
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border",
+                        BADGE_BASE,
                         severityInfo.classes
                       )}
                     >
@@ -469,8 +470,9 @@ export default function LogDetailSheet({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => setSelectedLog(null)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

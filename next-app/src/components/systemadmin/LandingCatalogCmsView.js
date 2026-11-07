@@ -14,6 +14,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export const MAX_CATALOG_ITEMS = 8
@@ -727,7 +728,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       {/* Apple-style card container */}
                       <div className="max-w-[420px] mx-auto bg-[#f5f5f7] dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 text-left shadow-sm border border-black/[0.04] dark:border-border font-jakarta">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
                             {currentCard.client || "Student & Alumni"}
                           </span>
                           <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
@@ -840,7 +841,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                         )}
                       >
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/40">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
                             {doc.client || "Student & Alumni"}
                           </span>
                           <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
