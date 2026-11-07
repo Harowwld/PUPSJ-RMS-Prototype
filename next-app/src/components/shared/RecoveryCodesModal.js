@@ -145,8 +145,9 @@ export default function RecoveryCodesModal({
         <DialogFooter className="p-6 pt-0 flex items-center justify-end">
           <Button
             type="button"
+            size="sm"
             onClick={handleClose}
-            className="h-10 px-6 cursor-pointer"
+            className="h-9 px-4 cursor-pointer"
           >
             Done
           </Button>

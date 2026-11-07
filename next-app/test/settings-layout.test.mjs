@@ -229,14 +229,14 @@ test("AccountSettingsPanel implements 4x1 Bento grid, in-situ avatar picker, tac
     "Profile tab must replace legacy merged-container with Apple Inset Grouped lists"
   );
 
-  // 5. Dynamic Dirty state tracking and Floating Save Capsule Dock
+  // 5. Dynamic Dirty state tracking and in-form Save & Discard Actions
   assert.ok(
     code.includes("const isDirty ="),
     "AccountSettingsPanel must compute real-time isDirty state tracking"
   );
   assert.ok(
     profileSection.includes("Unsaved profile changes") && profileSection.includes("handleDiscardProfileChanges"),
-    "Profile tab must render Apple floating dynamic save capsule dock with Discard and Save buttons when isDirty"
+    "Profile tab must render in-form Discard and Save buttons with real-time dirty state tracking when isDirty"
   );
 
   // 6. Avatar picker modal width, visible name cards, and default no-avatar profile

@@ -101,16 +101,18 @@ export function TOTPChallengeModal({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isLoading || (token.trim().length !== 6 && token.trim().length !== 8)}
-              className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
+              className="h-9 px-4 cursor-pointer disabled:opacity-50 border-0"
             >
               {isLoading ? (
                 <>

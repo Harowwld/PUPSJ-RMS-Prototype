@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/passwordHash";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
 import { transaction } from "@/lib/postgres";
+import { validateSecurityAnswer } from "@/lib/authSchemas";
 
 export const runtime = "nodejs";
 
@@ -13,12 +14,21 @@ async function saveSecurityAnswers(answers, applyChanges) {
   return transaction(async ({ query: run }) => {
     const ids = answers.map((answer) => answer.questionId);
     const result = await run(
-      "SELECT id, is_required FROM security_questions WHERE id = ANY($1::bigint[])",
+      "SELECT id, question, is_required FROM security_questions WHERE id = ANY($1::bigint[])",
       [ids]
     );
     const questions = new Map(result.rows.map((row) => [Number(row.id), row]));
     if (questions.size !== ids.length) {
       return { error: "One or more security questions no longer exist. Refresh and try again." };
+    }
+    for (const answer of answers) {
+      if (answer.answer) {
+        const question = questions.get(answer.questionId);
+        const validation = validateSecurityAnswer(answer.answer, question?.question || "");
+        if (!validation.valid) {
+          return { error: `Invalid answer for "${question?.question || "Question"}": ${validation.error}` };
+        }
+      }
     }
     await applyChanges(run, questions);
     return { ok: true };
