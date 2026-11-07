@@ -47,9 +47,22 @@ import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { SegmentedControl } from "@/components/ui/tabs"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
-import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon, Tick01Icon } from "hugeicons-react";
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
+import CampusOperationsList from "./CampusOperationsList"
+import {
+  BADGE_BASE,
+  BADGE_PALETTES,
+  getDepartmentBadgeClass,
+  getStatusBadgeClass,
+} from "@/lib/badgeStyles"
+import { getRequestCharterStatus, buildSlaTiers } from "@/lib/citizenCharter"
+import { generateCampusOperationsPdf } from "@/lib/pdfGenerator"
+import { exportRowsToCsv, generateExportFilename } from "@/lib/exportHelpers"
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession"
+import { useTablePreferences } from "@/components/shared/TablePreferences"
+import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon, Tick01Icon, Loading01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-const OPERATION_COLUMNS = ["department", "requester", "title", "details", "status", "submitted", "updatedAt"]
+const OPERATION_COLUMNS = ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"]
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -62,25 +75,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   )
 }
 
-function statusBadgeClass(status) {
-  const s = String(status || "").toUpperCase()
-  if (s === "PENDING" || s === "SUBMITTED") {
-    return "bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40"
-  }
-  if (s === "PROCESSING" || s === "INPROGRESS" || s === "UNDER REVIEW") {
-    return "bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40"
-  }
-  if (s === "READY" || s === "APPROVED" || s === "DONE" || s === "COMPLETED") {
-    return "bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
-  }
-  if (s === "NEEDS REVISION" || s === "REVISION") {
-    return "bg-orange-50 text-orange-800 border border-orange-200/80 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/40"
-  }
-  if (s === "CANCELLED" || s === "DECLINED" || s === "SHREDDED") {
-    return "bg-rose-50 text-rose-800 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
-  }
-  return "bg-gray-100 text-gray-800 border border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
-}
+const statusBadgeClass = getStatusBadgeClass
 
 function getStatusDotColor(status) {
   const s = String(status || "").toUpperCase()
@@ -104,12 +99,12 @@ export function formatTransactionId(tx) {
   const num = tx.originalId ?? (typeof tx.id === "string" ? tx.id.replace(/^[a-z]+-/, "") : tx.id)
   const padded = String(num || 0).padStart(3, "0")
   if (tx.officeId === "registrar" || tx.type === "document_request") {
-    return `#ODRS-${padded}`
+    return `ODRS-${padded}`
   }
   if (tx.officeId === "osas" || tx.type === "event_proposal") {
-    return `#OSAS-${padded}`
+    return `OSAS-${padded}`
   }
-  return `#TX-${padded}`
+  return `TX-${padded}`
 }
 
 /**
@@ -139,24 +134,33 @@ function InfoRow({ icon, label, value, children, className }) {
 }
 
 export default function CampusOperationsTab({ showToast, initialStandardsOpen = false }) {
+  const { density } = useTablePreferences()
   const [standardsSheetOpen, setStandardsSheetOpen] = useState(Boolean(initialStandardsOpen))
   const [slaStandards, setSlaStandards] = useState(null)
+  const slaTiers = useMemo(() => buildSlaTiers(slaStandards), [slaStandards])
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [autoRefreshSecs] = useState(15)
 
   // Filters & Sorting
+  const [viewMode, setViewMode] = useViewPreference("operations", "viewMode", "table")
   const [search, setSearch] = useViewPreference("operations", "search", "")
   const [operationFilters, setOperationFilters] = useViewPreference("operations", "operationFilters", [])
   const [lifecycle, setLifecycle] = useViewPreference("operations", "lifecycle", "all")
+  const [slaFilter, setSlaFilter] = useState("all") // "all" | "onTrack" | "dueSoon" | "overdue"
   const [groupBy, setGroupBy] = useViewPreference("operations", "groupBy", "none")
-  const [visibleColumns, setVisibleColumns] = useViewPreference("operations", "visibleColumns", OPERATION_COLUMNS.filter((key) => key !== "updatedAt"))
+  const [visibleColumns, setVisibleColumns] = useViewPreference("operations", "visibleColumns", OPERATION_COLUMNS.filter((key) => key !== "updatedAt" && key !== "slaStatus"))
   const visibleTableColumns = OPERATION_COLUMNS.filter((key) => visibleColumns.includes(key))
   const [sortBy, setSortBy] = useViewPreference("operations", "sortBy", "createdAt")
   const [sortOrder, setSortOrder] = useViewPreference("operations", "sortOrder", "DESC")
   const [page, setPage] = useUrlPage()
   const [pageSize, setPageSize] = useViewPreference("operations", "pageSize", 20)
+
+  // Export & Report Generation States
+  const [isExporting, setIsExporting] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const previewSession = usePdfPreviewSession()
 
   // Horizontal table scrolling hook
   const {
@@ -173,6 +177,20 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   const [selectedItem, setSelectedItem] = useState(null)
   const [sheetItem, setSheetItem] = useState(null)
   const [copiedField, setCopiedField] = useState(null)
+
+  const sheetItemCharter = useMemo(() => {
+    if (!sheetItem) return null
+    return getRequestCharterStatus(
+      {
+        doc_type: sheetItem.title,
+        tier: sheetItem.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+        created_at: sheetItem.createdAt,
+        updated_at: sheetItem.updatedAt,
+        status: sheetItem.status,
+      },
+      slaStandards
+    )
+  }, [sheetItem, slaStandards, slaTiers])
 
   const handleOpenDetails = useCallback((item) => {
     setSheetItem(item)
@@ -272,7 +290,53 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
   const transactions = health?.transactions
 
-  // Multi-criteria filter groups for department and operation status
+  const isClosed = (status) => ["approved", "completed", "done", "declined", "cancelled", "shredded"].includes(String(status || "").trim().toLowerCase())
+  const matchesStatus = (status, value) => {
+    const s = String(status || "").trim().toLowerCase()
+    if (value === "action_needed") return s === "pending" || s === "submitted"
+    if (value === "in_progress") return ["inprogress", "in progress", "under review", "processing"].includes(s)
+    if (value === "completed") return ["approved", "completed", "done"].includes(s)
+    if (value === "needs_revision") return s === "needs revision" || s === "revision"
+    if (value === "declined") return ["declined", "cancelled", "shredded"].includes(s)
+    return s === value
+  }
+
+  const slaMetrics = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return { onTrack: 0, dueSoon: 0, overdue: 0 }
+    }
+
+    let onTrack = 0
+    let dueSoon = 0
+    let overdue = 0
+
+    transactions.forEach((tx) => {
+      if (isClosed(tx.status)) return
+
+      const charter = getRequestCharterStatus(
+        {
+          doc_type: tx.title,
+          tier: tx.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+          created_at: tx.createdAt,
+          updated_at: tx.updatedAt,
+          status: tx.status,
+        },
+        slaStandards
+      )
+
+      if (charter.isOverdue) {
+        overdue++
+      } else if (charter.isDueSoon) {
+        dueSoon++
+      } else {
+        onTrack++
+      }
+    })
+
+    return { onTrack, dueSoon, overdue }
+  }, [transactions, slaStandards, slaTiers])
+
+  // Multi-criteria filter groups for department, operation status, and queue risk / SLA
   const operationFilterGroups = useMemo(() => {
     const list = transactions || []
 
@@ -368,26 +432,39 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           },
         ],
       },
+      {
+        id: "queue_risk",
+        label: "Queue Risk / SLA",
+        options: [
+          {
+            value: "on_track",
+            label: "On Track",
+            indicatorColor: "bg-blue-500",
+            count: slaMetrics.onTrack,
+          },
+          {
+            value: "due_today",
+            label: "Due Today",
+            indicatorColor: "bg-amber-500",
+            count: slaMetrics.dueSoon,
+          },
+          {
+            value: "overdue",
+            label: "Overdue",
+            indicatorColor: "bg-rose-500",
+            count: slaMetrics.overdue,
+          },
+        ],
+      },
     ]
-  }, [transactions])
+  }, [transactions, slaMetrics])
 
   const filterFields = useMemo(() => operationFilterGroups.map((group) => ({
     key: group.id,
-    label: group.id === "department" ? "Department" : "Stage status",
+    label: group.id === "department" ? "Department" : group.id === "queue_risk" ? "Queue Risk / SLA" : "Stage status",
     icon: group.id === "department" ? Certificate01Icon : Timer01Icon,
     options: group.options.map(({ value, label }) => ({ value, label })),
   })), [operationFilterGroups])
-
-  const isClosed = (status) => ["approved", "completed", "done", "declined", "cancelled", "shredded"].includes(String(status || "").trim().toLowerCase())
-  const matchesStatus = (status, value) => {
-    const s = String(status || "").trim().toLowerCase()
-    if (value === "action_needed") return s === "pending" || s === "submitted"
-    if (value === "in_progress") return ["inprogress", "in progress", "under review", "processing"].includes(s)
-    if (value === "completed") return ["approved", "completed", "done"].includes(s)
-    if (value === "needs_revision") return s === "needs revision" || s === "revision"
-    if (value === "declined") return ["declined", "cancelled", "shredded"].includes(s)
-    return s === value
-  }
 
   const lifecycleCounts = useMemo(() => ({
     all: transactions?.length || 0,
@@ -403,11 +480,45 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       if (lifecycle === "open" && isClosed(tx.status)) return false
       if (lifecycle === "closed" && !isClosed(tx.status)) return false
       if (!operationFilters.every(({ fieldKey, operator, value }) => {
-        const matches = fieldKey === "department"
-          ? String(tx.officeId || "").toLowerCase() === value
-          : matchesStatus(tx.status, value)
+        let matches = false
+        if (fieldKey === "department") {
+          matches = String(tx.officeId || "").toLowerCase() === value
+        } else if (fieldKey === "queue_risk") {
+          const charter = getRequestCharterStatus(
+            {
+              doc_type: tx.title,
+              tier: tx.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+              created_at: tx.createdAt,
+              updated_at: tx.updatedAt,
+              status: tx.status,
+            },
+            slaStandards
+          )
+          if (value === "overdue") matches = charter.isOverdue
+          else if (value === "due_today" || value === "dueSoon") matches = charter.isDueSoon
+          else if (value === "on_track" || value === "onTrack") matches = !charter.isOverdue && !charter.isDueSoon
+        } else {
+          matches = matchesStatus(tx.status, value)
+        }
         return operator === "is_not" ? !matches : matches
       })) return false
+
+      // Turnaround SLA filter
+      if (slaFilter !== "all") {
+        const charter = getRequestCharterStatus(
+          {
+            doc_type: tx.title,
+            tier: tx.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+            created_at: tx.createdAt,
+            updated_at: tx.updatedAt,
+            status: tx.status,
+          },
+          slaStandards
+        )
+        if (slaFilter === "overdue" && !charter.isOverdue) return false
+        if (slaFilter === "dueSoon" && !charter.isDueSoon) return false
+        if (slaFilter === "onTrack" && (charter.isOverdue || charter.isDueSoon)) return false
+      }
 
       // Keyword search
       if (search.trim()) {
@@ -431,7 +542,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
       return true
     })
-  }, [transactions, lifecycle, operationFilters, search])
+  }, [transactions, lifecycle, operationFilters, slaFilter, search, slaStandards, slaTiers])
 
   // Sorted transactions
   const sortedTransactions = useMemo(() => {
@@ -451,13 +562,121 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       } else if (sortBy === "studentName") {
         aVal = formatStudentRequester(a.studentName, a.studentNo)
         bVal = formatStudentRequester(b.studentName, b.studentNo)
+      } else if (sortBy === "slaStatus") {
+        const aCharter = getRequestCharterStatus(
+          { doc_type: a.title, tier: a.type === "event_proposal" ? slaTiers?.COMPLEX : undefined, created_at: a.createdAt, updated_at: a.updatedAt, status: a.status },
+          slaStandards
+        )
+        const bCharter = getRequestCharterStatus(
+          { doc_type: b.title, tier: b.type === "event_proposal" ? slaTiers?.COMPLEX : undefined, created_at: b.createdAt, updated_at: b.updatedAt, status: b.status },
+          slaStandards
+        )
+        aVal = aCharter.label || aCharter.status
+        bVal = bCharter.label || bCharter.status
       }
 
       if (aVal < bVal) return sortOrder === "ASC" ? -1 : 1
       if (aVal > bVal) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
-  }, [filteredTransactions, sortBy, sortOrder, groupBy])
+  }, [filteredTransactions, sortBy, sortOrder, groupBy, slaStandards, slaTiers])
+
+  // Export handlers
+  const handleDownloadCSV = useCallback(() => {
+    if (!filteredTransactions.length || isExporting) return
+    setIsExporting(true)
+    try {
+      const fileName = generateExportFilename("CAMPUS-OPERATIONS", "DATA", "csv")
+      const headers = [
+        "Transaction ID",
+        "Department",
+        "Student Number",
+        "Student Requester",
+        "Document or Proposal Title",
+        "Organization or Details",
+        "Stage Status",
+        "Charter SLA Tier",
+        "Charter SLA Status",
+        "Target Deadline",
+        "Submission Date (Asia/Manila)",
+        "Last Updated (Asia/Manila)",
+      ]
+
+      const rows = filteredTransactions.map((tx) => {
+        const charter = getRequestCharterStatus(
+          {
+            doc_type: tx.title,
+            tier: tx.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+            created_at: tx.createdAt,
+            updated_at: tx.updatedAt,
+            status: tx.status,
+          },
+          slaStandards
+        )
+
+        return [
+          formatTransactionId(tx),
+          tx.officeName || (tx.officeId === "registrar" ? "Registrar" : "OSAS"),
+          tx.studentNo || "N/A",
+          formatStudentRequester(tx.studentName, tx.studentNo),
+          tx.title || "Untitled",
+          tx.organizationName || tx.notes || "None",
+          tx.status || "Pending",
+          charter.tier?.name || "Standard",
+          charter.label || charter.status || "On Track",
+          charter.deadlineFormatted || "N/A",
+          tx.createdAt ? formatPHDateTime(tx.createdAt) : "N/A",
+          tx.updatedAt ? formatPHDateTime(tx.updatedAt) : "N/A",
+        ]
+      })
+
+      exportRowsToCsv(fileName, headers, rows)
+      showToast?.({
+        title: "Export Success",
+        description: `Exported ${filteredTransactions.length} operations to CSV successfully.`,
+      })
+    } catch (err) {
+      console.error("[Export CSV Error]", err)
+      showToast?.({
+        title: "Export Failed",
+        description: err.message || "Unable to export operations to CSV.",
+      }, true)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [filteredTransactions, isExporting, showToast, slaStandards, slaTiers])
+
+  const handlePreviewReportPDF = useCallback(async () => {
+    if (!filteredTransactions.length || isGeneratingPdf) return
+    setIsGeneratingPdf(true)
+    const request = previewSession.begin()
+    try {
+      const blob = await generateCampusOperationsPdf(filteredTransactions, {
+        slaStandards,
+        lifecycle,
+        search,
+        filters: operationFilters.length > 0 ? `${operationFilters.length} filter rules active` : "None",
+      })
+      const url = previewSession.createUrl(blob, request)
+      if (!url) return
+      setPdfPreviewData({
+        url,
+        title: "Campus Operations & Turnaround Standards Report",
+        filename: generateExportFilename("CAMPUS-OPERATIONS", "REPORT", "pdf"),
+        originalFilename: generateExportFilename("CAMPUS-OPERATIONS", "REPORT", "pdf"),
+      })
+      setPdfPreviewOpen(true)
+    } catch (err) {
+      if (!previewSession.isCurrent(request)) return
+      console.error("[PDF Preview Error]", err)
+      showToast?.({
+        title: "Preview Failed",
+        description: err.message || "Unable to generate PDF report.",
+      }, true)
+    } finally {
+      if (previewSession.isCurrent(request)) setIsGeneratingPdf(false)
+    }
+  }, [filteredTransactions, isGeneratingPdf, previewSession, slaStandards, lifecycle, search, operationFilters, showToast])
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedTransactions.length / pageSize) || 1
@@ -486,22 +705,24 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   // Reset page when filters change
   useEffect(() => {
     setPage(1)
-  }, [search, operationFilters, lifecycle, groupBy, pageSize, setPage])
+  }, [search, operationFilters, lifecycle, slaFilter, groupBy, pageSize, setPage])
 
   // Auto-reset scroll to start whenever page, filters, search, or sorting changes
   useEffect(() => {
     resetTableScroll()
-  }, [page, pageSize, search, operationFilters, lifecycle, groupBy, visibleColumns, sortBy, sortOrder, resetTableScroll])
+  }, [page, pageSize, search, operationFilters, lifecycle, slaFilter, groupBy, visibleColumns, sortBy, sortOrder, resetTableScroll])
 
   const handleClearFilters = useCallback(() => {
     setSearch("")
     setOperationFilters([])
+    setSlaFilter("all")
     setPage(1)
   }, [setOperationFilters, setPage, setSearch])
 
   const hasActiveFilters =
     Boolean(search?.trim()) ||
-    operationFilters.length > 0
+    operationFilters.length > 0 ||
+    slaFilter !== "all"
 
   if (loading) return <CampusOperationsSkeleton />
 
@@ -518,10 +739,54 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={<RefreshButton onRefresh={() => fetchHealth(true)} isLoading={refreshing} title="Refresh Campus Operations" className="h-9 w-9" />}
+          actions={
+            <div className="flex shrink-0 items-center gap-2">
+              <RefreshButton onRefresh={() => fetchHealth(true)} isLoading={refreshing} title="Refresh Campus Operations" className="h-9 w-9" />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setStandardsSheetOpen(true)}
+                className="h-9 shrink-0 px-3 text-xs font-semibold"
+              >
+                Configure Standards
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDownloadCSV}
+                disabled={loading || filteredTransactions.length === 0 || isExporting}
+                className="h-9 shrink-0 px-4 text-xs font-semibold"
+              >
+                {isExporting ? (
+                  <>
+                    <Loading01Icon size="1em" aria-hidden="true" className="mr-1.5 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  "Export CSV"
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={handlePreviewReportPDF}
+                disabled={loading || filteredTransactions.length === 0 || isGeneratingPdf}
+                className="h-9 shrink-0 px-4 text-xs font-semibold"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <Loading01Icon size="1em" aria-hidden="true" className="mr-1.5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Preview PDF"
+                )}
+              </Button>
+            </div>
+          }
         />
 
-        <div role="group" aria-label="Operation lifecycle" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+        <div role="group" aria-label="Operation lifecycle and view mode" className="flex items-center justify-between gap-4 px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
           <SegmentedControl
             value={lifecycle}
             onValueChange={setLifecycle}
@@ -533,6 +798,19 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               { value: "closed", label: "Closed", badge: lifecycleCounts.closed },
             ]}
           />
+
+          <div className="ml-auto shrink-0">
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                { value: "list", label: "List", icon: <ViewModeIcon mode="list" className="text-sm" /> },
+                { value: "table", label: "Table", icon: <ViewModeIcon mode="table" className="text-sm" /> },
+              ]}
+            />
+          </div>
         </div>
 
         {/* Navigation Toolbar */}
@@ -540,29 +818,64 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           <div className="flex min-w-0 items-center gap-2">
             {/* Search Input with Clear Button & Record Count */}
             <DashboardSearch value={search} onChange={setSearch} count={filteredTransactions.length} loading={loading} label="Search campus operations" placeholder="Search student, document, or org..." />
-            <TableScrollControls scrollContainerRef={tableContainerRef}
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              isScrolled={isScrolled}
-              onScrollLeft={scrollLeft}
-              onScrollRight={scrollRight}
-              onResetScroll={resetTableScroll}
-              controlSize="md"
-            />
+            {viewMode === "table" && (
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                isScrolled={isScrolled}
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetTableScroll}
+                controlSize="md"
+              />
+            )}
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover fields={filterFields} filters={operationFilters} onFiltersChange={setOperationFilters} entityLabel="operations" />
-            <SortPopover options={[{ key: "createdAt", label: "Submitted", icon: Calendar01Icon }, { key: "updatedAt", label: "Last Updated", icon: Calendar01Icon }, { key: "id", label: "ID", icon: Layers01Icon }, { key: "officeId", label: "Department", icon: Certificate01Icon }, { key: "studentName", label: "Student requester", icon: StudentIcon }, { key: "title", label: "Title", icon: File02Icon }, { key: "organizationName", label: "Organization / details", icon: ViewIcon }, { key: "status", label: "Stage status", icon: Timer01Icon }]} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
+            <SortPopover
+              options={[
+                { key: "createdAt", label: "Submitted", icon: Calendar01Icon },
+                { key: "updatedAt", label: "Last Updated", icon: Calendar01Icon },
+                { key: "id", label: "ID", icon: Layers01Icon },
+                { key: "officeId", label: "Department", icon: Certificate01Icon },
+                { key: "studentName", label: "Student requester", icon: StudentIcon },
+                { key: "title", label: "Title", icon: File02Icon },
+                { key: "organizationName", label: "Organization / details", icon: ViewIcon },
+                { key: "status", label: "Stage status", icon: Timer01Icon },
+                { key: "slaStatus", label: "Citizen's Charter SLA", icon: Timer01Icon },
+              ]}
+              sortBy={sortBy}
+              onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC") }}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+            />
             <GroupPopover options={[{ key: "department", label: "Department", icon: Certificate01Icon }, { key: "status", label: "Stage status", icon: Timer01Icon }, { key: "none", label: "No grouping", icon: Layers01Icon }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
-            <ColumnsPopover columns={[{ key: "department", label: "Department" }, { key: "requester", label: "Student requester" }, { key: "title", label: "Document or proposal" }, { key: "details", label: "Organization / details" }, { key: "status", label: "Stage status" }, { key: "submitted", label: "Submitted" }, { key: "updatedAt", label: "Last Updated" }]} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={0} />
+            {viewMode === "table" && (
+              <ColumnsPopover
+                columns={[
+                  { key: "department", label: "Department" },
+                  { key: "requester", label: "Student requester" },
+                  { key: "title", label: "Document or proposal" },
+                  { key: "details", label: "Organization / details" },
+                  { key: "status", label: "Stage status" },
+                  { key: "slaStatus", label: "Citizen's Charter SLA" },
+                  { key: "submitted", label: "Submitted" },
+                  { key: "updatedAt", label: "Last Updated" },
+                ]}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
+                minVisible={0}
+              />
+            )}
           </div>
         </DataViewToolbar>
 
         {/* Full Top-Level Turnaround Standards Institutional Banner */}
         <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card text-xs transition-colors">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10 text-pup-maroon border border-pup-maroon/20 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40 shadow-2xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#800000]/10 text-[#800000] dark:bg-red-950/40 dark:text-red-400 shadow-2xs">
               <Timer01Icon size="1em" className="text-lg" />
             </div>
             <div className="min-w-0">
@@ -570,7 +883,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   {slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
                 </p>
-                <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
                   {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
                 </span>
                 <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal">
@@ -578,7 +891,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Automated turnaround compliance targets and queue SLA velocity across Registrar and OSAS operations are measured against this baseline.
+                Target processing deadlines and on-time completion rates for Registrar and OSAS requests are calculated using this schedule.
               </p>
             </div>
           </div>
@@ -587,33 +900,49 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setStandardsSheetOpen(true)}
-              className="h-9 px-4"
+              className="h-9 px-4 text-xs font-semibold rounded-full cursor-pointer"
             >
-              <span>Configure Standards</span>
+              Configure Standards
             </Button>
           </div>
         </div>
 
-
         {/* Active Filter Chips & Horizontal Scroll Controls */}
-        {hasActiveFilters && <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-          <div className="flex-1 min-w-0">
-            <ActiveFilterChips
-              chips={operationFilters.map((clause) => ({ id: clause.id, label: `${filterFields.find((field) => field.key === clause.fieldKey)?.label || clause.fieldKey} ${clause.operator === "is_not" ? "is not" : "is"} ${filterFields.find((field) => field.key === clause.fieldKey)?.options.find((option) => option.value === clause.value)?.label || clause.value}`, onRemove: () => setOperationFilters((previous) => previous.filter((item) => item.id !== clause.id)) }))}
-              searchQuery={search}
-              onClearSearch={() => {
-                setSearch("")
-                setPage(1)
-              }}
-              onClearAll={handleClearFilters}
-              className="p-0 border-0"
-            />
+        {hasActiveFilters && (
+          <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+            <div className="flex-1 min-w-0">
+              <ActiveFilterChips
+                chips={[
+                  ...operationFilters.map((clause) => ({
+                    id: clause.id,
+                    label: `${filterFields.find((field) => field.key === clause.fieldKey)?.label || clause.fieldKey} ${clause.operator === "is_not" ? "is not" : "is"} ${filterFields.find((field) => field.key === clause.fieldKey)?.options.find((option) => option.value === clause.value)?.label || clause.value}`,
+                    onRemove: () => setOperationFilters((previous) => previous.filter((item) => item.id !== clause.id)),
+                  })),
+                  ...(slaFilter !== "all"
+                    ? [
+                        {
+                          id: "sla_risk_filter",
+                          label: `SLA: ${slaFilter === "overdue" ? "Overdue" : slaFilter === "dueSoon" ? "Due Today" : "On Track"}`,
+                          onRemove: () => setSlaFilter("all"),
+                        },
+                      ]
+                    : []),
+                ]}
+                searchQuery={search}
+                onClearSearch={() => {
+                  setSearch("")
+                  setPage(1)
+                }}
+                onClearAll={handleClearFilters}
+                className="p-0 border-0"
+              />
+            </div>
           </div>
+        )}
 
-        </div>}
-
-        {/* Cross-Department Activity Stream Table */}
+        {/* Cross-Department Activity Stream Table or List */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
             <TransactionsTableSkeleton rowCount={pageSize} visibleColumns={visibleTableColumns} groupBy={groupBy} />
@@ -645,6 +974,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 )}
               </Empty>
             </div>
+          ) : viewMode === "list" ? (
+            <CampusOperationsList
+              items={paginatedTransactions}
+              groupBy={groupBy}
+              slaStandards={slaStandards}
+              onOpenDetails={handleOpenDetails}
+              onPreviewPdf={handleOpenPdfPreview}
+              statusBadgeClass={statusBadgeClass}
+            />
           ) : (
             <div
               ref={tableContainerRef}
@@ -746,6 +1084,21 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     </th>
                     </>}
 
+                    {visibleColumns.includes("slaStatus") && <>
+                    {/* Citizen's Charter SLA */}
+                    <th className="p-4 w-[160px] min-w-[150px]">
+                      <button
+                        onClick={() => handleSort("slaStatus")}
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                          sortBy === "slaStatus" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                        )}
+                      >
+                        Charter SLA <SortIndicator column="slaStatus" sortBy={sortBy} sortOrder={sortOrder} />
+                      </button>
+                    </th>
+                    </>}
+
                     {visibleColumns.includes("submitted") && <>
                     {/* Submitted */}
                     <th className="p-4 w-[130px] min-w-[130px]">
@@ -784,12 +1137,22 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                 <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-card">
                   {paginatedTransactions.map((tx, index) => {
-                    const isRegistrar = tx.officeId === "registrar"
+                    const isRegistrar = tx.officeId === "registrar" || tx.type === "document_request"
                     const rel = formatRelativeTime(tx.createdAt)
+                    const charter = getRequestCharterStatus(
+                      {
+                        doc_type: tx.title,
+                        tier: tx.type === "event_proposal" ? slaTiers?.COMPLEX : undefined,
+                        created_at: tx.createdAt,
+                        updated_at: tx.updatedAt,
+                        status: tx.status,
+                      },
+                      slaStandards
+                    )
 
                     const groupValue = groupBy === "department" ? (isRegistrar ? "Registrar" : "OSAS") : tx.status
                     const previous = paginatedTransactions[index - 1]
-                    const previousGroup = previous && (groupBy === "department" ? (previous.officeId === "registrar" ? "Registrar" : "OSAS") : previous.status)
+                    const previousGroup = previous && (groupBy === "department" ? (previous.officeId === "registrar" || previous.type === "document_request" ? "Registrar" : "OSAS") : previous.status)
                     return (
                       <React.Fragment key={tx.id}>
                       {groupBy !== "none" && groupValue !== previousGroup && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><td colSpan={visibleTableColumns.length + 2} className="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200">{groupValue || "Unspecified"}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{paginatedTransactions.filter((item) => (groupBy === "department" ? (item.officeId === "registrar" ? "Registrar" : "OSAS") : item.status) === groupValue).length}</span></td></tr>}
@@ -804,7 +1167,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
-                          <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200/60 dark:border-zinc-700/60">
+                          <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
                             {formatTransactionId(tx)}
                           </span>
                         </td>
@@ -812,15 +1175,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         {visibleColumns.includes("department") && <>
                         {/* Department Badge */}
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
-                          {isRegistrar ? (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300">
-                              Registrar
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
-                              OSAS
-                            </span>
-                          )}
+                          <span className={cn(BADGE_BASE, getDepartmentBadgeClass(isRegistrar))}>
+                            {isRegistrar ? "Registrar" : "OSAS"}
+                          </span>
                         </td>
                         </>}
 
@@ -878,13 +1235,17 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         {visibleColumns.includes("status") && <>
                         {/* Stage Status Badge */}
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap shadow-2xs",
-                              statusBadgeClass(tx.status)
-                            )}
-                          >
+                          <span className={cn(BADGE_BASE, statusBadgeClass(tx.status))}>
                             <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
+                          </span>
+                        </td>
+                        </>}
+
+                        {visibleColumns.includes("slaStatus") && <>
+                        {/* Citizen's Charter SLA */}
+                        <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                          <span className={cn(BADGE_BASE, charter.badgeClass)}>
+                            <span>{charter.label}</span>
                           </span>
                         </td>
                         </>}
@@ -918,7 +1279,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           )}
 
           {/* Pagination Footer */}
-          {!loading && sortedTransactions.length > 0 && <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
+          {sortedTransactions.length > 0 && <TablePagination label="Campus operation pages" page={page} pageSize={pageSize} totalCount={sortedTransactions.length} displayedCount={paginatedTransactions.length} onPageChange={setPage} onPageSizeChange={setPageSize} loading={loading} />}
         </div>
       </Card>
 
@@ -1050,12 +1411,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200/80 dark:border-zinc-700/60 shadow-2xs">
+                <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
                   {formatTransactionId(sheetItem)}
                 </span>
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold border shadow-2xs",
+                    BADGE_BASE,
                     statusBadgeClass(sheetItem?.status)
                   )}
                 >
@@ -1101,15 +1462,14 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   icon={sheetItem?.officeId === "registrar" ? " Certificate01Icon" : " StudentIcon"}
                   label="Department"
                 >
-                  {sheetItem?.officeId === "registrar" ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#800000]/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-rose-300 border border-pup-maroon/20">
-                      University Registrar
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">
-                      Student Affairs (OSAS)
-                    </span>
-                  )}
+                  <span
+                    className={cn(
+                      BADGE_BASE,
+                      getDepartmentBadgeClass(sheetItem?.officeId === "registrar")
+                    )}
+                  >
+                    {sheetItem?.officeId === "registrar" ? "University Registrar" : "Student Affairs (OSAS)"}
+                  </span>
                 </InfoRow>
 
                 <InfoRow
@@ -1119,7 +1479,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border shadow-2xs",
+                        BADGE_BASE,
                         statusBadgeClass(sheetItem?.status)
                       )}
                     >
@@ -1127,6 +1487,25 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     </span>
                     <span className="text-[11px] font-sans tabular-nums text-gray-400 font-normal">
                       {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
+                    </span>
+                  </div>
+                </InfoRow>
+
+                <InfoRow
+                  icon=" Timer01Icon"
+                  label="Charter SLA"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={cn(
+                        BADGE_BASE,
+                        sheetItemCharter?.badgeClass
+                      )}
+                    >
+                      <span>{sheetItemCharter?.label}</span>
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                      {sheetItemCharter?.detail}
                     </span>
                   </div>
                 </InfoRow>
@@ -1264,8 +1643,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setSelectedItem(null)}
-              className="h-10 px-5"
+              className="h-9 px-4"
             >
               Close
             </Button>
@@ -1276,7 +1656,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   textToCopy={() => JSON.stringify(sheetItem, null, 2)}
                   entityName="Record Data"
                   idleLabel="Copy Record Data"
-                  className="h-10 px-4"
+                  className="h-9 px-4"
                   title="Copy operation record data"
                 />
               )}
@@ -1289,6 +1669,8 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       <PDFPreviewModal
         open={pdfPreviewOpen}
         onClose={() => {
+          previewSession.cancel()
+          setIsGeneratingPdf(false)
           setPdfPreviewOpen(false)
           setPdfPreviewData(null)
         }}

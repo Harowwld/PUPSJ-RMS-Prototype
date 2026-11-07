@@ -15,6 +15,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { SegmentedControl } from "@/components/ui/tabs";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import DocumentRequestRecordList from "@/components/staff/requests/DocumentRequestRecordList";
+import DocumentRequestKanbanPipeline from "@/components/staff/requests/DocumentRequestKanbanPipeline";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +54,6 @@ import {
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
@@ -55,6 +65,7 @@ import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
   ALLOWED_REOPEN_TRANSITIONS,
+  canTransitionRequestStatus,
 } from "@/lib/constants";
 import {
   getRequestCharterStatus,
@@ -164,6 +175,100 @@ export default function DocumentRequestsTab({
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
+
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("pup_doc_requests_view_mode");
+        if (saved && ["list", "table", "kanban"].includes(saved)) return saved;
+      } catch {}
+    }
+    return "table";
+  });
+  const viewModeRef = useRef(viewMode);
+  viewModeRef.current = viewMode;
+
+  const [filterRules, setFilterRules] = useState([]);
+  const [groupBy, setGroupBy] = useState("status");
+  const [visibleColumns, setVisibleColumns] = useState([
+    "id",
+    "student_no",
+    "student",
+    "docType",
+    "status",
+    "charter",
+    "targetDate",
+    "createdAt",
+  ]);
+
+  const filterFields = useMemo(() => [
+    {
+      key: "status",
+      label: "Status",
+      options: [
+        { value: "Pending", label: "Pending" },
+        { value: "PendingPayment", label: "Pending Payment" },
+        { value: "InProgress", label: "In Progress" },
+        { value: "Ready", label: "Ready" },
+        { value: "Completed", label: "Completed" },
+        { value: "Deficient", label: "Deficient" },
+        { value: "Cancelled", label: "Cancelled" },
+        { value: "Shredded", label: "Shredded" },
+      ],
+    },
+    {
+      key: "doc_type",
+      label: "Document Type",
+      options: (docTypes || []).map((dt) => ({ value: dt, label: dt })),
+    },
+    {
+      key: "client_type",
+      label: "Client Type",
+      options: [
+        { value: "Student", label: "Student" },
+        { value: "Alumni", label: "Alumni" },
+        { value: "Parent", label: "Parent / Guardian" },
+      ],
+    },
+    {
+      key: "charter",
+      label: "Processing Time",
+      options: [
+        { value: "OnTrack", label: "On Schedule" },
+        { value: "DueSoon", label: "Due Today" },
+        { value: "Overdue", label: "Past Due" },
+        { value: "Compliant", label: "On Time" },
+        { value: "Delayed", label: "Delayed" },
+      ],
+    },
+  ], [docTypes]);
+
+  const sortOptions = useMemo(() => [
+    { key: "created_at", label: "Date Filed" },
+    { key: "updated_at", label: "Last Updated" },
+    { key: "student_no", label: "Requester ID" },
+    { key: "student_name", label: "Requester Name" },
+    { key: "doc_type", label: "Document Type" },
+    { key: "status", label: "Status" },
+  ], []);
+
+  const groupOptions = useMemo(() => [
+    { key: "status", label: "Status", icon: UserStatusIcon },
+    { key: "doc_type", label: "Document Type", icon: GraduationScrollIcon },
+    { key: "client_type", label: "Client Type", icon: StudentIcon },
+    { key: "none", label: "No grouping" },
+  ], []);
+
+  const tableColumns = useMemo(() => [
+    { key: "id", label: "Request ID" },
+    { key: "student_no", label: "Requester ID" },
+    { key: "student", label: "Requester" },
+    { key: "docType", label: "Document Type" },
+    { key: "status", label: "Status" },
+    { key: "charter", label: "Processing Time" },
+    { key: "targetDate", label: "Target Date" },
+    { key: "createdAt", label: "Date Filed" },
+  ], []);
 
   const [createOpen, setCreateOpen] = useState(false);
   const { attachForm, ...repeat } = useCreateAnother(createOpen);
@@ -293,14 +398,26 @@ export default function DocumentRequestsTab({
       }
       const startTime = Date.now();
       try {
-        const offset = (page - 1) * itemsPerPage;
+        const currentView = opts.viewModeOverride || viewModeRef.current;
+        const effectiveLimit = currentView === "kanban" ? 100 : itemsPerPage;
+        const offset = currentView === "kanban" ? 0 : (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
-        qs.set("limit", String(itemsPerPage));
+        qs.set("limit", String(effectiveLimit));
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
-        if (statusFilters.length > 0) qs.set("status", statusFilters.join(","));
+
+        const statusRuleValues = filterRules
+          .filter((r) => r.fieldKey === "status" && r.operator === "is")
+          .map((r) => r.value);
+        const docTypeRuleValues = filterRules
+          .filter((r) => r.fieldKey === "doc_type" && r.operator === "is")
+          .map((r) => r.value);
+        const combinedStatus = [...new Set([...statusFilters, ...statusRuleValues])];
+        const combinedDocTypes = [...new Set([...docTypeFilters, ...docTypeRuleValues])];
+
+        if (combinedStatus.length > 0) qs.set("status", combinedStatus.join(","));
         if (clientTypeFilters.length > 0) qs.set("clientType", clientTypeFilters.join(","));
-        if (docTypeFilters.length > 0) qs.set("docType", docTypeFilters.join(","));
+        if (combinedDocTypes.length > 0) qs.set("docType", combinedDocTypes.join(","));
         qs.set("sortBy", sortBy);
         qs.set("sortOrder", sortOrder);
         const res = await fetch(`/api/document-requests?${qs}`, {
@@ -341,8 +458,22 @@ export default function DocumentRequestsTab({
         }
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, sortBy, sortOrder, showToast, loadSlaStandards]
+    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, sortBy, sortOrder, showToast, loadSlaStandards]
   );
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    viewModeRef.current = mode;
+    try {
+      localStorage.setItem("pup_doc_requests_view_mode", mode);
+    } catch {}
+
+    if (mode === "kanban" && rows.length < 100 && rows.length < total) {
+      loadList({ showLoading: false, viewModeOverride: "kanban" });
+    } else if (mode !== "kanban" && rows.length > itemsPerPage) {
+      loadList({ showLoading: false, viewModeOverride: mode });
+    }
+  };
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -383,7 +514,9 @@ export default function DocumentRequestsTab({
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [loadList]);
 
-  const openDetail = async (id) => {
+  const openDetail = async (target) => {
+    const id = typeof target === "object" && target !== null ? target.id : target;
+    if (!id || isNaN(Number(id))) return;
     setSelectedId(id);
     setDetailLoading(true);
     setDetail(null);
@@ -720,8 +853,11 @@ export default function DocumentRequestsTab({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-              {required ? "Authorization Files (SPA & Valid ID)" : "Supporting Documents & Attachments"}
-              {required && <span className="ml-1 text-red-500">*</span>}
+              {required ? (
+                "Authorization Files (SPA & Valid ID)"
+              ) : (
+                <>Supporting Documents & Attachments <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span></>
+              )}
             </label>
             <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
               {createAttachments.length}/5 files
@@ -794,12 +930,78 @@ export default function DocumentRequestsTab({
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
   const displayedRows = useMemo(() => {
-    if (charterFilters.length === 0) return rows;
     return rows.filter((r) => {
-      const charter = getRequestCharterStatus(r, slaStandards);
-      return charterFilters.includes(charter.status);
+      if (charterFilters.length > 0) {
+        const charter = getRequestCharterStatus(r, slaStandards);
+        if (!charterFilters.includes(charter.status)) return false;
+      }
+
+      return filterRules.every((rule) => {
+        let actual = "";
+        if (rule.fieldKey === "status") {
+          actual = r.status;
+        } else if (rule.fieldKey === "doc_type") {
+          actual = r.doc_type;
+        } else if (rule.fieldKey === "client_type") {
+          actual = r.client_type || (r.is_alumni ? "Alumni" : "Student");
+        } else if (rule.fieldKey === "charter") {
+          const charter = getRequestCharterStatus(r, slaStandards);
+          actual = charter.status;
+        } else {
+          actual = r[rule.fieldKey];
+        }
+
+        const ruleVal = String(rule.value || "").toLowerCase();
+        const actVal = String(actual || "").toLowerCase();
+
+        if (rule.operator === "is_not") {
+          return actVal !== ruleVal;
+        }
+        return actVal === ruleVal;
+      });
     });
-  }, [rows, charterFilters, slaStandards]);
+  }, [rows, filterRules, charterFilters, slaStandards]);
+
+  const clientTypeValue = clientTypeFilters.length === 1 ? clientTypeFilters[0] : "";
+  const handleClientTypeChange = (val) => {
+    setClientTypeFilters(val ? [val] : []);
+    setPage(1);
+  };
+
+  const handleKanbanDrop = async (item, targetStatus) => {
+    if (item.status === targetStatus) return;
+    if (!canTransitionRequestStatus(item.status, targetStatus)) {
+      showToast?.({
+        title: "Transition Not Allowed",
+        description: `Cannot move request #${item.id} from ${item.status} to ${targetStatus}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/document-requests/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: targetStatus }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Status update failed");
+      showToast?.({
+        title: "Status Updated",
+        description: `Request #${item.id} moved to ${targetStatus}.`,
+      });
+      loadList({ showLoading: false });
+    } catch (err) {
+      showToast?.(
+        formatErrorMessage(err, {
+          title: "Status Update Failed",
+          actionContext: `Moving request #${item.id} to ${targetStatus}`,
+        }),
+        true
+      );
+    }
+  };
 
   const {
     containerRef: tableContainerRef,
@@ -811,7 +1013,7 @@ export default function DocumentRequestsTab({
 
   useEffect(() => {
     resetScroll();
-  }, [page, q, statusFilters, docTypeFilters, clientTypeFilters, charterFilters, resetScroll]);
+  }, [page, q, statusFilters, docTypeFilters, clientTypeFilters, charterFilters, filterRules, resetScroll]);
 
   const filterGroups = useMemo(() => [
     {
@@ -870,6 +1072,7 @@ export default function DocumentRequestsTab({
 
   const handleClearFilters = useCallback(() => {
     setQ("");
+    setFilterRules([]);
     setStatusFilters([]);
     setClientTypeFilters([]);
     setDocTypeFilters([]);
@@ -886,18 +1089,24 @@ export default function DocumentRequestsTab({
         onRemove: () => { setQ(""); setPage(1); },
       });
     }
+    filterRules.forEach((rule) => {
+      const field = filterFields.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const optionLabel = field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
+      chips.push({
+        id: rule.id,
+        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${optionLabel}`,
+        onRemove: () => {
+          setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
+          setPage(1);
+        },
+      });
+    });
     statusFilters.forEach((st) => {
       chips.push({
         id: `status-${st}`,
         label: `Status: ${st === "InProgress" ? "In Progress" : st}`,
         onRemove: () => { setStatusFilters((prev) => prev.filter((s) => s !== st)); setPage(1); },
-      });
-    });
-    clientTypeFilters.forEach((ct) => {
-      chips.push({
-        id: `client-${ct}`,
-        label: `Client: ${ct === "Student" ? "Students" : "Alumni"}`,
-        onRemove: () => { setClientTypeFilters((prev) => prev.filter((c) => c !== ct)); setPage(1); },
       });
     });
     docTypeFilters.forEach((dt) => {
@@ -916,7 +1125,7 @@ export default function DocumentRequestsTab({
       });
     });
     return chips;
-  }, [q, statusFilters, clientTypeFilters, docTypeFilters, charterFilters, setPage]);
+  }, [q, filterRules, filterFields, statusFilters, docTypeFilters, charterFilters, setPage]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -926,7 +1135,14 @@ export default function DocumentRequestsTab({
           {/* 1. Page Header */}
           <PageHeader
             icon="InboxIcon"
-            title="Document Requests"
+            title={
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span>Document Requests</span>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {total.toLocaleString()} records
+                </span>
+              </div>
+            }
             description="Manage and track student document requests (ODRS)."
             showBorder={false}
             className="p-6"
@@ -938,99 +1154,140 @@ export default function DocumentRequestsTab({
                   onRefresh={() => loadList({ showLoading: false, manual: true })}
                   isLoading={isManualLoading}
                   title="Refresh Requests"
+                  className="h-9 w-9"
                 />
 
-                
-
-                <div className="flex items-center gap-2">
-                  {!loading && !error && (
-                    <Button
-                      type="button"
-                      onClick={() => setCreateOpen(true)}
-                      title="Create Document Request"
-                      className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-50"
-                    >
-                      Create Request
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  title="Create Document Request"
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"
+                >
+                  Create Request
+                </Button>
               </div>
             }
           />
 
-          {/* 2. Navigation Toolbar */}
+          {/* 2. Connected Segmented Tabs Row (Client Type Scope & View Mode Switcher) */}
+          <div
+            role="group"
+            aria-label="Requests client type and view mode"
+            className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4"
+          >
+            {/* Left: Client Type Tabs */}
+            <SegmentedControl
+              value={clientTypeValue}
+              onValueChange={handleClientTypeChange}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                { value: "", label: "All Requests" },
+                { value: "Student", label: "Students" },
+                { value: "Alumni", label: "Alumni" },
+                { value: "Parent", label: "Parent / Guardian" },
+              ]}
+            />
+
+            {/* Right: View Mode Switcher */}
+            <div className="ml-auto shrink-0">
+              <SegmentedControl
+                value={viewMode}
+                onValueChange={handleViewModeChange}
+                variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+                items={[
+                  {
+                    value: "kanban",
+                    label: "Kanban",
+                    icon: <ViewModeIcon mode="kanban" className="text-sm" />,
+                  },
+                  {
+                    value: "list",
+                    label: "List",
+                    icon: <ViewModeIcon mode="list" className="text-sm" />,
+                  },
+                  {
+                    value: "table",
+                    label: "Table",
+                    icon: <ViewModeIcon mode="table" className="text-sm" />,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+
+          {/* 3. Navigation Toolbar */}
           {!error && (
-            <DataViewToolbar label="Document request search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-              {/* Left: Client Type Segmented Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
-                {[
-                  { label: "All Requests", value: "" },
-                  { label: "Students", value: "Student" },
-                  { label: "Alumni", value: "Alumni" },
-                ].map((item) => {
-                  const isAll = item.value === "";
-                  const isActive = isAll
-                    ? clientTypeFilters.length === 0
-                    : clientTypeFilters.length === 1 && clientTypeFilters[0] === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      onClick={() => {
-                        setClientTypeFilters(item.value ? [item.value] : []);
-                        setPage(1);
-                      }}
-                      className={cn(
-                        "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
-                        isActive
-                          ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                          : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
+            <DataViewToolbar
+              label="Document request search, filters, sorting, grouping, and columns"
+              className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between"
+            >
+              {/* Left Group */}
+              <div className="flex min-w-0 items-center gap-2">
+                <DashboardSearch
+                  value={q}
+                  onChange={(val) => {
+                    setQ(val);
+                    setPage(1);
+                  }}
+                  count={total}
+                  loading={loading}
+                  label="Search requests"
+                  placeholder="Search student, name, program..."
+                />
+                {viewMode === "table" && (
+                  <TableScrollControls
+                    scrollContainerRef={tableContainerRef}
+                    isScrolledX={isScrolledX}
+                    onResetScroll={resetScroll}
+                    onScrollLeft={() => scrollLeft(400)}
+                    onScrollRight={() => scrollRight(400)}
+                    controlSize="md"
+                  />
+                )}
               </div>
 
-              {/* Right: Search Input & Dropdown Popovers Group */}
-              <div className="flex flex-nowrap items-center gap-3 shrink-0">
-                {/* Search Input */}
-                <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                  <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                    <Search01Icon size="1em"  className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm"></Search01Icon>
-                  </div>
-                  <Input
-                    value={q}
-                    onChange={(e) => {
-                      setQ(e.target.value);
-                      setPage(1);
-                    }}
-                    placeholder="Search student, name, program..."
-                    className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                  />
-                  <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                    {total > 0 ? `${total.toLocaleString()}` : "0"}
-                  </div>
-                </div>
-
-                {/* MultiCriteriaFilter Popover */}
-                <MultiCriteriaFilter
-                  title="Filter Requests"
-                  groups={filterGroups}
-                  selectedValues={filterValues}
-                  onChange={handleFilterChange}
-                  onClearAll={handleClearFilters}
-                  totalCount={total}
-                  filteredCount={displayedRows.length}
+              {/* Right Group: Reused UI components */}
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <FilterPopover
+                  fields={filterFields}
+                  filters={filterRules}
+                  onFiltersChange={(newRules) => {
+                    setFilterRules(newRules);
+                    setPage(1);
+                  }}
+                  entityLabel="requests"
                 />
-                <TableScrollControls scrollContainerRef={tableContainerRef} isScrolledX={isScrolledX} onResetScroll={resetScroll} onScrollLeft={() => scrollLeft(400)} onScrollRight={() => scrollRight(400)} />
+                <SortPopover
+                  options={sortOptions}
+                  sortBy={sortBy}
+                  onSortByChange={(val) => {
+                    setSortBy(val);
+                    setSortOrder("DESC");
+                  }}
+                  sortOrder={sortOrder}
+                  onSortOrderChange={setSortOrder}
+                />
+                <GroupPopover
+                  options={groupOptions}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                />
+                {viewMode === "table" && (
+                  <ColumnsPopover
+                    columns={tableColumns}
+                    visibleColumns={visibleColumns}
+                    onVisibleColumnsChange={setVisibleColumns}
+                    minVisible={2}
+                  />
+                )}
               </div>
             </DataViewToolbar>
           )}
 
-          {/* 3. Active Filter Chips & Scroll Controls Row */}
-          {!loading && !error && (
+          {/* 4. Active Filter Chips Row */}
+          {activeChips.length > 0 && (
             <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
               <div className="flex-1 min-w-0">
                 <ActiveFilterChips
@@ -1044,7 +1301,7 @@ export default function DocumentRequestsTab({
 
           {/* 4. Full-Width Table Body */}
           <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")}>
-            {(loading && !isManualLoading) ? (
+            {(loading && rows.length === 0 && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
@@ -1081,16 +1338,16 @@ export default function DocumentRequestsTab({
                         variant="outline"
                         onClick={handleClearFilters}
                         title="Reset Filters"
-                        className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
-                    Reset Filters
-                  </Button>
+                        Reset Filters
+                      </Button>
                     ) : (
                       <Button
                         type="button"
                         onClick={() => setCreateOpen(true)}
                         title="Create Document Request"
-                        className="flex h-10 items-center justify-center px-5 cursor-pointer"
+                        className="flex h-9 items-center justify-center px-4 cursor-pointer"
                       >
                         Create Request
                       </Button>
@@ -1098,88 +1355,151 @@ export default function DocumentRequestsTab({
                   </EmptyContent>
                 </Empty>
               </div>
+            ) : viewMode === "list" ? (
+              <DocumentRequestRecordList
+                items={displayedRows}
+                groupBy={groupBy}
+                onSelect={openDetail}
+                slaStandards={slaStandards}
+                statusBadgeClass={statusBadgeClass}
+              />
+            ) : viewMode === "kanban" ? (
+              <DocumentRequestKanbanPipeline
+                items={displayedRows}
+                onSelectItem={openDetail}
+                onDropItem={handleKanbanDrop}
+                slaStandards={slaStandards}
+                statusBadgeClass={statusBadgeClass}
+              />
             ) : (
               <div
                 ref={tableContainerRef}
-                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 border-t border-border dark:border-border"
               >
-                <Table columns={["identifier", { kind: "text", maxWidth: 340 }, "text", "status", "text", "date", "actions"]} className="min-w-[1240px]">
-                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th
-                        className={cn(
-                          "p-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("id")}
-                            className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                          >
-                            <span>ID</span>
-                            <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                          </button>
-                          {isScrolledX && (
+                <Table columns={["identifier", "identifier", { kind: "text", maxWidth: 360 }, "text", "status", "text", "date", "date", "actions"]} className="min-w-[1360px]">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                      {visibleColumns.includes("id") && (
+                        <th
+                          className={cn(
+                            "py-2.5 px-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-white dark:bg-card transition-shadow",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-1">
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset table scroll"
-                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              onClick={() => handleSort("id")}
+                              className={cn(
+                                "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                                sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                              )}
                             >
-                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              <span>ID</span>
+                              <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                          )}
-                        </div>
-                      </th>
-                      <th className="p-4 w-[240px] min-w-[240px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("student")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Requester</span>
-                          <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[200px] min-w-[200px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("doc_type")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Document Type</span>
-                          <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[140px] min-w-[140px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("status")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Status</span>
-                          <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 w-[220px] min-w-[220px]">
-                        <span>Processing Time</span>
-                      </th>
-                      <th className="p-4 w-[160px] min-w-[160px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("created_at")}
-                          className="group flex items-center transition-colors focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Created At</span>
-                          <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 pr-6 text-right w-[80px] min-w-[80px]">
+                            {isScrolledX && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetScroll();
+                                }}
+                                title="Reset table scroll"
+                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              >
+                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.includes("student_no") && (
+                        <th className="py-2.5 px-4 w-[150px] min-w-[150px]">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("student_no")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "student_no" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>Requester ID</span>
+                            <SortIndicator column="student_no" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("student") && (
+                        <th className="py-2.5 px-4 w-[280px] min-w-[280px]">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("student")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "student" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>Requester</span>
+                            <SortIndicator column="student" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("docType") && (
+                        <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("doc_type")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>Document Type</span>
+                            <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("status") && (
+                        <th className="py-2.5 px-4 w-[140px] min-w-[140px]">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("status")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>Status</span>
+                            <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("charter") && (
+                        <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
+                          <span>Processing Time</span>
+                        </th>
+                      )}
+                      {visibleColumns.includes("targetDate") && (
+                        <th className="py-2.5 px-4 w-[160px] min-w-[160px]">
+                          <span>Target Date</span>
+                        </th>
+                      )}
+                      {visibleColumns.includes("createdAt") && (
+                        <th className="py-2.5 px-4 w-[160px] min-w-[160px]">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("created_at")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>Date Filed</span>
+                            <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      <th className="py-2.5 px-4 pr-6 text-right w-[80px] min-w-[80px]">
                         <span>Actions</span>
                       </th>
                     </tr>
@@ -1200,92 +1520,104 @@ export default function DocumentRequestsTab({
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            <td
-                              className={cn(
-                                "p-4 align-middle text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                                selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
-                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                              )}
-                            >
-                              #{r.id}
-                            </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
-                                  title={formatTitleCase(r.student_name || r.requester_name)}
-                                >
-                                  {formatTitleCase(r.student_name || r.requester_name) || "N/A"}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
-                                    isParent
-                                      ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
-                                      : isAlumni
-                                      ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                      : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
-                                  )}
-                                >
-                                  {isParent ? "Parent/Guardian" : isAlumni ? "Alumni" : "Student"}
-                                </span>
-                                {Number(r.attachment_count) > 0 && (
-                                  <span
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
-                                    title={`${r.attachment_count} attachment(s)`}
-                                  >
-                                    <Attachment01Icon size="1em" className="text-[11px]" />
-                                    {r.attachment_count}
-                                  </span>
+                            {visibleColumns.includes("id") && (
+                              <td
+                                className={cn(
+                                  "py-2.5 px-4 align-middle text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                  selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
+                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                                 )}
-                              </div>
-                              <div className="flex items-center gap-1.5 mt-1 min-w-0 overflow-hidden text-xs font-normal text-[#8E8E93] dark:text-zinc-500">
+                              >
+                                #{r.id}
+                              </td>
+                            )}
+                            {visibleColumns.includes("student_no") && (
+                              <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 {r.student_no ? (
                                   <IdentifierBadge>
                                     {r.student_no}
                                   </IdentifierBadge>
                                 ) : (
-                                  <span className="italic text-xs text-amber-600 dark:text-amber-400 shrink-0">No Student ID</span>
+                                  <span className="italic text-xs text-amber-600 dark:text-amber-400">No Student ID</span>
                                 )}
-                                {r.course_code && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 shrink-0">
-                                    {r.course_code}
+                              </td>
+                            )}
+                            {visibleColumns.includes("student") && (
+                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
+                                    title={formatTitleCase(r.student_name || r.requester_name)}
+                                  >
+                                    {formatTitleCase(r.student_name || r.requester_name) || "N/A"}
                                   </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
-                                <span className="truncate" title={r.doc_type}>
-                                  {r.doc_type}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
-                                {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="flex flex-col gap-1 min-w-0">
-                                <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
+                                      isParent
+                                        ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
+                                        : isAlumni
+                                        ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
+                                        : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
+                                    )}
+                                  >
+                                    {isParent ? "Parent/Guardian" : isAlumni ? "Alumni" : "Student"}
+                                  </span>
+                                  {r.course_code && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 shrink-0">
+                                      {r.course_code}
+                                    </span>
+                                  )}
+                                  {Number(r.attachment_count) > 0 && (
+                                    <span
+                                      className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0 tabular-nums"
+                                      title={`${r.attachment_count} attachment(s)`}
+                                    >
+                                      {r.attachment_count} att.
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.includes("docType") && (
+                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
+                                  <span className="truncate" title={r.doc_type}>
+                                    {r.doc_type}
+                                  </span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.includes("status") && (
+                              <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                                  {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.includes("charter") && (
+                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                <div className="flex items-center gap-1.5 min-w-0">
                                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
                                     {charter.tier.shortLabel}
                                   </span>
-                                  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass)}>
-                                    <Clock01Icon size="1em"  className={cn("text-[10px]", charter.icon || "")} />
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass)}>
                                     {charter.label}
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={`Target: ${charter.deadlineFormatted}`}>
-                                  Target: {charter.deadlineFormatted}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              {formatPHDateTime(r.created_at)}
-                            </td>
-                            <td className="p-4 pr-6 align-middle text-right">
+                              </td>
+                            )}
+                            {visibleColumns.includes("targetDate") && (
+                              <td className="py-2.5 px-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70" title={`Target: ${charter.deadlineFormatted}`}>
+                                {charter.deadlineFormatted}
+                              </td>
+                            )}
+                            {visibleColumns.includes("createdAt") && (
+                              <td className="py-2.5 px-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-400 tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                {formatPHDateTime(r.created_at)}
+                              </td>
+                            )}
+                            <td className="py-2.5 px-4 pr-6 align-middle text-right">
                               <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1293,7 +1625,7 @@ export default function DocumentRequestsTab({
                                       type="button"
                                       onClick={() => openDetail(r.id)}
                                       aria-label="Inspect Request Details"
-                                      className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                     >
                                       <ViewIcon size="1em" className="text-[16px]" />
                                     </button>
@@ -1311,8 +1643,10 @@ export default function DocumentRequestsTab({
             )}
           </div>
 
-          {/* 5. Apple HIG Pagination Footer */}
-          <TablePagination label="Document request pages" page={page} pageSize={itemsPerPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
+          {/* 5. Apple HIG Pagination Footer (Table & List views only) */}
+          {viewMode !== "kanban" && (
+            <TablePagination label="Document request pages" page={page} pageSize={itemsPerPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
+          )}
         </Card>
 
         {/* 6. Request Detail Sheet Slide-Over Drawer */}
@@ -1400,8 +1734,8 @@ export default function DocumentRequestsTab({
                       className={cn(
                         "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                         createClientType === "Student"
-                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
-                          : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
+                          ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                          : "border-border dark:border-border bg-white dark:bg-zinc-900/40 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
                       )}
                     >
                       <StudentIcon size="1em" className="text-base" />
@@ -1413,8 +1747,8 @@ export default function DocumentRequestsTab({
                       className={cn(
                         "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                         createClientType === "Alumni"
-                          ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
-                          : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
+                          ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                          : "border-border dark:border-border bg-white dark:bg-zinc-900/40 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
                       )}
                     >
                       <GraduationScrollIcon size="1em" className="text-base" />
@@ -1427,8 +1761,8 @@ export default function DocumentRequestsTab({
                         className={cn(
                           "h-11 px-4 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
                           createClientType === "Parent"
-                            ? "bg-slate-900 text-white border-slate-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-border shadow-xs"
-                            : "bg-white text-gray-700 border-border hover:bg-gray-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border"
+                            ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                            : "border-border dark:border-border bg-white dark:bg-zinc-900/40 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800/60"
                         )}
                       >
                         <UserSearch01Icon size="1em" className="text-base" />
@@ -1538,7 +1872,7 @@ export default function DocumentRequestsTab({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-up">
                     <div>
                       <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                        Alumni Full Name <span className="text-red-500">*</span>
+                        Alumni Full Name
                       </label>
                       <Input
                         className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
@@ -1551,7 +1885,7 @@ export default function DocumentRequestsTab({
 
                     <div>
                       <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                        Academic Program / Degree {!createStudentNo.trim() && <span className="text-red-500">*</span>}
+                        Academic Program / Degree
                       </label>
                       <Select
                         className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
@@ -1574,7 +1908,7 @@ export default function DocumentRequestsTab({
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                          Student Number {createCourseCode ? "(Optional)" : ""}
+                          Student Number {createCourseCode ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
                         </label>
                         <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
                       </div>
@@ -1600,7 +1934,7 @@ export default function DocumentRequestsTab({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                       <div>
                         <label htmlFor="staff-requester-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Parent / Guardian Full Name <span className="text-red-500">*</span>
+                          Parent / Guardian Full Name
                         </label>
                         <Input
                           id="staff-requester-name"
@@ -1613,7 +1947,7 @@ export default function DocumentRequestsTab({
                       </div>
                       <div>
                         <label htmlFor="staff-requester-relationship" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Relationship to Student <span className="text-red-500">*</span>
+                          Relationship to Student
                         </label>
                         <Select
                           id="staff-requester-relationship"
@@ -1630,7 +1964,7 @@ export default function DocumentRequestsTab({
                       </div>
                       <div>
                         <label htmlFor="staff-requester-contact" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Contact / Mobile Number
+                          Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                         </label>
                         <Input
                           id="staff-requester-contact"
@@ -1649,7 +1983,7 @@ export default function DocumentRequestsTab({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-1">
                     <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                      Document Type <span className="text-red-500">*</span>
+                      Document Type
                     </label>
                     <Select
                       className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
@@ -1668,7 +2002,7 @@ export default function DocumentRequestsTab({
 
                   <div className="md:col-span-2">
                     <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                      Description / Purpose <span className="text-red-500">*</span>
+                      Description / Purpose
                     </label>
                     <Textarea
                       id="staff-request-description"
@@ -1694,7 +2028,8 @@ export default function DocumentRequestsTab({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  size="sm"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   onClick={() => handleCreateOpenChange(false)}
                   disabled={submitting}
                 >
@@ -1702,7 +2037,8 @@ export default function DocumentRequestsTab({
                 </Button>
                 <Button
                   type="submit"
-                  className="px-6 h-10 cursor-pointer disabled:opacity-50 gap-2 flex items-center"
+                  size="sm"
+                  className="px-4 h-9 cursor-pointer disabled:opacity-50 gap-2 flex items-center"
                   disabled={submitting}
                 >
                   {submitting ? (
@@ -1756,7 +2092,8 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                size="sm"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 onClick={() => setFileWarningOpen(false)}
               >
                 Close
@@ -1765,7 +2102,8 @@ export default function DocumentRequestsTab({
               {studentForRequest || detail?.room ? (
                 <Button
                   type="button"
-                  className="flex h-10 items-center justify-center py-0 px-5 cursor-pointer"
+                  size="sm"
+                  className="flex h-9 items-center justify-center py-0 px-4 cursor-pointer"
                   onClick={() => {
                     setFileWarningOpen(false);
                     const target = studentForRequest || (detail?.room ? {
@@ -1822,7 +2160,7 @@ export default function DocumentRequestsTab({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                    Written Justification / Reason <span className="text-red-500">*</span>
+                    Written Justification / Reason
                   </label>
                   <span className="text-[11px] text-gray-400">
                     {reopenReason.trim().length}/5 chars min
@@ -1846,7 +2184,8 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                size="sm"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 onClick={() => setReopenModalOpen(false)}
                 disabled={reopenSubmitting}
               >
@@ -1854,7 +2193,8 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="button"
-                className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                size="sm"
+                className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 onClick={handleConfirmReopen}
                 disabled={reopenSubmitting || reopenReason.trim().length < 5}
               >
