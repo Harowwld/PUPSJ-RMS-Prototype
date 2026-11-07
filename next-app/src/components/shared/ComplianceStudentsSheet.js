@@ -272,18 +272,20 @@ function ComplianceStudentsSheetContent({
             />
           )}
           <SheetFooter className="shrink-0 flex-wrap justify-between px-6 py-4">
-            <Button variant="outline" onClick={close}>
+            <Button size="sm" variant="outline" className="h-9 px-4" onClick={close}>
               Close
             </Button>
             <div className="flex min-w-0 flex-wrap items-center gap-2.5">
               <Button
+                size="sm"
                 variant="outline"
+                className="h-9 px-4"
                 disabled={disabled}
                 onClick={() => exportRoster("csv")}
               >
                 Export CSV
               </Button>
-              <Button disabled={disabled} onClick={() => exportRoster("pdf")}>
+              <Button size="sm" className="h-9 px-4" disabled={disabled} onClick={() => exportRoster("pdf")}>
                 {busy ? "Preparing PDF…" : PDF_ACTION_LABELS.preview}
               </Button>
             </div>

@@ -17,6 +17,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
 import { AlertCircleIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -385,7 +386,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">
                 {hasSecondaryLogo ? "Dual-seal letterhead" : "Single-seal letterhead"} · {reportFontLabel}
               </span>
-              <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-normal leading-4", isDirty ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200" : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300")} role="status" aria-live="polite">
+              <span className={cn(BADGE_BASE, isDirty ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald)} role="status" aria-live="polite">
                 {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
               </span>
             </div>
@@ -507,7 +508,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                     </label>
                   </div>
 
-                  {/* Secondary / Regulatory Seal (Optional) */}
+                  {/* Secondary / Regulatory Seal (optional) */}
                   <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/60 dark:bg-zinc-900/40 p-4 flex flex-col justify-between gap-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
@@ -599,7 +600,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label htmlFor="identity-jurisdiction" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Super-Header / Jurisdiction Line <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                        Super-Header / Jurisdiction Line <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         CHED / SUC Standard
@@ -646,7 +647,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="identity-campus" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Campus / Branch <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                        Campus / Branch <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                       </label>
                       <Input
                         id="identity-campus"
@@ -665,7 +666,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
                     <div>
                       <label htmlFor="identity-office-header" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Administrative Office Subheader <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                        Administrative Office Subheader <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                       </label>
                       <Input
                         id="identity-office-header"
@@ -705,7 +706,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-sans tabular-nums text-xs font-bold px-3 py-1.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-pup-maroon/20 dark:text-red-300 border border-pup-maroon/20">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "font-sans tabular-nums")}>
                         {deriveDocumentPrefix(branding.institutionName, branding.campusName)}-*
                       </span>
                     </div>
@@ -715,7 +716,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="pt-3 border-t border-border dark:border-border space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Signatory Titles <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+                        Signatory Titles <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         Leave blank for intelligent auto-defaults

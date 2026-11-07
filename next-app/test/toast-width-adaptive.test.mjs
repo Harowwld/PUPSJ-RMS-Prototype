@@ -31,36 +31,24 @@ test("1. Expanded Toast Max-Width in src/app/globals.css and sonner.jsx", () => 
   );
 });
 
-test("2. Adaptive Toast Geometry (Pill for single-line vs Apple Card for multi-sentence)", () => {
+test("2. Full Pill Toast Geometry (rounded-full across all stages)", () => {
   const globalsCss = fs.readFileSync(path.join(ROOT_DIR, "src/app/globals.css"), "utf8");
   const sonnerJsx = fs.readFileSync(path.join(ROOT_DIR, "src/components/ui/sonner.jsx"), "utf8");
 
-  // globals.css must define .rms-toast.is-card with 20px squircle radius and top alignment
+  // globals.css must enforce rounded-full (border-radius: 999px)
   assert.ok(
-    globalsCss.includes(".rms-toast.is-card"),
-    "globals.css must define .rms-toast.is-card"
-  );
-  assert.ok(
-    globalsCss.includes("border-radius: 20px !important") || globalsCss.includes("border-radius: 20px"),
-    ".rms-toast.is-card must apply 20px squircle border-radius"
-  );
-  assert.ok(
-    globalsCss.includes("align-items: flex-start !important") || globalsCss.includes("align-items: flex-start"),
-    ".rms-toast.is-card must align items to top"
+    globalsCss.includes("border-radius: 999px"),
+    "globals.css must set border-radius: 999px on .rms-toast"
   );
 
-  // sonner.jsx must dynamically branch between rounded-full and is-card squircle
-  assert.ok(
-    sonnerJsx.includes("isCard"),
-    "sonner.jsx must compute isCard state"
-  );
-  assert.ok(
-    sonnerJsx.includes("is-card"),
-    "sonner.jsx must apply is-card class when isCard is true"
-  );
+  // sonner.jsx must apply rounded-full class across toast items
   assert.ok(
     sonnerJsx.includes("rounded-full"),
-    "sonner.jsx must retain rounded-full for compact single-line toasts"
+    "sonner.jsx must apply rounded-full class"
+  );
+  assert.ok(
+    !sonnerJsx.includes("is-card"),
+    "sonner.jsx must not apply is-card squircle override"
   );
 });
 

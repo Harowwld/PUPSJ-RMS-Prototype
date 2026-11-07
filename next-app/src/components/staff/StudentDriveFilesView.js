@@ -94,7 +94,7 @@ export default function StudentDriveFilesView({
             variant="outline"
             size="sm"
             onClick={onBack}
-            className="h-10 px-4 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold cursor-pointer active:scale-95 transition-all shrink-0 shadow-2xs"
+            className="h-9 px-4 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 text-xs font-semibold cursor-pointer active:scale-95 transition-all shrink-0 shadow-2xs"
             title="Back to Records"
           >
             Back
@@ -159,8 +159,9 @@ export default function StudentDriveFilesView({
           {onLocateStudent && (
             <Button
               type="button"
+              size="sm"
               onClick={() => onLocateStudent(student)}
-              className="h-10 px-5 cursor-pointer"
+              className="h-9 px-4 cursor-pointer"
               title="Locate student's physical filing drawer in the archive map"
             >
               Locate Archive Drawer
@@ -176,7 +177,7 @@ export default function StudentDriveFilesView({
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenDetails(student)}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer active:scale-95 shadow-2xs"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer active:scale-95 shadow-2xs"
                   title={`View ${student?.category || student?.rawOrg ? "Organization" : "Student"} Details`}
                 >
                   {student?.category || student?.rawOrg ? "View Org Details" : "View Student Details"}
@@ -251,8 +252,9 @@ export default function StudentDriveFilesView({
               <EmptyContent>
                 <Button
                   type="button"
+                  size="sm"
                   onClick={() => onLocateStudent(student)}
-                  className="h-10 px-5 cursor-pointer"
+                  className="h-9 px-4 cursor-pointer"
                 >
                   Locate Archive Drawer in Storage Map
                 </Button>

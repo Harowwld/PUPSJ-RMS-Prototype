@@ -4,6 +4,7 @@ import { useState } from "react";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { cn, formatLogDetails } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import {
   AlignBoxBottomCenterIcon,
   Clock01Icon,
@@ -67,21 +68,18 @@ function getSeverityBadge(severity) {
   if (s === "CRITICAL" || s === "SECURITY") {
     return {
       label: "Critical",
-      className:
-        "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40",
+      className: BADGE_PALETTES.rose,
     };
   }
   if (s === "WARNING") {
     return {
       label: "Warning",
-      className:
-        "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40",
+      className: BADGE_PALETTES.amber,
     };
   }
   return {
     label: "Info",
-    className:
-      "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/40",
+    className: BADGE_PALETTES.blue,
   };
 }
 
@@ -134,7 +132,8 @@ export default function LogExpandedRow({ log, handleCopy }) {
             </div>
             <span
               className={cn(
-                "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shrink-0",
+                BADGE_BASE,
+                "tracking-wide shrink-0",
                 severityBadge.className
               )}
             >
@@ -152,7 +151,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             <div className="pt-3 border-t border-black/[0.04] dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 {log?.action && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 text-[11px] font-medium text-gray-700 dark:text-zinc-300 border border-black/[0.04] dark:border-white/[0.06] truncate">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "truncate")}>
                     {log.action}
                   </span>
                 )}
@@ -185,7 +184,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 Security & Network
               </h5>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
+            <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
               {isLoopback ? "Loopback" : "Direct Client"}
             </span>
           </div>
@@ -224,7 +223,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                   Client Platform
                 </span>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 text-[11.5px] font-medium text-gray-800 dark:text-zinc-200 border border-black/[0.04] dark:border-white/[0.06] truncate max-w-[170px]">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1.5 truncate max-w-[170px]")}>
                     <ComputerIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs shrink-0" />
                     <span className="truncate">{uaParsed.summary}</span>
                   </span>
@@ -288,7 +287,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 Resource & Scope
               </h5>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/50 dark:border-sky-800/40 shrink-0">
+            <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
               {entityTypeText}
             </span>
           </div>
@@ -328,7 +327,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 <span className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   Scope
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100/80 dark:bg-zinc-800/80 text-[11.5px] font-medium text-gray-800 dark:text-zinc-200 border border-black/[0.04] dark:border-white/[0.06] truncate max-w-[190px]">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "truncate max-w-[190px]")}>
                   {scopeText}
                 </span>
               </div>

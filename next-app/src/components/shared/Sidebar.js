@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import {
   isAdminRole,
@@ -163,6 +164,31 @@ export default function Sidebar({
     };
     window.addEventListener("avatar-changed", handleAvatarChanged);
     return () => window.removeEventListener("avatar-changed", handleAvatarChanged);
+  }, []);
+
+  const [displayNameFormat, setDisplayNameFormat] = useState(
+    authUser?.preferences?.display_name_format || "full_name"
+  );
+
+  useEffect(() => {
+    if (authUser?.preferences?.display_name_format) {
+      setDisplayNameFormat(authUser.preferences.display_name_format);
+    }
+  }, [authUser?.preferences?.display_name_format]);
+
+  useEffect(() => {
+    const handleNameFormatChanged = (e) => {
+      const nextFmt = e?.detail?.format || e?.detail?.preferences?.display_name_format;
+      if (nextFmt) {
+        setDisplayNameFormat(nextFmt);
+      }
+    };
+    window.addEventListener("display-name-format-changed", handleNameFormatChanged);
+    window.addEventListener("user-preferences-changed", handleNameFormatChanged);
+    return () => {
+      window.removeEventListener("display-name-format-changed", handleNameFormatChanged);
+      window.removeEventListener("user-preferences-changed", handleNameFormatChanged);
+    };
   }, []);
 
   // Global shortcuts: (Cmd+B / Ctrl+B for sidebar toggle)
@@ -324,7 +350,7 @@ export default function Sidebar({
     authUser?.username && !authUser.username.startsWith("enc:v1:") ? authUser.username.trim() : "";
 
   const displayName = (() => {
-    const fmt = authUser?.preferences?.display_name_format;
+    const fmt = displayNameFormat || authUser?.preferences?.display_name_format;
     if (cleanFirst && cleanLast) {
       if (fmt === "first_only") return cleanFirst;
       if (fmt === "last_only") return cleanLast;
@@ -2338,7 +2364,7 @@ export default function Sidebar({
                           <span className="truncate">{item.label}</span>
                         </div>
                         {isActive && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[9px] px-2 py-0.5")}>
                             Active
                           </span>
                         )}
@@ -2366,8 +2392,9 @@ export default function Sidebar({
           </DialogHeader>
           <DialogFooter className="mt-4">
             <Button
+              size="sm"
               onClick={handleSessionExpiredRedirect}
-              className="w-full h-10 px-5 cursor-pointer"
+              className="w-full h-9 px-4 cursor-pointer"
             >
               Sign In Again
             </Button>

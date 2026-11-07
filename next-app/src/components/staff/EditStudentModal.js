@@ -196,7 +196,7 @@ export default function EditStudentModal({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
               <div className="md:col-span-8">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Full Name (Last, First) <span className="text-red-500">*</span>
+                  Full Name (Last, First)
                 </label>
                 <Input
                   type="text"
@@ -230,7 +230,7 @@ export default function EditStudentModal({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-6">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Degree Program <span className="text-red-500">*</span>
+                  Degree Program
                 </label>
                 <Select
                   value={courseCode}
@@ -249,7 +249,7 @@ export default function EditStudentModal({
 
               <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Entry Year <span className="text-red-500">*</span>
+                  Entry Year
                 </label>
                 <Input
                   type="number"
@@ -264,7 +264,7 @@ export default function EditStudentModal({
 
               <div className="md:col-span-3">
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Section <span className="text-red-500">*</span>
+                  Section
                 </label>
                 {availableSections.length > 0 ? (
                   <Select
@@ -299,7 +299,7 @@ export default function EditStudentModal({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Archive Room <span className="text-red-500">*</span>
+                  Archive Room
                 </label>
                 <Select
                   value={String(room)}
@@ -315,7 +315,7 @@ export default function EditStudentModal({
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Cabinet Letter <span className="text-red-500">*</span>
+                  Cabinet Letter
                 </label>
                 <Select
                   value={canonicalizeCabinetId(cabinet)}
@@ -331,7 +331,7 @@ export default function EditStudentModal({
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Drawer Number <span className="text-red-500">*</span>
+                  Drawer Number
                 </label>
                 <Select
                   value={String(drawer)}
@@ -352,16 +352,18 @@ export default function EditStudentModal({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isSubmitting}
-              className="flex h-10 px-5 cursor-pointer disabled:opacity-50"
+              className="flex h-9 px-4 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">

@@ -543,16 +543,18 @@ export default function BulkImportQuestionsModal({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={handleCancel}
-            className="h-10 px-4"
+            className="h-9 px-4"
           >
             Cancel
           </Button>
           <Button
             type="button"
+            size="sm"
             onClick={handleImport}
             disabled={!canImport}
-            className="h-10 px-5 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
+            className="h-9 px-4 cursor-pointer disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed border-0"
           >
             Import Questions
           </Button>

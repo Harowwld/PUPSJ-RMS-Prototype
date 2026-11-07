@@ -196,7 +196,7 @@ const LogRow = React.memo(function LogRow({
                 <button
                   onClick={() => setSelectedLog(log)}
                   aria-label="View Details"
-                  className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors border-0 bg-transparent"
+                  className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                 >
                   <ViewIcon size="1em"  className="text-[16px]"></ViewIcon>
                 </button>

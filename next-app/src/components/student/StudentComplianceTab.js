@@ -20,6 +20,7 @@ import { generateExportFilename } from "@/lib/exportHelpers";
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import {
   Empty,
   EmptyHeader,
@@ -414,11 +415,11 @@ export default function StudentComplianceTab({ authUser }) {
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <span className="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-border dark:bg-zinc-800 dark:border-border dark:text-zinc-300">
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "hidden md:inline-flex")}>
                 Viewer Only
               </span>
               {student.studentNo && (
-                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "hidden sm:inline-flex")}>
                   {student.studentNo}
                 </span>
               )}
@@ -448,8 +449,9 @@ export default function StudentComplianceTab({ authUser }) {
 
               <Button
                 type="button"
+                size="sm"
                 onClick={() => setPrintModalOpen(true)}
-                className="h-10 px-5 border-0 cursor-pointer"
+                className="h-9 px-4 border-0 cursor-pointer"
               >
                 {PDF_ACTION_LABELS.preview}
               </Button>
@@ -643,14 +645,14 @@ export default function StudentComplianceTab({ authUser }) {
               className="inline-grid grid-flow-col auto-cols-fr"
               items={[
                 {
-                  value: "table",
-                  label: "Table",
-                  icon: <ViewModeIcon mode="table" className="text-sm" />,
-                },
-                {
                   value: "grid",
                   label: "Grid",
                   icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                },
+                {
+                  value: "table",
+                  label: "Table",
+                  icon: <ViewModeIcon mode="table" className="text-sm" />,
                 },
               ]}
             />
@@ -809,7 +811,7 @@ export default function StudentComplianceTab({ authUser }) {
                         <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isSubmitted ? (
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                 Completed
                               </span>
                               {item.document?.createdAt && (
@@ -819,7 +821,7 @@ export default function StudentComplianceTab({ authUser }) {
                               )}
                             </div>
                           ) : (
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                               Pending Submission
                             </span>
                           )}
@@ -833,7 +835,7 @@ export default function StudentComplianceTab({ authUser }) {
                               e.stopPropagation();
                               setSelectedRequirement(item);
                             }}
-                            className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                            className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5 opacity-70 group-hover:opacity-100 hover:opacity-100 focus-within:opacity-100"
                           >
                             View Details
                           </Button>

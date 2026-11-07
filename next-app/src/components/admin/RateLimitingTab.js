@@ -292,7 +292,7 @@ export default function RateLimitingTab() {
                                     violation.identifier
                                   )
                                 }
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                                className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-primary active:scale-95 cursor-pointer"
                                 aria-label="Clear violation"
                               >
                                 <SquareUnlock01Icon size={16} className="h-4 w-4" />
@@ -364,7 +364,7 @@ export default function RateLimitingTab() {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center justify-center border-0 bg-transparent cursor-pointer active:scale-95"
+                          className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                           aria-label="Edit configuration"
                         >
                           <PencilEdit01Icon size="1em" className="text-sm" />

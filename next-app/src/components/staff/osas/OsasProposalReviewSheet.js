@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -218,18 +219,18 @@ export default function OsasProposalReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded-md border border-red-200/60 dark:border-red-900/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "font-sans uppercase tracking-wider text-[10px]")}>
                   {selected.org_acronym ? `[${selected.org_acronym}] ` : ""}
                   {selected.verified_org_name || selected.organization_name}
                 </span>
                 {selected.is_verified_officer && (
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
                     Verified Officer
                   </span>
                 )}
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
+                    BADGE_BASE,
                     getProposalStatusBadgeClass(selected.status)
                   )}
                 >
@@ -315,7 +316,7 @@ export default function OsasProposalReviewSheet({
               <InfoRow icon="PieChartIcon" label="Current Stage">
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                    BADGE_BASE,
                     getProposalStatusBadgeClass(selected.status)
                   )}
                 >
@@ -355,7 +356,7 @@ export default function OsasProposalReviewSheet({
                       <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
                         Organization Charter (CBL)
                       </span>
-                      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100/70 px-2 py-0.2 text-[9px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
                         Active
                       </span>
                     </div>
@@ -679,17 +680,19 @@ export default function OsasProposalReviewSheet({
         <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between gap-3">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => {
               setSheetOpen(false);
               setSelected?.(null);
             }}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
 
           <Button
-            className="h-10 px-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
+            className="h-9 px-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => save?.()}
             disabled={isSaving || !isNoteValid}
           >

@@ -9,6 +9,7 @@ import { formatErrorMessage } from "@/lib/errorUtils";
 import { createImagePdfPreview } from "@/lib/imagePdfPreview";
 import { Archive01Icon, FileAddIcon, Loading01Icon } from "hugeicons-react";
 import PDFPreview from "@/components/shared/PDFPreview";
+import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL, formatBytes } from "@/lib/uploadLimits";
 
 export default function ResilientPDFViewer({
   src,
@@ -100,6 +101,12 @@ export default function ResilientPDFViewer({
     if (!file) return;
     if (file.type !== "application/pdf") {
       toast.error("Invalid File Type", { description: "Only PDF files are supported for document re-attachment." });
+      return;
+    }
+    if (file.size > DOCUMENT_MAX_SIZE_BYTES) {
+      toast.error("File Too Large", {
+        description: `Replacement PDF (${formatBytes(file.size)}) exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit.`,
+      });
       return;
     }
     if (!docId) return;

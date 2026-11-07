@@ -11,6 +11,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Add01Icon, Archive01Icon, Certificate01Icon, CovidInfoIcon, File02Icon, MinusSignIcon, Shield01Icon } from "hugeicons-react";
 
 
@@ -24,43 +25,43 @@ const PRESETS = [
     complexDays: 7,
     highlyTechnicalDays: 20,
     workingDaysOnly: true,
-    description: "Statutory 3-7-20 working day turnaround mandated by Republic Act No. 11032 for Philippine government agencies and SUCs.",
+    description: "Official 3-7-20 working day timeline mandated by Republic Act No. 11032 (Anti-Red Tape Act) for government agencies and state universities.",
     badge: "Official ARTA",
   },
   {
     id: "FAST_TRACK",
     name: "Fast-Track (1-3-5)",
-    fullName: "Fast-Track Digital Processing Time (1-3-5)",
-    frameworkName: "Fast-Track Digital Processing Time",
+    fullName: "Fast-Track Processing (1-3-5)",
+    frameworkName: "Fast-Track Processing Time",
     simpleDays: 1,
     complexDays: 3,
     highlyTechnicalDays: 5,
     workingDaysOnly: true,
-    description: "Shorter processing times for digital records and organized archives.",
+    description: "Shorter 1-3-5 day timeline designed for digitized student records.",
     badge: "Fast-Track",
   },
   {
     id: "STANDARD_UNIV",
     name: "Standard University (2-5-10)",
-    fullName: "Standard University Processing Time (2-5-10)",
+    fullName: "Standard University Processing (2-5-10)",
     frameworkName: "University Academic Records Processing Time",
     simpleDays: 2,
     complexDays: 5,
     highlyTechnicalDays: 10,
     workingDaysOnly: true,
-    description: "Operational standard widely used by private colleges and autonomous universities.",
+    description: "Balanced 2-5-10 day schedule commonly used across academic institutions.",
     badge: "University",
   },
   {
     id: "CUSTOM",
-    name: "Custom Standards",
-    fullName: "Custom Institutional Standards",
-    frameworkName: "Institutional Service Standards",
+    name: "Custom Schedule",
+    fullName: "Custom Institutional Schedule",
+    frameworkName: "Custom Processing Standards",
     simpleDays: 3,
     complexDays: 7,
     highlyTechnicalDays: 15,
     workingDaysOnly: true,
-    description: "Custom day thresholds and calendar policies tailored to institutional requirements.",
+    description: "Custom processing day limits and calendar rules set by campus administration.",
     badge: "Custom",
   },
 ];
@@ -79,7 +80,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
         type="button"
         disabled={!canDecrease}
         onClick={() => onAdjust(-1)}
-        aria-label={`Decrease ${label} turnaround days`}
+        aria-label={`Decrease ${label} processing days`}
         className={cn(
           "w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all",
           canDecrease
@@ -96,7 +97,7 @@ function DayStepper({ value, min = 1, max = 120, onAdjust, label }) {
         type="button"
         disabled={!canIncrease}
         onClick={() => onAdjust(1)}
-        aria-label={`Increase ${label} turnaround days`}
+        aria-label={`Increase ${label} processing days`}
         className={cn(
           "w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all",
           canIncrease
@@ -269,7 +270,7 @@ export default function ServiceStandardsTab({ showToast }) {
         <PageHeader
           icon="HourglassIcon"
           title="Processing Time Standards"
-          description="Configure turnaround time standards and compliance rules for document processing."
+          description="Configure target processing times, deadline rules, and working day schedules for student document requests."
           showBorder={true}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -302,7 +303,7 @@ export default function ServiceStandardsTab({ showToast }) {
           {/* Preset Segmented Control */}
           <div className="flex flex-col gap-2.5">
             <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-              Turnaround Framework Presets
+              Standard Timeline Presets
             </span>
             <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] overflow-x-auto">
               {PRESETS.map((p) => {
@@ -335,7 +336,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   {activePreset?.description}
                 </span>
               </div>
-              <span className="text-xs font-sans tabular-nums font-semibold text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-border/70 shrink-0 self-start sm:self-auto shadow-2xs">
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs self-start sm:self-auto")}>
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -346,7 +347,7 @@ export default function ServiceStandardsTab({ showToast }) {
             {/* Left Column: Form & Steppers (7 cols) */}
             <div className="lg:col-span-7 flex flex-col gap-5">
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                Turnaround Rules & Tier Limits
+                Processing Days by Request Type
               </span>
 
               {/* Framework Title */}
@@ -402,10 +403,10 @@ export default function ServiceStandardsTab({ showToast }) {
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        Simple Transaction
+                        Simple Requests
                       </span>
-                      <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/50">
-                        Clerical
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                        Routine
                       </span>
                     </div>
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
@@ -428,10 +429,10 @@ export default function ServiceStandardsTab({ showToast }) {
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        Complex Transaction
+                        Complex Requests
                       </span>
-                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/50">
-                        Vault Search
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "text-[10px]")}>
+                        Record Search
                       </span>
                     </div>
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
@@ -454,14 +455,14 @@ export default function ServiceStandardsTab({ showToast }) {
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-purple-500" />
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        Technical Transaction
+                        Specialized Requests
                       </span>
-                      <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-full border border-purple-200/50">
-                        Multi-Agency
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "text-[10px]")}>
+                        Verification
                       </span>
                     </div>
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                      Diplomas, CAV, Red Ribbon, Archival Reconstruction
+                      Diplomas, CAV, Red Ribbon, Archival Verification
                     </span>
                   </div>
 
@@ -479,7 +480,7 @@ export default function ServiceStandardsTab({ showToast }) {
             {/* Right Column: Live Simulator (5 cols) */}
             <div className="lg:col-span-5 flex flex-col gap-3">
               <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                Fulfillment Schedule Simulation
+                Estimated Completion Dates
               </span>
 
               <div className="rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20 p-5 flex flex-col gap-4 shadow-2xs">
@@ -487,7 +488,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                      Live Delivery Simulator
+                      Target Deadlines
                     </span>
                   </div>
                   <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-medium">
@@ -498,15 +499,15 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 1: Simple */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0 border border-emerald-100 dark:border-emerald-900/30">
+                    <div className="h-8 w-8 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0">
                       <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          Simple Tier
+                          Simple Requests
                         </span>
-                        <span className="text-[10px] font-sans tabular-nums font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.2 rounded-full border border-emerald-200/50">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
                           {standards.simpleDays} {unitSuffix}
                         </span>
                       </div>
@@ -523,15 +524,15 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 2: Complex */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0 border border-amber-100 dark:border-amber-900/30">
+                    <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center text-sm shrink-0">
                       <Archive01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          Complex Tier
+                          Complex Requests
                         </span>
-                        <span className="text-[10px] font-sans tabular-nums font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.2 rounded-full border border-amber-200/50">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "text-[10px]")}>
                           {standards.complexDays} {unitSuffix}
                         </span>
                       </div>
@@ -548,15 +549,15 @@ export default function ServiceStandardsTab({ showToast }) {
                 {/* Milestone 3: Technical */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-card border border-border/80 dark:border-border shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-900/30">
+                    <div className="h-8 w-8 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 flex items-center justify-center text-sm shrink-0">
                       <Certificate01Icon size="1em" className="text-base" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                          Technical Tier
+                          Specialized Requests
                         </span>
-                        <span className="text-[10px] font-sans tabular-nums font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.2 rounded-full border border-purple-200/50">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "text-[10px]")}>
                           {standards.highlyTechnicalDays} {unitSuffix}
                         </span>
                       </div>
@@ -579,7 +580,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         {standards.frameworkName}
                       </span>
                     </div>
-                    <span className="text-[10px] text-zinc-300 dark:text-zinc-400 font-medium px-2 py-0.5 rounded-full bg-white/10 dark:bg-white/5 border border-white/10">
+                    <span className="text-[10px] text-zinc-300 dark:text-zinc-400 font-medium px-2 py-0.5 rounded-full bg-white/10 dark:bg-white/5">
                       {standards.workingDaysOnly ? "Working Days" : "Calendar Days"}
                     </span>
                   </div>
@@ -603,7 +604,7 @@ export default function ServiceStandardsTab({ showToast }) {
         onCancel={() => setConfirmSaveOpen(false)}
         isAppleStyled={true}
         title="Apply Service Standards"
-        message={`Save "${standards.frameworkName}" (${standards.simpleDays}-${standards.complexDays}-${standards.highlyTechnicalDays} ${standards.workingDaysOnly ? "working" : "calendar"} days) as the active institutional turnaround standard for student document processing?`}
+        message={`Save "${standards.frameworkName}" (${standards.simpleDays}-${standards.complexDays}-${standards.highlyTechnicalDays} ${standards.workingDaysOnly ? "working" : "calendar"} days) as the active institutional processing standard for student document requests?`}
         confirmLabel="Save Standards"
         cancelLabel="Cancel"
         variant="brand"
@@ -617,7 +618,7 @@ export default function ServiceStandardsTab({ showToast }) {
         isAppleStyled={true}
         isRestoreModal={true}
         title="Restore Default Standards"
-        message="Are you sure you want to restore the turnaround limits to Philippine Republic Act No. 11032 (ARTA) statutory defaults (3-7-20 working days)? Any custom rules will be replaced."
+        message="Are you sure you want to restore processing time limits to Republic Act No. 11032 (ARTA) statutory defaults (3-7-20 working days)? Any custom rules will be replaced."
         confirmLabel="Restore Defaults"
         cancelLabel="Cancel"
         variant="warning"

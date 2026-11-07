@@ -184,6 +184,19 @@ function StudentDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [me, setMe] = useState(null);
+  const authUser = me;
+
+  useEffect(() => {
+    const handlePreferencesChanged = (e) => {
+      if (e?.detail?.preferences) {
+        setMe((prev) =>
+          prev ? { ...prev, preferences: { ...(prev.preferences || {}), ...e.detail.preferences } } : prev
+        );
+      }
+    };
+    window.addEventListener("user-preferences-changed", handlePreferencesChanged);
+    return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
@@ -1361,8 +1374,9 @@ function StudentDashboard() {
                           {!isFormOpen && (
                             <Button
                               type="button"
+                              size="sm"
                               onClick={() => setIsFormOpen(true)}
-                              className="flex h-10 px-5 cursor-pointer border-0"
+                              className="flex h-9 px-4 cursor-pointer border-0"
                               title="New Document Request"
                             >
                               Request
@@ -1430,7 +1444,7 @@ function StudentDashboard() {
                             {/* Client Type */}
                             <div className="min-w-0">
                               <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Client Type <span className="text-red-500">*</span>
+                                Client Type
                               </label>
                               <Select
                                 id="student-client-type"
@@ -1448,11 +1462,8 @@ function StudentDashboard() {
                             <div className="min-w-0">
                               <div className="flex items-center justify-between mb-1.5">
                                 <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Student Number {requestForm.clientType !== "Alumni" && <span className="text-red-500">*</span>}
+                                  Student Number {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
                                 </label>
-                                {requestForm.clientType === "Alumni" && (
-                                  <span className="text-[10px] text-gray-400 font-medium">Optional</span>
-                                )}
                               </div>
                               <Input
                                 id="student-id-input"
@@ -1474,7 +1485,7 @@ function StudentDashboard() {
                             {requestForm.clientType === "Alumni" && (
                               <div className="min-w-0">
                                 <label htmlFor="student-course-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Academic Program {!requestForm.studentNo && <span className="text-red-500">*</span>}
+                                  Academic Program
                                 </label>
                                 <Select
                                   id="student-course-select"
@@ -1495,7 +1506,7 @@ function StudentDashboard() {
                             {/* Document Type */}
                             <div className={cn("min-w-0", requestForm.clientType === "Alumni" ? "lg:col-span-1" : "md:col-span-1 lg:col-span-2")}>
                               <label htmlFor="student-document-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Document Type <span className="text-red-500">*</span>
+                                Document Type
                               </label>
                               <Select
                                 id="student-document-type"
@@ -1527,7 +1538,7 @@ function StudentDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                               <div className="min-w-0">
                                 <label htmlFor="parent-name-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Parent / Guardian Full Name <span className="text-red-500">*</span>
+                                  Parent / Guardian Full Name
                                 </label>
                                 <Input
                                   id="parent-name-input"
@@ -1542,7 +1553,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label htmlFor="parent-relationship-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Relationship to Student <span className="text-red-500">*</span>
+                                  Relationship to Student
                                 </label>
                                 <Select
                                   id="parent-relationship-select"
@@ -1559,7 +1570,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label htmlFor="parent-contact-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Contact / Mobile Number
+                                  Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 </label>
                                 <Input
                                   id="parent-contact-input"
@@ -1576,7 +1587,7 @@ function StudentDashboard() {
                           {/* Description / Purpose */}
                           <div>
                             <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Description / Purpose <span className="text-red-500">*</span>
+                              Description / Purpose
                             </label>
                             <Textarea
                               id="student-request-description"
@@ -1597,9 +1608,9 @@ function StudentDashboard() {
                               <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 flex items-center gap-1.5">
                                 <span>Supporting Documents & Attachments</span>
                                 {requestForm.clientType === "Parent" ? (
-                                  <span className="text-red-500 font-bold">* (SPA & Valid ID Required)</span>
+                                  <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">(SPA & Valid ID required)</span>
                                 ) : (
-                                  <span className="text-[10px] text-gray-400 font-normal">(Optional proof of payment, clearance, etc.)</span>
+                                  <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 )}
                               </label>
                               <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
@@ -1653,16 +1664,18 @@ function StudentDashboard() {
                               <Button
                                 type="button"
                                 variant="outline"
+                                size="sm"
                                 onClick={() => setIsFormOpen(false)}
-                                className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Hide
                               </Button>
                               <Button
                                 type="submit"
+                                size="sm"
                                 disabled={requestSubmitting || docTypes.length === 0}
                                 title="Submit Request"
-                                className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                               >
                                 {requestSubmitting ? (
                                   <>
@@ -1790,22 +1803,24 @@ function StudentDashboard() {
                             {hasActiveFilters ? (
                               <Button
                                 variant="outline"
+                                size="sm"
                                 onClick={() => {
                                   setRequestSearch("");
                                   setRequestFilters({ status: [], doc_type: [] });
                                   setCurrentPage(1);
                                 }}
                                 title="Reset Filters"
-                                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                               >
                                 Reset Filters
                               </Button>
                             ) : (
                               <Button
                                 type="button"
+                                size="sm"
                                 onClick={() => setIsFormOpen(true)}
                                 title="Submit Request"
-                                className="flex h-10 px-5 disabled:opacity-50 cursor-pointer border-0"
+                                className="flex h-9 px-4 disabled:opacity-50 cursor-pointer border-0"
                               >
                                 Submit Request
                               </Button>
@@ -1944,7 +1959,7 @@ function StudentDashboard() {
                                               setFeedbackModalOpen(true);
                                             }}
                                             aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
-                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
+                                            className="table-action-button rounded-lg text-amber-500 hover:text-amber-600 dark:text-amber-400 active:scale-95 cursor-pointer"
                                           >
                                             <StarIcon size="1em" className="text-[15px]" />
                                           </button>
@@ -1962,7 +1977,7 @@ function StudentDashboard() {
                                               setFeedbackModalOpen(true);
                                             }}
                                             aria-label="Rate Service"
-                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer active:scale-95"
+                                            className="table-action-button rounded-lg text-gray-400 hover:text-amber-500 active:scale-95 cursor-pointer"
                                           >
                                             <StarIcon size="1em" className="text-[15px]" />
                                           </button>
@@ -1976,7 +1991,7 @@ function StudentDashboard() {
                                           type="button"
                                           onClick={() => setSelectedRequestForDetail(item)}
                                           aria-label="View Request Updates Timeline"
-                                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer active:scale-95"
+                                          className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                                         >
                                           <Time01Icon size="1em" className="text-[15px]" />
                                         </button>
@@ -2036,11 +2051,12 @@ function StudentDashboard() {
                         {!isFormOpen && (
                           <Button
                             type="button"
+                            size="sm"
                             onClick={() => setIsFormOpen(true)}
                             disabled={myOrganizations.length === 0}
                             title={myOrganizations.length === 0 ? "You must be an officer authorized by OSAS to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
                             className={cn(
-                              "flex h-10 px-5 cursor-pointer border-0",
+                              "flex h-9 px-4 cursor-pointer border-0",
                               myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
                             )}
                           >
@@ -2180,7 +2196,7 @@ function StudentDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="min-w-0">
                                 <label htmlFor="osas-event-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Event Title <span className="text-red-500">*</span>
+                                  Event Title
                                 </label>
                                 <Input
                                   id="osas-event-title"
@@ -2194,7 +2210,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label htmlFor="osas-org-name" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Authorized Organization <span className="text-red-500">*</span>
+                                  Authorized Organization
                                 </label>
                                 <Select
                                   id="osas-org-name"
@@ -2220,7 +2236,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label htmlFor="osas-event-date" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Event Date <span className="text-red-500">*</span>
+                                  Event Date
                                 </label>
                                 <Input
                                   id="osas-event-date"
@@ -2237,7 +2253,7 @@ function StudentDashboard() {
 
                             <div>
                               <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Proposal PDF <span className="text-red-500">*</span>
+                                Proposal PDF
                               </label>
                               <FileAttachmentDropzone
                                 value={proposalForm.file ? { file: proposalForm.file, original_filename: proposalForm.file.name, size_bytes: proposalForm.file.size } : null}
@@ -2258,16 +2274,18 @@ function StudentDashboard() {
                                 <Button
                                   type="button"
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => setIsFormOpen(false)}
-                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Hide
                                 </Button>
                                 <Button
                                   type="submit"
+                                  size="sm"
                                   disabled={proposalSubmitting}
                                   title="Submit Proposal"
-                                  className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                  className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {proposalSubmitting ? (
                                     <>
@@ -2370,9 +2388,10 @@ function StudentDashboard() {
                                 <EmptyContent>
                                   <Button
                                     type="button"
+                                    size="sm"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit Proposal"
-                                    className="flex h-10 px-5 cursor-pointer border-0"
+                                    className="flex h-9 px-4 cursor-pointer border-0"
                                   >
                                     Submit Proposal
                                   </Button>
@@ -2537,7 +2556,7 @@ function StudentDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="min-w-0">
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Approved Event Proposal <span className="text-red-500">*</span>
+                                  Approved Event Proposal
                                 </label>
                                 <Select
                                   value={postEventForm.eventProposalId}
@@ -2563,7 +2582,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Actual Attendees Count
+                                  Actual Attendees Count <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 </label>
                                 <Input
                                   type="number"
@@ -2577,7 +2596,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Total Expenses Liquidated (PHP)
+                                  Total Expenses Liquidated (PHP) <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 </label>
                                 <Input
                                   type="number"
@@ -2594,7 +2613,7 @@ function StudentDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Narrative Accomplishment Report (PDF) <span className="text-red-500">*</span>
+                                  Narrative Accomplishment Report (PDF)
                                 </label>
                                 <FileAttachmentDropzone
                                   value={postEventForm.narrativeFile ? { file: postEventForm.narrativeFile, original_filename: postEventForm.narrativeFile.name, size_bytes: postEventForm.narrativeFile.size } : null}
@@ -2609,7 +2628,7 @@ function StudentDashboard() {
 
                               <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Financial Liquidation & Receipts (PDF)
+                                  Financial Liquidation & Receipts (PDF) <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 </label>
                                 <FileAttachmentDropzone
                                   value={postEventForm.liquidationFile ? { file: postEventForm.liquidationFile, original_filename: postEventForm.liquidationFile.name, size_bytes: postEventForm.liquidationFile.size } : null}
@@ -2631,16 +2650,18 @@ function StudentDashboard() {
                                 <Button
                                   type="button"
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => setIsFormOpen(false)}
-                                  className="w-full sm:w-auto h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                  className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Hide
                                 </Button>
                                 <Button
                                   type="submit"
+                                  size="sm"
                                   disabled={postEventSubmitting}
                                   title="Submit Post-Event Report"
-                                  className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                  className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {postEventSubmitting ? "Submitting..." : "Submit Post-Event Report"}
                                 </Button>
@@ -2678,9 +2699,10 @@ function StudentDashboard() {
                                 <EmptyContent>
                                   <Button
                                     type="button"
+                                    size="sm"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit Post-Event Report"
-                                    className="flex h-10 px-5 cursor-pointer border-0"
+                                    className="flex h-9 px-4 cursor-pointer border-0"
                                   >
                                     Submit Post-Event Report
                                   </Button>
@@ -2798,7 +2820,7 @@ function StudentDashboard() {
                             {/* 1. Version Title / Tag */}
                             <div className="min-w-0">
                               <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Version Title / Tag <span className="text-red-500">*</span>
+                                Version Title / Tag
                               </label>
                               <Input
                                 placeholder="e.g. 2026 Ratified Charter, CBL Amendment 2"
@@ -2812,7 +2834,7 @@ function StudentDashboard() {
                             {/* 2. Summary of Amendments / Notes for OSAS */}
                             <div className="min-w-0">
                               <label htmlFor="cbl-amendment-summary" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Summary of Amendments / Notes for OSAS
+                                Summary of Amendments / Notes for OSAS <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                               </label>
                               <Textarea
                                 id="cbl-amendment-summary"
@@ -2827,7 +2849,7 @@ function StudentDashboard() {
                             {/* 3. Official PDF Document Attachment */}
                             <div className="min-w-0">
                               <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Official PDF Document <span className="text-red-500">*</span>
+                                Official PDF Document
                               </label>
                               <FileAttachmentDropzone
                                 value={cblForm.file ? { file: cblForm.file, original_filename: cblForm.file.name, size_bytes: cblForm.file.size } : null}
@@ -2844,16 +2866,18 @@ function StudentDashboard() {
                               <Button
                                 type="button"
                                 variant="outline"
+                                size="sm"
                                 onClick={() => setIsFormOpen(false)}
-                                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Cancel
                               </Button>
                               <Button
                                 type="submit"
+                                size="sm"
                                 disabled={cblSubmitting}
                                 title="Submit to OSAS"
-                                className="w-full sm:w-auto h-10 px-6 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                               >
                                 {cblSubmitting ? (
                                   <>
@@ -2949,9 +2973,10 @@ function StudentDashboard() {
                                 <EmptyContent>
                                   <Button
                                     type="button"
+                                    size="sm"
                                     onClick={() => setIsFormOpen(true)}
                                     title="Submit CBL Document"
-                                    className="flex h-10 px-5 cursor-pointer border-0"
+                                    className="flex h-9 px-4 cursor-pointer border-0"
                                   >
                                     Submit CBL Document
                                   </Button>
@@ -3532,8 +3557,9 @@ function StudentDashboard() {
           <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setSelectedRequestForDetail(null)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>
@@ -3781,8 +3807,9 @@ function StudentDashboard() {
           <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setSelectedProposalForDetail(null)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { getOfficePrefix } from "@/lib/roleUtils"
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
 
@@ -113,7 +114,7 @@ export default function RegisterAccountTab({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                    First Name *
+                    First Name
                   </label>
                   <Input
                     type="text"
@@ -133,7 +134,7 @@ export default function RegisterAccountTab({
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                    Last Name *
+                    Last Name
                   </label>
                   <Input
                     type="text"
@@ -155,7 +156,7 @@ export default function RegisterAccountTab({
               {/* Row 2: Role Selection */}
               <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Privilege Level *
+                  Privilege Level
                 </label>
                 <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                   <button
@@ -193,7 +194,7 @@ export default function RegisterAccountTab({
                   <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                     System-Generated Credentials
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                     Auto-assigned
                   </span>
                 </div>
@@ -229,16 +230,18 @@ export default function RegisterAccountTab({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={onClose}
                 disabled={isLoading}
-                className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={isLoading}
-                className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
+                className="h-9 px-4 cursor-pointer disabled:opacity-50 border-0"
               >
                 {isLoading ? "Registering Staff…" : "Register Staff"}
               </Button>

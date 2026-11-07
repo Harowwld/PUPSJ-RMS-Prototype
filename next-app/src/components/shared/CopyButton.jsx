@@ -25,7 +25,7 @@ export function CopyButton({
   onClick,
   className,
   variant = "outline",
-  size = "default",
+  size = "sm",
   children,
   ...props
 }) {
@@ -87,7 +87,7 @@ export function CopyButton({
       onClick={handleCopy}
       aria-live="polite"
       className={cn(
-        "h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all select-none active:scale-95 cursor-pointer",
+        "h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs transition-all select-none active:scale-95 cursor-pointer",
         className
       )}
       {...props}

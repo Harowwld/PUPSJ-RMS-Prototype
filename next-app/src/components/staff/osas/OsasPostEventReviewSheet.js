@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -205,16 +206,16 @@ export default function OsasPostEventReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded-md border border-red-200/60 dark:border-red-900/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "font-sans uppercase tracking-wider text-[10px]")}>
                   {selectedPostEvent.organization_acronym ? `[${selectedPostEvent.organization_acronym}] ` : ""}
                   {selectedPostEvent.organization_name}
                 </span>
-                <span className="font-sans tabular-nums text-[10px] font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60">
+                <span className="font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300">
                   {trackingNo}
                 </span>
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold shrink-0",
+                    BADGE_BASE,
                     getPostEventStatusBadgeClass(selectedPostEvent.status)
                   )}
                 >
@@ -292,7 +293,7 @@ export default function OsasPostEventReviewSheet({
               <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                    BADGE_BASE,
                     getPostEventStatusBadgeClass(selectedPostEvent.status)
                   )}
                 >
@@ -550,14 +551,16 @@ export default function OsasPostEventReviewSheet({
         <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between gap-3">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
 
           <Button
-            className="h-10 px-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
+            className="h-9 px-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => savePostEvent?.()}
             disabled={isSavingPostEvent || !isPostEventNoteValid}
           >

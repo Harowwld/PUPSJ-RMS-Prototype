@@ -18,58 +18,31 @@ export default function DocumentRequestsSkeleton() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-xl" />
-            <Skeleton className="h-10 w-32 rounded-xl" />
+            <Skeleton className="h-9 w-9 rounded-xl" />
+            <Skeleton className="h-9 w-32 rounded-xl" />
           </div>
         </div>
 
-        {/* 2. Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-card">
-          <div className="flex items-center gap-6">
-            <Skeleton className="h-4 w-20 rounded" />
-            <Skeleton className="h-4 w-16 rounded" />
-            <Skeleton className="h-4 w-16 rounded" />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Skeleton className="h-10 w-full sm:w-64 rounded-xl" />
-            <Skeleton className="h-10 w-24 rounded-xl" />
+        {/* 2. Connected Segmented Tabs Row */}
+        <div className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4">
+          <Skeleton className="h-8 w-80 rounded-full" />
+          <Skeleton className="h-8 w-44 rounded-full ml-auto" />
+        </div>
+
+        {/* 3. Navigation Toolbar */}
+        <div className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-card">
+          <Skeleton className="h-9 w-72 sm:w-80 rounded-xl" />
+          <div className="ml-auto flex items-center gap-2">
+            <Skeleton className="h-9 w-20 rounded-xl" />
+            <Skeleton className="h-9 w-20 rounded-xl" />
+            <Skeleton className="h-9 w-20 rounded-xl" />
+            <Skeleton className="h-9 w-24 rounded-xl" />
           </div>
         </div>
 
-        {/* 3. Filter Chips & Scroll Controls Placeholder */}
-        <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-          <Skeleton className="h-4 w-48 rounded" />
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="h-8 w-8 rounded-lg" />
-            <Skeleton className="h-8 w-8 rounded-lg" />
-            <Skeleton className="h-8 w-8 rounded-lg" />
-          </div>
-        </div>
-
-        {/* 4. Table Body Skeleton */}
+        {/* 4. Table Body Skeleton with embedded Pagination Footer */}
         <div className="w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border">
           <DocumentRequestsTableSkeleton rowCount={10} embedded={true} />
-        </div>
-
-        {/* 5. Pagination Footer Skeleton */}
-        <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
-          <div className="flex items-center gap-6">
-            <Skeleton className="h-3.5 w-32 rounded" />
-            <div className="hidden sm:flex items-center gap-2">
-              <Skeleton className="h-3.5 w-10 rounded" />
-              <div className="flex items-center gap-1">
-                <Skeleton className="h-6 w-7 rounded-lg" />
-                <Skeleton className="h-6 w-7 rounded-lg" />
-                <Skeleton className="h-6 w-7 rounded-lg" />
-                <Skeleton className="h-6 w-7 rounded-lg" />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-14 rounded-xl" />
-            <Skeleton className="h-8 w-8 rounded-xl" />
-            <Skeleton className="h-8 w-14 rounded-xl" />
-          </div>
         </div>
       </Card>
     </div>

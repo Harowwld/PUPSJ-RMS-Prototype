@@ -21,6 +21,7 @@ import useTableScroll from "@/hooks/useTableScroll";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { Alert01Icon, Alert02Icon, Archive01Icon, CancelCircleIcon, CheckmarkCircle01Icon, CloudUploadIcon, Loading01Icon, Search01Icon } from "hugeicons-react";
+import { CSV_IMPORT_MAX_SIZE_BYTES, CSV_IMPORT_MAX_SIZE_LABEL, formatBytes } from "@/lib/uploadLimits";
 
 
 export default function BulkImportOrganizationsModal({
@@ -111,6 +112,15 @@ export default function BulkImportOrganizationsModal({
       setCsvRows([]);
       setCsvResults([]);
       setCsvSelected({});
+      if (csvInputRef.current) csvInputRef.current.value = "";
+      return;
+    }
+
+    if (f.size > CSV_IMPORT_MAX_SIZE_BYTES) {
+      showToast({
+        title: "File Too Large",
+        description: `CSV spreadsheet (${formatBytes(f.size)}) exceeds the ${CSV_IMPORT_MAX_SIZE_LABEL} limit.`,
+      }, true);
       if (csvInputRef.current) csvInputRef.current.value = "";
       return;
     }
@@ -424,7 +434,8 @@ export default function BulkImportOrganizationsModal({
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Button
                   type="button"
-                  className="h-10 px-5 cursor-pointer"
+                  size="sm"
+                  className="h-9 px-4 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     csvInputRef.current?.click();
@@ -749,18 +760,20 @@ export default function BulkImportOrganizationsModal({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
             disabled={csvLoading}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Cancel
           </Button>
 
           <Button
             type="button"
+            size="sm"
             onClick={handleImportOrganizations}
             disabled={csvLoading || !csvFile || selectedCount === 0 || hasInvalidSelected}
-            className="flex h-10 px-5 disabled:opacity-50 cursor-pointer"
+            className="flex h-9 px-4 disabled:opacity-50 cursor-pointer"
           >
             {csvLoading ? (
               <span className="flex items-center gap-2">

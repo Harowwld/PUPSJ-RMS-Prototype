@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
@@ -176,10 +177,10 @@ export default function PermanentAdmissionRecordSheet({
           <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
             <div
               className={cn(
-                "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 font-bold border mt-0.5 shadow-2xs",
+                "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs",
                 isSubmitted
-                  ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-900/40"
-                  : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-500/20 dark:border-amber-900/40"
+                  ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                  : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
               )}
             >
               <TaskDone01Icon size={16}
@@ -190,7 +191,7 @@ export default function PermanentAdmissionRecordSheet({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-[10px] mb-1")}>
                 {docCategory}
               </span>
               <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
@@ -218,10 +219,10 @@ export default function PermanentAdmissionRecordSheet({
               <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border",
+                    BADGE_BASE,
                     isSubmitted
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40"
-                      : "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40"
+                      ? BADGE_PALETTES.emerald
+                      : BADGE_PALETTES.amber
                   )}
                 >
                   {isSubmitted ? "Archived & Verified" : "Pending Submission"}
@@ -318,8 +319,9 @@ export default function PermanentAdmissionRecordSheet({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

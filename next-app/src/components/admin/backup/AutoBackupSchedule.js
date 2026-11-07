@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react"
 import useViewPreference from "@/hooks/useViewPreference"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Select } from "@/components/ui/select"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { Switch } from "@/components/ui/switch";
@@ -274,7 +275,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 Automatic Backups
               </h4>
               {schedule.enabled && (
-                <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 px-2.5 py-0.5 text-[11px] font-semibold">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                   Active
                 </span>
               )}
@@ -420,7 +421,7 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                   Smart Storage Retention (GFS 7/4/12)
                 </span>
-                <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40 px-2 py-0.5 text-[10px] font-semibold">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                   Recommended
                 </span>
               </div>
@@ -448,12 +449,12 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               </span>
 
               {schedule.lastRunStatus === "success" && (
-                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                   Successful
                 </span>
               )}
               {schedule.lastRunStatus === "failed" && (
-                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.rose)}>
                   Failed
                 </span>
               )}

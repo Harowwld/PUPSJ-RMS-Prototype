@@ -131,7 +131,7 @@ export default function EditOrganizationModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Organization Name <span className="text-red-500">*</span>
+                  Organization Name
                 </label>
                 <Input
                   type="text"
@@ -145,7 +145,7 @@ export default function EditOrganizationModal({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Acronym
+                  Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                 </label>
                 <Input
                   type="text"
@@ -160,7 +160,7 @@ export default function EditOrganizationModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Category <span className="text-red-500">*</span>
+                  Category
                 </label>
                 <Select
                   value={category}
@@ -193,7 +193,7 @@ export default function EditOrganizationModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Faculty Adviser Name
+                  Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                 </label>
                 <Input
                   type="text"
@@ -206,7 +206,7 @@ export default function EditOrganizationModal({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Adviser Email
+                  Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                 </label>
                 <Input
                   type="email"
@@ -265,16 +265,18 @@ export default function EditOrganizationModal({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               disabled={isSubmitting}
               onClick={() => onOpenChange(false)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isSubmitting}
-              className="h-10 px-5 cursor-pointer"
+              className="h-9 px-4 cursor-pointer"
             >
               {isSubmitting ? "Saving Changes..." : "Save Changes"}
             </Button>

@@ -50,6 +50,7 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
@@ -1018,18 +1019,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   ) : statusFilter === "Inactive" && stats.active > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => setStatusFilter("Active")}
                       title="View Active Personnel"
-                      className="flex h-10 items-center justify-center px-5"
+                      className="flex h-9 items-center justify-center px-4"
                     >
                       View Active Personnel
                     </Button>
                   ) : (
                     <Button
-                      variant="outline"
+                      size="sm"
                       onClick={handleOpenCreate}
                       title="Register Personnel"
-                      className="h-10 px-5 cursor-pointer"
+                      className="h-9 px-4 cursor-pointer"
                     >
                       Register Personnel
                     </Button>
@@ -1236,12 +1238,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <div
                                   className={cn(
-                                    "inline-flex items-center w-fit justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide border",
+                                    BADGE_BASE,
+                                    "tracking-wide select-none",
                                     member.role === "SystemAdmin" || member.role === "SuperAdmin"
-                                      ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
+                                      ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
                                       : member.role === "Admin"
-                                        ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
-                                        : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
+                                        ? BADGE_PALETTES.maroon
+                                        : BADGE_PALETTES.amber
                                   )}
                                 >
                                   <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
@@ -1263,10 +1266,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             {visibleColumns.includes("totp_enabled") && (
                               <td className="p-4 align-middle text-center">
                                 <span className={cn(
-                                  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium",
+                                  BADGE_BASE,
                                   member.totp_enabled
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                                    : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                    ? BADGE_PALETTES.emerald
+                                    : BADGE_PALETTES.gray
                                 )}>
                                   {member.totp_enabled ? "Enabled" : "Not enabled"}
                                 </span>
@@ -1356,7 +1359,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Assigned Office / Department {form.role === "SystemAdmin" && <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>}
+                    Assigned Office / Department {form.role === "SystemAdmin" && <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>}
                   </label>
                   <Select
                     value={form.office_id}
@@ -1414,7 +1417,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                     System-Generated Credentials
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                     {isEditing ? "Read-only" : "Auto-assigned"}
                   </span>
                 </div>
@@ -1452,16 +1455,18 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setFormOpen(false)}
                 disabled={submitLoading}
-                className="h-10 px-4"
+                className="h-9 px-4"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
+                size="sm"
                 disabled={submitLoading}
-                className="h-10 px-5 cursor-pointer"
+                className="h-9 px-4 cursor-pointer"
               >
                 {submitLoading ? (
                   <span className="flex items-center gap-1.5">
@@ -1504,11 +1509,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             <CopyButton
               textToCopy={tempPassword}
               entityName="Password"
-              className="h-10 px-4"
+              className="h-9 px-4"
             />
             <Button
+              size="sm"
               onClick={() => setPwDialogOpen(false)}
-              className="h-10 px-5 cursor-pointer"
+              className="h-9 px-4 cursor-pointer"
             >
               Done
             </Button>
@@ -1793,12 +1799,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         value={
                           <span
                             className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border select-none",
+                              BADGE_BASE,
+                              "select-none",
                               isSysAdmin
-                                ? "bg-gray-900 text-white border-gray-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-200"
+                                ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
                                 : inspectMember.role === "Admin"
-                                  ? "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40"
-                                  : "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40"
+                                  ? BADGE_PALETTES.maroon
+                                  : BADGE_PALETTES.amber
                             )}
                           >
                             {isSysAdmin ? "Platform System Administrator" : getOfficeRoleLabel(inspectMember.role, inspectMember, offices)}
@@ -1811,10 +1818,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         value={
                           <span
                             className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium select-none",
+                              BADGE_BASE,
+                              "select-none",
                               inspectMember.totp_enabled
-                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                                : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                ? BADGE_PALETTES.emerald
+                                : BADGE_PALETTES.gray
                             )}
                           >
                             {inspectMember.totp_enabled ? "Enabled" : "Not enabled"}
@@ -1883,8 +1891,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => setInspectMember(null)}
-                      className="h-10 px-4"
+                      className="h-9 px-4"
                     >
                       Close
                     </Button>
@@ -1895,7 +1904,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       copiedLabel="Data Copied!"
                       size="sm"
                       title="Copy personnel record data"
-                      className="h-10 px-3.5"
+                      className="h-9 px-3.5"
                     />
                   </div>
 
@@ -1906,23 +1915,25 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           <Button
                             type="button"
                             variant="outline"
+                            size="sm"
                             onClick={() => {
                               const m = inspectMember
                               setInspectMember(null)
                               setArchiveTarget(m)
                             }}
-                            className="h-10 px-4"
+                            className="h-9 px-4"
                           >
                             Archive Personnel
                           </Button>
                           <Button
                             type="button"
+                            size="sm"
                             onClick={() => {
                               const m = inspectMember
                               setInspectMember(null)
                               handleOpenEdit(m)
                             }}
-                            className="h-10 px-4"
+                            className="h-9 px-4"
                           >
                             Edit Profile
                           </Button>
@@ -1931,12 +1942,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         <Button
                           type="button"
                           variant="success"
+                          size="sm"
                           onClick={() => {
                             const m = inspectMember
                             setInspectMember(null)
                             setRestoreTarget(m)
                           }}
-                          className="h-10 px-4"
+                          className="h-9 px-4"
                         >
                           Restore Personnel
                         </Button>

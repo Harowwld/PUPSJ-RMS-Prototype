@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Files01Icon , Shield01Icon, Tick01Icon} from "hugeicons-react";
 
 export const CATALOG_ITEMS = [
@@ -371,7 +373,7 @@ export default function DocumentCatalog() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-5">
-                        <span className="text-[10px] font-sans tabular-nums font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
                           {doc.client || "Student & Alumni"}
                         </span>
                         <span className="text-[10px] font-sans tabular-nums text-zinc-400 font-medium tracking-wide">

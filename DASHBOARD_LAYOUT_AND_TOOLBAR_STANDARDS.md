@@ -95,13 +95,13 @@ Every dashboard view is encapsulated inside **one unified `<Card>` container** w
        Upon collapsing, the extra buttons hide and the three-dot icon button reappears in place.
 
 4. **Standard Action Button Dimensions & Padding (`h-9 px-4`)**:
-   - Following **Departments & Stations** ([`OfficeManagementTab.js#L915`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeManagementTab.js#L915)), all primary and secondary action buttons across dashboard headers, toolbars, settings tabs, and form action groups use the compact **`h-9 px-4`** standard (36px height, 16px horizontal padding, `text-xs font-semibold rounded-xl`).
+   - Following **Departments & Stations** ([`OfficeManagementTab.js#L915`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeManagementTab.js#L915)), all primary and secondary action buttons across dashboard headers, toolbars, settings tabs, sheet detail action bars (`SheetFooter`), and form action groups use the compact **`h-9 px-4`** standard (`size="sm"`, 36px height, 16px horizontal padding, `text-xs font-semibold rounded-xl`).
    - `RefreshButton`: `className="h-9 w-9"`
    - Three-Dot More Action Button: `className="h-9 w-9 shrink-0"`
-   - Secondary/Outline Action Buttons: `variant="outline" className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"`
-   - Primary Action Button: `className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"` (strictly text-only; no static leading icons)
+   - Secondary/Outline Action Buttons: `variant="outline" size="sm" className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"`
+   - Primary Action Button: `size="sm" className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"` (strictly text-only; no static leading icons)
    - **Forbidding Excessive Padding (`h-10 px-5` & `h-9 px-4.5`)**:
-     - Action buttons in dashboard headers, forms, and settings must **not** use `h-10 px-5` (40px height, 20px padding) or irregular padding like `px-4.5`.
+     - Action buttons in dashboard headers, forms, settings, and sheet detail footers must **not** use `h-10 px-5` (40px height, 20px padding) or irregular padding like `px-4.5` / `px-6`.
      - Standardizing on `h-9 px-4` ensures optical balance alongside `RefreshButton` (`h-9 w-9`) and three-dot buttons (`h-9 w-9`).
      - Floating capsule dock buttons use compact symmetric pill geometry (`h-8 px-3.5 rounded-full`).
 
@@ -148,13 +148,15 @@ When a view filters records by top-level scope/lifecycle (e.g., `Active` / `Arch
 
 Across all tabular and browsable records dashboards, the view mode switcher standardizes terminology, geometry, and icons:
 
-1. **Terminology Standard ("Grid" vs "Cards")**:
-   - **Always use "Grid"**: The word "Cards" or "Card" is strictly deprecated for view mode switchers. Use **"Grid"** (e.g., `[Grid] [Table]`, `[List] [Table] [Kanban]`, `[Grid] [List]`).
+1. **Terminology Standard ("Grid" vs "Cards") & Canonical Sequence**:
+   - **Always use "Grid"**: The word "Cards" or "Card" is strictly deprecated for view mode switchers. Use **"Grid"** (e.g., `[Kanban] [List] [Table]`, `[Grid] [Table]`, `[Grid] [List]`).
+   - **Canonical View Sequence (`Kanban → Grid → List → Table`)**:
+     Across all pages and views in the application, view switchers strictly adhere to the universal sequence: **`Kanban` → `Grid` → `List` → `Table`**. Only include views that apply to that specific page without adding unwanted ones (for example, if a page only supports table and list, sequence them as `[List] [Table]`; if a page supports table and grid, sequence them as `[Grid] [Table]`; if a page supports table, list, and kanban, sequence them as `[Kanban] [List] [Table]`).
    - The canonical view switcher modes across the application are:
+     - `Kanban`: Multi-column swimlanes grouped by status or workflow stage.
      - `Grid`: Card-based gallery layout with previews or summary metadata.
      - `List`: Vertical list rows with bullet/index affordances.
      - `Table`: Dense tabular rows and columns with sorting and pagination.
-     - `Kanban`: Multi-column swimlanes grouped by status or workflow stage.
      - `By Department`: Departmental grouped layout (in Module Configurations).
      - `Compare Features`: Matrix grid comparison view (in Module Configurations).
 
@@ -590,7 +592,7 @@ The user account and preferences dialog ([`AccountSettingsPanel.js`](file:///hom
    The inner settings sidebar mirrors the primary application sidebar (`Sidebar.js`):
    - **Icon Center Axis (23px)**: All category icons are centered in a `w-[38px] h-[38px]` container with `px-1` padding.
    - **Text Start Axis (48px)**: Category labels start at 48px from the container's inner edge.
-   - **Apple Elevated Pill Highlight**: Active tabs render with `bg-pup-maroon text-white dark:bg-zinc-800` (or theme-aware brand accent) and smooth tactile hover states.
+   - **Apple Elevated Pill Highlight**: Active tabs render with `bg-pup-maroon text-white dark:bg-zinc-800` (or theme-aware brand accent) and smooth tactile hover states. The active item explicitly renders pure white labels and icons (`text-white`) with full 100% opacity.
 2. **Dedicated Two-Factor Auth Decoupling**:
    Two-factor authentication (TOTP authenticator app pairing, QR codes, verification codes, and emergency backup codes) is decoupled into its own dedicated **Two-Factor Auth** sidebar tab, preventing dense scrolling collisions inside the Password/Security view.
 3. **Dedicated Accessibility Panel**:

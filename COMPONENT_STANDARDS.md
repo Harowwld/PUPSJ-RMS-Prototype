@@ -114,6 +114,9 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 | **Full Inspection** | `w-[96vw] max-w-[96vw] h-[90vh] xl:max-w-[1400px]` | PDF previewers, digitization audits, document reviews |
 
 ### 3.3 Modal & Sheet Golden Rules
+- **Title Case for Modal and Sheet Titles**: Modal titles (`<DialogTitle>`) and sheet titles (`<SheetTitle>`) must always use Title Case (e.g. `Dismiss Selected Files?`, `Bulk Action Results`, `Register Student Record`). Never use sentence case or all-lowercase titles.
+- **No Required Asterisks**: In accordance with Apple HIG, forms must not use noisy red asterisks (`*`) on required fields. Fields in administrative and institutional records workflows are assumed required by default.
+- **Explicit `(optional)` Labels**: Non-required fields must be explicitly labeled with `(optional)` in lowercase with secondary text styling (e.g., `Middle Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>`). Never capitalize as `(Optional)`.
 - **No Header or Footer Dividers**: Do not add separator borders, rules, or tinted bands between a modal/sheet header, body, and footer. Use spacing and typography to establish the sections. Keep functional borders inside forms, tables, notices, and previews where needed.
 - **Footer Layout**: `DialogFooter` has no default negative margins, border, background, or padding. A zero-padding shell supplies `p-6 pt-0` on the footer; a padded shell uses the neutral footer directly. Never compensate for footer layout with negative margins.
 - **NEVER** insert a decorative icon box or leading icon into `DialogHeader` or `SheetHeader`.
@@ -761,6 +764,9 @@ import { AlertCircleIcon, Cancel01Icon } from "hugeicons-react";
 Before finalizing any new page, tab, or modal, verify the following:
 
 - [ ] **No Header Icon in Dialogs**: Are `DialogHeader`s completely free of icon wrappers and decorative svgs?
+- [ ] **Modal Titles in Title Case**: Are all `<DialogTitle>` and `<SheetTitle>` headers written in proper Title Case (e.g. `Dismiss Selected Files?`, `Bulk Action Results`) without sentence case or lowercase titles?
+- [ ] **No Required Asterisks**: Are form labels free of red asterisks (`*`)?
+- [ ] **Explicit (optional) Designation**: Are non-required fields explicitly marked with lowercase `(optional)` using secondary text styling?
 - [ ] **Clear Button Labels**: Do primary actions use a verb plus specific noun (`Save Changes`, `Submit Request`) while dismissal/navigation use concise labels (`Cancel`, `Close`, `Back`, `Done`)?
 - [ ] **No Static Icons on Primary Buttons**: Does the main action button have clean text without leading plus/trash icons?
 - [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, inputs & buttons are `rounded-xl`, small items are `rounded-lg`.
@@ -947,13 +953,9 @@ All in-app alerts and notifications displayed via `@/components/ui/sonner` must 
 - **Purpose**: Provides ~510px of readable horizontal text width, allowing 2–3 sentence phrases in Plus Jakarta Sans to comfortably fit in 2 to at most 3 clean lines without awkward word breaks.
 - **Mobile Viewports**: Safely constrained by `calc(100vw - 32px)` with 16px margins on each side.
 
-### 10.2 Adaptive Geometry: Capsule Pill vs. Apple Card Squircle
-- **Single-Line Status Alerts** (e.g. *"Record updated successfully"*):
-  - Retain the sleek horizontal capsule pill with `rounded-full` and `items-center` (height ~44px).
-- **Multi-Sentence & Descriptive Alerts** (when a `description` exists or title exceeds 70 characters / spans multiple sentences):
-  - Adapt geometry to a squircle card with `.is-card` and `rounded-2xl sm:rounded-[20px]`.
-  - Align elements with `items-start` (`p-3 sm:p-3.5 px-4`) so status icons and dismiss buttons anchor to the top header line rather than floating awkwardly in the vertical midpoint.
-  - This eliminates the "bloated capsule" distortion where tall multi-line toasts produce giant semicircular corner gaps.
+### 10.2 Capsule Pill Geometry (`rounded-full`)
+- All in-app toasts strictly maintain the signature sleek horizontal capsule pill with `border-radius: 999px` (`rounded-full`) and centered vertical alignment (`items-center`) across all stages and notification types.
+- Combined with the expanded `620px` max-width and delimiter line-breaking (`<wbr />`), multi-sentence descriptions and technical filenames sit comfortably across 2–3 lines without awkward text fragmentation or breaking the canonical pill shape.
 
 ### 10.3 Long Technical Identifiers & Delimiter Line-Breaking
 - **The Issue**: Under Unicode Line Breaking Algorithm (UAX #14) rules, browsers treat a hyphen followed by a digit (e.g. `-2026-11-07`) as an unbreakable negative number prefix. Long compound tokens (e.g. backup package filenames like `PUP-SYSTEM-GOVERNANCE-BACKUP-2026-11-07...`, UUIDs, hashes) fail to wrap after digits, causing the layout engine to push the entire 50+ character block to the next line and leaving a large empty void on the line before it.

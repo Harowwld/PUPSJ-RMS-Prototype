@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Archive01Icon, ArrowRight02Icon, DragDropIcon, Tick01Icon } from "hugeicons-react";
 
 
@@ -141,8 +142,7 @@ const ConflictResolutionModals = memo(({
                       </td>
 
                       <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
-                          
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                           {row.count} {row.count === 1 ? "record" : "records"}
                         </span>
                       </td>
@@ -224,15 +224,17 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setTemplateConflictOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="button"
+              size="sm"
               onClick={openApplyPreview}
-              className="h-10 px-5 cursor-pointer border-0"
+              className="h-9 px-4 cursor-pointer border-0"
             >
               Preview Reassignment
             </Button>
@@ -275,7 +277,7 @@ const ConflictResolutionModals = memo(({
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                           {r.count}
                         </span>
                       </td>
@@ -290,15 +292,17 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setApplyPreviewOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Back
             </Button>
             <Button
               type="button"
+              size="sm"
               onClick={applyTemplateWithMappings}
-              className="h-10 px-5 cursor-pointer border-0"
+              className="h-9 px-4 cursor-pointer border-0"
             >
               Apply Template
             </Button>
@@ -351,8 +355,7 @@ const ConflictResolutionModals = memo(({
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                             {Number(r?.moved || 0)}
                           </span>
                         </td>
@@ -368,8 +371,9 @@ const ConflictResolutionModals = memo(({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setApplyReportOpen(false)}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

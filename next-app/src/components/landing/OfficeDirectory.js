@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Building01Icon, Clock01Icon, CovidInfoIcon, LinkSquare01Icon, Location01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function OfficeDirectory() {
@@ -196,7 +198,7 @@ export default function OfficeDirectory() {
           <div>
             {/* Location Eyebrow & Badges */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50  border border-red-100  text-[11px] font-sans tabular-nums font-semibold text-[#800000] ">
+              <div className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "gap-2")}>
                 <Location01Icon size="1em"  className="text-xs" />
                 <span>Physical Campus Archive</span>
               </div>

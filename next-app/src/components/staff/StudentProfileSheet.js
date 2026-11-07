@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn, formatTitleCase } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
@@ -416,17 +417,14 @@ export default function StudentProfileSheet({
                     icon=" CovidInfoIcon"
                     label="Registry Status"
                   >
-                    <Badge
-                      variant="outline"
+                    <span
                       className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                        isArchived
-                          ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                          : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                        BADGE_BASE,
+                        isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald
                       )}
                     >
                       {student.status || "Active"}
-                    </Badge>
+                    </span>
                   </InfoRow>
                 </>
               ) : (
@@ -472,17 +470,14 @@ export default function StudentProfileSheet({
                     icon=" CovidInfoIcon"
                     label="Registry Status"
                   >
-                    <Badge
-                      variant="outline"
+                    <span
                       className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                        isArchived
-                          ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                          : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                        BADGE_BASE,
+                        isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald
                       )}
                     >
                       {student.status || "Active"}
-                    </Badge>
+                    </span>
                   </InfoRow>
                 </>
               )}
@@ -642,14 +637,15 @@ export default function StudentProfileSheet({
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={cn(
-                            "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                            BADGE_BASE,
+                            "text-[10px]",
                             isApproved
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                              ? BADGE_PALETTES.emerald
                               : isPending
-                              ? "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20"
+                              ? BADGE_PALETTES.blue
                               : isDeclined
-                              ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                              ? BADGE_PALETTES.rose
+                              : BADGE_PALETTES.amber
                           )}
                         >
                           {req.status === "Missing" ? "Not Submitted" : req.status}
@@ -671,7 +667,7 @@ export default function StudentProfileSheet({
                                   );
                                 }}
                                 aria-label="Re-scan Document"
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                                className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                               >
                                 <ReloadIcon size="1em" className="text-xs" />
                               </button>
@@ -694,7 +690,7 @@ export default function StudentProfileSheet({
                                   );
                                 }}
                                 aria-label={PDF_ACTION_LABELS.preview}
-                                className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                                className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                               >
                                 <ViewIcon size="1em" className="text-xs" />
                               </button>
@@ -740,12 +736,13 @@ export default function StudentProfileSheet({
                     <div className="flex items-center gap-2 shrink-0">
                       <span
                         className={cn(
-                          "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                          BADGE_BASE,
+                          "text-[10px]",
                           doc.approval_status === "Approved"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                            ? BADGE_PALETTES.emerald
                             : doc.approval_status === "Declined"
-                            ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                            : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                            ? BADGE_PALETTES.rose
+                            : BADGE_PALETTES.amber
                         )}
                       >
                         {doc.approval_status || "Pending"}
@@ -767,7 +764,7 @@ export default function StudentProfileSheet({
                                 );
                               }}
                               aria-label="Re-scan Document"
-                              className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                              className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                             >
                               <ReloadIcon size="1em" className="text-xs" />
                             </button>
@@ -793,7 +790,7 @@ export default function StudentProfileSheet({
                               );
                             }}
                             aria-label={PDF_ACTION_LABELS.preview}
-                            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 bg-transparent"
+                            className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                           >
                             <ViewIcon size="1em" className="text-xs" />
                           </button>
@@ -841,14 +838,15 @@ export default function StudentProfileSheet({
                         </span>
                         <span
                           className={cn(
-                            "text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                            BADGE_BASE,
+                            "text-[10px]",
                             req.status === "Completed"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                              ? BADGE_PALETTES.emerald
                               : req.status === "InProgress"
-                              ? "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800"
+                              ? BADGE_PALETTES.blue
                               : req.status === "Ready"
-                              ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800"
-                              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                              ? BADGE_PALETTES.purple
+                              : BADGE_PALETTES.amber
                           )}
                         >
                           {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
@@ -871,8 +869,9 @@ export default function StudentProfileSheet({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
@@ -883,11 +882,12 @@ export default function StudentProfileSheet({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     onOpenChange(false);
                     onRestoreStudent?.(student.studentNo);
                   }}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isOrg ? "Restore Organization Record" : "Restore Student Record"}
                 </Button>
@@ -897,17 +897,18 @@ export default function StudentProfileSheet({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     onOpenChange(false);
                     onArchiveStudent?.(student.studentNo);
                   }}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isOrg ? "Archive Organization Record" : "Archive Student Record"}
                 </Button>
               )
             )}
-            {!isOrg && <Button onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
+            {!isOrg && <Button size="sm" className="h-9 px-4" onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
           </div>
         </SheetFooter>
       </SheetContent>

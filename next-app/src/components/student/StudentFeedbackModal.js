@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Loading01Icon } from "hugeicons-react";
 
 
@@ -144,7 +145,7 @@ export default function StudentFeedbackModal({
                   Rate Your Experience
                 </DialogTitle>
                 {request?.id && (
-                  <span className="text-[11px] font-semibold text-pup-maroon bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded-full border border-red-100 dark:border-red-900/30">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
                     #{request.id}
                   </span>
                 )}
@@ -161,7 +162,7 @@ export default function StudentFeedbackModal({
             {/* Star Rating Section */}
             <div>
               <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                Overall Satisfaction <span className="text-red-500">*</span>
+                Overall Satisfaction
               </label>
               <div className="flex flex-col items-center justify-center py-3 bg-gray-50/70 dark:bg-zinc-900/40 rounded-xl border border-border dark:border-border">
                 <div
@@ -217,7 +218,7 @@ export default function StudentFeedbackModal({
             {/* Quick Feedback Aspect Chips */}
             <div>
               <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                What went well? <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
+                What Went Well? <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {SUGGESTED_ASPECTS.map((aspect) => {
@@ -244,7 +245,7 @@ export default function StudentFeedbackModal({
             {/* Suggestions / Comments Textarea */}
             <div>
               <label htmlFor="student-feedback-comments" className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                Comments or Suggestions <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(Optional)</span>
+                Comments or Suggestions <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
               </label>
               <Textarea
                 id="student-feedback-comments"
@@ -261,16 +262,18 @@ export default function StudentFeedbackModal({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={handleClose}
               disabled={submitting}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={!rating || submitting}
-              className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
+              className="h-9 px-4 cursor-pointer disabled:opacity-50 border-0"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

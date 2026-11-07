@@ -11,6 +11,7 @@ import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import {
   Empty,
   EmptyHeader,
@@ -483,7 +484,7 @@ export default function StudentOverviewTab({
                 </span>
               )}
               {isOfficer && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                   Verified Officer
                 </span>
               )}
@@ -743,7 +744,7 @@ export default function StudentOverviewTab({
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/40 dark:border-red-900/40 dark:text-red-400 group-hover:scale-105 transition-transform">
                 <FileUploadIcon size="1em" className="text-xl" />
               </div>
-              <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-pup-maroon border border-red-100/60 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/40">
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
                 {(data.requests || []).length} Records
               </span>
             </div>
@@ -770,7 +771,7 @@ export default function StudentOverviewTab({
                 <ClipboardIcon size="1em" className="text-xl" />
               </div>
               {complianceSummary && (
-                <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                   {complianceSummary.submittedCount}/{complianceSummary.totalRequired} ({complianceSummary.complianceRate}%)
                 </span>
               )}
@@ -798,7 +799,7 @@ export default function StudentOverviewTab({
                 <StudentIcon size="1em" className="text-xl" />
               </div>
               {isOfficer && (
-                <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100/60 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                   {(data.proposals || []).length} Active
                 </span>
               )}
@@ -1109,7 +1110,7 @@ export default function StudentOverviewTab({
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
                 <InfoRow icon="PieChartIcon" label="Clearance Status">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                     {selectedPostEventDetail?.status || "Submitted"}
                   </span>
                 </InfoRow>
@@ -1168,8 +1169,9 @@ export default function StudentOverviewTab({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setSelectedPostEventDetail(null)}
-              className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Close
             </Button>

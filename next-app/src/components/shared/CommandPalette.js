@@ -48,6 +48,7 @@ import {
   Notification01Icon,
   ClipboardIcon,
   StudentIcon,
+  File02Icon,
   FileUploadIcon,
   Activity01Icon,
   HourglassIcon,
@@ -1851,7 +1852,7 @@ export default function CommandPalette({
                                   </span>
 
                                   {isActiveTab && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                                       Active
                                     </span>
                                   )}
@@ -1863,7 +1864,7 @@ export default function CommandPalette({
                                   )}
 
                                   {item.storageBadge && (
-                                    <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                                    <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
                                       {item.storageBadge}
                                     </span>
                                   )}
@@ -2045,8 +2046,9 @@ export default function CommandPalette({
             {focusedItem && (
               <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col gap-2">
                 <Button
+                  size="sm"
                   onClick={() => handleSelectSuggestion(focusedItem)}
-                  className="w-full h-10 px-5 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="w-full h-9 px-4 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {focusedItem.type === "student"
                     ? "Open Student Record"
@@ -2061,7 +2063,7 @@ export default function CommandPalette({
                   <CopyButton
                     textToCopy={focusedItem.badge}
                     entityName={focusedItem.type === "student" ? "Student No" : "Identifier"}
-                    className="w-full h-10 px-5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    className="w-full h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
                   />
                 )}
               </div>

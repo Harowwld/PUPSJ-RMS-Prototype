@@ -47,7 +47,7 @@ export default function EditUserModal({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  First Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  First Name
                 </label>
                 <Input
                   type="text"
@@ -62,7 +62,7 @@ export default function EditUserModal({
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Last Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Last Name
                 </label>
                 <Input
                   type="text"
@@ -80,7 +80,7 @@ export default function EditUserModal({
             {/* Part 2: Role Selection */}
             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
               <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                System Role
               </label>
               <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                 <button
@@ -116,7 +116,7 @@ export default function EditUserModal({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Employee ID <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
+                  Employee ID
                 </label>
                 <Input
                   type="text"
@@ -145,16 +145,18 @@ export default function EditUserModal({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={isLoading}
-              className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isLoading}
-              className="h-10 px-5 cursor-pointer disabled:opacity-50 border-0"
+              className="h-9 px-4 cursor-pointer disabled:opacity-50 border-0"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>

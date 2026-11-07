@@ -1366,7 +1366,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setProfileOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <ViewIcon size="1em"  className="text-[14px]"></ViewIcon>
                                   </button>
@@ -1383,7 +1383,7 @@ export default function StudentDirectoryTab({
                                       setActiveStudent(s);
                                       setEditOpen(true);
                                     }}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em"  className="text-[14px]"></PencilEdit01Icon>
                                   </button>
@@ -1397,7 +1397,7 @@ export default function StudentDirectoryTab({
                                   <button
                                     type="button"
                                     onClick={() => onLocateStudent?.(s)}
-                                    className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                                   >
                                     <CompassIcon size="1em"  className="text-[14px]"></CompassIcon>
                                   </button>
@@ -1415,7 +1415,7 @@ export default function StudentDirectoryTab({
                                         setRestoreTarget(s);
                                         setRestoreModalOpen(true);
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                      className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
                                     >
                                       <Archive02Icon size="1em"  className="text-[14px]"></Archive02Icon>
                                     </button>
@@ -1431,7 +1431,7 @@ export default function StudentDirectoryTab({
                                         setArchiveTarget(s);
                                         setArchiveModalOpen(true);
                                       }}
-                                      className="w-7 h-7 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                      className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
                                     >
                                       <Archive01Icon size="1em"  className="text-[14px]"></Archive01Icon>
                                     </button>

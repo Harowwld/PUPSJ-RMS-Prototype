@@ -26,6 +26,7 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
@@ -799,7 +800,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   Public Login Demo Accounts
                 </p>
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                   Prototype Access
                 </span>
               </div>

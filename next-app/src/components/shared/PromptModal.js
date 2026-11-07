@@ -159,18 +159,20 @@ export default function PromptModal({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={handleCancel}
-            className="h-10 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 px-4 text-xs font-semibold rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             disabled={isLoading}
           >
             {cancelLabel}
           </Button>
           <Button
             type="button"
+            size="sm"
             variant={isDeclineModal ? "danger" : v.confirmVariant}
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
-            className="h-10 px-5"
+            className="h-9 px-4"
           >
             {isLoading ? "Processing..." : confirmLabel}
           </Button>

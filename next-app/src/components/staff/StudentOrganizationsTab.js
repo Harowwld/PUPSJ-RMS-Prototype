@@ -205,6 +205,7 @@ const DEFAULT_ORDER = ["organizations", "officers", "proposals"];
 export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearchState] = useState("");
   const [categoryFilters, setCategoryFiltersState] = useState([]);
   const [statusFilters, setStatusFiltersState] = useState([]);
@@ -392,7 +393,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const fetchOrganizations = useCallback(
     async (showFeedback = false) => {
       try {
-        setLoading(true);
+        if (showFeedback) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
         const res = await fetch(`/api/osas/organizations?status=Active,Inactive,Archived`, {
           cache: "no-store",
         });
@@ -417,6 +422,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         );
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     },
     [showToast]
@@ -1044,7 +1050,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 {/* Refresh Button */}
                 <RefreshButton
                   onRefresh={() => fetchOrganizations(true)}
-                  isLoading={loading}
+                  isLoading={refreshing}
                   title="Refresh Organizations"
                 />
 
@@ -1627,19 +1633,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </DataViewToolbar>
 
           {/* 4. Active Filter Chips & Scroll Controls */}
-          <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-            <div className="flex-1 min-w-0">
-              <ActiveFilterChips
-                chips={activeChips}
-                onClearAll={handleResetFilters}
-                className="p-0 border-0"
-              />
+          {activeChips.length > 0 && (
+            <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+              <div className="flex-1 min-w-0">
+                <ActiveFilterChips
+                  chips={activeChips}
+                  onClearAll={handleResetFilters}
+                  className="p-0 border-0"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 5. Main Content Area (Dual View Engine) */}
           <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card">
-            {loading ? (
+            {loading && organizations.length === 0 ? (
               viewMode === "table" ? (
                 <div className="p-6 space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -1692,18 +1700,20 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     {hasActiveFilters ? (
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={handleResetFilters}
                         title="Reset Filters"
-                        className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                       >
                         Reset Filters
                       </Button>
                     ) : (
                       <Button
                         type="button"
+                        size="sm"
                         onClick={openCreateModal}
                         title="Register Organization"
-                        className="h-10 px-5 cursor-pointer border-0"
+                        className="h-9 px-4 cursor-pointer border-0"
                       >
                         Register Organization
                       </Button>
@@ -1933,7 +1943,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     type="button"
                                     onClick={() => openManageOrgSheet(org, "info")}
                                     aria-label="Manage Organization Info"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em" className="text-[16px]" />
                                   </button>
@@ -1947,7 +1957,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     type="button"
                                     onClick={() => openManageOrgSheet(org, "officers")}
                                     aria-label="Manage authorized officers"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 border-0 bg-transparent"
+                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                                   >
                                     <UserSearch01Icon size="1em" className="text-[16px]" />
                                   </button>
@@ -2408,7 +2418,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Organization Name <span className="text-red-500">*</span>
+                          Organization Name
                         </label>
                         <Input
                           type="text"
@@ -2422,7 +2432,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Acronym
+                          Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                         </label>
                         <Input
                           type="text"
@@ -2437,7 +2447,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Category <span className="text-red-500">*</span>
+                          Category
                         </label>
                         <Select
                           value={orgForm.category}
@@ -2470,7 +2480,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Faculty Adviser Name
+                          Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                         </label>
                         <Input
                           type="text"
@@ -2483,7 +2493,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Adviser Email
+                          Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                         </label>
                         <Input
                           type="email"
@@ -2563,7 +2573,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Student Account Email <span className="text-red-500">*</span>
+                            Student Account Email
                           </label>
                           <Input
                             type="email"
@@ -2579,7 +2589,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Officer Position <span className="text-red-500">*</span>
+                            Officer Position
                           </label>
                           <Select
                             value={officerForm.position}
@@ -2599,7 +2609,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Student Full Name (Optional)
+                            Student Full Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                           </label>
                           <Input
                             type="text"
@@ -2614,7 +2624,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Student Number (Optional)
+                            Student Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                           </label>
                           <Input
                             type="text"
@@ -2631,8 +2641,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <div className="flex justify-end pt-1">
                         <Button
                           type="submit"
+                          size="sm"
                           disabled={addingOfficer}
-                          className="h-9 px-5 cursor-pointer disabled:opacity-50"
+                          className="h-9 px-4 cursor-pointer disabled:opacity-50"
                         >
                           {addingOfficer ? "Authorizing Officer…" : "Authorize Officer"}
                         </Button>
@@ -2911,11 +2922,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   setSelectedOrgForOfficers(null);
                   setEditingOrg(null);
                 }}
-                className="h-10 px-5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
@@ -2923,9 +2935,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="submit"
                   form="org-info-form"
+                  size="sm"
                   onClick={handleSaveOrg}
                   disabled={savingOrg}
-                  className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   {savingOrg ? "Saving Organization Details…" : "Save Organization Details"}
                 </Button>
@@ -2953,7 +2966,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Organization Name <span className="text-red-500">*</span>
+                      Organization Name
                     </label>
                     <Input
                       type="text"
@@ -2967,7 +2980,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Acronym
+                      Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                     </label>
                     <Input
                       type="text"
@@ -2982,7 +2995,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Category <span className="text-red-500">*</span>
+                      Category
                     </label>
                     <Select
                       value={orgForm.category}
@@ -3014,7 +3027,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                 <div>
                   <label htmlFor="org-modal-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                    Description & Mission
+                    Description & Mission <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                   </label>
                   <Textarea
                     id="org-modal-description"
@@ -3030,7 +3043,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Faculty Adviser Name
+                      Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                     </label>
                     <Input
                       type="text"
@@ -3043,7 +3056,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Adviser Email
+                      Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                     </label>
                     <Input
                       type="email"
@@ -3101,17 +3114,19 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setOrgModalOpen(false)}
                   disabled={savingOrg}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={savingOrg}
                   title={editingOrg ? "Update Organization" : "Register Organization"}
-                  className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   {savingOrg
                     ? "Saving Organization…"
@@ -3144,7 +3159,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    CBL Document (PDF) <span className="text-red-500">*</span>
+                    CBL Document (PDF)
                   </label>
                   <FileAttachmentDropzone
                     value={cblFile ? { file: cblFile, original_filename: cblFile.name, size_bytes: cblFile.size } : null}
@@ -3162,16 +3177,18 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setCblUploadOrg(null)}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={uploadingCbl || !cblFile}
                   title="Archive Constitution & By-Laws"
-                  className="h-10 px-5 cursor-pointer disabled:opacity-50"
+                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   {uploadingCbl ? "Uploading Charter…" : "Upload Charter"}
                 </Button>
@@ -3204,8 +3221,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <div className="p-6 space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                    {cblReviewAction === "Approved" ? "Approval Remarks / Notes (Optional)" : "Review Feedback & Instructions"}
-                    {cblReviewAction !== "Approved" && <span className="text-red-500"> *</span>}
+                    {cblReviewAction === "Approved" ? (
+                      <>Approval Remarks / Notes <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span></>
+                    ) : (
+                      "Review Feedback & Instructions"
+                    )}
                   </label>
                   <Textarea
                     rows={4}
@@ -3226,13 +3246,15 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setCblReviewModalOpen(false)}
-                  className="h-10 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={cblReviewSubmitting}
                   title={
                     cblReviewAction === "Approved"
@@ -3242,7 +3264,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       : "Confirm Decline"
                   }
                   className={cn(
-                    "h-10 px-5 text-xs font-semibold rounded-xl text-white shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-2",
+                    "h-9 px-4 text-xs font-semibold rounded-xl text-white shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-2",
                     cblReviewAction === "Approved"
                       ? "bg-emerald-600 hover:bg-emerald-700"
                       : cblReviewAction === "Needs Revision"

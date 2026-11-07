@@ -1145,9 +1145,10 @@ export default function RecordsArchiveTab({
                     <EmptyContent>
                       <Button
                         type="button"
+                        size="sm"
                         onClick={() => onSwitchView(isOsas ? "organizations" : "upload")}
                         title={isOsas ? "Go to Student Organizations" : "Go to Upload"}
-                        className="mt-4 h-10 px-5 cursor-pointer"
+                        className="mt-4 h-9 px-4 cursor-pointer"
                       >
                         {isOsas ? "Register Organization" : "Upload Records"}
                       </Button>
@@ -1532,7 +1533,7 @@ export default function RecordsArchiveTab({
                                        );
                                      }}
                                      title={PDF_ACTION_LABELS.preview}
-                                     className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
+                                     className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                    >
                                      <File02Icon size="1em" className="text-[15px]"></File02Icon>
                                    </button>
@@ -1543,7 +1544,7 @@ export default function RecordsArchiveTab({
                                        type="button"
                                        onClick={() => handleOpenStudentProfile(row.student)}
                                        title={isOsas ? "View Organization Details" : "View Student Details"}
-                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
+                                       className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                      >
                                        <ViewIcon size="1em" className="text-[15px]"></ViewIcon>
                                      </button>
@@ -1556,7 +1557,7 @@ export default function RecordsArchiveTab({
                                        type="button"
                                        onClick={() => handleLocateStudentClick(row.student)}
                                        title="Locate Archive Drawer"
-                                       className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 transition-colors focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center border-0 bg-transparent"
+                                       className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
                                      >
                                        <Location01Icon size="1em" className="text-[15px]"></Location01Icon>
                                      </button>
