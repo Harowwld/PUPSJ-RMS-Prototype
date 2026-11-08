@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { createOcrRequestGuard } from "@/lib/ocrRequestGuard";
 import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -345,6 +346,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const fileInputRef = useRef(null);
   const ocrContextRef = useRef(null);
   const ocrContextFileRef = useRef(null);
+  const ocrRequestGuardRef = useRef(createOcrRequestGuard());
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrSuggestion, setOcrSuggestion] = useState(null);
   const [ocrError, setOcrError] = useState("");
@@ -1327,6 +1329,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
 
     const activeFile = incomingFiles[0];
+    const ocrRequestId = ocrRequestGuardRef.current.begin(activeFile);
     if (!skipQueue || ocrContextFileRef.current !== activeFile) {
       ocrContextRef.current = null;
       ocrContextFileRef.current = activeFile;
@@ -1345,6 +1348,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
       if (!isLeadPage) {
         console.log("[OCR] Skipping OCR autofill: not the lead page (page 2+).");
+        setOcrLoading(false);
         return;
       }
 
@@ -1361,6 +1365,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             ? ocrContextRef.current
             : null,
         });
+        if (!ocrRequestGuardRef.current.isCurrent(ocrRequestId, activeFile)) return;
         ocrContextRef.current = suggestion.ocrContext;
         ocrContextFileRef.current = activeFile;
         delete suggestion.ocrContext;
@@ -1378,7 +1383,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         );
         setNewRec((p) => ({
           ...p,
-          name: keepExistingIdentity
+          name: keepExistingIdentity || students.some((student) =>
+            String(student.studentNo || student.student_no || "").trim().toUpperCase() ===
+            String(p.studentNo || "").trim().toUpperCase()
+          )
             ? p.name
             : String(suggestion.name || p.name || "")
                 .trim()
@@ -1400,6 +1408,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }
         clearAllUploadFieldErrors();
       } catch (err) {
+        if (!ocrRequestGuardRef.current.isCurrent(ocrRequestId, activeFile)) return;
         setOcrLoading(false);
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
@@ -1411,7 +1420,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           true
         );
       } finally {
-        setOcrLoading(false);
+        if (ocrRequestGuardRef.current.isCurrent(ocrRequestId, activeFile)) {
+          setOcrLoading(false);
+        }
       }
     }
   };
@@ -1419,11 +1430,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const handleRemoveQueuedFile = (indexToRemove) => {
     setUploadedFiles((prev) => {
       const next = prev.filter((_, idx) => idx !== indexToRemove);
+      const nextIndex = next.length === 0 ? 0 : Math.min(selectedQueuedFileIndex, next.length - 1);
+      const nextFile = next[nextIndex] || null;
+      ocrRequestGuardRef.current.invalidate(nextFile);
+      setOcrSuggestion(null);
+      setOcrLoading(false);
       if (next.length === 0) {
         setUploadedFile(null);
         setSelectedQueuedFileIndex(0);
       } else {
-        const nextIndex = Math.min(selectedQueuedFileIndex, next.length - 1);
         setSelectedQueuedFileIndex(nextIndex);
         setUploadedFile(next[nextIndex]);
       }
@@ -1775,6 +1790,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
 
       setUploadedFile(null);
+      ocrRequestGuardRef.current.invalidate(null);
+      setOcrLoading(false);
+      setOcrSuggestion(null);
       setUploadedFiles([]);
       setSelectedQueuedFileIndex(0);
       setUploadFieldErrors({});
@@ -1886,6 +1904,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     clearAllUploadFieldErrors();
     // Clear previous uploads so the dropzone is ready for the new scan/replacement file
     setUploadedFile(null);
+    ocrRequestGuardRef.current.invalidate(null);
+    setOcrLoading(false);
+    setOcrSuggestion(null);
     setUploadedFiles([]);
     setSelectedQueuedFileIndex(0);
     setRotation(0);
@@ -2247,6 +2268,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               setRotation={setRotation}
               onClearFile={() => {
                 setUploadedFile(null);
+                ocrRequestGuardRef.current.invalidate(null);
+                setOcrLoading(false);
                 setUploadedFiles([]);
                 setSelectedQueuedFileIndex(0);
                 setOcrSuggestion(null);

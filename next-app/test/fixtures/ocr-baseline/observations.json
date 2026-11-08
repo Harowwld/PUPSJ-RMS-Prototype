@@ -1,0 +1,6812 @@
+{
+  "provenance": "constructed-replay",
+  "docTypes": [
+    "Transcript of Records",
+    "Certificate of Registration",
+    "Form 137 / SF10",
+    "Student ID",
+    "PSA Certificate of Live Birth"
+  ],
+  "observations": {
+    "canonical-01-Q1": {
+      "Q1": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00001-SJ-0\nNAME: Santos, Mara Isabel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261109,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Santos, Mara Isabel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Isabel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Santos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-01-Q2": {
+      "Q2": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00001-SJ-0\nNAME: SaZtos, Mara Isabel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261110,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "SaZtos, Mara Isabel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Isabel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SaZtos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-01-Q3": {
+      "Q3": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00001-SJ-0\nNAME: SaZtos, Mara Isabel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261111,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "SaZtos, Mara Isabel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Isabel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SaZtos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-01-Q4": {
+      "Q4": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00001-SJ-0\nNAME: SaZZos, Mara Isabel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261112,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "SaZZos, Mara Isabel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Isabel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SaZZos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-01-Q5": {
+      "Q5": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00001-SJ-0\nNAME: SaZZos, Mara Isabel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261113,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "SaZZos, Mara Isabel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Isabel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SaZZos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-02-Q1": {
+      "Q1": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00002-SJ-0\nNAME: Reyes, Jose Luis",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261126,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Reyes, Jose Luis"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Jose",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luis",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Reyes",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-02-Q2": {
+      "Q2": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00002-SJ-0\nNAME: RFyes, Jose Luis",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261127,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "RFyes, Jose Luis"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Jose",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luis",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RFyes",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-02-Q3": {
+      "Q3": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00002-SJ-0\nNAME: RFyes, Jose Luis",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261128,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "RFyes, Jose Luis"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Jose",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luis",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RFyes",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-02-Q4": {
+      "Q4": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00002-SJ-0\nNAME: RFyes, Jose Lui5",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261129,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "RFyes, Jose Lui5"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Jose",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lui5",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RFyes",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-02-Q5": {
+      "Q5": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00002-SJ-0\nNAME: RFyes, Jose Lui5",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261130,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "RFyes, Jose Lui5"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Jose",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lui5",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RFyes",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-03-Q1": {
+      "Q1": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00003-SJ-0\nNAME: Dela Cruz, Ana Beatriz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261143,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Dela Cruz, Ana Beatriz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ana",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Beatriz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Dela Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-03-Q2": {
+      "Q2": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00003-SJ-0\nNAME: DeZa Cruz, Ana Beatriz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261144,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "DeZa Cruz, Ana Beatriz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ana",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Beatriz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DeZa Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-03-Q3": {
+      "Q3": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00003-SJ-0\nNAME: DeZa Cruz, Ana Beatriz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261145,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "DeZa Cruz, Ana Beatriz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ana",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Beatriz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DeZa Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-03-Q4": {
+      "Q4": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00003-SJ-0\nNAME: DeZa Cruz, Ana BFatriz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261146,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "DeZa Cruz, Ana BFatriz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ana",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "BFatriz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DeZa Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-03-Q5": {
+      "Q5": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00003-SJ-0\nNAME: DeZa Cruz, Ana BFatriz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261147,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "DeZa Cruz, Ana BFatriz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ana",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "BFatriz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DeZa Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-04-Q1": {
+      "Q1": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00004-SJ-0\nNAME: Garcia, Paolo Miguel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261160,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Garcia, Paolo Miguel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Paolo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Miguel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Garcia",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-04-Q2": {
+      "Q2": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00004-SJ-0\nNAME: GaZcia, Paolo Miguel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261161,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "GaZcia, Paolo Miguel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Paolo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Miguel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "GaZcia",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-04-Q3": {
+      "Q3": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00004-SJ-0\nNAME: GaZcia, Paolo Miguel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261162,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "GaZcia, Paolo Miguel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Paolo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Miguel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "GaZcia",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-04-Q4": {
+      "Q4": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00004-SJ-0\nNAME: GaZcia, P4olo Miguel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261163,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "GaZcia, P4olo Miguel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "P4olo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Miguel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "GaZcia",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-04-Q5": {
+      "Q5": {
+        "rawText": "TRANSCRIPT OF RECORDS\nSTUDENT NO. 2026-00004-SJ-0\nNAME: GaZcia, P4olo Miguel",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261164,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "GaZcia, P4olo Miguel"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "P4olo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Miguel",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "GaZcia",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-05-Q1": {
+      "Q1": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00005-SJ-0\nNAME: Mendoza, Lia Mae",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261177,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Mendoza, Lia Mae"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Mae",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Mendoza",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-05-Q2": {
+      "Q2": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00005-SJ-0\nNAME: MFndoza, Lia Mae",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261178,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "MFndoza, Lia Mae"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Mae",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MFndoza",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-05-Q3": {
+      "Q3": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00005-SJ-0\nNAME: MFndoza, Lia Mae",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261179,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "MFndoza, Lia Mae"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Mae",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MFndoza",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-05-Q4": {
+      "Q4": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00005-SJ-0\nNAME: MFZdoza, Lia Mae",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261180,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "MFZdoza, Lia Mae"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Mae",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MFZdoza",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-05-Q5": {
+      "Q5": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00005-SJ-0\nNAME: MFZdoza, Lia Mae",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261181,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "MFZdoza, Lia Mae"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Mae",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MFZdoza",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-06-Q1": {
+      "Q1": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00006-SJ-0\nNAME: Cruz, Rafael Antonio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261194,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Cruz, Rafael Antonio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rafael",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Antonio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Cruz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-06-Q2": {
+      "Q2": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00006-SJ-0\nNAME: CrZz, Rafael Antonio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261195,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "CrZz, Rafael Antonio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rafael",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Antonio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "CrZz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-06-Q3": {
+      "Q3": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00006-SJ-0\nNAME: CrZz, Rafael Antonio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261196,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "CrZz, Rafael Antonio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rafael",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Antonio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "CrZz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-06-Q4": {
+      "Q4": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00006-SJ-0\nNAME: CrZz, Rafael Anton1o",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261197,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "CrZz, Rafael Anton1o"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rafael",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Anton1o",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "CrZz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-06-Q5": {
+      "Q5": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00006-SJ-0\nNAME: CrZz, Rafael AntoZio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261198,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "CrZz, Rafael AntoZio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rafael",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "AntoZio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "CrZz",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-07-Q1": {
+      "Q1": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00007-SJ-0\nNAME: Bautista, Nina Joy",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261211,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Bautista, Nina Joy"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Nina",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Joy",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Bautista",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-07-Q2": {
+      "Q2": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00007-SJ-0\nNAME: BaZtista, Nina Joy",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261212,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "BaZtista, Nina Joy"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Nina",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Joy",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "BaZtista",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-07-Q3": {
+      "Q3": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00007-SJ-0\nNAME: BaZtista, Nina Joy",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261213,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "BaZtista, Nina Joy"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Nina",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Joy",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "BaZtista",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-07-Q4": {
+      "Q4": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00007-SJ-0\nNAME: BaZtista, N1na Joy",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261214,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "BaZtista, N1na Joy"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "N1na",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Joy",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "BaZtista",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-07-Q5": {
+      "Q5": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00007-SJ-0\nNAME: BaZtista, N1na Joy",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261215,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "BaZtista, N1na Joy"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "N1na",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Joy",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "BaZtista",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-08-Q1": {
+      "Q1": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00008-SJ-0\nNAME: Villanueva, Elias Ramon",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261228,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Villanueva, Elias Ramon"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Elias",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Ramon",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Villanueva",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-08-Q2": {
+      "Q2": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00008-SJ-0\nNAME: VilZanueva, Elias Ramon",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261229,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "VilZanueva, Elias Ramon"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Elias",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Ramon",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "VilZanueva",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-08-Q3": {
+      "Q3": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00008-SJ-0\nNAME: VilZanueva, Elias Ramon",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261230,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "VilZanueva, Elias Ramon"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Elias",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Ramon",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "VilZanueva",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-08-Q4": {
+      "Q4": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00008-SJ-0\nNAME: VilZanuFva, Elias Ramon",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261231,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "VilZanuFva, Elias Ramon"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Elias",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Ramon",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "VilZanuFva",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-08-Q5": {
+      "Q5": {
+        "rawText": "CERTIFICATE OF REGISTRATION ENROLLMENT\nSTUDENT NO. 2026-00008-SJ-0\nNAME: V1lZanueva, Elias Ramon",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261232,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "V1lZanueva, Elias Ramon"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Elias",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Ramon",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "V1lZanueva",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-09-Q1": {
+      "Q1": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00009-SJ-0\nNAME: Navarro, Celia Rose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261245,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Navarro, Celia Rose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Celia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Rose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Navarro",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-09-Q2": {
+      "Q2": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00009-SJ-0\nNAME: NaZarro, Celia Rose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261246,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "NaZarro, Celia Rose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Celia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Rose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "NaZarro",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-09-Q3": {
+      "Q3": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00009-SJ-0\nNAME: NaZarro, Celia Rose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261247,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "NaZarro, Celia Rose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Celia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Rose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "NaZarro",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-09-Q4": {
+      "Q4": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00009-SJ-0\nNAME: NaZarro, Celia R0se",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261248,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "NaZarro, Celia R0se"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Celia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "R0se",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "NaZarro",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-09-Q5": {
+      "Q5": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00009-SJ-0\nNAME: NaZarro, Celia R0se",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261249,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "NaZarro, Celia R0se"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Celia",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "R0se",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "NaZarro",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-10-Q1": {
+      "Q1": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00010-SJ-0\nNAME: Castillo, Marco Andres",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261262,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Castillo, Marco Andres"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Marco",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Andres",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Castillo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-10-Q2": {
+      "Q2": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00010-SJ-0\nNAME: Ca5tillo, Marco Andres",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261263,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Ca5tillo, Marco Andres"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Marco",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Andres",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ca5tillo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-10-Q3": {
+      "Q3": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00010-SJ-0\nNAME: Ca5tillo, Marco Andres",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261264,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Ca5tillo, Marco Andres"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Marco",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Andres",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ca5tillo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-10-Q4": {
+      "Q4": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00010-SJ-0\nNAME: Ca5tillo, MarZo Andres",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261265,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "Ca5tillo, MarZo Andres"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "MarZo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Andres",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ca5tillo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-10-Q5": {
+      "Q5": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00010-SJ-0\nNAME: Ca5tillo, MarZo Andres",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261266,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "Ca5tillo, MarZo Andres"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "MarZo",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Andres",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ca5tillo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-11-Q1": {
+      "Q1": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00011-SJ-0\nNAME: Aquino, Tessa Marie",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261279,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Aquino, Tessa Marie"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Tessa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Marie",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Aquino",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-11-Q2": {
+      "Q2": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00011-SJ-0\nNAME: AqZino, Tessa Marie",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261280,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "AqZino, Tessa Marie"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Tessa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Marie",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "AqZino",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-11-Q3": {
+      "Q3": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00011-SJ-0\nNAME: AqZino, Tessa Marie",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261281,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "AqZino, Tessa Marie"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Tessa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Marie",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "AqZino",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-11-Q4": {
+      "Q4": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00011-SJ-0\nNAME: AqZin0, Tessa Marie",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261282,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "AqZin0, Tessa Marie"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Tessa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Marie",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "AqZin0",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-11-Q5": {
+      "Q5": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00011-SJ-0\nNAME: AqZin0, Tessa Marie",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261283,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "AqZin0, Tessa Marie"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Tessa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Marie",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "AqZin0",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-12-Q1": {
+      "Q1": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00012-SJ-0\nNAME: Flores, Daniel Jose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261296,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Flores, Daniel Jose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Daniel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Jose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Flores",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-12-Q2": {
+      "Q2": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00012-SJ-0\nNAME: Fl0res, Daniel Jose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261297,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Fl0res, Daniel Jose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Daniel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Jose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Fl0res",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-12-Q3": {
+      "Q3": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00012-SJ-0\nNAME: Fl0res, Daniel Jose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261298,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Fl0res, Daniel Jose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Daniel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Jose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Fl0res",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-12-Q4": {
+      "Q4": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00012-SJ-0\nNAME: FZ0res, Daniel Jose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261299,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "FZ0res, Daniel Jose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Daniel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Jose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "FZ0res",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-12-Q5": {
+      "Q5": {
+        "rawText": "DEPED FORM 137 PERMANENT RECORD\nSTUDENT NO. 2026-00012-SJ-0\nNAME: Zl0res, Daniel Jose",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261300,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "Zl0res, Daniel Jose"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Daniel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Jose",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Zl0res",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-13-Q1": {
+      "Q1": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00013-SJ-0\nNAME: Ramos, Irene Luz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261313,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Ramos, Irene Luz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Irene",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ramos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-13-Q2": {
+      "Q2": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00013-SJ-0\nNAME: R4mos, Irene Luz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261314,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "R4mos, Irene Luz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Irene",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "R4mos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-13-Q3": {
+      "Q3": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00013-SJ-0\nNAME: R4mos, Irene Luz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261315,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "R4mos, Irene Luz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Irene",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Luz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "R4mos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-13-Q4": {
+      "Q4": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00013-SJ-0\nNAME: R4mos, Irene Zuz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261316,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "R4mos, Irene Zuz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Irene",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Zuz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "R4mos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-13-Q5": {
+      "Q5": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00013-SJ-0\nNAME: R4mos, Irene Zuz",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261317,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "R4mos, Irene Zuz"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Irene",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Zuz",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "R4mos",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-14-Q1": {
+      "Q1": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00014-SJ-0\nNAME: Torres, Victor Emil",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261330,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Torres, Victor Emil"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Victor",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Emil",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Torres",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-14-Q2": {
+      "Q2": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00014-SJ-0\nNAME: ToZres, Victor Emil",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261331,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "ToZres, Victor Emil"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Victor",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Emil",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "ToZres",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-14-Q3": {
+      "Q3": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00014-SJ-0\nNAME: ToZres, Victor Emil",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261332,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "ToZres, Victor Emil"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Victor",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Emil",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "ToZres",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-14-Q4": {
+      "Q4": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00014-SJ-0\nNAME: ToZres, ViZtor Emil",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261333,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "ToZres, ViZtor Emil"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "ViZtor",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Emil",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "ToZres",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-14-Q5": {
+      "Q5": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00014-SJ-0\nNAME: ToZres, ViZtor Emil",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261334,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "ToZres, ViZtor Emil"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "ViZtor",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Emil",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "ToZres",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-15-Q1": {
+      "Q1": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00015-SJ-0\nNAME: Domingo, Lea Grace",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261347,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Domingo, Lea Grace"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lea",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Grace",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Domingo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-15-Q2": {
+      "Q2": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00015-SJ-0\nNAME: DoZingo, Lea Grace",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261348,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "DoZingo, Lea Grace"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lea",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Grace",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DoZingo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-15-Q3": {
+      "Q3": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00015-SJ-0\nNAME: DoZingo, Lea Grace",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261349,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "DoZingo, Lea Grace"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lea",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Grace",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DoZingo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-15-Q4": {
+      "Q4": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00015-SJ-0\nNAME: DoZiZgo, Lea Grace",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261350,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "DoZiZgo, Lea Grace"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lea",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Grace",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DoZiZgo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-15-Q5": {
+      "Q5": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00015-SJ-0\nNAME: DoZ1ngo, Lea Grace",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261351,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "DoZ1ngo, Lea Grace"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Lea",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Grace",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "DoZ1ngo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-16-Q1": {
+      "Q1": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00016-SJ-0\nNAME: Fernandez, Noel Pio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261364,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Fernandez, Noel Pio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Noel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Pio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Fernandez",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-16-Q2": {
+      "Q2": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00016-SJ-0\nNAME: FeZnandez, Noel Pio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261365,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "FeZnandez, Noel Pio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Noel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Pio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "FeZnandez",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-16-Q3": {
+      "Q3": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00016-SJ-0\nNAME: FeZnandez, Noel Pio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261366,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "FeZnandez, Noel Pio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Noel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Pio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "FeZnandez",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-16-Q4": {
+      "Q4": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00016-SJ-0\nNAME: ZeZnandez, Noel Pio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261367,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "ZeZnandez, Noel Pio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Noel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Pio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "ZeZnandez",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-16-Q5": {
+      "Q5": {
+        "rawText": "STUDENT IDENTIFICATION CARD\nSTUDENT NO. 2026-00016-SJ-0\nNAME: FeZZandez, Noel Pio",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261368,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "FeZZandez, Noel Pio"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Noel",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Pio",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "FeZZandez",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-17-Q1": {
+      "Q1": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Rivera, Rosa Elena",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261381,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Rivera, Rosa Elena"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rosa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Elena",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Rivera",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-17-Q2": {
+      "Q2": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: RiZera, Rosa Elena",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261382,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "RiZera, Rosa Elena"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rosa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Elena",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RiZera",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-17-Q3": {
+      "Q3": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: RiZera, Rosa Elena",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261383,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "RiZera, Rosa Elena"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rosa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Elena",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RiZera",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-17-Q4": {
+      "Q4": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: RiZera, Rosa EleZa",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261384,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "RiZera, Rosa EleZa"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rosa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "EleZa",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RiZera",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-17-Q5": {
+      "Q5": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: RiZera, Rosa EleZa",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261385,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "RiZera, Rosa EleZa"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Rosa",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "EleZa",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "RiZera",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-18-Q1": {
+      "Q1": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Santiago, Mario Felix",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261398,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Santiago, Mario Felix"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mario",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Felix",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Santiago",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-18-Q2": {
+      "Q2": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: SaZtiago, Mario Felix",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261399,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "SaZtiago, Mario Felix"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mario",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Felix",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SaZtiago",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-18-Q3": {
+      "Q3": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: SanZiago, Mario Felix",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261400,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "SanZiago, Mario Felix"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mario",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Felix",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SanZiago",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-18-Q4": {
+      "Q4": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: SanZiago, Mar1o Felix",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261401,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "SanZiago, Mar1o Felix"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mar1o",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Felix",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SanZiago",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-18-Q5": {
+      "Q5": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: SanZiago, Mari0 Felix",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261402,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "SanZiago, Mari0 Felix"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Mari0",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Felix",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "SanZiago",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-19-Q1": {
+      "Q1": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Mercado, Clara Faith",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261415,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Mercado, Clara Faith"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Clara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Faith",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Mercado",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-19-Q2": {
+      "Q2": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: MeZcado, Clara Faith",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261416,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "MeZcado, Clara Faith"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Clara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Faith",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MeZcado",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-19-Q3": {
+      "Q3": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: MeZcado, Clara Faith",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261417,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "MeZcado, Clara Faith"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Clara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Faith",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MeZcado",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-19-Q4": {
+      "Q4": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: MeZcado, Zlara Faith",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261418,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "MeZcado, Zlara Faith"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Zlara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Faith",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MeZcado",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-19-Q5": {
+      "Q5": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: MeZcado, Zlara Faith",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261419,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "MeZcado, Zlara Faith"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Zlara",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Faith",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "MeZcado",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-20-Q1": {
+      "Q1": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Ocampo, Ben Lucas",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261432,
+          "tier": "Q1",
+          "requestedNameSubstitutions": 0,
+          "actualNameText": "Ocampo, Ben Lucas"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ben",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lucas",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Ocampo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-20-Q2": {
+      "Q2": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Oc4mpo, Ben Lucas",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261433,
+          "tier": "Q2",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Oc4mpo, Ben Lucas"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ben",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lucas",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Oc4mpo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-20-Q3": {
+      "Q3": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Oc4mpo, Ben Lucas",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261434,
+          "tier": "Q3",
+          "requestedNameSubstitutions": 1,
+          "actualNameText": "Oc4mpo, Ben Lucas"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ben",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lucas",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Oc4mpo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-20-Q4": {
+      "Q4": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Oc4Zpo, Ben Lucas",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261435,
+          "tier": "Q4",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "Oc4Zpo, Ben Lucas"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ben",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lucas",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Oc4Zpo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    },
+    "canonical-20-Q5": {
+      "Q5": {
+        "rawText": "PHILIPPINE STATISTICS AUTHORITY CERTIFICATE OF LIVE BIRTH\nNAME: Oc4Zpo, Ben Lucas",
+        "engine": "constructed-replay",
+        "provenance": "constructed from manifest labels and seeded tier noise; not captured from a native OCR engine",
+        "construction": {
+          "seed": 20261436,
+          "tier": "Q5",
+          "requestedNameSubstitutions": 2,
+          "actualNameText": "Oc4Zpo, Ben Lucas"
+        },
+        "pages": [
+          {
+            "pageIndex": 0,
+            "width": 1000,
+            "height": 1400,
+            "observations": [
+              {
+                "text": "Ben",
+                "x": 0.12,
+                "y": 0.3,
+                "width": 0.22,
+                "height": 0.03
+              },
+              {
+                "text": "Lucas",
+                "x": 0.39,
+                "y": 0.3,
+                "width": 0.1,
+                "height": 0.03
+              },
+              {
+                "text": "Oc4Zpo",
+                "x": 0.55,
+                "y": 0.3,
+                "width": 0.28,
+                "height": 0.03
+              }
+            ]
+          }
+        ],
+        "templates": [
+          {
+            "page_index": 0,
+            "regions": {
+              "firstName": {
+                "x": 0.1,
+                "y": 0.27,
+                "width": 0.27,
+                "height": 0.09
+              },
+              "middleName": {
+                "x": 0.37,
+                "y": 0.27,
+                "width": 0.16,
+                "height": 0.09
+              },
+              "lastName": {
+                "x": 0.53,
+                "y": 0.27,
+                "width": 0.33,
+                "height": 0.09
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

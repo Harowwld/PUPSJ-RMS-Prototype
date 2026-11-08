@@ -1,7 +1,7 @@
 "use client"
 
 
-import { useMemo, useState, useEffect, useCallback } from "react"
+import { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
@@ -99,6 +99,53 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
+  const [mismatchConfirmOpen, setMismatchConfirmOpen] = useState(false)
+  const mismatchSubmissionRef = useRef(null)
+
+  const ocrMismatch = (() => {
+    if (isOsas) return null
+    const selectedStudentNo = String(newRec?.studentNo || "").trim()
+    if (!selectedStudentNo) return null
+    const matches = Array.isArray(ocrSuggestion?.studentMatches) ? ocrSuggestion.studentMatches : []
+    const exactMatches = matches.filter((candidate) =>
+      Number(candidate?.mismatchRatio) === 0 || Number(candidate?.mismatchPercent) === 0
+    )
+    const candidate = exactMatches.length === 1 ? exactMatches[0] : matches.length === 1 ? matches[0] : null
+    if (!candidate) return null
+    const candidateStudentNo = String(candidate.studentNo || candidate.student_no || "").trim()
+    if (!candidateStudentNo || candidateStudentNo.toUpperCase() === selectedStudentNo.toUpperCase()) return null
+
+    const selectedStudent = students.find((student) =>
+      String(student.studentNo || student.student_no || "").trim().toUpperCase() === selectedStudentNo.toUpperCase()
+    )
+    const candidateStudent = candidate.student || students.find((student) =>
+      String(student.studentNo || student.student_no || "").trim().toUpperCase() === candidateStudentNo.toUpperCase()
+    )
+    return {
+      selectedStudentNo,
+      selectedStudentName: selectedStudent?.name || newRec?.name || selectedStudentNo,
+      candidateStudentNo,
+      candidateStudentName: candidateStudent?.name || candidate.name || candidateStudentNo,
+    }
+  })()
+
+  const startUpload = (onSuccess) => {
+    mismatchSubmissionRef.current = { onSuccess }
+    if (ocrMismatch) {
+      setMismatchConfirmOpen(true)
+      return
+    }
+    const submission = mismatchSubmissionRef.current
+    mismatchSubmissionRef.current = null
+    processSubmission(submission)
+  }
+
+  const confirmMismatchUpload = () => {
+    setMismatchConfirmOpen(false)
+    const submission = mismatchSubmissionRef.current
+    mismatchSubmissionRef.current = null
+    if (submission) processSubmission(submission)
+  }
 
   const existingDocOnRecord = useMemo(() => {
     const cleanId = String(
@@ -671,6 +718,22 @@ export default function ScanUploadTab({
                 onCancel={() => {
                   setPendingDroppedFile(null)
                   setConfirmDropOpen(false)
+                }}
+                variant="warning"
+              />
+
+              <ConfirmModal
+                open={mismatchConfirmOpen}
+                title="Student mismatch detected"
+                message={ocrMismatch
+                  ? `OCR suggests this document belongs to ${ocrMismatch.candidateStudentName} (${ocrMismatch.candidateStudentNo}), but ${ocrMismatch.selectedStudentName} (${ocrMismatch.selectedStudentNo}) is selected. Confirm the student assignment before filing. The document will still follow the standard review process.`
+                  : "The OCR candidate no longer differs from the selected student. Confirm the upload to continue."}
+                confirmLabel="Upload to Selected Student"
+                cancelLabel="Cancel"
+                onConfirm={confirmMismatchUpload}
+                onCancel={() => {
+                  mismatchSubmissionRef.current = null
+                  setMismatchConfirmOpen(false)
                 }}
                 variant="warning"
               />
@@ -1396,6 +1459,14 @@ export default function ScanUploadTab({
                         ) : (
                           /* Existing Student Record Form for Registrar */
                           <div className="space-y-5">
+                            {ocrMismatch && (
+                              <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
+                                <p className="text-xs font-semibold">OCR identifies a different student</p>
+                                <p className="mt-1 text-[11px] leading-relaxed">
+                                  The scanned document appears to belong to {ocrMismatch.candidateStudentName} ({ocrMismatch.candidateStudentNo}), while {ocrMismatch.selectedStudentName} ({ocrMismatch.selectedStudentNo}) is selected. Review the assignment before filing.
+                                </p>
+                              </div>
+                            )}
                             {uploadStudentIsExisting && (
                               <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                                 <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
@@ -1852,17 +1923,14 @@ export default function ScanUploadTab({
                         <Button
                           type="button"
                           size="sm"
-                          onClick={() =>
-                            processSubmission({
-                              onSuccess: (ids) => {
-                                if (Array.isArray(ids) && ids.length > 0) {
-                                  ids.forEach(id => hf.removeIngestItem(id));
-                                } else {
-                                  hf.removeIngestItem();
-                                }
-                              },
-                            })
-                          }
+                          disabled={Boolean(ocrLoading)}
+                          onClick={() => startUpload((ids) => {
+                            if (Array.isArray(ids) && ids.length > 0) {
+                              ids.forEach(id => hf.removeIngestItem(id));
+                            } else {
+                              hf.removeIngestItem();
+                            }
+                          })}
                           className="w-full h-9 px-4 disabled:opacity-50 cursor-pointer"
                         >
                           {isReplaceMode || rescanContext ? "Replace Existing Document" : "Upload Document"}
