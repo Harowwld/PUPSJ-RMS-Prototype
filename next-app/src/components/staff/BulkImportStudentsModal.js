@@ -633,11 +633,11 @@ export default function BulkImportStudentsModal({
                 <span>Bulk Assign Location to Selected ({selectedCount}):</span>
               </div>
 
-              <DataViewToolbar label="Bulk location assignment and table controls" className="gap-4">
+              <DataViewToolbar label="Bulk location assignment and table controls" className="gap-4 p-1.5">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Room:</span>
                   <Select
-                    className="h-8.5 w-24 rounded-lg border border-border px-2 text-xs bg-white dark:bg-zinc-800"
+                    className="h-9 w-24 rounded-xl px-2 text-xs"
                     value={csvBulkRoom}
                     onChange={(e) => setCsvBulkRoom(e.target.value)}
                   >
@@ -653,7 +653,7 @@ export default function BulkImportStudentsModal({
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Cabinet:</span>
                   <Select
-                    className="h-8.5 w-32 rounded-lg border border-border px-2.5 text-xs bg-white dark:bg-zinc-800"
+                    className="h-9 w-32 rounded-xl px-2.5 text-xs"
                     value={csvBulkCabinet}
                     onChange={(e) => setCsvBulkCabinet(e.target.value)}
                   >
@@ -669,7 +669,7 @@ export default function BulkImportStudentsModal({
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Drawer:</span>
                   <Select
-                    className="h-8.5 w-28 rounded-lg border border-border px-2.5 text-xs bg-white dark:bg-zinc-800"
+                    className="h-9 w-28 rounded-xl px-2.5 text-xs"
                     value={csvBulkDrawer}
                     onChange={(e) => setCsvBulkDrawer(e.target.value)}
                   >
@@ -688,7 +688,7 @@ export default function BulkImportStudentsModal({
                   size="sm"
                   onClick={applyCsvBulkLocation}
                   disabled={selectedCount === 0 || (!csvBulkRoom && !csvBulkCabinet && !csvBulkDrawer)}
-                  className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 border-border text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer disabled:opacity-50 ml-1 shadow-2xs"
+                  className="ml-1"
                 >
                   Apply Location
                 </Button>
@@ -707,7 +707,18 @@ export default function BulkImportStudentsModal({
               ref={tableContainerRef}
               className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
             >
-                    <Table columns={["selection", "identifier", "text", "category", "year", "category", "category", "category", "category", "status"]} className="min-w-[1160px]">
+              <Table columns={[
+                "selection",
+                { kind: "identifier", minWidth: 184 },
+                { kind: "text", minWidth: 148, maxWidth: 172 },
+                { kind: "category", minWidth: 128 },
+                { kind: "year", minWidth: 92 },
+                { kind: "category", minWidth: 112 },
+                { kind: "category", width: 152, paddingX: 8 },
+                { kind: "category", width: 152, paddingX: 8 },
+                { kind: "category", width: 152, paddingX: 8 },
+                "status",
+              ]} className="min-w-[1160px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="w-12 min-w-[48px] p-3 text-center">
@@ -728,14 +739,14 @@ export default function BulkImportStudentsModal({
                         }}
                       />
                     </th>
-                    <th className="p-3 w-44 min-w-[150px] whitespace-nowrap">Student No.</th>
-                    <th className="p-3 min-w-[220px] whitespace-nowrap">Full Name</th>
-                    <th className="p-3 w-32 min-w-[110px] whitespace-nowrap">Course</th>
-                    <th className="p-3 w-20 min-w-[70px] whitespace-nowrap text-center">Year</th>
-                    <th className="p-3 w-24 min-w-[80px] whitespace-nowrap text-center">Section</th>
-                    <th className="p-3 pr-4 w-32 min-w-[110px] whitespace-nowrap">Room</th>
-                    <th className="p-3 pr-6 w-40 min-w-[150px] whitespace-nowrap">Cabinet</th>
-                    <th className="p-3 pl-2 pr-4 w-36 min-w-[120px] whitespace-nowrap">Drawer</th>
+                    <th className="whitespace-nowrap">Student No.</th>
+                    <th className="whitespace-nowrap">Full Name</th>
+                    <th className="whitespace-nowrap">Course</th>
+                    <th className="whitespace-nowrap">Year</th>
+                    <th className="whitespace-nowrap">Section</th>
+                    <th>Room</th>
+                    <th>Cabinet</th>
+                    <th>Drawer</th>
                     <th className="p-3 pr-5 text-right w-20 min-w-[70px] whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -781,9 +792,12 @@ export default function BulkImportStudentsModal({
                         <td className="p-3 align-middle text-center text-gray-600 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
                           {r.student.section}
                         </td>
-                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Room"
+                            className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
+                            containerClassName="py-0.5"
+                            valueClassName="text-center"
                             value={String(room || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "room", parseInt(e.target.value, 10))
@@ -796,9 +810,12 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-30 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Cabinet"
+                            className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
+                            containerClassName="py-0.5"
+                            valueClassName="text-center"
                             value={String(cabinet || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "cabinet", e.target.value)
@@ -811,9 +828,12 @@ export default function BulkImportStudentsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-24 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Drawer"
+                            className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
+                            containerClassName="py-0.5"
+                            valueClassName="text-center"
                             value={String(drawer || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "drawer", parseInt(e.target.value, 10))

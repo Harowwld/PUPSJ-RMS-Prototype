@@ -67,7 +67,7 @@ export default function StudentOsasProposalsSkeleton({ count = 3, showForm = tru
       {/* ONE Single Card Container encapsulating Header, Stream Switcher, Inline Proposal Form, Toolbar & Proposals List */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* 1. Page Header Skeleton (matches PageHeader with Organization Selector Pill + RefreshButton) */}
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <Skeleton className="h-5 w-52 sm:w-64 rounded-md dark:bg-muted" />
@@ -87,7 +87,7 @@ export default function StudentOsasProposalsSkeleton({ count = 3, showForm = tru
         </div>
 
         {/* 2. OSAS Stream Switcher (3-tab SegmentedControl) */}
-        <div className="border-t border-b border-border/80 bg-white dark:bg-card px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="border-b border-border/80 bg-white dark:bg-card px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0">
             <Skeleton className="h-7 w-32 rounded-full bg-white dark:bg-zinc-800 shadow-xs" />
             <Skeleton className="h-7 w-40 rounded-full bg-transparent dark:bg-transparent" />
