@@ -3,7 +3,6 @@
 
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import LinkOdrsPortalAccountDialog from "./LinkOdrsPortalAccountDialog";
 import StudentRecordsReportDialog from "@/components/shared/StudentRecordsReportDialog";
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -73,7 +72,6 @@ export default function StudentProfileSheet({
   const [requests, setRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [linkingStudentNo, setLinkingStudentNo] = useState(null);
 
   const isOrg = Boolean(student?.category || student?.rawOrg);
 
@@ -375,15 +373,6 @@ export default function StudentProfileSheet({
               </Button>
             </div>
           </div>
-
-          {!isOrg && !isArchived && authUser?.role === "Admin" && authUser?.office_id === "registrar" && (
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-              <h3 className="text-sm font-semibold">ODRS Portal Account</h3>
-              <Button variant="outline" size="sm" onClick={() => setLinkingStudentNo(student.studentNo)}>
-                Link Portal Account
-              </Button>
-            </div>
-          )}
 
           {/* 1. Academic & Enrollment Details (Standard Info List) */}
           <div className="space-y-2">
@@ -912,9 +901,6 @@ export default function StudentProfileSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-    {open && linkingStudentNo && linkingStudentNo === student.studentNo && (
-      <LinkOdrsPortalAccountDialog studentNo={student.studentNo} studentName={displayName} onClose={() => setLinkingStudentNo(null)} />
-    )}
     {!isOrg && <StudentRecordsReportDialog
       key={`${student.studentNo}:${authUser?.office_id || "registrar"}`}
       open={open && reportOpen}
