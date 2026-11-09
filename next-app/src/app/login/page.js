@@ -509,6 +509,7 @@ export default function Home() {
         throw new Error(result.error || `${fallback} The server returned an unexpected response (HTTP ${result.status}).`);
       }
       if (action === "send") {
+        if (signupChallengeId) toast.success("Verification Code Sent");
         setSignupChallengeId(result.data.challengeId);
         setSignupCode("");
         setSignupSetup(null);
@@ -535,6 +536,7 @@ export default function Home() {
     }
   }
 
+  const isVerifyingSignup = view === "student-signup" && Boolean(signupChallengeId) && !signupSetup;
   const formattedStudentSignupName = formatRegistrarStudentName(studentSignup);
 
   const handle2FAVerify = async (e) => {
@@ -589,7 +591,7 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-[#eef0f6] dark:bg-zinc-950 font-sans p-8 overflow-y-auto">
+      <PageTransition className={`min-h-screen w-full flex items-center justify-center relative bg-[#eef0f6] dark:bg-zinc-950 font-sans overflow-y-auto ${isVerifyingSignup ? "px-2 py-10 sm:px-8" : "p-8"}`}>
         {/* Dynamic Liquid Glass Background Blobs */}
         
 
@@ -607,8 +609,8 @@ export default function Home() {
           <div
             className="bg-white rounded-[2.5rem] shadow-xl dark:bg-zinc-900 flex flex-col items-center w-full relative transition-all duration-300 border border-border"
             style={{
-              padding: "48px 48px",
-              minHeight: "630px",
+              padding: isVerifyingSignup ? "40px clamp(16px, 5vw, 48px)" : "48px 48px",
+              minHeight: isVerifyingSignup ? "auto" : "630px",
             }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
@@ -1024,6 +1026,72 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            ) : isVerifyingSignup ? (
+              <form
+                aria-busy={studentSignupLoading}
+                className="mx-auto flex w-full max-w-sm flex-col items-center text-center"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (signupCode.length === 6 && !studentSignupLoading) submitSignupStep("verify");
+                }}
+              >
+                <img src="/assets/branding/black-icon.png" alt="" width={40} height={40} className="mb-5 dark:hidden" />
+                <img src="/assets/branding/white-icon.png" alt="" width={40} height={40} className="mb-5 hidden dark:block" />
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Verify your email</h1>
+                <p id="signup-code-instructions" className="mt-2 w-full text-sm leading-relaxed text-muted-foreground">
+                  Enter the six-digit code sent to{" "}
+                  <strong className="break-all font-semibold text-foreground">{studentSignup.email.trim()}</strong>.
+                </p>
+
+                <label className="mt-6 block w-full">
+                  <span className="sr-only">Email verification code</span>
+                  <span data-otp-input className="relative grid grid-cols-6 gap-1.5 sm:gap-2">
+                    <input
+                      autoFocus
+                      type="text"
+                      autoComplete="one-time-code"
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
+                      required
+                      aria-invalid={Boolean(studentSignupError)}
+                      aria-describedby={studentSignupError ? "signup-code-instructions signup-code-error" : "signup-code-instructions"}
+                      value={signupCode}
+                      onChange={(event) => {
+                        setSignupCode(event.target.value.replace(/\D/g, "").slice(0, 6));
+                        setStudentSignupError("");
+                      }}
+                      className="peer absolute inset-0 z-10 h-full w-full cursor-text opacity-0 text-base"
+                    />
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <span
+                        key={index}
+                        aria-hidden="true"
+                        className={`flex h-12 min-w-0 items-center justify-center rounded-xl border bg-muted/45 text-xl font-semibold tabular-nums text-foreground motion-safe:transition-colors sm:h-14 sm:text-2xl ${studentSignupError ? "border-destructive/60" : "border-border"} ${index === Math.min(signupCode.length, 5) ? "peer-focus:border-pup-maroon peer-focus:ring-1 peer-focus:ring-pup-maroon" : ""}`}
+                      >
+                        {signupCode[index] || <span className="size-1.5 rounded-full bg-muted-foreground/40" />}
+                      </span>
+                    ))}
+                  </span>
+                </label>
+
+                {studentSignupError && <p id="signup-code-error" role="alert" className="mt-3 text-sm text-destructive">{studentSignupError}</p>}
+
+                <Button type="submit" className="mt-5 h-11 w-full" disabled={studentSignupLoading || signupCode.length !== 6}>
+                  {studentSignupLoading ? "Please wait…" : "Verify Email"}
+                </Button>
+                <div className="mt-2 flex w-full flex-wrap justify-center gap-x-1">
+                  <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
+                    Resend Code
+                  </Button>
+                  <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => {
+                    setSignupChallengeId("");
+                    setSignupCode("");
+                    setStudentSignupError("");
+                  }}>
+                    Edit Signup Details
+                  </Button>
+                </div>
+              </form>
             ) : (
               <div className="w-full text-center flex-1 flex flex-col justify-center animate-in fade-in duration-300">
                 <div className="flex justify-center w-full mb-4">
@@ -1052,77 +1120,49 @@ export default function Home() {
                     className="mt-3 w-full space-y-4 text-left"
                     onSubmit={(event) => {
                       event.preventDefault();
-                      submitSignupStep(signupSetup ? "complete" : "verify");
+                      submitSignupStep("complete");
                     }}
                   >
-                    <h2 className="text-base font-semibold">{signupSetup ? "Account Setup" : "Verify Your Email"}</h2>
-                    {signupSetup ? (
-                      <>
-                        <p className="text-sm text-muted-foreground">
-                          {signupSetup.questions.length
-                            ? "Set up your recovery questions to finish creating your account."
-                            : "Your email is verified. Finish creating your account to continue."}
-                        </p>
-                        <label htmlFor="signup-affiliation" className="block text-sm font-medium">
-                          How are you using eManage?
-                        </label>
-                        <Select
-                          id="signup-affiliation"
-                          value={signupAffiliation}
-                          onChange={(event) => setSignupAffiliation(event.target.value)}
-                        >
-                          <option value="" disabled>Select your affiliation</option>
-                          {STUDENT_AFFILIATIONS.map(({ value, label }) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </Select>
-                        {signupSetup.questions.map(({ id, question }) => (
-                          <label key={id} className="block space-y-1 text-sm">
-                            <span>{question}</span>
-                            <Input
-                              type="password"
-                              autoComplete="off"
-                              required
-                              minLength={3}
-                              maxLength={100}
-                              value={signupAnswers[id] || ""}
-                              onChange={(event) => setSignupAnswers((answers) => ({ ...answers, [id]: event.target.value }))}
-                            />
-                          </label>
-                        ))}
-                      </>
-                    ) : (
-                      <label className="block space-y-2 text-sm">
-                        <span>Enter the six-digit code sent to <strong className="break-all">{studentSignup.email.trim()}</strong>.</span>
+                    <h2 className="text-base font-semibold">Account Setup</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {signupSetup.questions.length
+                        ? "Set up your recovery questions to finish creating your account."
+                        : "Your email is verified. Finish creating your account to continue."}
+                    </p>
+                    <label htmlFor="signup-affiliation" className="block text-sm font-medium">
+                      How are you using eManage?
+                    </label>
+                    <Select
+                      id="signup-affiliation"
+                      value={signupAffiliation}
+                      onChange={(event) => setSignupAffiliation(event.target.value)}
+                    >
+                      <option value="" disabled>Select your affiliation</option>
+                      {STUDENT_AFFILIATIONS.map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </Select>
+                    {signupSetup.questions.map(({ id, question }) => (
+                      <label key={id} className="block space-y-1 text-sm">
+                        <span>{question}</span>
                         <Input
-                          autoFocus
-                          autoComplete="one-time-code"
-                          inputMode="numeric"
-                          pattern="[0-9]{6}"
-                          maxLength={6}
+                          type="password"
+                          autoComplete="off"
                           required
-                          aria-label="Email verification code"
-                          value={signupCode}
-                          onChange={(event) => setSignupCode(event.target.value.replace(/\D/g, ""))}
+                          minLength={3}
+                          maxLength={100}
+                          value={signupAnswers[id] || ""}
+                          onChange={(event) => setSignupAnswers((answers) => ({ ...answers, [id]: event.target.value }))}
                         />
                       </label>
-                    )}
+                    ))}
                     {studentSignupError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{studentSignupError}</p>}
-                    <Button type="submit" className="w-full" disabled={studentSignupLoading || (Boolean(signupSetup) && !signupAffiliation)}>
-                      {signupSetup ? "Complete Account Setup" : "Verify Email"}
+                    <Button type="submit" className="w-full" disabled={studentSignupLoading || !signupAffiliation}>
+                      Complete Account Setup
                     </Button>
                     <Button type="button" variant="outline" className="w-full" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
-                      {signupSetup ? "Request New Code" : "Resend Verification Code"}
+                      Request New Code
                     </Button>
-                    {!signupSetup && (
-                      <Button type="button" variant="outline" className="w-full" disabled={studentSignupLoading} onClick={() => {
-                        setSignupChallengeId("");
-                        setSignupCode("");
-                        setStudentSignupError("");
-                      }}>
-                        Edit Signup Details
-                      </Button>
-                    )}
                   </form>
                 ) : (
                 <form onSubmit={handleStudentSignup} className="w-full flex flex-col mt-2">
