@@ -1,6 +1,6 @@
 "use client";
 
-import { hasLinkedStudentRecord, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
+import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
@@ -750,9 +750,7 @@ export default function AccountSettingsPanel() {
     if (authUser?.role === "Student") {
       return [
         { id: "default", label: "Overview", desc: "View request status and recent activity" },
-        ...(hasLinkedStudentRecord(authUser) ? [
-          { id: "compliance", label: "Requirements & Compliance", desc: "Track admission document statuses" },
-        ] : []),
+        { id: "compliance", label: "Document Checklist", desc: "Review student enrollment requirements" },
         { id: "requests", label: "Document Requests", desc: "View and request official academic records" },
       ];
     }

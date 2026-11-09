@@ -259,10 +259,8 @@ function StudentDashboard() {
   const [revisionTargetProposal, setRevisionTargetProposal] = useState(null);
   const [myOrganizations, setMyOrganizations] = useState([]);
   const [selectedOsasOrgId, setSelectedOsasOrgId] = useState("");
-  const [selectedView, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
-  const canViewStudentRecords = hasLinkedStudentRecord(me);
+  const [view, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
   const isParentAccount = me?.client_type === "Parent";
-  const view = ["compliance", "osas"].includes(selectedView) && !canViewStudentRecords ? "overview" : selectedView;
   const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -1309,13 +1307,12 @@ function StudentDashboard() {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    const normalized = normalizeStudentTab(nextView) || "overview";
-    const target = ["compliance", "osas"].includes(normalized) && !canViewStudentRecords ? "overview" : normalized;
+    const target = normalizeStudentTab(nextView) || "overview";
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-  }, [router, canViewStudentRecords]);
+  }, [router]);
 
   // Synchronize view from switch-view events (Command Palette & deep linking)
   useEffect(() => {
@@ -1359,11 +1356,11 @@ function StudentDashboard() {
       }));
       const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes, complianceRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
-        linkedStudent ? fetch("/api/student/event-proposals", { cache: "no-store" }) : null,
+        fetch("/api/student/event-proposals", { cache: "no-store" }),
         fetch("/api/doc-types?scope=requestable", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
-        linkedStudent ? fetch("/api/student/organizations", { cache: "no-store" }) : null,
-        linkedStudent ? fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })) : null,
+        fetch("/api/student/organizations", { cache: "no-store" }),
+        fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
         linkedStudent ? fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })) : null,
       ]);
       const parseJsonSafe = async (res) => {
@@ -1384,7 +1381,7 @@ function StudentDashboard() {
         postEventRes?.ok ? parseJsonSafe(postEventRes) : {},
         complianceRes?.ok ? parseJsonSafe(complianceRes) : {},
       ]);
-      if (!requestRes.ok || !requestJson?.ok || (linkedStudent && (!proposalRes?.ok || !proposalJson?.ok))) {
+      if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
       }
       setComplianceData(complianceJson?.ok ? complianceJson.data : null);
@@ -1925,7 +1922,7 @@ function StudentDashboard() {
       iconClass: " FileUploadIcon",
       badge: readyRequestsCount > 0 ? readyRequestsCount : undefined,
     },
-    ...(canViewStudentRecords ? [{
+    {
       key: "compliance",
       label: "Document Checklist",
       iconClass: " ClipboardIcon",
@@ -1937,7 +1934,7 @@ function StudentDashboard() {
       label: "OSAS Submissions",
       iconClass: " StudentIcon",
       badge: osasActionCount > 0 ? osasActionCount : undefined,
-    }] : []),
+    },
   ];
 
   async function handleLogout() {
@@ -2016,7 +2013,7 @@ function StudentDashboard() {
                   hasLoaded={hasLoaded}
                 />
               ) : view === "compliance" ? (
-                <StudentComplianceTab authUser={me} onLogout={handleLogout} />
+                <StudentComplianceTab />
               ) : view === "activity" ? (
                 <MyActivityPanel />
               ) : view === "settings" ? (
@@ -2042,7 +2039,6 @@ function StudentDashboard() {
                         </div>
                       }
                       description="Request official academic records and track Registrar processing updates."
-                      showBorder={false}
                       className="p-6"
                       titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                       descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -2078,7 +2074,7 @@ function StudentDashboard() {
 
                     {/* 2. Inline Non-Modal Request Form Section */}
                     {isFormOpen && (
-                      <div className="border-t border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                      <div className="bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
                         {/* Dismissable duplicate ticket reminder alert attached to the line */}
                         {!isDuplicateAlertDismissed && (
                           <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
@@ -2233,7 +2229,7 @@ function StudentDashboard() {
                               ) : (
                                 <p className="mt-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
                                   Only university-issued credentials and certifications may be requested here.
-                                  {canViewStudentRecords && requestForm.clientType === "Student" && " For enrollment records, open Document Checklist."}
+                                  {requestForm.clientType === "Student" && " For enrollment records, open Document Checklist."}
                                 </p>
                               )}
                             </div>
@@ -2402,7 +2398,7 @@ function StudentDashboard() {
                     )}
 
                     {/* 3. Toolbar & Request History Header */}
-                    <DataViewToolbar label="Request history search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+                    <DataViewToolbar label="Request history search and controls" className={cn("p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none", isFormOpen && "border-t border-border")}>
                       {/* Left: DashboardSearch */}
                       <div className="flex min-w-0 items-center gap-2">
                         <DashboardSearch
@@ -2687,7 +2683,6 @@ function StudentDashboard() {
                       </div>
                     }
                     description="Submit organization event proposals and follow evaluation progress."
-                    showBorder={false}
                     className="p-6"
                     titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                     descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"

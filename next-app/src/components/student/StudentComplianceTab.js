@@ -70,7 +70,7 @@ function formatChipDate(dateStr) {
   }
 }
 
-export default function StudentComplianceTab({ authUser, initialData }) {
+export default function StudentComplianceTab({ initialData }) {
   const [data, setData] = useState(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [refreshing, setRefreshing] = useState(false);
@@ -315,13 +315,87 @@ export default function StudentComplianceTab({ authUser, initialData }) {
     return <StudentComplianceSkeleton />;
   }
 
-  const student = data?.student || {
-    studentNo: authUser?.student_no || "Unassigned",
-    name: authUser?.name || "Student",
-    courseCode: "BSIT",
-    courseName: "Bachelor of Science in Information Technology",
-    section: "1-1",
-  };
+  const checklistNotice = (
+    <div className="w-full border-b border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/35 dark:text-blue-100">
+      <p className="font-semibold">For current students</p>
+      <p className="mt-1 text-blue-800 dark:text-blue-200">
+        This checklist covers documents students submit for enrollment. Personal submission status is available to current students with a linked record.
+      </p>
+    </div>
+  );
+
+  if (!data?.student) {
+    const term = searchQuery.trim().toLowerCase();
+    const matchingRequirements = requirements.filter(({ name, category, instructions }) =>
+      [name, category, instructions].some((value) => value?.toLowerCase().includes(term))
+    );
+    const categories = new Map();
+    for (const requirement of matchingRequirements) {
+      const category = requirement.category || "General Requirements";
+      if (!categories.has(category)) categories.set(category, []);
+      categories.get(category).push(requirement);
+    }
+
+    return (
+      <Card className="flex min-w-0 w-full flex-1 flex-col gap-0 overflow-hidden rounded-2xl p-0">
+        <PageHeader
+          title="Document Checklist"
+          description="Find out which documents to prepare for enrollment and how to submit them."
+          className="p-6"
+        />
+        {checklistNotice}
+        {requirements.length > 0 && (
+          <DataViewToolbar label="Search enrollment requirements" className="border-b border-border px-6 py-3">
+            <DashboardSearch
+              label="Search enrollment requirements"
+              placeholder="Search documents or categories"
+              value={searchQuery}
+              onChange={setSearchQuery}
+              count={matchingRequirements.length}
+              className="w-full sm:w-80"
+            />
+          </DataViewToolbar>
+        )}
+        {categories.size > 0 ? (
+          <div className="min-w-0 divide-y divide-border">
+            {[...categories].map(([category, items]) => (
+              <section key={category}>
+                <h2 className="flex items-center gap-2.5 border-b border-border bg-muted/35 px-6 py-3 text-sm font-semibold">
+                  <AppIcon icon={getRequirementCategoryIcon(category)} aria-hidden="true" className="shrink-0 text-base text-pup-maroon dark:text-red-400" />
+                  <span className="min-w-0 break-words">{category}</span>
+                </h2>
+                <ul className="divide-y divide-border">
+                  {items.map((requirement) => (
+                    <li key={requirement.id} className="space-y-1 px-6 py-3.5">
+                      <h3 className="break-words text-sm font-semibold">{requirement.name}</h3>
+                      <p className="break-words text-sm leading-relaxed text-muted-foreground">{requirement.instructions}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                {term ? <EmptySearch01Icon size="1em" /> : <EmptyCheckListIcon size="1em" />}
+              </EmptyMedia>
+              <EmptyTitle>{term ? "No Matching Requirements" : "No Requirements Available"}</EmptyTitle>
+              {term && <EmptyDescription>Try a document name or category.</EmptyDescription>}
+            </EmptyHeader>
+            {term && (
+              <EmptyContent>
+                <Button variant="outline" onClick={() => setSearchQuery("")}>Clear Search</Button>
+              </EmptyContent>
+            )}
+          </Empty>
+        )}
+      </Card>
+    );
+  }
+
+  const { student } = data;
 
   const handleDownloadPdf = async () => {
     setDownloadingPdf(true);
@@ -409,7 +483,6 @@ export default function StudentComplianceTab({ authUser, initialData }) {
             </div>
           }
           description="Track your submitted credentials and monitor required documents for university records compliance."
-          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -459,8 +532,9 @@ export default function StudentComplianceTab({ authUser, initialData }) {
           }
         />
 
+        {checklistNotice}
         {/* B. KPI Stat Cards Row */}
-        <div className="px-6 pb-6">
+        <div className="px-6 pt-4 pb-6">
           <StudentComplianceKpiCards summary={summary} />
         </div>
 

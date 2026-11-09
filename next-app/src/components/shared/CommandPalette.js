@@ -1,5 +1,4 @@
 "use client";
-import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -1097,14 +1096,7 @@ export default function CommandPalette({
           ],
         },
       ];
-      if (!hasLinkedStudentRecord(authUser)) {
-        candidateGroups = candidateGroups
-          .map((group) => ({
-            ...group,
-            items: group.items.filter(({ view }) => view !== "compliance" && view !== "osas"),
-          }))
-          .filter(({ items }) => items.length);
-      }
+
     }
 
     // Universal Controls

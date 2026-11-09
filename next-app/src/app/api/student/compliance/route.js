@@ -98,6 +98,19 @@ function getNormalizedGroupKey(name) {
   return n.replace(/[^a-z0-9]/g, "_");
 }
 
+function getRequirementDetails(dt) {
+  return {
+    id: dt.id,
+    name: dt.name,
+    docType: dt.name,
+    documentType: dt.name,
+    groupKey: getNormalizedGroupKey(dt.name),
+    category: dt.compliance_category || getRequirementCategory(dt.name),
+    description: getRequirementDescription(dt.name),
+    instructions: getRequirementInstructions(dt.name),
+  };
+}
+
 export async function GET(req) {
   const access = await requireStudent(req);
   if (access.error || !access.user) {
@@ -106,23 +119,6 @@ export async function GET(req) {
       access.error?.startsWith("Access denied") ? 403 : 401
     );
   }
-
-  if (!hasLinkedStudentRecord(access.user)) {
-    return createAuthErrorResponse("The document checklist is available to current students with a linked record.", 403);
-  }
-
-  const { studentNo } = access.user;
-  const student = await queryOne(
-    `SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
-            s.storage_room, s.storage_cabinet, s.storage_drawer, c.name AS course_name
-       FROM students s
-       LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
-      WHERE s.student_no = $1`,
-    [studentNo]
-  );
-  if (!student) return createAuthErrorResponse("Linked student record not found.", 404);
-  if (student.name) student.name = decryptPII(student.name);
-  const effectiveStudentNo = student.student_no;
 
   // 2. Fetch Active Compliance Document Types for Registrar
   const docTypes = await query(
@@ -146,6 +142,26 @@ export async function GET(req) {
     }
   }
   const canonicalTypes = Array.from(dedupedTypesMap.values());
+
+  if (!hasLinkedStudentRecord(access.user)) {
+    return NextResponse.json({
+      ok: true,
+      data: { requirements: canonicalTypes.map(getRequirementDetails), student: null, summary: null },
+    });
+  }
+
+  const { studentNo } = access.user;
+  const student = await queryOne(
+    `SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
+            s.storage_room, s.storage_cabinet, s.storage_drawer, c.name AS course_name
+       FROM students s
+       LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
+      WHERE s.student_no = $1`,
+    [studentNo]
+  );
+  if (!student) return createAuthErrorResponse("Linked student record not found.", 404);
+  if (student.name) student.name = decryptPII(student.name);
+  const effectiveStudentNo = student.student_no;
 
   // 3. Fetch Submitted Documents for this Student
   const rawDocuments = effectiveStudentNo
@@ -199,14 +215,7 @@ export async function GET(req) {
     }
 
     return {
-      id: dt.id,
-      name: dt.name,
-      docType: dt.name,
-      documentType: dt.name,
-      groupKey: gKey,
-      category: dt.compliance_category || getRequirementCategory(dt.name),
-      description: getRequirementDescription(dt.name),
-      instructions: getRequirementInstructions(dt.name),
+      ...getRequirementDetails(dt),
       status, // Strictly "Submitted" or "Not Submitted"
       document: validDoc
         ? {

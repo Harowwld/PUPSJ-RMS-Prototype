@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -464,7 +463,6 @@ export default function StudentOverviewTab({
     .map((part) => part[0]?.toUpperCase())
     .join("") || "S";
   const complianceSummary = complianceData?.summary;
-  const canViewStudentRecords = hasLinkedStudentRecord(authUser);
   const isParent = authUser?.client_type === "Parent";
   const isAlumni = authUser?.client_type === "Alumni";
   const requestActionLabel = isParent ? "Request on Behalf of a Student" : "Open Request Form";
@@ -472,9 +470,7 @@ export default function StudentOverviewTab({
     ? "Request a student’s academic documents and track the Registrar’s review."
     : isAlumni
       ? "Request transcripts, diplomas, and other academic documents. Track your requests here."
-      : canViewStudentRecords
-        ? "Track academic requests, enrollment records, and OSAS submissions."
-        : "Request academic documents and track their status. Contact the Registrar to link your student record.";
+      : "Track academic requests, review enrollment requirements, and open OSAS submissions.";
   const isOfficer = myOrganizations.length > 0;
   const inFlightCount = (data.requests || []).filter((r) =>
     ["submitted", "pending", "under review", "underreview", "inprogress", "processing", "ready", "pendingpayment"].includes(
@@ -522,7 +518,6 @@ export default function StudentOverviewTab({
             </div>
           }
           description={overviewDescription}
-          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -546,7 +541,7 @@ export default function StudentOverviewTab({
         />
 
         {/* 2. Unified Content Body */}
-        <div className="border-t border-border dark:border-border p-6 flex flex-[1_0_auto] flex-col gap-6">
+        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
 
       {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
       {attentionItems.length > 0 && (
@@ -773,7 +768,7 @@ export default function StudentOverviewTab({
           Quick Portals &amp; Actions
         </h2>
 
-        <div className={cn("grid grid-cols-1 gap-3.5 w-full", canViewStudentRecords && "sm:grid-cols-3")}>
+        <div className="grid w-full grid-cols-1 gap-3.5 sm:grid-cols-3">
           {/* Action 1: Document Requests */}
           <button
             type="button"
@@ -801,7 +796,6 @@ export default function StudentOverviewTab({
             </div>
           </button>
 
-          {canViewStudentRecords && <>
           {/* Action 2: Document Checklist */}
           <button
             type="button"
@@ -823,7 +817,7 @@ export default function StudentOverviewTab({
               Document Checklist
             </span>
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
-              Verify physical archival compliance (Form 137, PSA, Good Moral).
+              Review the documents students need to submit for enrollment.
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 group-hover:underline underline-offset-4">
               <span>Open Document Checklist</span>
@@ -843,7 +837,7 @@ export default function StudentOverviewTab({
               </div>
               <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "tabular-nums")}>
                 <StudentIcon size={12} aria-hidden="true" />
-                {isOfficer ? `${(data.proposals || []).length} Active` : "Student Body"}
+                {isOfficer ? `${(data.proposals || []).length} Active` : "Officer access required"}
               </span>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
@@ -857,7 +851,6 @@ export default function StudentOverviewTab({
               <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
-          </>}
         </div>
       </div>
 
@@ -882,10 +875,8 @@ export default function StudentOverviewTab({
             items={[
               { value: "all", label: "All Activity" },
               { value: "requests", label: "Registrar Requests" },
-              ...(canViewStudentRecords ? [
-                { value: "compliance", label: "Permanent Records" },
-                { value: "osas", label: "OSAS Affairs" },
-              ] : []),
+              { value: "compliance", label: "Permanent Records" },
+              { value: "osas", label: "OSAS Affairs" },
             ]}
           />
         </div>
@@ -987,7 +978,7 @@ export default function StudentOverviewTab({
                   </EmptyTitle>
                   <EmptyDescription>
                     {activityFilter === "all"
-                      ? (canViewStudentRecords ? "Updates for document requests, enrollment records, and OSAS submissions will appear here." : "Updates for your document requests will appear here.")
+                      ? "Updates for document requests, enrollment records, and OSAS submissions will appear here."
                       : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar Requests" : activityFilter === "compliance" ? "Permanent Records" : "OSAS Affairs"}.`}
                   </EmptyDescription>
                 </EmptyHeader>
