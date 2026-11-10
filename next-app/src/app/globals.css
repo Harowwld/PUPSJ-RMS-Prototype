@@ -8,6 +8,7 @@
 :root {
   --brand-accent: #800000;
   --brand-foreground: #ffffff;
+  --storage-grid-line: rgba(148, 163, 184, 0.12);
 }
 
 .systemadmin-dashboard {
@@ -773,6 +774,7 @@
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
+  --storage-grid-line: rgba(255, 255, 255, 0.05);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: rgb(255 255 255 / 8%);

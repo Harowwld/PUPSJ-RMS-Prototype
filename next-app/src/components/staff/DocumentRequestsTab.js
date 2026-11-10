@@ -59,10 +59,10 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import useTableScroll from "@/hooks/useTableScroll";
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import { formatErrorMessage } from "@/lib/errorUtils";
-import { matchesSearchQuery } from "@/lib/searchUtils";
 import {
   ALLOWED_STATUS_TRANSITIONS,
   TERMINAL_REQUEST_STATUSES,
@@ -155,7 +155,6 @@ export default function DocumentRequestsTab({
   students = [],
   courses = [],
   docTypes = [],
-  staffDocs = [],
   onLocateOnMap,
   showToast,
   error = null,
@@ -164,6 +163,7 @@ export default function DocumentRequestsTab({
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const listRequest = useRef(0);
   const [isManualLoading, setIsManualLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -191,6 +191,8 @@ export default function DocumentRequestsTab({
   viewModeRef.current = viewMode;
 
   const [filterRules, setFilterRules] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [groupBy, setGroupBy] = useState("status");
   const [visibleColumns, setVisibleColumns] = useState([
     "id",
@@ -287,6 +289,9 @@ export default function DocumentRequestsTab({
 
   const [studentSearch, setStudentSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentSuggestions, setStudentSuggestions] = useState([]);
+  const [requestStudent, setRequestStudent] = useState(null);
+  const [requestDocs, setRequestDocs] = useState(null);
 
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -341,6 +346,7 @@ export default function DocumentRequestsTab({
     setCreateDocType("");
     setCreateNotes("");
     setStudentSearch("");
+    setStudentSuggestions([]);
     setSelectedStudent(null);
   };
 
@@ -361,17 +367,25 @@ export default function DocumentRequestsTab({
     return map;
   }, [students]);
 
-  const studentSuggestions = useMemo(() => {
+  useEffect(() => {
     const val = studentSearch.trim();
-    if (val.length < 2) return [];
-    return students
-      .filter((s) => {
-        const sn = s.studentNo || s.student_no || "";
-        const nm = s.name || "";
-        return matchesSearchQuery([sn, nm, s.courseCode, s.section], val);
-      })
-      .slice(0, 5);
-  }, [studentSearch, students]);
+    if (!createOpen || val.length < 2) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/students?q=${encodeURIComponent(val)}&limit=5`, { signal: controller.signal });
+        const json = await res.json();
+        if (res.ok && json?.ok && !controller.signal.aborted) setStudentSuggestions(json.data || []);
+      } catch {
+        if (!controller.signal.aborted) setStudentSuggestions([]);
+      }
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [createOpen, studentSearch]);
+
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
@@ -418,6 +432,8 @@ export default function DocumentRequestsTab({
         if (combinedStatus.length > 0) qs.set("status", combinedStatus.join(","));
         if (clientTypeFilters.length > 0) qs.set("clientType", clientTypeFilters.join(","));
         if (combinedDocTypes.length > 0) qs.set("docType", combinedDocTypes.join(","));
+        if (startDate) qs.set("startDate", startDate);
+        if (endDate) qs.set("endDate", endDate);
         qs.set("sortBy", sortBy);
         qs.set("sortOrder", sortOrder);
         const res = await fetch(`/api/document-requests?${qs}`, {
@@ -438,6 +454,7 @@ export default function DocumentRequestsTab({
         if (request !== listRequest.current) return;
         setRows(Array.isArray(json.data) ? json.data : []);
         setTotal(Number(json.total) || 0);
+        setHasLoaded(true);
       } catch (e) {
         if (request !== listRequest.current) return;
         if (showLoading || isManual) {
@@ -458,7 +475,7 @@ export default function DocumentRequestsTab({
         }
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, sortBy, sortOrder, showToast, loadSlaStandards]
+    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
   );
 
   const handleViewModeChange = (mode) => {
@@ -520,6 +537,8 @@ export default function DocumentRequestsTab({
     setSelectedId(id);
     setDetailLoading(true);
     setDetail(null);
+    setRequestStudent(null);
+    setRequestDocs(null);
     try {
       const res = await fetch(`/api/document-requests/${id}`, { cache: "no-store" });
       const json = await res.json().catch(() => null);
@@ -542,23 +561,40 @@ export default function DocumentRequestsTab({
     }
   };
 
+  useEffect(() => {
+    if (!detail?.student_no || !detail?.doc_type) return;
+    const controller = new AbortController();
+    const studentNo = encodeURIComponent(detail.student_no);
+    const docType = encodeURIComponent(detail.doc_type);
+    Promise.all([
+      fetch(`/api/students/${studentNo}`, { signal: controller.signal }),
+      fetch(`/api/documents?studentNo=${studentNo}&docType=${docType}&excludeDeclined=1&limit=20`, { signal: controller.signal }),
+    ]).then(async ([studentRes, docsRes]) => {
+      const [studentJson, docsJson] = await Promise.all([studentRes.json(), docsRes.json()]);
+      if (controller.signal.aborted) return;
+      setRequestStudent(studentRes.ok && studentJson?.ok ? studentJson.data : null);
+      setRequestDocs(docsRes.ok && docsJson?.ok ? docsJson.data || [] : []);
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [detail?.student_no, detail?.doc_type]);
+
   const studentForRequest = useMemo(() => {
     if (!detail?.student_no) return null;
     const sn = String(detail.student_no).toUpperCase();
     return (
       students.find((s) => String(s.studentNo || "").toUpperCase() === sn) ||
-      null
+      requestStudent
     );
-  }, [detail, students]);
+  }, [detail, students, requestStudent]);
 
   const availability = useMemo(() => {
-    if (!detail?.student_no || !detail?.doc_type) return null;
+    if (!detail?.student_no || !detail?.doc_type || !requestDocs) return null;
     return getDocAvailabilityForType(
-      staffDocs,
+      requestDocs,
       detail.student_no,
       detail.doc_type
     );
-  }, [detail, staffDocs]);
+  }, [detail, requestDocs]);
 
   const requestNeedsPhysicalVerification = useMemo(() => {
     if (!availability) return true;
@@ -925,6 +961,15 @@ export default function DocumentRequestsTab({
 
   const displayedRows = useMemo(() => {
     return rows.filter((r) => {
+      if (startDate || endDate) {
+        const itemDate = r.created_at ? new Date(r.created_at) : null;
+        if (itemDate && !isNaN(itemDate.getTime())) {
+          const dateStr = itemDate.toISOString().slice(0, 10);
+          if (startDate && dateStr < startDate) return false;
+          if (endDate && dateStr > endDate) return false;
+        }
+      }
+
       if (charterFilters.length > 0) {
         const charter = getRequestCharterStatus(r, slaStandards);
         if (!charterFilters.includes(charter.status)) return false;
@@ -954,7 +999,7 @@ export default function DocumentRequestsTab({
         return actVal === ruleVal;
       });
     });
-  }, [rows, filterRules, charterFilters, slaStandards]);
+  }, [rows, filterRules, charterFilters, startDate, endDate, slaStandards]);
 
   const clientTypeValue = clientTypeFilters.length === 1 ? clientTypeFilters[0] : "";
   const handleClientTypeChange = (val) => {
@@ -1071,6 +1116,8 @@ export default function DocumentRequestsTab({
     setClientTypeFilters([]);
     setDocTypeFilters([]);
     setCharterFilters([]);
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   }, [setPage]);
 
@@ -1081,6 +1128,13 @@ export default function DocumentRequestsTab({
         id: "search",
         label: `Search: ${q.trim()}`,
         onRemove: () => { setQ(""); setPage(1); },
+      });
+    }
+    if (startDate || endDate) {
+      chips.push({
+        id: "dateRange",
+        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
     filterRules.forEach((rule) => {
@@ -1119,7 +1173,7 @@ export default function DocumentRequestsTab({
       });
     });
     return chips;
-  }, [q, filterRules, filterFields, statusFilters, docTypeFilters, charterFilters, setPage]);
+  }, [q, filterRules, filterFields, statusFilters, docTypeFilters, charterFilters, startDate, endDate, setPage]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -1276,6 +1330,21 @@ export default function DocumentRequestsTab({
                     minVisible={2}
                   />
                 )}
+                <DateRangeFilterButton
+                  startDate={startDate}
+                  endDate={endDate}
+                  onApply={({ startDate: s, endDate: e }) => {
+                    setStartDate(s);
+                    setEndDate(e);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setStartDate("");
+                    setEndDate("");
+                    setPage(1);
+                  }}
+                  disableFutureDates={true}
+                />
               </div>
             </DataViewToolbar>
           )}
@@ -1294,8 +1363,8 @@ export default function DocumentRequestsTab({
           )}
 
           {/* 4. Full-Width Table Body */}
-          <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")}>
-            {(loading && rows.length === 0 && !isManualLoading) ? (
+          <div className={cn("relative w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")} aria-busy={loading}>
+            {(loading && !hasLoaded && !isManualLoading) ? (
               <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
             ) : error ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
@@ -1632,10 +1701,15 @@ export default function DocumentRequestsTab({
                 </Table>
               </div>
             )}
+            {loading && hasLoaded && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
+                Loading requests…
+              </div>
+            )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer (Table & List views only) */}
-          {viewMode !== "kanban" && !loading && total > 0 && rows.length > 0 && (
+          {viewMode !== "kanban" && total > 0 && rows.length > 0 && (
             <TablePagination label="Document request pages" page={page} pageSize={itemsPerPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
           )}
         </Card>
@@ -1808,7 +1882,10 @@ export default function DocumentRequestsTab({
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                             value={studentSearch}
-                            onChange={(e) => setStudentSearch(e.target.value)}
+                            onChange={(e) => {
+                              setStudentSearch(e.target.value);
+                              setStudentSuggestions([]);
+                            }}
                             placeholder="Type to search by name or number..."
                           />
                         </div>
@@ -1825,6 +1902,7 @@ export default function DocumentRequestsTab({
                                     setSelectedStudent(s);
                                     setCreateStudentNo(sn);
                                     setStudentSearch("");
+                                    setStudentSuggestions([]);
                                   }}
                                 >
                                   <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">

@@ -74,8 +74,28 @@ function getStudentFolderYear(s) {
   return Number.isFinite(fromDb) ? fromDb : null;
 }
 
+function organizationRecord(org) {
+  return {
+    studentNo: org.id,
+    acronym: org.acronym || org.id,
+    name: org.name,
+    room: org.storage_room || 1,
+    cabinet: org.storage_cabinet || (org.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
+    drawer: org.storage_drawer || "1",
+    status: org.status,
+    category: org.category || "Academic",
+    adviser: org.adviser_name,
+    activeOfficerCount: org.active_officer_count,
+    proposalCount: org.proposal_count,
+    hasCbl: Boolean(org.bylaws_storage_filename),
+    bylawsStorageFilename: org.bylaws_storage_filename,
+    rawOrg: org,
+  }
+}
+
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
+import { fetchAllPages } from "@/lib/fetchAllPages"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, UserGroupIcon as EmptyUserGroupIcon , Alert01Icon, ArrowDown01Icon, ArrowRight01Icon, Calendar01Icon, File02Icon, Files01Icon, FolderOpenIcon, LayoutGridIcon, Location01Icon, Menu01Icon, PaintBoardIcon, Search01Icon, Tick01Icon, UserIcon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -269,15 +289,10 @@ export default function RecordsArchiveTab({
   loading,
   quickQuery,
   setQuickQuery,
-  isQuickSearching,
-  quickResults,
   onLocateStudent,
   breadcrumbs,
   currentLevel,
   onBreadcrumbClick,
-  students,
-  archivedStudents,
-  explorerItems,
   onSwitchView,
   onPreviewDocument,
   onRescan,
@@ -286,21 +301,85 @@ export default function RecordsArchiveTab({
   onSelectionChange,
   onBulkArchive,
   onBulkRestore,
-  staffDocs,
   officeLabel,
   courses = [],
   sections = [],
   storageLayout = null,
   onStudentUpdated,
   showToast,
-  allDocs = [],
   authUser = null,
+  onSelectYear,
+  onSelectCategory,
+  refreshVersion = 0,
 }) {
+  const isOsas = officeLabel === "OSAS"
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
   const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [folderSortBy, setFolderSortBy] = useState("default") // "default", "year-desc", "year-asc", "name-asc", "name-desc", "count-desc"
+  const [browseSummary, setBrowseSummary] = useState(null)
+  const [browsePage, setBrowsePage] = useState({ rows: [], total: 0 })
+  const [browseResults, setBrowseResults] = useState({ rows: [], total: 0 })
+  const [browseLoading, setBrowseLoading] = useState(false)
+  const [quickSearchLoading, setQuickSearchLoading] = useState(false)
+  const [browseVersion, setBrowseVersion] = useState(0)
+  const [selectedDocs, setSelectedDocs] = useState({ studentNo: null, rows: [] })
+  const selectedYear = Number(breadcrumbs?.find((b) => b.level === "students")?.label.match(/\d{4}/)?.[0]) || null
+  const archiveCategory = breadcrumbs?.find((b) => b.level === "organizations")?.label.replace(/ Organizations$/, "") || null
+  const browseSortBy = folderSortBy === "name-asc" || folderSortBy === "name-desc" ? "name" : "studentNo"
+  const browseSortOrder = folderSortBy === "name-desc" || folderSortBy === "year-desc" ? "DESC" : "ASC"
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const url = isOsas ? "/api/osas/organizations?mode=archive-summary" : "/api/students/browse?mode=summary"
+    fetch(url, { cache: "no-store", signal: controller.signal })
+      .then((res) => res.json())
+      .then((json) => { if (json?.ok) setBrowseSummary(json.data); else throw new Error(json?.error || "Archive unavailable") })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        setBrowseSummary({ error: true })
+        showToast?.({ title: "Archive Load Failed", description: error.message }, true)
+      })
+    return () => controller.abort()
+  }, [isOsas, browseVersion, refreshVersion, showToast])
+
+  useEffect(() => {
+    if ((!isOsas && !selectedYear) || (isOsas && !archiveCategory)) return
+    const controller = new AbortController()
+    const params = isOsas
+      ? new URLSearchParams({ status: showArchived ? "Archived" : "Active,Inactive", category: archiveCategory, limit: String(itemsPerPage), offset: String((page - 1) * itemsPerPage), sortBy: browseSortBy, sortOrder: browseSortOrder })
+      : new URLSearchParams({ archived: String(showArchived), folderYear: String(selectedYear), page: String(page), pageSize: String(itemsPerPage), sortBy: browseSortBy, sortOrder: browseSortOrder })
+    const url = isOsas ? `/api/osas/organizations?${params}` : `/api/students/browse?${params}`
+    const loadingTimer = setTimeout(() => setBrowseLoading(true), 0)
+    fetch(url, { cache: "no-store", signal: controller.signal })
+      .then((res) => res.json())
+      .then((json) => { if (json?.ok) setBrowsePage(isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data) })
+      .catch(() => {})
+      .finally(() => { if (!controller.signal.aborted) setBrowseLoading(false) })
+    return () => { clearTimeout(loadingTimer); controller.abort() }
+  }, [isOsas, selectedYear, archiveCategory, showArchived, page, itemsPerPage, browseSortBy, browseSortOrder, browseVersion, refreshVersion])
+
+  useEffect(() => {
+    if (!quickQuery.trim()) {
+      return
+    }
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      setQuickSearchLoading(true)
+      const params = isOsas
+        ? new URLSearchParams({ search: quickQuery.trim(), status: showArchived ? "Archived" : "Active,Inactive", limit: "10" })
+        : new URLSearchParams({ q: quickQuery.trim(), archived: String(showArchived), pageSize: "10" })
+      const url = isOsas ? `/api/osas/organizations?${params}` : `/api/students/browse?${params}`
+      fetch(url, { cache: "no-store", signal: controller.signal })
+        .then((res) => res.json())
+        .then((json) => { if (json?.ok) setBrowseResults(isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data) })
+        .catch(() => {})
+        .finally(() => { if (!controller.signal.aborted) setQuickSearchLoading(false) })
+    }, 300)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [isOsas, quickQuery, showArchived, browseVersion, refreshVersion])
+
 
   const [folderColors, setFolderColors] = useState({})
 
@@ -376,8 +455,7 @@ export default function RecordsArchiveTab({
   const [archiveTarget, setArchiveTarget] = useState(null)
 
   const handleArchiveRecord = (sn) => {
-    const pool = showArchived ? archivedStudents : students
-    const target = (pool || []).find((s) => (s.studentNo || s.id) === sn) || activeStudent
+    const target = browsePage.rows.find((s) => (s.studentNo || s.id) === sn) || activeStudent
     if (!target) return
     setArchiveTarget(target)
     setArchiveStudentOpen(true)
@@ -407,6 +485,21 @@ export default function RecordsArchiveTab({
 
   // Student Drilldown Level State (Google Drive Files Explorer)
   const [selectedStudent, setSelectedStudent] = useState(null)
+
+  useEffect(() => {
+    if (!selectedStudent?.studentNo && !activeStudent?.studentNo) return
+    const studentNo = profileOpen ? activeStudent?.studentNo : selectedStudent?.studentNo || activeStudent?.studentNo
+    if (!studentNo) return
+    let active = true
+    const request = isOsas
+      ? fetch(`/api/documents/browse?mode=organization&organizationId=${encodeURIComponent(studentNo)}`, { cache: "no-store" })
+          .then((res) => res.json()).then((json) => json?.data?.rows || [])
+      : fetchAllPages(`/api/documents?studentNo=${encodeURIComponent(studentNo)}&excludeDeclined=1`, 200)
+    request
+      .then((docs) => { if (active) setSelectedDocs({ studentNo, rows: docs }) })
+      .catch(() => { if (active) setSelectedDocs({ studentNo, rows: [] }) })
+    return () => { active = false }
+  }, [isOsas, profileOpen, selectedStudent?.studentNo, activeStudent?.studentNo, browseVersion, refreshVersion])
 
   // Clear selected student whenever folder navigation level or archived mode changes
   useEffect(() => {
@@ -448,47 +541,29 @@ export default function RecordsArchiveTab({
 
 
 
-  const isOsas = officeLabel === "OSAS"
   const isLeafLevel = isOsas
     ? currentLevel === "organizations" || currentLevel === "students"
     : currentLevel === "students"
 
-  const selectedCategory = (() => {
-    if (!isOsas) return null
-    const catBreadcrumb = breadcrumbs.find((b) => b.level === "organizations")
-    return catBreadcrumb?.label.replace(/ Organizations$/, "") || null
-  })()
-
   // Derived filtered results
   const filteredQuickResults = useMemo(() => {
-    if (showArchived) {
-      const q = quickQuery.toLowerCase()
-      return archivedStudents
-        .filter(
-          (s) =>
-            (s.studentNo || "").toLowerCase().includes(q) ||
-            (s.acronym || "").toLowerCase().includes(q) ||
-            (s.name || "").toLowerCase().includes(q) ||
-            (s.category || "").toLowerCase().includes(q)
-        )
-        .slice(0, 10)
-    }
-    return quickResults
-  }, [showArchived, quickResults, archivedStudents, quickQuery])
+    return quickQuery.trim().length >= 2 ? browseResults.rows : []
+  }, [browseResults, quickQuery])
 
   const filteredExplorerItems = (() => {
     let items = []
 
     if (!isLeafLevel) {
       if (isOsas) {
-        items = explorerItems.map((item) => {
+        items = [...new Set((browseSummary?.categories || []).map((entry) => entry.category))].map((category) => ({
+          key: category,
+          title: category,
+          icon: "Building01Icon",
+          onClick: () => onSelectCategory?.(category),
+        })).map((item) => {
           const cat = item.key
-          const activeCount = students.filter(
-            (s) => (s.category || s.rawOrg?.category) === cat
-          ).length
-          const archCount = archivedStudents.filter(
-            (s) => (s.category || s.rawOrg?.category) === cat
-          ).length
+          const activeCount = (browseSummary?.categories || []).filter((entry) => entry.category === cat && entry.status !== "Archived").reduce((sum, entry) => sum + entry.count, 0)
+          const archCount = (browseSummary?.categories || []).filter((entry) => entry.category === cat && entry.status === "Archived").reduce((sum, entry) => sum + entry.count, 0)
 
           return {
             ...item,
@@ -499,15 +574,16 @@ export default function RecordsArchiveTab({
           }
         })
       } else {
-        items = explorerItems.map((item) => {
+        items = (browseSummary?.years || []).filter((entry) => Number(entry.year) >= 2000 && Number(entry.year) <= 2100).reduce((list, entry) => {
+          if (!list.some((item) => item.key === String(entry.year))) {
+            list.push({ key: String(entry.year), title: `Year ${entry.year}`, icon: "Calendar01Icon", onClick: () => onSelectYear?.(Number(entry.year)) })
+          }
+          return list
+        }, []).map((item) => {
           const yearStr = item.key
           const yearNum = Number(yearStr)
-          const activeCount = students.filter((s) => {
-            return getStudentFolderYear(s) === yearNum
-          }).length
-          const archCount = archivedStudents.filter((s) => {
-            return getStudentFolderYear(s) === yearNum
-          }).length
+          const activeCount = (browseSummary?.years || []).filter((entry) => Number(entry.year) === yearNum && entry.status === "Active").reduce((sum, entry) => sum + entry.count, 0)
+          const archCount = (browseSummary?.years || []).filter((entry) => Number(entry.year) === yearNum && entry.status !== "Active").reduce((sum, entry) => sum + entry.count, 0)
 
           return {
             ...item,
@@ -543,58 +619,12 @@ export default function RecordsArchiveTab({
       return sorted
     }
 
-    if (showArchived) {
-      if (isOsas) {
-        if (!selectedCategory) return []
-        items = archivedStudents
-          .filter((s) => (s.category || s.rawOrg?.category) === selectedCategory)
-          .map((s) => ({ key: s.rawOrg?.id || s.studentNo, student: s }))
-      } else {
-        const year = breadcrumbs
-          .find((b) => b.level === "students")
-          ?.label.split(" ")[1]
-        if (!year) return []
-        const yearNum = Number(year)
-        items = archivedStudents
-          .filter((s) => {
-            return getStudentFolderYear(s) === yearNum
-          })
-          .map((s) => ({ key: s.studentNo, student: s }))
-      }
-    } else {
-      items = [...explorerItems]
-    }
-
-    // Sort leaf records
-    const sortedLeaf = [...items]
-    if (folderSortBy === "name-asc") {
-      sortedLeaf.sort((a, b) => {
-        const nameA = String(a.student?.name || a.student?.acronym || "").toLowerCase()
-        const nameB = String(b.student?.name || b.student?.acronym || "").toLowerCase()
-        return nameA.localeCompare(nameB)
-      })
-    } else if (folderSortBy === "name-desc") {
-      sortedLeaf.sort((a, b) => {
-        const nameA = String(a.student?.name || a.student?.acronym || "").toLowerCase()
-        const nameB = String(b.student?.name || b.student?.acronym || "").toLowerCase()
-        return nameB.localeCompare(nameA)
-      })
-    } else if (folderSortBy === "year-desc" || folderSortBy === "year-asc") {
-      sortedLeaf.sort((a, b) => {
-        const noA = String(a.student?.studentNo || "")
-        const noB = String(b.student?.studentNo || "")
-        return folderSortBy === "year-desc" ? noB.localeCompare(noA) : noA.localeCompare(noB)
-      })
-    }
-
-    return sortedLeaf
+    return browsePage.rows.map((student) => ({ key: student.studentNo, student }))
   })()
 
   const paginatedExplorerItems = useMemo(() => {
-    if (!isLeafLevel) return filteredExplorerItems
-    const start = (page - 1) * itemsPerPage
-    return filteredExplorerItems.slice(start, start + itemsPerPage)
-  }, [filteredExplorerItems, isLeafLevel, page, itemsPerPage])
+    return filteredExplorerItems
+  }, [filteredExplorerItems])
 
   const {
     containerRef: tableContainerRef,
@@ -608,72 +638,35 @@ export default function RecordsArchiveTab({
     resetScroll();
   }, [page, currentEffectiveLevel, showArchived, resetScroll]);
 
-  const totalItems = isLeafLevel ? filteredExplorerItems.length : 0
+  const totalItems = isLeafLevel ? browsePage.total : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
   const activeTabCount = (() => {
-    if (isLeafLevel) {
-      if (isOsas) {
-        if (selectedCategory) {
-          return students.filter((s) => (s.category || s.rawOrg?.category) === selectedCategory).length
-        }
-      } else {
-        const yearItem = breadcrumbs.find((b) => b.level === "students")
-        if (yearItem) {
-          const yearNum = Number(yearItem.label.split(" ")[1])
-          if (Number.isFinite(yearNum)) {
-            return students.filter((s) => getStudentFolderYear(s) === yearNum).length
-          }
-        }
-      }
-    }
-    return students.length
+    if (!isOsas) return isLeafLevel
+      ? (browseSummary?.years || []).filter((entry) => Number(entry.year) === selectedYear && entry.status === "Active").reduce((sum, entry) => sum + entry.count, 0)
+      : browseSummary?.counts?.active || 0
+    return isLeafLevel
+      ? (browseSummary?.categories || []).filter((entry) => entry.category === archiveCategory && entry.status !== "Archived").reduce((sum, entry) => sum + entry.count, 0)
+      : browseSummary?.active || 0
   })()
 
   const archivedTabCount = (() => {
-    if (isLeafLevel) {
-      if (isOsas) {
-        if (selectedCategory) {
-          return archivedStudents.filter((s) => (s.category || s.rawOrg?.category) === selectedCategory).length
-        }
-      } else {
-        const yearItem = breadcrumbs.find((b) => b.level === "students")
-        if (yearItem) {
-          const yearNum = Number(yearItem.label.split(" ")[1])
-          if (Number.isFinite(yearNum)) {
-            return archivedStudents.filter((s) => getStudentFolderYear(s) === yearNum).length
-          }
-        }
-      }
-    }
-    return archivedStudents.length
+    if (!isOsas) return isLeafLevel
+      ? (browseSummary?.years || []).filter((entry) => Number(entry.year) === selectedYear && entry.status !== "Active").reduce((sum, entry) => sum + entry.count, 0)
+      : browseSummary?.counts?.archived || 0
+    return isLeafLevel
+      ? (browseSummary?.categories || []).filter((entry) => entry.category === archiveCategory && entry.status === "Archived").reduce((sum, entry) => sum + entry.count, 0)
+      : browseSummary?.archived || 0
   })()
 
   const quickMatchCount = useMemo(() => {
-    if (!quickQuery.trim()) {
-      return showArchived ? archivedTabCount : activeTabCount
-    }
-    const q = quickQuery.toLowerCase()
-    const pool = showArchived ? archivedStudents : students
-    return pool.filter(
-      (s) =>
-        (s.studentNo || "").toLowerCase().includes(q) ||
-        (s.acronym || "").toLowerCase().includes(q) ||
-        (s.name || "").toLowerCase().includes(q) ||
-        (s.category || "").toLowerCase().includes(q)
-    ).length
-  }, [quickQuery, showArchived, archivedStudents, students, archivedTabCount, activeTabCount])
+    return quickQuery.trim() ? browseResults.total : (showArchived ? archivedTabCount : activeTabCount)
+  }, [browseResults, quickQuery, showArchived, archivedTabCount, activeTabCount])
 
   // Record Navigation for Profile Sheet (< > 01 of XX)
   const currentRecordList = useMemo(() => {
-    if (isLeafLevel && filteredExplorerItems.length > 0) {
-      return filteredExplorerItems.map((it) => it.student).filter(Boolean)
-    }
-    if (showArchived) {
-      return archivedStudents || []
-    }
-    return students || []
-  }, [isLeafLevel, filteredExplorerItems, showArchived, archivedStudents, students])
+    return isLeafLevel ? browsePage.rows : selectedStudent ? [selectedStudent] : filteredQuickResults
+  }, [browsePage, isLeafLevel, selectedStudent, filteredQuickResults])
 
   const currentRecordIndex = useMemo(() => {
     if (!activeStudent || currentRecordList.length === 0) return -1
@@ -710,10 +703,17 @@ export default function RecordsArchiveTab({
       tabIndex={0}
     >
       {/* ONE Single Card Container encapsulating Header, Toolbar, Breadcrumbs, Content, Pagination & Office Documents */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card className="relative flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta" aria-busy={browseLoading}>
         <PageHeader
           icon="Archive01Icon"
-          title="Records & Archive"
+          title={
+            <span className="flex items-center gap-2">
+              <span>Records & Archive</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {quickMatchCount > 0 ? `${quickMatchCount.toLocaleString()} ${quickMatchCount === 1 ? "record" : "records"}` : "No records"}
+              </span>
+            </span>
+          }
           description={
             isOsas
               ? "Browse, search, and locate student organization records and physical archives."
@@ -722,44 +722,32 @@ export default function RecordsArchiveTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center bg-gray-100/90 dark:bg-zinc-800/80 p-0.5 rounded-xl border border-border/60 dark:border-border">
-              <button
-                type="button"
-                onClick={() => setArchiveViewMode("folders")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  archiveViewMode === "folders"
-                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-                title="Browse records by folder"
-              >
-                <FolderOpenIcon size="1em" className="text-xs" />
-                <span>Browse Folders</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setArchiveViewMode("master-list")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  archiveViewMode === "master-list"
-                    ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-                title="View all documents in a table"
-              >
-                <Files01Icon size="1em" className="text-xs" />
-                <span>All Documents</span>
-              </button>
-            </div>
+            <SegmentedControl
+              value={archiveViewMode}
+              onValueChange={setArchiveViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                {
+                  value: "folders",
+                  label: "Browse Folders",
+                  icon: <FolderOpenIcon size="1em" className="text-xs" />,
+                },
+                {
+                  value: "master-list",
+                  label: "All Documents",
+                  icon: <Files01Icon size="1em" className="text-xs" />,
+                },
+              ]}
+            />
           }
         />
 
         {archiveViewMode === "master-list" ? (
           <OfficeDocumentsTable
-            documents={staffDocs}
+            serverPaged={true}
             officeLabel={officeLabel}
             breadcrumbs={null}
             onPreviewDocument={onPreviewDocument}
@@ -769,48 +757,26 @@ export default function RecordsArchiveTab({
         ) : (
           <>
             {/* Filter Section: Tabs (Active/Archived), Controls (Sort, Select All, View Toggle), Search */}
-            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30 select-none">
+            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-card select-none">
           {/* Left: Active / Archived Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => setShowArchived(false)}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                !showArchived
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span
-                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-              >
-                {activeTabCount}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowArchived(true)}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                showArchived
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span
-                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
-                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-              >
-                {archivedTabCount}
-              </span>
-            </button>
-          </div>
+          <SegmentedControl
+            value={showArchived ? "archived" : "active"}
+            onValueChange={(val) => setShowArchived(val === "archived")}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              {
+                value: "active",
+                label: "Active",
+                badge: activeTabCount,
+              },
+              {
+                value: "archived",
+                label: "Archived",
+                badge: archivedTabCount,
+              },
+            ]}
+          />
 
           {/* Right: Filter Controls (Search FIRST, then Sort, Select All, Card/Table Toggle) */}
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
@@ -835,7 +801,7 @@ export default function RecordsArchiveTab({
               {/* Quick Search Results Dropdown Overlay */}
               {quickQuery.trim().length >= 2 && (
                 <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-border bg-white shadow-lg p-2 dark:border-border dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
-                  {isQuickSearching ? (
+                  {quickQuery.trim().length >= 2 && quickSearchLoading ? (
                     <div className="p-2 space-y-2">
                       {[1, 2, 3].map((i) => (
                         <Skeleton key={i} className="h-10 w-full rounded-lg" />
@@ -1106,7 +1072,7 @@ export default function RecordsArchiveTab({
               {selectedStudent ? (
                 <StudentDriveFilesView
                   student={selectedStudent}
-                  allDocs={allDocs}
+                  allDocs={selectedDocs.studentNo === selectedStudent?.studentNo ? selectedDocs.rows : []}
                   courses={courses}
                   onLocateStudent={onLocateStudent}
                   onPreviewDocument={onPreviewDocument}
@@ -1122,9 +1088,19 @@ export default function RecordsArchiveTab({
                     setProfileOpen(true)
                   }}
                 />
-              ) : loading ? (
+              ) : loading || !browseSummary ? (
                 <RecordsArchiveSkeleton />
-              ) : students.length === 0 && !showArchived ? (
+              ) : browseSummary?.error ? (
+                <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyTitle>Archive unavailable</EmptyTitle>
+                      <EmptyDescription>Could not load archive folders. Please try again.</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent><Button size="sm" onClick={() => setBrowseVersion((version) => version + 1)}>Refresh Archive</Button></EmptyContent>
+                  </Empty>
+                </div>
+              ) : activeTabCount === 0 && !showArchived ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>
                     <EmptyHeader>
@@ -1151,7 +1127,7 @@ export default function RecordsArchiveTab({
                     </EmptyContent>
                   </Empty>
                 </div>
-              ) : archivedStudents.length === 0 && showArchived ? (
+              ) : archivedTabCount === 0 && showArchived ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>
                     <EmptyHeader>
@@ -1433,9 +1409,9 @@ export default function RecordsArchiveTab({
                   className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                 >
                   <Table columns={["selection", "identifier", "text", ...(isOsas ? ["category"] : []), "text", "actions"]} className="min-w-[850px]">
-                    <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                       <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="w-12 p-4 text-center">
+                        <th className="w-12 py-2.5 px-3 text-center">
                            <input
                              type="checkbox"
                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1443,11 +1419,11 @@ export default function RecordsArchiveTab({
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className={isOsas ? "p-4 w-[18%]" : "p-4 w-[22%]"}>{isOsas ? "Acronym" : "Student No."}</th>
-                        <th className={isOsas ? "p-4 w-[32%]" : "p-4 w-[42%]"}>{isOsas ? "Organization Name" : "Full Name"}</th>
-                        {isOsas && <th className="w-[16%] p-4">Category</th>}
-                        <th className={isOsas ? "p-4 w-[24%]" : "p-4 w-[28%]"}>Physical Location</th>
-                        <th className="w-24 p-4 pr-6 text-right">Actions</th>
+                        <th className={isOsas ? "py-2.5 px-4 w-[18%]" : "py-2.5 px-4 w-[22%]"}>{isOsas ? "Acronym" : "Student No."}</th>
+                        <th className={isOsas ? "py-2.5 px-4 w-[32%]" : "py-2.5 px-4 w-[42%]"}>{isOsas ? "Organization Name" : "Full Name"}</th>
+                        {isOsas && <th className="w-[16%] py-2.5 px-4">Category</th>}
+                        <th className={isOsas ? "py-2.5 px-4 w-[24%]" : "py-2.5 px-4 w-[28%]"}>Physical Location</th>
+                        <th className="w-24 py-2.5 px-4 pr-6 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -1463,7 +1439,7 @@ export default function RecordsArchiveTab({
                             )}
                             onClick={() => handleStudentSelect(row.student)}
                           >
-                            <td className="w-12 p-4 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                            <td className="w-12 py-2.5 px-3 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                                <input
                                  type="checkbox"
                                  className={cn(
@@ -1474,12 +1450,12 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>
-                            <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2 min-w-0 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                   <span className="truncate" title={formatTitleCase(row.student.name)}>
@@ -1504,18 +1480,18 @@ export default function RecordsArchiveTab({
                               </div>
                             </td>
                             {isOsas && (
-                              <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
                                   {row.student.category || "Academic"}
                                 </span>
                               </td>
                             )}
-                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                <div className={cn("inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap", BADGE_BASE)}>
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>
-                            <td className="p-4 pr-6 align-middle text-right">
+                            <td className="py-2.5 px-4 pr-6 align-middle text-right">
                               <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                                  {isOsas && row.student.hasCbl && (
                                    <button
@@ -1575,7 +1551,7 @@ export default function RecordsArchiveTab({
 
             {!selectedStudent && (
               <OfficeDocumentsTable
-                documents={staffDocs}
+                serverPaged={true}
                 officeLabel={officeLabel}
                 breadcrumbs={breadcrumbs}
                 onPreviewDocument={onPreviewDocument}
@@ -1584,6 +1560,11 @@ export default function RecordsArchiveTab({
               />
             )}
           </>
+        )}
+        {browseLoading && browseSummary && !selectedStudent && !loading && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
+            Loading archive…
+          </div>
         )}
       </Card>
 
@@ -1611,6 +1592,7 @@ export default function RecordsArchiveTab({
               onSelectionChange(next)
             }
             await onRestoreStudent(sn)
+            if (!isOsas) setBrowseVersion((version) => version + 1)
           }
           setRestoreStudentOpen(false)
           setRestoreTarget(null)
@@ -1658,6 +1640,7 @@ export default function RecordsArchiveTab({
               if (onStudentUpdated) {
                 await onStudentUpdated()
               }
+              if (!isOsas) setBrowseVersion((version) => version + 1)
               if (selectedStudent && (selectedStudent.studentNo === sn || selectedStudent.id === sn)) {
                 setSelectedStudent(null)
               }
@@ -1679,15 +1662,14 @@ export default function RecordsArchiveTab({
         onOpenChange={setProfileOpen}
         student={activeStudent}
         courses={courses}
-        allDocs={allDocs}
+        allDocs={selectedDocs.studentNo === activeStudent?.studentNo ? selectedDocs.rows : []}
         onLocateStudent={onLocateStudent}
         onPreviewDocument={onPreviewDocument}
         onRescan={onRescan}
         onEditStudent={handleEditRecord}
         onArchiveStudent={handleArchiveRecord}
         onRestoreStudent={async (sn) => {
-          const pool = showArchived ? archivedStudents : students
-          const target = (pool || []).find((s) => (s.studentNo || s.id) === sn) || activeStudent
+          const target = browsePage.rows.find((s) => (s.studentNo || s.id) === sn) || activeStudent
           setRestoreTarget(target)
           setRestoreStudentOpen(true)
         }}
@@ -1710,6 +1692,7 @@ export default function RecordsArchiveTab({
           if (onStudentUpdated) {
             await onStudentUpdated();
           }
+          if (!isOsas) setBrowseVersion((version) => version + 1)
           const targetStudentNo = editingStudent?.studentNo || activeStudent?.studentNo;
           if (targetStudentNo) {
             try {
@@ -1748,6 +1731,7 @@ export default function RecordsArchiveTab({
           if (onStudentUpdated) {
             await onStudentUpdated();
           }
+          if (!isOsas) setBrowseVersion((version) => version + 1)
           const orgId = editingOrg?.id || activeStudent?.rawOrg?.id || activeStudent?.studentNo;
           if (orgId) {
             try {

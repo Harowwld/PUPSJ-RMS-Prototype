@@ -1,12 +1,9 @@
 "use client"
 
-
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useRef, useState, useEffect } from "react"
-import {
-  Card,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyHeader,
@@ -14,11 +11,13 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
+import useTableScroll from "@/hooks/useTableScroll"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 
 function parseDateLocal(str) {
   if (!str) return undefined
@@ -35,7 +34,38 @@ import BackupTableSkeleton from "./backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import { AlertCircleIcon as EmptyAlertCircleIcon , Loading01Icon} from "hugeicons-react";
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
+import { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { AlertCircleIcon as EmptyAlertCircleIcon, CheckmarkCircle01Icon, Database01Icon, Loading01Icon, PieChartIcon } from "hugeicons-react"
+
+const BACKUP_SORT_OPTIONS = [
+  { key: "created_at", label: "Created" },
+  { key: "filename", label: "Archive name" },
+  { key: "actor", label: "Actor" },
+  { key: "size_bytes", label: "Size" },
+  { key: "backup_type", label: "Backup type" },
+  { key: "status_local", label: "Storage status" },
+]
+
+const BACKUP_GROUP_OPTIONS = [
+  { key: "backup_type", label: "Backup type", icon: Database01Icon },
+  { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon },
+  { key: "none", label: "No grouping" },
+]
+
+const BACKUP_FILTER_FIELDS = [
+  {
+    key: "status_local",
+    label: "Storage Status",
+    icon: CheckmarkCircle01Icon,
+    options: [
+      { value: "Completed", label: "Completed" },
+      { value: "Pending", label: "Pending" },
+      { value: "Failed", label: "Failed" },
+    ],
+  },
+]
 
 export default function BackupTab({
   systemHealth,
@@ -71,24 +101,7 @@ export default function BackupTab({
   })
 
   const [isRescanning, setIsRescanning] = useState(false)
-
-  const [statusSidebarOpen, setStatusSidebarOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pupsj_backup_status_sidebar")
-      if (saved !== null) return saved === "true"
-    }
-    return true
-  })
-
-  const handleToggleStatusSidebar = (forcedState) => {
-    setStatusSidebarOpen((prev) => {
-      const next = typeof forcedState === "boolean" ? forcedState : !prev
-      if (typeof window !== "undefined") {
-        localStorage.setItem("pupsj_backup_status_sidebar", String(next))
-      }
-      return next
-    })
-  }
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false)
 
   const handleRescanDrive = async () => {
     setIsRescanning(true)
@@ -150,10 +163,18 @@ export default function BackupTab({
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
+  const [filterRules, setFilterRules] = useState([])
+  const [groupBy, setGroupBy] = useState("none")
+  const [backupTypeFilter, setBackupTypeFilter] = useState("all")
+  const [visibleColumns, setVisibleColumns] = useState(() =>
+    PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
+  )
   const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
+
+  const { containerRef: tableScrollRef, isScrolledX, scrollLeft, scrollRight, resetScroll } = useTableScroll([visibleColumns.join(","), (backups || []).length, isLoading])
 
   const validBackupIds = useMemo(() => new Set((backups || []).map((b) => b?.id).filter(Boolean)), [backups])
   const effectiveSelectedBackupIds = useMemo(() => selectedBackupIds.filter((id) => validBackupIds.has(id)), [selectedBackupIds, validBackupIds])
@@ -184,7 +205,7 @@ export default function BackupTab({
   }
 
   const handleSelectAll = (checked) => {
-    setSelectedBackupIds(checked ? backups.filter(b => b).map((b) => b.id) : [])
+    setSelectedBackupIds(checked ? (backups || []).filter(b => b).map((b) => b.id) : [])
   }
 
   const handleToggleRow = (id) => {
@@ -193,8 +214,33 @@ export default function BackupTab({
     )
   }
 
+  const backupTypeTabs = useMemo(() => {
+    return [
+      { value: "all", label: "All Types", count: (backups || []).length },
+      { value: "Manual", label: "Manual", count: (backups || []).filter((b) => String(b?.backup_type).toLowerCase() === "manual").length },
+      { value: "Scheduled", label: "Automated", count: (backups || []).filter((b) => String(b?.backup_type).toLowerCase() === "scheduled").length },
+    ]
+  }, [backups])
+
+  const filteredBackups = useMemo(() => {
+    let result = (backups || []).filter(Boolean)
+    if (backupTypeFilter !== "all") {
+      result = result.filter((b) => String(b?.backup_type).toLowerCase() === backupTypeFilter.toLowerCase())
+    }
+    if (filterRules.length > 0) {
+      result = result.filter((b) => {
+        return filterRules.every((rule) => {
+          if (!rule.value) return true
+          const val = b[rule.fieldKey] || ""
+          return rule.operator === "is_not" ? val !== rule.value : val === rule.value
+        })
+      })
+    }
+    return result
+  }, [backups, backupTypeFilter, filterRules])
+
   const sortedAndPaginatedBackups = useMemo(() => {
-    let result = (backups || []).filter(b => b)
+    const result = [...filteredBackups]
     result.sort((a, b) => {
       let valA, valB
       if (sortBy === "size_bytes") {
@@ -212,9 +258,9 @@ export default function BackupTab({
     })
     const start = (page - 1) * itemsPerPage
     return result.slice(start, start + itemsPerPage)
-  }, [backups, sortBy, sortOrder, page, itemsPerPage])
+  }, [filteredBackups, sortBy, sortOrder, page, itemsPerPage])
 
-  const totalPages = Math.max(1, Math.ceil((backups || []).length / itemsPerPage))
+  const totalPages = Math.max(1, Math.ceil(filteredBackups.length / itemsPerPage))
 
   const handleGenerateBackup = async () => {
     setLocalLoading((prev) => ({
@@ -284,16 +330,18 @@ export default function BackupTab({
     setPage(1)
   }
 
-  const startItem = (page - 1) * itemsPerPage + 1
-  const endItem = Math.min(page * itemsPerPage, (backups || []).length)
+  const startItem = filteredBackups.length === 0 ? 0 : (page - 1) * itemsPerPage + 1
+  const endItem = Math.min(page * itemsPerPage, filteredBackups.length)
 
-  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate)
+  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate || filterRules.length > 0)
 
   const handleClearFilters = () => {
     setLocalSearch("")
     setBackupSearch("")
     setBackupStartDate("")
     setBackupEndDate("")
+    setFilterRules([])
+    setBackupTypeFilter("all")
     setPage(1)
   }
 
@@ -303,21 +351,63 @@ export default function BackupTab({
         <div className="relative flex flex-[1_0_auto] min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 flex flex-col">
-            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
+            <Card className="flex-[1_0_auto] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
               <PageHeader
                 icon="CloudServerIcon"
-                title="Office Partition Backup & Archive"
+                title={
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span>Office Partition Backup & Archive</span>
+                    <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                      {isLoading ? "Loading backups…" : `${(backups || []).length.toLocaleString()} ${(backups || []).length === 1 ? "archive" : "archives"}`}
+                    </span>
+                  </div>
+                }
                 description="Create and restore office partition backups, and save offline copies to an external drive for safekeeping."
                 showBorder={false}
+                className="p-6"
                 titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-                descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+                descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                 actions={
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
+                    <RefreshButton
+                      onRefresh={onRefresh}
+                      isLoading={isManualLoading}
+                      title="Refresh Office Backups"
+                      className="h-9 w-9"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStatusSheetOpen(true)}
+                      className="h-9 w-9 p-0"
+                      aria-label="Open System Status"
+                      title="System Status"
+                    >
+                      <PieChartIcon size={16} aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => restoreFileRef.current?.click()}
+                      disabled={localLoading.uploading}
+                      className="h-9 px-4"
+                    >
+                      {localLoading.uploading ? (
+                        <span className="flex items-center gap-1.5">
+                          <Loading01Icon size="1em" className="animate-spin text-xs" />
+                          <span>Restoring...</span>
+                        </span>
+                      ) : (
+                        "Restore Backup"
+                      )}
+                    </Button>
                     <Button
                       size="sm"
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
+                      className="h-9 px-4 cursor-pointer"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -337,20 +427,25 @@ export default function BackupTab({
                     />
                   </div>
                 }
-                secondaryActions={
-                  <>
-                    <Button type="button" variant="outline" onClick={() => handleToggleStatusSidebar()} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all" title={statusSidebarOpen ? "Hide System Status panel" : "Show System Status panel"}>
-                      {statusSidebarOpen ? "Hide Status" : "Show Status"}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => restoreFileRef.current?.click()} disabled={localLoading.uploading} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
-                      {localLoading.uploading ? <span className="flex items-center gap-1.5"><Loading01Icon size="1em" className="animate-spin text-xs" /><span>Restoring...</span></span> : "Restore Backup"}
-                    </Button>
-                  </>
-                }
               />
 
-              {/* Automatic Backup Configuration Section */}
-              <AutoBackupSchedule showToast={showToast} scope="office" embedded={true} />
+              {/* Connected Row: Backup Type Filter */}
+              <div role="group" aria-label="Backup type" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+                <SegmentedControl
+                  value={backupTypeFilter}
+                  onValueChange={(val) => {
+                    setBackupTypeFilter(val);
+                    setPage(1);
+                  }}
+                  variant="capsule"
+                  className="inline-grid grid-flow-col auto-cols-fr"
+                  items={backupTypeTabs.map(({ value, label, count }) => ({
+                    value,
+                    label,
+                    badge: count,
+                  }))}
+                />
+              </div>
 
               {/* Standard Filter Toolbar */}
               <BackupFilters
@@ -366,13 +461,57 @@ export default function BackupTab({
                 setPage={setPage}
                 setLocalSearch={setLocalSearch}
                 setBackupSearch={setBackupSearch}
-                backupTotal={(backups || []).length}
+                backupTotal={filteredBackups.length}
                 isLoading={isLoading}
+                inline
+                tableControls={<>
+                  <FilterPopover fields={BACKUP_FILTER_FIELDS} filters={filterRules} onFiltersChange={(rules) => { setFilterRules(rules); setPage(1) }} entityLabel="backups" />
+                  <SortPopover options={BACKUP_SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1) }} />
+                  <GroupPopover options={BACKUP_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={setGroupBy} />
+                  <ColumnsPopover columns={PLATFORM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+                </>}
+                scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}
               />
+
+              {/* Automatic Backup Configuration Section */}
+              <AutoBackupSchedule showToast={showToast} scope="office" embedded={true} />
+
+              {/* Active Filter Chips Row */}
+              {(localSearch !== "" ||
+                backupStartDate !== "" ||
+                backupEndDate !== "" ||
+                filterRules.length > 0) && (
+                <ActiveFilterChips
+                  searchQuery={localSearch}
+                  onClearSearch={() => {
+                    setLocalSearch("")
+                    setBackupSearch("")
+                    setPage(1)
+                  }}
+                  extraChips={[
+                    ...filterRules.map((rule) => ({
+                      key: rule.id || rule.fieldKey,
+                      label: `${BACKUP_FILTER_FIELDS.find((f) => f.key === rule.fieldKey)?.label || rule.fieldKey} ${rule.operator.replaceAll("_", " ")} ${rule.value}`,
+                      onRemove: () => setFilterRules((current) => current.filter((item) => (item.id || item.fieldKey) !== (rule.id || rule.fieldKey)))
+                    })),
+                    ...(backupStartDate || backupEndDate ? [{
+                      key: "dateRange",
+                      label: `Range: ${backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to ${backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}`,
+                      onRemove: () => {
+                        setBackupStartDate("")
+                        setBackupEndDate("")
+                        setPage(1)
+                      }
+                    }] : [])
+                  ]}
+                  onClearAll={handleClearFilters}
+                  className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                />
+              )}
 
               {isLoading && !isManualLoading ? (
                 <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
-                  <BackupTableSkeleton embedded={true} />
+                  <BackupTableSkeleton embedded={true} visibleColumns={visibleColumns} scrollRef={tableScrollRef} />
                 </div>
               ) : error ? (
                 <div className="flex-1 flex min-h-[400px] flex-col items-center justify-center p-6 rounded-b-2xl">
@@ -397,91 +536,69 @@ export default function BackupTab({
                   </Empty>
                 </div>
               ) : (
-                <>
-                  {/* Active Filter Chips Row */}
-                  {(localSearch !== "" ||
-                    backupStartDate !== "" ||
-                    backupEndDate !== "") && (
-                    <ActiveFilterChips
-                      searchQuery={localSearch}
-                      onClearSearch={() => {
-                        setLocalSearch("")
-                        setBackupSearch("")
-                        setPage(1)
-                      }}
-                      extraChips={(backupStartDate || backupEndDate) ? [{
-                        key: "dateRange",
-                        label: `Range: ${backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to ${backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}`,
-                        onRemove: () => {
-                          setBackupStartDate("")
-                          setBackupEndDate("")
-                          setPage(1)
-                        }
-                      }] : []}
-                      onClearAll={handleClearFilters}
-                      className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                    />
-                  )}
-
-                  <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
-                    <BackupTable
-                      backups={backups}
-                      sortedAndPaginatedBackups={sortedAndPaginatedBackups}
-                      selectedBackupIds={effectiveSelectedBackupIds}
-                      handleToggleRow={handleToggleRow}
-                      handleSelectAll={handleSelectAll}
-                      handleSort={handleSort}
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      localLoading={localLoading}
-                      handleSyncExternal={handleSyncExternal}
-                      onDownloadBackup={handleDownloadBackup}
-                      onDeleteBackup={onDeleteBackup}
-                      handleGenerateBackup={handleGenerateBackup}
-                      isFilterActive={isFilterActive}
-                      onClearFilters={handleClearFilters}
-                      page={page}
-                      setPage={setPage}
-                      totalPages={totalPages}
-                      startItem={startItem}
-                      endItem={endItem}
-                      totalCount={(backups || []).length}
-                      itemsPerPage={itemsPerPage}
-                      handleItemsPerPageChange={handleItemsPerPageChange}
-                      scope="office"
-                      externalDriveConnected={Boolean(externalDrive?.connected)}
-                    />
-                  </div>
-                </>
+                <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
+                  <BackupTable
+                    backups={filteredBackups}
+                    sortedAndPaginatedBackups={sortedAndPaginatedBackups}
+                    selectedBackupIds={effectiveSelectedBackupIds}
+                    handleToggleRow={handleToggleRow}
+                    handleSelectAll={handleSelectAll}
+                    handleSort={handleSort}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    localLoading={localLoading}
+                    handleSyncExternal={handleSyncExternal}
+                    onDownloadBackup={handleDownloadBackup}
+                    onDeleteBackup={onDeleteBackup}
+                    handleGenerateBackup={handleGenerateBackup}
+                    isFilterActive={isFilterActive}
+                    onClearFilters={handleClearFilters}
+                    page={page}
+                    setPage={setPage}
+                    totalPages={totalPages}
+                    startItem={startItem}
+                    endItem={endItem}
+                    totalCount={filteredBackups.length}
+                    itemsPerPage={itemsPerPage}
+                    handleItemsPerPageChange={handleItemsPerPageChange}
+                    scope="office"
+                    externalDriveConnected={Boolean(externalDrive?.connected)}
+                    visibleColumns={visibleColumns}
+                    tableScrollRef={tableScrollRef}
+                    isScrolledX={isScrolledX}
+                    resetScroll={resetScroll}
+                  />
+                </div>
               )}
             </Card>
           </div>
-
-          {statusSidebarOpen ? (
-            <HealthSidebar
-              systemHealth={systemHealth}
-              lastBackupTime={lastBackupTime}
-              isLoading={isLoading}
-              isManualLoading={isManualLoading}
-              externalDrive={externalDrive}
-              onRescanDrive={handleRescanDrive}
-              onToggleSimulation={handleToggleSimulationLocal}
-              isRescanning={isRescanning}
-              onToggleCollapse={() => handleToggleStatusSidebar(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => handleToggleStatusSidebar(true)}
-              title="Show System Status"
-              className="hidden md:flex flex-col items-center justify-center w-8 self-stretch rounded-2xl border border-border dark:border-border bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-zinc-800/80 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white shadow-2xs transition-all cursor-pointer group py-4 select-none shrink-0"
-            >
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-zinc-500 [writing-mode:vertical-lr] rotate-180">
-                Status
-              </span>
-            </button>
-          )}
         </div>
+
+        <Sheet open={statusSheetOpen} onOpenChange={setStatusSheetOpen}>
+          <SheetContent side="right" className="w-[480px] sm:w-[540px] max-w-[90vw] p-0">
+            <SheetHeader className="px-6 py-5 pr-14">
+              <SheetTitle>System Status</SheetTitle>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <HealthSidebar
+                systemHealth={systemHealth}
+                lastBackupTime={lastBackupTime}
+                isLoading={isLoading}
+                isManualLoading={isManualLoading}
+                externalDrive={externalDrive}
+                onRescanDrive={handleRescanDrive}
+                onToggleSimulation={handleToggleSimulationLocal}
+                isRescanning={isRescanning}
+                embedded
+              />
+            </div>
+            <SheetFooter className="shrink-0 p-4 px-6">
+              <SheetClose asChild>
+                <Button type="button" variant="outline" size="sm" className="h-9 px-4">Close</Button>
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         <FloatingActionBar
           selectedCount={effectiveSelectedBackupIds.length}
@@ -497,7 +614,7 @@ export default function BackupTab({
               label: "Copy Filenames",
               copiedLabel: "Filenames Copied!",
               onClick: () => {
-                const selected = backups.filter((b) => effectiveSelectedBackupIds.includes(b.id))
+                const selected = (backups || []).filter((b) => effectiveSelectedBackupIds.includes(b.id))
                 const filenames = selected.map((b) => b.filename).filter(Boolean)
                 if (filenames.length === 0) return
                 navigator.clipboard?.writeText(filenames.join("\n"))

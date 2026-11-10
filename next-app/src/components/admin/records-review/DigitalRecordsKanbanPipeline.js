@@ -279,6 +279,7 @@ export default function DigitalRecordsKanbanPipeline({
                       onDragStart={(e) => handleDragStartCard(e, record)}
                       onDragEnd={handleDragEndCard}
                       onClick={() => onPreview?.(record)}
+                      onDoubleClick={() => onPreview?.(record)}
                       className={cn(
                         "kanban-card group flex flex-col gap-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-white dark:bg-zinc-800/90 p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon dark:hover:border-red-400/70 transition-all cursor-grab active:cursor-grabbing relative select-none",
                         draggingItem?.id === record.id && "opacity-40 scale-98"
@@ -346,6 +347,7 @@ export default function DigitalRecordsKanbanPipeline({
                               <button
                                 type="button"
                                 onClick={() => onPreview?.(record)}
+                      onDoubleClick={() => onPreview?.(record)}
                                 className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                               >
                                 <ViewIcon size="1em" className="text-xs" />

@@ -80,7 +80,7 @@ export default function ScanUploadSkeleton() {
         </div>
 
         {/* Submit Button */}
-        <Skeleton className="h-11 w-full rounded-xl dark:bg-muted mt-6" />
+        <Skeleton className="h-9 w-full rounded-xl dark:bg-muted mt-6" />
       </section>
     </div>
   )

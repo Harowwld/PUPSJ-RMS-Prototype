@@ -78,6 +78,7 @@ export default function StudentOverviewTab({
   onRefresh,
   refreshing = false,
   loading = false,
+  hasLoaded = false,
 }) {
   const [activityFilter, setActivityFilter] = useState("all");
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -456,7 +457,7 @@ export default function StudentOverviewTab({
   ).length;
 
   // Render skeleton during initial load before datasets arrive
-  if (loading && !data?.requests?.length && !data?.proposals?.length && !complianceData) {
+  if (loading && !hasLoaded) {
     return <StudentOverviewSkeleton />;
   }
 

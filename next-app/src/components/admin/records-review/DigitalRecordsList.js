@@ -183,8 +183,11 @@ export default function DigitalRecordsList({
                           onPreview?.(record);
                         }
                       }}
+                      onDoubleClick={() => {
+                        onPreview?.(record);
+                      }}
                       className={cn(
-                        "group flex flex-col md:flex-row md:items-center justify-between transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none",
+                        "group flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
                         densityClasses.paddingX,
                         densityClasses.paddingY,
                         densityClasses.gap,
@@ -192,19 +195,20 @@ export default function DigitalRecordsList({
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
-                      {/* Left Block: Checkbox + PDF Thumbnail Preview Card */}
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      {/* Left: Checkbox, Thumbnail, Identifier, Title, and Secondary Context */}
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
                         {/* Checkbox (for Pending records or selectable items) */}
                         <div
                           className="shrink-0 flex items-center justify-center"
                           onClick={(e) => e.stopPropagation()}
+                          onDoubleClick={(e) => e.stopPropagation()}
                         >
                           {isPending ? (
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={(e) => onToggleSelect?.(record.id, e)}
-                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border"
+                              className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:border-border"
                               aria-label={`Select ${record.original_filename}`}
                             />
                           ) : (
@@ -212,15 +216,10 @@ export default function DigitalRecordsList({
                           )}
                         </div>
 
-                        {/* Visual Thumbnail Card */}
+                        {/* Visual Thumbnail Card (Non-clickable static preview indicator) */}
                         <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPreview?.(record);
-                          }}
-                          title={`Preview ${record.original_filename}`}
                           className={cn(
-                            "relative shrink-0 rounded-lg overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-800/90 dark:to-zinc-900 border border-border/80 dark:border-zinc-700/80 shadow-2xs hover:shadow-xs hover:border-pup-maroon dark:hover:border-red-400/80 flex flex-col items-center justify-between p-1 transition-all group/thumb cursor-pointer",
+                            "relative shrink-0 rounded-lg overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-800/90 dark:to-zinc-900 border border-border/80 dark:border-zinc-700/80 shadow-2xs flex flex-col items-center justify-between p-1 select-none pointer-events-none",
                             density === "compact" ? "w-8 h-10" : density === "comfortable" ? "w-10 h-13 sm:w-11 sm:h-14" : "w-9 h-11 sm:w-10 sm:h-12"
                           )}
                         >
@@ -233,99 +232,72 @@ export default function DigitalRecordsList({
                           </div>
 
                           {/* Center icon */}
-                          <div className="my-auto flex items-center justify-center text-gray-500 group-hover/thumb:text-pup-maroon dark:text-zinc-400 dark:group-hover/thumb:text-red-400 transition-colors">
+                          <div className="my-auto flex items-center justify-center text-gray-500 dark:text-zinc-400">
                             {isPdf ? (
-                              <Pdf01Icon size="1.1em" className="text-base" />
+                              <Pdf01Icon size="1.2em" className="text-base" />
                             ) : (
-                              <File02Icon size="1.1em" className="text-base" />
+                              <File02Icon size="1.2em" className="text-base" />
                             )}
-                          </div>
-
-                          {/* Bottom mini indicator */}
-                          <div className="w-full bg-white/80 dark:bg-zinc-800/80 rounded py-0 text-center">
-                            <span className="text-[7px] font-semibold text-gray-600 dark:text-zinc-300 tabular-nums truncate block">
-                              {formatBytes(record.size_bytes)}
-                            </span>
-                          </div>
-
-                          {/* Hover action overlay */}
-                          <div className="absolute inset-0 bg-pup-maroon/85 dark:bg-red-950/90 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] font-semibold">
-                            <ViewIcon size="1em" className="text-xs" />
                           </div>
                         </div>
 
-                        {/* Identity & Metadata Details */}
-                        <div className="flex flex-col min-w-0 flex-1 gap-1">
-                          {/* Line 1: Student Name + ID + DocType */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-900 group-hover:text-pup-maroon dark:text-zinc-100 dark:group-hover:text-red-400 transition-colors truncate">
-                              {formatTitleCase(record.student_name)}
-                            </span>
-
-                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0", BADGE_BASE)}>
+                        {/* Main Identity & Context Stream */}
+                        <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 min-w-0 shrink-0">
+                            {/* Identifier (Student No.) */}
+                            <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[70px] select-none">
                               {record.student_no}
                             </span>
 
-                            <span
-                              className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 shrink-0 truncate max-w-[220px]", BADGE_BASE)}
-                              title={record.doc_type}
-                            >
+                            {/* Title (Document Type as Title) */}
+                            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate shrink-0 max-w-[200px] sm:max-w-[280px] lg:max-w-[340px]">
                               {record.doc_type}
                             </span>
                           </div>
 
-                          {/* Line 2: Original Filename, Size, and Upload Timestamp */}
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                            <span
-                              className="truncate max-w-[280px] sm:max-w-md font-normal text-gray-700 dark:text-zinc-300"
-                              title={record.original_filename}
-                            >
-                              {record.original_filename}
-                            </span>
+                          {/* Desktop Secondary Context (Em-dash stream: Student Name • Filename • Size) */}
+                          <span className="text-xs text-gray-400 dark:text-zinc-500 truncate hidden md:inline font-normal select-none">
+                            — {formatTitleCase(record.student_name)}
+                            {record.org_acronym ? ` (${record.org_acronym})` : ""}
+                            {record.original_filename ? ` • ${record.original_filename}` : ""}
+                            {record.size_bytes ? ` (${formatBytes(record.size_bytes)})` : ""}
+                            {isDeclined && record.review_note ? ` • Decline note: "${record.review_note}"` : ""}
+                          </span>
 
-                            <span className="text-gray-300 dark:text-zinc-600">·</span>
-
-                            <span className="tabular-nums font-medium text-gray-600 dark:text-zinc-400">
-                              {formatBytes(record.size_bytes)}
-                            </span>
-
-                            <span className="text-gray-300 dark:text-zinc-600">·</span>
-
-                            <span className="tabular-nums">
-                              {dateStr} {timeStr ? `at ${timeStr}` : ""}
-                            </span>
-                          </div>
-
-                          {/* Line 3: Special notes (Declined reason or Review timestamp) */}
-                          {isDeclined && record.review_note && (
-                            <div className="mt-1 flex items-baseline gap-1.5 rounded-lg border border-red-200/70 bg-red-50/60 dark:border-red-900/40 dark:bg-red-950/20 px-2.5 py-1 text-[11px] text-red-700 dark:text-red-300">
-                              <span className="font-semibold shrink-0">Decline Reason:</span>
-                              <span className="italic truncate">&ldquo;{record.review_note}&rdquo;</span>
-                            </div>
-                          )}
-
-                          {isApproved && record.reviewed_at && (
-                            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                              Approved on {formatUploadedDate(record.reviewed_at).dateStr}
-                            </div>
-                          )}
+                          {/* Mobile Secondary Context */}
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate md:hidden font-normal select-none">
+                            {formatTitleCase(record.student_name)}
+                            {record.original_filename ? ` · ${record.original_filename}` : ""}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Right Block: Status Pill & Action Triggers */}
-                      <div
-                        className="flex shrink-0 items-center justify-between md:justify-end gap-3 pt-2 md:pt-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Text-Only Status Badge without indicator dot */}
+                      {/* Right: Linear Property Pills & Action Buttons */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        {/* Status Pill (Text-only pill) */}
                         <span
                           className={cn("select-none", badgeClass, BADGE_BASE)}
                         >
                           {record.approval_status || "Pending"}
                         </span>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-1.5">
+                        {/* Relative / Upload Timestamp */}
+                        {record.created_at && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-normal tabular-nums hidden sm:inline ml-1 shrink-0">
+                                {dateStr}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Uploaded on {dateStr} {timeStr ? `at ${timeStr}` : ""}
+                              {isApproved && record.reviewed_at ? ` · Approved on ${formatUploadedDate(record.reviewed_at).dateStr}` : ""}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 sm:gap-1.5 ml-1">
                           {/* Preview Action - Icon-only */}
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -333,15 +305,15 @@ export default function DigitalRecordsList({
                                 type="button"
                                 onClick={() => onPreview?.(record)}
                                 aria-label="Preview Document"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all"
                               >
-                                <ViewIcon size="1em" className="text-sm" />
+                                <ViewIcon size="1em" className="text-xs" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent side="top">Preview Document</TooltipContent>
                           </Tooltip>
 
-                          {/* Quick Review Actions for Pending records - Text-only */}
+                          {/* Quick Review Actions for Pending records - Text-only & Bold Colors */}
                           {isPending && (
                             <>
                               <Tooltip>
@@ -350,7 +322,7 @@ export default function DigitalRecordsList({
                                     type="button"
                                     onClick={() => onApprove?.(record.id)}
                                     aria-label="Approve Document"
-                                    className="inline-flex h-8 items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3 text-xs font-semibold shadow-2xs cursor-pointer active:scale-95 transition-all"
+                                    className="inline-flex h-7 items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 text-[11px] font-semibold shadow-2xs cursor-pointer active:scale-95 transition-all"
                                   >
                                     Approve
                                   </button>
@@ -364,7 +336,7 @@ export default function DigitalRecordsList({
                                     type="button"
                                     onClick={() => onDecline?.(record.id)}
                                     aria-label="Decline Document"
-                                    className="inline-flex h-8 items-center justify-center rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/30 dark:hover:bg-red-900/40 dark:text-red-300 px-3 text-xs font-semibold shadow-2xs cursor-pointer active:scale-95 transition-all"
+                                    className="inline-flex h-7 items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 text-white px-3 text-[11px] font-semibold shadow-2xs cursor-pointer active:scale-95 transition-all"
                                   >
                                     Decline
                                   </button>
@@ -374,7 +346,7 @@ export default function DigitalRecordsList({
                             </>
                           )}
 
-                          {/* Undo / Reopen trigger for reviewed records - Upgraded typography & tactile feel */}
+                          {/* Undo / Reopen trigger for reviewed records */}
                           {!isPending && onSetStatus && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -387,7 +359,7 @@ export default function DigitalRecordsList({
                                       "Moved back to review queue from list view"
                                     )
                                   }
-                                  className="inline-flex h-8 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-800 dark:text-zinc-100 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs transition-all cursor-pointer active:scale-95"
+                                  className="inline-flex h-7 items-center justify-center rounded-lg border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 px-3 text-[11px] font-semibold text-gray-800 dark:text-zinc-100 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs transition-all cursor-pointer active:scale-95"
                                 >
                                   Reopen
                                 </button>

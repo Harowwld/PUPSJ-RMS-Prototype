@@ -164,8 +164,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
+  const referenceDataLoadedRef = useRef(false);
   const coreRequestRef = useRef(0);
   const docsLoadedRef = useRef(false);
+  const docsLoadedAtRef = useRef(0);
   const docsRequestRef = useRef(0);
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
@@ -305,8 +307,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [selectedYear, setSelectedYear] = useState(null);
 
   const [quickQuery, setQuickQuery] = useState("");
-  const [quickResults, setQuickResults] = useState([]);
-  const [isQuickSearching, setIsQuickSearching] = useState(false);
+  const [archiveRefreshVersion, setArchiveRefreshVersion] = useState(0);
 
   const [activeStudent, setActiveStudent] = useState(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
@@ -442,9 +443,27 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     return toast.success(str);
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async ({ includeRoster = true } = {}) => {
     const request = ++coreRequestRef.current;
     try {
+      if (!includeRoster) {
+        const [typesRes, coursesRes, sectionsRes, layoutRes] = await Promise.all([
+          fetch("/api/doc-types?scope=requestable"),
+          fetch("/api/courses"),
+          fetch("/api/sections"),
+          fetch("/api/storage-layout"),
+        ]);
+        const [typesJson, coursesJson, sectionsJson, layoutJson] = await Promise.all([
+          typesRes.json(), coursesRes.json(), sectionsRes.json(), layoutRes.json(),
+        ]);
+        if (request !== coreRequestRef.current) return;
+        setRequestableDocTypes(typesJson?.data || []);
+        setCourses(coursesJson?.data || []);
+        setSections(sectionsJson?.data || []);
+        setStorageLayout(layoutJson?.data || { version: 2, rooms: [] });
+        referenceDataLoadedRef.current = true;
+        return;
+      }
       const orgsPromise = isOsas
         ? fetch("/api/osas/organizations?status=Active,Inactive,Archived").then(r => r.json()).catch(() => ({ ok: false, data: [] }))
         : Promise.resolve({ ok: true, data: [] });
@@ -468,12 +487,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       if (request !== coreRequestRef.current) return;
       
       setStudents(studentRows.filter((s) => s.status === "Active").map(normalizeStudentRow));
-      
       setArchivedStudents(
-        studentRows
-          .filter(s => s.status !== "Active")
-          .map(normalizeStudentRow)
+        studentRows.filter(s => s.status !== "Active").map(normalizeStudentRow)
       );
+      coreDataLoadedRef.current = true;
 
       const allOrgs = Array.isArray(orgsData?.data) ? orgsData.data : [];
       setOrganizations(allOrgs.filter(o => o.status !== "Archived"));
@@ -484,7 +501,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setCourses(cData.data || []);
       setSections(secData.data || []);
       setStorageLayout(layoutData?.data || { version: 2, rooms: [] });
-      coreDataLoadedRef.current = true;
+      referenceDataLoadedRef.current = true;
     } catch (err) {
       if (request !== coreRequestRef.current) return;
       showToast(
@@ -510,6 +527,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const fetchAllDocs = useCallback(async () => {
     const request = ++docsRequestRef.current;
+    docsLoadedAtRef.current = Date.now();
     try {
       const [res, proposalsData] = await Promise.all([
         fetchAllPages("/api/documents?excludeDeclined=1", 200),
@@ -540,7 +558,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       if (request !== docsRequestRef.current) return;
       setAllDocs([...res, ...proposalDocuments]);
       docsLoadedRef.current = true;
+      docsLoadedAtRef.current = Date.now();
     } catch {
+      if (request === docsRequestRef.current) docsLoadedAtRef.current = 0;
       /* silent */
     }
   }, [isOsas]);
@@ -562,17 +582,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setAuthUser(initialAuthUser);
     setLoading(false);
     const timer = setTimeout(() => {
-      fetchData();
-      fetchAllDocs();
       fetchNotificationsUnread();
     }, 0);
     return () => clearTimeout(timer);
-  }, [initialAuthUser, fetchData, fetchAllDocs, fetchNotificationsUnread]);
+  }, [initialAuthUser, fetchNotificationsUnread]);
 
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
-      fetchAllDocs();
+      if (docsLoadedRef.current && Date.now() - docsLoadedAtRef.current > 60_000 && ["storage", "upload", "documents"].includes(view)) fetchAllDocs();
       fetchNotificationsUnread();
     };
     document.addEventListener("visibilitychange", onVisible);
@@ -581,7 +599,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchAllDocs, fetchNotificationsUnread]);
+  }, [fetchAllDocs, fetchNotificationsUnread, view]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -612,17 +630,22 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, [authUser?.id]);
 
   useEffect(() => {
-    // The compliance matrix loads its own complete roster; search still needs document rows.
-    if (view !== "search" || docsLoadedRef.current) return;
-    setTimeout(() => {
+    if (!authUser) return;
+    if (["storage", "upload", "batch_review"].includes(view) && !coreDataLoadedRef.current) {
+      fetchData();
+    }
+    if (["students", "requests", "documents", "search"].includes(view) && !referenceDataLoadedRef.current) {
+      fetchData({ includeRoster: false });
+    }
+    if (["storage", "upload", "documents"].includes(view) && (!docsLoadedRef.current || Date.now() - docsLoadedAtRef.current > 60_000)) {
       fetchAllDocs();
-    }, 0);
-  }, [view, fetchAllDocs]);
+    }
+  }, [authUser, view, fetchData, fetchAllDocs]);
 
   useEffect(() => {
     if (view !== "upload" && view !== "search") return;
     // Keep staff selectors/SLV in sync with admin layout edits.
-    refreshStorageLayout();
+    if (coreDataLoadedRef.current) refreshStorageLayout();
   }, [view, refreshStorageLayout]);
 
   useEffect(() => {
@@ -677,46 +700,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
   }, [storageLayout, currentLocatorLevel, selectedRoom, selectedCabinet]);
 
-  useEffect(() => {
-    if (quickQuery.trim().length < 2) {
-      setQuickResults([]);
-      return;
-    }
-    setIsQuickSearching(true);
-    const timer = setTimeout(() => {
-      const q = quickQuery.toLowerCase();
-      if (authUser?.office_id === "osas") {
-        const results = organizations.filter(
-          (o) =>
-            (o.name || "").toLowerCase().includes(q) ||
-            (o.acronym || "").toLowerCase().includes(q) ||
-            (o.category || "").toLowerCase().includes(q) ||
-            (o.adviser_name || "").toLowerCase().includes(q)
-        ).map((o) => ({
-          studentNo: o.id,
-          acronym: o.acronym || o.id,
-          name: o.name,
-          category: o.category,
-          room: o.storage_room || 1,
-          cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-          drawer: o.storage_drawer || "1",
-          isOrg: true,
-          rawOrg: o,
-        }));
-        setQuickResults(results.slice(0, 10));
-      } else {
-        const results = students.filter(
-          (s) =>
-            s.studentNo.toLowerCase().includes(q) ||
-            s.name.toLowerCase().includes(q),
-        );
-        setQuickResults(results.slice(0, 10));
-      }
-      setIsQuickSearching(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [quickQuery, students, organizations, authUser?.office_id]);
-
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -726,27 +709,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     localStorage.setItem("pup-logout", Date.now());
     window.location.href = "/login";
   };
-
-  const getStudentFolderYear = (s) => {
-    const derived = getStudentNoYear(s.studentNo);
-    if (derived != null) return derived;
-    const fromDb = Number(s.yearLevel);
-    return Number.isFinite(fromDb) ? fromDb : null;
-  };
-
-  const academicYearOptions = useMemo(() => {
-    const combined = [...students, ...archivedStudents];
-    const fromData = Array.from(
-      new Set(
-        combined
-          .map((s) => getStudentFolderYear(s))
-          .filter((y) => y != null)
-          .map((y) => Number(y))
-          .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
-      ),
-    );
-    return fromData.sort((a, b) => a - b);
-  }, [students, archivedStudents]);
 
   const breadcrumbs = useMemo(() => {
     if (authUser?.office_id === "osas") {
@@ -762,91 +724,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
     return list;
   }, [authUser?.office_id, selectedCategory, selectedYear]);
-
-  const explorerItems = useMemo(() => {
-    if (authUser?.office_id === "osas") {
-      if (currentLevel === "categories" || currentLevel === "years") {
-        const allOrgs = [...organizations, ...archivedOrganizations];
-        const categories = Array.from(new Set(allOrgs.map((o) => o.category || "Academic")));
-        if (categories.length === 0) {
-          categories.push("Academic", "Non-Academic");
-        }
-        return categories.map((cat) => {
-          const activeCount = organizations.filter((o) => (o.category || "Academic") === cat).length;
-          const archCount = archivedOrganizations.filter((o) => (o.category || "Academic") === cat).length;
-          return {
-            key: cat,
-            title: cat,
-            subtitle: `${activeCount} Active · ${archCount} Archived`,
-            icon: "Building01Icon",
-            onClick: () => {
-              setSelectedCategory(cat);
-              setCurrentLevel("organizations");
-            },
-          };
-        });
-      }
-      if (currentLevel === "organizations" || currentLevel === "students") {
-        return organizations
-          .filter((o) => (o.category || "Academic") === selectedCategory)
-          .map((o) => ({
-            key: o.id,
-            org: o,
-            student: {
-              studentNo: o.id,
-              acronym: o.acronym || o.id,
-              name: o.name,
-              room: o.storage_room || 1,
-              cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-              drawer: o.storage_drawer || "1",
-              status: o.status,
-              category: o.category,
-              adviser: o.adviser_name,
-              activeOfficerCount: o.active_officer_count,
-              proposalCount: o.proposal_count,
-              hasCbl: Boolean(o.bylaws_storage_filename),
-              bylawsStorageFilename: o.bylaws_storage_filename,
-              rawOrg: o,
-            },
-          }));
-      }
-      return [];
-    }
-
-    if (currentLevel === "years") {
-      const years = [...academicYearOptions].sort((a, b) => b - a);
-      return years.map((y) => {
-        const activeCount = students.filter((s) => getStudentFolderYear(s) === y).length;
-        const archCount = archivedStudents.filter((s) => getStudentFolderYear(s) === y).length;
-        return {
-          key: String(y),
-          title: `Year ${y}`,
-          subtitle: `${activeCount} Active · ${archCount} Archived`,
-          icon: "Calendar01Icon",
-          onClick: () => {
-            setSelectedYear(y);
-            setCurrentLevel("students");
-          },
-        };
-      });
-    }
-    if (currentLevel === "students") {
-      return students
-        .filter((s) => getStudentFolderYear(s) === Number(selectedYear))
-        .map((s) => ({ key: s.studentNo, student: s }));
-    }
-    return [];
-  }, [
-    authUser?.office_id,
-    currentLevel,
-    organizations,
-    archivedOrganizations,
-    selectedCategory,
-    students,
-    archivedStudents,
-    selectedYear,
-    academicYearOptions,
-  ]);
 
   const staffDocs = useMemo(
     () =>
@@ -1872,12 +1749,21 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
     if (isOsas) {
       const allOrgsPool = [...organizations, ...archivedOrganizations];
-      const org = allOrgsPool.find(
+      let org = allOrgsPool.find(
         (x) =>
           String(x.id || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase() ||
           String(x.name || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase() ||
           String(x.acronym || "").trim().toLowerCase() === String(resolvedTargetId || "").trim().toLowerCase()
       );
+      if (!org && resolvedTargetId) {
+        try {
+          const response = await fetch(`/api/osas/organizations/${encodeURIComponent(resolvedTargetId)}`, { cache: "no-store" });
+          const result = await response.json();
+          if (response.ok && result?.ok) org = result.data;
+        } catch {
+          // The upload form can still use the document's organization details.
+        }
+      }
       if (org) {
         applyStudentToPdfForm(org, docType || matchedDoc?.doc_type);
         setUploadStudentIsExisting(true);
@@ -1953,6 +1839,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setBulkArchiveOpen(false);
       setSelectedStudentIds(new Set());
       fetchData();
+      setArchiveRefreshVersion((version) => version + 1);
     } catch (err) {
       showToast(
         formatErrorMessage(err, {
@@ -2001,6 +1888,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setBulkRestoreOpen(false);
       setSelectedStudentIds(new Set());
       fetchData();
+      setArchiveRefreshVersion((version) => version + 1);
     } catch (err) {
       showToast(
         formatErrorMessage(err, {
@@ -2114,12 +2002,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             <StudentDirectoryTab
               authUser={authUser}
               loading={!storageLayout || loading}
-              students={students}
-              archivedStudents={archivedStudents}
               courses={courses}
               sections={sections}
               storageLayout={storageLayout}
-              allDocs={allDocs}
               onLocateStudent={locateStudent}
               onPreviewDocument={handlePreviewDocument}
               onRescan={handleRescan}
@@ -2131,10 +2016,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           {view === "search" && (
             <RecordsArchiveTab
               loading={!storageLayout}
+              refreshVersion={archiveRefreshVersion}
+              onSelectYear={(year) => { setSelectedYear(year); setCurrentLevel("students"); }}
               quickQuery={quickQuery}
               setQuickQuery={setQuickQuery}
-              isQuickSearching={isQuickSearching}
-              quickResults={quickResults}
+              onSelectCategory={(category) => { setSelectedCategory(category); setCurrentLevel("organizations"); }}
               onLocateStudent={locateStudent}
               breadcrumbs={breadcrumbs}
               currentLevel={currentLevel}
@@ -2149,39 +2035,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   setCurrentLevel(authUser?.office_id === "osas" ? "organizations" : "students");
                 }
               }}
-              students={authUser?.office_id === "osas" ? organizations.map((o) => ({
-                studentNo: o.id,
-                acronym: o.acronym || o.id,
-                name: o.name,
-                room: o.storage_room || 1,
-                cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-                drawer: o.storage_drawer || "1",
-                category: o.category,
-                adviser: o.adviser_name,
-                activeOfficerCount: o.active_officer_count,
-                proposalCount: o.proposal_count,
-                hasCbl: Boolean(o.bylaws_storage_filename),
-                bylawsStorageFilename: o.bylaws_storage_filename,
-                rawOrg: o,
-              })) : students}
-              archivedStudents={authUser?.office_id === "osas" ? archivedOrganizations.map((o) => ({
-                studentNo: o.id,
-                acronym: o.acronym || o.id,
-                name: o.name,
-                room: o.storage_room || 1,
-                cabinet: o.storage_cabinet || (o.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-                drawer: o.storage_drawer || "1",
-                category: o.category,
-                adviser: o.adviser_name,
-                activeOfficerCount: o.active_officer_count,
-                proposalCount: o.proposal_count,
-                hasCbl: Boolean(o.bylaws_storage_filename),
-                bylawsStorageFilename: o.bylaws_storage_filename,
-                rawOrg: o,
-              })) : archivedStudents}
-              staffDocs={authUser?.office_id === "osas" ? staffDocs : staffDocs.filter((doc) => doc.source_type !== "event_proposal")}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
-              explorerItems={explorerItems}
               onSwitchView={setView}
               onPreviewDocument={handlePreviewDocument}
               onRestoreStudent={async (targetId) => {
@@ -2342,7 +2196,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               students={students}
               courses={courses}
               docTypes={requestableDocTypes}
-              staffDocs={staffDocs}
               officeId={authUser?.office_id}
               onLocateOnMap={goToStorageMapFromRequest}
               showToast={showToast}

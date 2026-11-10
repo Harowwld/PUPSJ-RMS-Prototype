@@ -6,9 +6,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 const actionClassName = "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:text-zinc-300 dark:hover:bg-zinc-800/70 dark:focus-visible:ring-red-400"
 
-export default function PersonnelActionsMenu({ member, name, isSelf, onViewProfile, onEdit, onSettings, onArchive, onRestore }) {
+export default function PersonnelActionsMenu({
+  member,
+  name,
+  isSelf,
+  entityName = "Personnel",
+  onViewProfile,
+  onEdit,
+  onSettings,
+  onArchive,
+  onRestore,
+}) {
   const [open, setOpen] = useState(false)
-  const isActive = member.status === "Active"
+  const isActive = member.status === "Active" || (member.status !== "Archived" && member.status !== "Inactive")
 
   const runAction = (event, callback) => {
     event.stopPropagation()
@@ -19,7 +29,13 @@ export default function PersonnelActionsMenu({ member, name, isSelf, onViewProfi
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" onClick={(event) => event.stopPropagation()} aria-label={`More actions for ${name}`} aria-expanded={open} className="table-action-button rounded-lg active:scale-95 cursor-pointer">
+        <button
+          type="button"
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`More actions for ${name}`}
+          aria-expanded={open}
+          className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+        >
           <MoreHorizontalIcon size={16} aria-hidden="true" />
         </button>
       </PopoverTrigger>
@@ -34,18 +50,18 @@ export default function PersonnelActionsMenu({ member, name, isSelf, onViewProfi
             </button>
           ) : isActive && (
             <button type="button" onClick={(event) => runAction(event, onEdit)} className={actionClassName}>
-              <PencilEdit01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" /><span>Edit Personnel</span>
+              <PencilEdit01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" /><span>Edit {entityName}</span>
             </button>
           )}
           {!isSelf && <>
-            <div aria-hidden="true" className="my-1 h-px bg-border dark:bg-white/10" />
+            <div aria-hidden="true" className="-mx-1 my-1.5 h-px bg-gray-200 dark:bg-white/10" />
             {isActive ? (
               <button type="button" onClick={(event) => runAction(event, onArchive)} className="flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 dark:text-red-400 dark:hover:bg-red-950/30">
-                <Archive01Icon size={14} aria-hidden="true" className="shrink-0" /><span>Archive Personnel</span>
+                <Archive01Icon size={14} aria-hidden="true" className="shrink-0" /><span>Archive {entityName}</span>
               </button>
             ) : (
               <button type="button" onClick={(event) => runAction(event, onRestore)} className="flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-950/30">
-                <ReloadIcon size={14} aria-hidden="true" className="shrink-0" /><span>Restore Personnel</span>
+                <ReloadIcon size={14} aria-hidden="true" className="shrink-0" /><span>Restore {entityName}</span>
               </button>
             )}
           </>}

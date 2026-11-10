@@ -1753,6 +1753,8 @@ export default function Sidebar({
                     {hasActiveChild && !isExpanded && (
                       <motion.span
                         layoutId="sidebar-active-pill"
+                        layout="y"
+                        initial={false}
                         className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
                         style={{ backgroundColor: activeColor }}
                         transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
@@ -1919,6 +1921,8 @@ export default function Sidebar({
                             {isChildActive && (
                               <motion.span
                                 layoutId="sidebar-active-pill"
+                                layout="y"
+                                initial={false}
                                 className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
                                 style={{ backgroundColor: activeColor }}
                                 transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
@@ -2043,6 +2047,8 @@ export default function Sidebar({
                 {isActive && (
                   <motion.span
                     layoutId="sidebar-active-pill"
+                    layout="y"
+                    initial={false}
                     className="absolute inset-0 rounded-xl shadow-2xs z-0 pointer-events-none"
                     style={{ backgroundColor: activeColor }}
                     transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}

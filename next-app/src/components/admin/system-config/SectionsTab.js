@@ -2,11 +2,13 @@
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
+import { SegmentedControl } from "@/components/ui/tabs";
+import TaxonomyActionsMenu from "./TaxonomyActionsMenu";
 
 
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import TaxonomyTableSkeleton from "@/components/admin/skeletons/TaxonomyTableSkeleton"
@@ -247,7 +249,7 @@ export default function SectionsTab({
         ? "These course blocks will be visible for new records again."
         : "These course blocks will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore Blocks" : "Archive Blocks",
-      variant: showArchived ? "success" : "warning",
+      variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? " Archive02Icon" : " Archive01Icon",
       icon: showArchived ? " Archive02Icon" : " Archive01Icon",
       selectedItems: selectedNames,
@@ -256,7 +258,13 @@ export default function SectionsTab({
     setConfirmOpen(true)
   }
 
-
+  const activeTableColumns = useMemo(() => [
+    "selection",
+    { kind: "identifier", minWidth: 130, maxWidth: 180, growthWeight: 1 },
+    { kind: "text", minWidth: 280, maxWidth: 1000, growthWeight: 5 },
+    { kind: "status", minWidth: 130, maxWidth: 180, growthWeight: 1 },
+    "actions",
+  ], [])
 
   return (
     <TooltipProvider delay={200}>
@@ -285,56 +293,37 @@ export default function SectionsTab({
           className="p-6"
         />
 
+        {/* Connected Segmented Tabs Row: Active vs Archived */}
+        <div
+          role="group"
+          aria-label="Course blocks status filters"
+          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none"
+        >
+          <SegmentedControl
+            value={showArchived ? "archived" : "active"}
+            onValueChange={(val) => {
+              setShowArchived(val === "archived")
+              setPageSection(1)
+            }}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              {
+                value: "active",
+                label: "Active",
+                badge: sections.filter((s) => s.status !== "Archived").length,
+              },
+              {
+                value: "archived",
+                label: "Archived",
+                badge: sections.filter((s) => s.status === "Archived").length,
+              },
+            ]}
+          />
+        </div>
+
         {/* Navigation Toolbar */}
         <DataViewToolbar label="Section search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-          {/* Active / Archived Segmented Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => {
-                setShowArchived(false)
-                setPageSection(1)
-              }}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                !showArchived
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Active</span>
-              <span
-                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
-                    ? BADGE_PALETTES.emerald
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-              >
-                {sections.filter((s) => s.status !== "Archived").length}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowArchived(true)
-                setPageSection(1)
-              }}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                showArchived
-                  ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                  : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-              )}
-            >
-              <span>Archived</span>
-              <span
-                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
-                    ? BADGE_PALETTES.amber
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-              >
-                {sections.filter((s) => s.status === "Archived").length}
-              </span>
-            </button>
-          </div>
-
           {/* Search Input, Matches Count, Export, Add */}
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
             {/* Program Filter Select dropdown */}
@@ -465,7 +454,7 @@ export default function SectionsTab({
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <Table columns={["selection", "category", "identifier", "status", "actions"]} className="min-w-[950px]">
+              <Table columns={activeTableColumns} className="min-w-[950px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
@@ -481,7 +470,7 @@ export default function SectionsTab({
                         />
                       </th>
                       <th className={cn(
-                        "w-[24%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        "w-[18%] p-4 px-6 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}>
                         <div className="flex items-center justify-between">
@@ -510,7 +499,7 @@ export default function SectionsTab({
                           )}
                         </div>
                       </th>
-                      <th className="w-[48%] p-4">
+                      <th className="w-[56%] p-4">
                         <button
                           onClick={() => onSort("name")}
                           className={cn(
@@ -521,7 +510,7 @@ export default function SectionsTab({
                           Block Name <SortIndicator sortState={sortSection} column="name" />
                         </button>
                       </th>
-                      <th className="w-[14%] p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">Status</th>
+                      <th className="w-[14%] p-4 px-6 text-xs font-semibold text-gray-500 dark:text-zinc-400">Status</th>
                       <th className="w-28 p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
                     </tr>
                   </thead>
@@ -572,7 +561,7 @@ export default function SectionsTab({
                             />
                           </td>
                           <td className={cn(
-                            "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
+                            "p-4 px-6 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
                             isSelected
                               ? "bg-blue-50 dark:bg-blue-950"
                               : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
@@ -587,7 +576,7 @@ export default function SectionsTab({
                               {sec.name}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 px-6 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {sec.status === "Archived" ? (
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400", BADGE_BASE)}>
                                 Archived
@@ -600,93 +589,62 @@ export default function SectionsTab({
                           </td>
                           <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
                             <div 
-                              className="inline-flex items-center justify-end gap-1.5"
+                              className="inline-flex items-center justify-end"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {!showArchived && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      disabled={sec.status === "Archived"}
-                                      onClick={() => {
-                                        setEditSection({
-                                          id: sec.id,
-                                          name: sec.name,
-                                          courseCode: sec.course_code || "",
-                                        })
-                                        setIsEditSectionOpen(true)
-                                      }}
-                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                    >
-                                      <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">Edit Course Block</TooltipContent>
-                                </Tooltip>
-                              )}
-
-                            {sec.status === "Archived" ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => {
-                                      setConfirmPayload({
-                                        title: "Restore Course Block",
-                                        message:
-                                          "This course block will be visible for new records again.",
-                                        confirmLabel: "Restore Block",
-                                        variant: "success",
-                                        buttonIcon: " Archive02Icon",
-                                        icon: " Archive02Icon",
-                                        selectedItems: [sec.name],
-                                        onConfirm: () =>
-                                          resSection(
-                                            sec.id,
-                                            sec.name,
-                                            sec.course_code
-                                          ),
-                                      })
-                                      setConfirmOpen(true)
-                                    }}
-                                    className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <Archive02Icon size="1em"  className="text-sm"></Archive02Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Restore</TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => {
-                                      setConfirmPayload({
-                                        title: "Archive Course Block",
-                                        message:
-                                          "This course block will be hidden from new registrations but its history will be preserved.",
-                                        confirmLabel: "Archive Block",
-                                        variant: "warning",
-                                        buttonIcon: " Archive01Icon",
-                                        icon: " Archive01Icon",
-                                        selectedItems: [sec.name],
-                                        onConfirm: () =>
-                                          delSection(
-                                            sec.id,
-                                            sec.name,
-                                            sec.course_code
-                                          ),
-                                      })
-                                      setConfirmOpen(true)
-                                    }}
-                                    className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <Archive01Icon size="1em"  className="text-sm"></Archive01Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Archive Course Block</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
+                              <TaxonomyActionsMenu
+                                item={sec}
+                                name={sec.name}
+                                entityName="Course Block"
+                                isArchived={sec.status === "Archived"}
+                                onEdit={(item) => {
+                                  setEditSection({
+                                    id: item.id,
+                                    name: item.name,
+                                    courseCode: item.course_code || "",
+                                  })
+                                  setIsEditSectionOpen(true)
+                                }}
+                                onArchive={(item) => {
+                                  setConfirmPayload({
+                                    title: "Archive Course Block",
+                                    message:
+                                      "This course block will be hidden from new registrations but its history will be preserved.",
+                                    confirmLabel: "Archive Block",
+                                    variant: "danger",
+                                    buttonIcon: " Archive01Icon",
+                                    icon: " Archive01Icon",
+                                    selectedItems: [item.name],
+                                    onConfirm: () =>
+                                      delSection(
+                                        item.id,
+                                        item.name,
+                                        item.course_code
+                                      ),
+                                  })
+                                  setConfirmOpen(true)
+                                }}
+                                onRestore={(item) => {
+                                  setConfirmPayload({
+                                    title: "Restore Course Block",
+                                    message:
+                                      "This course block will be visible for new records again.",
+                                    confirmLabel: "Restore Block",
+                                    variant: "success",
+                                    buttonIcon: " Archive02Icon",
+                                    icon: " Archive02Icon",
+                                    selectedItems: [item.name],
+                                    onConfirm: () =>
+                                      resSection(
+                                        item.id,
+                                        item.name,
+                                        item.course_code
+                                      ),
+                                  })
+                                  setConfirmOpen(true)
+                                }}
+                              />
+                            </div>
                         </td>
                       </tr>
                     )})}

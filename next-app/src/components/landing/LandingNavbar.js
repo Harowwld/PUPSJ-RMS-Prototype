@@ -175,6 +175,7 @@ export default function LandingNavbar() {
                     {activeSection === item.id && (
                       <motion.div
                         layoutId="navUnderline"
+                        layout="x"
                         className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

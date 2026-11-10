@@ -27,7 +27,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { splitNameComponents } from "@/lib/ocrClient"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
-import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon, ViewIcon} from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import {
   DOCUMENT_MAX_SIZE_BYTES,
@@ -41,6 +41,8 @@ const COORDINATE_REGION_LABELS = {
   middleName: { label: "Middle name", color: "#9333ea" },
   lastName: { label: "Last name", color: "#dc2626" },
 }
+
+const SELECT_BASE_CLASS = "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80";
 
 export default function ScanUploadTab({
   authUser = null,
@@ -612,10 +614,16 @@ export default function ScanUploadTab({
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="FingerPrintScanIcon"
-            title="Scan & Upload"
+            title={
+              <span className="flex items-center gap-2">
+                <span>Scan & Upload</span>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {hf.rows.length > 0 ? `${hf.rows.length} queued` : "Scanner ready"}
+                </span>
+              </span>
+            }
             description={isOsas ? "Scan organization records or import files to save them digitally." : "Scan student records or import files to save them digitally."}
-            showBorder={false}
-            className="p-6"
+            className="p-6 border-b border-border dark:border-border"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
             actions={
@@ -631,7 +639,7 @@ export default function ScanUploadTab({
           />
 
           {/* Workstation Hardware & Digitization Path Banner */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2 bg-slate-50/70 dark:bg-zinc-900/60 border-t border-b border-border dark:border-border text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 bg-slate-50/70 dark:bg-zinc-900/60 border-b border-border dark:border-border text-xs">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
 
@@ -670,7 +678,7 @@ export default function ScanUploadTab({
 
           <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />
 
-          <CardContent className="flex flex-[1_0_auto] flex-col p-6 pt-3 rounded-b-2xl">
+          <CardContent className="flex flex-[1_0_auto] flex-col p-6 rounded-b-2xl">
           {loading ? (
             <ScanUploadSkeleton />
           ) : error ? (
@@ -792,9 +800,9 @@ export default function ScanUploadTab({
                                  variant="outline"
                                  size="sm"
                                  onClick={() => setShowPagesSidebar(!showPagesSidebar)}
-                                 className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                                 className="h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                                >
-                                 {showPagesSidebar ? "Hide" : "Show"}
+                                 {showPagesSidebar ? "Hide Pages" : "Show Pages"}
                                </Button>
                              )}
                             <Button
@@ -802,33 +810,34 @@ export default function ScanUploadTab({
                               variant="outline"
                               size="sm"
                               onClick={() => fileInputRef.current?.click()}
-                              className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 flex items-center gap-1.5"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               title="Choose or drop a different file"
                             >
-                              <Upload01Icon size="1em" className="text-xs" />
-                              <span>Replace File</span>
+                              Replace File
                             </Button>
                             <button
                               type="button"
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                              aria-label="Rotate Counter-Clockwise"
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                               onClick={() => setRotation((r) => r - 90)}
                               title="Rotate Left"
                             >
-                              <ReloadIcon size="1em"  className="text-xs" />
+                              <ReloadIcon size="1em" className="text-sm" />
                             </button>
                             <button
                               type="button"
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                              aria-label="Rotate Clockwise"
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                               onClick={() => setRotation((r) => r + 90)}
                               title="Rotate Right"
                             >
-                              <ReloadIcon size="1em"  className="text-xs" />
+                              <ReloadIcon size="1em" className="text-sm -scale-x-100" />
                             </button>
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="ml-1 h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                              className="ml-1 h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               onClick={() => {
                                 if (hf.selectedRow) {
                                   hf.clearIngestSelection()
@@ -917,14 +926,16 @@ export default function ScanUploadTab({
                                   );
                                 })}
                               </div>
-                              <button
+                              <Button
                                 type="button"
+                                variant="outline"
+                                size="sm"
                                 onClick={() => fileInputRef.current?.click()}
                                 title="Add Page"
-                                className="mt-auto flex h-9 items-center justify-center rounded-xl border border-border bg-white text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 dark:bg-card dark:border-border dark:text-zinc-300 cursor-pointer active:scale-95 px-3"
+                                className="mt-auto h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-card text-xs font-semibold text-gray-700 dark:text-zinc-300 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
                               >
-                                Add
-                              </button>
+                                Add Page
+                              </Button>
                             </div>
                           )}
 
@@ -1125,11 +1136,10 @@ export default function ScanUploadTab({
                             variant="outline"
                             size="sm"
                             onClick={() => onPreviewDocument(rescanContext.docType, newRec.name, rescanContext.targetId, rescanContext.docId)}
-                            className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer flex items-center gap-1 shadow-2xs"
+                            className="h-8 px-3 text-xs font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-xl cursor-pointer shadow-2xs active:scale-95 transition-all"
                             title="View current on-file version in modal"
                           >
-                            <ViewIcon size="1em" className="text-xs" />
-                            <span>View Copy</span>
+                            View Copy
                           </Button>
                         )}
                         {isReplaceMode || rescanContext ? (
@@ -1139,7 +1149,7 @@ export default function ScanUploadTab({
                               variant="outline"
                               size="sm"
                               onClick={onCancelRescan}
-                              className="h-7 px-2.5 text-[11px] font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-lg cursor-pointer shadow-2xs"
+                              className="h-8 px-3 text-xs font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-xl cursor-pointer shadow-2xs active:scale-95 transition-all"
                             >
                               Cancel
                             </Button>
@@ -1149,7 +1159,7 @@ export default function ScanUploadTab({
                             type="button"
                             size="sm"
                             onClick={() => setIsReplaceMode(true)}
-                            className="h-7 px-3 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                            className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
                           >
                             Replace Document
                           </Button>
@@ -1259,7 +1269,7 @@ export default function ScanUploadTab({
                                     placeholder="Choose an organization..."
                                     disabled={Boolean(rescanContext)}
                                     className={cn(
-                                      "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                      SELECT_BASE_CLASS,
                                       ring("organization"),
                                       ring("organizationId"),
                                       Boolean(rescanContext) && lockedField
@@ -1414,7 +1424,7 @@ export default function ScanUploadTab({
                                     <Select
                                       placeholder="Select Category"
                                       className={cn(
-                                        "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                        SELECT_BASE_CLASS,
                                         ring("category")
                                       )}
                                       value={newRec.category || ""}
@@ -1719,7 +1729,7 @@ export default function ScanUploadTab({
                               <Select
                                 placeholder="Select Course"
                                 className={cn(
-                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  SELECT_BASE_CLASS,
                                   ring("course"),
                                   lockIdentity && lockedField
                                 )}
@@ -1751,7 +1761,7 @@ export default function ScanUploadTab({
                               <Select
                                 placeholder="Select Section"
                                 className={cn(
-                                  "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                  SELECT_BASE_CLASS,
                                   ring("sectionPart"),
                                   lockIdentity && lockedField
                                 )}
@@ -1783,7 +1793,7 @@ export default function ScanUploadTab({
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                SELECT_BASE_CLASS,
                                 ring("room")
                               )}
                               value={String(newRec.room || "")}
@@ -1814,7 +1824,7 @@ export default function ScanUploadTab({
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                SELECT_BASE_CLASS,
                                 ring("cabinet")
                               )}
                               value={newRec.cabinet}
@@ -1844,7 +1854,7 @@ export default function ScanUploadTab({
                             <Select
                               placeholder=""
                               className={cn(
-                                "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                                SELECT_BASE_CLASS,
                                 ring("drawer")
                               )}
                               value={String(newRec.drawer || "")}
@@ -1874,7 +1884,7 @@ export default function ScanUploadTab({
                             placeholder="Select Document type"
                             disabled={Boolean(rescanContext?.docType)}
                             className={cn(
-                              "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all",
+                              SELECT_BASE_CLASS,
                               ring("docType"),
                               Boolean(rescanContext?.docType) && lockedField
                             )}

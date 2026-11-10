@@ -85,8 +85,8 @@ test("Document Requests multi-view architecture and toolbar design standard", ()
   );
   assert.match(
     tabContent,
-    /loading\s*&&\s*rows\.length\s*===\s*0/,
-    "Skeleton must only replace table on initial empty load, never flashing during background revalidation"
+    /loading\s*&&\s*!hasLoaded/,
+    "Skeleton must only replace table before the first load, including when the first result is empty"
   );
   assert.doesNotMatch(
     tabContent,

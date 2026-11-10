@@ -63,8 +63,9 @@
 .app-table th[data-kind="number"] > button { margin-left: auto; margin-right: 0; }
 .app-table th:is([data-kind="status"], [data-kind="year"], [data-kind="category"]) > button,
 .app-table td:is([data-kind="status"], [data-kind="year"], [data-kind="category"]) > div { margin-left: auto; margin-right: auto; }
-.app-table [data-kind="actions"] { z-index: 12; background: var(--table-surface); }
-.app-table th[data-kind="actions"] { z-index: 32; background: var(--table-header); }
+.app-table td[data-slot="table-cell"]:has(+ td[data-kind="actions"]) { border-right: 0; }
+.app-table [data-kind="actions"] { z-index: 12; background: var(--table-surface); border-left: 1px solid var(--table-divider); }
+.app-table th[data-kind="actions"] { z-index: 32; background: var(--table-header); border-left: 1px solid var(--table-divider); }
 .app-table tr:hover > td[data-kind="actions"] { background: #f9fafb; }
 .dark .app-table tr:hover > td[data-kind="actions"] { background: #27272a; }
 .app-table tbody > tr[data-selected="true"] { transition: none !important; }

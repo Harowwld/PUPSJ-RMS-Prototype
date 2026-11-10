@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
 import PageHeader from "@/components/shared/PageHeader"
 import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 
 export default function GlobalAuditLogsSkeleton() {
   return (
@@ -30,7 +31,12 @@ export default function GlobalAuditLogsSkeleton() {
             </div>
           }
         />
-        <div aria-hidden="true" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+        <div className="px-6 pb-6">
+          <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+            <KpiStatCardsSkeleton count={3} />
+          </div>
+        </div>
+        <div aria-hidden="true" className="flex items-center px-6 py-2.5 border-t border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
             {[["All Levels", true], ["Information", false], ["Warning", false], ["Critical", false]].map(([label, active]) => (
               <div key={label} className={`inline-flex items-center justify-center px-3.5 py-1 text-xs font-semibold rounded-full ${active ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs" : "text-gray-500 dark:text-zinc-400"}`}>

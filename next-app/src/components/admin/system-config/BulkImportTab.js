@@ -27,6 +27,7 @@ import {
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import DashboardSearch from "@/components/shared/DashboardSearch"
 import { Add01Icon, Alert01Icon, Cancel01Icon, CheckmarkCircle01Icon, Copy01Icon, Database01Icon, HelpCircleIcon, PencilEdit01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function BulkImportTab({
@@ -167,7 +168,7 @@ export default function BulkImportTab({
             }
           />
           
-          <div className="border-t border-border dark:border-border p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
+          <div className="p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
             <div className="flex items-center gap-2">
               <a
                 href={
@@ -176,7 +177,7 @@ export default function BulkImportTab({
                     : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Transcript of Records,,false,true%0ADOCUMENT TYPE,Diploma,,false,true%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false%0ADOCUMENT TYPE,Form 137,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,%0ASection,Block 1,BSIT,%0ASection,Section 1,BSA,"
                 }
                 download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                className="inline-flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
               >
                 Download Template
               </a>
@@ -235,8 +236,9 @@ export default function BulkImportTab({
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
+              size="sm"
               onClick={resetImport}
-              className="flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
             >
               Back
             </Button>
@@ -254,47 +256,49 @@ export default function BulkImportTab({
             </div>
           </div>
           <DataViewToolbar label="Import preview search and table controls" className="gap-4">
-              <div className="relative group w-[220px]">
-                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Search preview..."
-                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                  {filteredImportRows.length.toLocaleString()}
-                </div>
-              </div>
+            {/* Left Zone: Search with z-10 + TableScroll */}
+            <div className="flex min-w-0 items-center gap-2 z-10">
+              <DashboardSearch
+                value={searchTerm}
+                onChange={(val) => {
+                  setSearchTerm(val)
+                  setCurrentPage(1)
+                }}
+                onClear={() => {
+                  setSearchTerm("")
+                  setCurrentPage(1)
+                }}
+                count={filteredImportRows.length}
+                placeholder="Search preview..."
+                label="Search preview"
+              />
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                onScrollLeft={() => scrollTable("left")}
+                onScrollRight={() => scrollTable("right")}
+                isScrolled={isScrolledX}
+              />
+            </div>
 
-              <div className="flex items-center gap-3.5 text-[12px] text-gray-900 dark:text-zinc-300">
-                <span className="border-r border-border pr-3.5 font-medium text-gray-500 dark:border-border dark:text-zinc-500">
-                  Summary
+            {/* Right Zone: Summary */}
+            <div className="ml-auto flex shrink-0 items-center gap-3.5 text-[12px] text-gray-900 dark:text-zinc-300">
+              <span className="border-r border-border pr-3.5 font-medium text-gray-500 dark:border-border dark:text-zinc-500">
+                Summary
+              </span>
+              <div className="flex items-center gap-3.5">
+                <span className="font-normal text-gray-900 dark:text-zinc-300">
+                  {importRows.length} rows detected · <span className={importRows.filter((r) => r.error).length > 0 ? "text-red-600 dark:text-red-400 font-medium" : "text-gray-500 dark:text-zinc-400"}>{importRows.filter((r) => r.error).length} invalid</span>
                 </span>
-                <div className="flex items-center gap-3.5">
-                  <span className="font-normal text-gray-900 dark:text-zinc-300">
-                    {importRows.length} rows detected · <span className={importRows.filter((r) => r.error).length > 0 ? "text-red-600 dark:text-red-400 font-medium" : "text-gray-500 dark:text-zinc-400"}>{importRows.filter((r) => r.error).length} invalid</span>
+                <div className="h-3.5 w-[1px] bg-gray-200 dark:bg-zinc-700"></div>
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span>
+                    {importRows.filter((r) => !r.error && importSelected[r.index]).length} Selected
                   </span>
-                  <div className="h-3.5 w-[1px] bg-gray-200 dark:bg-zinc-700"></div>
-                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-                    <span>
-                      {importRows.filter((r) => !r.error && importSelected[r.index]).length} Selected
-                    </span>
-                  </div>
                 </div>
-                <TableScrollControls scrollContainerRef={tableContainerRef}
-                  canScrollLeft={canScrollLeft}
-                  canScrollRight={canScrollRight}
-                  onScrollLeft={() => scrollTable("left")}
-                  onScrollRight={() => scrollTable("right")}
-                />
               </div>
+            </div>
           </DataViewToolbar>
           </div>
 
@@ -310,8 +314,8 @@ export default function BulkImportTab({
                         ref={tableContainerRef}
                         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                       >
-              <Table columns={["selection", "number", "category", { kind: "text", maxWidth: 340 }, "identifier", "status"]} className="min-w-[850px]">
-                          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+              <Table columns={["selection", "number", "category", { kind: "text", minWidth: 260, maxWidth: 1000, growthWeight: 6 }, { kind: "identifier", minWidth: 100, maxWidth: 160, growthWeight: 0 }, "status"]} className="min-w-[850px]">
+                          <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                               <th className="w-12 min-w-[48px] p-4 text-center">
                                 <input
@@ -324,11 +328,11 @@ export default function BulkImportTab({
                                   onChange={(e) => toggleImportSelectAll(e.target.checked)}
                                 />
                               </th>
-                              <th className="w-[8%] min-w-[60px] p-4 text-center">Row</th>
-                              <th className="w-[20%] min-w-[160px] p-4">Category</th>
-                              <th className="w-[36%] min-w-[240px] p-4">Name / Label</th>
-                              <th className="w-[20%] min-w-[160px] p-4">Identifier</th>
-                              <th className="w-[16%] min-w-[130px] p-4 pr-6 text-right">Validation</th>
+                              <th className="w-[8%] min-w-[50px] p-4 text-center">Row</th>
+                              <th className="w-[16%] min-w-[140px] p-4">Category</th>
+                              <th className="w-[46%] min-w-[260px] p-4">Name / Label</th>
+                              <th className="w-[16%] min-w-[120px] p-4">Identifier</th>
+                              <th className="w-[14%] min-w-[110px] p-4 pr-6 text-right">Validation</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border dark:border-border">
@@ -685,14 +689,15 @@ export default function BulkImportTab({
                   variant="outline"
                   size="sm"
                   onClick={resetImport}
-                  className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                  className="flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-4 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
                 >
                   Cancel
                 </Button>
                 <Button
+                  size="sm"
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="flex h-10 items-center justify-center px-6 disabled:opacity-50 cursor-pointer border-0"
+                  className="flex h-9 items-center justify-center px-4 disabled:opacity-50 cursor-pointer border-0"
                 >
                   Confirm Import
                 </Button>
@@ -754,8 +759,9 @@ export default function BulkImportTab({
 
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
+                size="sm"
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center cursor-pointer border-0"
+                className="flex h-9 w-full items-center justify-center cursor-pointer border-0"
               >
                 Done
               </Button>

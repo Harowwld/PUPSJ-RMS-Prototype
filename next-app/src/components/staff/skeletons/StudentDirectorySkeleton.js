@@ -18,10 +18,10 @@ export default function StudentDirectorySkeleton() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-xl" />
-            <Skeleton className="h-10 w-32 rounded-xl" />
-            <Skeleton className="h-10 w-32 rounded-xl" />
-            <Skeleton className="h-10 w-36 rounded-xl" />
+            <Skeleton className="h-9 w-9 rounded-xl" />
+            <Skeleton className="h-9 w-28 rounded-xl" />
+            <Skeleton className="h-9 w-32 rounded-xl" />
+            <Skeleton className="h-9 w-36 rounded-xl" />
           </div>
         </div>
 
@@ -45,11 +45,11 @@ export default function StudentDirectorySkeleton() {
         {/* 3. Toolbar */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex items-center gap-2.5 flex-1">
-            <Skeleton className="h-10 w-full max-w-sm rounded-xl" />
-            <Skeleton className="h-10 w-28 rounded-xl" />
-            <Skeleton className="h-10 w-28 rounded-xl" />
+            <Skeleton className="h-9 w-44 rounded-full" />
+            <Skeleton className="h-9 w-full max-w-sm rounded-xl" />
+            <Skeleton className="h-9 w-28 rounded-xl" />
           </div>
-          <Skeleton className="h-10 w-24 rounded-xl" />
+          <Skeleton className="h-9 w-24 rounded-xl" />
         </div>
 
         {/* 4. Filter Chips & Scroll Controls */}
@@ -65,33 +65,33 @@ export default function StudentDirectorySkeleton() {
         {/* 5. Main Data Table */}
         <div className="w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-x-auto">
           <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
-            <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
+            <thead className="border-b border-border bg-white dark:bg-card">
               <tr>
-                <th className="w-12 p-4 text-center">
+                <th className="w-12 py-2.5 px-3 text-center">
                   <Skeleton className="h-4 w-4 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[160px]">
+                <th className="py-2.5 px-4 w-[160px]">
                   <Skeleton className="h-3.5 w-24 rounded" />
                 </th>
-                <th className="p-4 w-[240px]">
+                <th className="py-2.5 px-4 w-[240px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[190px]">
+                <th className="py-2.5 px-4 w-[190px]">
                   <Skeleton className="h-3.5 w-32 rounded" />
                 </th>
-                <th className="p-4 w-[130px]">
+                <th className="py-2.5 px-4 w-[130px]">
                   <Skeleton className="h-3.5 w-20 rounded" />
                 </th>
-                <th className="p-4 w-[200px]">
+                <th className="py-2.5 px-4 w-[200px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[100px] text-center">
+                <th className="py-2.5 px-4 w-[100px] text-center">
                   <Skeleton className="h-3.5 w-12 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[120px] text-center">
+                <th className="py-2.5 px-4 w-[120px] text-center">
                   <Skeleton className="h-3.5 w-14 mx-auto rounded" />
                 </th>
-                <th className="w-28 p-4 text-right">
+                <th className="w-28 py-2.5 px-4 pr-6 text-right">
                   <Skeleton className="h-3.5 w-14 ml-auto rounded" />
                 </th>
               </tr>
@@ -99,31 +99,31 @@ export default function StudentDirectorySkeleton() {
             <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
               {Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i}>
-                  <td className="w-12 p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="w-12 py-2.5 px-3 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-4 mx-auto rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-6 w-28 rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-36 rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-28 rounded-full" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-16 rounded" />
                   </td>
-                  <td className="p-4 border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-32 rounded" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-8 mx-auto rounded-full" />
                   </td>
-                  <td className="p-4 text-center border-r border-border/70 dark:border-border/70">
+                  <td className="py-2.5 px-4 text-center border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-5 w-16 mx-auto rounded-full" />
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="w-28 py-2.5 px-4 pr-6 text-right">
                     <Skeleton className="h-7 w-7 ml-auto rounded-lg" />
                   </td>
                 </tr>
@@ -133,7 +133,7 @@ export default function StudentDirectorySkeleton() {
         </div>
 
         {/* 6. Pagination Footer */}
-        <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl mt-auto">
+        <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto">
           <div className="flex items-center gap-6">
             <Skeleton className="h-3.5 w-32 rounded" />
             <div className="hidden sm:flex items-center gap-2">

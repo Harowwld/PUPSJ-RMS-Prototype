@@ -146,7 +146,14 @@ export default function StorageExplorerTab({
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon="FolderOpenIcon"
-          title="Storage Explorer"
+          title={
+            <span className="flex items-center gap-2">
+              <span>Storage Explorer</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {locatorModel?.rooms?.length ? `${locatorModel.rooms.length} ${locatorModel.rooms.length === 1 ? "room" : "rooms"}` : "Archive Map"}
+              </span>
+            </span>
+          }
           description={
             isOsas
               ? "Browse and explore physical storage archives, cabinets, and drawer organization folders."
@@ -155,13 +162,15 @@ export default function StorageExplorerTab({
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <Button
+              type="button"
               variant="outline"
+              size="sm"
               onClick={() => onSwitchView("search")}
               title="Return to Records & Archive"
-              className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+              className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               Return to Records
             </Button>
@@ -169,7 +178,7 @@ export default function StorageExplorerTab({
         />
 
         {/* Navigation Toolbar / Location Breadcrumbs */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
+        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card">
           <div className="flex flex-col gap-2 h-8 justify-center">
 
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -249,7 +258,7 @@ export default function StorageExplorerTab({
             {/* Level Inner Content */}
             <div className="flex w-full flex-col flex-[1_0_auto] mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
               {loading ? (
-              <StorageExplorerSkeleton />
+              <StorageExplorerSkeleton embedded={true} />
             ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-[1_0_auto] flex-col w-full">
                 <div className="px-8 pb-8 w-full flex-[1_0_auto]">
@@ -284,7 +293,7 @@ export default function StorageExplorerTab({
                               !isClickable && !isTarget && "opacity-40",
                               isTarget
                                 ? "border-transparent text-white ring-2 ring-white/10 scale-[1.01] shadow-md"
-                                : "border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] text-gray-900 dark:text-zinc-100"
+                                : "border-border dark:border-border bg-white dark:bg-card text-gray-900 dark:text-zinc-100"
                             )}
                             style={isTarget ? {
                               background: `linear-gradient(135deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`,

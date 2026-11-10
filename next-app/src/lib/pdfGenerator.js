@@ -17,7 +17,14 @@ const numericColumns = (...indices) => Object.fromEntries(indices.map((index) =>
 const analyticsSection = (report, heading, note) => report.section(heading, note, { spaceBefore: 14 })
 
 export async function generateAuditLogsPdf(logs = [], options = {}) {
-  const report = await createReportDocument({ title: "Activity History Summary Report", branding: options.branding, orientation: "landscape" })
+  const report = await createReportDocument({
+    title: "Activity History Summary Report",
+    branding: options.branding,
+    orientation: "landscape",
+    fontData: options.fontData,
+    logoData: options.logoData,
+    secondaryLogoData: options.secondaryLogoData,
+  })
   report.metadata([
     ["Coverage", coverage(options)],
     ["Scope", options.scope || "Authorized activity history"],

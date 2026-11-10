@@ -470,7 +470,7 @@ export default function BulkImportStudentsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] lg:max-w-[95vw] xl:max-w-[1440px] 2xl:max-w-[1560px] max-h-[92vh] h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-white dark:bg-card border border-border shadow-2xl font-jakarta gap-0">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] lg:max-w-[95vw] xl:max-w-[1440px] 2xl:max-w-[1560px] max-h-[92vh] h-[92vh] flex flex-col p-0 overflow-hidden rounded-[22px] sm:rounded-[22px] bg-white dark:bg-card border border-border shadow-2xl font-jakarta gap-0">
         {/* Header */}
         <DialogHeader className="p-6 pb-0 text-left shrink-0 pr-12">
           <DialogTitle>
@@ -602,7 +602,7 @@ export default function BulkImportStudentsModal({
                     value={localCsvSearch}
                     onChange={(e) => setLocalCsvSearch(e.target.value)}
                     placeholder="Search loaded students..."
-                    className="h-9 pl-8 pr-3 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border"
+                    className="h-9 pl-8 pr-3 text-xs rounded-xl bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none"
                   />
                 </div>
 

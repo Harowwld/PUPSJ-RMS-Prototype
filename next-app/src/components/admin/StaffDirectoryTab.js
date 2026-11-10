@@ -1,21 +1,31 @@
 "use client"
 import { BADGE_BASE } from "@/lib/badgeStyles";
-
 import { Table, TableRow } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
-
-
-import useUrlPage from "@/hooks/useUrlPage"
-import { useMemo, useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import DirectoryTableSkeleton from "@/components/systemadmin/skeletons/DirectoryTableSkeleton"
+import SheetPagination from "@/components/shared/SheetPagination";
+import useUrlPage from "@/hooks/useUrlPage";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import StaffDirectorySkeleton from "@/components/admin/skeletons/StaffDirectorySkeleton";
+import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import CopyButton from "@/components/shared/CopyButton";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   formatRelativeTime,
-} from "@/lib/timeFormat"
+  formatPHDateTime,
+} from "@/lib/timeFormat";
 import {
   Empty,
   EmptyHeader,
@@ -23,43 +33,93 @@ import {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
-} from "@/components/ui/empty"
-import { Card } from "@/components/ui/card"
+} from "@/components/ui/empty";
+import { Card } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import PageHeader from "@/components/shared/PageHeader"
-import FloatingActionBar from "@/components/shared/FloatingActionBar"
-import { RefreshButton } from "@/components/shared/RefreshButton"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
-import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import TableScrollControls from "@/components/shared/TableScrollControls"
-import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { SegmentedControl } from "@/components/ui/tabs"
-import useTableScroll from "@/hooks/useTableScroll"
-import { cn, formatTitleCase } from "@/lib/utils"
-import { matchesSearchQuery } from "@/lib/searchUtils"
-import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils"
-import React from "react"
-import { AlertCircleIcon as EmptyAlertCircleIcon, Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, PencilEdit01Icon, Settings01Icon, Archive01Icon, Search01Icon} from "hugeicons-react";
+} from "@/components/ui/tooltip";
+import PageHeader from "@/components/shared/PageHeader";
+import FloatingActionBar from "@/components/shared/FloatingActionBar";
+import { RefreshButton } from "@/components/shared/RefreshButton";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import TableScrollControls from "@/components/shared/TableScrollControls";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import { SegmentedControl } from "@/components/ui/tabs";
+import useTableScroll from "@/hooks/useTableScroll";
+import useViewPreference from "@/hooks/useViewPreference";
+import { cn, formatTitleCase } from "@/lib/utils";
+import { matchesSearchQuery } from "@/lib/searchUtils";
+import { getOfficePrefix, getOfficeRoleLabel } from "@/lib/roleUtils";
+import React from "react";
+import {
+  AlertCircleIcon as EmptyAlertCircleIcon,
+  Archive01Icon as EmptyArchive01Icon,
+  Search01Icon as EmptySearch01Icon,
+  UserGroupIcon as EmptyUserGroupIcon,
+  Add01Icon,
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  ArrowUpDownIcon,
+  Building01Icon,
+  Cancel01Icon,
+  CheckmarkCircle01Icon,
+  Copy01Icon,
+  FilterIcon,
+  Layers01Icon,
+  Layout2ColumnIcon,
+  MinusSignIcon,
+  SecurityCheckIcon,
+  Tick01Icon,
+  Clock01Icon,
+} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+
+const STAFF_SORT_OPTIONS = [
+  { key: "fname", label: "Staff Name" },
+  { key: "id", label: "Staff ID" },
+  { key: "role", label: "Role" },
+  { key: "section", label: "Section" },
+  { key: "totp_enabled", label: "2FA Status" },
+  { key: "last_active", label: "Last Login" },
+  { key: "email", label: "Email Address" },
+  { key: "created_at", label: "Date Added" },
+]
+
+const OPTIONAL_COLUMNS = [
+  { key: "name", label: "Staff Name" },
+  { key: "role", label: "Role" },
+  { key: "section", label: "Section" },
+  { key: "totp_enabled", label: "2FA Status" },
+  { key: "last_active", label: "Last Login" },
+  { key: "email", label: "Email Address", defaultHidden: true },
+  { key: "created_at", label: "Date Added", defaultHidden: true },
+]
+const DEFAULT_VISIBLE_COLUMNS = ["name", "role", "section", "totp_enabled", "last_active"]
+
 const formatLastLoginDate = (dateStr) => {
   if (!dateStr || dateStr === "N/A") return "N/A"
   try {
     const parts = dateStr.split("/")
     if (parts.length === 3) {
-      const month = parseInt(parts[0]) - 1
-      const day = parseInt(parts[1])
-      const year = parseInt(parts[2])
+      const month = parseInt(parts[0], 10) - 1
+      const day = parseInt(parts[1], 10)
+      const year = parseInt(parts[2], 10)
       const date = new Date(year, month, day)
       if (!isNaN(date.getTime())) {
         return date.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
-          year: "numeric"
+          year: "numeric",
         })
       }
     }
@@ -68,7 +128,7 @@ const formatLastLoginDate = (dateStr) => {
       return d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-        year: "numeric"
+        year: "numeric",
       })
     }
   } catch {}
@@ -88,9 +148,190 @@ const getStaffCleanEmail = (staff) => {
   return "N/A"
 }
 
+function InfoRow({ icon, label, children, className }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-2 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
+        className
+      )}
+    >
+      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
+        {icon && (
+          typeof icon === "string" ? (
+            <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          ) : (
+            <span className="text-gray-400 dark:text-zinc-500 text-sm shrink-0 flex items-center">
+              {icon}
+            </span>
+          )
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
+      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const StaffGridCard = React.memo(({
+  s,
+  offices,
+  isCurrentUser,
+  isSelected,
+  active,
+  toggleSelect,
+  onEditUser,
+  onRestoreUser,
+  onDeleteUser,
+  onInspectUser,
+}) => {
+  const initials = `${s.fname?.charAt(0) || ""}${s.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
+  const cleanName = getStaffCleanName(s)
+  const cleanEmail = getStaffCleanEmail(s)
+
+  return (
+    <Card
+      onClick={() => onInspectUser(s)}
+      className={cn(
+        "group relative flex flex-col p-4 rounded-2xl border border-border bg-white dark:bg-card shadow-xs transition-all duration-200 hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer select-none",
+        isSelected && "ring-2 ring-blue-500/80 bg-blue-50/30 dark:bg-blue-950/20"
+      )}
+    >
+      {/* Top Row: Checkbox, Avatar, Name & Email, Kebab Action Menu */}
+      <div className="flex items-start justify-between gap-2.5 min-w-0">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          {!isCurrentUser && (
+            <div
+              className="pt-0.5"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleSelect(s.id, e)
+              }}
+            >
+              <input
+                type="checkbox"
+                aria-label={`Select ${cleanName}`}
+                className={cn(
+                  "h-3.5 w-3.5 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
+                  isSelected ? "opacity-100" : "opacity-40 group-hover:opacity-80"
+                )}
+                checked={isSelected}
+                onChange={() => {}}
+              />
+            </div>
+          )}
+
+          <ProfileAvatar
+            staffId={s.id}
+            name={cleanName}
+            initials={initials}
+            className="size-9 rounded-full border shadow-2xs shrink-0"
+            fallbackClassName="text-xs font-bold"
+          />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3
+                className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors leading-tight"
+                title={cleanName}
+              >
+                {cleanName}
+              </h3>
+              {isCurrentUser && (
+                <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9.5px] px-1 py-0 leading-tight")}>
+                  You
+                </span>
+              )}
+            </div>
+            <p
+              className="truncate text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5"
+              title={cleanEmail}
+            >
+              {cleanEmail}
+            </p>
+          </div>
+        </div>
+
+        <div onClick={(e) => e.stopPropagation()} className="shrink-0 -mr-1 -mt-0.5">
+          <PersonnelActionsMenu
+            member={s}
+            name={cleanName}
+            isSelf={isCurrentUser}
+            entityName="Staff"
+            onViewProfile={() => onInspectUser(s)}
+            onEdit={() => onEditUser(s.id)}
+            onSettings={() =>
+              window.dispatchEvent(
+                new CustomEvent("switch-view", { detail: { view: "settings" } })
+              )
+            }
+            onArchive={() => onDeleteUser(s.id)}
+            onRestore={() => onRestoreUser(s.id)}
+          />
+        </div>
+      </div>
+
+      {/* Row 2: ID Pill & Section */}
+      <div className="mt-3 flex items-center justify-between gap-2 min-w-0">
+        <span className={cn("font-sans tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0", BADGE_BASE)}>
+          {s.id}
+        </span>
+        <span className="truncate text-[11px] font-medium text-gray-500 dark:text-zinc-400 text-right" title={s.section || "Administration"}>
+          {s.section || "Administration"}
+        </span>
+      </div>
+
+      {/* Row 3: Role Badge & 2FA Status */}
+      <div className="mt-2 flex items-center justify-between gap-2 min-w-0">
+        <div
+          className={cn(
+            "inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10.5px] font-medium tracking-wide truncate",
+            s.role === "SystemAdmin" || s.role === "SuperAdmin"
+              ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+              : s.role === "Admin"
+                ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+            BADGE_BASE
+          )}
+        >
+          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
+        </div>
+        {s.totp_enabled ? (
+          <span className="text-[10.5px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shrink-0">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            2FA
+          </span>
+        ) : (
+          <span className="text-[10.5px] font-normal text-gray-400 dark:text-zinc-500 flex items-center gap-1 shrink-0">
+            <span className="size-1.5 rounded-full bg-gray-300 dark:bg-zinc-600" />
+            Off
+          </span>
+        )}
+      </div>
+
+      {/* Card Divider & Last Active */}
+      <div className="my-2.5 h-px bg-border/50 dark:bg-border/30" />
+
+      <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
+        <span className="text-[10.5px] text-gray-400 dark:text-zinc-500">Last login</span>
+        <span className="text-[11px] font-medium text-gray-800 dark:text-zinc-200 tabular-nums">
+          {(!active.relative && (!active.date || active.date === "N/A"))
+            ? "Never active"
+            : (active.relative || formatLastLoginDate(active.date))}
+        </span>
+      </div>
+    </Card>
+  )
+})
+StaffGridCard.displayName = "StaffGridCard"
+
 const StaffTableRow = React.memo(({ 
   s, 
   offices,
+  visibleColumns = DEFAULT_VISIBLE_COLUMNS,
   isCurrentUser, 
   isSelected, 
   active, 
@@ -98,14 +339,17 @@ const StaffTableRow = React.memo(({
   onEditUser, 
   onRestoreUser, 
   onDeleteUser, 
-  activeTab,
+  onInspectUser,
   isScrolledX,
 }) => {
-  const router = useRouter()
   return (
     <TableRow
       selected={isSelected}
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
+      onDoubleClick={(e) => {
+        if (e.target.closest("button, input, a")) return
+        onInspectUser(s)
+      }}
       className={cn(
         "group border-b-[0.5px] border-border dark:border-border last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
@@ -121,12 +365,13 @@ const StaffTableRow = React.memo(({
         {!isCurrentUser && (
           <input
             type="checkbox"
+            aria-label={`Select ${getStaffCleanName(s)}`}
             className={cn(
               "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
               isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
             )}
             checked={isSelected}
-            onChange={() => {}} // Controlled by tr onClick
+            onChange={() => {}}
           />
         )}
       </td>
@@ -141,147 +386,152 @@ const StaffTableRow = React.memo(({
           {s.id}
         </span>
       </td>
-      <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
-            <span className="truncate" title={getStaffCleanName(s)}>
-              {getStaffCleanName(s)}
-            </span>
-          </div>
-          <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={getStaffCleanEmail(s)}>
-            {getStaffCleanEmail(s)}
-          </div>
-        </div>
-      </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-        <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide", s.role === "SystemAdmin" || s.role === "SuperAdmin"
-            ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
-            : s.role === "Admin"
-              ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", BADGE_BASE)}>
-          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
-        </div>
-      </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-        {s.totp_enabled ? (
-          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            2FA Enabled
-          </span>
-        ) : (
-          <span className="text-xs font-normal text-gray-500 dark:text-zinc-400">
-            Off
-          </span>
-        )}
-      </td>
-      <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-        {(!active.relative && (!active.date || active.date === "N/A")) ? (
-          <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
-            Never active
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-900 dark:text-zinc-100">
-              {active.relative || formatLastLoginDate(active.date)}
-            </div>
-            {active.relative && (
-              <div className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                {formatLastLoginDate(active.date)}
-              </div>
-            )}
-          </div>
-        )}
-      </td>
-      <td className="w-24 p-4 align-middle text-right whitespace-nowrap">
-        <div
-          className="flex items-center justify-end gap-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isCurrentUser ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent("switch-view", {
-                        detail: { view: "settings" },
-                      })
-                    )
-                  }
-                  aria-label="My Account Settings"
-                  className="table-action-button rounded-lg text-gray-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 active:scale-95 cursor-pointer"
-                >
-                  <Settings01Icon size="1em"  className="text-[16px]"></Settings01Icon>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>My Account Settings</TooltipContent>
-            </Tooltip>
-          ) : (
-            <div className="flex items-center gap-1.5">
-              {activeTab === "active" && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onEditUser(s.id)}
-                      aria-label="Edit Staff Member"
-                      className="table-action-button rounded-lg text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 active:scale-95 cursor-pointer"
-                    >
-                      <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Edit Staff</TooltipContent>
-                </Tooltip>
-              )}
 
-              {activeTab === "archived" ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onRestoreUser(s.id)}
-                      aria-label="Restore Staff Member"
-                      className="table-action-button rounded-lg text-gray-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 active:scale-95 cursor-pointer"
-                    >
-                      <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Restore Staff</TooltipContent>
-                </Tooltip>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onDeleteUser(s.id)}
-                      aria-label="Archive Staff Member"
-                      className="table-action-button rounded-lg text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 active:scale-95 cursor-pointer"
-                    >
-                      <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Archive Staff</TooltipContent>
-                </Tooltip>
+      {visibleColumns.includes("name") && (
+        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <ProfileAvatar
+              staffId={s.id}
+              name={getStaffCleanName(s)}
+              initials={`${s.fname?.charAt(0) || ""}${s.lname?.charAt(0) || ""}`.toUpperCase() || "ST"}
+              className="size-8 rounded-full border shadow-2xs shrink-0"
+              fallbackClassName="text-xs font-bold"
+            />
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2 min-w-0 text-[14px] font-semibold text-gray-900 dark:text-zinc-100">
+                <span className="truncate" title={getStaffCleanName(s)}>
+                  {getStaffCleanName(s)}
+                </span>
+                {isCurrentUser && (
+                  <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0")}>
+                    You
+                  </span>
+                )}
+              </div>
+              <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={getStaffCleanEmail(s)}>
+                {getStaffCleanEmail(s)}
+              </div>
+            </div>
+          </div>
+        </td>
+      )}
+
+      {visibleColumns.includes("role") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide", s.role === "SystemAdmin" || s.role === "SuperAdmin"
+              ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+              : s.role === "Admin"
+                ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", BADGE_BASE)}>
+            {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
+          </div>
+        </td>
+      )}
+
+      {visibleColumns.includes("section") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <span className="text-xs font-medium text-gray-700 dark:text-zinc-300">
+            {s.section || "General"}
+          </span>
+        </td>
+      )}
+
+      {visibleColumns.includes("totp_enabled") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          {s.totp_enabled ? (
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-500" />
+              2FA Enabled
+            </span>
+          ) : (
+            <span className="text-xs font-normal text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-gray-400 dark:bg-zinc-600" />
+              Off
+            </span>
+          )}
+        </td>
+      )}
+
+      {visibleColumns.includes("last_active") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          {(!active.relative && (!active.date || active.date === "N/A")) ? (
+            <div className="text-xs font-normal text-gray-400 dark:text-zinc-500">
+              Never active
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-gray-900 dark:text-zinc-100">
+                {active.relative || formatLastLoginDate(active.date)}
+              </div>
+              {active.relative && (
+                <div className="text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
+                  {formatLastLoginDate(active.date)}
+                </div>
               )}
             </div>
           )}
+        </td>
+      )}
+
+      {visibleColumns.includes("email") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <span className="text-xs font-mono text-gray-600 dark:text-zinc-400 truncate">
+            {getStaffCleanEmail(s)}
+          </span>
+        </td>
+      )}
+
+      {visibleColumns.includes("created_at") && (
+        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+          <span className="text-xs font-normal text-gray-600 dark:text-zinc-400 tabular-nums">
+            {formatLastLoginDate(s.created_at)}
+          </span>
+        </td>
+      )}
+
+      <td className="w-12 p-4 align-middle text-center whitespace-nowrap">
+        <div
+          className="flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PersonnelActionsMenu
+            member={s}
+            name={getStaffCleanName(s)}
+            isSelf={isCurrentUser}
+            entityName="Staff"
+            onViewProfile={() => onInspectUser(s)}
+            onEdit={() => onEditUser(s.id)}
+            onSettings={() =>
+              window.dispatchEvent(
+                new CustomEvent("switch-view", {
+                  detail: { view: "settings" },
+                })
+              )
+            }
+            onArchive={() => onDeleteUser(s.id)}
+            onRestore={() => onRestoreUser(s.id)}
+          />
         </div>
       </td>
     </TableRow>
   )
 })
-
 StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>
+    return <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
   }
   return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   ) : (
-    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   )
 }
 
 export default function StaffDirectoryTab({
   staffData,
+  hasLoaded = false,
   officeId = "registrar",
   officeShortName,
   offices,
@@ -303,6 +553,33 @@ export default function StaffDirectoryTab({
   onRefresh,
 }) {
   const [activeTab, setActiveTab] = useState("active")
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("staffDir_viewMode")
+      if (saved === "grid" || saved === "table") return saved
+    }
+    return "table"
+  })
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("staffDir_viewMode", viewMode)
+    }
+  }, [viewMode])
+
+  const [inspectMember, setInspectMember] = useState(null)
+  const [copiedField, setCopiedField] = useState(null)
+
+  const handleCopyField = (text, fieldKey, fieldLabel) => {
+    if (!text) return
+    navigator.clipboard?.writeText(text)
+    setCopiedField(fieldKey)
+    toast.success(`Copied ${fieldLabel} to clipboard`)
+    setTimeout(() => {
+      setCopiedField((curr) => (curr === fieldKey ? null : curr))
+    }, 2000)
+  }
+
   const [localSearch, setLocalSearch] = useState(() => {
     if (search) return search
     if (typeof window !== "undefined") {
@@ -316,12 +593,44 @@ export default function StaffDirectoryTab({
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
+  const [groupBy, setGroupBy] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("staffDir_groupBy")
+      if (saved && ["none", "role", "section", "totp_enabled"].includes(saved)) return saved
+    }
+    return "none"
+  })
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("staffDir_groupBy", groupBy)
+    }
+  }, [groupBy])
+
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = JSON.parse(localStorage.getItem("staffDir_visibleColumns"))
+        if (Array.isArray(saved) && saved.length > 0) return saved
+      } catch {}
+    }
+    return DEFAULT_VISIBLE_COLUMNS
+  })
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("staffDir_visibleColumns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns])
+
+  const [filterRules, setFilterRules] = useState([])
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+
   const roleFilters = useMemo(() => {
     if (!roleFilter || roleFilter === "All") return []
     return roleFilter.split(",").map((s) => s.trim()).filter(Boolean)
   }, [roleFilter])
-  const [statusFilters, setStatusFilters] = useState([])
-  const [twoFactorFilters, setTwoFactorFilters] = useState([])
 
   // Filter staff to the active office scope (excludes SuperAdmin/SystemAdmin and other offices like OSAS)
   const officeStaff = useMemo(() => {
@@ -341,71 +650,65 @@ export default function StaffDirectoryTab({
 
   const officePrefix = useMemo(() => getOfficePrefix(officeShortName || officeId, offices), [officeShortName, officeId, offices])
 
-  const filterCriteriaGroups = useMemo(() => {
-    const list = officeStaff || []
-    const adminCount = list.filter((s) => s.role === "Admin").length
-    const staffCount = list.filter((s) => s.role === "Staff").length
-    const activeCount = list.filter((s) => s.status === "Active").length
-    const inactiveCount = list.filter((s) => s.status === "Inactive").length
-    const twoFaCount = list.filter((s) => s.totp_enabled).length
-    const noTwoFaCount = list.filter((s) => !s.totp_enabled).length
+  const groupOptions = useMemo(() => [
+    { key: "role", label: "Role", icon: EmptyUserGroupIcon },
+    { key: "section", label: "Section", icon: Building01Icon },
+    { key: "totp_enabled", label: "2FA Status", icon: SecurityCheckIcon },
+    { key: "none", label: "No grouping", icon: MinusSignIcon },
+  ], [])
 
+  const filterFields = useMemo(() => {
+    const sections = Array.from(new Set(officeStaff.map((s) => s.section).filter(Boolean))).sort()
     return [
       {
-        id: "role",
-        label: "Personnel Role",
+        key: "role",
+        label: "Role",
+        icon: EmptyUserGroupIcon,
         options: [
-          { id: "Admin", label: `${officePrefix} Admin`, count: adminCount },
-          { id: "Staff", label: `${officePrefix} Staff`, count: staffCount },
+          { value: "Admin", label: `${officePrefix} Admin` },
+          { value: "Staff", label: `${officePrefix} Staff` },
         ],
-        selected: roleFilters,
-        onChange: (vals) => {
-          if (setRoleFilter) {
-            setRoleFilter(vals.length === 1 ? vals[0] : (vals.length === 0 ? "All" : vals.join(",")))
-          }
-          setCurrentPage(1)
-        }
       },
       {
-        id: "status",
+        key: "section",
+        label: "Section",
+        icon: Building01Icon,
+        options: sections.length > 0
+          ? sections.map((sec) => ({ value: sec, label: sec }))
+          : [{ value: "Records", label: "Records" }],
+      },
+      {
+        key: "totp_enabled",
+        label: "2FA Status",
+        icon: SecurityCheckIcon,
+        options: [
+          { value: "true", label: "2FA Enabled" },
+          { value: "false", label: "2FA Disabled" },
+        ],
+      },
+      {
+        key: "status",
         label: "Account Status",
+        icon: CheckmarkCircle01Icon,
         options: [
-          { id: "Active", label: "Active", count: activeCount, dotColor: "bg-emerald-500" },
-          { id: "Inactive", label: "Inactive", count: inactiveCount, dotColor: "bg-gray-400" },
+          { value: "Active", label: "Active" },
+          { value: "Archived", label: "Archived" },
         ],
-        selected: statusFilters,
-        onChange: (vals) => {
-          setStatusFilters(vals)
-          setCurrentPage(1)
-        }
       },
-      {
-        id: "twoFactor",
-        label: "2FA Security",
-        options: [
-          { id: "enabled", label: "2FA Enabled", count: twoFaCount, dotColor: "bg-emerald-500" },
-          { id: "disabled", label: "2FA Disabled", count: noTwoFaCount, dotColor: "bg-amber-500" },
-        ],
-        selected: twoFactorFilters,
-        onChange: (vals) => {
-          setTwoFactorFilters(vals)
-          setCurrentPage(1)
-        }
-      }
     ]
-  }, [officeStaff, roleFilters, statusFilters, twoFactorFilters, setRoleFilter, officePrefix, setCurrentPage])
+  }, [officeStaff, officePrefix])
 
-
-  const hasActiveFilters = localSearch !== "" || roleFilters.length > 0 || statusFilters.length > 0 || twoFactorFilters.length > 0;
+  const hasActiveFilters = localSearch !== "" || filterRules.length > 0 || roleFilters.length > 0 || startDate !== "" || endDate !== ""
 
   const handleClearFilters = useCallback(() => {
     setLocalSearch("")
     setSearch("")
-    setStatusFilters([])
-    setTwoFactorFilters([])
+    setFilterRules([])
     setRoleFilter?.("All")
+    setStartDate("")
+    setEndDate("")
     setCurrentPage(1)
-  }, [setSearch, setRoleFilter, setCurrentPage])
+  }, [setSearch, setRoleFilter, setCurrentPage, setFilterRules])
 
   // Debounce search update
   useEffect(() => {
@@ -418,30 +721,59 @@ export default function StaffDirectoryTab({
 
   // Persist search when it changes
   useEffect(() => {
-    localStorage.setItem("staffDir_search", search)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("staffDir_search", search)
+    }
   }, [search])
 
   const filteredStaff = useMemo(() => {
     return (officeStaff || []).filter((s) => {
       const matchesSearch = matchesSearchQuery(
-        [getStaffCleanName(s), s.id, getStaffCleanEmail(s)],
+        [getStaffCleanName(s), s.id, getStaffCleanEmail(s), s.section || ""],
         search
       )
 
+      const matchesFilterRules = filterRules.every((rule) => {
+        if (!rule.value && rule.value !== false && rule.value !== "false") return true
+        if (rule.fieldKey === "role") {
+          return rule.operator === "is_not" ? s.role !== rule.value : s.role === rule.value
+        }
+        if (rule.fieldKey === "section") {
+          const sec = s.section || ""
+          return rule.operator === "is_not" ? sec !== rule.value : sec === rule.value
+        }
+        if (rule.fieldKey === "totp_enabled") {
+          const is2Fa = Boolean(s.totp_enabled)
+          const ruleBool = rule.value === "true" || rule.value === true
+          return rule.operator === "is_not" ? is2Fa !== ruleBool : is2Fa === ruleBool
+        }
+        if (rule.fieldKey === "status") {
+          const statusVal = s.status || "Active"
+          return rule.operator === "is_not" ? statusVal !== rule.value : statusVal === rule.value
+        }
+        return true
+      })
+
       const matchesRole = roleFilters.length === 0 || roleFilters.includes(s.role)
-      const matchesStatus = statusFilters.length === 0 || statusFilters.includes(s.status)
-      const matchesTwoFactor =
-        twoFactorFilters.length === 0 ||
-        (twoFactorFilters.includes("enabled") && Boolean(s.totp_enabled)) ||
-        (twoFactorFilters.includes("disabled") && !s.totp_enabled)
+
+      // Filter by created_at date range
+      const matchesDateRange = (() => {
+        if (!startDate && !endDate) return true
+        const itemDate = s.created_at ? new Date(s.created_at) : null
+        if (!itemDate || isNaN(itemDate.getTime())) return true
+        const dateStr = itemDate.toISOString().slice(0, 10)
+        if (startDate && dateStr < startDate) return false
+        if (endDate && dateStr > endDate) return false
+        return true
+      })()
 
       // Filter by tab status
       const isArchived = s.status === "Archived"
       const matchesTab = activeTab === "active" ? !isArchived : isArchived
 
-      return matchesSearch && matchesRole && matchesStatus && matchesTwoFactor && matchesTab
+      return matchesSearch && matchesFilterRules && matchesRole && matchesDateRange && matchesTab
     })
-  }, [search, roleFilters, statusFilters, twoFactorFilters, officeStaff, activeTab])
+  }, [search, filterRules, roleFilters, startDate, endDate, officeStaff, activeTab])
 
   const [sortBy, setSortBy] = useState("id")
   const [sortOrder, setSortOrder] = useState("ASC")
@@ -462,8 +794,6 @@ export default function StaffDirectoryTab({
   }
 
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage) || 1
-
-  // Cap current page if filtering reduces dataset below current page
   const displayPage = Math.min(currentPage, totalPages)
 
   const sortedStaff = useMemo(() => {
@@ -471,7 +801,7 @@ export default function StaffDirectoryTab({
       let valA = a[sortBy]
       let valB = b[sortBy]
 
-      if (sortBy === "fname") {
+      if (sortBy === "fname" || sortBy === "name") {
         valA = getStaffCleanName(a).toLowerCase()
         valB = getStaffCleanName(b).toLowerCase()
       } else if (sortBy === "id") {
@@ -481,6 +811,15 @@ export default function StaffDirectoryTab({
       } else if (sortBy === "totp_enabled") {
         valA = a.totp_enabled ? 1 : 0
         valB = b.totp_enabled ? 1 : 0
+      } else if (sortBy === "email") {
+        valA = getStaffCleanEmail(a).toLowerCase()
+        valB = getStaffCleanEmail(b).toLowerCase()
+      } else if (sortBy === "section") {
+        valA = (a.section || "").toLowerCase()
+        valB = (b.section || "").toLowerCase()
+      } else if (sortBy === "created_at" || sortBy === "last_active") {
+        valA = Date.parse(a[sortBy]) || 0
+        valB = Date.parse(b[sortBy]) || 0
       } else if (typeof valA === "string") {
         valA = valA.toLowerCase()
         valB = (valB || "").toLowerCase()
@@ -497,6 +836,43 @@ export default function StaffDirectoryTab({
     return sortedStaff.slice(start, start + itemsPerPage)
   }, [sortedStaff, displayPage, itemsPerPage])
 
+  const groupedStaff = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "", members: paginatedStaff }]
+    }
+    const groups = new Map()
+    for (const member of paginatedStaff) {
+      let label = ""
+      if (groupBy === "role") {
+        label = member.role === "Admin" ? `${officePrefix} Admin` : `${officePrefix} Staff`
+      } else if (groupBy === "section") {
+        label = member.section || "General / Unassigned"
+      } else if (groupBy === "totp_enabled") {
+        label = member.totp_enabled ? "2FA Enabled" : "2FA Disabled (Off)"
+      }
+      if (!groups.has(label)) groups.set(label, [])
+      groups.get(label).push(member)
+    }
+    return [...groups.entries()].map(([label, members]) => ({ key: label, label, members }))
+  }, [groupBy, paginatedStaff, officePrefix])
+
+  const staffTableColumns = useMemo(() => [
+    "selection",
+    "identifier",
+    ...OPTIONAL_COLUMNS.filter((c) => visibleColumns.includes(c.key)).map((c) => {
+      if (c.key === "name" || c.key === "email") return { kind: "text", maxWidth: 360 }
+      if (c.key === "section") return { kind: "text", maxWidth: 200 }
+      if (c.key === "last_active" || c.key === "created_at") return { kind: "date" }
+      if (c.key === "totp_enabled") return { kind: "status" }
+      return { kind: "category" }
+    }),
+    "actions",
+  ], [visibleColumns])
+
+  const tableColSpan = useMemo(() => {
+    return OPTIONAL_COLUMNS.filter((c) => visibleColumns.includes(c.key)).length + 3
+  }, [visibleColumns])
+
   const {
     containerRef: tableContainerRef,
     isScrolledX,
@@ -507,7 +883,7 @@ export default function StaffDirectoryTab({
 
   useEffect(() => {
     resetScroll();
-  }, [displayPage, activeTab, search, roleFilters, twoFactorFilters, resetScroll]);
+  }, [displayPage, activeTab, search, roleFilters, filterRules, resetScroll]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
@@ -579,18 +955,15 @@ export default function StaffDirectoryTab({
     if (event?.shiftKey && lastSelectedId) {
       if (isSelected) {
         if (selectedIds.size > 1) {
-          // If Shift+Clicking an already selected item among multiple, deselect others
           onSelectionChange(new Set([id]))
           setLastSelectedId(id)
         } else {
-          // If Shift+Clicking the ONLY selected item, deselect it completely
           onSelectionChange(new Set())
           setLastSelectedId(null)
         }
         return
       }
 
-      // Normal Shift+Click Range Selection
       const currentIdx = paginatedStaff.findIndex((s) => s.id === id)
       const lastIdx = paginatedStaff.findIndex((s) => s.id === lastSelectedId)
 
@@ -611,7 +984,6 @@ export default function StaffDirectoryTab({
       }
     }
 
-    // Plain Click: Additive Toggle
     const next = new Set(selectedIds)
     if (next.has(id)) {
       next.delete(id)
@@ -625,7 +997,6 @@ export default function StaffDirectoryTab({
 
   const handleKeyDown = useCallback(
     (e) => {
-      // Only paginate if not typing in an input/select
       if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return
 
       if (e.key === "ArrowLeft") {
@@ -637,6 +1008,10 @@ export default function StaffDirectoryTab({
     [totalPages, displayPage, handlePageChange]
   )
 
+  const adminCount = useMemo(() => {
+    return officeStaff.filter((s) => s.role === "Admin").length
+  }, [officeStaff])
+
   return (
     <TooltipProvider delayDuration={200}>
       <div
@@ -644,14 +1019,17 @@ export default function StaffDirectoryTab({
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
-      {/* Main Table Card with Header, Toolbar & Active Filter Chips */}
+      {/* Main Single Card Container */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        {/* PageHeader with Inline Metrics and Action Buttons */}
         <PageHeader
           icon="UserSearch01Icon"
           title={
             <div className="flex items-center gap-[6px]">
               <span>Staff Directory</span>
-              
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {officeStaff.length} personnel · {adminCount} {adminCount === 1 ? "administrator" : "administrators"}
+              </span>
             </div>
           }
           description={`Manage ${officePrefix} personnel and administrative access.`}
@@ -666,8 +1044,6 @@ export default function StaffDirectoryTab({
                 title="Refresh Staff Directory"
               />
 
-              
-
               <Button
                 onClick={() => onSwitchView("create")}
                 disabled={activeTab === "archived" || isLoading}
@@ -679,9 +1055,8 @@ export default function StaffDirectoryTab({
           }
         />
 
-        {/* Navigation Toolbar */}
-        <DataViewToolbar label="Staff search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-          {/* Left: Active vs Archived Segmented Tabs */}
+        {/* Connected Tabs Row: Active/Archived on Left, [Grid] [Table] View Switcher on Right */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 bg-white dark:bg-card">
           <SegmentedControl
             value={activeTab}
             onValueChange={handleTabChange}
@@ -701,35 +1076,114 @@ export default function StaffDirectoryTab({
             ]}
           />
 
-          {/* Right: Search & Role Filter */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div className="relative flex-1 sm:w-64 min-w-[200px] group">
-              <Search01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
-              <Input
-                type="text"
-                placeholder="Search name, email or ID..."
-                className="h-9 pl-8 pr-16 rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                disabled={isLoading}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                {filteredStaff.length.toLocaleString()}
-              </div>
-            </div>
+          <div className="ml-auto">
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                {
+                  value: "grid",
+                  label: "Grid",
+                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                },
+                {
+                  value: "table",
+                  label: "Table",
+                  icon: <ViewModeIcon mode="table" className="text-sm" />,
+                },
+              ]}
+            />
+          </div>
+        </div>
 
-            {/* Multi-Criteria Filters (Role, Status, 2FA) */}
-            <MultiCriteriaFilter
-              groups={filterCriteriaGroups}
-              align="end"
-              buttonLabel="Filter Personnel"
+        {/* 2-Zone DataViewToolbar */}
+        <DataViewToolbar label="Staff search, filters, sorting, grouping, and columns" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-3 bg-white dark:bg-card">
+          {/* Left: Search input + TableScrollControls (only when viewMode === "table") */}
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch
+              value={localSearch}
+              onChange={setLocalSearch}
+              onClear={() => {
+                setLocalSearch("")
+                setSearch("")
+                setCurrentPage(1)
+              }}
+              count={filteredStaff.length}
+              loading={isLoading}
+              label="Staff search"
+              placeholder="Search name, email or ID..."
             />
 
-            <TableScrollControls scrollContainerRef={tableContainerRef}
-              onScrollLeft={scrollLeft}
-              onScrollRight={scrollRight}
-              onResetScroll={resetScroll}
-              isScrolled={isScrolledX}
+            {viewMode === "table" && (
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
+                onScrollLeft={scrollLeft}
+                onScrollRight={scrollRight}
+                onResetScroll={resetScroll}
+                isScrolled={isScrolledX}
+              />
+            )}
+          </div>
+
+          {/* Right: FilterPopover, SortPopover, GroupPopover, and ColumnsPopover */}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <FilterPopover
+              fields={filterFields}
+              filters={filterRules}
+              onFiltersChange={(newRules) => {
+                setFilterRules(newRules)
+                setCurrentPage(1)
+              }}
+              entityLabel="personnel"
+            />
+
+            <SortPopover
+              options={STAFF_SORT_OPTIONS}
+              sortBy={sortBy}
+              onSortByChange={(key) => {
+                setSortBy(key)
+                setSortOrder("ASC")
+                setCurrentPage(1)
+              }}
+              sortOrder={sortOrder}
+              onSortOrderChange={(order) => {
+                setSortOrder(order)
+                setCurrentPage(1)
+              }}
+            />
+
+            <GroupPopover
+              options={groupOptions}
+              groupBy={groupBy}
+              onGroupByChange={setGroupBy}
+            />
+
+            {viewMode === "table" && (
+              <ColumnsPopover
+                columns={OPTIONAL_COLUMNS}
+                visibleColumns={visibleColumns}
+                defaultColumns={DEFAULT_VISIBLE_COLUMNS}
+                onVisibleColumnsChange={setVisibleColumns}
+                minVisible={2}
+              />
+            )}
+
+            <DateRangeFilterButton
+              startDate={startDate}
+              endDate={endDate}
+              onApply={({ startDate: s, endDate: e }) => {
+                setStartDate(s)
+                setEndDate(e)
+                setCurrentPage(1)
+              }}
+              onClear={() => {
+                setStartDate("")
+                setEndDate("")
+                setCurrentPage(1)
+              }}
+              disableFutureDates={true}
             />
           </div>
         </DataViewToolbar>
@@ -737,38 +1191,52 @@ export default function StaffDirectoryTab({
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
           <ActiveFilterChips
+            chips={[
+              ...filterRules.map((rule) => {
+                const field = filterFields.find((f) => f.key === rule.fieldKey)
+                const fieldLabel = field?.label || rule.fieldKey
+                const opt = field?.options?.find((o) => String(o.value) === String(rule.value))
+                const valLabel = opt?.label || String(rule.value)
+                const opText = rule.operator === "is_not" ? "is not" : "is"
+                return {
+                  id: rule.id,
+                  label: `${fieldLabel} ${opText} ${valLabel}`,
+                  onRemove: () => {
+                    setFilterRules((prev) => prev.filter((r) => r.id !== rule.id))
+                    setCurrentPage(1)
+                  },
+                }
+              }),
+              ...(startDate || endDate
+                ? [
+                    {
+                      id: "dateRange",
+                      label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+                      onRemove: () => {
+                        setStartDate("")
+                        setEndDate("")
+                        setCurrentPage(1)
+                      },
+                    },
+                  ]
+                : []),
+            ]}
             groups={[
-              {
-                key: "role",
-                label: "Role",
-                values: roleFilters,
-                onRemove: (val) => {
-                  const next = roleFilters.filter((v) => v !== val)
-                  setRoleFilter?.(next.length === 1 ? next[0] : (next.length === 0 ? "All" : next.join(",")))
-                  setCurrentPage(1)
-                },
-                formatValue: (val) => (val === "Admin" ? `${officePrefix} Admin` : val === "Staff" ? `${officePrefix} Staff` : val)
-              },
-              {
-                key: "status",
-                label: "Status",
-                values: statusFilters,
-                onRemove: (val) => {
-                  setStatusFilters((prev) => prev.filter((v) => v !== val))
-                  setCurrentPage(1)
-                },
-                formatValue: (val) => val
-              },
-              {
-                key: "twoFactor",
-                label: "2FA",
-                values: twoFactorFilters,
-                onRemove: (val) => {
-                  setTwoFactorFilters((prev) => prev.filter((v) => v !== val))
-                  setCurrentPage(1)
-                },
-                formatValue: (val) => (val === "enabled" ? "2FA Enabled" : "2FA Disabled")
-              }
+              ...(roleFilters.length > 0
+                ? [
+                    {
+                      key: "role",
+                      label: "Role",
+                      values: roleFilters,
+                      onRemove: (val) => {
+                        const next = roleFilters.filter((v) => v !== val)
+                        setRoleFilter?.(next.length === 1 ? next[0] : (next.length === 0 ? "All" : next.join(",")))
+                        setCurrentPage(1)
+                      },
+                      formatValue: (val) => (val === "Admin" ? `${officePrefix} Admin` : val === "Staff" ? `${officePrefix} Staff` : val),
+                    },
+                  ]
+                : []),
             ]}
             searchQuery={localSearch}
             onClearSearch={() => {
@@ -781,10 +1249,10 @@ export default function StaffDirectoryTab({
           />
         )}
 
-        {/* Content Area: Loading / Error / Table */}
-        {isLoading ? (
+        {/* Content Area: Loading / Error / Empty / Grid / Table */}
+        {isLoading && !hasLoaded ? (
           <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-            <DirectoryTableSkeleton rowCount={8} />
+            <StaffDirectorySkeleton rowCount={8} layoutView={viewMode} />
           </div>
         ) : error ? (
           <div className="p-6 flex-[1_0_auto] flex flex-col justify-center border-t border-border dark:border-border rounded-b-2xl">
@@ -801,7 +1269,7 @@ export default function StaffDirectoryTab({
             </Empty>
           </div>
         ) : filteredStaff.length === 0 ? (
-          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
             <Empty>
               <EmptyHeader>
                 <EmptyMedia>{activeTab === "archived" && !hasActiveFilters && search === "" ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
@@ -839,18 +1307,105 @@ export default function StaffDirectoryTab({
               </EmptyContent>
             </Empty>
           </div>
+        ) : viewMode === "grid" ? (
+          /* Grid View */
+          <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+            <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20">
+              <div className="space-y-6">
+                {groupedStaff.map((group) => (
+                  <div key={group.key} className="space-y-3">
+                    {group.label && (
+                      <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                        <span>{group.label}</span>
+                        <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500 text-[11px]">
+                          ({group.members.length})
+                        </span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
+                      {group.members.map((s) => (
+                        <StaffGridCard
+                          key={s.id}
+                          s={s}
+                          offices={offices}
+                          isCurrentUser={s.id === currentUserId}
+                          isSelected={selectedIds.has(s.id)}
+                          active={formatRelativeTime(s.last_active)}
+                          toggleSelect={toggleSelect}
+                          onEditUser={onEditUser}
+                          onRestoreUser={onRestoreUser}
+                          onDeleteUser={onDeleteUser}
+                          onInspectUser={setInspectMember}
+                        />
+                      ))}
+
+                      {activeTab === "active" && displayPage === totalPages && groupBy === "none" && (
+                        <button
+                          type="button"
+                          onClick={() => onSwitchView("create")}
+                          disabled={isLoading}
+                          className="group flex min-h-[148px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border p-4 text-gray-500 shadow-2xs transition-all hover:border-gray-900/40 hover:bg-gray-100/60 hover:text-gray-950 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 active:scale-[0.98]"
+                          aria-label="Register Staff"
+                        >
+                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
+                            <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                          </span>
+                          <span className="text-center">
+                            <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Register Staff</span>
+                            <span className="mt-0.5 block text-[11px] text-gray-400 dark:text-zinc-500">Add a new personnel account to this office.</span>
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {activeTab === "active" && displayPage === totalPages && groupBy !== "none" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start pt-2">
+                    <button
+                      type="button"
+                      onClick={() => onSwitchView("create")}
+                      disabled={isLoading}
+                      className="group flex min-h-[148px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border p-4 text-gray-500 shadow-2xs transition-all hover:border-gray-900/40 hover:bg-gray-100/60 hover:text-gray-950 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 active:scale-[0.98]"
+                      aria-label="Register Staff"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
+                        <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                      </span>
+                      <span className="text-center">
+                        <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Register Staff</span>
+                        <span className="mt-0.5 block text-[11px] text-gray-400 dark:text-zinc-500">Add a new personnel account to this office.</span>
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <TablePagination
+              label="Staff directory pages"
+              page={currentPage}
+              pageSize={itemsPerPage}
+              totalCount={filteredStaff.length}
+              displayedCount={paginatedStaff.length}
+              onPageChange={handlePageChange}
+              onPageSizeChange={setItemsPerPage}
+            />
+          </div>
         ) : (
+          /* Table View */
           <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
             <div
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
-              <Table columns={["selection", "identifier", { kind: "text", maxWidth: 340 }, "category", "status", "date", "actions"]} className="min-w-[1240px]">
+              <Table columns={staffTableColumns} className={visibleColumns.length >= 5 ? "min-w-[1240px]" : "min-w-[960px]"}>
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
                       <input
                         type="checkbox"
+                        aria-label="Select all staff on this page"
                         className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
                         checked={
                           paginatedStaff.some(
@@ -870,7 +1425,7 @@ export default function StaffDirectoryTab({
                       />
                     </th>
                     <th className={cn(
-                      "p-4 w-[18%] min-w-[160px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                      "p-4 w-[16%] min-w-[150px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                       isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                     )}>
                       <div className="flex items-center justify-between">
@@ -904,101 +1459,190 @@ export default function StaffDirectoryTab({
                         )}
                       </div>
                     </th>
-                    <th className="p-4 w-[26%]">
-                      <button
-                        onClick={() => handleSort("fname")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                          sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        Staff Name{" "}
-                        <SortIndicator
-                          column="fname"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="p-4 w-[16%]">
-                      <button
-                        onClick={() => handleSort("role")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                          sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        Role{" "}
-                        <SortIndicator
-                          column="role"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="p-4 w-[14%]">
-                      <button
-                        onClick={() => handleSort("totp_enabled")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                          sortBy === "totp_enabled" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        2FA Status{" "}
-                        <SortIndicator
-                          column="totp_enabled"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="p-4 w-[18%]">
-                      <button
-                        onClick={() => handleSort("last_active")}
-                        className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                          sortBy === "last_active" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                        )}
-                      >
-                        Last Login{" "}
-                        <SortIndicator
-                          column="last_active"
-                          sortBy={sortBy}
-                          sortOrder={sortOrder}
-                        />
-                      </button>
-                    </th>
-                    <th className="w-24 p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                    {visibleColumns.includes("name") && (
+                      <th className="p-4 w-[33%]">
+                        <button
+                          onClick={() => handleSort("fname")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "fname" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Staff Name{" "}
+                          <SortIndicator
+                            column="fname"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("role") && (
+                      <th className="p-4 w-[15%]">
+                        <button
+                          onClick={() => handleSort("role")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "role" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Role{" "}
+                          <SortIndicator
+                            column="role"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("section") && (
+                      <th className="p-4 w-[13%]">
+                        <button
+                          onClick={() => handleSort("section")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "section" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Section{" "}
+                          <SortIndicator
+                            column="section"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("totp_enabled") && (
+                      <th className="p-4 w-[9%] min-w-[100px]">
+                        <button
+                          onClick={() => handleSort("totp_enabled")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "totp_enabled" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          2FA Status{" "}
+                          <SortIndicator
+                            column="totp_enabled"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("last_active") && (
+                      <th className="p-4 w-[17%]">
+                        <button
+                          onClick={() => handleSort("last_active")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "last_active" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Last Login{" "}
+                          <SortIndicator
+                            column="last_active"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("email") && (
+                      <th className="p-4 w-[18%]">
+                        <button
+                          onClick={() => handleSort("email")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "email" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Email Address{" "}
+                          <SortIndicator
+                            column="email"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    {visibleColumns.includes("created_at") && (
+                      <th className="p-4 w-[14%]">
+                        <button
+                          onClick={() => handleSort("created_at")}
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                            sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                          )}
+                        >
+                          Date Added{" "}
+                          <SortIndicator
+                            column="created_at"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                    )}
+                    <th className="w-12 p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-transparent divide-y divide-border dark:divide-border">
-                  {paginatedStaff.map((s) => (
-                    <StaffTableRow
-                      key={s.id}
-                      s={s}
-                      offices={offices}
-                      isCurrentUser={s.id === currentUserId}
-                      isSelected={selectedIds.has(s.id)}
-                      active={formatRelativeTime(s.last_active)}
-                      toggleSelect={toggleSelect}
-                      onEditUser={onEditUser}
-                      onRestoreUser={onRestoreUser}
-                      onDeleteUser={onDeleteUser}
-                      activeTab={activeTab}
-                      isScrolledX={isScrolledX}
-                    />
+                  {groupedStaff.map((group) => (
+                    <React.Fragment key={group.key}>
+                      {group.label && (
+                        <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
+                          <td
+                            colSpan={tableColSpan}
+                            className="px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200"
+                          >
+                            {group.label}
+                            <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">
+                              {group.members.length}
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                      {group.members.map((s) => (
+                        <StaffTableRow
+                          key={s.id}
+                          s={s}
+                          offices={offices}
+                          visibleColumns={visibleColumns}
+                          isCurrentUser={s.id === currentUserId}
+                          isSelected={selectedIds.has(s.id)}
+                          active={formatRelativeTime(s.last_active)}
+                          toggleSelect={toggleSelect}
+                          onEditUser={onEditUser}
+                          onRestoreUser={onRestoreUser}
+                          onDeleteUser={onDeleteUser}
+                          onInspectUser={setInspectMember}
+                          isScrolledX={isScrolledX}
+                        />
+                      ))}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </Table>
             </div>
 
-            <TablePagination label="Staff directory pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredStaff.length} displayedCount={paginatedStaff.length} onPageChange={handlePageChange} onPageSizeChange={setItemsPerPage} />
+            <TablePagination
+              label="Staff directory pages"
+              page={currentPage}
+              pageSize={itemsPerPage}
+              totalCount={filteredStaff.length}
+              displayedCount={paginatedStaff.length}
+              onPageChange={handlePageChange}
+              onPageSizeChange={setItemsPerPage}
+            />
           </div>
         )}
       </Card>
 
+      {/* Floating Bulk Action Bar */}
       <FloatingActionBar
         selectedCount={selectedIds.size}
         entityName="personnel"
@@ -1027,9 +1671,331 @@ export default function StaffDirectoryTab({
           },
         ]}
       />
+
+      {/* Slide-over Staff Details Sheet */}
+      <Sheet open={Boolean(inspectMember)} onOpenChange={(open) => !open && setInspectMember(null)}>
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg flex flex-col h-full p-0 overflow-hidden font-jakarta"
+        >
+          {inspectMember && (() => {
+            const office = (Array.isArray(offices) ? offices : []).find((o) => o.id === inspectMember.office_id)
+            const isSelf = inspectMember.id === currentUserId
+            const initials = `${inspectMember.fname?.charAt(0) || ""}${inspectMember.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
+            const currentMemberIndex = filteredStaff.findIndex((m) => m.id === inspectMember.id)
+            const hasPrevMember = currentMemberIndex > 0
+            const hasNextMember = currentMemberIndex >= 0 && currentMemberIndex < filteredStaff.length - 1
+            const activeInfo = formatRelativeTime(inspectMember.last_active)
+
+            return (
+              <>
+                <SheetHeader className="shrink-0 p-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                    <div>
+                      <SheetTitle>Staff Details</SheetTitle>
+                      <SheetDescription className="sr-only">
+                        Detailed account profile and security metadata for {getStaffCleanName(inspectMember)}
+                      </SheetDescription>
+                    </div>
+
+                    <div className="ml-auto flex items-center gap-3">
+                      {filteredStaff.length > 1 && currentMemberIndex !== -1 && (
+                        <SheetPagination
+                          compact
+                          label="Record navigation"
+                          page={currentMemberIndex + 1}
+                          totalPages={filteredStaff.length}
+                          totalCount={filteredStaff.length}
+                          displayCount={filteredStaff.length}
+                          onPrevious={() => hasPrevMember && setInspectMember(filteredStaff[currentMemberIndex - 1])}
+                          onNext={() => hasNextMember && setInspectMember(filteredStaff[currentMemberIndex + 1])}
+                          previousDisabled={!hasPrevMember}
+                          nextDisabled={!hasNextMember}
+                          previousLabel="Previous Staff"
+                          nextLabel="Next Staff"
+                        />
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setInspectMember(null)}
+                        className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                        aria-label="Close Staff Details"
+                        title="Close"
+                      >
+                        <Cancel01Icon size="1em" className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                </SheetHeader>
+
+                {/* Status Banner */}
+                <div
+                  className={cn(
+                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                    inspectMember.status !== "Archived"
+                      ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                      : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                  )}
+                >
+                  <AppIcon
+                    className={cn(
+                      " text-[15px] shrink-0",
+                      inspectMember.status !== "Archived"
+                        ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+                        : "Alert01Icon text-amber-600 dark:text-amber-400"
+                    )}
+                  />
+                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                    <strong className="font-semibold">
+                      {inspectMember.status !== "Archived"
+                        ? "Active Staff Account:"
+                        : "Archived Staff Account:"}
+                    </strong>{" "}
+                    {inspectMember.status !== "Archived"
+                      ? "Operational access granted to office archives and workstation."
+                      : "Account access deactivated. Historical audit logs and records preserved."}
+                  </span>
+                </div>
+
+                {/* Identity Summary Strip */}
+                <div className="px-6 pt-4 flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border shrink-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <ProfileAvatar
+                      staffId={inspectMember.id}
+                      name={getStaffCleanName(inspectMember)}
+                      initials={initials}
+                      className="size-12 rounded-full border shadow-2xs shrink-0"
+                      fallbackClassName="text-base font-bold"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                          {getStaffCleanName(inspectMember)}
+                        </span>
+                        {isSelf && (
+                          <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0")}>
+                            You
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
+                        {inspectMember.id} • <span className="font-sans font-medium text-gray-600 dark:text-zinc-300">{inspectMember.section || "Administration"}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    <span className={cn(BADGE_BASE, "bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}>
+                      {office?.name || officeShortName || officePrefix}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Scrollable Metadata Details */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                      <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
+                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                        Identity & Access Metadata
+                      </h3>
+                    </div>
+                    <div>
+                      <InfoRow icon="Contact01Icon" label="Employee ID">
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
+                            {inspectMember.id}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyField(inspectMember.id, "id", "Employee ID")}
+                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                            title="Copy Employee ID"
+                          >
+                            {copiedField === "id" ? (
+                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                            ) : (
+                              <Copy01Icon size="1em" className="text-[11px]" />
+                            )}
+                          </button>
+                        </div>
+                      </InfoRow>
+
+                      <InfoRow icon="Mail01Icon" label="Official Email">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 truncate text-xs font-medium" title={inspectMember.email}>
+                            {getStaffCleanEmail(inspectMember)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyField(getStaffCleanEmail(inspectMember), "email", "Official email")}
+                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                            title="Copy Email"
+                          >
+                            {copiedField === "email" ? (
+                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
+                            ) : (
+                              <Copy01Icon size="1em" className="text-[11px]" />
+                            )}
+                          </button>
+                        </div>
+                      </InfoRow>
+
+                      <InfoRow icon="Shield01Icon" label="Role Authorization">
+                        <span
+                          className={cn(
+                            BADGE_BASE,
+                            "select-none",
+                            inspectMember.role === "Admin"
+                              ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                          )}
+                        >
+                          {getOfficeRoleLabel(inspectMember.role, inspectMember, offices)}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow icon="Shield01Icon" label="Two-step Verification">
+                        <span
+                          className={cn(
+                            BADGE_BASE,
+                            "select-none",
+                            inspectMember.totp_enabled
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
+                          )}
+                        >
+                          {inspectMember.totp_enabled ? "Enabled" : "Not enabled"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow icon="Building01Icon" label="Assigned Section">
+                        <span className="font-medium text-gray-800 dark:text-zinc-200">
+                          {inspectMember.section || "General Administration"}
+                        </span>
+                      </InfoRow>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                      <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
+                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                        Activity & Lifecycle
+                      </h3>
+                    </div>
+                    <div>
+                      <InfoRow icon="Clock01Icon" label="Last Active Session">
+                        <span className="font-sans tabular-nums text-xs font-medium text-gray-800 dark:text-zinc-200">
+                          {activeInfo.relative || formatLastLoginDate(activeInfo.date) || "Never active"}
+                        </span>
+                      </InfoRow>
+
+                      {inspectMember.created_at && (
+                        <InfoRow icon="Calendar01Icon" label="Registered On">
+                          <span className="font-sans tabular-nums text-xs font-medium text-gray-800 dark:text-zinc-200">
+                            {formatPHDateTime(inspectMember.created_at)}
+                          </span>
+                        </InfoRow>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInspectMember(null)}
+                      className="h-9 px-4"
+                    >
+                      Close
+                    </Button>
+                    <CopyButton
+                      textToCopy={() => JSON.stringify(inspectMember, null, 2)}
+                      entityName="Staff Data"
+                      idleLabel="Copy Staff Data"
+                      copiedLabel="Data Copied!"
+                      size="sm"
+                      title="Copy staff record data"
+                      className="h-9 px-3.5"
+                    />
+                  </div>
+
+                  {isSelf ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setInspectMember(null)
+                        window.dispatchEvent(
+                          new CustomEvent("switch-view", { detail: { view: "settings" } })
+                        )
+                      }}
+                      className="h-9 px-4"
+                    >
+                      My Account Settings
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {inspectMember.status !== "Archived" ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const m = inspectMember
+                              setInspectMember(null)
+                              onDeleteUser(m.id)
+                            }}
+                            className="h-9 px-4"
+                          >
+                            Archive Staff
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => {
+                              const m = inspectMember
+                              setInspectMember(null)
+                              onEditUser(m.id)
+                            }}
+                            className="h-9 px-4"
+                          >
+                            Edit Profile
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="success"
+                          size="sm"
+                          onClick={() => {
+                            const m = inspectMember
+                            setInspectMember(null)
+                            onRestoreUser(m.id)
+                          }}
+                          className="h-9 px-4"
+                        >
+                          Restore Staff
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </SheetFooter>
+              </>
+            )
+          })()}
+        </SheetContent>
+      </Sheet>
     </div>
     </TooltipProvider>
   )
 }
-
-

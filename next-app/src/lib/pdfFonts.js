@@ -20,11 +20,12 @@ async function loadFont(path) {
   return fonts.get(path)
 }
 
-export async function registerReportFont(doc, value) {
+export async function registerReportFont(doc, value, suppliedFontData) {
   const font = getReportFont(value)
   await Promise.all(["normal", "bold"].map(async (style) => {
     const filename = `${font.file}-${style === "bold" ? "Bold" : "Regular"}.ttf`
-    doc.addFileToVFS(filename, await loadFont(`/assets/fonts/reports/${filename}`))
+    const fontData = suppliedFontData?.[style] || await loadFont(`/assets/fonts/reports/${filename}`)
+    doc.addFileToVFS(filename, fontData)
     doc.addFont(filename, font.family, style)
   }))
   doc.setFont(font.family, "normal")

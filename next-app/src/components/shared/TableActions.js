@@ -48,7 +48,7 @@ export function TableActions({ children, actions, label = "Row actions" }) {
           key={index}
           nativeButton={item.original.type !== "a"}
           disabled={item.original.props.disabled}
-          variant={/delete|remove/i.test(item.label) ? "destructive" : "default"}
+          variant={/archive|delete|remove|decline/i.test(item.label) ? "destructive" : "default"}
           render={React.cloneElement(item.original, { className: undefined, title: undefined, "aria-label": item.label }, <>{icons}<span>{item.label}</span></>)}
         />;
       })}

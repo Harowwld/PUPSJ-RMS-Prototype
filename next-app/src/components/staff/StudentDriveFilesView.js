@@ -47,7 +47,10 @@ export default function StudentDriveFilesView({
     // 1. Matches from allDocs
     const matched = (allDocs || []).filter((d) => {
       const docSn = String(d.student_no || "").trim().toLowerCase();
+      const organizationId = String(d.organization_id || "").trim().toLowerCase();
       return (
+        (sn && organizationId === sn) ||
+        (acronym && organizationId === acronym) ||
         (sn && docSn === sn) ||
         (acronym && docSn === acronym) ||
         (student.name && String(d.student_name || "").trim().toLowerCase() === String(student.name).trim().toLowerCase())

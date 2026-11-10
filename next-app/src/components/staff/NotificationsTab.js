@@ -46,6 +46,15 @@ import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import DashboardSearch from "@/components/shared/DashboardSearch";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ActiveFilterChips as TableActiveFilterChips,
+} from "@/components/systemadmin/OfficeTableControls";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TablePagination from "@/components/shared/TablePagination";
@@ -165,6 +174,7 @@ export default function NotificationsTab({
   isLoading: propLoading,
 }) {
   const onUnreadChangeRef = useRef(onUnreadChange);
+  const loadRequestRef = useRef(0);
   useEffect(() => {
     onUnreadChangeRef.current = onUnreadChange;
   }, [onUnreadChange]);
@@ -185,6 +195,12 @@ export default function NotificationsTab({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilters, setTypeFilters] = useState([]);
   const [decisionFilters, setDecisionFilters] = useState([]);
+  const [filterRules, setFilterRules] = useState([]);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("DESC");
+  const [groupBy, setGroupBy] = useState("date");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Pagination
   const [page, setPage] = useUrlPage();
@@ -208,7 +224,7 @@ export default function NotificationsTab({
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, typeFilters, decisionFilters, activeTab, setPage]);
+  }, [debouncedSearch, typeFilters, decisionFilters, filterRules, activeTab, sortBy, sortOrder, startDate, endDate, setPage]);
 
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage) || 1);
   const displayPage = Math.min(page, totalPages);
@@ -217,6 +233,7 @@ export default function NotificationsTab({
   // Main fetch function
   const load = useCallback(
     async (showRefreshing = false) => {
+      const request = ++loadRequestRef.current;
       if (showRefreshing) setIsRefreshing(true);
       setError("");
       try {
@@ -224,11 +241,21 @@ export default function NotificationsTab({
         qs.set("limit", String(itemsPerPage));
         qs.set("offset", String(offset));
         qs.set("tab", activeTab);
-        qs.set("sortBy", "created_at");
-        qs.set("sortOrder", "DESC");
+        qs.set("sortBy", sortBy);
+        qs.set("sortOrder", sortOrder);
         if (debouncedSearch) qs.set("search", debouncedSearch);
-        if (typeFilters.length > 0) qs.set("type", typeFilters.join(","));
-        if (decisionFilters.length > 0) qs.set("decision", decisionFilters.join(","));
+        const effectiveTypes = [
+          ...typeFilters,
+          ...filterRules.filter((r) => r.fieldKey === "type" && r.operator !== "is_not").map((r) => r.value),
+        ];
+        if (effectiveTypes.length > 0) qs.set("type", effectiveTypes.join(","));
+        const effectiveDecisions = [
+          ...decisionFilters,
+          ...filterRules.filter((r) => r.fieldKey === "decision" && r.operator !== "is_not").map((r) => r.value),
+        ];
+        if (effectiveDecisions.length > 0) qs.set("decision", effectiveDecisions.join(","));
+        if (startDate) qs.set("startDate", startDate);
+        if (endDate) qs.set("endDate", endDate);
 
         const [res] = await Promise.all([
           fetch(`/api/notifications?${qs.toString()}`, { cache: "no-store" }),
@@ -238,6 +265,7 @@ export default function NotificationsTab({
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Failed to load notifications");
         }
+        if (request !== loadRequestRef.current) return;
         const data = json.data || {};
         const nextItems = Array.isArray(data.items) ? data.items : [];
         setItems(nextItems);
@@ -246,13 +274,16 @@ export default function NotificationsTab({
         setReadCount(Number(data.readCount || 0));
         onUnreadChangeRef.current?.(Number(data.unreadCount || 0));
       } catch (e) {
+        if (request !== loadRequestRef.current) return;
         setError(e?.message || "Failed to load notifications");
       } finally {
-        setInitialLoading(false);
-        setIsRefreshing(false);
+        if (request === loadRequestRef.current) {
+          setInitialLoading(false);
+          setIsRefreshing(false);
+        }
       }
     },
-    [offset, itemsPerPage, activeTab, debouncedSearch, typeFilters, decisionFilters]
+    [offset, itemsPerPage, activeTab, debouncedSearch, typeFilters, decisionFilters, filterRules, sortBy, sortOrder, startDate, endDate]
   );
 
   useEffect(() => {
@@ -410,8 +441,86 @@ export default function NotificationsTab({
     setTimeout(() => setCopiedKey(null), 1500);
   };
 
-  // Group items by time bucket: TODAY, YESTERDAY, THIS WEEK, EARLIER
+  // Filter fields configuration for FilterPopover
+  const filterFields = useMemo(
+    () => [
+      {
+        key: "type",
+        label: "Category",
+        type: "select",
+        options: [
+          { value: "document_review", label: "Document Reviews" },
+          { value: "document_request", label: "Document Requests" },
+          { value: "scan_upload", label: "Uploads & Ingestion" },
+          { value: "system", label: "System Alerts" },
+        ],
+      },
+      {
+        key: "decision",
+        label: "Review Decision",
+        type: "select",
+        options: [
+          { value: "Approved", label: "Approved" },
+          { value: "Declined", label: "Declined" },
+        ],
+      },
+    ],
+    []
+  );
+
+  const sortOptions = useMemo(
+    () => [
+      { key: "created_at", value: "created_at", label: "Date & Time" },
+      { key: "title", value: "title", label: "Title" },
+      { key: "type", value: "type", label: "Category" },
+    ],
+    []
+  );
+
+  const groupOptions = useMemo(
+    () => [
+      { key: "date", value: "date", label: "Date" },
+      { key: "type", value: "type", label: "Category" },
+      { key: "decision", value: "decision", label: "Decision" },
+      { key: "none", value: "none", label: "No grouping" },
+    ],
+    []
+  );
+
+  // Group items by selected grouping criteria
   const groupedItems = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "ALL", label: null, items }];
+    }
+    if (groupBy === "type") {
+      const map = new Map();
+      items.forEach((item) => {
+        const visuals = getNotificationVisuals(item);
+        const key = visuals.category || "General";
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(item);
+      });
+      return Array.from(map.entries()).map(([label, groupItems]) => ({
+        key: label,
+        label,
+        items: groupItems,
+      }));
+    }
+    if (groupBy === "decision") {
+      const map = new Map();
+      items.forEach((item) => {
+        const d = item.approval_status || item.metadata?.approval_status || item.metadata?.status || "None";
+        if (!map.has(d)) map.set(d, []);
+        map.get(d).push(item);
+      });
+      return Array.from(map.entries()).map(([label, groupItems]) => ({
+        key: label,
+        label,
+        items: groupItems,
+      }));
+    }
+
+    // Default: date grouping
     const groups = {
       TODAY: [],
       YESTERDAY: [],
@@ -434,7 +543,7 @@ export default function NotificationsTab({
       { key: "THIS WEEK", label: "This Week", items: groups["THIS WEEK"] },
       { key: "EARLIER", label: "Earlier", items: groups.EARLIER },
     ].filter((g) => g.items.length > 0);
-  }, [items]);
+  }, [items, groupBy]);
 
   // Filters configuration
   const filterGroups = useMemo(
@@ -479,6 +588,9 @@ export default function NotificationsTab({
     setSearchQuery("");
     setTypeFilters([]);
     setDecisionFilters([]);
+    setFilterRules([]);
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   }, [setPage]);
 
@@ -494,8 +606,16 @@ export default function NotificationsTab({
         },
       });
     }
+    filterRules.forEach((rule) => {
+      const field = filterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
     typeFilters.forEach((t) => {
-      const opt = filterGroups[0]?.options.find((o) => o.value === t);
+      const opt = filterFields[0]?.options.find((o) => o.value === t);
       chips.push({
         id: `type-${t}`,
         label: `Category: ${opt?.label || t}`,
@@ -506,20 +626,32 @@ export default function NotificationsTab({
       });
     });
     decisionFilters.forEach((d) => {
+      const opt = filterFields[1]?.options.find((o) => o.value === d);
       chips.push({
         id: `decision-${d}`,
-        label: `Decision: ${d}`,
+        label: `Decision: ${opt?.label || d}`,
         onRemove: () => {
           setDecisionFilters((prev) => prev.filter((item) => item !== d));
           setPage(1);
         },
       });
     });
+    if (startDate || endDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${startDate || "Any"} to ${endDate || "Any"}`,
+        onRemove: () => {
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        },
+      });
+    }
     return chips;
-  }, [searchQuery, typeFilters, decisionFilters, filterGroups, setPage]);
+  }, [searchQuery, filterRules, filterFields, typeFilters, decisionFilters, startDate, endDate, setPage]);
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() || typeFilters.length > 0 || decisionFilters.length > 0
+    searchQuery.trim() || typeFilters.length > 0 || decisionFilters.length > 0 || filterRules.length > 0 || startDate || endDate
   );
 
   return (
@@ -531,20 +663,18 @@ export default function NotificationsTab({
           <PageHeader
             icon="Notification01Icon"
             title={
-              <div className="flex items-center gap-2">
+              <span className="flex items-center gap-2">
                 <span>Notifications</span>
-                {unreadCount > 0 && (
-                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400", BADGE_BASE)}>
-                    {unreadCount} new
-                  </span>
-                )}
-              </div>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {unreadCount > 0 ? `${unreadCount.toLocaleString()} unread` : "All caught up"}
+                </span>
+              </span>
             }
             description="Real-time updates on document reviews, student requests, and system activity."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
@@ -561,7 +691,6 @@ export default function NotificationsTab({
                     onClick={markAllRead}
                     className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <TickDouble01Icon size={16} className="mr-1.5" />
                     Mark All as Read
                   </Button>
                   <Button
@@ -571,7 +700,6 @@ export default function NotificationsTab({
                     onClick={markAllUnread}
                     className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    <Mail01Icon size={16} className="mr-1.5" />
                     Mark All as Unread
                   </Button>
                 </div>
@@ -579,9 +707,8 @@ export default function NotificationsTab({
             }
           />
 
-          {/* 2. Navigation Toolbar: Read / Unread Tabs ONLY */}
-          <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
-            {/* Left: Segmented Control Tabs */}
+          {/* Connected Row: Read / Unread Tabs */}
+          <div className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 bg-white dark:bg-card">
             <SegmentedControl
               value={activeTab}
               onValueChange={setActiveTab}
@@ -600,44 +727,69 @@ export default function NotificationsTab({
                 },
               ]}
             />
-
-            {/* Right: Search Input & Multi-Criteria Filter Group */}
-            <div className="flex flex-wrap items-center gap-2.5 max-w-full">
-              {/* Search Input */}
-              <div className="w-full sm:w-60 md:w-64 relative group min-w-0">
-                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                </div>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search notifications, student..."
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500">
-                  {total > 0 ? `${total.toLocaleString()}` : "0"}
-                </div>
-              </div>
-
-              {/* Multi-Criteria Filter Popover */}
-              <MultiCriteriaFilter
-                title="Filter Notifications"
-                groups={filterGroups}
-                selectedValues={filterValues}
-                onChange={handleFilterChange}
-                onClearAll={handleClearFilters}
-                totalCount={total}
-                filteredCount={items.length}
-              />
-            </div>
           </div>
 
+          {/* Canonical 2-Zone DataViewToolbar */}
+          <DataViewToolbar
+            label="Notifications search and controls"
+            className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+          >
+            {/* Left Zone: DashboardSearch */}
+            <div className="flex min-w-0 items-center gap-2 z-10">
+              <DashboardSearch
+                value={searchQuery}
+                onChange={(val) => setSearchQuery(val)}
+                count={total}
+                loading={isLoading}
+                placeholder="Search notifications, student..."
+                label="Search notifications"
+              />
+            </div>
+
+            {/* Right Zone: Filter -> Sort -> Group -> DateRange */}
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <FilterPopover
+                fields={filterFields}
+                filters={filterRules}
+                onFiltersChange={setFilterRules}
+                entityLabel="notifications"
+              />
+              <SortPopover
+                options={sortOptions}
+                sortBy={sortBy}
+                onSortByChange={setSortBy}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+              />
+              <GroupPopover
+                options={groupOptions}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+              />
+              <DateRangeFilterButton
+                startDate={startDate}
+                endDate={endDate}
+                onApply={({ startDate: s, endDate: e }) => {
+                  setStartDate(s);
+                  setEndDate(e);
+                }}
+                onClear={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                disableFutureDates={true}
+              />
+            </div>
+          </DataViewToolbar>
+
           {/* 3. Active Filter Chips */}
-          <ActiveFilterChips
-            chips={activeChips}
-            onClearAll={handleClearFilters}
-            className="border-t border-border dark:border-border px-6 py-2.5"
-          />
+          {activeChips.length > 0 && (
+            <TableActiveFilterChips
+              chips={activeChips}
+              onClearAll={handleClearFilters}
+              className="border-t border-border dark:border-border px-6 py-2.5 bg-white dark:bg-card"
+            />
+          )}
 
           {/* 4. Grouped Notification List / Skeletons / Empty State */}
           {isLoading && !isRefreshing ? (
@@ -844,10 +996,10 @@ export default function NotificationsTab({
             showCloseButton={false}
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden focus:outline-none focus-visible:outline-none"
           >
-            <SheetHeader className="shrink-0 p-0">
+            <SheetHeader className="shrink-0 p-0 border-b border-border bg-white dark:bg-card">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
-                  <SheetTitle>
+                  <SheetTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100">
                     Notification Details
                   </SheetTitle>
                   <SheetDescription className="sr-only">
@@ -1141,7 +1293,7 @@ export default function NotificationsTab({
             ) : null}
 
             {/* Executive Action Bar Footer */}
-            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
+            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border flex flex-row items-center justify-between bg-white dark:bg-card">
               <Button
                 type="button"
                 variant="outline"
@@ -1180,21 +1332,27 @@ export default function NotificationsTab({
                         selectedNotif.mime_type
                       );
                     }}
-                    className="h-9 px-4 cursor-pointer flex items-center gap-1.5"
+                    className="h-9 px-4 cursor-pointer"
                   >
-                    <span>Rescan Document</span>
+                    Rescan Document
                   </Button>
                 ) : null}
 
                 {(selectedNotif?.entity_type === "document" || selectedNotif?.metadata?.document_id) && (
-                  <a
-                    href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
-                    download={selectedNotif.original_filename || "document.pdf"}
-                    rel="noreferrer"
-                    className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 px-4 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                  <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl shadow-xs active:scale-95 cursor-pointer"
                   >
-                    {selectedNotif?.mime_type?.startsWith("image/") ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}
-                  </a>
+                    <a
+                      href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
+                      download={selectedNotif.original_filename || "document.pdf"}
+                      rel="noreferrer"
+                    >
+                      {selectedNotif?.mime_type?.startsWith("image/") ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}
+                    </a>
+                  </Button>
                 )}
               </div>
             </SheetFooter>

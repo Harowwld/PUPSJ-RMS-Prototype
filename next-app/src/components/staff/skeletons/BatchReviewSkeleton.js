@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function BatchReviewSkeleton() {
   return (
-    <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 border-t border-border dark:border-border animate-fade-up font-jakarta select-none" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }}>
+    <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 animate-fade-up font-jakarta select-none" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }}>
       {/* Left: Review Queue Column */}
       <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
@@ -65,11 +65,11 @@ export default function BatchReviewSkeleton() {
             {/* Document Type & Extracted Name */}
             <div className="min-w-0 space-y-1.5">
               <Skeleton className="h-3 w-24 rounded-md dark:bg-muted" />
-              <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-full rounded-xl dark:bg-muted" />
             </div>
             <div className="min-w-0 space-y-1.5">
               <Skeleton className="h-3 w-24 rounded-md dark:bg-muted" />
-              <Skeleton className="h-10 w-full rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-full rounded-xl dark:bg-muted" />
             </div>
 
             {/* Metrics: Match Confidence & Quality */}
@@ -86,9 +86,9 @@ export default function BatchReviewSkeleton() {
 
             {/* Action Buttons */}
             <div className="col-span-2 flex gap-2 pt-2 border-t border-border dark:border-border md:col-span-1">
-              <Skeleton className="h-10 w-24 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-20 rounded-xl dark:bg-muted" />
-              <Skeleton className="h-10 w-20 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-24 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
             </div>
           </div>
         </div>

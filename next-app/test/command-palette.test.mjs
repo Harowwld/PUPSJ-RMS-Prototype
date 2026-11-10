@@ -206,8 +206,8 @@ test('CommandPalette Badges and Buttons Align With Apple HIG and Repository Stan
     'CommandPalette badges must not contain WarehouseIcon or icons'
   )
   assert.ok(
-    code.includes('rounded-full text-[9px] font-medium bg-amber-50'),
-    'Storage badge must be rounded-full with text only'
+    code.includes('rounded-full bg-black/[0.04] dark:bg-white/[0.06]'),
+    'Badges must use the borderless compound status pill pattern'
   )
 
   // Primary action button: text only, no trailing symbols like ↵

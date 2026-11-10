@@ -171,7 +171,7 @@ export default function EditStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-[22px] sm:rounded-[22px] border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
@@ -204,7 +204,7 @@ export default function EditStudentModal({
                   placeholder="DELA CRUZ, JUAN"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs uppercase"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs uppercase"
                 />
               </div>
 
@@ -258,7 +258,7 @@ export default function EditStudentModal({
                   max={2100}
                   value={yearLevel}
                   onChange={(e) => setYearLevel(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                 />
               </div>
 
@@ -284,7 +284,7 @@ export default function EditStudentModal({
                     placeholder="e.g. 1"
                     value={section}
                     onChange={(e) => setSection(e.target.value)}
-                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                   />
                 )}
               </div>
@@ -368,10 +368,10 @@ export default function EditStudentModal({
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
-                  Saving...
+                  Saving Profile...
                 </span>
               ) : (
-                "Save Changes"
+                "Save Student Profile"
               )}
             </Button>
           </DialogFooter>

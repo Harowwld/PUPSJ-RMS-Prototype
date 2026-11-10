@@ -22,6 +22,7 @@ import DigitalRecordsList, {
   formatUploadedDate,
 } from "@/components/admin/records-review/DigitalRecordsList"
 import DigitalRecordsKanbanPipeline from "@/components/admin/records-review/DigitalRecordsKanbanPipeline"
+import DigitalRecordActionsMenu from "@/components/admin/records-review/DigitalRecordActionsMenu"
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import RecordsReviewTableSkeleton from "@/components/admin/skeletons/RecordsReviewTableSkeleton"
 import { format } from "date-fns"
@@ -50,7 +51,6 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { toast } from "sonner"
-import { matchesSearchQuery } from "@/lib/searchUtils"
 import {
   AlertCircleIcon as EmptyAlertCircleIcon,
   Search01Icon as EmptySearch01Icon,
@@ -96,6 +96,9 @@ function formatChipDate(dateStr) {
 
 export default function DigitalRecordsReviewTab({
   records,
+  totalCount = 0,
+  serverStats,
+  onQueryChange,
   isLoading,
   isManualLoading = false,
   error = null,
@@ -114,7 +117,7 @@ export default function DigitalRecordsReviewTab({
   const [searchQuery, setSearchQuery] = useState("")
   const [localSearch, setLocalSearch] = useState("")
   const [currentPage, setCurrentPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [docTypeFilters, setDocTypeFilters] = useState([])
   const [statusFilters, setStatusFilters] = useState(() => {
     if (!statusFilter || statusFilter === "All") return []
@@ -142,25 +145,22 @@ export default function DigitalRecordsReviewTab({
   const [filterRules, setFilterRules] = useState([])
   const [groupBy, setGroupBy] = useState("status")
   const [visibleColumns, setVisibleColumns] = useState([
-    "selection",
     "student_no",
     "student_name",
     "doc_type",
+    "original_filename",
     "status",
     "created_at",
-    "actions",
   ])
 
   const tableColumns = useMemo(
     () => [
-      { key: "selection", label: "Checkbox" },
       { key: "student_no", label: "Student No." },
       { key: "student_name", label: "Full Name" },
       { key: "doc_type", label: "Document Type" },
-      { key: "original_filename", label: "Filename", defaultHidden: true },
+      { key: "original_filename", label: "Filename" },
       { key: "status", label: "Status" },
       { key: "created_at", label: "Upload Date" },
-      { key: "actions", label: "Actions" },
     ],
     []
   )
@@ -244,10 +244,10 @@ export default function DigitalRecordsReviewTab({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!statusFilter || statusFilter === "All") {
-        setStatusFilters([])
+        setStatusFilters((prev) => prev.length ? [] : prev)
       } else {
         const list = statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
-        setStatusFilters(list)
+        setStatusFilters((prev) => prev.length === list.length && prev.every((value, index) => value === list[index]) ? prev : list)
       }
     }, 0)
     return () => clearTimeout(timer)
@@ -334,102 +334,34 @@ export default function DigitalRecordsReviewTab({
     setCurrentPage(1)
   }
 
-  const sortedRecords = useMemo(() => {
-    const baseFiltered = (records || []).filter((r) => {
-      if (statusFilters.length > 0 && !statusFilters.includes(r.approval_status)) return false
-      if (docTypeFilters.length > 0 && !docTypeFilters.includes(r.doc_type)) return false
-      if (dateFrom || dateTo) {
-        let createdDate = ""
-        if (r.created_at) {
-          try {
-            const d = new Date(r.created_at)
-            if (!isNaN(d.getTime())) {
-              createdDate = format(d, "yyyy-MM-dd")
-            }
-          } catch {
-            createdDate = String(r.created_at).substring(0, 10)
-          }
-        }
-
-        if (dateFrom && createdDate < dateFrom) return false
-        if (dateTo && createdDate > dateTo) return false
-      }
-
-      // Filter rules from FilterPopover
-      for (const rule of filterRules) {
-        let actual = ""
-        if (rule.fieldKey === "status") {
-          actual = r.approval_status
-        } else if (rule.fieldKey === "doc_type") {
-          actual = r.doc_type
-        } else {
-          actual = r[rule.fieldKey]
-        }
-        const actVal = String(actual || "").toLowerCase()
-        const ruleVal = String(rule.value || "").toLowerCase()
-        if (rule.operator === "is_not") {
-          if (actVal === ruleVal) return false
-        } else {
-          if (actVal !== ruleVal) return false
-        }
-      }
-
-      return matchesSearchQuery(
-        [r.student_no, r.student_name, r.doc_type, r.original_filename],
-        searchQuery
-      )
-    })
-
-    return [...baseFiltered].sort((a, b) => {
-      let valA = a[sortBy] ?? ""
-      let valB = b[sortBy] ?? ""
-
-      if (sortBy === "student_no") {
-        valA = a.student_no || ""
-        valB = b.student_no || ""
-      }
-
-      if (sortBy === "student_name") {
-        valA = a.student_name || ""
-        valB = b.student_name || ""
-      }
-
-      if (typeof valA === "string") valA = valA.toLowerCase()
-      if (typeof valB === "string") valB = valB.toLowerCase()
-
-      if (!valA && valA !== 0) return sortOrder === "ASC" ? 1 : -1
-      if (!valB && valB !== 0) return sortOrder === "ASC" ? -1 : 1
-
-      if (valA < valB) return sortOrder === "ASC" ? -1 : 1
-      if (valA > valB) return sortOrder === "ASC" ? 1 : -1
-      return 0
-    })
-  }, [
-    records,
+  const query = useMemo(() => ({
+    page: currentPage,
+    pageSize: itemsPerPage,
     statusFilters,
     docTypeFilters,
+    filterRules,
+    search: searchQuery,
     dateFrom,
     dateTo,
-    filterRules,
-    searchQuery,
     sortBy,
     sortOrder,
-  ])
+  }), [currentPage, itemsPerPage, statusFilters, docTypeFilters, filterRules, searchQuery, dateFrom, dateTo, sortBy, sortOrder])
 
-  const totalPages = Math.ceil(sortedRecords.length / itemsPerPage) || 1
+  useEffect(() => { onQueryChange?.(query) }, [onQueryChange, query])
+
+  const sortedRecords = records || []
+  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1
   const displayPage = Math.min(currentPage, totalPages)
+  const paginatedRecords = sortedRecords
 
-  const paginatedRecords = useMemo(() => {
-    const start = (displayPage - 1) * itemsPerPage
-    return sortedRecords.slice(start, start + itemsPerPage)
-  }, [sortedRecords, displayPage, itemsPerPage])
+  useEffect(() => {
+    if (serverStats && currentPage > totalPages) setCurrentPage(totalPages)
+  }, [currentPage, totalPages, serverStats, setCurrentPage])
 
   const toggleSelectAll = (checked) => {
     if (checked) {
-      const pendingIds = paginatedRecords
-        .filter((r) => r.approval_status === "Pending")
-        .map((r) => r.id)
-      setSelectedIds(new Set(pendingIds))
+      const allIds = paginatedRecords.map((r) => r.id)
+      setSelectedIds(new Set(allIds))
     } else {
       setSelectedIds(new Set())
     }
@@ -438,7 +370,7 @@ export default function DigitalRecordsReviewTab({
 
   const toggleSelectRow = (id, event) => {
     const record = paginatedRecords.find((r) => r.id === id) || records?.find((r) => r.id === id)
-    if (!record || record.approval_status !== "Pending") return
+    if (!record) return
 
     const isSelected = selectedIds.has(id)
 
@@ -462,7 +394,6 @@ export default function DigitalRecordsReviewTab({
         const end = Math.max(currentIdx, lastIdx)
         const idsInRange = paginatedRecords
           .slice(start, end + 1)
-          .filter((r) => r.approval_status === "Pending")
           .map((r) => r.id)
 
         const next = new Set(selectedIds)
@@ -557,67 +488,7 @@ export default function DigitalRecordsReviewTab({
     }
   }
 
-  const stats = useMemo(() => {
-    const today = new Date().toLocaleDateString("en-CA")
-
-    const pending = (records || []).filter((r) => r.approval_status === "Pending")
-    const approvedRecords = (records || []).filter((r) => r.approval_status === "Approved")
-    const declinedRecords = (records || []).filter((r) => r.approval_status === "Declined")
-
-    const pendingToday = pending.filter((r) => {
-      if (!r.created_at) return false
-      const raw = String(r.created_at)
-      let dStr = ""
-      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
-        dStr = raw.substring(0, 10)
-      } else {
-        try {
-          const d = new Date(r.created_at)
-          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch {}
-      }
-      return dStr === today
-    }).length
-
-    const approvedToday = approvedRecords.filter((r) => {
-      if (!r.reviewed_at) return false
-      const raw = String(r.reviewed_at)
-      let dStr = ""
-      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
-        dStr = raw.substring(0, 10)
-      } else {
-        try {
-          const d = new Date(r.reviewed_at)
-          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch {}
-      }
-      return dStr === today
-    }).length
-
-    const declinedToday = declinedRecords.filter((r) => {
-      if (!r.reviewed_at) return false
-      const raw = String(r.reviewed_at)
-      let dStr = ""
-      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
-        dStr = raw.substring(0, 10)
-      } else {
-        try {
-          const d = new Date(r.reviewed_at)
-          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
-        } catch {}
-      }
-      return dStr === today
-    }).length
-
-    return {
-      pending: pending.length,
-      pendingToday,
-      approvedToday,
-      totalApproved: approvedRecords.length,
-      declinedToday,
-      totalDeclined: declinedRecords.length,
-    }
-  }, [records])
+  const stats = serverStats || { total: 0, pending: 0, pendingToday: 0, approvedToday: 0, totalApproved: 0, declinedToday: 0, totalDeclined: 0 }
 
   const handleClearFilters = useCallback(() => {
     setLocalSearch("")
@@ -708,19 +579,25 @@ export default function DigitalRecordsReviewTab({
     setCurrentPage(1)
   }
 
+  const orderedVisibleColumns = useMemo(() => {
+    return tableColumns.filter((col) => visibleColumns.includes(col.key))
+  }, [tableColumns, visibleColumns])
+
   const activeTableColumns = useMemo(() => {
-    const map = {
-      selection: "selection",
+    const columnMap = {
       student_no: "identifier",
       student_name: "text",
-      doc_type: "text",
+      doc_type: "category",
       original_filename: { kind: "text", maxWidth: 340 },
       status: "status",
       created_at: "date",
-      actions: "actions",
     }
-    return visibleColumns.map((colKey) => map[colKey]).filter(Boolean)
-  }, [visibleColumns])
+    return [
+      "selection",
+      ...orderedVisibleColumns.map((col) => columnMap[col.key] || "text"),
+      "actions",
+    ]
+  }, [orderedVisibleColumns])
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -734,7 +611,7 @@ export default function DigitalRecordsReviewTab({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span>Records Review</span>
                 <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
-                  {(records?.length ?? 0).toLocaleString()} records · {stats.pending.toLocaleString()} pending review
+                  {stats.total.toLocaleString()} records · {stats.pending.toLocaleString()} pending review
                 </span>
               </div>
             }
@@ -758,22 +635,16 @@ export default function DigitalRecordsReviewTab({
           {/* Color Stat Cards / Skeletons at the Top */}
           {isLoading && !isManualLoading && !records ? (
             <div className="px-6 pb-6">
-              <KpiStatCardsSkeleton count={3} />
+              <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+                <KpiStatCardsSkeleton count={3} />
+              </div>
             </div>
           ) : !error ? (
             <div className="px-6 pb-6">
               <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                   {/* Card 1: Pending Review */}
-                  <div
-                    onClick={() => handleScopeChange(currentScope === "Pending" ? "All" : "Pending")}
-                    className={cn(
-                      "rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border transition-all duration-200 flex flex-col justify-between cursor-pointer active:scale-[0.99]",
-                      currentScope === "Pending"
-                        ? "border-gray-950 dark:border-white ring-1 ring-black/10 dark:ring-white/20 shadow-xs"
-                        : "border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
-                    )}
-                  >
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="size-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -783,8 +654,9 @@ export default function DigitalRecordsReviewTab({
                           Pending Review
                         </span>
                       </div>
-                      <span className={cn(BADGE_PALETTES.amber, "select-none", BADGE_BASE)}>
-                        Needs Action
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Clock01Icon size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Needs Action</span>
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
@@ -796,15 +668,7 @@ export default function DigitalRecordsReviewTab({
                   </div>
 
                   {/* Card 2: Approved Records */}
-                  <div
-                    onClick={() => handleScopeChange(currentScope === "Approved" ? "All" : "Approved")}
-                    className={cn(
-                      "rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border transition-all duration-200 flex flex-col justify-between cursor-pointer active:scale-[0.99]",
-                      currentScope === "Approved"
-                        ? "border-gray-950 dark:border-white ring-1 ring-black/10 dark:ring-white/20 shadow-xs"
-                        : "border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
-                    )}
-                  >
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -814,8 +678,11 @@ export default function DigitalRecordsReviewTab({
                           Approved
                         </span>
                       </div>
-                      <span className={cn(BADGE_PALETTES.emerald, "select-none", BADGE_BASE)}>
-                        Archival Ready
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                          <Tick01Icon size={8} className="stroke-[3]" />
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Archival Ready</span>
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
@@ -827,15 +694,7 @@ export default function DigitalRecordsReviewTab({
                   </div>
 
                   {/* Card 3: Declined Records */}
-                  <div
-                    onClick={() => handleScopeChange(currentScope === "Declined" ? "All" : "Declined")}
-                    className={cn(
-                      "rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border transition-all duration-200 flex flex-col justify-between cursor-pointer active:scale-[0.99]",
-                      currentScope === "Declined"
-                        ? "border-gray-950 dark:border-white ring-1 ring-black/10 dark:ring-white/20 shadow-xs"
-                        : "border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
-                    )}
-                  >
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="size-5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
@@ -845,8 +704,9 @@ export default function DigitalRecordsReviewTab({
                           Declined
                         </span>
                       </div>
-                      <span className={cn(BADGE_PALETTES.rose, "select-none", BADGE_BASE)}>
-                        Returned
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <CancelCircleIcon size={12} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Returned</span>
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 font-jakarta mt-2">
@@ -869,12 +729,13 @@ export default function DigitalRecordsReviewTab({
           >
             {/* Left: Status Scope Tabs */}
             <SegmentedControl
+              id="records-review-scope"
               value={currentScope}
               onValueChange={handleScopeChange}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
-                { value: "All", label: "All Records", badge: records?.length ?? 0 },
+                { value: "All", label: "All Records", badge: stats.total },
                 { value: "Pending", label: "Pending", badge: stats.pending },
                 { value: "Approved", label: "Approved", badge: stats.totalApproved },
                 { value: "Declined", label: "Declined", badge: stats.totalDeclined },
@@ -884,6 +745,7 @@ export default function DigitalRecordsReviewTab({
             {/* Right: View Mode Switcher */}
             <div className="ml-auto shrink-0">
               <SegmentedControl
+                id="records-review-view-mode"
                 value={viewMode}
                 onValueChange={handleViewModeChange}
                 variant="capsule"
@@ -919,7 +781,7 @@ export default function DigitalRecordsReviewTab({
               <DashboardSearch
                 value={localSearch}
                 onChange={setLocalSearch}
-                count={sortedRecords.length}
+                count={totalCount}
                 loading={isLoading && !isManualLoading}
                 label="Search student records"
                 placeholder="Search student, name, doc type..."
@@ -1001,8 +863,9 @@ export default function DigitalRecordsReviewTab({
           )}
 
           {/* 5. Content Area */}
-          {isLoading && !isManualLoading && (!records || records.length === 0) ? (
-            <RecordsReviewTableSkeleton rowCount={8} embedded={true} />
+          <div className="relative flex flex-[1_0_auto] flex-col" aria-busy={isLoading || undefined}>
+          {isLoading && !isManualLoading && !records ? (
+            <RecordsReviewTableSkeleton rowCount={itemsPerPage} embedded={true} />
           ) : error ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
@@ -1041,7 +904,7 @@ export default function DigitalRecordsReviewTab({
                     >
                       Reset Filters
                     </Button>
-                  ) : currentScope !== "All" && (records?.length ?? 0) > 0 ? (
+                  ) : currentScope !== "All" && stats.total > 0 ? (
                     <Button
                       variant="outline"
                       onClick={() => handleScopeChange("All")}
@@ -1071,8 +934,9 @@ export default function DigitalRecordsReviewTab({
                 label="Digital record review pages"
                 page={displayPage}
                 pageSize={itemsPerPage}
-                totalCount={sortedRecords.length}
+                totalCount={totalCount}
                 displayedCount={paginatedRecords.length}
+                loading={isLoading || !serverStats}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setItemsPerPage}
               />
@@ -1099,6 +963,16 @@ export default function DigitalRecordsReviewTab({
                   }
                 }}
               />
+              <TablePagination
+                label="Digital record review pages"
+                page={displayPage}
+                pageSize={itemsPerPage}
+                totalCount={totalCount}
+                displayedCount={paginatedRecords.length}
+                loading={isLoading || !serverStats}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setItemsPerPage}
+              />
             </div>
           ) : (
             <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
@@ -1110,33 +984,23 @@ export default function DigitalRecordsReviewTab({
                 <Table columns={activeTableColumns} className="min-w-[1380px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      {visibleColumns.includes("selection") && (
-                        <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-white dark:bg-card">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-border"
-                            checked={
-                              paginatedRecords.length > 0 &&
-                              paginatedRecords.filter((r) => r.approval_status === "Pending")
-                                .length > 0 &&
-                              paginatedRecords
-                                .filter((r) => r.approval_status === "Pending")
-                                .every((r) => selectedIds.has(r.id))
-                            }
-                            onChange={(e) => toggleSelectAll(e.target.checked)}
-                            disabled={
-                              paginatedRecords.length === 0 ||
-                              paginatedRecords.filter((r) => r.approval_status === "Pending")
-                                .length === 0
-                            }
-                          />
-                        </th>
-                      )}
+                      <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-white dark:bg-card">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-border"
+                          checked={
+                            paginatedRecords.length > 0 &&
+                            paginatedRecords.every((r) => selectedIds.has(r.id))
+                          }
+                          onChange={(e) => toggleSelectAll(e.target.checked)}
+                          disabled={paginatedRecords.length === 0}
+                          aria-label="Select all records on this page"
+                        />
+                      </th>
                       {visibleColumns.includes("student_no") && (
                         <th
                           className={cn(
-                            "p-4 w-[160px] min-w-[160px] sticky z-20 bg-white dark:bg-card transition-shadow",
-                            visibleColumns.includes("selection") ? "left-12" : "left-0",
+                            "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
                             isScrolledX &&
                               "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
@@ -1197,12 +1061,12 @@ export default function DigitalRecordsReviewTab({
                         </th>
                       )}
                       {visibleColumns.includes("doc_type") && (
-                        <th className="p-4 w-[180px] min-w-[180px]">
+                        <th className="p-4 w-[180px] min-w-[180px] text-center">
                           <button
                             type="button"
                             onClick={() => handleSort("doc_type")}
                             className={cn(
-                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              "group mx-auto inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                               sortBy === "doc_type"
                                 ? "text-gray-900 dark:text-white"
                                 : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -1228,7 +1092,7 @@ export default function DigitalRecordsReviewTab({
                             type="button"
                             onClick={() => handleSort("approval_status")}
                             className={cn(
-                              "group inline-flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              "group mx-auto inline-flex items-center justify-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
                               sortBy === "approval_status"
                                 ? "text-gray-900 dark:text-white"
                                 : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
@@ -1264,11 +1128,9 @@ export default function DigitalRecordsReviewTab({
                           </button>
                         </th>
                       )}
-                      {visibleColumns.includes("actions") && (
-                        <th className="w-28 min-w-[110px] p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                          Actions
-                        </th>
-                      )}
+                      <th className="w-12 p-0 text-center">
+                        <span className="sr-only">Actions</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -1284,40 +1146,39 @@ export default function DigitalRecordsReviewTab({
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                           )}
                           onClick={(e) => {
-                            if (r.approval_status === "Pending") {
-                              toggleSelectRow(r.id, e)
-                            }
+                            toggleSelectRow(r.id, e)
                           }}
                           onDoubleClick={() => {
                             handlePreview(r)
                           }}
                         >
-                          {visibleColumns.includes("selection") && (
-                            <td
+                          <td
+                            className={cn(
+                              "w-12 p-4 text-center align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleSelectRow(r.id, e)
+                            }}
+                            onDoubleClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
                               className={cn(
-                                "w-12 p-4 text-center align-middle border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
-                                isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                                "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
+                                isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
                               )}
-                            >
-                              {r.approval_status === "Pending" ? (
-                                <input
-                                  type="checkbox"
-                                  className={cn(
-                                    "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-border transition-opacity",
-                                    isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                                  )}
-                                  checked={isSelected}
-                                  onChange={() => {}}
-                                />
-                              ) : null}
-                            </td>
-                          )}
+                              checked={isSelected}
+                              onChange={(e) => toggleSelectRow(r.id, e)}
+                              aria-label={`Select record for ${r.student_name || r.student_no}`}
+                            />
+                          </td>
 
                           {visibleColumns.includes("student_no") && (
                             <td
                               className={cn(
-                                "w-44 min-w-[160px] p-4 whitespace-nowrap align-middle sticky z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
-                                visibleColumns.includes("selection") ? "left-12" : "left-0",
+                                "p-4 w-[160px] min-w-[160px] whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
                                 isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                                 isScrolledX
                                   ? "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
@@ -1342,13 +1203,15 @@ export default function DigitalRecordsReviewTab({
                           )}
 
                           {visibleColumns.includes("doc_type") && (
-                            <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
-                              <span
-                                className={cn("inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200", BADGE_BASE)}
-                                title={r.doc_type}
-                              >
-                                {r.doc_type}
-                              </span>
+                            <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle text-center border-r border-border/70 dark:border-border/70">
+                              <div className="flex items-center justify-center">
+                                <span
+                                  className={cn("inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200", BADGE_BASE)}
+                                  title={r.doc_type}
+                                >
+                                  {r.doc_type}
+                                </span>
+                              </div>
                             </td>
                           )}
 
@@ -1388,86 +1251,21 @@ export default function DigitalRecordsReviewTab({
                             </td>
                           )}
 
-                          {visibleColumns.includes("actions") && (
-                            <td className="w-28 min-w-[110px] p-4 pr-6 text-right align-middle">
-                              <div
-                                className="flex items-center justify-end gap-1.5"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={() => handlePreview(r)}
-                                      aria-label={PDF_ACTION_LABELS.preview}
-                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                    >
-                                      <ViewIcon size="1em" className="text-[16px]" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    {PDF_ACTION_LABELS.preview}
-                                  </TooltipContent>
-                                </Tooltip>
-
-                                {r.approval_status === "Pending" ? (
-                                  <>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => handleApprove(r.id)}
-                                          aria-label="Approve Document"
-                                          className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
-                                        >
-                                          <Tick01Icon size="1em" className="text-[16px]" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top">Approve Document</TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => {
-                                            setSelectedIds((prev) => {
-                                              if (!prev.has(r.id)) return prev
-                                              const next = new Set(prev)
-                                              next.delete(r.id)
-                                              return next
-                                            })
-                                            onDecline(r.id)
-                                          }}
-                                          aria-label="Decline Document"
-                                          className="table-action-button rounded-lg text-red-600 hover:text-red-700 dark:text-red-400 active:scale-95 cursor-pointer"
-                                        >
-                                          <Cancel01Icon size="1em" className="text-[16px]" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top">Decline Document</TooltipContent>
-                                    </Tooltip>
-                                  </>
-                                ) : onSetStatus ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() =>
-                                          onSetStatus(
-                                            r.id,
-                                            "Pending",
-                                            "Moved back to review queue from table view"
-                                          )
-                                        }
-                                        aria-label="Move back to Pending Review"
-                                        className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
-                                      >
-                                        <RotateLeft01Icon size="1em" className="text-[15px]" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Move back to Pending Review</TooltipContent>
-                                  </Tooltip>
-                                ) : null}
-                              </div>
-                            </td>
-                          )}
+                          <td className="w-12 p-0 align-middle text-center whitespace-nowrap">
+                            <div
+                              className="flex items-center justify-center"
+                              onClick={(e) => e.stopPropagation()}
+                              onDoubleClick={(e) => e.stopPropagation()}
+                            >
+                              <DigitalRecordActionsMenu
+                                record={r}
+                                onPreview={handlePreview}
+                                onApprove={handleApprove}
+                                onDecline={onDecline}
+                                onSetStatus={onSetStatus}
+                              />
+                            </div>
+                          </td>
                         </tr>
                       )
                     })}
@@ -1480,13 +1278,22 @@ export default function DigitalRecordsReviewTab({
                 label="Digital record review pages"
                 page={currentPage}
                 pageSize={itemsPerPage}
-                totalCount={sortedRecords.length}
+                totalCount={totalCount}
                 displayedCount={paginatedRecords.length}
+                loading={isLoading || !serverStats}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setItemsPerPage}
               />
             </div>
           )}
+          {isLoading && !isManualLoading && records && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 dark:bg-card/70">
+              <span role="status" className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
+                Loading records…
+              </span>
+            </div>
+          )}
+          </div>
         </Card>
 
         {/* Floating Bulk Action Bar */}
@@ -1523,9 +1330,9 @@ export default function DigitalRecordsReviewTab({
                 selectedCount={selectedIds.size}
                 onCancel={() => setSelectedIds(new Set())}
                 actions={
-                  <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50 flex items-center">
-                    <Alert01Icon size={16} className="mr-1.5" />
-                    Contains reviewed records. Bulk actions disabled.
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "px-3 py-1.5 h-auto text-xs rounded-full gap-1.5 select-none")}>
+                    <Alert01Icon size={14} className="shrink-0" />
+                    <span>Contains reviewed records. Bulk actions disabled.</span>
                   </span>
                 }
               />

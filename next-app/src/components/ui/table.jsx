@@ -197,23 +197,23 @@ function getContentColumnWidths(columns, children, availableWidth, className = "
   return roundedWidths;
 }
 
-function cellStyle({ kind, align, width, maxWidth, style, header = false, colSpan, paddingX = 16, paddingLeft = paddingX, paddingRight = paddingX }) {
+function cellStyle({ kind, align, width, minWidth, maxWidth, style, header = false, colSpan, paddingX = 16, paddingLeft = paddingX, paddingRight = paddingX }) {
   const control = kind === "actions" || kind === "selection";
   const alignment = align || (["status", "year", "category", "actions", "selection"].includes(kind) ? "center" : kind === "number" ? "right" : "left");
   return {
     ...style, textAlign: alignment, verticalAlign: "middle", paddingLeft, paddingRight,
     ...(colSpan > 1 ? {} : { height: header ? 40 : "var(--table-row-height)", paddingTop: header ? 8 : "var(--table-cell-py)", paddingBottom: header ? 8 : "var(--table-cell-py)" }),
-    ...(width ? { width, minWidth: width } : {}), ...(maxWidth ? { maxWidth, overflow: "hidden" } : {}),
+    ...(width ? { width, minWidth: width } : minWidth ? { minWidth } : {}), ...(maxWidth ? { maxWidth, overflow: "hidden" } : {}),
     ...(control ? { width: 48, minWidth: 48, maxWidth: 48, paddingLeft: 2, paddingRight: 2 } : {}),
     ...(kind === "actions" ? { position: "sticky", right: 0 } : {}),
   };
 }
 
-function TableHead({ className, children, kind = "text", align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
-  return <th data-slot="table-head" data-kind={kind} scope="col" className={cn("px-4 text-xs font-semibold text-gray-600 dark:text-zinc-300", className)} style={cellStyle({ kind, align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, header: true, colSpan: props.colSpan })} {...props}>{kind === "actions" ? <span className="sr-only">Actions</span> : kind === "selection" ? selectionContent(children, "Select all records on this page") : children}</th>;
+function TableHead({ className, children, kind = "text", align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
+  return <th data-slot="table-head" data-kind={kind} scope="col" className={cn("px-4 text-xs font-semibold text-gray-600 dark:text-zinc-300", className)} style={cellStyle({ kind, align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, header: true, colSpan: props.colSpan })} {...props}>{kind === "actions" ? <span className="sr-only">Actions</span> : kind === "selection" ? selectionContent(children, "Select all records on this page") : children}</th>;
 }
 
-function TableCell({ className, children, kind = "text", align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
+function TableCell({ className, children, kind = "text", align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
   const spanning = Number(props.colSpan) > 1;
   const alignment = align || (["status", "year", "category", "actions", "selection"].includes(kind) ? "center" : kind === "number" ? "right" : "left");
   let content = children;
@@ -226,7 +226,7 @@ function TableCell({ className, children, kind = "text", align, width, maxWidth,
     content = <span className="block w-full min-w-0 truncate" title={String(children)}>{children}</span>;
   }
   if (!spanning && maxWidth && !["identifier", "status", "actions", "selection"].includes(kind)) content = <div className={cn("w-full min-w-0", alignment === "center" && "mx-auto", alignment === "right" && "ml-auto")} style={{ maxWidth }}>{content}</div>;
-  return <td data-slot="table-cell" data-kind={kind} className={cn("px-4 text-[13px] font-normal text-gray-900 dark:text-zinc-100", className)} style={cellStyle({ kind, align, width, maxWidth, paddingX, paddingLeft, paddingRight, style, colSpan: props.colSpan })} {...props}>{content}</td>;
+  return <td data-slot="table-cell" data-kind={kind} className={cn("px-4 text-[13px] font-normal text-gray-900 dark:text-zinc-100", className)} style={cellStyle({ kind, align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, colSpan: props.colSpan })} {...props}>{content}</td>;
 }
 function selectionContent(children, label) {
   return React.Children.map(children, (child) => {

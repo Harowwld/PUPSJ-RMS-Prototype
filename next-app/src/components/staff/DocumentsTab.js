@@ -2,6 +2,17 @@
 import { Table } from "@/components/ui/table";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import TablePagination from "@/components/shared/TablePagination";
+import { SegmentedControl } from "@/components/ui/tabs";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import DashboardSearch from "@/components/shared/DashboardSearch";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+  ActiveFilterChips as TableActiveFilterChips,
+} from "@/components/systemadmin/OfficeTableControls";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -127,10 +138,20 @@ export default function DocumentsTab({
   const [matrixSearch, setMatrixSearch] = useState("");
   const [matrixCourseFilters, setMatrixCourseFilters] = useState([]);
   const [matrixMissingDocFilters, setMatrixMissingDocFilters] = useState([]);
+  const [matrixFilterRules, setMatrixFilterRules] = useState([]);
+  const [matrixGroupBy, setMatrixGroupBy] = useState("none");
+  const [matrixStartDate, setMatrixStartDate] = useState("");
+  const [matrixEndDate, setMatrixEndDate] = useState("");
   const [matrixSortBy, setMatrixSortBy] = useState("student_no");
   const [matrixSortOrder, setMatrixSortOrder] = useState("ASC");
   const [matrixPage, setMatrixPage] = useUrlPage();
   const [matrixItemsPerPage, setMatrixItemsPerPage] = useState(10);
+  const [matrixVisibleColumns, setMatrixVisibleColumns] = useState([
+    "student_no",
+    "name",
+    "course",
+    "progress",
+  ]);
 
   // Horizontal scroll container ref & scroll helper
   const matrixTableContainerRef = useRef(null);
@@ -186,6 +207,20 @@ export default function DocumentsTab({
   const [docsLoading, setMatrixLoading] = useState(true);
   const [docsError, setMatrixError] = useState("");
   const [rosterOpen, setRosterOpen] = useState(false);
+  const activeCourseFilters = useMemo(() => {
+    const fromRules = matrixFilterRules
+      .filter((r) => r.fieldKey === "course" && r.operator !== "is_not")
+      .map((r) => r.value);
+    return Array.from(new Set([...matrixCourseFilters, ...fromRules]));
+  }, [matrixFilterRules, matrixCourseFilters]);
+
+  const activeMissingDocFilters = useMemo(() => {
+    const fromRules = matrixFilterRules
+      .filter((r) => r.fieldKey === "missingDoc" && r.operator !== "is_not")
+      .map((r) => r.value);
+    return Array.from(new Set([...matrixMissingDocFilters, ...fromRules]));
+  }, [matrixFilterRules, matrixMissingDocFilters]);
+
   const matrixController = useRef(null);
   const matrixQuery = useMemo(() => {
     const params = new URLSearchParams({
@@ -197,10 +232,23 @@ export default function DocumentsTab({
       limit: String(matrixItemsPerPage),
       offset: String((matrixPage - 1) * matrixItemsPerPage),
     });
-    matrixCourseFilters.forEach((course) => params.append("courseCode", course));
-    matrixMissingDocFilters.forEach((type) => params.append("missingDocType", type));
+    activeCourseFilters.forEach((course) => params.append("courseCode", course));
+    activeMissingDocFilters.forEach((type) => params.append("missingDocType", type));
+    if (matrixStartDate) params.append("startDate", matrixStartDate);
+    if (matrixEndDate) params.append("endDate", matrixEndDate);
     return params.toString();
-  }, [matrixStatusFilter, matrixSearch, matrixSortBy, matrixSortOrder, matrixItemsPerPage, matrixPage, matrixCourseFilters, matrixMissingDocFilters]);
+  }, [
+    matrixStatusFilter,
+    matrixSearch,
+    matrixSortBy,
+    matrixSortOrder,
+    matrixItemsPerPage,
+    matrixPage,
+    activeCourseFilters,
+    activeMissingDocFilters,
+    matrixStartDate,
+    matrixEndDate,
+  ]);
 
   const loadMatrix = useCallback(async () => {
     matrixController.current?.abort();
@@ -226,6 +274,67 @@ export default function DocumentsTab({
   }, [loadMatrix, staffDocs]);
 
   const complianceDocTypes = matrixReport?.meta.definitions.configuredDocTypes || [];
+
+  // Sync columns with configured document types
+  useEffect(() => {
+    if (complianceDocTypes.length > 0) {
+      setMatrixVisibleColumns((prev) => {
+        const docKeys = complianceDocTypes.map((dt) => `doc_${dt}`);
+        const existing = new Set(prev);
+        const missingDocKeys = docKeys.filter((k) => !existing.has(k));
+        if (missingDocKeys.length > 0) {
+          return [...prev, ...missingDocKeys];
+        }
+        return prev;
+      });
+    }
+  }, [complianceDocTypes]);
+
+  const matrixFilterFields = useMemo(() => [
+    {
+      key: "course",
+      label: "Degree Program",
+      type: "select",
+      options: (courses || []).map((c) => ({
+        value: c.code,
+        label: `${c.code} - ${c.name || c.code}`,
+      })),
+    },
+    {
+      key: "missingDoc",
+      label: "Outstanding Requirement",
+      type: "select",
+      options: (complianceDocTypes || []).map((dt) => ({
+        value: dt,
+        label: dt,
+      })),
+    },
+  ], [courses, complianceDocTypes]);
+
+  const matrixSortOptions = useMemo(() => [
+    { value: "student_no", label: "Student Number" },
+    { value: "name", label: "Student Name" },
+    { value: "course", label: "Degree Program" },
+    { value: "progress", label: "Compliance Progress" },
+  ], []);
+
+  const matrixGroupOptions = useMemo(() => [
+    { value: "none", label: "No grouping" },
+    { value: "course", label: "Degree Program" },
+    { value: "compliance", label: "Compliance Status" },
+  ], []);
+
+  const matrixTableColumns = useMemo(() => [
+    { key: "student_no", label: "Student No." },
+    { key: "name", label: "Full Name" },
+    { key: "course", label: "Program" },
+    { key: "progress", label: "Compliance Progress" },
+    ...(complianceDocTypes || []).map((dt) => ({
+      key: `doc_${dt}`,
+      label: dt,
+    })),
+  ], [complianceDocTypes]);
+
   const stats = matrixReport?.summary;
   const kpiStats = {
     totalStudents: stats?.totalStudents || 0,
@@ -245,6 +354,25 @@ export default function DocumentsTab({
   const totalMatrixPages = Math.max(1, Math.ceil(matrixTotal / matrixItemsPerPage));
   const currentMatrixPage = Math.min(Math.max(1, matrixPage), totalMatrixPages);
   const paginatedMatrixRecords = matrixReport?.records || [];
+
+  const groupedMatrixRecords = useMemo(() => {
+    if (matrixGroupBy === "none") return [{ key: "all", label: null, rows: paginatedMatrixRecords }];
+    const map = new Map();
+    for (const item of paginatedMatrixRecords) {
+      let key = "Other";
+      if (matrixGroupBy === "course") key = item.student?.courseCode || item.courseCode || "Other Program";
+      else if (matrixGroupBy === "compliance") key = item.isCompliant ? "Fully Compliant" : "Incomplete / Missing";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([label, rows]) => ({
+      key: label,
+      label,
+      rows,
+    }));
+  }, [paginatedMatrixRecords, matrixGroupBy]);
+
   useEffect(() => {
     if (matrixReport && matrixPage > totalMatrixPages) setMatrixPage(totalMatrixPages);
   }, [matrixReport, matrixPage, totalMatrixPages, setMatrixPage]);
@@ -276,7 +404,7 @@ export default function DocumentsTab({
     if (matrixTableContainerRef.current) {
       matrixTableContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
     }
-  }, [matrixPage, matrixStatusFilter, matrixSearch, matrixCourseFilters, matrixMissingDocFilters]);
+  }, [matrixPage, matrixStatusFilter, matrixSearch, matrixCourseFilters, matrixMissingDocFilters, matrixFilterRules, matrixGroupBy]);
 
   const matrixFilterGroups = useMemo(() => [
     {
@@ -318,6 +446,9 @@ export default function DocumentsTab({
     setMatrixSearch("");
     setMatrixCourseFilters([]);
     setMatrixMissingDocFilters([]);
+    setMatrixFilterRules([]);
+    setMatrixStartDate("");
+    setMatrixEndDate("");
     setMatrixPage(1);
   };
 
@@ -333,6 +464,14 @@ export default function DocumentsTab({
         },
       });
     }
+    matrixFilterRules.forEach((rule) => {
+      const field = matrixFilterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setMatrixFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
     matrixCourseFilters.forEach((c) => {
       chips.push({
         id: `course-${c}`,
@@ -353,8 +492,28 @@ export default function DocumentsTab({
         },
       });
     });
+    if (matrixStartDate || matrixEndDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${matrixStartDate || "Any"} to ${matrixEndDate || "Any"}`,
+        onRemove: () => {
+          setMatrixStartDate("");
+          setMatrixEndDate("");
+          setMatrixPage(1);
+        },
+      });
+    }
     return chips;
-  }, [matrixSearch, matrixCourseFilters, matrixMissingDocFilters, setMatrixPage]);
+  }, [
+    matrixSearch,
+    matrixFilterRules,
+    matrixFilterFields,
+    matrixCourseFilters,
+    matrixMissingDocFilters,
+    matrixStartDate,
+    matrixEndDate,
+    setMatrixPage,
+  ]);
 
 
 
@@ -377,32 +536,47 @@ export default function DocumentsTab({
           {/* 1. Page Header */}
           <PageHeader
             icon="Files01Icon"
-            title="Batch Compliance Matrix"
+            title={
+              <span className="flex items-center gap-2">
+                <span>Batch Compliance Matrix</span>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {matrixTotal > 0 ? `${matrixTotal.toLocaleString()} ${matrixTotal === 1 ? "student" : "students"}` : "No records"}
+                </span>
+              </span>
+            }
             description="Track required document compliance across students, sections, and degree programs."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" className="h-9 shrink-0 px-4" disabled={!matrixReport?.meta.configured || !kpiStats.incomplete || docsLoading} onClick={() => setRosterOpen(true)}>View Incomplete Students</Button>
-              <RefreshButton
-                onRefresh={async () => {
-                  setIsManualRefreshing(true);
-                  const startTime = Date.now();
-                  try {
-                    await loadMatrix();
-                    const elapsed = Date.now() - startTime;
-                    if (elapsed < 600) {
-                      await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  disabled={!matrixReport?.meta.configured || !kpiStats.incomplete || docsLoading}
+                  onClick={() => setRosterOpen(true)}
+                >
+                  View Incomplete Students
+                </Button>
+                <RefreshButton
+                  onRefresh={async () => {
+                    setIsManualRefreshing(true);
+                    const startTime = Date.now();
+                    try {
+                      await loadMatrix();
+                      const elapsed = Date.now() - startTime;
+                      if (elapsed < 600) {
+                        await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
+                      }
+                    } finally {
+                      setIsManualRefreshing(false);
                     }
-                  } finally {
-                    setIsManualRefreshing(false);
-                  }
-                }}
-                isLoading={docsLoading || isManualRefreshing}
-                title="Refresh Records"
-              />
+                  }}
+                  isLoading={docsLoading || isManualRefreshing}
+                  title="Refresh Records"
+                />
               </div>
             }
           />
@@ -414,7 +588,7 @@ export default function DocumentsTab({
             values={kpiOrder}
             onReorder={handleReorder}
             ref={statCardsRef}
-            className="border-t border-border dark:border-border grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-gray-50/50 dark:bg-zinc-900/30 relative z-20 items-start select-none"
+            className="border-t border-border dark:border-border grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-white dark:bg-card relative z-20 items-start select-none"
           >
             {kpiOrder.map((key) => {
               if (key === "compliant") {
@@ -745,135 +919,133 @@ export default function DocumentsTab({
             })}
           </Reorder.Group>
 
-              {/* 3. Navigation Toolbar for Matrix */}
-              <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-                {/* Left: Status Filter Segmented Tabs */}
-                <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMatrixStatusFilter("all");
+              {/* Connected Row: Status Filter Segmented Tabs */}
+              <div className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 bg-white dark:bg-card">
+                <SegmentedControl
+                  value={matrixStatusFilter}
+                  onValueChange={(val) => {
+                    setMatrixStatusFilter(val);
+                    setMatrixPage(1);
+                  }}
+                  variant="capsule"
+                  className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+                  items={[
+                    {
+                      value: "all",
+                      label: "All Students",
+                      badge: kpiStats.totalStudents,
+                    },
+                    {
+                      value: "incomplete",
+                      label: "Incomplete / Missing",
+                      badge: kpiStats.incomplete,
+                    },
+                    {
+                      value: "compliant",
+                      label: "Fully Compliant",
+                      badge: kpiStats.fullyCompliant,
+                    },
+                  ]}
+                />
+              </div>
+
+              {/* Canonical 2-Zone DataViewToolbar */}
+              <DataViewToolbar
+                label="Batch compliance matrix search and controls"
+                className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+              >
+                {/* Left Zone: DashboardSearch + TableScrollControls */}
+                <div className="flex min-w-0 items-center gap-2">
+                  <DashboardSearch
+                    value={matrixSearch}
+                    onChange={(val) => {
+                      setMatrixSearch(val);
                       setMatrixPage(1);
                     }}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                      matrixStatusFilter === "all"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                    )}
-                  >
-                    <span>All Students</span>
-                    <span
-                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "all"
-                          ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-                    >
-                      {kpiStats.totalStudents}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMatrixStatusFilter("incomplete");
-                      setMatrixPage(1);
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                      matrixStatusFilter === "incomplete"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                    )}
-                  >
-                    <span>Incomplete / Missing</span>
-                    <span
-                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "incomplete"
-                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-                    >
-                      {kpiStats.incomplete}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMatrixStatusFilter("compliant");
-                      setMatrixPage(1);
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                      matrixStatusFilter === "compliant"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                    )}
-                  >
-                    <span>Fully Compliant</span>
-                    <span
-                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "compliant"
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-                    >
-                      {kpiStats.fullyCompliant}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Right: Search & MultiCriteriaFilter */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-                  <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                    <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                      <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                    </div>
-                    <Input
-                      value={matrixSearch}
-                      onChange={(e) => {
-                        setMatrixSearch(e.target.value);
-                        setMatrixPage(1);
-                      }}
-                      placeholder="Search student no., name, or section..."
-                      className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                    count={matrixTotal}
+                    loading={docsLoading}
+                    placeholder="Search student no., name, or section..."
+                    label="Search compliance matrix"
+                  />
+                  {paginatedMatrixRecords.length > 0 && (
+                    <TableScrollControls
+                      scrollContainerRef={matrixTableContainerRef}
+                      isScrolledX={isScrolledX}
+                      onResetScroll={resetMatrixScroll}
+                      onScrollLeft={() => scrollMatrixTable("left")}
+                      onScrollRight={() => scrollMatrixTable("right")}
                     />
-                    <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                      {matrixTotal > 0
-                        ? matrixTotal.toLocaleString()
-                        : "0"}
-                    </div>
-                  </div>
+                  )}
+                </div>
 
-                  <MultiCriteriaFilter
-                    title="Filter Matrix"
-                    groups={matrixFilterGroups}
-                    selectedValues={matrixFilterValues}
-                    onChange={handleMatrixFilterChange}
-                    onClearAll={handleClearMatrixFilters}
-                    totalCount={kpiStats.totalStudents}
-                    filteredCount={matrixTotal}
+                {/* Right Zone: Filter -> Sort -> Group -> Columns -> DateRange */}
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  <FilterPopover
+                    fields={matrixFilterFields}
+                    filters={matrixFilterRules}
+                    onFiltersChange={(newRules) => {
+                      setMatrixFilterRules(newRules);
+                      setMatrixPage(1);
+                    }}
+                    entityLabel="records"
                   />
-                  <TableScrollControls
-                    scrollContainerRef={matrixTableContainerRef}
-                    isScrolledX={isScrolledX}
-                    onResetScroll={resetMatrixScroll}
-                    onScrollLeft={() => scrollMatrixTable("left")}
-                    onScrollRight={() => scrollMatrixTable("right")}
+                  <SortPopover
+                    options={matrixSortOptions}
+                    sortBy={matrixSortBy}
+                    onSortByChange={(val) => {
+                      setMatrixSortBy(val);
+                      setMatrixPage(1);
+                    }}
+                    sortOrder={matrixSortOrder}
+                    onSortOrderChange={(val) => {
+                      setMatrixSortOrder(val);
+                      setMatrixPage(1);
+                    }}
+                  />
+                  <GroupPopover
+                    options={matrixGroupOptions}
+                    groupBy={matrixGroupBy}
+                    onGroupByChange={(val) => {
+                      setMatrixGroupBy(val);
+                      setMatrixPage(1);
+                    }}
+                  />
+                  <ColumnsPopover
+                    columns={matrixTableColumns}
+                    visibleColumns={matrixVisibleColumns}
+                    onVisibleColumnsChange={setMatrixVisibleColumns}
+                    minVisible={2}
+                  />
+                  <DateRangeFilterButton
+                    startDate={matrixStartDate}
+                    endDate={matrixEndDate}
+                    onApply={({ startDate: s, endDate: e }) => {
+                      setMatrixStartDate(s);
+                      setMatrixEndDate(e);
+                      setMatrixPage(1);
+                    }}
+                    onClear={() => {
+                      setMatrixStartDate("");
+                      setMatrixEndDate("");
+                      setMatrixPage(1);
+                    }}
+                    disableFutureDates={true}
                   />
                 </div>
-              </div>
+              </DataViewToolbar>
 
-              {/* 4. Active Chips & Horizontal Scroll Controls for Matrix */}
-              <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-                <div className="flex-1 min-w-0">
-                  <ActiveFilterChips
-                    chips={matrixChips}
-                    onClearAll={handleClearMatrixFilters}
-                    className="p-0 border-0"
-                  />
-                </div>
-              </div>
+              {/* 4. Active Chips for Matrix */}
+              {matrixChips.length > 0 && (
+                <TableActiveFilterChips
+                  chips={matrixChips}
+                  onClearAll={handleClearMatrixFilters}
+                  className="border-t border-border dark:border-border px-6 py-2.5 bg-white dark:bg-card"
+                />
+              )}
 
               {/* 5. Matrix Table Content */}
-              <div className="flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border">
-                {docsLoading ? (
+              <div className="relative flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border" aria-busy={docsLoading}>
+                {docsLoading && !matrixReport ? (
                   <DocumentsMatrixSkeleton rowCount={7} embedded={true} docTypes={complianceDocTypes} />
                 ) : docsError ? (
                   <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
@@ -923,240 +1095,272 @@ export default function DocumentsTab({
                     className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
                   >
                     <Table layout="matrix" columns={[{ kind: "identifier", width: 180 }, { kind: "text", width: 240 }, { kind: "category", width: 160 }, { kind: "number", width: 210 }, ...complianceDocTypes.map(() => ({ kind: "category", width: 185 }))]}>
-                      <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                      <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                         <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           {/* Sticky Column: Student No */}
-                          <th className="p-4 pl-6 sticky left-0 z-30 bg-gray-50 dark:bg-zinc-900 w-[180px] min-w-[180px] max-w-[180px]">
-                            <button
-                              type="button"
-                              onClick={() => handleMatrixSort("student_no")}
-                              className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
-                            >
-                              <span>Student No.</span>
-                              <SortIndicator
-                                column="student_no"
-                                sortBy={matrixSortBy}
-                                sortOrder={matrixSortOrder}
-                              />
-                            </button>
-                          </th>
-
-                          {/* Sticky Column: Student Name */}
-                          <th className="p-4 sticky left-[180px] z-30 bg-gray-50 dark:bg-zinc-900 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[240px] min-w-[240px] max-w-[240px]">
-                            <div className="flex items-center justify-between gap-1">
+                          {matrixVisibleColumns.includes("student_no") && (
+                            <th className="py-2.5 px-4 pl-6 sticky left-0 z-30 bg-white dark:bg-card w-[180px] min-w-[180px] max-w-[180px]">
                               <button
                                 type="button"
-                                onClick={() => handleMatrixSort("name")}
+                                onClick={() => handleMatrixSort("student_no")}
                                 className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
                               >
-                                <span>Full Name</span>
+                                <span>Student No.</span>
                                 <SortIndicator
-                                  column="name"
+                                  column="student_no"
                                   sortBy={matrixSortBy}
                                   sortOrder={matrixSortOrder}
                                 />
                               </button>
-                              {isScrolledX && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={resetMatrixScroll}
-                                      className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                      aria-label="Reset scroll to start"
-                                    >
-                                      <ReloadIcon size="1em" className="text-xs" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                                </Tooltip>
-                              )}
-                            </div>
-                          </th>
+                            </th>
+                          )}
 
-                          {/* Program & Section */}
-                          <th className="p-4 w-[160px] min-w-[160px]">
-                            <button
-                              type="button"
-                              onClick={() => handleMatrixSort("course")}
-                              className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
-                            >
-                              <span>Program</span>
-                              <SortIndicator
-                                column="course"
-                                sortBy={matrixSortBy}
-                                sortOrder={matrixSortOrder}
-                              />
-                            </button>
-                          </th>
-
-                          {/* Progress */}
-                          <th className="p-4 w-[210px] min-w-[210px]">
-                            <button
-                              type="button"
-                              onClick={() => handleMatrixSort("progress")}
-                              className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
-                            >
-                              <span>Compliance Progress</span>
-                              <SortIndicator
-                                column="progress"
-                                sortBy={matrixSortBy}
-                                sortOrder={matrixSortOrder}
-                              />
-                            </button>
-                          </th>
-
-                          {/* Dynamic Requirement Columns */}
-                          {complianceDocTypes.map((docType) => (
-                            <th
-                              key={docType}
-                              className="p-4 text-center w-[185px] min-w-[185px] select-none"
-                              title={docType}
-                            >
-                              <div className="truncate max-w-[165px] mx-auto text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                {docType}
+                          {/* Sticky Column: Student Name */}
+                          {matrixVisibleColumns.includes("name") && (
+                            <th className="py-2.5 px-4 sticky left-[180px] z-30 bg-white dark:bg-card shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] w-[240px] min-w-[240px] max-w-[240px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMatrixSort("name")}
+                                  className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+                                >
+                                  <span>Full Name</span>
+                                  <SortIndicator
+                                    column="name"
+                                    sortBy={matrixSortBy}
+                                    sortOrder={matrixSortOrder}
+                                  />
+                                </button>
+                                {isScrolledX && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        type="button"
+                                        onClick={resetMatrixScroll}
+                                        className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                        aria-label="Reset scroll to start"
+                                      >
+                                        <ReloadIcon size="1em" className="text-xs" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                                  </Tooltip>
+                                )}
                               </div>
                             </th>
-                          ))}
+                          )}
+
+                          {/* Program & Section */}
+                          {matrixVisibleColumns.includes("course") && (
+                            <th className="py-2.5 px-4 w-[160px] min-w-[160px]">
+                              <button
+                                type="button"
+                                onClick={() => handleMatrixSort("course")}
+                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+                              >
+                                <span>Program</span>
+                                <SortIndicator
+                                  column="course"
+                                  sortBy={matrixSortBy}
+                                  sortOrder={matrixSortOrder}
+                                />
+                              </button>
+                            </th>
+                          )}
+
+                          {/* Progress */}
+                          {matrixVisibleColumns.includes("progress") && (
+                            <th className="py-2.5 px-4 w-[210px] min-w-[210px]">
+                              <button
+                                type="button"
+                                onClick={() => handleMatrixSort("progress")}
+                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+                              >
+                                <span>Compliance Progress</span>
+                                <SortIndicator
+                                  column="progress"
+                                  sortBy={matrixSortBy}
+                                  sortOrder={matrixSortOrder}
+                                />
+                              </button>
+                            </th>
+                          )}
+
+                          {/* Dynamic Requirement Columns */}
+                          {complianceDocTypes
+                            .filter((docType) => matrixVisibleColumns.includes(`doc_${docType}`))
+                            .map((docType) => (
+                              <th
+                                key={docType}
+                                className="py-2.5 px-4 text-center w-[185px] min-w-[185px] select-none"
+                                title={docType}
+                              >
+                                <div className="truncate max-w-[165px] mx-auto text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  {docType}
+                                </div>
+                              </th>
+                            ))}
                         </tr>
                       </thead>
 
                       <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                        {paginatedMatrixRecords.map((item) => (
-                          <tr
-                            key={item.student.studentNo}
-                            className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
-                          >
-                            {/* Sticky Student No */}
-                            <td className="p-4 pl-6 sticky left-0 z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 font-sans tabular-nums text-xs text-gray-900 dark:text-zinc-100 font-semibold w-[180px] min-w-[180px] max-w-[180px] whitespace-nowrap">
-                              {item.student.studentNo}
-                            </td>
-
-                            {/* Sticky Full Name */}
-                            <td
-                              className="p-4 sticky left-[180px] z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate w-[240px] min-w-[240px] max-w-[240px]"
-                              title={item.student.name}
-                            >
-                              {formatTitleCase(item.student.name)}
-                            </td>
-
-                            {/* Program & Section */}
-                            <td className="p-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px] border-r border-border/70 dark:border-border/70">
-                              <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                                {item.student.courseCode}
-                              </span>{" "}
-                              <span className="text-gray-500 dark:text-zinc-400">
-                                {item.student.section}
-                              </span>
-                            </td>
-
-                            {/* Progress */}
-                            <td className="p-4 whitespace-nowrap w-[210px] min-w-[210px] border-r border-border/70 dark:border-border/70">
-                              <div className="flex items-center gap-3">
-                                <div className="w-24 h-2.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden shrink-0 border border-black/5 dark:border-white/5">
-                                  <div
-                                    className={cn(
-                                      "h-full transition-all duration-300 rounded-full",
-                                      item.isCompliant
-                                        ? "bg-emerald-500"
-                                        : item.completionPercent >= 50
-                                        ? "bg-amber-500"
-                                        : "bg-red-500"
-                                    )}
-                                    style={{ width: `${item.completionPercent}%` }}
-                                  />
-                                </div>
-                                <span
-                                  className={cn(
-                                    "text-xs font-bold shrink-0 tabular-nums",
-                                    item.isCompliant
-                                      ? "text-emerald-600 dark:text-emerald-400"
-                                      : item.completionPercent >= 50
-                                      ? "text-amber-600 dark:text-amber-400"
-                                      : "text-red-600 dark:text-red-400"
-                                  )}
-                                >
-                                  {item.verifiedCount}/{item.totalCount} ({item.completionPercent}%)
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Dynamic Requirement Cells */}
-                            {item.requirements.map((req) => (
-                              <td
-                                key={req.docType}
-                                className="p-3.5 text-center align-middle w-[185px] min-w-[185px] border-r border-border/70 dark:border-border/70 last:border-r-0"
+                        {groupedMatrixRecords.map((group) => (
+                          <tbody key={group.key || "root"} className="divide-y divide-border dark:divide-border contents">
+                            {group.label && (
+                              <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
+                                <td colSpan={matrixVisibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                  <span className="font-bold">{group.label}</span>
+                                  <span className="ml-2 font-normal text-muted-foreground">({group.rows.length})</span>
+                                </td>
+                              </tr>
+                            )}
+                            {group.rows.map((item) => (
+                              <tr
+                                key={item.student.studentNo}
+                                className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                               >
-                                {req.status === "verified" ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleMatrixCellClick(item.student, req)}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/80 dark:hover:bg-emerald-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
-                                      >
-                                        <CheckmarkCircle01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
-                                        <span>Verified</span>
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="font-semibold">{req.docType} • Verified</p>
-                                      <p className="text-[11px] text-gray-300">
-                                        {req.doc?.original_filename}
-                                      </p>
-                                      <p className="text-[10px] text-gray-400 mt-0.5">
-                                        Click to preview document
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ) : req.status === "pending" ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleMatrixCellClick(item.student, req)}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/80 dark:hover:bg-amber-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
-                                      >
-                                        <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
-                                        <span>Pending</span>
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="font-semibold">{req.docType} • Pending Review</p>
-                                      <p className="text-[11px] text-gray-300">
-                                        {req.doc?.original_filename}
-                                      </p>
-                                      <p className="text-[10px] text-gray-400 mt-0.5">
-                                        Click to preview document
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ) : (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => onRescan?.(item.student.studentNo, req.docType, req.doc?.id, req.doc?.original_filename, req.doc?.mime_type)}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/80 dark:hover:bg-rose-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
-                                      >
-                                        <FingerPrintScanIcon size="1em" className="text-xs text-rose-600 dark:text-rose-400" />
-                                        <span>{req.status === "declined" ? "Needs correction" : "Missing"}</span>
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="font-semibold text-rose-300">
-                                        {req.status === "declined" ? "Correction Required" : "Missing Requirement"}
-                                      </p>
-                                      <p className="text-[11px] text-gray-200">{req.docType}</p>
-                                      <p className="text-[10px] text-gray-400 mt-0.5">
-                                        Click to scan or upload
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                {/* Sticky Student No */}
+                                {matrixVisibleColumns.includes("student_no") && (
+                                  <td className="py-2.5 px-4 pl-6 sticky left-0 z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 font-sans tabular-nums text-xs text-gray-900 dark:text-zinc-100 font-semibold w-[180px] min-w-[180px] max-w-[180px] whitespace-nowrap">
+                                    {item.student.studentNo}
+                                  </td>
                                 )}
-                              </td>
+
+                                {/* Sticky Full Name */}
+                                {matrixVisibleColumns.includes("name") && (
+                                  <td
+                                    className="py-2.5 px-4 sticky left-[180px] z-20 bg-white dark:bg-card group-hover:bg-gray-50 dark:group-hover:bg-zinc-800/90 border-r border-border/70 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate w-[240px] min-w-[240px] max-w-[240px]"
+                                    title={item.student.name}
+                                  >
+                                    {formatTitleCase(item.student.name)}
+                                  </td>
+                                )}
+
+                                {/* Program & Section */}
+                                {matrixVisibleColumns.includes("course") && (
+                                  <td className="py-2.5 px-4 text-xs text-gray-600 dark:text-zinc-400 whitespace-nowrap w-[160px] min-w-[160px] border-r border-border/70 dark:border-border/70">
+                                    <span className="font-semibold text-gray-900 dark:text-zinc-100">
+                                      {item.student.courseCode}
+                                    </span>{" "}
+                                    <span className="text-gray-500 dark:text-zinc-400">
+                                      {item.student.section}
+                                    </span>
+                                  </td>
+                                )}
+
+                                {/* Progress */}
+                                {matrixVisibleColumns.includes("progress") && (
+                                  <td className="py-2.5 px-4 whitespace-nowrap w-[210px] min-w-[210px] border-r border-border/70 dark:border-border/70">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-24 h-2.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden shrink-0 border border-black/5 dark:border-white/5">
+                                        <div
+                                          className={cn(
+                                            "h-full transition-all duration-300 rounded-full",
+                                            item.isCompliant
+                                              ? "bg-emerald-500"
+                                              : item.completionPercent >= 50
+                                              ? "bg-amber-500"
+                                              : "bg-red-500"
+                                          )}
+                                          style={{ width: `${item.completionPercent}%` }}
+                                        />
+                                      </div>
+                                      <span
+                                        className={cn(
+                                          "text-xs font-bold shrink-0 tabular-nums",
+                                          item.isCompliant
+                                            ? "text-emerald-600 dark:text-emerald-400"
+                                            : item.completionPercent >= 50
+                                            ? "text-amber-600 dark:text-amber-400"
+                                            : "text-red-600 dark:text-red-400"
+                                        )}
+                                      >
+                                        {item.verifiedCount}/{item.totalCount} ({item.completionPercent}%)
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+
+                                {/* Dynamic Requirement Cells */}
+                                {item.requirements
+                                  .filter((req) => matrixVisibleColumns.includes(`doc_${req.docType}`))
+                                  .map((req) => (
+                                    <td
+                                      key={req.docType}
+                                      className="py-2 px-3 text-center align-middle w-[185px] min-w-[185px] border-r border-border/70 dark:border-border/70 last:border-r-0"
+                                    >
+                                      {req.status === "verified" ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleMatrixCellClick(item.student, req)}
+                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/80 dark:hover:bg-emerald-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                            >
+                                              <CheckmarkCircle01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
+                                              <span>Verified</span>
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="font-semibold">{req.docType} • Verified</p>
+                                            <p className="text-[11px] text-gray-300">
+                                              {req.doc?.original_filename}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                              Click to preview document
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : req.status === "pending" ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleMatrixCellClick(item.student, req)}
+                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/80 dark:hover:bg-amber-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                            >
+                                              <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
+                                              <span>Pending</span>
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="font-semibold">{req.docType} • Pending Review</p>
+                                            <p className="text-[11px] text-gray-300">
+                                              {req.doc?.original_filename}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                              Click to preview document
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              type="button"
+                                              onClick={() => onRescan?.(item.student.studentNo, req.docType, req.doc?.id, req.doc?.original_filename, req.doc?.mime_type)}
+                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/80 dark:hover:bg-rose-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                            >
+                                              <FingerPrintScanIcon size="1em" className="text-xs text-rose-600 dark:text-rose-400" />
+                                              <span>{req.status === "declined" ? "Needs correction" : "Missing"}</span>
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="font-semibold text-rose-300">
+                                              {req.status === "declined" ? "Correction Required" : "Missing Requirement"}
+                                            </p>
+                                            <p className="text-[11px] text-gray-200">{req.docType}</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                              Click to scan or upload
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </td>
+                                  ))}
+                              </tr>
                             ))}
-                          </tr>
+                          </tbody>
                         ))}
                       </tbody>
                     </Table>
@@ -1164,8 +1368,13 @@ export default function DocumentsTab({
                 )}
 
                 {/* Matrix Pagination */}
-                {!docsLoading && matrixTotal > 0 && paginatedMatrixRecords.length > 0 && (
+                {matrixTotal > 0 && paginatedMatrixRecords.length > 0 && (
                   <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
+                )}
+                {docsLoading && matrixReport && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
+                    Loading documents…
+                  </div>
                 )}
               </div>
         </Card>
@@ -1181,14 +1390,14 @@ export default function DocumentsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-2xl dark:border-border gap-0 bg-white dark:bg-card">
-            <DialogHeader className="shrink-0 p-6 pb-0 text-left">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-border p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] sm:rounded-[22px] rounded-[22px] dark:border-border gap-0 bg-white dark:bg-card">
+            <DialogHeader className="shrink-0 p-6 pb-4 border-b border-border text-left">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-10">
-                  <DialogTitle>
+                  <DialogTitle className="text-lg font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100">
                     Document View: {selectedDoc?.doc_type || "Loading..."}
                   </DialogTitle>
-                  <DialogDescription className="mt-1">
+                  <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                     Viewing details for student {selectedDoc?.student_no}.
                   </DialogDescription>
                 </div>
@@ -1360,7 +1569,7 @@ export default function DocumentsTab({
               </div>
             </div>
 
-            <div className="flex shrink-0 justify-between items-center gap-3 p-4">
+            <div className="flex shrink-0 justify-between items-center gap-3 p-4 border-t border-border bg-white dark:bg-card">
               <div className="flex items-center gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>

@@ -118,10 +118,10 @@ test("DigitalRecordsList component design and features", () => {
     "Must support grouping by status, docType, and none"
   );
 
-  // Visual thumbnail preview
+  // Visual thumbnail indicator and preview action
   assert.ok(
-    listCode.includes("group/thumb") && listCode.includes("Preview"),
-    "Must render interactive visual document thumbnail card with preview action"
+    listCode.includes("Pdf01Icon") && listCode.includes("Preview Document"),
+    "Must render visual document thumbnail card and dedicated preview action"
   );
 
   // Metadata and actions

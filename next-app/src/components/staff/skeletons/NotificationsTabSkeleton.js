@@ -18,9 +18,9 @@ export default function NotificationsTabSkeleton() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-xl" />
-            <Skeleton className="h-10 w-36 rounded-xl" />
-            <Skeleton className="h-10 w-36 rounded-xl" />
+            <Skeleton className="h-9 w-9 rounded-xl" />
+            <Skeleton className="h-9 w-36 rounded-xl" />
+            <Skeleton className="h-9 w-36 rounded-xl" />
           </div>
         </div>
 
@@ -37,8 +37,8 @@ export default function NotificationsTabSkeleton() {
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <Skeleton className="h-10 w-60 rounded-xl" />
-            <Skeleton className="h-10 w-28 rounded-xl" />
+            <Skeleton className="h-9 w-60 rounded-xl" />
+            <Skeleton className="h-9 w-28 rounded-xl" />
           </div>
         </div>
 

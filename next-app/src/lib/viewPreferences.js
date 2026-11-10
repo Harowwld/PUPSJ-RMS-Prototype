@@ -2,7 +2,7 @@ const columns = {
   offices: ["department", "office", "station", "staff", "modules", "status", "created_at", "updated_at"],
   staff: ["name", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
   operations: ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"],
-  logs: ["severity", "actor", "office_id", "details", "ip"],
+  logs: ["created_at", "severity", "actor", "action", "office_id", "details", "ip"],
   backups: ["size", "created", "actor", "type", "status", "external", "offsite"],
 };
 const enums = {
@@ -37,6 +37,7 @@ const ruleFields = {
   "cms-faq": ["category"],
   logs: ["office", "role", "severity"],
   activity: ["severity"],
+  compliance: ["courseCode", "percent", "total", "digitized"],
 };
 const strings = (value) => Array.isArray(value) && value.length <= 100 && value.every((item) => typeof item === "string" && item.length <= 5000);
 

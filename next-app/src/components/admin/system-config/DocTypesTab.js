@@ -1,6 +1,8 @@
 "use client"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
+import { SegmentedControl } from "@/components/ui/tabs";
+import TaxonomyActionsMenu from "./TaxonomyActionsMenu";
 
 
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
@@ -251,7 +253,7 @@ export default function DocTypesTab({
         ? "These document types will be visible for new records again."
         : "These document types will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore Types" : "Archive Types",
-      variant: showArchived ? "success" : "warning",
+      variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? " Archive02Icon" : " Archive01Icon",
       icon: showArchived ? " Archive02Icon" : " Archive01Icon",
       selectedItems: selectedNames,
@@ -287,107 +289,37 @@ export default function DocTypesTab({
           }
         />
 
+        {/* Connected Segmented Tabs Row: Active vs Archived */}
+        <div
+          role="group"
+          aria-label="Document types status filters"
+          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none"
+        >
+          <SegmentedControl
+            value={showArchived ? "archived" : "active"}
+            onValueChange={(val) => {
+              setShowArchived(val === "archived")
+              setPageDoc(1)
+            }}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              {
+                value: "active",
+                label: "Active",
+                badge: docTypes.filter((dt) => dt.status !== "Archived").length,
+              },
+              {
+                value: "archived",
+                label: "Archived",
+                badge: docTypes.filter((dt) => dt.status === "Archived").length,
+              },
+            ]}
+          />
+        </div>
+
         {/* Navigation Toolbar */}
         <DataViewToolbar label="Document type search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-          {/* Active / Archived Tabs & Purpose Segmented Filter */}
-          <div className="flex flex-wrap items-center gap-4 shrink-0 select-none">
-            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowArchived(false)
-                  setPageDoc(1)
-                }}
-                className={cn(
-                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  !showArchived
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                <span>Active</span>
-                <span
-                  className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
-                      ? BADGE_PALETTES.emerald
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-                >
-                  {docTypes.filter((dt) => dt.status !== "Archived").length}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowArchived(true)
-                  setPageDoc(1)
-                }}
-                className={cn(
-                  "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  showArchived
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                <span>Archived</span>
-                <span
-                  className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
-                      ? BADGE_PALETTES.amber
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
-                >
-                  {docTypes.filter((dt) => dt.status === "Archived").length}
-                </span>
-              </button>
-            </div>
-
-            {/* Segmented Control for Purpose */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
-              <button
-                type="button"
-                onClick={() => {
-                  setDocPurposeFilter?.("all")
-                  setPageDoc(1)
-                }}
-                className={cn(
-                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  docPurposeFilter === "all"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDocPurposeFilter?.("requestable")
-                  setPageDoc(1)
-                }}
-                className={cn(
-                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  docPurposeFilter === "requestable"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                Requestable ({docTypes.filter((dt) => dt.is_requestable && !dt.is_compliance && (showArchived ? dt.status === "Archived" : dt.status !== "Archived")).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDocPurposeFilter?.("compliance")
-                  setPageDoc(1)
-                }}
-                className={cn(
-                  "px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  docPurposeFilter === "compliance"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                Compliance ({docTypes.filter((dt) => dt.is_compliance && (showArchived ? dt.status === "Archived" : dt.status !== "Archived")).length})
-              </button>
-            </div>
-          </div>
-
           {/* Search Input, Matches Count, Export, Add */}
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
             <div className="flex-1 max-w-md relative group">
@@ -486,7 +418,7 @@ export default function DocTypesTab({
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
             >
-              <Table columns={["selection", "text", { kind: "text", maxWidth: 340 }, "status", "actions"]} className="min-w-[950px]">
+              <Table columns={["selection", { kind: "text", minWidth: 280, maxWidth: 1000, growthWeight: 4 }, { kind: "text", minWidth: 180, maxWidth: 260, growthWeight: 1 }, { kind: "status", minWidth: 130, maxWidth: 180, growthWeight: 1 }, "actions"]} className="min-w-[950px]">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
@@ -502,7 +434,7 @@ export default function DocTypesTab({
                         />
                       </th>
                       <th className={cn(
-                        "w-[44%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                        "w-[52%] p-4 sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}>
                         <div className="flex items-center justify-between">
@@ -531,8 +463,8 @@ export default function DocTypesTab({
                           )}
                         </div>
                       </th>
-                      <th className="w-[28%] p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">Purpose / Scope</th>
-                      <th className="w-[14%] p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">Status</th>
+                      <th className="w-[22%] p-4 px-6 text-xs font-semibold text-gray-500 dark:text-zinc-400">Purpose / Scope</th>
+                      <th className="w-[14%] p-4 px-6 text-xs font-semibold text-gray-500 dark:text-zinc-400">Status</th>
                       <th className="w-28 p-4 pr-6 text-right text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
                     </tr>
                   </thead>
@@ -593,7 +525,7 @@ export default function DocTypesTab({
                               {dt.name}
                             </span>
                           </td>
-                          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 px-6 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {dt.is_requestable && (
                                 <span className={cn(BADGE_PALETTES.blue, "gap-1", BADGE_BASE)}>
@@ -614,7 +546,7 @@ export default function DocTypesTab({
                               )}
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="p-4 px-6 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {dt.status === "Archived" ? (
                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400", BADGE_BASE)}>
                                 Archived
@@ -627,88 +559,53 @@ export default function DocTypesTab({
                           </td>
                           <td className="p-4 pr-6 text-right align-middle whitespace-nowrap">
                             <div 
-                              className="inline-flex items-center justify-end gap-1.5"
+                              className="inline-flex items-center justify-end"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {!showArchived && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      disabled={dt.status === "Archived"}
-                                      onClick={() => {
-                                        setEditDocType({
-                                          id: dt.id,
-                                          name: dt.name,
-                                          isRequestable: Boolean(dt.is_requestable),
-                                          isCompliance: Boolean(dt.is_compliance),
-                                        })
-                                        setIsEditDocTypeOpen(true)
-                                      }}
-                                      aria-label="Edit Document Type"
-                                      className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                    >
-                                      <PencilEdit01Icon size="1em"  className="text-[16px]"></PencilEdit01Icon>
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">Edit</TooltipContent>
-                                </Tooltip>
-                              )}
-
-                            {dt.status === "Archived" ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => {
-                                      setConfirmPayload({
-                                        title: "Restore Document Type",
-                                        message:
-                                          "This document type will be visible for new records again.",
-                                        confirmLabel: "Restore Document Type",
-                                        variant: "success",
-                                        buttonIcon:
-                                          " Archive02Icon",
-                                        icon: " Archive02Icon",
-                                        selectedItems: [dt.name],
-                                        onConfirm: () => resDocType(dt.id, dt.name),
-                                      })
-                                      setConfirmOpen(true)
-                                    }}
-                                    aria-label="Restore Document Type"
-                                    className="table-action-button rounded-lg text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <Archive02Icon size="1em"  className="text-[16px]"></Archive02Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Restore</TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => {
-                                      setConfirmPayload({
-                                        title: "Archive Document Type",
-                                        message:
-                                          "This document type will be hidden from new registrations but its history will be preserved.",
-                                        confirmLabel: "Archive Document Type",
-                                        variant: "warning",
-                                        buttonIcon: " Archive01Icon",
-                                        icon: " Archive01Icon",
-                                        selectedItems: [dt.name],
-                                        onConfirm: () => delDocType(dt.id, dt.name),
-                                      })
-                                      setConfirmOpen(true)
-                                    }}
-                                    aria-label="Archive Document Type"
-                                    className="table-action-button rounded-lg text-amber-600 hover:text-amber-700 dark:text-amber-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <Archive01Icon size="1em"  className="text-[16px]"></Archive01Icon>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Archive</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
+                              <TaxonomyActionsMenu
+                                item={dt}
+                                name={dt.name}
+                                entityName="Document Type"
+                                isArchived={dt.status === "Archived"}
+                                onEdit={(item) => {
+                                  setEditDocType({
+                                    id: item.id,
+                                    name: item.name,
+                                    isRequestable: Boolean(item.is_requestable),
+                                    isCompliance: Boolean(item.is_compliance),
+                                  })
+                                  setIsEditDocTypeOpen(true)
+                                }}
+                                onArchive={(item) => {
+                                  setConfirmPayload({
+                                    title: "Archive Document Type",
+                                    message:
+                                      "This document type will be hidden from new registrations but its history will be preserved.",
+                                    confirmLabel: "Archive Document Type",
+                                    variant: "danger",
+                                    buttonIcon: " Archive01Icon",
+                                    icon: " Archive01Icon",
+                                    selectedItems: [item.name],
+                                    onConfirm: () => delDocType(item.id, item.name),
+                                  })
+                                  setConfirmOpen(true)
+                                }}
+                                onRestore={(item) => {
+                                  setConfirmPayload({
+                                    title: "Restore Document Type",
+                                    message:
+                                      "This document type will be visible for new records again.",
+                                    confirmLabel: "Restore Document Type",
+                                    variant: "success",
+                                    buttonIcon: " Archive02Icon",
+                                    icon: " Archive02Icon",
+                                    selectedItems: [item.name],
+                                    onConfirm: () => resDocType(item.id, item.name),
+                                  })
+                                  setConfirmOpen(true)
+                                }}
+                              />
+                            </div>
                           </td>
                         </tr>
                       )})}

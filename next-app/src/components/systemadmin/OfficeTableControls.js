@@ -170,9 +170,9 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
   )
 }
 
-export function SortPopover({ options, sortBy, onSortByChange, sortOrder, onSortOrderChange }) {
+export function SortPopover({ options = [], sortBy, onSortByChange, sortOrder, onSortOrderChange }) {
   const [open, setOpen] = useState(false)
-  const selectedOption = options.find((option) => option.key === sortBy) || options[0]
+  const selectedOption = (options || []).find((option) => (option.key ?? option.value) === sortBy) || options[0]
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -181,9 +181,11 @@ export function SortPopover({ options, sortBy, onSortByChange, sortOrder, onSort
       <PopoverContent align="start" className="max-h-[calc(100dvh-2rem)] w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl">
         <PopoverHeader className="px-4.5 py-2.5"><PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">Sort by</PopoverTitle></PopoverHeader>
         <div className="max-h-[min(55vh,18rem)] space-y-0.5 overflow-y-auto p-1">
-          {options.map(({ key, label }) => {
-            const isSelected = key === sortBy
-            return <button key={key} type="button" onClick={() => { onSortByChange(key); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
+          {(options || []).map((option) => {
+            const optionKey = option.key ?? option.value
+            const label = option.label
+            const isSelected = optionKey === sortBy
+            return <button key={optionKey} type="button" onClick={() => { onSortByChange(optionKey); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
               <span className="min-w-0 flex-1 truncate">{label}</span>
               {isSelected && <Tick01Icon size={14} aria-hidden="true" className="ml-2 shrink-0 text-gray-600 dark:text-zinc-300" />}
             </button>
@@ -205,9 +207,9 @@ export function SortPopover({ options, sortBy, onSortByChange, sortOrder, onSort
   )
 }
 
-export function GroupPopover({ options, groupBy, onGroupByChange }) {
+export function GroupPopover({ options = [], groupBy, onGroupByChange }) {
   const [open, setOpen] = useState(false)
-  const selectedOption = options.find((option) => option.key === groupBy) || options[0]
+  const selectedOption = (options || []).find((option) => (option.key ?? option.value) === groupBy) || options[0]
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -216,10 +218,13 @@ export function GroupPopover({ options, groupBy, onGroupByChange }) {
       <PopoverContent align="start" className="max-h-[calc(100dvh-2rem)] w-[min(14rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl">
         <PopoverHeader className="px-4.5 py-2.5"><PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">Group by</PopoverTitle></PopoverHeader>
         <div className="space-y-0.5 p-1">
-          {options.map(({ key, label, icon: Icon }) => {
-            const isSelected = key === groupBy
-            const OptionIcon = key === "none" ? MinusSignIcon : Icon || Layers01Icon
-            return <button key={key} type="button" onClick={() => { onGroupByChange(key); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
+          {(options || []).map((option) => {
+            const optionKey = option.key ?? option.value
+            const label = option.label
+            const Icon = option.icon
+            const isSelected = optionKey === groupBy
+            const OptionIcon = optionKey === "none" ? MinusSignIcon : Icon || Layers01Icon
+            return <button key={optionKey} type="button" onClick={() => { onGroupByChange(optionKey); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
               {OptionIcon && <OptionIcon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />}
               <span className="min-w-0 flex-1 truncate">{label}</span>
               {isSelected && <Tick01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-600 dark:text-zinc-300" />}
@@ -311,3 +316,6 @@ export default function OfficeTableControls({
     </DataViewToolbar>
   )
 }
+
+export { default as ActiveFilterChips } from "@/components/shared/ActiveFilterChips"
+

@@ -62,6 +62,15 @@ import StudentOverviewTab from "@/components/student/StudentOverviewTab";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import DashboardSearch from "@/components/shared/DashboardSearch";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+  ActiveFilterChips as TableActiveFilterChips,
+} from "@/components/systemadmin/OfficeTableControls";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { ContentSwap } from "@/components/ui/motion";
@@ -206,6 +215,7 @@ function StudentDashboard() {
     return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
   }, []);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -237,12 +247,32 @@ function StudentDashboard() {
     status: [],
     doc_type: [],
   });
+  const [requestFilterRules, setRequestFilterRules] = useState([]);
+  const [requestGroupBy, setRequestGroupBy] = useState("none");
+  const [requestVisibleColumns, setRequestVisibleColumns] = useState([
+    "id",
+    "doc_type",
+    "notes",
+    "status",
+    "created_at",
+    "actions",
+  ]);
+  const [requestStartDate, setRequestStartDate] = useState("");
+  const [requestEndDate, setRequestEndDate] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
   const [currentPage, setCurrentPage] = useUrlPage({ enabled: view === "odrs" });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState(null);
+
+  // Proposals Table & Filter state
+  const [proposalFilterRules, setProposalFilterRules] = useState([]);
+  const [proposalSortBy, setProposalSortBy] = useState("created_at");
+  const [proposalSortOrder, setProposalSortOrder] = useState("DESC");
+  const [proposalGroupBy, setProposalGroupBy] = useState("none");
+  const [proposalStartDate, setProposalStartDate] = useState("");
+  const [proposalEndDate, setProposalEndDate] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [isDuplicateAlertDismissed, setIsDuplicateAlertDismissed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -344,10 +374,94 @@ function StudentDashboard() {
 
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(me);
 
+  const requestFilterFields = useMemo(() => [
+    {
+      key: "status",
+      label: "Request Status",
+      type: "select",
+      options: [
+        { value: "Pending", label: "Pending" },
+        { value: "Deficient", label: "Action Required" },
+        { value: "PendingPayment", label: "Pending Payment" },
+        { value: "InProgress", label: "In Progress" },
+        { value: "Ready", label: "Ready for Pickup" },
+        { value: "Completed", label: "Completed" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "doc_type",
+      label: "Document Type",
+      type: "text",
+    },
+  ], []);
+
+  const requestSortOptions = useMemo(() => [
+    { value: "created_at", label: "Date Requested" },
+    { value: "id", label: "Ticket #" },
+    { value: "doc_type", label: "Document Type" },
+    { value: "status", label: "Status" },
+  ], []);
+
+  const requestGroupOptions = useMemo(() => [
+    { value: "none", label: "No grouping" },
+    { value: "status", label: "Status" },
+    { value: "doc_type", label: "Document Type" },
+  ], []);
+
+  const requestTableColumns = useMemo(() => [
+    { key: "id", label: "Ticket #" },
+    { key: "doc_type", label: "Document" },
+    { key: "notes", label: "Purpose & Notes" },
+    { key: "status", label: "Status" },
+    { key: "created_at", label: "Date Requested" },
+    { key: "actions", label: "Actions" },
+  ], []);
+
+  const proposalFilterFields = useMemo(() => [
+    {
+      key: "status",
+      label: "Review Status",
+      type: "select",
+      options: [
+        { value: "Submitted", label: "Submitted" },
+        { value: "Under Review", label: "Under Review" },
+        { value: "Needs Revision", label: "Needs Revision" },
+        { value: "Approved", label: "Approved" },
+        { value: "Declined", label: "Declined" },
+      ],
+    },
+    {
+      key: "organization",
+      label: "Organization",
+      type: "select",
+      options: myOrganizations.map((org) => ({
+        value: org.name,
+        label: org.name,
+      })),
+    },
+  ], [myOrganizations]);
+
+  const proposalSortOptions = useMemo(() => [
+    { value: "created_at", label: "Date Submitted" },
+    { value: "title", label: "Proposal Title" },
+    { value: "event_date", label: "Target Event Date" },
+    { value: "status", label: "Status" },
+  ], []);
+
+  const proposalGroupOptions = useMemo(() => [
+    { value: "none", label: "No grouping" },
+    { value: "status", label: "Status" },
+    { value: "organization", label: "Organization" },
+  ], []);
+
   const hasActiveFilters =
     requestSearch !== "" ||
     (requestFilters.status?.length > 0) ||
-    (requestFilters.doc_type?.length > 0);
+    (requestFilters.doc_type?.length > 0) ||
+    requestFilterRules.length > 0 ||
+    Boolean(requestStartDate) ||
+    Boolean(requestEndDate);
 
   const requestFilterGroups = useMemo(() => {
     const reqs = data.requests || [];
@@ -503,15 +617,64 @@ function StudentDashboard() {
         (item.client_type || "").toLowerCase().includes(q) ||
         (item.student_no || "").toLowerCase().includes(q);
 
+      if (!matchesSearch) return false;
+
       const matchesStatus =
         selectedStatuses.length === 0 || selectedStatuses.includes(item.status);
+      if (!matchesStatus) return false;
 
       const matchesDocType =
         selectedDocTypes.length === 0 || selectedDocTypes.includes(item.doc_type);
+      if (!matchesDocType) return false;
 
-      return matchesSearch && matchesStatus && matchesDocType;
+      for (const rule of requestFilterRules) {
+        if (rule.fieldKey === "status") {
+          const match = String(item.status || "").toLowerCase() === String(rule.value || "").toLowerCase();
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "doc_type") {
+          const match = String(item.doc_type || "").toLowerCase().includes(String(rule.value || "").toLowerCase());
+          if (rule.operator === "is_not" ? match : !match) return false;
+        }
+      }
+
+      if (requestStartDate) {
+        const s = new Date(requestStartDate).getTime();
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
+      }
+      if (requestEndDate) {
+        const e = new Date(requestEndDate);
+        e.setHours(23, 59, 59, 999);
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
+      }
+
+      return true;
     });
-  }, [data.requests, requestSearch, requestFilters]);
+  }, [data.requests, requestSearch, requestFilters, requestFilterRules, requestStartDate, requestEndDate]);
+
+  const requestActiveChips = useMemo(() => {
+    const chips = [];
+    requestFilterRules.forEach((rule) => {
+      const field = requestFilterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setRequestFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
+    if (requestStartDate || requestEndDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${requestStartDate || "Any"} to ${requestEndDate || "Any"}`,
+        onRemove: () => {
+          setRequestStartDate("");
+          setRequestEndDate("");
+        },
+      });
+    }
+    return chips;
+  }, [requestFilterRules, requestFilterFields, requestStartDate, requestEndDate]);
 
   const filteredProposals = useMemo(() => {
     const q = (proposalSearch || "").trim().toLowerCase();
@@ -525,6 +688,8 @@ function StudentDashboard() {
         (item.organization_name || "").toLowerCase().includes(q) ||
         (item.status || "").toLowerCase().includes(q);
 
+      if (!matchesSearch) return false;
+
       const itemStatusNorm = normalizeProposalStatus(item.status);
       const matchesStatus =
         selectedStatuses.length === 0 ||
@@ -533,13 +698,98 @@ function StudentDashboard() {
             normalizeProposalStatus(st) === itemStatusNorm ||
             String(st).toLowerCase() === String(item.status || "").toLowerCase()
         );
+      if (!matchesStatus) return false;
 
       const matchesOrg =
         selectedOrgs.length === 0 || selectedOrgs.includes(item.organization_name || "General");
+      if (!matchesOrg) return false;
 
-      return matchesSearch && matchesStatus && matchesOrg;
+      for (const rule of proposalFilterRules) {
+        if (rule.fieldKey === "status") {
+          const match = normalizeProposalStatus(item.status) === normalizeProposalStatus(rule.value);
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "organization") {
+          const match = (item.organization_name || "General").toLowerCase() === String(rule.value || "").toLowerCase();
+          if (rule.operator === "is_not" ? match : !match) return false;
+        }
+      }
+
+      if (proposalStartDate) {
+        const s = new Date(proposalStartDate).getTime();
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
+      }
+      if (proposalEndDate) {
+        const e = new Date(proposalEndDate);
+        e.setHours(23, 59, 59, 999);
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
+      }
+
+      return true;
     });
-  }, [data.proposals, proposalSearch, proposalFilters]);
+  }, [data.proposals, proposalSearch, proposalFilters, proposalFilterRules, proposalStartDate, proposalEndDate]);
+
+  const proposalActiveChips = useMemo(() => {
+    const chips = [];
+    proposalFilterRules.forEach((rule) => {
+      const field = proposalFilterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setProposalFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
+    if (proposalStartDate || proposalEndDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${proposalStartDate || "Any"} to ${proposalEndDate || "Any"}`,
+        onRemove: () => {
+          setProposalStartDate("");
+          setProposalEndDate("");
+        },
+      });
+    }
+    return chips;
+  }, [proposalFilterRules, proposalFilterFields, proposalStartDate, proposalEndDate]);
+
+  const sortedProposals = useMemo(() => {
+    return [...filteredProposals].sort((a, b) => {
+      let valA = a[proposalSortBy];
+      let valB = b[proposalSortBy];
+
+      if (proposalSortBy === "created_at" || proposalSortBy === "event_date") {
+        const timeA = new Date(valA || 0).getTime();
+        const timeB = new Date(valB || 0).getTime();
+        return proposalSortOrder === "ASC" ? timeA - timeB : timeB - timeA;
+      } else if (typeof valA === "string") {
+        valA = valA.toLowerCase();
+        valB = (valB || "").toLowerCase();
+      }
+
+      if (valA < valB) return proposalSortOrder === "ASC" ? -1 : 1;
+      if (valA > valB) return proposalSortOrder === "ASC" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredProposals, proposalSortBy, proposalSortOrder]);
+
+  const groupedProposals = useMemo(() => {
+    if (proposalGroupBy === "none") return [{ key: "all", label: null, items: sortedProposals }];
+    const map = new Map();
+    for (const item of sortedProposals) {
+      let key = "Other";
+      if (proposalGroupBy === "status") key = normalizeProposalStatus(item.status);
+      else if (proposalGroupBy === "organization") key = item.organization_name || "General";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
+  }, [sortedProposals, proposalGroupBy]);
 
   const sortedRequests = useMemo(() => {
     return [...filteredRequests].sort((a, b) => {
@@ -571,6 +821,24 @@ function StudentDashboard() {
     return sortedRequests.slice(start, start + itemsPerPage);
   }, [sortedRequests, displayPage, itemsPerPage]);
 
+  const groupedPaginatedRequests = useMemo(() => {
+    if (requestGroupBy === "none") return [{ key: "all", label: null, items: paginatedRequests }];
+    const map = new Map();
+    for (const item of paginatedRequests) {
+      let key = "Other";
+      if (requestGroupBy === "status") key = item.status || "Unknown";
+      else if (requestGroupBy === "doc_type") key = item.doc_type || "Other";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
+  }, [paginatedRequests, requestGroupBy]);
+
   const {
     tableContainerRef,
     canScrollLeft,
@@ -582,7 +850,7 @@ function StudentDashboard() {
 
   useEffect(() => {
     resetScroll();
-  }, [currentPage, sortBy, sortOrder, requestSearch, requestFilters, resetScroll]);
+  }, [currentPage, sortBy, sortOrder, requestSearch, requestFilters, requestFilterRules, requestGroupBy, resetScroll]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -772,6 +1040,7 @@ function StudentDashboard() {
       setPendingPostEvents(postEventJson?.data?.pendingEvents || []);
       setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [] });
     } finally {
+      setHasLoaded(true);
       setLoading(false);
     }
   }, [router]);
@@ -1212,7 +1481,7 @@ function StudentDashboard() {
     }
   }
 
-  if (!me || (loading && !data.requests?.length && !data.proposals?.length && !complianceData)) {
+  if (!me || (loading && !hasLoaded)) {
     const requestedView = normalizeStudentTab(searchParams?.get("view"));
     const preferredView = me ? normalizeStudentTab(me.preferences?.default_home_view) || "overview" : null;
     return <StudentDashboardSkeleton view={requestedView || preferredView} />;
@@ -1327,6 +1596,7 @@ function StudentDashboard() {
                   }}
                   refreshing={refreshing}
                   loading={loading}
+                  hasLoaded={hasLoaded}
                 />
               ) : view === "compliance" ? (
                 <StudentComplianceTab authUser={me} onLogout={handleLogout} />
@@ -1694,98 +1964,107 @@ function StudentDashboard() {
                     )}
 
                     {/* 3. Toolbar & Request History Header */}
-                    <DataViewToolbar label="Request history search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-                      {/* Left: Heading and count */}
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div>
-                          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Request History</h3>
-                          <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Track every Registrar update and status change in real time.</p>
-                        </div>
-                        {loading ? (
-                          <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
-                        ) : (
-                          <span className="self-center rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            {data.requests.length} total
-                          </span>
+                    <DataViewToolbar label="Request history search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+                      {/* Left: DashboardSearch + TableScrollControls */}
+                      <div className="flex min-w-0 items-center gap-2">
+                        <DashboardSearch
+                          value={requestSearch}
+                          onChange={(val) => {
+                            setRequestSearch(val);
+                            setCurrentPage(1);
+                            resetScroll();
+                          }}
+                          count={filteredRequests.length}
+                          loading={loading}
+                          placeholder="Search ticket, document, notes..."
+                          label="Search requests"
+                        />
+                        {paginatedRequests.length > 0 && (
+                          <TableScrollControls
+                            scrollContainerRef={tableContainerRef}
+                            canScrollLeft={canScrollLeft}
+                            canScrollRight={canScrollRight}
+                            isScrolledX={isScrolledX}
+                            onResetScroll={resetScroll}
+                            onScrollLeft={() => scrollTable("left")}
+                            onScrollRight={() => scrollTable("right")}
+                          />
                         )}
                       </div>
 
-                      {/* Right: Search & Filter Group */}
-                      <div className="flex flex-nowrap items-center gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                          <Search01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
-                          <Input
-                            type="text"
-                            placeholder="Search ticket, document, notes..."
-                            className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                            value={requestSearch}
-                            onChange={(e) => {
-                              setRequestSearch(e.target.value);
-                              setCurrentPage(1);
-                            }}
-                          />
-                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 z-10 text-[11px] text-gray-400 dark:text-zinc-500">
-                            {loading ? (
-                              <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
-                            ) : (
-                              filteredRequests.length
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="w-full sm:w-auto shrink-0">
-                          <MultiCriteriaFilter
-                            title="Filter Requests"
-                            groups={requestFilterGroups}
-                            selected={requestFilters}
-                            onChange={(newFilters) => {
-                              setRequestFilters(newFilters);
-                              setCurrentPage(1);
-                            }}
-                            totalCount={data.requests.length}
-                            matchingCount={filteredRequests.length}
-                            onReset={() => {
-                              setRequestFilters({ status: [], doc_type: [] });
-                              setCurrentPage(1);
-                            }}
-                          />
-                        </div>
-
-                        <TableScrollControls scrollContainerRef={tableContainerRef}
-                          canScrollLeft={canScrollLeft}
-                          canScrollRight={canScrollRight}
-                          onScrollLeft={() => scrollTable("left")}
-                          onScrollRight={() => scrollTable("right")}
+                      {/* Right: Filter -> Sort -> Group -> Columns -> DateRange */}
+                      <div className="ml-auto flex shrink-0 items-center gap-2">
+                        <FilterPopover
+                          fields={requestFilterFields}
+                          filters={requestFilterRules}
+                          onFiltersChange={(newRules) => {
+                            setRequestFilterRules(newRules);
+                            setCurrentPage(1);
+                          }}
+                          entityLabel="requests"
+                        />
+                        <SortPopover
+                          options={requestSortOptions}
+                          sortBy={sortBy}
+                          onSortByChange={(val) => {
+                            setSortBy(val);
+                            setCurrentPage(1);
+                          }}
+                          sortOrder={sortOrder}
+                          onSortOrderChange={(val) => {
+                            setSortOrder(val);
+                            setCurrentPage(1);
+                          }}
+                        />
+                        <GroupPopover
+                          options={requestGroupOptions}
+                          groupBy={requestGroupBy}
+                          onGroupByChange={(val) => {
+                            setRequestGroupBy(val);
+                            setCurrentPage(1);
+                          }}
+                        />
+                        <ColumnsPopover
+                          columns={requestTableColumns}
+                          visibleColumns={requestVisibleColumns}
+                          onVisibleColumnsChange={setRequestVisibleColumns}
+                          minVisible={2}
+                        />
+                        <DateRangeFilterButton
+                          startDate={requestStartDate}
+                          endDate={requestEndDate}
+                          onApply={({ startDate: s, endDate: e }) => {
+                            setRequestStartDate(s);
+                            setRequestEndDate(e);
+                            setCurrentPage(1);
+                          }}
+                          onClear={() => {
+                            setRequestStartDate("");
+                            setRequestEndDate("");
+                            setCurrentPage(1);
+                          }}
+                          disableFutureDates={true}
                         />
                       </div>
                     </DataViewToolbar>
 
                     {/* 4. Active Filter Chips Bar */}
-                    <ActiveFilterChips
-                      groups={requestFilterGroups}
-                      selected={requestFilters}
-                      onRemove={(groupId, val) => {
-                        setRequestFilters((prev) => ({
-                          ...prev,
-                          [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-                        }));
-                        setCurrentPage(1);
-                      }}
-                      searchQuery={requestSearch}
-                      onClearSearch={() => {
-                        setRequestSearch("");
-                        setCurrentPage(1);
-                      }}
-                      onClearAll={() => {
-                        setRequestSearch("");
-                        setRequestFilters({ status: [], doc_type: [] });
-                        setCurrentPage(1);
-                      }}
-                      className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                    />
+                    {requestActiveChips.length > 0 && (
+                      <TableActiveFilterChips
+                        chips={requestActiveChips}
+                        onClearAll={() => {
+                          setRequestSearch("");
+                          setRequestFilterRules([]);
+                          setRequestStartDate("");
+                          setRequestEndDate("");
+                          setCurrentPage(1);
+                        }}
+                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                      />
+                    )}
 
                     {/* 5. Request History Table / Empty State */}
-                    {!loading && sortedRequests.length === 0 ? (
+                    {hasLoaded && sortedRequests.length === 0 ? (
                       <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
                         <Empty>
                           <EmptyHeader>
@@ -1836,180 +2115,216 @@ function StudentDashboard() {
                       <Table columns={["identifier", "text", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[900px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                              <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort("id")}
-                                  className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                    sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                  )}
-                                >
-                                  Ticket #
-                                  <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                                </button>
-                              </th>
-                              <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort("doc_type")}
-                                  className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                    sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                  )}
-                                >
-                                  Document Type
-                                  <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
-                                </button>
-                              </th>
-                              <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap">
-                                <span className="flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                                  Purpose / Description
-                                </span>
-                              </th>
-                              <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort("status")}
-                                  className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                    sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                  )}
-                                >
-                                  Status
-                                  <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                                </button>
-                              </th>
-                              <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort("created_at")}
-                                  className={cn(
-                                    "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                    sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                  )}
-                                >
-                                  Date Requested
-                                  <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
-                                </button>
-                              </th>
-                              <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
+                              {requestVisibleColumns.includes("id") && (
+                                <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSort("id")}
+                                    className={cn(
+                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Ticket #
+                                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                                  </button>
+                                </th>
+                              )}
+                              {requestVisibleColumns.includes("doc_type") && (
+                                <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSort("doc_type")}
+                                    className={cn(
+                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                                      sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Document Type
+                                    <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
+                                  </button>
+                                </th>
+                              )}
+                              {requestVisibleColumns.includes("notes") && (
+                                <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap">
+                                  <span className="flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                                    Purpose / Description
+                                  </span>
+                                </th>
+                              )}
+                              {requestVisibleColumns.includes("status") && (
+                                <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSort("status")}
+                                    className={cn(
+                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                                      sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Status
+                                    <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
+                                  </button>
+                                </th>
+                              )}
+                              {requestVisibleColumns.includes("created_at") && (
+                                <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSort("created_at")}
+                                    className={cn(
+                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                                      sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                                    )}
+                                  >
+                                    Date Requested
+                                    <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
+                                  </button>
+                                </th>
+                              )}
+                              {requestVisibleColumns.includes("actions") && (
+                                <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
+                              )}
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                            {loading ? (
+                            {loading && !hasLoaded ? (
                               <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
                             ) : (
-                              paginatedRequests.map((item) => (
-                              <tr
-                                key={item.id}
-                                onClick={() => setSelectedRequestForDetail(item)}
-                                className={cn(
-                                  "group h-[52px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
-                                  ["Deficient", "PendingPayment"].includes(item.status) &&
-                                    "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
-                                )}
-                              >
-                                <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                                  #{item.id}
-                                </td>
-                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                      {item.doc_type}
-                                    </span>
-                                    {item.client_type === "Parent" && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 shrink-0">
-                                        Parent/Guardian
-                                      </span>
-                                    )}
-                                    {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
-                                      <span
-                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
-                                        title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
-                                      >
-                                        <Attachment01Icon size="1em" className="text-[11px]" />
-                                        {item.attachment_count || item.attachments?.length}
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
+                              groupedPaginatedRequests.map((group) => (
+                                <tbody key={group.key || "root"} className="divide-y divide-border dark:divide-border contents">
+                                  {group.label && (
+                                    <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
+                                      <td colSpan={requestVisibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                        <span className="font-bold">{group.label}</span>
+                                        <span className="ml-2 font-normal text-muted-foreground">({group.items.length})</span>
+                                      </td>
+                                    </tr>
+                                  )}
+                                  {group.items.map((item) => (
+                                    <tr
+                                      key={item.id}
+                                      onClick={() => setSelectedRequestForDetail(item)}
+                                      className={cn(
+                                        "group h-[52px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
+                                        ["Deficient", "PendingPayment"].includes(item.status) &&
+                                          "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
+                                      )}
+                                    >
+                                      {requestVisibleColumns.includes("id") && (
+                                        <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                                          #{item.id}
+                                        </td>
+                                      )}
+                                      {requestVisibleColumns.includes("doc_type") && (
+                                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                              {item.doc_type}
+                                            </span>
+                                            {item.client_type === "Parent" && (
+                                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 shrink-0">
+                                                Parent/Guardian
+                                              </span>
+                                            )}
+                                            {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
+                                              <span
+                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
+                                                title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
+                                              >
+                                                <Attachment01Icon size="1em" className="text-[11px]" />
+                                                {item.attachment_count || item.attachments?.length}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </td>
+                                      )}
 
-                                <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                  <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
-                                    {item.notes || "N/A"}
-                                  </div>
-                                </td>
-                                <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                  <StatusBadge status={item.status} />
-                                </td>
-                                <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                  {formatPHDateTime(item.created_at)}
-                                </td>
-                                <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    {item.feedback ? (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setFeedbackRequest(item);
-                                              setFeedbackInitialRating(item.feedback.rating || 0);
-                                              setFeedbackModalOpen(true);
-                                            }}
-                                            aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
-                                            className="table-action-button rounded-lg text-amber-500 hover:text-amber-600 dark:text-amber-400 active:scale-95 cursor-pointer"
-                                          >
-                                            <StarIcon size="1em" className="text-[15px]" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Rated {item.feedback.rating}/5 stars. Click to edit.</TooltipContent>
-                                      </Tooltip>
-                                    ) : (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setFeedbackRequest(item);
-                                              setFeedbackInitialRating(0);
-                                              setFeedbackModalOpen(true);
-                                            }}
-                                            aria-label="Rate Service"
-                                            className="table-action-button rounded-lg text-gray-400 hover:text-amber-500 active:scale-95 cursor-pointer"
-                                          >
-                                            <StarIcon size="1em" className="text-[15px]" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Rate Service</TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={() => setSelectedRequestForDetail(item)}
-                                          aria-label="View Request Updates Timeline"
-                                          className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
-                                        >
-                                          <Time01Icon size="1em" className="text-[15px]" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>View Timeline</TooltipContent>
-                                    </Tooltip>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
+                                      {requestVisibleColumns.includes("notes") && (
+                                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                                          <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
+                                            {item.notes || "N/A"}
+                                          </div>
+                                        </td>
+                                      )}
+                                      {requestVisibleColumns.includes("status") && (
+                                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                          <StatusBadge status={item.status} />
+                                        </td>
+                                      )}
+                                      {requestVisibleColumns.includes("created_at") && (
+                                        <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                          {formatPHDateTime(item.created_at)}
+                                        </td>
+                                      )}
+                                      {requestVisibleColumns.includes("actions") && (
+                                        <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                                          <div className="flex items-center justify-end gap-1.5">
+                                            {item.feedback ? (
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setFeedbackRequest(item);
+                                                      setFeedbackInitialRating(item.feedback.rating || 0);
+                                                      setFeedbackModalOpen(true);
+                                                    }}
+                                                    aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
+                                                    className="table-action-button rounded-lg text-amber-500 hover:text-amber-600 dark:text-amber-400 active:scale-95 cursor-pointer"
+                                                  >
+                                                    <StarIcon size="1em" className="text-[15px]" />
+                                                  </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Rated {item.feedback.rating}/5 stars. Click to edit.</TooltipContent>
+                                              </Tooltip>
+                                            ) : (
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setFeedbackRequest(item);
+                                                      setFeedbackInitialRating(0);
+                                                      setFeedbackModalOpen(true);
+                                                    }}
+                                                    aria-label="Rate Service"
+                                                    className="table-action-button rounded-lg text-gray-400 hover:text-amber-500 active:scale-95 cursor-pointer"
+                                                  >
+                                                    <StarIcon size="1em" className="text-[15px]" />
+                                                  </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Rate Service</TooltipContent>
+                                              </Tooltip>
+                                            )}
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setSelectedRequestForDetail(item)}
+                                                  aria-label="View Request Updates Timeline"
+                                                  className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                                                >
+                                                  <Time01Icon size="1em" className="text-[15px]" />
+                                                </button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>View Timeline</TooltipContent>
+                                            </Tooltip>
+                                          </div>
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              ))
+                            )}
                         </tbody>
                       </Table>
                     </div>
                   )}
 
                     {/* 6. Pagination Bar */}
-                    {loading ? (
+                    {loading && !hasLoaded ? (
                       <StudentRequestsPaginationSkeleton />
                     ) : filteredRequests.length > 0 ? (
                       <TablePagination label="Student request pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRequests.length} displayedCount={paginatedRequests.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
@@ -2304,73 +2619,73 @@ function StudentDashboard() {
                         </div>
                       )}
 
-                      {/* Proposals History Header */}
-                      <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-gray-50/40 dark:bg-zinc-900/30">
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div>
-                            <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Event Proposals History</h3>
-                            <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Follow OSAS review updates, approval standing, and post-event requirements.</p>
-                          </div>
-                          {loading ? (
-                            <Skeleton className="h-6 w-16 rounded-full dark:bg-muted" />
-                          ) : (
-                            <span className="self-center rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                              {data.proposals.length} total
-                            </span>
-                          )}
+                      {/* Proposals History Toolbar */}
+                      <DataViewToolbar label="Event proposals search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+                        {/* Left: DashboardSearch */}
+                        <div className="flex min-w-0 items-center gap-2">
+                          <DashboardSearch
+                            value={proposalSearch}
+                            onChange={(val) => setProposalSearch(val)}
+                            count={filteredProposals.length}
+                            loading={loading}
+                            placeholder="Search proposals..."
+                            label="Search proposals"
+                          />
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                          <div className="relative flex-1 sm:w-64 lg:w-72 min-w-[200px] group">
-                            <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
-                            <Input
-                              type="text"
-                              placeholder="Search proposals..."
-                              className="h-9 pl-8 pr-16 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                              value={proposalSearch}
-                              onChange={(e) => setProposalSearch(e.target.value)}
-                            />
-                            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                              {filteredProposals.length.toLocaleString()}
-                            </div>
-                          </div>
-
-                          <div className="w-full sm:w-auto shrink-0">
-                            <MultiCriteriaFilter
-                              title="Filter Proposals"
-                              groups={proposalFilterGroups}
-                              selected={proposalFilters}
-                              onChange={setProposalFilters}
-                              totalCount={data.proposals.length}
-                              matchingCount={filteredProposals.length}
-                              onReset={() => setProposalFilters({ status: [], organization: [] })}
-                            />
-                          </div>
+                        {/* Right: Filter -> Sort -> Group -> DateRange */}
+                        <div className="ml-auto flex shrink-0 items-center gap-2">
+                          <FilterPopover
+                            fields={proposalFilterFields}
+                            filters={proposalFilterRules}
+                            onFiltersChange={(newRules) => setProposalFilterRules(newRules)}
+                            entityLabel="proposals"
+                          />
+                          <SortPopover
+                            options={proposalSortOptions}
+                            sortBy={proposalSortBy}
+                            onSortByChange={(val) => setProposalSortBy(val)}
+                            sortOrder={proposalSortOrder}
+                            onSortOrderChange={(val) => setProposalSortOrder(val)}
+                          />
+                          <GroupPopover
+                            options={proposalGroupOptions}
+                            groupBy={proposalGroupBy}
+                            onGroupByChange={(val) => setProposalGroupBy(val)}
+                          />
+                          <DateRangeFilterButton
+                            startDate={proposalStartDate}
+                            endDate={proposalEndDate}
+                            onApply={({ startDate: s, endDate: e }) => {
+                              setProposalStartDate(s);
+                              setProposalEndDate(e);
+                            }}
+                            onClear={() => {
+                              setProposalStartDate("");
+                              setProposalEndDate("");
+                            }}
+                            disableFutureDates={false}
+                          />
                         </div>
-                      </div>
+                      </DataViewToolbar>
 
                       {/* Active Filter Chips Bar */}
-                      <ActiveFilterChips
-                        groups={proposalFilterGroups}
-                        selected={proposalFilters}
-                        onRemove={(groupId, val) => {
-                          setProposalFilters((prev) => ({
-                            ...prev,
-                            [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-                          }));
-                        }}
-                        searchQuery={proposalSearch}
-                        onClearSearch={() => setProposalSearch("")}
-                        onClearAll={() => {
-                          setProposalSearch("");
-                          setProposalFilters({ status: [], organization: [] });
-                        }}
-                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                      />
+                      {proposalActiveChips.length > 0 && (
+                        <TableActiveFilterChips
+                          chips={proposalActiveChips}
+                          onClearAll={() => {
+                            setProposalSearch("");
+                            setProposalFilterRules([]);
+                            setProposalStartDate("");
+                            setProposalEndDate("");
+                          }}
+                          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                        />
+                      )}
 
                       {/* Proposals List */}
                       <div className="border-t border-border dark:border-border flex-1">
-                        {loading ? (
+                        {loading && !hasLoaded ? (
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
@@ -2430,87 +2745,97 @@ function StudentDashboard() {
                             </Empty>
                           </div>
                         ) : (
-                          <div className="p-5 space-y-3">
-                            {filteredProposals.map((item) => (
-                              <article
-                                key={item.id}
-                                onClick={() => setSelectedProposalForDetail(item)}
-                                className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
-                              >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                    {item.title}
-                                  </h3>
-                                  <div className="flex items-center gap-2">
-                                    <StatusBadge status={item.status} />
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenPdfPreview(item);
-                                      }}
-                                      title={PDF_ACTION_LABELS.preview}
-                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                    >
-                                      <File02Icon size="1em" className="text-[16px]"></File02Icon>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedProposalForDetail(item);
-                                      }}
-                                      title="View Proposal Details & Timeline"
-                                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                    >
-                                      <Time01Icon size="1em" className="text-[16px]"></Time01Icon>
-                                    </button>
+                          <div className="p-5 space-y-4">
+                            {groupedProposals.map((group) => (
+                              <div key={group.key || "all"} className="space-y-3">
+                                {group.label && (
+                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                    <span className="font-bold">{group.label}</span>
+                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
                                   </div>
-                                </div>
-                                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                                  <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
-                                    {item.organization_name} · {item.event_date}
-                                  </p>
-                                  {item.status === "Approved" && (
-                                    <div className="flex items-center gap-2">
-                                      {item.post_event_status === "Cleared" ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                                          Post-Event Cleared
-                                        </span>
-                                      ) : item.post_event_status === "Submitted" || item.post_event_status === "Under Review" ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
-                                          Post-Event In Review
-                                        </span>
-                                      ) : (
+                                )}
+                                {group.items.map((item) => (
+                                  <article
+                                    key={item.id}
+                                    onClick={() => setSelectedProposalForDetail(item)}
+                                    className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                        {item.title}
+                                      </h3>
+                                      <div className="flex items-center gap-2">
+                                        <StatusBadge status={item.status} />
                                         <button
                                           type="button"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setOsasSubView("post_event");
-                                            setPostEventForm((prev) => ({
-                                              ...prev,
-                                              eventProposalId: String(item.id),
-                                              organizationId: item.organization_id || myOrganizations[0]?.organization_id || "",
-                                            }));
-                                            setIsFormOpen(true);
+                                            handleOpenPdfPreview(item);
                                           }}
-                                          title="Submit Post-Event Report"
-                                          className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                          title={PDF_ACTION_LABELS.preview}
+                                          className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                         >
-                                          Submit
+                                          <File02Icon size="1em" className="text-[16px]"></File02Icon>
                                         </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedProposalForDetail(item);
+                                          }}
+                                          title="View Proposal Details & Timeline"
+                                          className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                        >
+                                          <Time01Icon size="1em" className="text-[16px]"></Time01Icon>
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                                        {item.organization_name} · {item.event_date}
+                                      </p>
+                                      {item.status === "Approved" && (
+                                        <div className="flex items-center gap-2">
+                                          {item.post_event_status === "Cleared" ? (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                              Post-Event Cleared
+                                            </span>
+                                          ) : item.post_event_status === "Submitted" || item.post_event_status === "Under Review" ? (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+                                              Post-Event In Review
+                                            </span>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOsasSubView("post_event");
+                                                setPostEventForm((prev) => ({
+                                                  ...prev,
+                                                  eventProposalId: String(item.id),
+                                                  organizationId: item.organization_id || myOrganizations[0]?.organization_id || "",
+                                                }));
+                                                setIsFormOpen(true);
+                                              }}
+                                              title="Submit Post-Event Report"
+                                              className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                            >
+                                              Submit
+                                            </button>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
-                                  )}
-                                </div>
-                                <ol className="mt-3 space-y-2 border-l-2 border-border pl-4 text-xs text-gray-500 dark:border-border dark:text-zinc-400">
-                                  {item.updates?.map((update) => (
-                                    <li key={update.id}>
-                                      <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> : {update.message || "Status updated"}
-                                    </li>
-                                  ))}
-                                </ol>
-                              </article>
+                                    <ol className="mt-3 space-y-2 border-l-2 border-border pl-4 text-xs text-gray-500 dark:border-border dark:text-zinc-400">
+                                      {item.updates?.map((update) => (
+                                        <li key={update.id}>
+                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> : {update.message || "Status updated"}
+                                        </li>
+                                      ))}
+                                    </ol>
+                                  </article>
+                                ))}
+                              </div>
                             ))}
                           </div>
                         )}

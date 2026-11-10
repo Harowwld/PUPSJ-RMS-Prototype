@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
+import { SegmentedControl } from "@/components/ui/tabs"
 import {
   Empty,
   EmptyHeader,
@@ -73,6 +74,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const [restoreTemplateId, setRestoreTemplateId] = useState(null)
   const [templateFilter, setTemplateFilter] = useState("Active")
   const [loading, setLoading] = useState(true)
+  const hasLoadedRef = useRef(false)
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
   const imageRef = useRef(null)
@@ -80,7 +82,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
   const importInputRef = useRef(null)
 
   const load = useCallback(async () => {
-    setLoading(true)
+    if (!hasLoadedRef.current) setLoading(true)
     try {
       const [typesResponse, templatesResponse] = await Promise.all([
         fetch("/api/doc-types?admin=true", { cache: "no-store" }),
@@ -90,6 +92,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
       const templatesData = await templatesResponse.json()
       setDocTypes(Array.isArray(typesData.data) ? typesData.data.filter((type) => type.status !== "Archived") : [])
       setTemplates(Array.isArray(templatesData.data) ? templatesData.data : [])
+      hasLoadedRef.current = true
     } catch (error) {
       showToast?.(formatErrorMessage(error, "Failed to Load Templates"), true)
     } finally {
@@ -484,7 +487,14 @@ export default function RecognitionTemplatesTab({ showToast }) {
           showBorder={false}
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          title="OCR Configuration"
+          title={
+            <div className="flex items-center gap-[6px]">
+              <span>OCR Configuration</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                ({activeTemplates.length} {activeTemplates.length === 1 ? "template" : "templates"})
+              </span>
+            </div>
+          }
           description="Select a document type, upload a representative sample, and calibrate field bounding boxes for automated OCR extraction."
           className="p-6"
           actions={
@@ -517,7 +527,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           }
         />
 
-        <div className="border-t border-border dark:border-border p-6 flex-1 min-h-0">
+        <div className="p-6 flex-1 min-h-0">
           <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* Left Panel: Calibration Controls */}
           <div className="space-y-4 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs">
@@ -841,32 +851,50 @@ export default function RecognitionTemplatesTab({ showToast }) {
             </div>
 
             {/* Active / Archived Segmented Switch */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
-              <button
-                type="button"
-                onClick={() => setTemplateFilter("Active")}
-                className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  templateFilter === "Active"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                Active ({activeTemplates.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setTemplateFilter("Archived")}
-                className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0",
-                  templateFilter === "Archived"
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                )}
-              >
-                Archived ({archivedTemplates.length})
-              </button>
-            </div>
+            <SegmentedControl
+              variant="capsule"
+              value={templateFilter}
+              onValueChange={setTemplateFilter}
+              items={[
+                {
+                  value: "Active",
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <span>Active</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.2 text-[10px] font-semibold tabular-nums",
+                          templateFilter === "Active"
+                            ? "bg-white/20 text-white"
+                            : "bg-black/5 text-muted-foreground dark:bg-white/10"
+                        )}
+                      >
+                        {activeTemplates.length}
+                      </span>
+                    </span>
+                  ),
+                },
+                {
+                  value: "Archived",
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <span>Archived</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.2 text-[10px] font-semibold tabular-nums",
+                          templateFilter === "Archived"
+                            ? "bg-white/20 text-white"
+                            : "bg-black/5 text-muted-foreground dark:bg-white/10"
+                        )}
+                      >
+                        {archivedTemplates.length}
+                      </span>
+                    </span>
+                  ),
+                },
+              ]}
+              className="w-full"
+            />
 
             {displayTemplates.length === 0 ? (
               <Empty variant="compact">
@@ -908,7 +936,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                                   e.stopPropagation()
                                   setArchiveTemplateId(template.id)
                                 }}
-                                className="w-7 h-7 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 dark:text-zinc-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
+                                className="w-7 h-7 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-red-950/30 transition-colors flex items-center justify-center cursor-pointer active:scale-95 border-0 bg-transparent"
                               >
                                 <Archive01Icon size="1em"  className="text-sm" />
                               </button>
@@ -1010,7 +1038,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
           title="Archive OCR Configuration"
           message="Archiving this configuration will remove it from active recognition routing. You can restore it anytime from the Archived tab."
           confirmLabel="Archive Configuration"
-          confirmVariant="warning"
+          confirmVariant="danger"
           isArchiveModal={true}
           onCancel={() => setArchiveTemplateId(null)}
           onConfirm={confirmArchiveTemplate}

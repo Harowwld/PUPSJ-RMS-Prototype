@@ -69,6 +69,61 @@ import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
+import { Building01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
+
+const ORG_SORT_OPTIONS = [
+  { key: "name", label: "Organization Name" },
+  { key: "acronym", label: "Acronym" },
+  { key: "category", label: "Category" },
+  { key: "status", label: "Status" },
+  { key: "proposal_count", label: "Activity Submissions" },
+  { key: "created_at", label: "Date Added" },
+];
+
+const ORG_GROUP_OPTIONS = [
+  { key: "category", label: "Category", icon: Building01Icon },
+  { key: "status", label: "Status", icon: CheckmarkCircle01Icon },
+  { key: "none", label: "No grouping" },
+];
+
+const ORG_TABLE_COLUMNS = [
+  { key: "name", label: "Organization" },
+  { key: "category", label: "Category" },
+  { key: "status", label: "Status" },
+  { key: "adviser", label: "Adviser" },
+  { key: "proposal_count", label: "Submissions" },
+  { key: "created_at", label: "Date Added" },
+];
+
+const ORG_FILTER_FIELDS = [
+  {
+    key: "category",
+    label: "Category",
+    icon: Building01Icon,
+    options: [
+      { value: "Academic", label: "Academic" },
+      { value: "Non-Academic", label: "Non-Academic" },
+    ],
+  },
+  {
+    key: "status",
+    label: "Status",
+    icon: CheckmarkCircle01Icon,
+    options: [
+      { value: "Active", label: "Active" },
+      { value: "Inactive", label: "Inactive" },
+      { value: "Archived", label: "Archived" },
+    ],
+  },
+];
 
 const CATEGORIES = [
   "All",
@@ -122,7 +177,7 @@ const getBannerStatusDotClass = (status) => {
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, Building01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
@@ -207,10 +262,19 @@ const DEFAULT_ORDER = ["organizations", "officers", "proposals"];
 export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const fetchRequestRef = useRef(0);
   const [search, setSearchState] = useState("");
   const [categoryFilters, setCategoryFiltersState] = useState([]);
   const [statusFilters, setStatusFiltersState] = useState([]);
+  const [filterRules, setFilterRules] = useState([]);
+  const [groupBy, setGroupBy] = useState("none");
+  const [visibleColumns, setVisibleColumns] = useState(() => ORG_TABLE_COLUMNS.map((c) => c.key));
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("ASC");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
   const [orgPage, setOrgPage] = useState(1);
   const [orgPageSize, setOrgPageSize] = useState(10);
@@ -394,6 +458,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   // Fetch Organizations
   const fetchOrganizations = useCallback(
     async (showFeedback = false) => {
+      const request = ++fetchRequestRef.current;
       try {
         if (showFeedback) {
           setRefreshing(true);
@@ -407,7 +472,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         if (!res.ok || !json.ok) {
           throw new Error(json.error || "Failed to load student organizations.");
         }
+        if (request !== fetchRequestRef.current) return;
         setOrganizations(json.data || []);
+        setHasLoaded(true);
         if (showFeedback) {
           showToast({
             title: "Organizations Refreshed",
@@ -415,6 +482,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           });
         }
       } catch (err) {
+        if (request !== fetchRequestRef.current) return;
         showToast(
           formatErrorMessage(err, {
             title: "Organizations Load Failed",
@@ -423,8 +491,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           true
         );
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (request === fetchRequestRef.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [showToast]
@@ -872,10 +942,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     setSearch("");
     setCategoryFilters([]);
     setStatusFilters([]);
+    setFilterRules([]);
+    setStartDate("");
+    setEndDate("");
   }, [setSearch, setCategoryFilters, setStatusFilters]);
 
   const filteredOrganizations = useMemo(() => {
-    return organizations.filter((org) => {
+    const list = organizations.filter((org) => {
       if (statusFilters.length > 0) {
         if (!statusFilters.includes(org.status)) return false;
       } else {
@@ -885,6 +958,25 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
       if (categoryFilters.length > 0 && !categoryFilters.includes(org.category)) {
         return false;
+      }
+
+      if (startDate || endDate) {
+        const itemDate = org.created_at ? new Date(org.created_at) : null;
+        if (itemDate && !isNaN(itemDate.getTime())) {
+          const dateStr = itemDate.toISOString().slice(0, 10);
+          if (startDate && dateStr < startDate) return false;
+          if (endDate && dateStr > endDate) return false;
+        }
+      }
+
+      if (filterRules.length > 0) {
+        const matchesRules = filterRules.every((rule) => {
+          let actual = org[rule.fieldKey] || "";
+          const ruleVal = String(rule.value || "").toLowerCase();
+          const actVal = String(actual || "").toLowerCase();
+          return rule.operator === "is_not" ? actVal !== ruleVal : actVal === ruleVal;
+        });
+        if (!matchesRules) return false;
       }
 
       if (search.trim()) {
@@ -897,7 +989,22 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
       return true;
     });
-  }, [organizations, statusFilters, categoryFilters, search]);
+
+    return list.sort((a, b) => {
+      let valA = a[sortBy] || "";
+      let valB = b[sortBy] || "";
+      if (sortBy === "proposal_count") {
+        valA = a.proposal_count || 0;
+        valB = b.proposal_count || 0;
+      } else if (typeof valA === "string") {
+        valA = valA.toLowerCase();
+        valB = String(valB).toLowerCase();
+      }
+      if (valA < valB) return sortOrder === "ASC" ? -1 : 1;
+      if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
+      return 0;
+    });
+  }, [organizations, statusFilters, categoryFilters, filterRules, startDate, endDate, search, sortBy, sortOrder]);
 
   const safeOrgPage = Math.min(orgPage, Math.max(1, Math.ceil(filteredOrganizations.length / orgPageSize)));
   const paginatedOrganizations = filteredOrganizations.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
@@ -930,6 +1037,24 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     resetScroll();
   }, [viewMode, search, statusFilters, categoryFilters, resetScroll]);
 
+  const groupedOrganizations = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "", orgs: paginatedOrganizations }];
+    }
+    const map = new Map();
+    for (const org of paginatedOrganizations) {
+      let label = "";
+      if (groupBy === "category") {
+        label = org.category || "Unassigned Category";
+      } else if (groupBy === "status") {
+        label = org.status || "Unknown Status";
+      }
+      if (!map.has(label)) map.set(label, []);
+      map.get(label).push(org);
+    }
+    return [...map.entries()].map(([label, orgs]) => ({ key: label, label, orgs }));
+  }, [groupBy, paginatedOrganizations]);
+
   const activeChips = useMemo(() => {
     const chips = [];
     if (search.trim()) {
@@ -937,6 +1062,24 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         id: "search",
         label: `Search: ${search.trim()}`,
         onRemove: () => setSearch(""),
+      });
+    }
+    filterRules.forEach((rule) => {
+      const field = ORG_FILTER_FIELDS.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
+      const valLabel = opt?.label || String(rule.value);
+      chips.push({
+        id: rule.id,
+        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${valLabel}`,
+        onRemove: () => setFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
+    if (startDate || endDate) {
+      chips.push({
+        id: "dateRange",
+        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        onRemove: () => { setStartDate(""); setEndDate(""); },
       });
     }
     categoryFilters.forEach((cat) => {
@@ -954,10 +1097,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
     });
     return chips;
-  }, [search, categoryFilters, statusFilters, setSearch, setCategoryFilters, setStatusFilters]);
+  }, [search, filterRules, startDate, endDate, categoryFilters, statusFilters, setSearch, setCategoryFilters, setStatusFilters]);
 
   const hasActiveFilters = Boolean(
-    search.trim() || categoryFilters.length > 0 || statusFilters.length > 0
+    search.trim() || categoryFilters.length > 0 || statusFilters.length > 0 || filterRules.length > 0 || startDate !== "" || endDate !== ""
   );
 
   // Standard KPI Metrics & Detailed Breakdown for Popovers
@@ -1041,12 +1184,19 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           {/* 1. Page Header */}
           <PageHeader
             icon="Building01Icon"
-            title="Student Organizations"
+            title={
+              <span className="flex items-center gap-2">
+                <span>Student Organizations</span>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {organizations.length > 0 ? `${organizations.length.toLocaleString()} organizations` : "No organizations"}
+                </span>
+              </span>
+            }
             description="Manage recognized campus student organizations, their Constitution and By-Laws, and authorized officers."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 {/* Refresh Button */}
@@ -1082,7 +1232,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
           {/* 2. Top Summary Metrics Banner (Standard Reorderable Stat Cards Grid) */}
           <div className="px-6 pb-6">
-            {loading && organizations.length === 0 ? (
+            {loading && !hasLoaded ? (
               <KpiStatCardsSkeleton count={3} />
             ) : (
               <Reorder.Group
@@ -1132,7 +1282,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex justify-between items-end p-4 pt-1">
                             <div className="flex items-baseline gap-2">
                               <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading ? <Skeleton className="h-7 w-12" /> : kpiStats.total}
+                                {loading && !hasLoaded ? <Skeleton className="h-7 w-12" /> : kpiStats.total}
                               </span>
                               <span className="text-xs font-medium text-pup-maroon dark:text-red-400 mb-1">
                                 Campus Active
@@ -1259,7 +1409,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex justify-between items-end p-4 pt-1">
                             <div className="flex items-baseline gap-2">
                               <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading ? (
+                                {loading && !hasLoaded ? (
                                   <Skeleton className="h-7 w-12" />
                                 ) : (
                                   kpiStats.totalOfficers
@@ -1391,7 +1541,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex justify-between items-end p-4 pt-1">
                             <div className="flex items-baseline gap-2">
                               <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading ? (
+                                {loading && !hasLoaded ? (
                                   <Skeleton className="h-7 w-12" />
                                 ) : (
                                   kpiStats.totalProposals
@@ -1491,9 +1641,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
           </div>
 
-          {/* 3. Navigation Toolbar: Category Navigation Slider & Search/Status Controls */}
-          <DataViewToolbar label="Organization search, views, and filters" className="border-t border-border dark:border-border p-5 gap-3 bg-white dark:bg-card">
-            {/* Left: Category Navigation Slider */}
+          {/* Connected Tabs & View Switcher Row */}
+          <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
+            {/* Category Navigation Slider */}
             <div className="relative min-w-[220px] flex-1 max-w-full overflow-hidden flex items-center">
               {/* Left Gradient Mask & Chevron */}
               {canScrollLeft && (
@@ -1580,55 +1730,94 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               )}
             </div>
 
-            {/* Right: Search Input & Multi-Criteria Filter */}
-            <div className="flex flex-nowrap items-center gap-3 shrink-0">
-              {/* Search Bar with live count badge */}
-              <div className="w-full sm:w-[260px] lg:w-[300px] relative group shrink-0">
-                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                </div>
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search org name, acronym, adviser..."
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                  {filteredOrganizations.length.toLocaleString()}
-                </div>
-              </div>
+            <SegmentedControl
+              value={viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-4"
+              items={[
+                {
+                  value: "grid",
+                  label: "Grid",
+                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                },
+                {
+                  value: "table",
+                  label: "Table",
+                  icon: <ViewModeIcon mode="table" className="text-sm" />,
+                },
+              ]}
+            />
+          </div>
 
-              <SegmentedControl
-                value={viewMode}
-                onValueChange={setViewMode}
-                variant="capsule"
-                className="inline-grid grid-flow-col auto-cols-fr"
-                items={[
-                  {
-                    value: "grid",
-                    label: "Grid",
-                    icon: <ViewModeIcon mode="grid" className="text-sm" />,
-                  },
-                  {
-                    value: "table",
-                    label: "Table",
-                    icon: <ViewModeIcon mode="table" className="text-sm" />,
-                  },
-                ]}
+          {/* 3. Navigation Toolbar */}
+          <DataViewToolbar label="Organization search, views, and filters" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+            {/* Left Zone: Search + Scroll */}
+            <div className="flex min-w-0 items-center gap-2">
+              <DashboardSearch
+                value={search}
+                onChange={setSearch}
+                onClear={() => setSearch("")}
+                resultCount={filteredOrganizations.length}
+                placeholder="Search org name, acronym, adviser..."
               />
+              {viewMode === "table" && (
+                <TableScrollControls
+                  scrollContainerRef={tableContainerRef}
+                  isScrolledX={isScrolledX}
+                  onResetScroll={resetScroll}
+                  onScrollLeft={() => scrollLeft(400)}
+                  onScrollRight={() => scrollRight(400)}
+                  controlSize="md"
+                />
+              )}
+            </div>
 
-              {/* Multi-Criteria Filter Popover */}
-              <MultiCriteriaFilter
-                title="Filter Organizations"
-                groups={filterGroups}
-                selectedValues={filterValues}
-                onChange={handleFilterChange}
-                onClearAll={handleResetFilters}
-                totalCount={organizations.length}
-                filteredCount={filteredOrganizations.length}
+            {/* Right Zone: Filter, Sort, Group, Columns, Date Range */}
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <FilterPopover
+                fields={ORG_FILTER_FIELDS}
+                filters={filterRules}
+                onFiltersChange={setFilterRules}
+                entityLabel="organizations"
+              />
+              <SortPopover
+                options={ORG_SORT_OPTIONS}
+                sortBy={sortBy}
+                onSortByChange={(val) => {
+                  setSortBy(val);
+                  setSortOrder("ASC");
+                }}
+                sortOrder={sortOrder}
+                onSortOrderChange={setSortOrder}
+              />
+              <GroupPopover
+                options={ORG_GROUP_OPTIONS}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+              />
+              {viewMode === "table" && (
+                <ColumnsPopover
+                  columns={ORG_TABLE_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onVisibleColumnsChange={setVisibleColumns}
+                  minVisible={2}
+                />
+              )}
+              <DateRangeFilterButton
+                startDate={startDate}
+                endDate={endDate}
+                onApply={({ startDate: s, endDate: e }) => {
+                  setStartDate(s);
+                  setEndDate(e);
+                }}
+                onClear={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                disableFutureDates={true}
               />
             </div>
-            {viewMode === "table" && <TableScrollControls scrollContainerRef={tableContainerRef} isScrolledX={isScrolledX} onResetScroll={resetScroll} onScrollLeft={() => scrollLeft(400)} onScrollRight={() => scrollRight(400)} />}
           </DataViewToolbar>
 
           {/* 4. Active Filter Chips & Scroll Controls */}
@@ -1646,7 +1835,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
           {/* 5. Main Content Area (Dual View Engine) */}
           <div className={cn("flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredOrganizations.length === 0 && "rounded-b-2xl")}>
-            {loading && organizations.length === 0 ? (
+            {loading && !hasLoaded ? (
               viewMode === "table" ? (
                 <div className="p-6 space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (

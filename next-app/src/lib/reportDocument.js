@@ -63,13 +63,13 @@ export function drawReportHeader(doc, title, options = {}) {
   return y
 }
 
-export async function createReportDocument({ title, branding: suppliedBranding, orientation = "portrait", generatedAt }) {
+export async function createReportDocument({ title, branding: suppliedBranding, orientation = "portrait", generatedAt, fontData, logoData: suppliedLogoData, secondaryLogoData: suppliedSecondaryLogoData }) {
   const branding = resolveBranding(suppliedBranding || await getInstitutionalBranding())
   const doc = new jsPDF({ orientation, unit: "pt", format: "a4", putOnlyUsedFonts: true })
-  const font = await registerReportFont(doc, branding.reportFont)
+  const font = await registerReportFont(doc, branding.reportFont, fontData)
   const [logoData, secondaryLogoData] = await Promise.all([
-    getLogoAsPng(branding.logoBase64 || branding.logoUrl),
-    getLogoAsPng(branding.secondaryLogoBase64 || branding.secondaryLogoUrl, false),
+    suppliedLogoData !== undefined ? suppliedLogoData : getLogoAsPng(branding.logoBase64 || branding.logoUrl),
+    suppliedSecondaryLogoData !== undefined ? suppliedSecondaryLogoData : getLogoAsPng(branding.secondaryLogoBase64 || branding.secondaryLogoUrl, false),
   ])
   const date = generatedAt || new Date().toISOString()
   const reportDate = new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", year: "numeric", month: "long", day: "numeric" }).format(new Date(date))

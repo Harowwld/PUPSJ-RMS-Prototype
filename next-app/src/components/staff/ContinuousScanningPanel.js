@@ -4,17 +4,24 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
 import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import TablePagination from "@/components/shared/TablePagination";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { formatErrorMessage } from "@/lib/errorUtils";
 
 const EMPTY_STATS = { total: 0, remaining: 0, succeeded: 0, confirmed: 0, review: 0, failed: 0 };
 
-export default function ContinuousScanningPanel({ onOpenReview, showToast = () => {} }) {
+export default function ContinuousScanningPanel({ onOpenReview, showToast = () => {}, className }) {
   const [workerConnected, setWorkerConnected] = useState(false);
   const [batch, setBatch] = useState(null);
   const [stats, setStats] = useState(EMPTY_STATS);
@@ -159,23 +166,37 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   const visibleCompletedRows = filteredCompletedRows.slice((safeCompletedPage - 1) * completedPageSize, safeCompletedPage * completedPageSize);
 
   return (
-    <div className="mx-6 my-2.5 rounded-2xl border border-blue-200/70 bg-blue-50/50 p-3.5 dark:border-blue-500/20 dark:bg-blue-950/20">
+    <div className={cn("border-b border-border bg-blue-50/30 px-6 py-3.5 dark:border-border dark:bg-blue-950/20", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50">
-            <span className={`h-2.5 w-2.5 rounded-full ${workerConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
+          <div className="text-sm font-bold text-gray-900 dark:text-zinc-50">
             Continuous Scanning
           </div>
-          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">{paused ? "Scanning is paused. Incoming documents will wait in the queue." : "OCR starts automatically when a stable inbound file is received."}</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">
+            {paused ? "Scanning is paused. Incoming documents will wait in the queue." : "OCR starts automatically when a stable inbound file is received."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-900 dark:text-zinc-300">{workerConnected ? "Event stream connected" : "Reconnecting"}</span>
+          <span className={cn(
+            "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+            workerConnected
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+            BADGE_BASE
+          )}>
+            {workerConnected ? "Stream Connected" : "Reconnecting"}
+          </span>
           <Button
             size="sm"
             variant="outline"
             disabled={controlLoading}
             onClick={toggleScanning}
-            className={`h-9 px-4 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all ${paused ? "border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-zinc-800 dark:text-emerald-300 dark:hover:bg-zinc-700" : "border-rose-200 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-zinc-800 dark:text-rose-300 dark:hover:bg-zinc-700"}`}
+            className={cn(
+              "h-9 px-4 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all",
+              paused
+                ? "border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-zinc-800 dark:text-emerald-300 dark:hover:bg-zinc-700"
+                : "border-rose-200 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-zinc-800 dark:text-rose-300 dark:hover:bg-zinc-700"
+            )}
           >
             {controlLoading ? "Updating…" : paused ? "Resume scanning" : "Stop scanning"}
           </Button>
@@ -200,7 +221,17 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       </div>
       {recentSuccesses.length > 0 && (
         <div className="mt-3 border-t border-blue-100 pt-3 dark:border-blue-400/20">
-          <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Recent completed scans</div><Button size="xs" variant="outline" onClick={() => { setCompletedPage(1); setShowCompleted(true); }} className="h-7 px-2.5 text-xs font-medium rounded-lg border border-blue-200 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95">View ({completedRows.length})</Button></div>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Recent completed scans</div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setCompletedPage(1); setShowCompleted(true); }}
+              className="h-7 px-3 text-[11px] font-semibold rounded-lg border border-blue-200 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              View ({completedRows.length})
+            </Button>
+          </div>
           <div className="grid gap-1 sm:grid-cols-2">
             {recentSuccesses.map((row) => (
               <div key={row.id} className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] dark:bg-zinc-900/50">
@@ -211,16 +242,95 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
           </div>
         </div>
       )}
-      {showCompleted && typeof document !== "undefined" && createPortal(<div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Completed scans">
-        <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl dark:border-border dark:bg-zinc-900">
-          <div className="flex items-center justify-between px-5 py-4"><div><h2 className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">Completed scans</h2><p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">{completedRows.length} OCR-completed document(s) in this batch. Confirmation is still required.</p></div><Button size="sm" variant="outline" onClick={() => setShowCompleted(false)} className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95">Close</Button></div>
-          <DataViewToolbar label="Completed scan search and filters" className="border-b border-border p-4 dark:border-border"><Input value={completedQuery} onChange={(event) => { setCompletedQuery(event.target.value); setCompletedPage(1); }} placeholder="Search filename, student, or type" className="h-9 min-w-[220px] w-[min(36rem,60vw)] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80" /><div className="w-[180px] shrink-0"><Select value={completedStatus} onChange={(event) => { setCompletedStatus(event.target.value); setCompletedPage(1); }} className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:border-border dark:bg-zinc-800 dark:text-zinc-200"><option value="">All review statuses</option><option value="Needs Review">Needs Review</option><option value="Conflict">Conflict</option><option value="Duplicate">Duplicate</option><option value="Rejected">Rejected</option><option value="Confirmed">Confirmed</option></Select></div></DataViewToolbar>
-          <div className="min-h-0 flex-1 overflow-auto p-4"><div className="grid gap-2">{visibleCompletedRows.length ? visibleCompletedRows.map((row) => <div key={row.id} className="rounded-xl border border-border p-3 dark:border-border"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-medium text-gray-900 dark:text-zinc-100" title={row.original_filename}>{row.original_filename}</div><div className="mt-1 text-xs text-gray-900 dark:text-zinc-300">{row.proposed_doc_type || "Document type not detected"} · {row.ocr_name || "No extracted name"}</div></div><span className={cn("shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300", BADGE_BASE)}>OCR complete</span></div><div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-900 dark:text-zinc-300"><span>Review: {row.review_status || "Needs Review"}</span><Button size="xs" variant="outline" onClick={() => { setShowCompleted(false); onOpenReview?.(); }} className="h-7 px-2.5 text-xs font-medium rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95">Review Scan</Button></div></div>) : <p className="py-8 text-center text-sm text-gray-500">No completed scans match the current filters.</p>}</div></div>
+      <Dialog open={showCompleted} onOpenChange={setShowCompleted}>
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-[22px]">
+          <DialogHeader className="px-5 py-4 border-b border-border dark:border-border">
+            <DialogTitle>Completed Scans</DialogTitle>
+            <DialogDescription>
+              {completedRows.length} OCR-completed document(s) in this batch. Confirmation is still required.
+            </DialogDescription>
+          </DialogHeader>
+          <DataViewToolbar label="Completed scan search and filters" className="border-b border-border p-4 dark:border-border">
+            <Input
+              value={completedQuery}
+              onChange={(event) => { setCompletedQuery(event.target.value); setCompletedPage(1); }}
+              placeholder="Search filename, student, or type"
+              className="h-9 min-w-[220px] w-[min(36rem,60vw)] rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+            />
+            <div className="w-[180px] shrink-0">
+              <Select
+                value={completedStatus}
+                onChange={(event) => { setCompletedStatus(event.target.value); setCompletedPage(1); }}
+                className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-normal text-gray-700 shadow-none outline-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:border-border dark:bg-zinc-800 dark:text-zinc-200"
+              >
+                <option value="">All review statuses</option>
+                <option value="Needs Review">Needs Review</option>
+                <option value="Conflict">Conflict</option>
+                <option value="Duplicate">Duplicate</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Confirmed">Confirmed</option>
+              </Select>
+            </div>
+          </DataViewToolbar>
+          <div className="min-h-0 flex-1 overflow-auto p-4">
+            <div className="grid gap-2">
+              {visibleCompletedRows.length ? visibleCompletedRows.map((row) => (
+                <div key={row.id} className="rounded-xl border border-border p-3 dark:border-border">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-gray-900 dark:text-zinc-100" title={row.original_filename}>
+                        {row.original_filename}
+                      </div>
+                      <div className="mt-1 text-xs text-gray-900 dark:text-zinc-300">
+                        {row.proposed_doc_type || "Document type not detected"} · {row.ocr_name || "No extracted name"}
+                      </div>
+                    </div>
+                    <span className={cn("shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300", BADGE_BASE)}>
+                      OCR complete
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-900 dark:text-zinc-300">
+                    <span>Review: {row.review_status || "Needs Review"}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setShowCompleted(false); onOpenReview?.(); }}
+                      className="h-7 px-2.5 text-xs font-semibold rounded-lg border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+                    >
+                      Review Scan
+                    </Button>
+                  </div>
+                </div>
+              )) : (
+                <p className="py-8 text-center text-sm text-gray-500">No completed scans match the current filters.</p>
+              )}
+            </div>
+          </div>
           {filteredCompletedRows.length > 0 && (
-            <TablePagination borderless label="Completed scan pages" page={safeCompletedPage} pageSize={completedPageSize} totalCount={filteredCompletedRows.length} displayedCount={visibleCompletedRows.length} onPageChange={setCompletedPage} onPageSizeChange={setCompletedPageSize} className="px-4 py-3" />
+            <TablePagination
+              borderless
+              label="Completed scan pages"
+              page={safeCompletedPage}
+              pageSize={completedPageSize}
+              totalCount={filteredCompletedRows.length}
+              displayedCount={visibleCompletedRows.length}
+              onPageChange={setCompletedPage}
+              onPageSizeChange={setCompletedPageSize}
+              className="px-4 py-3 border-t border-border dark:border-border"
+            />
           )}
-        </div>
-      </div>, document.body)}
+          <DialogFooter className="px-5 py-3 border-t border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/50">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowCompleted(false)}
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

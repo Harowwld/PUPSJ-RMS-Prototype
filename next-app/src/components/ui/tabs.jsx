@@ -12,6 +12,7 @@ const TabsContext = React.createContext({
   variant: "default",
   size: "default",
   listId: "default",
+  orientation: "horizontal",
 });
 
 function Tabs({
@@ -66,17 +67,21 @@ function TabsList({
   className,
   variant = "default",
   size = "default",
+  orientation: orientationProp,
   id: idProp,
   ...props
 }) {
   const generatedId = React.useId();
   const listId = idProp || generatedId;
+  const orientation =
+    orientationProp || (className?.includes("flex-col") ? "vertical" : "horizontal");
 
   return (
-    <TabsContext.Provider value={{ variant, size, listId }}>
+    <TabsContext.Provider value={{ variant, size, listId, orientation }}>
       <TabsPrimitive.List
         data-slot="tabs-list"
         data-variant={variant}
+        data-orientation={orientation}
         className={cn(tabsListVariants({ variant, size }), className)}
         {...props}
       />
@@ -139,6 +144,7 @@ function TabsTrigger({
   }
 
   const isCapsule = context.variant === "capsule" || resolvedSize === "capsule";
+  const layoutAxis = context.orientation === "vertical" ? "y" : "x";
 
   return (
     <TabsPrimitive.Tab
@@ -160,6 +166,8 @@ function TabsTrigger({
             {isActive && (
               <motion.span
                 layoutId={`segmented-pill-${context.listId}`}
+                layout={layoutAxis}
+                initial={false}
                 transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                 className={cn(
                   "absolute inset-0 z-0 bg-white dark:bg-zinc-800 pointer-events-none",
@@ -207,9 +215,11 @@ function SegmentedControl({
   items = [],
   variant = "capsule",
   size: sizeProp,
+  orientation = "horizontal",
   className,
   pillClassName,
   badgeClassName,
+  id,
   ...props
 }) {
   const resolvedSize = sizeProp || (variant === "capsule" ? "capsule" : "default");
@@ -217,10 +227,11 @@ function SegmentedControl({
     <Tabs
       value={value}
       onValueChange={onValueChange}
+      orientation={orientation}
       className={cn("w-auto", className)}
       {...props}
     >
-      <TabsList variant={variant} size={resolvedSize}>
+      <TabsList variant={variant} size={resolvedSize} orientation={orientation} id={id}>
         {items.map((item) => (
           <TabsTrigger
             key={item.value}

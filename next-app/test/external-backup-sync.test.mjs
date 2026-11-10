@@ -10,7 +10,7 @@ let record;
 let externalStatus;
 global.__pupsjPostgresPool = {
   async query(sql, params) {
-    if (sql.startsWith("SELECT * FROM backups")) return { rows: [record] };
+    if (sql.includes("FROM backups")) return { rows: [record] };
     if (sql.startsWith("UPDATE backups SET status_external")) {
       externalStatus = params[0];
       return { rows: [{ id: record.id }] };

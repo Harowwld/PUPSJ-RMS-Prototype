@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -39,14 +39,49 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import { SegmentedControl } from "@/components/ui/tabs";
 import useTableScroll from "@/hooks/useTableScroll";
-import { matchesSearchQuery } from "@/lib/searchUtils";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
 import { generateExportFilename } from "@/lib/exportHelpers";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 import { StudentIcon as EmptyStudentIcon , Archive01Icon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CompassIcon, DragDropIcon, File02Icon, LibraryIcon, Location01Icon, PencilEdit01Icon, Search01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+
+const STUDENT_SORT_OPTIONS = [
+  { key: "studentNo", label: "Student Number" },
+  { key: "name", label: "Student Name" },
+  { key: "courseCode", label: "Academic Program" },
+  { key: "yearLevel", label: "Year Level" },
+  { key: "section", label: "Section" },
+  { key: "location", label: "Physical Archive" },
+];
+
+const STUDENT_GROUP_OPTIONS = [
+  { key: "courseCode", label: "Program", icon: LibraryIcon },
+  { key: "yearLevel", label: "Year Level", icon: CompassIcon },
+  { key: "section", label: "Section", icon: UserSearch01Icon },
+  { key: "none", label: "No grouping" },
+];
+
+const STUDENT_TABLE_COLUMNS = [
+  { key: "studentNo", label: "Student Number" },
+  { key: "name", label: "Student Name" },
+  { key: "courseCode", label: "Program" },
+  { key: "yearLevel", label: "Year Level" },
+  { key: "section", label: "Section" },
+  { key: "location", label: "Storage Location" },
+  { key: "documentCount", label: "Documents" },
+  { key: "status", label: "Status" },
+];
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
@@ -63,12 +98,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function StudentDirectoryTab({
   authUser = null,
   loading = false,
-  students = [],
-  archivedStudents = [],
   courses = [],
   sections = [],
   storageLayout = null,
-  allDocs = [],
   onLocateStudent,
   onPreviewDocument,
   onRescan,
@@ -77,11 +109,18 @@ export default function StudentDirectoryTab({
 }) {
   const [activeTab, setActiveTab] = useState("active"); // "active" | "archived"
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [courseFilters, setCourseFilters] = useState([]);
   const [yearFilters, setYearFilters] = useState([]);
   const [sectionFilters, setSectionFilters] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [browseSummary, setBrowseSummary] = useState(null);
+  const [browsePage, setBrowsePage] = useState({ rows: [], total: 0 });
+  const [browseLoading, setBrowseLoading] = useState(true);
+  const [hasLoadedPage, setHasLoadedPage] = useState(false);
+  const [browseVersion, setBrowseVersion] = useState(0);
+  const [profileDocs, setProfileDocs] = useState({ studentNo: null, rows: [] });
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [kpiOrder, setKpiOrder] = useState(["students", "programs", "documents"]);;
   const statCardsRef = useRef(null);
@@ -102,13 +141,62 @@ export default function StudentDirectoryTab({
     };
   }, [selectedKpi]);
 
-  // Sorting
-  const [sortBy, setSortBy] = useState("name");
+  // Sorting & View Preferences
+  const [sortBy, setSortBy] = useState("studentNo");
   const [sortOrder, setSortOrder] = useState("ASC");
+  const [filterRules, setFilterRules] = useState([]);
+  const [groupBy, setGroupBy] = useState("none");
+  const [visibleColumns, setVisibleColumns] = useState(() => STUDENT_TABLE_COLUMNS.map((c) => c.key));
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Pagination
   const [page, setPage] = useUrlPage();
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const onDataChanged = useCallback(async () => {
+    await fetchData?.();
+    setBrowseVersion((version) => version + 1);
+  }, [fetchData]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/students/browse?mode=summary", { cache: "no-store", signal: controller.signal })
+      .then((res) => res.json())
+      .then((json) => { if (json?.ok) setBrowseSummary(json.data); })
+      .catch((error) => { if (error.name !== "AbortError") showToast?.({ title: "Directory Load Failed", description: "Could not load directory totals." }, true); });
+    return () => controller.abort();
+  }, [browseVersion, showToast]);
+
+  const browseParams = useMemo(() => {
+    const params = new URLSearchParams({ archived: String(activeTab === "archived"), page: String(page), pageSize: String(itemsPerPage), sortBy, sortOrder });
+    if (debouncedSearch) params.set("q", debouncedSearch);
+    const ruleCourses = filterRules.filter(r => r.fieldKey === "course" && r.operator === "is").map(r => r.value);
+    const ruleYears = filterRules.filter(r => r.fieldKey === "year" && r.operator === "is").map(r => r.value);
+    const ruleSections = filterRules.filter(r => r.fieldKey === "section" && r.operator === "is").map(r => r.value);
+    [...new Set([...courseFilters, ...ruleCourses])].forEach((value) => params.append("course", value));
+    [...new Set([...yearFilters, ...ruleYears])].forEach((value) => params.append("year", value));
+    [...new Set([...sectionFilters, ...ruleSections])].forEach((value) => params.append("section", value));
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    return params.toString();
+  }, [activeTab, page, itemsPerPage, sortBy, sortOrder, debouncedSearch, courseFilters, yearFilters, sectionFilters, filterRules, startDate, endDate]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadingTimer = setTimeout(() => setBrowseLoading(true), 0);
+    fetch(`/api/students/browse?${browseParams}`, { cache: "no-store", signal: controller.signal })
+      .then((res) => res.json())
+      .then((json) => { if (json?.ok) { setBrowsePage(json.data); setHasLoadedPage(true); } else throw new Error(json?.error || "Directory unavailable"); })
+      .catch((error) => { if (error.name !== "AbortError") showToast?.({ title: "Directory Load Failed", description: error.message }, true); })
+      .finally(() => { if (!controller.signal.aborted) setBrowseLoading(false); });
+    return () => { clearTimeout(loadingTimer); controller.abort(); };
+  }, [browseParams, browseVersion, showToast]);
 
   // Modals
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -116,6 +204,16 @@ export default function StudentDirectoryTab({
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [activeStudent, setActiveStudent] = useState(null);
+
+  useEffect(() => {
+    if (!profileOpen || !activeStudent?.studentNo) return;
+    const studentNo = activeStudent.studentNo;
+    let active = true;
+    fetchAllPages(`/api/documents?studentNo=${encodeURIComponent(studentNo)}&excludeDeclined=1`, 200)
+      .then((docs) => { if (active) setProfileDocs({ studentNo, rows: docs }); })
+      .catch(() => { if (active) setProfileDocs({ studentNo, rows: [] }); });
+    return () => { active = false; };
+  }, [profileOpen, activeStudent?.studentNo, browseVersion]);
 
   // Archive / Restore Confirm Modals
   const [archiveTarget, setArchiveTarget] = useState(null);
@@ -126,11 +224,7 @@ export default function StudentDirectoryTab({
   const [bulkActionType, setBulkActionType] = useState("archive"); // "archive" | "restore"
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  // Dataset based on active tab
-  const allAvailableStudents = useMemo(() => {
-    if (activeTab === "archived") return archivedStudents;
-    return students;
-  }, [activeTab, students, archivedStudents]);
+  const allAvailableStudents = browsePage.rows;
 
   // Reset selection when switching directory tabs (active / archived)
   useEffect(() => {
@@ -141,39 +235,15 @@ export default function StudentDirectoryTab({
     return () => clearTimeout(timer);
   }, [activeTab, setPage]);
 
-  // Prune any stale selected IDs when available students update
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSelectedIds((prev) => {
-        if (prev.size === 0) return prev;
-        const validIds = new Set(allAvailableStudents.map((s) => s.studentNo));
-        let needsPruning = false;
-        for (const id of prev) {
-          if (!validIds.has(id)) {
-            needsPruning = true;
-            break;
-          }
-        }
-        if (!needsPruning) return prev;
-        const next = new Set();
-        for (const id of prev) {
-          if (validIds.has(id)) next.add(id);
-        }
-        return next;
-      });
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [allAvailableStudents]);
-
   // Unique years for filter
   const availableYears = useMemo(() => {
     const years = new Set();
-    [...students, ...archivedStudents].forEach((s) => {
-      const yr = Number(s.yearLevel || s.year_level);
+    (browseSummary?.facets || []).forEach((entry) => {
+      const yr = Number(entry.year_level);
       if (Number.isFinite(yr) && yr >= 2000) years.add(yr);
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [students, archivedStudents]);
+  }, [browseSummary]);
 
   // Dynamic sections filtered by courseFilters
   const availableFilterSections = useMemo(() => {
@@ -191,27 +261,22 @@ export default function StudentDirectoryTab({
   // Document count lookup map
   const docCountMap = useMemo(() => {
     const map = new Map();
-    (allDocs || []).forEach((d) => {
-      const sn = String(d.student_no || "").trim().toUpperCase();
-      if (sn) {
-        map.set(sn, (map.get(sn) || 0) + 1);
-      }
+    allAvailableStudents.forEach((student) => {
+      map.set(String(student.studentNo).toUpperCase(), student.documentCount || 0);
     });
     return map;
-  }, [allDocs]);
+  }, [allAvailableStudents]);
 
   // KPI card calculations
   const kpiStats = useMemo(() => {
-    const activeCount = students.length;
-    const assignedDrawersCount = students.filter(
-      (s) => s.room && s.cabinet && s.drawer
-    ).length;
+    const activeCount = browseSummary?.counts?.active || 0;
+    const assignedDrawersCount = browseSummary?.counts?.assigned || 0;
 
     // Top programs by enrollment
     const courseCounts = {};
-    students.forEach((s) => {
-      const code = s.courseCode || s.course_code || "Unassigned";
-      courseCounts[code] = (courseCounts[code] || 0) + 1;
+    (browseSummary?.facets || []).filter((entry) => entry.status === "Active").forEach((entry) => {
+      const code = entry.course_code || "Unassigned";
+      courseCounts[code] = (courseCounts[code] || 0) + entry.count;
     });
     const topPrograms = Object.entries(courseCounts)
       .sort((a, b) => b[1] - a[1])
@@ -229,17 +294,8 @@ export default function StudentDirectoryTab({
     });
 
     // Document breakdown
-    const studentsWithFilesCount = new Set(
-      (allDocs || []).map((d) => d.student_no || d.studentNo).filter(Boolean)
-    ).size;
-    const docTypeCounts = {};
-    (allDocs || []).forEach((d) => {
-      const type = d.doc_type || d.docType || "General Document";
-      docTypeCounts[type] = (docTypeCounts[type] || 0) + 1;
-    });
-    const topDocTypes = Object.entries(docTypeCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+    const studentsWithFilesCount = browseSummary?.documents?.students_with_files || 0;
+    const topDocTypes = (browseSummary?.docTypes || []).map((entry) => [entry.doc_type, entry.count]);
 
     return {
       activeCount,
@@ -248,74 +304,15 @@ export default function StudentDirectoryTab({
       programsList,
       totalPrograms: courses.length,
       totalSections: sections.length,
-      totalDocs: (allDocs || []).length,
+      totalDocs: browseSummary?.documents?.total || 0,
       studentsWithFilesCount,
       topDocTypes,
     };
-  }, [students, courses, sections, allDocs]);
+  }, [browseSummary, courses, sections]);
 
   // Filtered and sorted students
-  const filteredStudents = useMemo(() => {
-    let result = [...allAvailableStudents];
-
-    // Search query
-    if (searchQuery.trim()) {
-      result = result.filter((s) =>
-        matchesSearchQuery([s.studentNo, s.name, s.courseCode, s.section], searchQuery)
-      );
-    }
-
-    // Course filter
-    if (courseFilters.length > 0) {
-      result = result.filter((s) =>
-        courseFilters.some((code) => String(s.courseCode || "").trim().toUpperCase() === code.trim().toUpperCase())
-      );
-    }
-
-    // Year filter
-    if (yearFilters.length > 0) {
-      result = result.filter((s) =>
-        yearFilters.some((yr) => String(s.yearLevel || s.year_level) === String(yr))
-      );
-    }
-
-    // Section filter
-    if (sectionFilters.length > 0) {
-      result = result.filter((s) =>
-        sectionFilters.some((sec) => String(s.section || "").trim().toUpperCase() === sec.trim().toUpperCase())
-      );
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      let valA = a[sortBy] ?? "";
-      let valB = b[sortBy] ?? "";
-
-      if (sortBy === "documents") {
-        valA = docCountMap.get(String(a.studentNo).toUpperCase()) || 0;
-        valB = docCountMap.get(String(b.studentNo).toUpperCase()) || 0;
-        return sortOrder === "ASC" ? valA - valB : valB - valA;
-      }
-
-      if (typeof valA === "string") valA = valA.toLowerCase();
-      if (typeof valB === "string") valB = valB.toLowerCase();
-
-      if (valA < valB) return sortOrder === "ASC" ? -1 : 1;
-      if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  }, [
-    allAvailableStudents,
-    searchQuery,
-    courseFilters,
-    yearFilters,
-    sectionFilters,
-    sortBy,
-    sortOrder,
-    docCountMap,
-  ]);
+  const filteredStudents = allAvailableStudents;
+  const filteredCount = browsePage.total;
 
   const filterGroups = useMemo(() => [
     {
@@ -324,7 +321,7 @@ export default function StudentDirectoryTab({
       options: (courses || []).map((c) => ({
         value: c.code,
         label: c.code,
-        count: allAvailableStudents.filter((s) => String(s.courseCode || "").toUpperCase() === c.code.toUpperCase()).length,
+        count: (browseSummary?.facets || []).filter((entry) => (activeTab === "archived" ? entry.status !== "Active" : entry.status === "Active") && String(entry.course_code).toUpperCase() === c.code.toUpperCase()).reduce((sum, entry) => sum + entry.count, 0),
       })),
     },
     {
@@ -333,7 +330,7 @@ export default function StudentDirectoryTab({
       options: availableYears.map((yr) => ({
         value: String(yr),
         label: `Batch ${yr}`,
-        count: allAvailableStudents.filter((s) => String(s.yearLevel || s.year_level) === String(yr)).length,
+        count: (browseSummary?.facets || []).filter((entry) => (activeTab === "archived" ? entry.status !== "Active" : entry.status === "Active") && Number(entry.year_level) === yr).reduce((sum, entry) => sum + entry.count, 0),
       })),
     },
     {
@@ -342,10 +339,10 @@ export default function StudentDirectoryTab({
       options: availableFilterSections.map((sec) => ({
         value: sec,
         label: `Section ${sec}`,
-        count: allAvailableStudents.filter((s) => String(s.section || "").toUpperCase() === sec.toUpperCase()).length,
+        count: (browseSummary?.facets || []).filter((entry) => (activeTab === "archived" ? entry.status !== "Active" : entry.status === "Active") && String(entry.section).toUpperCase() === sec.toUpperCase()).reduce((sum, entry) => sum + entry.count, 0),
       })),
     },
-  ], [courses, allAvailableStudents, availableYears, availableFilterSections]);
+  ], [courses, browseSummary, activeTab, availableYears, availableFilterSections]);
 
   const filterValues = useMemo(() => ({
     course: courseFilters,
@@ -366,11 +363,41 @@ export default function StudentDirectoryTab({
     }
   }, [setPage]);
 
+  const filterFields = useMemo(() => [
+    {
+      key: "course",
+      label: "Program",
+      options: (courses || []).map((c) => ({
+        value: c.code,
+        label: `${c.code}${c.name ? ` - ${c.name}` : ""}`,
+      })),
+    },
+    {
+      key: "year",
+      label: "Batch / Entry Year",
+      options: availableYears.map((yr) => ({
+        value: String(yr),
+        label: `Batch ${yr}`,
+      })),
+    },
+    {
+      key: "section",
+      label: "Section",
+      options: availableFilterSections.map((sec) => ({
+        value: sec,
+        label: `Section ${sec}`,
+      })),
+    },
+  ], [courses, availableYears, availableFilterSections]);
+
   const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setCourseFilters([]);
     setYearFilters([]);
     setSectionFilters([]);
+    setFilterRules([]);
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   }, [setPage]);
 
@@ -381,6 +408,27 @@ export default function StudentDirectoryTab({
         id: "search",
         label: `Search: ${searchQuery.trim()}`,
         onRemove: () => { setSearchQuery(""); setPage(1); },
+      });
+    }
+    filterRules.forEach((rule) => {
+      const field = filterFields.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
+      const valLabel = opt?.label || String(rule.value);
+      chips.push({
+        id: rule.id,
+        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${valLabel}`,
+        onRemove: () => {
+          setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
+          setPage(1);
+        },
+      });
+    });
+    if (startDate || endDate) {
+      chips.push({
+        id: "dateRange",
+        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
     courseFilters.forEach((c) => {
@@ -405,14 +453,30 @@ export default function StudentDirectoryTab({
       });
     });
     return chips;
-  }, [searchQuery, courseFilters, yearFilters, sectionFilters, setPage]);
+  }, [searchQuery, filterRules, filterFields, startDate, endDate, courseFilters, yearFilters, sectionFilters, setPage]);
 
-  // Pagination slice
-  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / itemsPerPage));
-  const paginatedStudents = useMemo(() => {
-    const start = (page - 1) * itemsPerPage;
-    return filteredStudents.slice(start, start + itemsPerPage);
-  }, [filteredStudents, page, itemsPerPage]);
+  const totalPages = Math.max(1, Math.ceil(filteredCount / itemsPerPage));
+  const paginatedStudents = filteredStudents;
+
+  const groupedStudents = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "", students: paginatedStudents }];
+    }
+    const map = new Map();
+    for (const student of paginatedStudents) {
+      let label = "";
+      if (groupBy === "courseCode") {
+        label = student.courseCode || "Unassigned Program";
+      } else if (groupBy === "yearLevel") {
+        label = `Year / Batch ${student.yearLevel || "N/A"}`;
+      } else if (groupBy === "section") {
+        label = `Section ${student.section || "N/A"}`;
+      }
+      if (!map.has(label)) map.set(label, []);
+      map.get(label).push(student);
+    }
+    return [...map.entries()].map(([label, students]) => ({ key: label, label, students }));
+  }, [groupBy, paginatedStudents]);
 
   const {
     containerRef: tableContainerRef,
@@ -424,13 +488,16 @@ export default function StudentDirectoryTab({
 
   useEffect(() => {
     resetScroll();
-  }, [page, activeTab, searchQuery, courseFilters, yearFilters, sectionFilters, resetScroll]);
+  }, [page, activeTab, searchQuery, courseFilters, yearFilters, sectionFilters, filterRules, startDate, endDate, resetScroll]);
 
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
     courseFilters.length > 0 ||
     yearFilters.length > 0 ||
-    sectionFilters.length > 0;
+    sectionFilters.length > 0 ||
+    filterRules.length > 0 ||
+    startDate !== "" ||
+    endDate !== "";
 
   const handleSort = (col) => {
     if (sortBy === col) {
@@ -465,7 +532,7 @@ export default function StudentDirectoryTab({
     setIsRefreshing(true);
     const start = Date.now();
     try {
-      await fetchData?.();
+      await onDataChanged();
       const elapsed = Date.now() - start;
       if (elapsed < 500) {
         await new Promise((r) => setTimeout(r, 500 - elapsed));
@@ -486,36 +553,16 @@ export default function StudentDirectoryTab({
       });
       return;
     }
-    if (filteredStudents.length === 0) return;
-    const headers = [
-      "Student No",
-      "Full Name",
-      "Degree Program",
-      "Section",
-      "Year Level",
-      "Room",
-      "Cabinet",
-      "Drawer",
-      "Documents Count",
-      "Status",
-    ];
-
-    const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
-    const rows = filteredStudents.map((s) => [
-      q(s?.studentNo || s?.student_no),
-      q(s?.name || ""),
-      q(s?.courseCode || s?.course_code || ""),
-      q(s?.section || ""),
-      q(s?.yearLevel || s?.year_level || ""),
-      q(s?.room || ""),
-      q(s?.cabinet || ""),
-      q(s?.drawer || ""),
-      q(docCountMap.get(String(s?.studentNo || s?.student_no || "").toUpperCase()) || 0),
-      q(s?.status || "Active"),
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    if (filteredCount === 0) return;
+    const exportParams = new URLSearchParams(browseParams);
+    if (searchQuery.trim()) exportParams.set("q", searchQuery.trim());
+    else exportParams.delete("q");
+    const response = await fetch(`/api/students/browse?mode=export&${exportParams}`, { cache: "no-store" });
+    if (!response.ok) {
+      showToast?.({ title: "Export Failed", description: "Could not export the student directory." }, true);
+      return;
+    }
+    const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     const fileName = generateExportFilename("STUDENT-DIRECTORY", "DATA", "csv");
@@ -531,17 +578,6 @@ export default function StudentDirectoryTab({
       description: `Student directory exported successfully as ${fileName}.`,
     });
 
-    try {
-      await fetch("/api/audit-logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "Export Student Directory",
-        }),
-      });
-    } catch {
-      // ignore
-    }
   };
 
   const handleCopyStudentNumbers = useCallback(() => {
@@ -573,7 +609,7 @@ export default function StudentDirectoryTab({
       });
       setArchiveModalOpen(false);
       setArchiveTarget(null);
-      fetchData?.();
+      onDataChanged();
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -609,7 +645,7 @@ export default function StudentDirectoryTab({
       });
       setRestoreModalOpen(false);
       setRestoreTarget(null);
-      fetchData?.();
+      onDataChanged();
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -649,7 +685,7 @@ export default function StudentDirectoryTab({
 
       setSelectedIds(new Set());
       setBulkActionOpen(false);
-      fetchData?.();
+      onDataChanged();
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -680,17 +716,24 @@ export default function StudentDirectoryTab({
           {/* 1. Page Header */}
           <PageHeader
             icon="UserSearch01Icon"
-            title="Student Directory"
+            title={
+              <span className="flex items-center gap-2">
+                <span>Student Directory</span>
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {filteredCount > 0 ? `${filteredCount.toLocaleString()} ${filteredCount === 1 ? "student" : "students"}` : "No students"}
+                </span>
+              </span>
+            }
             description="Browse, filter, and manage student master records, academic profiles, and physical archive assignments."
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-            descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-2">
                 <RefreshButton
                   onRefresh={handleRefresh}
-                  isLoading={loading || isRefreshing}
+                  isLoading={loading || browseLoading || isRefreshing}
                   title="Refresh Student Directory"
                 />
 
@@ -702,7 +745,7 @@ export default function StudentDirectoryTab({
                       type="button"
                       variant="outline"
                       onClick={handleExportCSV}
-                      disabled={filteredStudents.length === 0}
+                      disabled={filteredCount === 0}
                       className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Export CSV
@@ -1034,9 +1077,8 @@ export default function StudentDirectoryTab({
             })}
           </Reorder.Group>
 
-          {/* 3. Navigation & Filters Toolbar */}
-          <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card select-none">
-            {/* Status Segmented Tabs */}
+          {/* Status Segmented Tabs Row */}
+          <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
             <SegmentedControl
               value={activeTab}
               onValueChange={(tab) => {
@@ -1049,71 +1091,114 @@ export default function StudentDirectoryTab({
                 {
                   value: "active",
                   label: "Active",
-                  badge: students.length,
+                  badge: browseSummary?.counts?.active || 0,
                 },
                 {
                   value: "archived",
                   label: "Archived",
-                  badge: archivedStudents.length,
+                  badge: browseSummary?.counts?.archived || 0,
                 },
               ]}
             />
-
-            {/* Filter Selects & Search Bar */}
-            <div className="flex flex-nowrap items-center gap-2.5 flex-1 lg:justify-end">
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64 group">
-                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Search student no. or name"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setPage(1);
-                  }}
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                  {filteredStudents.length.toLocaleString()}
-                </div>
-              </div>
-
-              {/* MultiCriteriaFilter Popover */}
-              <MultiCriteriaFilter
-                title="Filter Students"
-                groups={filterGroups}
-                selectedValues={filterValues}
-                onChange={handleFilterChange}
-                onClearAll={handleResetFilters}
-                totalCount={allAvailableStudents.length}
-                filteredCount={filteredStudents.length}
-              />
-            </div>
-            <TableScrollControls scrollContainerRef={tableContainerRef}
-              isScrolledX={isScrolledX}
-              onResetScroll={resetScroll}
-              onScrollLeft={() => scrollLeft(400)}
-              onScrollRight={() => scrollRight(400)}
-            />
-          </DataViewToolbar>
-
-          {/* Active Filter Chips & Scroll Controls */}
-          <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
-            <div className="flex-1 min-w-0">
-              <ActiveFilterChips
-                chips={activeChips}
-                onClearAll={handleResetFilters}
-                className="p-0 border-0"
-              />
-            </div>
           </div>
 
+          {/* 3. Navigation & Filters Toolbar */}
+          <DataViewToolbar label="Student directory search and filters" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+            {/* Left Zone: Search + Scroll */}
+            <div className="flex min-w-0 items-center gap-2">
+              <DashboardSearch
+                value={searchQuery}
+                onChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
+                }}
+                onClear={() => {
+                  setSearchQuery("");
+                  setPage(1);
+                }}
+                resultCount={filteredCount}
+                placeholder="Search student no. or name..."
+              />
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
+                isScrolledX={isScrolledX}
+                onResetScroll={resetScroll}
+                onScrollLeft={() => scrollLeft(400)}
+                onScrollRight={() => scrollRight(400)}
+                controlSize="md"
+              />
+            </div>
+
+            {/* Right Zone: Filter, Sort, Group, Columns, Date Range */}
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <FilterPopover
+                fields={filterFields}
+                filters={filterRules}
+                onFiltersChange={(newRules) => {
+                  setFilterRules(newRules);
+                  setPage(1);
+                }}
+                entityLabel="students"
+              />
+              <SortPopover
+                options={STUDENT_SORT_OPTIONS}
+                sortBy={sortBy}
+                onSortByChange={(val) => {
+                  setSortBy(val);
+                  setSortOrder("ASC");
+                  setPage(1);
+                }}
+                sortOrder={sortOrder}
+                onSortOrderChange={(ord) => {
+                  setSortOrder(ord);
+                  setPage(1);
+                }}
+              />
+              <GroupPopover
+                options={STUDENT_GROUP_OPTIONS}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+              />
+              <ColumnsPopover
+                columns={STUDENT_TABLE_COLUMNS}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
+                minVisible={2}
+              />
+              <DateRangeFilterButton
+                startDate={startDate}
+                endDate={endDate}
+                onApply={({ startDate: s, endDate: e }) => {
+                  setStartDate(s);
+                  setEndDate(e);
+                  setPage(1);
+                }}
+                onClear={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  setPage(1);
+                }}
+                disableFutureDates={true}
+              />
+            </div>
+          </DataViewToolbar>
+
+          {/* Active Filter Chips */}
+          {activeChips.length > 0 && (
+            <div className="border-t border-border dark:border-border px-6 py-2.5 flex items-center justify-between gap-4 bg-white dark:bg-card">
+              <div className="flex-1 min-w-0">
+                <ActiveFilterChips
+                  chips={activeChips}
+                  onClearAll={handleResetFilters}
+                  className="p-0 border-0"
+                />
+              </div>
+            </div>
+          )}
+
           {/* 4. Main Data Table */}
-          <div className={cn("w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredStudents.length === 0 && "rounded-b-2xl")}>
-            {loading ? (
+          <div className={cn("relative w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredCount === 0 && "rounded-b-2xl")} aria-busy={browseLoading}>
+            {loading || (browseLoading && !hasLoadedPage) ? (
               <div className="p-6 space-y-3 rounded-b-2xl">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-12 w-full rounded-xl" />
@@ -1154,9 +1239,9 @@ export default function StudentDirectoryTab({
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
                 <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
-                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900">
+                      <th className="w-12 py-2.5 px-3 text-center sticky left-0 z-20 bg-white dark:bg-card">
                         <input
                           type="checkbox"
                           className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
@@ -1167,7 +1252,7 @@ export default function StudentDirectoryTab({
 
                       <th
                         className={cn(
-                          "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                          "py-2.5 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1196,7 +1281,7 @@ export default function StudentDirectoryTab({
                         </div>
                       </th>
 
-                      <th className="p-4 w-[240px] min-w-[240px]">
+                      <th className="py-2.5 px-4 w-[240px] min-w-[240px]">
                         <button
                           type="button"
                           onClick={() => handleSort("name")}
@@ -1207,7 +1292,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 w-[190px] min-w-[190px]">
+                      <th className="py-2.5 px-4 w-[190px] min-w-[190px]">
                         <button
                           type="button"
                           onClick={() => handleSort("courseCode")}
@@ -1218,7 +1303,7 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 w-[130px] min-w-[130px]">
+                      <th className="py-2.5 px-4 w-[130px] min-w-[130px]">
                         <button
                           type="button"
                           onClick={() => handleSort("yearLevel")}
@@ -1229,11 +1314,11 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 w-[200px] min-w-[200px]">
+                      <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
                         <span>Physical Archive</span>
                       </th>
 
-                      <th className="p-4 w-[100px] min-w-[100px] text-center">
+                      <th className="py-2.5 px-4 w-[100px] min-w-[100px] text-center">
                         <button
                           type="button"
                           onClick={() => handleSort("documents")}
@@ -1244,38 +1329,47 @@ export default function StudentDirectoryTab({
                         </button>
                       </th>
 
-                      <th className="p-4 w-[120px] min-w-[120px] text-center">
+                      <th className="py-2.5 px-4 w-[120px] min-w-[120px] text-center">
                         <span>Status</span>
                       </th>
 
-                      <th className="w-28 min-w-[112px] p-4 pr-6 text-right">
+                      <th className="w-28 min-w-[112px] py-2.5 px-4 pr-6 text-right">
                         <span>Actions</span>
                       </th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {paginatedStudents.map((s) => {
-                      const isSelected = selectedIds.has(s.studentNo);
-                      const isStudentArchived = String(s.status || "").toLowerCase() === "archived";
-                      const docCount = docCountMap.get(String(s.studentNo).toUpperCase()) || 0;
+                    {groupedStudents.map((group) => (
+                      <React.Fragment key={group.key}>
+                        {groupBy !== "none" && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
+                            <td colSpan={9} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                              {group.label} ({group.students.length})
+                            </td>
+                          </tr>
+                        )}
+                        {group.students.map((s) => {
+                          const isSelected = selectedIds.has(s.studentNo);
+                          const isStudentArchived = String(s.status || "").toLowerCase() === "archived";
+                          const docCount = docCountMap.get(String(s.studentNo).toUpperCase()) || 0;
 
-                      return (
-                        <tr
-                          key={s.studentNo}
-                          selected={isSelected}
-                          onClick={() => {
-                            setActiveStudent(s);
-                            setProfileOpen(true);
-                          }}
-                          className={cn(
-                            "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                            isSelected && "bg-blue-50/50 dark:bg-blue-950/20"
-                          )}
-                        >
+                          return (
+                            <tr
+                              key={s.studentNo}
+                              selected={isSelected}
+                              onClick={() => {
+                                setActiveStudent(s);
+                                setProfileOpen(true);
+                              }}
+                              className={cn(
+                                "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
+                                isSelected && "bg-blue-50/50 dark:bg-blue-950/20"
+                              )}
+                            >
                           <td
                             className={cn(
-                              "w-12 p-4 text-center align-middle border-r border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
+                              "w-12 py-2.5 px-3 text-center align-middle border-r border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
                               isSelected && "bg-blue-50/50 dark:bg-blue-950/20"
                             )}
                             onClick={(e) => {
@@ -1293,7 +1387,7 @@ export default function StudentDirectoryTab({
 
                           <td
                             className={cn(
-                              "p-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                              "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
                               isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
                               isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                             )}
@@ -1303,13 +1397,13 @@ export default function StudentDirectoryTab({
                             </span>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                          <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
                               {formatTitleCase(s.name)}
                             </div>
                           </td>
 
-                          <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Badge
                                 variant="outline"
@@ -1323,11 +1417,11 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                             {s.yearLevel || "N/A"}
                           </td>
 
-                          <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                               <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
                               <span>
@@ -1336,24 +1430,27 @@ export default function StudentDirectoryTab({
                             </div>
                           </td>
 
-                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <span className="tabular-nums">
                               {docCount} {docCount === 1 ? "file" : "files"}
                             </span>
                           </td>
 
-                          <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <Badge
-                              variant="outline"
-                              className={cn("text-[10px] font-semibold px-2.5 py-0.5 rounded-full border", isStudentArchived
-                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20", BADGE_BASE)}
+                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                            <span
+                              className={cn(
+                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
+                                isStudentArchived
+                                  ? BADGE_PALETTES.amber
+                                  : BADGE_PALETTES.emerald,
+                                BADGE_BASE
+                              )}
                             >
                               {s.status || "Active"}
-                            </Badge>
+                            </span>
                           </td>
 
-                          <td className="w-28 p-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <td className="w-28 py-2.5 px-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {/* View Profile */}
                               <Tooltip>
@@ -1442,15 +1539,22 @@ export default function StudentDirectoryTab({
                         </tr>
                       );
                     })}
-                  </tbody>
+                  </React.Fragment>
+                ))}
+              </tbody>
                 </Table>
+              </div>
+            )}
+            {browseLoading && hasLoadedPage && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
+                Loading students…
               </div>
             )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
           {!loading && filteredStudents.length > 0 && (
-            <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredStudents.length} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
+            <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredCount} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading || browseLoading} />
           )}
         </Card>
 
@@ -1488,7 +1592,7 @@ export default function StudentDirectoryTab({
           courses={courses}
           sections={sections}
           storageLayout={storageLayout}
-          onSuccess={fetchData}
+          onSuccess={onDataChanged}
           showToast={showToast}
           authUser={authUser}
         />
@@ -1500,7 +1604,7 @@ export default function StudentDirectoryTab({
           storageLayout={storageLayout}
           courses={courses}
           sections={sections}
-          onSuccess={fetchData}
+          onSuccess={onDataChanged}
           showToast={showToast}
         />
 
@@ -1512,7 +1616,7 @@ export default function StudentDirectoryTab({
           courses={courses}
           sections={sections}
           storageLayout={storageLayout}
-          onSuccess={fetchData}
+          onSuccess={onDataChanged}
           showToast={showToast}
           authUser={authUser}
         />
@@ -1540,7 +1644,7 @@ export default function StudentDirectoryTab({
                 }
               }}
               courses={courses}
-              allDocs={allDocs}
+              allDocs={profileDocs.studentNo === activeStudent?.studentNo ? profileDocs.rows : []}
               onLocateStudent={onLocateStudent}
               onPreviewDocument={onPreviewDocument}
               onRescan={onRescan}

@@ -27,7 +27,6 @@ import HealthSidebar from "@/components/admin/backup/HealthSidebar"
 import PlatformBackupTable, { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
-import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { SegmentedControl } from "@/components/ui/tabs"
@@ -348,19 +347,13 @@ export default function SystemBackupsTab({ showToast }) {
     )
   }
 
-  const backupTypes = useMemo(() => [...new Set(backups.map((backup) => backup.backup_type).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [backups])
   const backupTypeTabs = useMemo(() => {
-    const defaults = [
-      { value: "Manual", label: "Manual" },
-      { value: "Scheduled", label: "Automated" },
-    ]
-    const known = new Set(defaults.map(({ value }) => value.toLowerCase()))
     return [
       { value: "all", label: "All Types", count: backups.length },
-      ...defaults.map((item) => ({ ...item, count: backups.filter((backup) => backup.backup_type === item.value).length })),
-      ...backupTypes.filter((type) => !known.has(String(type).toLowerCase())).map((type) => ({ value: type, label: type, count: backups.filter((backup) => backup.backup_type === type).length })),
+      { value: "Manual", label: "Manual", count: backups.filter((backup) => String(backup?.backup_type).toLowerCase() === "manual").length },
+      { value: "Scheduled", label: "Automated", count: backups.filter((backup) => String(backup?.backup_type).toLowerCase() === "scheduled").length },
     ]
-  }, [backups, backupTypes])
+  }, [backups])
   const filterFields = useMemo(() => [
     { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon, options: [...new Set(backups.map((backup) => backup.status_local).filter(Boolean))].map((value) => ({ value, label: value })) },
     { key: "size_bytes", label: "Size (bytes)", icon: HardDriveIcon, type: "number" },
@@ -733,7 +726,7 @@ export default function SystemBackupsTab({ showToast }) {
     return formatPHDateTime(backups[0].created_at)
   }, [backups])
 
-  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate || filterRules.length || backupTypeFilter !== "all")
+  const isFilterActive = !!(backupSearch || backupStartDate || backupEndDate || filterRules.length > 0)
 
   const handleClearFilters = () => {
     setLocalSearch("")
@@ -885,7 +878,7 @@ export default function SystemBackupsTab({ showToast }) {
                     setBackupSearch("")
                     setPage(1)
                   }}
-                  extraChips={[...(backupTypeFilter !== "all" ? [{ key: "backupType", groupLabel: "Backup type", label: backupTypeFilter, onRemove: () => { setBackupTypeFilter("all"); setPage(1) } }] : []), ...filterRules.map((rule) => ({ key: rule.id, label: `${filterFields.find((field) => field.key === rule.fieldKey)?.label || rule.fieldKey} ${rule.operator.replaceAll("_", " ")} ${rule.value}`, onRemove: () => setFilterRules((current) => current.filter((item) => item.id !== rule.id)) })), ...(backupStartDate || backupEndDate ? [{
+                  extraChips={[...filterRules.map((rule) => ({ key: rule.id, label: `${filterFields.find((field) => field.key === rule.fieldKey)?.label || rule.fieldKey} ${rule.operator.replaceAll("_", " ")} ${rule.value}`, onRemove: () => setFilterRules((current) => current.filter((item) => item.id !== rule.id)) })), ...(backupStartDate || backupEndDate ? [{
                     key: "dateRange",
                     label: `Range: ${backupStartDate ? format(parseDateLocal(backupStartDate), "MMM d, yyyy") : "..."} to ${backupEndDate ? format(parseDateLocal(backupEndDate), "MMM d, yyyy") : "..."}`,
                     onRemove: () => {
@@ -899,9 +892,7 @@ export default function SystemBackupsTab({ showToast }) {
                 />
               )}
 
-              {isLoading && !isManualLoading ? (
-                <BackupTableSkeleton embedded={true} scope="platform" visibleColumns={visibleColumns} rowCount={itemsPerPage} scrollRef={tableScrollRef} />
-              ) : error ? (
+              {error ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
                     <Empty>

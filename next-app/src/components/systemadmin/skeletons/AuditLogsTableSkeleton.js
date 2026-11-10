@@ -4,8 +4,8 @@ import { Table } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false, showScope = false, visibleColumns = ["severity", "actor", "office_id", "details"] }) {
-  const has = (key) => !showScope || visibleColumns.includes(key)
+export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false, showScope = false, visibleColumns }) {
+  const has = (key) => !visibleColumns || visibleColumns.includes(key)
   return (
     <div
       className={cn(
@@ -16,15 +16,17 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <Table columns={["selection", "date", ...(has("severity") ? ["status"] : []), ...(has("actor") ? ["text"] : []), ...(showScope && has("office_id") ? ["status"] : []), "text", ...(has("details") ? [{ kind: "text", maxWidth: 340 }] : []), ...(showScope && has("ip") ? [{ kind: "text", maxWidth: 200 }] : []), "actions"]} className={showScope ? "min-w-[900px]" : "min-w-[1240px]"}>
+        <Table columns={["selection", ...(has("created_at") ? ["date"] : []), ...(has("severity") ? ["status"] : []), ...(has("actor") ? ["text"] : []), ...(showScope && has("office_id") ? ["status"] : []), ...(has("action") ? ["text"] : []), ...(has("details") ? [{ kind: "text", maxWidth: 340 }] : []), ...(has("ip") ? [{ kind: "text", maxWidth: 200 }] : []), "actions"]} className={showScope ? "min-w-[900px]" : "min-w-[1240px]"}>
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 min-w-12 max-w-12 py-3 px-2.5 text-center">
                 <Skeleton className="h-3.5 w-3.5 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className={cn("py-3 px-4", showScope ? "w-[15%]" : "w-[16%]")}>
-                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
-              </th>
+              {has("created_at") && (
+                <th className={cn("py-3 px-4", showScope ? "w-[15%]" : "w-[16%]")}>
+                  <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+                </th>
+              )}
               {has("severity") && <th className={cn("py-3 px-4", showScope ? "w-[9%]" : "w-[10%]")}>
                 <Skeleton className="h-3.5 w-14 dark:bg-muted" />
               </th>}
@@ -36,13 +38,15 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                   <Skeleton className="h-3.5 w-16 dark:bg-muted" />
                 </th>
               )}
-              <th className={cn("py-3 px-4", showScope ? "w-[16%]" : "w-[18%]")}>
-                <Skeleton className="h-3.5 w-20 dark:bg-muted" />
-              </th>
+              {has("action") && (
+                <th className={cn("py-3 px-4", showScope ? "w-[16%]" : "w-[18%]")}>
+                  <Skeleton className="h-3.5 w-20 dark:bg-muted" />
+                </th>
+              )}
               {has("details") && <th className={cn("py-3 px-4", showScope ? "w-[22%]" : "w-[24%]")}>
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>}
-              {showScope && has("ip") && <th><Skeleton className="h-3.5 w-24" /></th>}
+              {has("ip") && <th><Skeleton className="h-3.5 w-24" /></th>}
               <th className="w-12 min-w-12 max-w-12 px-2 text-center">
                 <Skeleton className="h-3.5 w-7 mx-auto rounded dark:bg-muted" />
               </th>
@@ -57,11 +61,13 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                 <td className="w-12 min-w-12 max-w-12 py-3 px-2.5 align-middle text-center border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-3.5 rounded mx-auto dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                  <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3.5 w-24 font-sans tabular-nums rounded dark:bg-muted" />
-                  </div>
-                </td>
+                {has("created_at") && (
+                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <div className="flex flex-col gap-1">
+                      <Skeleton className="h-3.5 w-24 font-sans tabular-nums rounded dark:bg-muted" />
+                    </div>
+                  </td>
+                )}
                 {has("severity") && <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                 </td>}
@@ -73,9 +79,11 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                     <Skeleton className="h-5 w-16 rounded-full dark:bg-muted" />
                   </td>
                 )}
-                <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                  <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
-                </td>
+                {has("action") && (
+                  <td className="py-3 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                    <Skeleton className="h-3.5 w-20 rounded dark:bg-muted" />
+                  </td>
+                )}
                 {has("details") && <td className="py-3 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                   <Skeleton
                     className={cn(
@@ -84,7 +92,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
                     )}
                   />
                 </td>}
-                {showScope && has("ip") && <td><Skeleton className="h-3.5 w-24" /></td>}
+                {has("ip") && <td><Skeleton className="h-3.5 w-24" /></td>}
                 <td className="w-12 min-w-12 max-w-12 px-2 align-middle text-center whitespace-nowrap">
                   <div className="flex items-center justify-center">
                     <Skeleton className="h-7 w-7 rounded-lg mx-auto dark:bg-muted" />

@@ -65,6 +65,7 @@ import {
   CloudUploadIcon,
   LayoutGridIcon,
   CheckmarkBadge01Icon,
+  Tick01Icon,
 } from "hugeicons-react";
 
 const RECENT_COMMANDS_KEY = "pupsj_command_recent_v1";
@@ -1784,8 +1785,15 @@ export default function CommandPalette({
                         <span>{group.title}</span>
                       </span>
                       {group.badge && (
-                        <span className={cn("font-semibold text-[9.5px] px-1.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-500 dark:text-zinc-400", BADGE_BASE)}>
-                          {group.badge}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-jakarta normal-case tracking-normal select-none shrink-0">
+                          <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                            <Tick01Icon size={8} className="stroke-[3]" />
+                          </span>
+                          <span className="font-semibold text-gray-900 dark:text-zinc-100">Scope</span>
+                          <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                          <span className="font-medium text-gray-500 dark:text-zinc-400">
+                            {group.badge}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -1854,32 +1862,54 @@ export default function CommandPalette({
                                   </span>
 
                                   {isActiveTab && (
-                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300", BADGE_BASE)}>
-                                      Active
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-jakarta select-none shrink-0">
+                                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                        <Tick01Icon size={8} className="stroke-[3]" />
+                                      </span>
+                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                                        Active
+                                      </span>
                                     </span>
                                   )}
 
                                   {item.badge && (
-                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400", BADGE_BASE)}>
-                                      {item.badge}
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-jakarta select-none shrink-0">
+                                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                        <Tick01Icon size={8} className="stroke-[3]" />
+                                      </span>
+                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">ID</span>
+                                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                      <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                                        {item.badge}
+                                      </span>
                                     </span>
                                   )}
 
                                   {item.storageBadge && (
-                                    <span className={cn("hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300", BADGE_BASE)}>
-                                      {item.storageBadge}
+                                    <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-jakarta select-none shrink-0">
+                                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                        <Tick01Icon size={8} className="stroke-[3]" />
+                                      </span>
+                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Archive</span>
+                                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                                        {item.storageBadge}
+                                      </span>
                                     </span>
                                   )}
 
                                   {item.statusBadge && (
-                                    <span
-                                      className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold", item.statusBadge === "Completed" || item.statusBadge === "Approved"
-                                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                          : item.statusBadge === "Pending"
-                                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300", BADGE_BASE)}
-                                    >
-                                      {item.statusBadge}
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-jakarta select-none shrink-0">
+                                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                        <Tick01Icon size={8} className="stroke-[3]" />
+                                      </span>
+                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                                        {item.statusBadge}
+                                      </span>
                                     </span>
                                   )}
                                 </div>
@@ -1953,19 +1983,33 @@ export default function CommandPalette({
                 </h3>
 
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-200", BADGE_BASE)}>
-                    {focusedItem.scope === "records"
-                      ? "Records & Data"
-                      : focusedItem.scope === "actions"
-                        ? "Quick Action"
-                        : focusedItem.scope === "system"
-                          ? "System Utility"
-                          : "Navigation View"}
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                    <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                      <Tick01Icon size={8} className="stroke-[3]" />
+                    </span>
+                    <span className="font-semibold text-gray-900 dark:text-zinc-100">Type</span>
+                    <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                    <span className="font-medium text-gray-500 dark:text-zinc-400">
+                      {focusedItem.scope === "records"
+                        ? "Records & Data"
+                        : focusedItem.scope === "actions"
+                          ? "Quick Action"
+                          : focusedItem.scope === "system"
+                            ? "System Utility"
+                            : "Navigation View"}
+                    </span>
                   </span>
 
                   {focusedItem.badge && (
-                    <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400", BADGE_BASE)}>
-                      {focusedItem.badge}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                        <Tick01Icon size={8} className="stroke-[3]" />
+                      </span>
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">ID</span>
+                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                        {focusedItem.badge}
+                      </span>
                     </span>
                   )}
                 </div>

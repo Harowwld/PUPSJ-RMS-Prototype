@@ -15,7 +15,6 @@ import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/errorUtils"
-import { fetchAllPages } from "@/lib/fetchAllPages"
 
 
 import Sidebar from "@/components/shared/Sidebar"
@@ -128,7 +127,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     logs: false,
     system: false,
     backup: false,
-    review: false,
     request_analytics: false,
     system_data: true,
   })
@@ -172,6 +170,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
 
   const [staffData, setStaffData] = useState([])
+  const [staffLoaded, setStaffLoaded] = useState(false)
   const [offices, setOffices] = useState([])
 
   useEffect(() => {
@@ -194,6 +193,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     }
   }, [])
   const [auditLogs, setAuditLogs] = useState(null)
+  const logRequestRef = useRef(0)
   const [logStats, setLogStats] = useState(null)
   const [logsLoading, setLogsLoading] = useState(false)
   const [logPage, setLogPage] = useUrlPage({ enabled: view === "logs" })
@@ -201,7 +201,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [logsPerPage, setLogsPerPage] = useState(50)
   const [logSearch, setLogSearch] = useState("")
   const [logRoleFilter, setLogRoleFilter] = useState("All")
+  const [logExcludeRoleFilter, setLogExcludeRoleFilter] = useState("")
   const [logSeverityFilter, setLogSeverityFilter] = useState("All")
+  const [logExcludeSeverityFilter, setLogExcludeSeverityFilter] = useState("")
   const [logStartDate, setLogStartDate] = useState("")
   const [logEndDate, setLogEndDate] = useState("")
   const [logSortBy, setLogSortBy] = useState("created_at")
@@ -218,11 +220,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     dbStatus: "Healthy",
   })
   const [backups, setBackups] = useState([])
+  const backupRequestRef = useRef(0)
   const [backupSearch, setBackupSearch] = useState("")
   const [backupStartDate, setBackupStartDate] = useState("")
   const [backupEndDate, setBackupEndDate] = useState("")
   const [externalDrive, setExternalDrive] = useState(null)
   const [reviewRecords, setReviewRecords] = useState(null)
+  const [reviewQuery, setReviewQuery] = useState(null)
+  const [reviewTotal, setReviewTotal] = useState(0)
+  const [reviewStats, setReviewStats] = useState(null)
+  const [reviewError, setReviewError] = useState(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState("All")
   const [pendingReviewCount, setPendingReviewCount] = useState(0)
   const reviewRequestRef = useRef(0)
@@ -554,6 +561,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load staff")
       setStaffData(Array.isArray(json.data) ? json.data : [])
+      setStaffLoaded(true)
       loadedViewsRef.current.directory = true
     } catch (err) {
       showToast(formatErrorMessage(err, "Personnel Directory Load Failed"), true)
@@ -563,6 +571,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   }, [authUser?.office_id, showToast])
 
   const refreshAuditLogs = useCallback(async (isManual = false) => {
+    const request = ++logRequestRef.current
     if (isManual) setViewLoading((prev) => ({ ...prev, logs: true }))
     setLogsLoading(true)
     try {
@@ -572,10 +581,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         logRoleFilter !== "All"
           ? `&role=${encodeURIComponent(logRoleFilter)}`
           : ""
+      const excludeRoleQuery = logExcludeRoleFilter
+        ? `&excludeRole=${encodeURIComponent(logExcludeRoleFilter)}`
+        : ""
       const sevQuery =
         logSeverityFilter !== "All"
           ? `&severity=${encodeURIComponent(logSeverityFilter)}`
           : ""
+      const excludeSevQuery = logExcludeSeverityFilter
+        ? `&excludeSeverity=${encodeURIComponent(logExcludeSeverityFilter)}`
+        : ""
       const startQuery = logStartDate
         ? `&startDate=${encodeURIComponent(logStartDate)}`
         : ""
@@ -586,23 +601,29 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       const [resLogs] = await Promise.all([
         fetch(
-          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`
+          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}${sortQuery}`
         ),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const jsonLogs = await resLogs.json()
       if (!resLogs.ok || !jsonLogs?.ok)
         throw new Error(jsonLogs?.error || "Unable to load activity history.")
+      if (request !== logRequestRef.current) return
 
       setLogTotal(jsonLogs.total || 0)
       const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : []
       setAuditLogs(
         rows.map((r) => ({
           id: r.id,
+          created_at: r.created_at,
           time: formatPHDateTime(r.created_at),
           user: r.actor,
+          actor: r.actor,
+          actor_display_name: r.actor_display_name || r.actor,
           actor_id: r.actor_id,
           role: r.role,
+          office_id: r.office_id,
+          scope: r.office_id === "osas" ? "OSAS" : r.office_id === "registrar" ? "Registrar" : (r.office_id ? String(r.office_id).toUpperCase() : "Platform"),
           action: r.action,
           details: formatLogDetails(r.details) || "N/A",
           severity: r.severity || "INFO",
@@ -616,8 +637,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     } catch {
       // silent
     } finally {
-      if (isManual) setViewLoading((prev) => ({ ...prev, logs: false }))
-      setLogsLoading(false)
+      if (request === logRequestRef.current) {
+        setViewLoading((prev) => ({ ...prev, logs: false }))
+        setLogsLoading(false)
+      }
     }
   }, [
     logPage,
@@ -625,7 +648,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     logSearch,
     logsMineOnly,
     logRoleFilter,
+    logExcludeRoleFilter,
     logSeverityFilter,
+    logExcludeSeverityFilter,
     logStartDate,
     logEndDate,
     logSortBy,
@@ -633,7 +658,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   ])
 
   const refreshLogStats = useCallback(async () => {
-    setLogsLoading(true)
     try {
       const res = await fetch("/api/audit-logs/stats")
       const json = await res.json()
@@ -642,8 +666,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
     } catch {
       // ignore
-    } finally {
-      setLogsLoading(false)
     }
   }, [])
 
@@ -660,6 +682,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   }, [])
 
   const refreshBackups = useCallback(async (isManual = false) => {
+    const request = ++backupRequestRef.current
     if (isManual) setViewLoading((prev) => ({ ...prev, system: true, backup: true }))
     try {
       const searchQuery = backupSearch
@@ -682,6 +705,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const json = await res.json()
+      if (request !== backupRequestRef.current) return
       if (res.ok && json?.ok) {
         setBackups(Array.isArray(json.data) ? json.data : [])
         loadedViewsRef.current.system = true
@@ -689,14 +713,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
       if (driveRes && driveRes.ok) {
         const driveJson = await driveRes.json().catch(() => null)
-        if (driveJson?.ok && driveJson.data) {
+        if (request === backupRequestRef.current && driveJson?.ok && driveJson.data) {
           setExternalDrive(driveJson.data)
         }
       }
     } catch (err) {
       console.error("Failed to refresh backups:", err)
     } finally {
-      if (isManual) setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
+      if (request === backupRequestRef.current) {
+        setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
+      }
     }
   }, [backupSearch, backupStartDate, backupEndDate, authUser?.office_id, refreshSystemHealth])
 
@@ -769,22 +795,37 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   }, [])
 
   const refreshReviewRecords = useCallback(async (isManual = false) => {
+    if (!reviewQuery) return
     const request = ++reviewRequestRef.current
     if (isManual) setViewLoading((prev) => ({ ...prev, review: true }))
     setReviewLoading(true)
+    setReviewError(null)
     try {
-      const approvalStatus = reviewStatusFilter === "All"
-        ? ""
-        : `?approvalStatus=${encodeURIComponent(reviewStatusFilter)}`
-      const [rows] = await Promise.all([
-        fetchAllPages(`/api/documents${approvalStatus}`, 200),
+      const params = new URLSearchParams({
+        page: String(reviewQuery.page),
+        pageSize: String(reviewQuery.pageSize),
+        statuses: JSON.stringify(reviewQuery.statusFilters),
+        docTypes: JSON.stringify(reviewQuery.docTypeFilters),
+        rules: JSON.stringify(reviewQuery.filterRules),
+        search: reviewQuery.search,
+        dateFrom: reviewQuery.dateFrom,
+        dateTo: reviewQuery.dateTo,
+        sortBy: reviewQuery.sortBy,
+        sortOrder: reviewQuery.sortOrder,
+      })
+      const [res] = await Promise.all([
+        fetch(`/api/documents/review?${params}`, { cache: "no-store" }),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
+      const json = await res.json()
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load records")
       if (request !== reviewRequestRef.current) return
-      setReviewRecords(rows)
-      loadedViewsRef.current.review = true
-      fetchPendingReviewCount()
+      setReviewRecords(json.data.rows || [])
+      setReviewTotal(Number(json.data.total) || 0)
+      setReviewStats(json.data.stats || null)
+      setPendingReviewCount(Number(json.data.stats?.pending) || 0)
     } catch (err) {
+      if (request === reviewRequestRef.current) setReviewError(err?.message || "Failed to load records")
       if (isManual && request === reviewRequestRef.current) {
         showToast(formatErrorMessage(err, "Digital Records Review Load Failed"), true)
       }
@@ -794,7 +835,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         setReviewLoading(false)
       }
     }
-  }, [reviewStatusFilter, showToast, fetchPendingReviewCount])
+  }, [reviewQuery, showToast])
 
   const performSwitchView = useCallback(
     (nextView) => {
@@ -827,13 +868,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           refreshBackups()
         }, 0)
       }
-      if (nextView === "review" && !loadedViewsRef.current.review) {
-        setTimeout(() => {
-          refreshReviewRecords()
-        }, 0)
-      }
     },
-    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
+    [refreshAuditLogs, refreshBackups, refreshStaff, router]
   )
 
   const switchView = useCallback(
@@ -920,10 +956,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     const timer = setTimeout(() => {
       refreshStaff()
       refreshSystemHealth()
-      fetchPendingReviewCount()
     }, 0)
     return () => clearTimeout(timer)
-  }, [initialAuthUser, refreshStaff, refreshSystemHealth, fetchPendingReviewCount])
+  }, [initialAuthUser, refreshStaff, refreshSystemHealth])
 
   useEffect(() => {
     if (!authUser) return
@@ -1071,12 +1106,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   }, [view, refreshAuditLogs, refreshLogStats])
 
   useEffect(() => {
-    if (view === "review") {
+    if (view === "review" && reviewQuery) {
       setTimeout(() => {
         refreshReviewRecords()
       }, 0)
     }
-  }, [view, refreshReviewRecords])
+  }, [view, reviewQuery, refreshReviewRecords])
 
 
 
@@ -1946,6 +1981,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
+              hasLoaded={staffLoaded}
               officeId={authUser?.office_id || "registrar"}
               officeShortName={authUser?.office_short_name}
               offices={offices}
@@ -2013,8 +2049,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               setLogSearch={setLogSearch}
               logRoleFilter={logRoleFilter}
               setLogRoleFilter={setLogRoleFilter}
+              logExcludeRoleFilter={logExcludeRoleFilter}
+              setLogExcludeRoleFilter={setLogExcludeRoleFilter}
               logSeverityFilter={logSeverityFilter}
               setLogSeverityFilter={setLogSeverityFilter}
+              logExcludeSeverityFilter={logExcludeSeverityFilter}
+              setLogExcludeSeverityFilter={setLogExcludeSeverityFilter}
               logStartDate={logStartDate}
               setLogStartDate={setLogStartDate}
               logEndDate={logEndDate}
@@ -2024,7 +2064,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               logSortOrder={logSortOrder}
               setLogSortOrder={setLogSortOrder}
               showToast={showToast}
-              onLogAction={logAdminAction}
               onRefresh={() => {
                 refreshAuditLogs(true)
                 refreshLogStats()
@@ -2051,12 +2090,15 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           {view === "review" && (
             <DigitalRecordsReviewTab
               records={reviewRecords}
+              totalCount={reviewTotal}
+              serverStats={reviewStats}
+              onQueryChange={setReviewQuery}
               isLoading={reviewLoading}
               isManualLoading={viewLoading.review}
-              error={null}
+              error={reviewError}
               statusFilter={reviewStatusFilter}
               setStatusFilter={setReviewStatusFilter}
-              onRefresh={refreshReviewRecords}
+              onRefresh={() => refreshReviewRecords(true)}
               onApprove={(id, suppress = false) => reviewDocumentStatus(id, "Approved", "", suppress)}
               onDecline={openDeclinePrompt}
               onBulkApprove={handleBulkApprove}

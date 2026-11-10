@@ -26,7 +26,9 @@ export default function AdminTabSkeleton({ showStats = true }) {
         {/* Optional Top KPI Stat Cards */}
         {showStats && (
           <div className="px-6 pb-6">
-            <KpiStatCardsSkeleton count={3} />
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <KpiStatCardsSkeleton count={3} />
+            </div>
           </div>
         )}
 

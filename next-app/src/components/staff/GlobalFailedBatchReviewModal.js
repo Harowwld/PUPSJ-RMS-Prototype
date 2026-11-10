@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { formatErrorMessage } from "@/lib/errorUtils";
 
@@ -186,7 +187,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent hideClose className="flex max-h-[85vh] w-full max-w-3xl sm:max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900">
+      <DialogContent hideClose className="flex max-h-[85vh] w-full max-w-3xl sm:max-w-3xl flex-col gap-0 overflow-hidden rounded-[22px] border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-zinc-900">
         <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-center justify-between">
             <DialogTitle>
@@ -221,6 +222,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => retry(row.id)}
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
                       className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
@@ -230,6 +232,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => dismiss(row.id)}
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
                       className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
@@ -243,14 +246,15 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
           )}
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4">
+        <DialogFooter className="flex items-center justify-between px-6 py-4 border-t border-border dark:border-border">
           {failedRows.length > 0 ? (
             <Button
               type="button"
               variant="outline"
+              size="sm"
               disabled={clearingAll || retryingId !== null || dismissingId !== null}
               onClick={clearAllFailed}
-              className="h-10 rounded-xl px-4 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 rounded-xl px-4 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
               {clearingAll ? "Clearing..." : "Clear All Failed"}
             </Button>
@@ -258,12 +262,13 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => handleOpenChange(false)}
-            className="h-10 rounded-xl px-4 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            className="h-9 rounded-xl px-4 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

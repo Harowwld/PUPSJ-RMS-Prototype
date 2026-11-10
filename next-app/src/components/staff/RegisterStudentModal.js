@@ -204,7 +204,7 @@ export default function RegisterStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={(value) => { if (!isSubmitting) onOpenChange(value); }}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-[22px] sm:rounded-[22px] border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
         <form ref={attachForm} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
           <DialogHeader className="p-6 pb-0 text-left shrink-0">
             <DialogTitle>
@@ -233,7 +233,7 @@ export default function RegisterStudentModal({
                   placeholder="e.g. 2024-00123-SJ-0"
                   value={studentNo}
                   onChange={(e) => handleStudentNoChange(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                 />
               </div>
 
@@ -247,7 +247,7 @@ export default function RegisterStudentModal({
                   placeholder="DELA CRUZ, JUAN"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs uppercase"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs uppercase"
                 />
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function RegisterStudentModal({
                   placeholder="2024"
                   value={yearLevel}
                   onChange={(e) => setYearLevel(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                 />
               </div>
 
@@ -316,7 +316,7 @@ export default function RegisterStudentModal({
                     placeholder="e.g. 1 or 1-1"
                     value={section}
                     onChange={(e) => setSection(e.target.value)}
-                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 shadow-xs"
+                    className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                   />
                 )}
               </div>

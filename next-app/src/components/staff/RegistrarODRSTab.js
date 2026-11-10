@@ -12,6 +12,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
 import RegistrarODRSSkeleton from "@/components/staff/skeletons/RegistrarODRSSkeleton";
+import TablePagination from "@/components/shared/TablePagination";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import {
@@ -36,6 +37,9 @@ const statuses = ["Pending", "Deficient", "PendingPayment", "InProgress", "Ready
 
 export default function RegistrarODRSTab({ showToast }) {
   const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState(null);
   const [status, setStatus] = useState("Pending");
   const [message, setMessage] = useState("");
@@ -53,10 +57,11 @@ export default function RegistrarODRSTab({ showToast }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/registrar/document-requests", { cache: "no-store" });
+      const res = await fetch(`/api/registrar/document-requests?limit=${pageSize}&offset=${(page - 1) * pageSize}`, { cache: "no-store" });
       const json = await res.json().catch(() => null);
       if (res.ok && json?.ok) {
         setRows(json.data);
+        setTotal(Number(json.total) || 0);
       } else {
         showToast?.(
           formatErrorMessage(json?.error || "Unable to load document requests.", {
@@ -75,7 +80,7 @@ export default function RegistrarODRSTab({ showToast }) {
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, page, pageSize]);
 
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 0);
@@ -249,7 +254,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
               <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Request Queue</h2>
               <span className={cn("rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300", BADGE_BASE)}>
-                {rows.length} total
+                {total} total
               </span>
             </div>
             <div className="space-y-2">
@@ -324,6 +329,15 @@ export default function RegistrarODRSTab({ showToast }) {
                 })
               )}
             </div>
+            <TablePagination
+              label="Document request pages"
+              page={page}
+              pageSize={pageSize}
+              totalCount={total}
+              displayedCount={rows.length}
+              onPageChange={(nextPage) => { setSelected(null); setPage(nextPage); }}
+              onPageSizeChange={(size) => { setSelected(null); setPage(1); setPageSize(size); }}
+            />
           </section>
 
           <aside className="flex flex-col bg-white p-6 dark:bg-card">

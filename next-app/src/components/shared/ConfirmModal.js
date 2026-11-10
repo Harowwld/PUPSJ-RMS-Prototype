@@ -68,7 +68,7 @@ export default function ConfirmModal({
   if (isRestoreModal) {
     resolvedVariant = "success";
   } else if (isArchiveModal) {
-    resolvedVariant = "warning";
+    resolvedVariant = (variant === "danger" || confirmVariant === "danger" || confirmVariant === "destructive") ? "danger" : "warning";
   } else if (isDeleteModal || isDeleteBackup) {
     resolvedVariant = "danger";
   } else if (isUnsavedChangesModal) {

@@ -26,11 +26,11 @@ export function RefreshButton({
       disabled={disabled || isLoading}
       onClick={onRefresh}
       className={cn(
-        "rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all",
+        "size-9 h-9 w-9 shrink-0 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all",
         className
       )}
     >
-      <Icon size={18} aria-hidden="true" className={isLoading ? "animate-spin" : undefined} />
+      <Icon size={16} aria-hidden="true" className={isLoading ? "animate-spin" : undefined} />
     </Button>
   );
 }

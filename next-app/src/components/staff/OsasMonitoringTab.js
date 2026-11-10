@@ -22,6 +22,7 @@ import PDFPreview from "@/components/shared/PDFPreview";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
 import {
@@ -33,6 +34,7 @@ import {
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import OsasRecordList from "@/components/staff/osas/OsasRecordList";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 import {
   Tooltip,
   TooltipTrigger,
@@ -256,6 +258,8 @@ function sortTableRecords(items, stream, sortBy, sortOrder) {
 
 export default function OsasMonitoringTab({ showToast }) {
   const [rows, setRows] = useState([]);
+  const [proposalTotal, setProposalTotal] = useState(0);
+  const [proposalOrganizations, setProposalOrganizations] = useState([]);
   const [selected, setSelected] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
@@ -295,6 +299,8 @@ export default function OsasMonitoringTab({ showToast }) {
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
   const [filterRules, setFilterRules] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [statusFilters, setStatusFilters] = useState([]);
   const [orgFilters, setOrgFilters] = useState([]);
   const [groupBy, setGroupBy] = useState("status");
@@ -309,6 +315,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [tableSortBy, setTableSortBy] = useState("");
   const [tableSortOrder, setTableSortOrder] = useState("ASC");
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [page, setPage] = useUrlPage();
@@ -316,6 +323,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
+  const loadRequestRef = useRef(0);
 
   const handleStreamChange = useCallback((stream) => {
     setActiveStream(stream);
@@ -366,6 +374,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
   // Post-Event Reports Stream state
   const [postEventReports, setPostEventReports] = useState([]);
+  const [postEventTotal, setPostEventTotal] = useState(0);
+  const [postEventOrganizations, setPostEventOrganizations] = useState([]);
   const [selectedPostEvent, setSelectedPostEvent] = useState(null);
   const [postEventSheetOpen, setPostEventSheetOpen] = useState(false);
   const [postEventStatus, setPostEventStatus] = useState("Cleared");
@@ -383,27 +393,67 @@ export default function OsasMonitoringTab({ showToast }) {
     } catch {}
   };
 
+  const serverPaged = viewMode !== "kanban" && !searchQuery.trim() &&
+    filterRules.length === 0 && statusFilters.length === 0 && orgFilters.length === 0 && !tableSortBy;
+
   const load = useCallback(async (isManual = false) => {
+    const request = ++loadRequestRef.current;
     try {
       if (isManual) {
         setIsRefreshing(true);
       } else {
         setLoading(true);
       }
+      const proposalQuery = serverPaged
+        ? `?limit=${activeStream === "proposals" ? itemsPerPage : 1}&offset=${activeStream === "proposals" ? (page - 1) * itemsPerPage : 0}`
+        : "";
+      const postEventQuery = serverPaged
+        ? `?limit=${activeStream === "post_events" ? itemsPerPage : 1}&offset=${activeStream === "post_events" ? (page - 1) * itemsPerPage : 0}`
+        : "";
       const [proposalsRes, postEventsRes] = await Promise.allSettled([
-        fetch("/api/osas/event-proposals", { cache: "no-store" }),
-        fetch("/api/osas/post-event-reports", { cache: "no-store" }),
+        serverPaged
+          ? fetch(`/api/osas/event-proposals${proposalQuery}`, { cache: "no-store" })
+          : fetchAllPages("/api/osas/event-proposals", 100),
+        serverPaged
+          ? fetch(`/api/osas/post-event-reports${postEventQuery}`, { cache: "no-store" })
+          : fetchAllPages("/api/osas/post-event-reports", 100),
       ]);
+      if (request !== loadRequestRef.current) return;
 
       if (proposalsRes.status === "fulfilled") {
-        const json = await proposalsRes.value.json().catch(() => null);
-        if (proposalsRes.value.ok && json?.ok) setRows(json.data || []);
+        if (serverPaged) {
+          const json = await proposalsRes.value.json().catch(() => null);
+          if (request !== loadRequestRef.current) return;
+          if (proposalsRes.value.ok && json?.ok) {
+            setRows(json.data || []);
+            setProposalTotal(Number(json.total) || 0);
+            setProposalOrganizations(json.organizations || []);
+          }
+        } else {
+          const list = proposalsRes.value;
+          setRows(list);
+          setProposalTotal(list.length);
+          setProposalOrganizations([...new Set(list.map((row) => row.verified_org_name || row.organization_name).filter(Boolean))].sort());
+        }
       }
       if (postEventsRes.status === "fulfilled") {
-        const json = await postEventsRes.value.json().catch(() => null);
-        if (postEventsRes.value.ok && json?.ok) setPostEventReports(json.data || []);
+        if (serverPaged) {
+          const json = await postEventsRes.value.json().catch(() => null);
+          if (request !== loadRequestRef.current) return;
+          if (postEventsRes.value.ok && json?.ok) {
+            setPostEventReports(json.data || []);
+            setPostEventTotal(Number(json.total) || 0);
+            setPostEventOrganizations(json.organizations || []);
+          }
+        } else {
+          const list = postEventsRes.value;
+          setPostEventReports(list);
+          setPostEventTotal(list.length);
+          setPostEventOrganizations([...new Set(list.map((row) => row.organization_name).filter(Boolean))].sort());
+        }
       }
     } catch (err) {
+      if (request !== loadRequestRef.current) return;
       showToast?.(
         formatErrorMessage(err, {
           title: "Submissions Load Failed",
@@ -412,10 +462,13 @@ export default function OsasMonitoringTab({ showToast }) {
         true
       );
     } finally {
-      setLoading(false);
-      setIsRefreshing(false);
+      if (request === loadRequestRef.current) {
+        setHasLoaded(true);
+        setLoading(false);
+        setIsRefreshing(false);
+      }
     }
-  }, [showToast]);
+  }, [showToast, serverPaged, activeStream, page, itemsPerPage]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(), 0);
@@ -886,7 +939,7 @@ export default function OsasMonitoringTab({ showToast }) {
   }, [visibleColumns]);
 
   const proposalFilterFields = useMemo(() => {
-    const orgs = Array.from(new Set(rows.map((r) => r.verified_org_name || r.organization_name).filter(Boolean))).sort();
+    const orgs = proposalOrganizations;
     return [
       {
         key: "status",
@@ -913,10 +966,10 @@ export default function OsasMonitoringTab({ showToast }) {
         ],
       },
     ];
-  }, [rows]);
+  }, [proposalOrganizations]);
 
   const postEventFilterFields = useMemo(() => {
-    const orgs = Array.from(new Set(postEventReports.map((r) => r.organization_name).filter(Boolean))).sort();
+    const orgs = postEventOrganizations;
     return [
       {
         key: "status",
@@ -935,7 +988,7 @@ export default function OsasMonitoringTab({ showToast }) {
         options: orgs.map((org) => ({ value: org, label: org })),
       },
     ];
-  }, [postEventReports]);
+  }, [postEventOrganizations]);
 
   const currentFilterFields = useMemo(() => {
     return activeStream === "proposals" ? proposalFilterFields : postEventFilterFields;
@@ -973,6 +1026,8 @@ export default function OsasMonitoringTab({ showToast }) {
     setFilterRules([]);
     setStatusFilters([]);
     setOrgFilters([]);
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   }, [setPage]);
 
@@ -983,6 +1038,13 @@ export default function OsasMonitoringTab({ showToast }) {
         id: "search",
         label: `Search: ${searchQuery.trim()}`,
         onRemove: () => { setSearchQuery(""); setPage(1); },
+      });
+    }
+    if (startDate || endDate) {
+      chips.push({
+        id: "dateRange",
+        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
     filterRules.forEach((rule) => {
@@ -1013,14 +1075,22 @@ export default function OsasMonitoringTab({ showToast }) {
       });
     });
     return chips;
-  }, [searchQuery, filterRules, currentFilterFields, statusFilters, orgFilters, setPage]);
+  }, [searchQuery, filterRules, currentFilterFields, statusFilters, orgFilters, startDate, endDate, setPage]);
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() || filterRules.length > 0 || statusFilters.length > 0 || orgFilters.length > 0
+    searchQuery.trim() || filterRules.length > 0 || statusFilters.length > 0 || orgFilters.length > 0 || startDate !== "" || endDate !== ""
   );
 
   const filteredRows = useMemo(() => {
     return rows.filter((item) => {
+      if (startDate || endDate) {
+        const itemDate = item.event_date || item.created_at ? new Date(item.event_date || item.created_at) : null;
+        if (itemDate && !isNaN(itemDate.getTime())) {
+          const dateStr = itemDate.toISOString().slice(0, 10);
+          if (startDate && dateStr < startDate) return false;
+          if (endDate && dateStr > endDate) return false;
+        }
+      }
       if (statusFilters.length > 0) {
         const itemStatusNorm = normalizeProposalStatus(item.status);
         const matchesStatus = statusFilters.some(
@@ -1060,10 +1130,18 @@ export default function OsasMonitoringTab({ showToast }) {
       }
       return true;
     });
-  }, [rows, statusFilters, orgFilters, searchQuery, filterRules]);
+  }, [rows, statusFilters, orgFilters, searchQuery, filterRules, startDate, endDate]);
 
   const filteredPostEvents = useMemo(() => {
     return postEventReports.filter((item) => {
+      if (startDate || endDate) {
+        const itemDate = item.created_at || item.event_date ? new Date(item.created_at || item.event_date) : null;
+        if (itemDate && !isNaN(itemDate.getTime())) {
+          const dateStr = itemDate.toISOString().slice(0, 10);
+          if (startDate && dateStr < startDate) return false;
+          if (endDate && dateStr > endDate) return false;
+        }
+      }
       if (statusFilters.length > 0) {
         const matches = statusFilters.some((sf) => String(sf).toLowerCase() === String(item.status || "Submitted").toLowerCase());
         if (!matches) return false;
@@ -1097,7 +1175,7 @@ export default function OsasMonitoringTab({ showToast }) {
       }
       return true;
     });
-  }, [postEventReports, statusFilters, orgFilters, searchQuery, filterRules]);
+  }, [postEventReports, statusFilters, orgFilters, searchQuery, filterRules, startDate, endDate]);
 
   const sortedRows = useMemo(
     () => sortTableRecords(filteredRows, "proposals", tableSortBy, tableSortOrder),
@@ -1113,18 +1191,23 @@ export default function OsasMonitoringTab({ showToast }) {
     return filteredRows;
   }, [activeStream, filteredPostEvents, filteredRows]);
 
-  const totalPages = Math.max(1, Math.ceil(activeFilteredList.length / itemsPerPage));
+  const activeTotal = serverPaged
+    ? (activeStream === "post_events" ? postEventTotal : proposalTotal)
+    : activeFilteredList.length;
+  const totalPages = Math.max(1, Math.ceil(activeTotal / itemsPerPage));
   const safePage = Math.min(Math.max(1, page), totalPages);
 
   const paginatedRows = useMemo(() => {
+    if (serverPaged) return sortedRows;
     const start = (safePage - 1) * itemsPerPage;
     return sortedRows.slice(start, start + itemsPerPage);
-  }, [sortedRows, safePage, itemsPerPage]);
+  }, [sortedRows, safePage, itemsPerPage, serverPaged]);
 
   const paginatedPostEvents = useMemo(() => {
+    if (serverPaged) return sortedPostEvents;
     const start = (safePage - 1) * itemsPerPage;
     return sortedPostEvents.slice(start, start + itemsPerPage);
-  }, [sortedPostEvents, safePage, itemsPerPage]);
+  }, [sortedPostEvents, safePage, itemsPerPage, serverPaged]);
 
   // Track horizontal scroll state on the table container
   useEffect(() => {
@@ -1246,7 +1329,7 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  if (loading && rows.length === 0 && postEventReports.length === 0) {
+  if (loading && !hasLoaded) {
     return <OsasMonitoringSkeleton />;
   }
 
@@ -1269,7 +1352,7 @@ export default function OsasMonitoringTab({ showToast }) {
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
               <RefreshButton
@@ -1299,13 +1382,13 @@ export default function OsasMonitoringTab({ showToast }) {
                 value: "proposals",
                 label: "Pre-Event Proposals",
                 icon: <CalendarCheckIn01Icon size="1em" className="text-sm" />,
-                badge: rows.length,
+                badge: proposalTotal,
               },
               {
                 value: "post_events",
                 label: "Post-Event & Liquidation",
                 icon: <ClipboardIcon size="1em" className="text-sm" />,
-                badge: postEventReports.length,
+                badge: postEventTotal,
               },
             ]}
           />
@@ -1351,8 +1434,8 @@ export default function OsasMonitoringTab({ showToast }) {
                 setSearchQuery(val);
                 setPage(1);
               }}
-              count={activeFilteredList.length}
-              loading={loading && rows.length === 0 && postEventReports.length === 0}
+              count={activeTotal}
+              loading={loading && !hasLoaded}
               label="Search submissions"
               placeholder={
                 activeStream === "proposals"
@@ -1406,6 +1489,21 @@ export default function OsasMonitoringTab({ showToast }) {
                 minVisible={2}
               />
             )}
+            <DateRangeFilterButton
+              startDate={startDate}
+              endDate={endDate}
+              onApply={({ startDate: s, endDate: e }) => {
+                setStartDate(s);
+                setEndDate(e);
+                setPage(1);
+              }}
+              onClear={() => {
+                setStartDate("");
+                setEndDate("");
+                setPage(1);
+              }}
+              disableFutureDates={true}
+            />
           </div>
         </DataViewToolbar>
 
@@ -2003,8 +2101,8 @@ export default function OsasMonitoringTab({ showToast }) {
             label="OSAS monitoring pages"
             page={page}
             pageSize={itemsPerPage}
-            totalCount={activeFilteredList.length}
-            displayedCount={Math.max(0, Math.min(itemsPerPage, activeFilteredList.length - (safePage - 1) * itemsPerPage))}
+            totalCount={activeTotal}
+            displayedCount={serverPaged ? activeFilteredList.length : Math.max(0, Math.min(itemsPerPage, activeTotal - (safePage - 1) * itemsPerPage))}
             onPageChange={setPage}
             onPageSizeChange={setItemsPerPage}
           />

@@ -25,6 +25,7 @@ const SHEET_FILES = [
   "src/components/admin/OSASOrganizationComplianceView.js",
   "src/components/student/StudentOverviewTab.js",
   "src/components/systemadmin/SystemBackupsTab.js",
+  "src/components/admin/BackupTab.js",
   "src/app/student/page.js",
 ];
 
