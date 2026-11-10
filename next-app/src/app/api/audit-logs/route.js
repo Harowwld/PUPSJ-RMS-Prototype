@@ -6,6 +6,9 @@ import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { addAuditActorIds, getPrincipalActorIdentities } from "../../../lib/auditActor";
 import { formatLogDetails } from "../../../lib/auditLogFormatting";
 import { getStaffFullName } from "../../../lib/staffRepo";
+import { formatPHDateTime } from "@/lib/timeFormat";
+import { createAuditLogCsvResponse, generateServerAuditLogsPdf } from "@/lib/auditLogExport";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -61,6 +64,7 @@ export async function GET(req) {
   const offset = parseInt(searchParams.get("offset") || "0");
   const search = searchParams.get("search") || "";
   const role = searchParams.get("role") || "";
+  const excludeRole = searchParams.get("excludeRole") || "";
   const severity = searchParams.get("severity") || "";
   const excludeSeverity = searchParams.get("excludeSeverity") || "";
   const startDate = searchParams.get("startDate") || "";
@@ -68,9 +72,11 @@ export async function GET(req) {
   const sortBy = searchParams.get("sortBy") || "created_at";
   const sortOrder = searchParams.get("sortOrder") || "DESC";
   const mine = searchParams.get("mine") === "1";
+  const format = searchParams.get("format");
   const isStudent = auth.user.principalType === "student";
   const isGlobalAdmin = isSystemAdminRole(auth.user.role);
-  const officeId = isGlobalAdmin || isStudent || mine ? "" : getPrincipalOfficeId(auth.user);
+  const officeParam = searchParams.get("office") || searchParams.get("officeId") || "";
+  const officeId = isGlobalAdmin ? officeParam : (isStudent || mine ? "" : getPrincipalOfficeId(auth.user));
 
   if (!mine) {
     if (!isAdmin(auth.user)) return createAuthErrorResponse("Access denied", 403);
@@ -88,42 +94,82 @@ export async function GET(req) {
     }
   }
 
+  const queryOptions = {
+    search,
+    actorId: mine ? actorId : "",
+    actorExact: mine ? resolvedActors : "",
+    officeId,
+    role: isStudent ? "Student" : role,
+    excludeRole: isStudent ? "" : excludeRole,
+    severity,
+    excludeSeverity,
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder,
+  };
+  const decorateRows = async (rows) => addAuditActorIds(rows.map((row) => ({
+    ...row,
+    actor: decryptPII(row.actor),
+    details: formatLogDetails(decryptPII(row.details)),
+  })));
+
+  if (format === "csv") {
+    return createAuditLogCsvResponse({
+      filename: "activity-history.csv",
+      headers: ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"],
+      loadPage: async ({ limit: pageLimit, offset: pageOffset }) => decorateRows(await listAuditLogs({ ...queryOptions, limit: pageLimit, offset: pageOffset })),
+      mapRow: (log) => [
+        log?.created_at ? formatPHDateTime(log.created_at) : (log?.time || "N/A"),
+        log?.severity || "INFO",
+        log?.actor_display_name || log?.user || log?.actor || "System",
+        log?.role || "N/A",
+        log?.action || "N/A",
+        formatLogDetails(log?.details) || "No known description",
+        log?.ip || "N/A",
+        log?.user_agent || log?.userAgent || "N/A",
+        log?.entity_type || log?.entityType || "N/A",
+        log?.entity_id || log?.entityId || "N/A",
+      ],
+      onComplete: (exportedCount) => writeAuditLog(req, "Exported Activity History to CSV", {
+        details: `Exported ${exportedCount} records. Filters - Role: ${role || "All"}, Severity: ${severity || "All"}, Search: ${search || "None"}`,
+      }),
+    });
+  }
+
+  if (format === "pdf") {
+    const exportedRows = [];
+    for (let pageOffset = 0; ; pageOffset += 500) {
+      const pageRows = await listAuditLogs({ ...queryOptions, limit: 500, offset: pageOffset });
+      if (!pageRows.length) break;
+      exportedRows.push(...await decorateRows(pageRows));
+      if (pageRows.length < 500) break;
+    }
+    const pdf = await generateServerAuditLogsPdf(exportedRows, { role, severity, startDate, endDate, search });
+    await writeAuditLog(req, "Generated Activity History PDF Report", {
+      details: `Generated report for ${exportedRows.length} records. Filters - Role: ${role || "All"}, Severity: ${severity || "All"}`,
+    });
+    return new Response(await pdf.arrayBuffer(), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="activity-history.pdf"',
+        "Cache-Control": "private, no-store",
+      },
+    });
+  }
+
   const [rows, total] = await Promise.all([
     listAuditLogs({
+      ...queryOptions,
       limit,
       offset,
-      search,
-      actorId: mine ? actorId : "",
-      actorExact: mine ? resolvedActors : "",
-      officeId,
-      role: isStudent ? "Student" : role,
-      severity,
-      excludeSeverity,
-      startDate,
-      endDate,
-      sortBy,
-      sortOrder,
     }),
-    countAuditLogs({
-      search,
-      actorId: mine ? actorId : "",
-      actorExact: mine ? resolvedActors : "",
-      officeId,
-      role: isStudent ? "Student" : role,
-      severity,
-      excludeSeverity,
-      startDate,
-      endDate,
-    }),
+    countAuditLogs(queryOptions),
   ]);
 
   return NextResponse.json({
     ok: true,
-    data: await addAuditActorIds(rows.map(r => ({
-      ...r,
-      actor: decryptPII(r.actor),
-      details: formatLogDetails(decryptPII(r.details)),
-    }))),
+    data: await decorateRows(rows),
     total,
   });
 }

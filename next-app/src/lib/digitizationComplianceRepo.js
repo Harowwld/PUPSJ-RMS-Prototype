@@ -74,6 +74,7 @@ async function loadComplianceSnapshot({
   officeId,
   studentNo,
   includeDigitizedDocuments = false,
+  summaryOnly = false,
 } = {}) {
   const office =
     String(officeId || "")
@@ -98,26 +99,44 @@ async function loadComplianceSnapshot({
         AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
         AND ($1::text IS NULL OR EXISTS (
           SELECT 1 FROM student_office_memberships som
-          WHERE som.student_no = s.student_no AND som.office_id = $1 AND som.status = 'Active'
+          WHERE som.student_no = s.student_no AND som.office_id = $1
+            AND (
+              ($2 = 'all' AND som.status IN ('Active', 'Archived'))
+              OR ($2 = 'Archived' AND (som.status = 'Archived' OR s.status != 'Active'))
+              OR ($2 = 'Active' AND som.status = 'Active' AND s.status = 'Active')
+            )
         ))
     )
     SELECT
+      (SELECT count(*)::int FROM students s
+       WHERE s.status = 'Active'
+         AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
+         AND ($1::text IS NULL OR EXISTS (
+           SELECT 1 FROM student_office_memberships som
+           WHERE som.student_no = s.student_no AND som.office_id = $1 AND som.status = 'Active'
+         ))) AS active_students_count,
+      (SELECT count(*)::int FROM students s
+       WHERE (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
+         AND ($1::text IS NULL OR EXISTS (
+           SELECT 1 FROM student_office_memberships som
+           WHERE som.student_no = s.student_no AND som.office_id = $1
+             AND (som.status = 'Archived' OR s.status != 'Active')
+         ))) AS archived_students_count,
       (SELECT coalesce(jsonb_agg(t ORDER BY lower(t.name), t.id), '[]'::jsonb) FROM types t) AS types,
       (SELECT coalesce(jsonb_agg(record ORDER BY record.student_no), '[]'::jsonb) FROM (
-        SELECT s.*, (SELECT coalesce(jsonb_agg(jsonb_build_object(
+        SELECT ${summaryOnly ? "s.student_no, s.course_code, s.year_level" : "s.*"}, (SELECT coalesce(jsonb_agg(jsonb_build_object(
           'documentTypeId', t.id, 'docType', t.name, 'officeId', t.office_id,
           'doc', (SELECT jsonb_build_object(
-            'id', d.id, 'student_no', d.student_no, 'doc_type', d.doc_type,
-            'office_id', d.office_id, 'approval_status', d.approval_status,
-            'original_filename', d.original_filename, 'mime_type', d.mime_type, 'size_bytes', d.size_bytes,
-            'created_at', d.created_at, 'review_note', d.review_note, 'reviewed_at', d.reviewed_at
+            ${summaryOnly
+              ? "'approval_status', d.approval_status"
+              : "'id', d.id, 'student_no', d.student_no, 'doc_type', d.doc_type, 'office_id', d.office_id, 'approval_status', d.approval_status, 'original_filename', d.original_filename, 'mime_type', d.mime_type, 'size_bytes', d.size_bytes, 'created_at', d.created_at, 'review_note', d.review_note, 'reviewed_at', d.reviewed_at"}
           ) FROM documents d
             WHERE d.student_no = s.student_no AND d.office_id = t.office_id AND d.doc_type = t.name
             ORDER BY CASE d.approval_status WHEN 'Approved' THEN 0 WHEN 'Pending' THEN 1 ELSE 2 END, d.id DESC
             LIMIT 1)
         ) ORDER BY lower(t.name), t.id), '[]'::jsonb) FROM types t
           WHERE EXISTS (SELECT 1 FROM student_office_memberships som
-            WHERE som.student_no = s.student_no AND som.office_id = t.office_id AND som.status = 'Active')
+            WHERE som.student_no = s.student_no AND som.office_id = t.office_id)
         ) AS requirements
         ${
           includeDigitizedDocuments
@@ -152,6 +171,8 @@ async function loadComplianceSnapshot({
     courses,
     studentStatus,
     requireApproved,
+    activeStudentsCount: Number(snapshot?.active_students_count) || 0,
+    archivedStudentsCount: Number(snapshot?.archived_students_count) || 0,
     generatedAt: new Date().toISOString(),
   }
 }
@@ -207,6 +228,8 @@ function summarize(snapshot) {
   return {
     summary: {
       totalStudents,
+      activeStudentsCount: snapshot.activeStudentsCount ?? totalStudents,
+      archivedStudentsCount: snapshot.archivedStudentsCount ?? 0,
       digitizedStudents: complete,
       fullyDigitizedStudents: complete,
       notDigitizedStudents: records.filter(
@@ -264,7 +287,7 @@ function summarize(snapshot) {
 }
 
 export async function getDigitizationComplianceSummary(options = {}) {
-  return summarize(await loadComplianceSnapshot(options))
+  return summarize(await loadComplianceSnapshot({ ...options, summaryOnly: true }))
 }
 
 export async function getStudentRecordsReport({ studentNo, officeId } = {}) {

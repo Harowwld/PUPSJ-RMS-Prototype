@@ -1,20 +1,72 @@
 "use client"
 
 import { useMemo } from "react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import DashboardSearch from "@/components/systemadmin/DashboardSearch"
+import TableScrollControls from "@/components/shared/TableScrollControls"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter"
-import { Search01Icon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Alert01Icon, UserIcon, UserGroupIcon } from "hugeicons-react"
 
+export const AUDIT_GROUP_OPTIONS = [
+  { key: "role", label: "Role", icon: UserGroupIcon },
+  { key: "severity", label: "Severity", icon: Alert01Icon },
+  { key: "none", label: "No grouping" },
+]
+
+export const AUDIT_COLUMNS = [
+  { key: "created_at", label: "Timestamp", kind: "date", maxWidth: 205 },
+  { key: "severity", label: "Level", kind: "status", maxWidth: 120 },
+  { key: "actor", label: "Actor", kind: "text", maxWidth: 240 },
+  { key: "action", label: "Action", kind: "text", maxWidth: 300 },
+  { key: "details", label: "Description", kind: "text" },
+  { key: "ip", label: "IP Address", kind: "text", maxWidth: 200, defaultHidden: true },
+]
+export const OPTIONAL_COLUMNS = AUDIT_COLUMNS
+
+export const DEFAULT_VISIBLE_COLUMNS = [
+  "created_at",
+  "severity",
+  "actor",
+  "action",
+  "details",
+]
+
+export const SORT_OPTIONS = [
+  { key: "created_at", label: "Timestamp" },
+  { key: "severity", label: "Level" },
+  { key: "actor", label: "Actor" },
+  { key: "action", label: "Action" },
+]
+
+export const AUDIT_FILTER_FIELDS = [
+  {
+    key: "role",
+    label: "Role",
+    icon: UserIcon,
+    options: [
+      { value: "SuperAdmin", label: "SuperAdmin" },
+      { value: "Admin", label: "Admin" },
+      { value: "Staff", label: "Staff" },
+      { value: "Student", label: "Student" },
+      { value: "System", label: "System" },
+    ],
+  },
+  {
+    key: "severity",
+    label: "Severity",
+    icon: EmptyAlertCircleIcon,
+    options: [
+      { value: "INFO", label: "Information" },
+      { value: "WARNING", label: "Warning" },
+      { value: "CRITICAL", label: "Critical" },
+    ],
+  },
+]
 
 export default function LogFilters({
   localSearch,
   handleSearchChange,
-  logRoleFilter,
-  logSeverityFilter,
   logStartDate,
   setLogStartDate,
   logEndDate,
@@ -22,102 +74,126 @@ export default function LogFilters({
   setLogPage,
   setLocalSearch,
   setLogSearch,
-  setLogRoleFilter,
-  setLogSeverityFilter,
   logTotal = 0,
   isLoading = false,
+  logSortBy = "created_at",
+  setLogSortBy,
+  logSortOrder = "DESC",
+  setLogSortOrder,
+  visibleColumns = DEFAULT_VISIBLE_COLUMNS,
+  setVisibleColumns,
+  groupBy = "none",
+  onGroupByChange,
+  groupOptions = AUDIT_GROUP_OPTIONS,
+  filterRules = [],
+  onFiltersChange,
+  tableContainerRef,
+  canScrollLeft = false,
+  canScrollRight = false,
+  isScrolled = false,
+  onScrollLeft,
+  onScrollRight,
+  onResetScroll,
 }) {
-  const selectedSeverities = useMemo(() => {
-    if (!logSeverityFilter || logSeverityFilter === "All") return []
-    return logSeverityFilter.split(",").map((s) => s.trim()).filter(Boolean)
-  }, [logSeverityFilter])
-
-  const selectedRoles = useMemo(() => {
-    if (!logRoleFilter || logRoleFilter === "All") return []
-    return logRoleFilter.split(",").map((s) => s.trim()).filter(Boolean)
-  }, [logRoleFilter])
-
-  const filterCriteriaGroups = useMemo(() => [
-    {
-      id: "severity",
-      label: "Severity",
-      options: [
-        { id: "INFO", label: "Information", dotColor: "bg-blue-500" },
-        { id: "WARNING", label: "Warnings", dotColor: "bg-amber-500" },
-        { id: "CRITICAL", label: "Critical", dotColor: "bg-rose-500" },
-      ],
-      selected: selectedSeverities,
-      onChange: (vals) => {
-        setLogSeverityFilter(vals.length === 0 ? "All" : vals.join(","))
-        setLogPage(1)
-      }
-    },
-    {
-      id: "role",
-      label: "Role",
-      options: [
-        { id: "Admin", label: "Administrators" },
-        { id: "Staff", label: "Regular Staff" },
-        { id: "System", label: "System Service" },
-      ],
-      selected: selectedRoles,
-      onChange: (vals) => {
-        setLogRoleFilter(vals.length === 0 ? "All" : vals.join(","))
-        setLogPage(1)
-      }
-    }
-  ], [selectedSeverities, selectedRoles, setLogSeverityFilter, setLogRoleFilter, setLogPage])
-
-
   return (
-    <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
-      {/* Search Input with Pure Number Count (Left side) */}
-      <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-        <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-          <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-        </div>
-        <Input
-          type="text"
-          placeholder="Search logs by actor, action, details..."
-          className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+    <DataViewToolbar
+      label="Activity history search, filters, sorting, columns, and dates"
+      className="border-t border-border dark:border-border gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3 select-none"
+    >
+      {/* Search & Scroll Controls (Left side) */}
+      <div className="flex min-w-0 items-center gap-2">
+        <DashboardSearch
           value={localSearch}
-          onChange={handleSearchChange}
-          disabled={isLoading}
+          onChange={(val) => {
+            if (handleSearchChange) {
+              handleSearchChange({ target: { value: val } })
+            } else {
+              setLocalSearch?.(val)
+            }
+          }}
+          onClear={() => {
+            setLocalSearch?.("")
+            setLogSearch?.("")
+            setLogPage?.(1)
+          }}
+          placeholder="Search logs by actor, action, details..."
+          label="Search activity history"
+          count={logTotal}
+          loading={isLoading}
+          className="z-10"
         />
-        <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-          {logTotal.toLocaleString()}
-        </div>
+        {tableContainerRef && (
+          <TableScrollControls
+            scrollContainerRef={tableContainerRef}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            isScrolled={isScrolled}
+            onScrollLeft={onScrollLeft}
+            onScrollRight={onScrollRight}
+            onResetScroll={onResetScroll}
+            controlSize="md"
+          />
+        )}
       </div>
 
-      {/* Filter controls (Right side) */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Multi-Criteria Filters (Severity, Role) */}
-        <div className="w-full sm:w-auto shrink-0">
-          <MultiCriteriaFilter
-            title="Filter Logs"
-            groups={filterCriteriaGroups}
-            align="end"
-            buttonLabel="Filter Logs"
+      {/* Filter, Sort, Column and Date controls (Right side) */}
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        {onFiltersChange && (
+          <FilterPopover
+            fields={AUDIT_FILTER_FIELDS}
+            filters={filterRules}
+            onFiltersChange={onFiltersChange}
+            entityLabel="activity"
           />
-        </div>
-
-        {/* Date Range Modal Trigger */}
+        )}
+        {setLogSortBy && setLogSortOrder && (
+          <SortPopover
+            options={SORT_OPTIONS}
+            sortBy={logSortBy}
+            onSortByChange={(key) => {
+              setLogSortBy(key)
+              setLogSortOrder("ASC")
+              setLogPage?.(1)
+            }}
+            sortOrder={logSortOrder}
+            onSortOrderChange={(order) => {
+              setLogSortOrder(order)
+              setLogPage?.(1)
+            }}
+          />
+        )}
+        {onGroupByChange && (
+          <GroupPopover
+            options={groupOptions}
+            groupBy={groupBy}
+            onGroupByChange={onGroupByChange}
+          />
+        )}
+        {setVisibleColumns && (
+          <ColumnsPopover
+            columns={AUDIT_COLUMNS}
+            visibleColumns={visibleColumns}
+            defaultColumns={DEFAULT_VISIBLE_COLUMNS}
+            onVisibleColumnsChange={setVisibleColumns}
+            minVisible={2}
+          />
+        )}
         <DateRangeFilterButton
           startDate={logStartDate}
           endDate={logEndDate}
           onApply={({ startDate, endDate }) => {
-            setLogStartDate(startDate)
-            setLogEndDate(endDate)
+            setLogStartDate?.(startDate)
+            setLogEndDate?.(endDate)
             setLogPage?.(1)
           }}
           onClear={() => {
-            setLogStartDate("")
-            setLogEndDate("")
+            setLogStartDate?.("")
+            setLogEndDate?.("")
             setLogPage?.(1)
           }}
           disableFutureDates={true}
         />
       </div>
-    </div>
+    </DataViewToolbar>
   )
 }

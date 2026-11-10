@@ -1,27 +1,33 @@
 "use client";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
-
 import useUrlPage from "@/hooks/useUrlPage";
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SegmentedControl } from "@/components/ui/tabs";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import ComplianceCalcSkeleton from "@/components/admin/skeletons/ComplianceCalcSkeleton";
 import ComplianceTableSkeleton from "@/components/admin/skeletons/ComplianceTableSkeleton";
-import { Input } from "@/components/ui/input";
+import DashboardSearch from "@/components/systemadmin/DashboardSearch";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+} from "@/components/systemadmin/OfficeTableControls";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-  TooltipProvider,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Reorder } from "framer-motion";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import { formatErrorMessage } from "@/lib/errorUtils";
@@ -33,30 +39,61 @@ import {
   EmptyDescription,
   EmptyMedia,
   EmptyContent,
+  EmptyState,
 } from "@/components/ui/empty";
 
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
 import OSASOrganizationComplianceView from "./OSASOrganizationComplianceView";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Files01Icon as EmptyFiles01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, DragDropIcon, Loading01Icon, PieChartIcon, ReloadIcon, Target01Icon, UserSearch01Icon, Search01Icon } from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import {
+  AlertCircleIcon as EmptyAlertCircleIcon,
+  Files01Icon as EmptyFiles01Icon,
+  Search01Icon as EmptySearch01Icon,
+  UserGroupIcon as EmptyUserGroupIcon,
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  ArrowUpDownIcon,
+  Award01Icon,
+  CheckmarkCircle01Icon,
+  Loading01Icon,
+  PieChartIcon,
+  ReloadIcon,
+  Target01Icon,
+  Tick01Icon,
+  UserSearch01Icon,
+} from "hugeicons-react";
+
+const COMPLIANCE_COLUMNS = [
+  { key: "courseCode", label: "Program", kind: "text" },
+  { key: "total", label: "Total Students", kind: "number" },
+  { key: "digitized", label: "Fully Digitized", kind: "number" },
+  { key: "percent", label: "Document Coverage", kind: "number" },
+];
+
+const COMPLIANCE_GROUP_OPTIONS = [
+  { key: "tier", label: "Coverage Tier", icon: Award01Icon },
+  { key: "none", label: "No grouping" },
+];
+
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
     return (
-      <ArrowUpDownIcon size="1em" className="ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <ArrowUpDownIcon
+        size="1em"
+        className="ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"
+      />
     );
   }
-  return sortOrder === "asc" ? (
-    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+  return String(sortOrder).toLowerCase() === "asc" ? (
+    <ArrowUp01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   ) : (
-    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-pup-maroon dark:text-primary" />
+    <ArrowDown01Icon size="1em" className="ml-1 text-[12px] text-gray-400" />
   );
 }
 
@@ -86,7 +123,6 @@ function DigitizationComplianceContent({
   const searchParams = useSearchParams();
   const [page, setPage] = useUrlPage({ enabled: true });
 
-  const [kpiOrder, setKpiOrder] = useState(["completeness","students","complete"]);
   const [statusFilter, setStatusFilter] = useState(() => {
     const s = searchParams.get("status");
     return s === "Archived" ? "Archived" : "Active";
@@ -111,29 +147,18 @@ function DigitizationComplianceContent({
   const previewSession = usePdfPreviewSession();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const statCardsRef = useRef(null);
   const [missingDialog, setMissingDialog] = useState(null);
   const loadController = useRef(null);
 
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
-
+  // Filters & Sorting state for the Program Breakdown table
+  const [tableSearch, setTableSearch] = useState("");
+  const [filterRules, setFilterRules] = useState([]);
   const [sortBy, setSortBy] = useState("courseCode");
   const [sortOrder, setSortOrder] = useState("asc");
-  const [tableSearch, setTableSearch] = useState("");
+  const [groupBy, setGroupBy] = useState("none");
+  const [visibleColumns, setVisibleColumns] = useState(() => COMPLIANCE_COLUMNS.map((c) => c.key));
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const toggleCourseFilter = useCallback((courseCode) => {
     setCourseFilter((previous) => {
@@ -237,28 +262,27 @@ function DigitizationComplianceContent({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    // Always enforce the correct view
     const oldStatus = params.get("status") || "Active";
     const oldCourse = params.get("course") || "";
     const currentCourse = Array.isArray(courseFilter) ? courseFilter.join(",") : "";
     const oldApproved = params.get("approved") || "1";
     const currentView = params.get("view");
 
-    // Only update if something actually changed
     const hasChanged =
-        oldStatus !== statusFilter ||
-        oldCourse !== currentCourse ||
-        (oldApproved === "1") !== requireApproved ||
-        currentView !== "digitization";
+      oldStatus !== statusFilter ||
+      oldCourse !== currentCourse ||
+      (oldApproved === "1") !== requireApproved ||
+      currentView !== "digitization";
 
     if (hasChanged) {
-        params.set("view", "digitization");
-        params.set("status", statusFilter);
-        if (currentCourse) params.set("course", currentCourse); else params.delete("course");
-        params.set("approved", requireApproved ? "1" : "0");
+      params.set("view", "digitization");
+      params.set("status", statusFilter);
+      if (currentCourse) params.set("course", currentCourse);
+      else params.delete("course");
+      params.set("approved", requireApproved ? "1" : "0");
 
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        router.replace(newUrl, { scroll: false });
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      router.replace(newUrl, { scroll: false });
     }
 
     const delay = firstLoadRef.current ? 0 : 350;
@@ -266,23 +290,91 @@ function DigitizationComplianceContent({
     const id = setTimeout(() => {
       load();
     }, delay);
-    return () => { clearTimeout(id); loadController.current?.abort(); };
+    return () => {
+      clearTimeout(id);
+      loadController.current?.abort();
+    };
   }, [statusFilter, courseFilter, requireApproved, load, router]);
 
   const summary = data?.summary;
   const meta = data?.meta;
-  const byCourse = useMemo(() => Array.isArray(data?.byCourse) ? data.byCourse : [], [data]);
+  const byCourse = useMemo(() => (Array.isArray(data?.byCourse) ? data.byCourse : []), [data]);
 
+  // Standard FilterPopover field options
+  const filterFields = useMemo(() => {
+    return [
+      {
+        key: "courseCode",
+        label: "Program",
+        options: courses.map((c) => ({
+          value: c.code,
+          label: c.code ? `${c.code}${c.name ? ` : ${c.name}` : ""}` : c.name || "Program",
+        })),
+      },
+      {
+        key: "percent",
+        label: "Document Coverage (%)",
+        type: "number",
+      },
+      {
+        key: "total",
+        label: "Total Students",
+        type: "number",
+      },
+      {
+        key: "digitized",
+        label: "Fully Digitized",
+        type: "number",
+      },
+    ];
+  }, [courses]);
+
+  // Standard SortPopover options
+  const sortOptions = useMemo(
+    () => [
+      { key: "courseCode", label: "Program Code" },
+      { key: "total", label: "Total Students" },
+      { key: "digitized", label: "Fully Digitized" },
+      { key: "percent", label: "Document Coverage" },
+    ],
+    []
+  );
+
+  // Filter and sort programs for table
   const sortedByCourse = useMemo(() => {
-    let filtered = [...byCourse];
+    let list = [...byCourse];
+
     if (tableSearch.trim()) {
-      const search = tableSearch.toLowerCase();
-      filtered = filtered.filter(row =>
-        row.courseCode?.toLowerCase().includes(search)
-      );
+      const search = tableSearch.trim().toLowerCase();
+      list = list.filter((row) => row.courseCode?.toLowerCase().includes(search));
     }
 
-    return filtered.sort((a, b) => {
+    // Apply FilterPopover rules
+    if (filterRules.length > 0) {
+      list = list.filter((row) => {
+        return filterRules.every((rule) => {
+          if (!rule.fieldKey) return true;
+          const actual = row[rule.fieldKey];
+
+          if (rule.fieldKey === "courseCode") {
+            const ruleVal = String(rule.value || "");
+            if (rule.operator === "is_not") return actual !== ruleVal;
+            return actual === ruleVal;
+          }
+
+          const numActual = Number(actual) || 0;
+          const numTarget = Number(rule.value) || 0;
+          if (rule.operator === "is") return numActual === numTarget;
+          if (rule.operator === "is_not") return numActual !== numTarget;
+          if (rule.operator === "greater_than") return numActual > numTarget;
+          if (rule.operator === "less_than") return numActual < numTarget;
+
+          return true;
+        });
+      });
+    }
+
+    return list.sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
 
@@ -291,23 +383,38 @@ function DigitizationComplianceContent({
         valB = (valB || "").toLowerCase();
       }
 
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      const isAsc = String(sortOrder).toLowerCase() === "asc";
+      if (valA < valB) return isAsc ? -1 : 1;
+      if (valA > valB) return isAsc ? 1 : -1;
       return 0;
     });
-  }, [byCourse, sortBy, sortOrder, tableSearch]);
+  }, [byCourse, tableSearch, filterRules, sortBy, sortOrder]);
 
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     setPage(1);
-  }, [tableSearch, statusFilter, courseFilter, requireApproved, sortBy, sortOrder, pageSize, setPage]);
+  }, [tableSearch, statusFilter, courseFilter, requireApproved, sortBy, sortOrder, pageSize, filterRules, setPage]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedByCourse.length / pageSize));
   const paginatedByCourse = useMemo(() => {
     const startIndex = (page - 1) * pageSize;
     return sortedByCourse.slice(startIndex, startIndex + pageSize);
   }, [sortedByCourse, page, pageSize]);
+
+  const groupedCourses = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "", courses: paginatedByCourse }];
+    }
+    const map = new Map();
+    for (const c of paginatedByCourse) {
+      let label = "Under 50% Coverage";
+      if (c.percent >= 80) label = "High Compliance (80% - 100%)";
+      else if (c.percent >= 50) label = "Moderate Compliance (50% - 79%)";
+      if (!map.has(label)) map.set(label, []);
+      map.get(label).push(c);
+    }
+    return [...map.entries()].map(([label, courses]) => ({ key: label, label, courses }));
+  }, [groupBy, paginatedByCourse]);
 
   const {
     containerRef: tableContainerRef,
@@ -319,7 +426,7 @@ function DigitizationComplianceContent({
 
   useEffect(() => {
     resetScroll();
-  }, [page, tableSearch, courseFilter, requireApproved, sortBy, sortOrder, pageSize, resetScroll]);
+  }, [page, tableSearch, courseFilter, requireApproved, sortBy, sortOrder, pageSize, filterRules, resetScroll]);
 
   const handlePreview = async () => {
     if (!data || loading) return;
@@ -343,7 +450,7 @@ function DigitizationComplianceContent({
     } finally {
       if (previewSession.isCurrent(request)) setIsGeneratingPdf(false);
     }
-  }
+  };
 
   const handleDownloadPdf = async () => {
     const fileName = generateExportFilename("COMPLIANCE", "REPORT", "pdf");
@@ -383,19 +490,18 @@ function DigitizationComplianceContent({
     onLogAction?.({
       action: "Generate Report",
       details: `generated formal physical record compliance report (${fileName}) for university accreditation records`,
-      entityType: "Report"
+      entityType: "Report",
     });
 
     showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
   };
-
 
   const downloadCsv = useCallback(async () => {
     if (!summary) return;
     setIsExportingCsv(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const q = (cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`;
       const row = (cells) => cells.map(q).join(",");
@@ -404,7 +510,10 @@ function DigitizationComplianceContent({
         row(["System Analytics - Digitization Compliance Report", ""]),
         row(["Generated (server UTC)", meta?.generatedAt || ""]),
         row(["Student status filter", meta?.studentStatus || ""]),
-        row(["Course filter", meta?.courseCode || (Array.isArray(courseFilter) && courseFilter.length > 0 ? courseFilter.join(", ") : "All")]),
+        row([
+          "Course filter",
+          meta?.courseCode || (Array.isArray(courseFilter) && courseFilter.length > 0 ? courseFilter.join(", ") : "All"),
+        ]),
         row(["Require approved only", meta?.requireApproved ? "Yes" : "No"]),
         row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
         "",
@@ -453,78 +562,84 @@ function DigitizationComplianceContent({
       onLogAction?.({
         action: "Export CSV",
         details: `exported digitization compliance dataset (${fileName}) to local CSV storage volume`,
-        entityType: "Report"
+        entityType: "Report",
       });
 
       showToast?.({ title: "Export Success", description: `The compliance dataset has been successfully exported as ${fileName}.` });
     } catch {
-       showToast?.({ title: "Export Failed", description: "An error occurred while exporting the compliance dataset to CSV." }, true);
+      showToast?.({ title: "Export Failed", description: "An error occurred while exporting the compliance dataset to CSV." }, true);
     } finally {
       setIsExportingCsv(false);
     }
   }, [summary, meta, byCourse, courseFilter, onLogAction, showToast]);
 
   const handleClearAll = useCallback(() => {
-    setStatusFilter("Active");
     setCourseFilter([]);
-    setRequireApproved(true);
     setTableSearch("");
-  }, []);
+    setFilterRules([]);
+    setPage(1);
+  }, [setPage]);
 
-  const filterCriteriaGroups = useMemo(() => {
-    return [
-      {
-        id: "status",
-        label: "Student Status",
-        options: [
-          { id: "Active", label: "Active Students", dotColor: "bg-emerald-500" },
-          { id: "Archived", label: "Archived Students", dotColor: "bg-gray-400" },
-        ],
-        selected: [statusFilter],
-        onChange: (vals) => {
-          if (vals.length === 0) {
-            setStatusFilter("Active");
-          } else {
-            setStatusFilter(vals[vals.length - 1]);
-          }
-        }
-      },
-      {
-        id: "course",
-        label: "Academic Program",
-        options: courses.map((c) => ({
-          id: String(c.code || ""),
-          label: c.code ? `${c.code}${c.name ? ` : ${c.name}` : ""}` : c.name || "Program",
-        })),
-        selected: Array.isArray(courseFilter) ? courseFilter : [],
-        onChange: (vals) => {
-          setCourseFilter(Array.isArray(vals) ? vals : []);
-        }
-      },
-      {
-        id: "approval",
-        label: "Verification Requirement",
-        options: [
-          { id: "approved", label: "Approved Only", dotColor: "bg-emerald-500" },
-        ],
-        selected: requireApproved ? ["approved"] : [],
-        onChange: (vals) => {
-          setRequireApproved(vals.includes("approved"));
-        }
-      }
-    ];
-  }, [courses, statusFilter, courseFilter, requireApproved]);
+  // Active filter chips
+  const activeChips = useMemo(() => {
+    const chips = [];
 
+    // Filter rules from FilterPopover
+    filterRules.forEach((rule) => {
+      const field = filterFields.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const optionLabel =
+        field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
+      const opText =
+        rule.operator === "is_not"
+          ? "is not"
+          : rule.operator === "greater_than"
+          ? ">"
+          : rule.operator === "less_than"
+          ? "<"
+          : "is";
+      chips.push({
+        id: rule.id,
+        label: `${fieldLabel} ${opText} ${optionLabel}`,
+        onRemove: () => {
+          setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
+          setPage(1);
+        },
+      });
+    });
 
-  const hasActiveFilters = statusFilter !== "Active" || (Array.isArray(courseFilter) && courseFilter.length > 0) || !requireApproved || tableSearch !== "";
+    // Program filters (from courseFilter)
+    (courseFilter || []).forEach((c) => {
+      chips.push({
+        id: `course-${c}`,
+        label: `Program: ${c}`,
+        onRemove: () => {
+          setCourseFilter((prev) => prev.filter((item) => item !== c));
+          setPage(1);
+        },
+      });
+    });
+
+    return chips;
+  }, [filterRules, courseFilter, filterFields, setPage]);
+
+  const hasActiveFilters = Boolean(tableSearch.trim() || activeChips.length > 0);
 
   return (
     <div className="flex flex-[1_0_auto] flex-col w-full gap-6 animate-fade-up font-jakarta">
-      {/* Unified Single Card Container: Header, Metrics, Filters, Target Metrics & Program Breakdown Table */}
+      {/* 1. Unified Single Card Container */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+        {/* PageHeader: Title + Inline Count + Right Actions Group (RefreshButton Exemption) */}
         <PageHeader
           icon="PieChartIcon"
-          title="Compliance Analysis"
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>Compliance Analysis</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {(summary?.totalStudents ?? 0).toLocaleString()} students · {byCourse.length} programs
+              </span>
+            </div>
+          }
           description="Monitor digitization completeness."
           showBorder={false}
           className="p-6"
@@ -536,393 +651,179 @@ function DigitizationComplianceContent({
                 onRefresh={() => load(true)}
                 isLoading={manualLoading}
                 title="Refresh Compliance Data"
+                className="h-9 w-9"
               />
 
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={downloadCsv}
+                disabled={loading || !data || isExportingCsv}
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                {isExportingCsv ? (
+                  <Loading01Icon size="1em" className="animate-spin text-[16px]" />
+                ) : (
+                  "Export CSV"
+                )}
+              </Button>
 
-
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  onClick={handlePreview}
-                  disabled={loading || !data || isGeneratingPdf}
-                  className="h-9 shrink-0 px-4 cursor-pointer"
-                >
-                  {isGeneratingPdf ? (
-                    <Loading01Icon size="1em"  className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
-                  ) : (
-                    PDF_ACTION_LABELS.preview
-                  )}
-                </Button>
-              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handlePreview}
+                disabled={loading || !data || isGeneratingPdf}
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"
+              >
+                {isGeneratingPdf ? (
+                  <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
+                ) : (
+                  PDF_ACTION_LABELS.preview
+                )}
+              </Button>
             </div>
-          }
-          secondaryActions={
-            <Button type="button" variant="outline" onClick={downloadCsv} disabled={loading || !data || isExportingCsv} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
-              {isExportingCsv ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
-            </Button>
           }
         />
 
-        {/* 2. Top Summary Metrics Banner */}
-        {loading && !data ? (
+        {/* 2. Top Summary Metrics Banner (Clean, Non-interactive Steady Stat Cards) */}
+        {loading && !manualLoading && !data ? (
           <div className="px-6 pb-6">
-            <KpiStatCardsSkeleton count={3} />
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <KpiStatCardsSkeleton count={3} />
+            </div>
           </div>
         ) : !error && data ? (
           <div className="px-6 pb-6">
-            <div className={cn(
-              "transition-all duration-slow",
-              (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-            )}>
-              {/* Stats Cards */}
-              <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-20">
-            {kpiOrder.map(key => {
-              if (key === "completeness") return (
-              <Reorder.Item as="div" value="completeness" key="completeness" className={cn(selectedKpi === "completeness" ? "z-30" : "z-10")}>
-
-
-                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "completeness" ? "z-30" : "z-10")}>
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === "completeness" ? null : "completeness")}
-                    className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "completeness"
-                        ? "border-red-500/50 ring-1 ring-red-500/20"
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                          Document Coverage
-                        </span>
-                        <TooltipProvider delayDuration={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <CovidInfoIcon size="1em"  className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="right"
-                              className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
-                            >
-                              <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Digitization Formula</p>
-                              <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
-                                Percentage of expected mandatory documents uploaded across all active/selected students.
-                              </p>
-                              <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
-                                (Digitized Docs / Expected Docs) × 100
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                {/* Card 1: Document Coverage */}
+                <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <PieChartIcon size="0.75em" />
                       </div>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                        <PieChartIcon size="1em" className="text-[15px]" />
-                      </div>
+                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                        Document Coverage
+                      </span>
                     </div>
-
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {summary?.percentDigitized ?? 0}%
-                        </span>
-                        <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
-                          {(summary?.totalDigitizedDocsCount ?? 0).toLocaleString()} / {(summary?.totalExpectedDocsCount ?? 0).toLocaleString()} slots
-                        </span>
-                      </div>
-                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                      <PieChartIcon size={12} className="text-red-600 dark:text-red-400 shrink-0" />
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Overall Rate</span>
+                    </span>
                   </div>
-
-                  {/* Absolute details container */}
-                  <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                    selectedKpi === "completeness" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                  )} onClick={(e) => e.stopPropagation()}>
-                    <div className="space-y-3">
-                      {summary && (
-                        <>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-600 dark:text-zinc-300 uppercase tracking-wider">Document Coverage</span>
-                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.percentDigitized ?? 0}%</span>
-                            </div>
-                            <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
-                              <span className="block text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Digitized Files</span>
-                              <span className="text-lg font-black text-red-700 dark:text-red-400">{summary.totalDigitizedDocsCount?.toLocaleString()}</span>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Expected Documents</span>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50">{summary.totalExpectedDocsCount?.toLocaleString()}</span>
-                          </div>
-
-                          {byCourse && byCourse.length > 0 && (
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Course Document Coverage</h4>
-                              <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
-                                {byCourse.map((c) => (
-                                  <div key={c.courseCode} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
-                                    <span className="truncate max-w-[150px]" title={c.courseCode}>{c.courseCode}</span>
-                                    <span className="font-bold text-gray-900 dark:text-zinc-50">{c.percent}%</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                  <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
+                    {summary?.percentDigitized ?? 0}%
+                  </div>
+                  <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
+                    {(summary?.totalDigitizedDocsCount ?? 0).toLocaleString()} / {(summary?.totalExpectedDocsCount ?? 0).toLocaleString()} slots
                   </div>
                 </div>
 
-                              </Reorder.Item>
-              );
-              if (key === "students") return (
-              <Reorder.Item as="div" value="students" key="students" className={cn(selectedKpi === "students" ? "z-30" : "z-10")}>
-
-                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "students" ? "z-30" : "z-10")}>
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
-                    className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "students"
-                        ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                        Students
-                      </span>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                        <UserSearch01Icon size="1em" className="text-[15px]" />
+                {/* Card 2: Students Evaluated */}
+                <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <UserSearch01Icon size="0.75em" />
                       </div>
-                    </div>
-
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                        {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents ?? 0}
+                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                        Students Evaluated
                       </span>
-                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
                     </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                      <UserSearch01Icon size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Total Cohort</span>
+                    </span>
                   </div>
-
-                  {/* Absolute details container */}
-                  <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                    selectedKpi === "students" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                  )} onClick={(e) => e.stopPropagation()}>
-                    <div className="space-y-3">
-                      {summary && (
-                        <>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Enrollment</span>
-                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{summary.totalStudents?.toLocaleString()}</span>
-                            </div>
-                            <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                              <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Digitized Students</span>
-                              <span className="text-lg font-black text-blue-700 dark:text-blue-400">{summary.digitizedStudents?.toLocaleString()}</span>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Students not fully digitized</span>
-                            <span className="font-bold text-amber-600 dark:text-amber-400">{summary.notDigitizedStudents?.toLocaleString()}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                  <div className="text-xl sm:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400 font-jakarta mt-2">
+                    {(summary?.totalStudents ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
+                    {(summary?.notDigitizedStudents ?? 0).toLocaleString()} incomplete records
                   </div>
                 </div>
 
-                              </Reorder.Item>
-              );
-              if (key === "complete") return (
-              <Reorder.Item as="div" value="complete" key="complete" className={cn(selectedKpi === "complete" ? "z-30" : "z-10")}>
-
-                <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "complete" ? "z-30" : "z-10")}>
-                  <div
-                    onClick={() => setSelectedKpi(selectedKpi === "complete" ? null : "complete")}
-                    className={cn(
-                      "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                      selectedKpi === "complete"
-                        ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                        : "border-border dark:border-border"
-                    )}
-                  >
-                    <div className="flex justify-between items-start p-4 pb-0">
-                      <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                        Students Fully Digitized
+                {/* Card 3: Fully Digitized */}
+                <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <CheckmarkCircle01Icon size="0.75em" />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                        Fully Digitized
                       </span>
-                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                        <CheckmarkCircle01Icon size="1em" className="text-[15px]" />
-                      </div>
                     </div>
-
-                    <div className="flex justify-between items-end p-4 pt-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[25px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                          {(summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0).toLocaleString()} / {(summary?.totalStudents ?? 0).toLocaleString()}
-                        </span>
-                        <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
-                          {summary?.fullyDigitizedRate ?? 0}% complete
-                        </span>
-                      </div>
-                      <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                      <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                        <Tick01Icon size={8} className="stroke-[3]" />
+                      </span>
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">Compliant</span>
+                    </span>
                   </div>
-
-                  {/* Absolute details container */}
-                  <div className={cn(
-                    "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                    selectedKpi === "complete" ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                  )} onClick={(e) => e.stopPropagation()}>
-                    <div className="space-y-3">
-                      {summary && (
-                        <>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                              <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Fully Digitized</span>
-                              <span className="text-lg font-black text-gray-900 dark:text-zinc-50">{(summary?.digitizedStudents ?? summary?.fullyDigitizedStudents ?? 0).toLocaleString()}</span>
-                            </div>
-                            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                              <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Completion Rate</span>
-                              <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{summary?.fullyDigitizedRate ?? 0}%</span>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                            <span className="font-semibold text-gray-600 dark:text-zinc-400">Students in current filter</span>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50">{summary.totalStudents?.toLocaleString?.() ?? 0}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                  <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
+                    {(summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
+                    {summary?.fullyDigitizedRate ?? 0}% completion rate
                   </div>
                 </div>
-                            </Reorder.Item>
-              );
-              return null;
-            })}
-            </Reorder.Group>
-
+              </div>
             </div>
           </div>
         ) : null}
 
-        {/* Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card flex-wrap">
-          {/* Search Input (Left side) */}
-          <div className="relative flex-1 sm:w-64 min-w-[200px] max-w-sm group">
-            <Search01Icon size="1em" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-xs" />
-            <Input
-              type="text"
-              placeholder="Search Program"
-              className="pl-8 pr-16 h-9 text-xs w-full bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
-              value={tableSearch}
-              onChange={(e) => setTableSearch(e.target.value)}
-            />
-            <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-              {sortedByCourse.length}
-            </div>
-          </div>
+        {/* 3. Connected Segmented Tabs Row (Both with Permanent Number Badges) */}
+        <div
+          role="group"
+          aria-label="Compliance status scope and requirement"
+          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4"
+        >
+          {/* Left: Active vs Archived Scope Tabs */}
+          <SegmentedControl
+            id="compliance-status-filter"
+            value={statusFilter}
+            onValueChange={(val) => {
+              setStatusFilter(val);
+              setPage(1);
+            }}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              {
+                value: "Active",
+                label: "Active",
+                badge: summary?.activeStudentsCount ?? (statusFilter === "Active" ? summary?.totalStudents : 0),
+              },
+              {
+                value: "Archived",
+                label: "Archived",
+                badge: summary?.archivedStudentsCount ?? (statusFilter === "Archived" ? summary?.totalStudents : 0),
+              },
+            ]}
+          />
 
-          {/* Filter controls (Right side) */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Multi-Criteria Filters (Status, Program, Requirement) */}
-            <MultiCriteriaFilter
-              groups={filterCriteriaGroups}
-              align="end"
-              buttonLabel="Filter Compliance"
-            />
-
-            {/* Validation Requirement Segmented Control */}
-            <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
-              <button
-                type="button"
-                onClick={() => setRequireApproved(false)}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                  !requireApproved
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                All Uploads
-              </button>
-              <button
-                type="button"
-                onClick={() => setRequireApproved(true)}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap",
-                  requireApproved
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                Approved Only
-              </button>
-            </div>
-          </div>
-          <p className="basis-full text-[11px] leading-relaxed text-gray-500 dark:text-zinc-400">
-            {requireApproved
-              ? "Counts include approved documents only."
-              : "Counts include pending and approved uploads; declined documents are excluded."}
-          </p>
+          {/* Right: Validation Requirement Segmented Control */}
+          <SegmentedControl
+            id="compliance-require-approved"
+            value={requireApproved ? "approved" : "all"}
+            onValueChange={(val) => {
+              setRequireApproved(val === "approved");
+              setPage(1);
+            }}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-auto"
+            items={[
+              { value: "all", label: "All Uploads" },
+              { value: "approved", label: "Approved Only" },
+            ]}
+          />
         </div>
 
-        {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <ActiveFilterChips
-            groups={[
-              ...(statusFilter !== "Active"
-                ? [
-                    {
-                      key: "status",
-                      label: "Status",
-                      values: [statusFilter],
-                      onRemove: () => setStatusFilter("Active"),
-                      formatValue: (val) => val
-                    }
-                  ]
-                : []),
-              ...(Array.isArray(courseFilter) && courseFilter.length > 0
-                ? [
-                    {
-                      key: "course",
-                      label: "Program",
-                      values: courseFilter,
-                      onRemove: (valToRemove) => {
-                        setCourseFilter((prev) => prev.filter((c) => c !== valToRemove));
-                      },
-                      formatValue: (val) => val
-                    }
-                  ]
-                : []),
-              ...(requireApproved
-                ? [
-                    {
-                      key: "requirement",
-                      label: "Requirement",
-                      values: ["Approved Only"],
-                      onRemove: () => setRequireApproved(false),
-                      formatValue: (val) => val
-                    }
-                  ]
-                : [])
-            ]}
-            searchQuery={tableSearch}
-            onClearSearch={() => setTableSearch("")}
-            onClearAll={handleClearAll}
-            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-          />
-        )}
-
-        {/* Calculation block skeletons or data */}
-        <div className="p-6 border-t border-border dark:border-border">
+        {/* 4. Digitization Progress & Missing Documents Section */}
+        <div className="p-6 border-t border-border dark:border-border bg-white dark:bg-card">
           {loading && !data ? (
             <ComplianceCalcSkeleton />
           ) : !error && data ? (() => {
@@ -931,16 +832,17 @@ function DigitizationComplianceContent({
               : 0;
             const fullyDigitizedCount = summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0;
             return (
-              <div className={cn(
-                "transition-all duration-slow",
-                (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-              )}>
+              <div
+                className={cn(
+                  "transition-all duration-slow",
+                  loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+                )}
+              >
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
-
                   {/* Context & Formula */}
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <Target01Icon size="1em"  className="text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
+                      <Target01Icon size="1em" className="text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                       <div>
                         <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
                           Digitization Progress
@@ -983,7 +885,7 @@ function DigitizationComplianceContent({
                       </div>
                     </div>
 
-                    {/* Substantial Progress Bar */}
+                    {/* Progress Bar */}
                     <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
                       <div
                         className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-slow ease-standard"
@@ -1007,58 +909,65 @@ function DigitizationComplianceContent({
                 <section className="mt-7 border-t border-border pt-5 dark:border-border" aria-labelledby="missing-documents-title">
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div>
-                    <h4 id="missing-documents-title" className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
-                      Missing Documents by Type
-                    </h4>
-                    <p className="mt-1 text-[11px] text-gray-600 dark:text-zinc-300">
-                      Each required type is counted once per student. Counts follow the selected status and approval filters.
-                    </p>
+                      <h4 id="missing-documents-title" className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">
+                        Missing Documents by Type
+                      </h4>
+                      <p className="mt-1 text-[11px] text-gray-600 dark:text-zinc-300">
+                        Each required type is counted once per student. Counts follow the selected status and approval filters.
+                      </p>
                     </div>
-                    <Button variant="outline" size="sm" disabled={!meta?.configured || !summary?.notDigitizedStudents} onClick={() => openMissingStudents({ documentType: "All compliance requirements" })}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!meta?.configured || !summary?.notDigitizedStudents}
+                      onClick={() => openMissingStudents({ documentType: "All compliance requirements" })}
+                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
                       View Incomplete Students
                     </Button>
                   </div>
                   {summary?.totalStudents === 0 || !Array.isArray(data.missingByDocumentType) || data.missingByDocumentType.length === 0 || docTypeItems.length === 0 ? (
-                    <div className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30">
-                      <Empty variant="compact">
-                        <EmptyHeader>
-                          <EmptyMedia>{summary?.totalStudents === 0 ? hasActiveFilters ? <EmptySearch01Icon size="1em" /> : <EmptyUserGroupIcon size="1em" /> : <EmptyFiles01Icon size="1em" />}</EmptyMedia>
-                          <EmptyTitle>
-                            {summary?.totalStudents === 0
-                              ? hasActiveFilters
-                                ? "No Matching Students"
-                                : "No Student Records Found"
-                              : "No Document Types Configured"}
-                          </EmptyTitle>
-                          <EmptyDescription>
-                            {summary?.totalStudents === 0
-                              ? hasActiveFilters
-                                ? "No students match the current filters. Adjust or reset your criteria to evaluate missing documents."
-                                : "No student records are currently available to evaluate document compliance."
-                              : "No active compliance document types are configured for this view."}
-                          </EmptyDescription>
-                        </EmptyHeader>
-                        {summary?.totalStudents === 0 && hasActiveFilters && (
-                          <EmptyContent>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={handleClearAll}
-                              title="Reset Filters"
-                              className="mt-4 flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                            >
-                              Reset Filters
-                            </Button>
-                          </EmptyContent>
-                        )}
-                      </Empty>
-                    </div>
+                    <EmptyState
+                      variant="compact"
+                      icon={summary?.totalStudents === 0 ? (hasActiveFilters ? EmptySearch01Icon : EmptyUserGroupIcon) : EmptyFiles01Icon}
+                      title={
+                        summary?.totalStudents === 0
+                          ? hasActiveFilters
+                            ? "No Matching Students"
+                            : statusFilter === "Archived"
+                            ? "No Archived Records"
+                            : "No Student Records Found"
+                          : "No Document Types Configured"
+                      }
+                      description={
+                        summary?.totalStudents === 0
+                          ? hasActiveFilters
+                            ? "No students match the current filters. Adjust or reset your criteria to evaluate missing documents."
+                            : statusFilter === "Archived"
+                            ? "There are currently no archived student records in this office."
+                            : "No student records are currently available to evaluate document compliance."
+                          : "No active compliance document types are configured for this view."
+                      }
+                    >
+                      {summary?.totalStudents === 0 && hasActiveFilters && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearAll}
+                          title="Reset Filters"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        >
+                          Reset Filters
+                        </Button>
+                      )}
+                    </EmptyState>
                   ) : (
-                    <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border">
+                    <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border overflow-hidden">
                       {docTypeItems.map((item) => (
                         <div
                           key={item.documentTypeId}
-                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors"
                         >
                           <div className="min-w-0">
                             <div className="truncate text-[12px] font-medium text-gray-900 dark:text-zinc-100" title={item.documentType}>
@@ -1075,8 +984,9 @@ function DigitizationComplianceContent({
                             <Button
                               type="button"
                               variant="outline"
+                              size="sm"
                               onClick={() => openMissingStudents(item)}
-                              className="col-span-2 h-11 rounded-xl px-4 text-xs font-semibold sm:col-span-1"
+                              className="col-span-2 h-9 rounded-xl px-4 text-xs font-semibold sm:col-span-1 border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               View Missing Students
                             </Button>
@@ -1095,25 +1005,122 @@ function DigitizationComplianceContent({
           })() : null}
         </div>
 
-        {/* Table / Empty / Error Area embedded in single card */}
+        {/* 5. DataViewToolbar: Located Directly on Top of the Program Breakdown Table */}
+        <DataViewToolbar
+          label="Program compliance search and filters"
+          className="border-t border-border dark:border-border px-5 sm:py-3 bg-white dark:bg-card select-none"
+        >
+          {/* Left Group: DashboardSearch + TableScrollControls */}
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardSearch
+              value={tableSearch}
+              onChange={(val) => {
+                setTableSearch(val);
+                setPage(1);
+              }}
+              onClear={() => {
+                setTableSearch("");
+                setPage(1);
+              }}
+              resultCount={sortedByCourse.length}
+              placeholder="Search programs..."
+            />
+
+            <TableScrollControls
+              scrollContainerRef={tableContainerRef}
+              onScrollLeft={scrollLeft}
+              onScrollRight={scrollRight}
+              onResetScroll={resetScroll}
+              isScrolled={isScrolledX}
+            />
+          </div>
+
+          {/* Right Group: FilterPopover + SortPopover + GroupPopover + ColumnsPopover + DateRangeFilterButton */}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <FilterPopover
+              fields={filterFields}
+              filters={filterRules}
+              onFiltersChange={(newRules) => {
+                setFilterRules(newRules);
+                setPage(1);
+              }}
+              entityLabel="programs"
+            />
+
+            <SortPopover
+              options={sortOptions}
+              sortBy={sortBy}
+              onSortByChange={(val) => {
+                setSortBy(val);
+                setSortOrder("asc");
+              }}
+              sortOrder={sortOrder.toUpperCase()}
+              onSortOrderChange={(ord) => setSortOrder(ord.toLowerCase())}
+            />
+
+            <GroupPopover
+              options={COMPLIANCE_GROUP_OPTIONS}
+              groupBy={groupBy}
+              onGroupByChange={setGroupBy}
+            />
+
+            <ColumnsPopover
+              columns={COMPLIANCE_COLUMNS}
+              visibleColumns={visibleColumns}
+              onVisibleColumnsChange={setVisibleColumns}
+              minVisible={2}
+            />
+
+            <DateRangeFilterButton
+              startDate={startDate}
+              endDate={endDate}
+              onApply={({ startDate: s, endDate: e }) => {
+                setStartDate(s);
+                setEndDate(e);
+                setPage(1);
+              }}
+              onClear={() => {
+                setStartDate("");
+                setEndDate("");
+                setPage(1);
+              }}
+              disableFutureDates={true}
+            />
+          </div>
+        </DataViewToolbar>
+
+        {/* 6. ActiveFilterChips Row (Conditional) */}
+        {hasActiveFilters && (
+          <div className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5">
+            <ActiveFilterChips
+              chips={activeChips}
+              searchQuery={tableSearch}
+              onClearSearch={() => setTableSearch("")}
+              onClearAll={handleClearAll}
+              className="p-0 border-0"
+            />
+          </div>
+        )}
+
+        {/* 7. Main Program Breakdown Table */}
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
         ) : error ? (
           <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
             <Empty>
               <EmptyHeader>
-                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
+                <EmptyMedia className="text-red-600 dark:text-red-400">
+                  <EmptyAlertCircleIcon size="1em" />
+                </EmptyMedia>
                 <EmptyTitle>Data Unavailable</EmptyTitle>
-                <EmptyDescription>
-                  {error}
-                </EmptyDescription>
+                <EmptyDescription>{error}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => load(true)}
-                  className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-6 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                  className="flex h-9 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
                   Retry Loading
                 </Button>
@@ -1121,169 +1128,185 @@ function DigitizationComplianceContent({
             </Empty>
           </div>
         ) : data ? (
-          <div className={cn(
-            "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
-            (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-          )}>
-            <DataViewToolbar label="Program compliance table controls" className="justify-between gap-6 px-6 py-3.5 bg-white dark:bg-card border-b border-border dark:border-border">
-              <div className="flex items-center gap-2.5">
-                <h4 className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] m-0">
-                  Program Breakdown
-                </h4>
-                <span className="text-[11px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                  ({sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"})
-                </span>
-              </div>
-              <TableScrollControls scrollContainerRef={tableContainerRef}
-                onScrollLeft={scrollLeft}
-                onScrollRight={scrollRight}
-                onResetScroll={resetScroll}
-                isScrolled={isScrolledX}
-              />
-            </DataViewToolbar>
-
+          <div
+            className={cn(
+              "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
+              loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            )}
+          >
             <div
               ref={tableContainerRef}
               className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 sm:block"
             >
               {sortedByCourse.length > 0 ? (
                 <Table columns={["text", "number", "number", "number"]} className="min-w-[850px]">
-                  <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                  <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th
-                        className={cn(
-                          "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <button
-                            onClick={() => handleSort("courseCode")}
-                            className={cn(
-                              "group flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
-                              sortBy === "courseCode" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                            )}
-                          >
-                            Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
-                          </button>
-                          {isScrolledX && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={resetScroll}
-                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                  aria-label="Reset scroll to start"
-                                >
-                                  <ReloadIcon size="1em" className="text-xs" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </th>
-                      <th className="p-4 px-6 w-[22%] text-center">
-                        <button
-                          onClick={() => handleSort("total")}
+                      {visibleColumns.includes("courseCode") && (
+                        <th
                           className={cn(
-                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
-                            sortBy === "total" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 px-6 w-[22%] text-center">
-                        <button
-                          onClick={() => handleSort("digitized")}
-                          className={cn(
-                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
-                            sortBy === "digitized" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                      <th className="p-4 px-6 w-[24%] text-right">
-                        <button
-                          onClick={() => handleSort("percent")}
-                          className={cn(
-                            "group ml-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
-                            sortBy === "percent" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Document Coverage <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-transparent divide-y divide-border dark:divide-border">
-                    {paginatedByCourse.map((row) => {
-                      const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode)
-                      return (
-                        <tr
-                          key={row.courseCode}
-                          className={cn(
-                            "h-[48px] hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none",
-                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                          )}
-                        >
-                        <td
-                          className={cn(
-                            "p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
-                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20 group-hover:bg-blue-50/80 dark:group-hover:bg-blue-950/40",
+                            "p-4 px-6 w-[32%] min-w-[200px] sticky left-0 z-20 bg-white dark:bg-card backdrop-blur-xs transition-shadow duration-200",
                             isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
-                          <button
-                            type="button"
-                            onClick={() => toggleCourseFilter(row.courseCode)}
-                            aria-pressed={isSelected}
-                            className="rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500"
-                            title={`${isSelected ? "Remove" : "Add"} ${row.courseCode} ${isSelected ? "from" : "as"} program filter`}
-                          >
-                            {row.courseCode || "N/A"}
-                          </button>
-                        </td>
-                        <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center border-r border-border/70 dark:border-border/70">
-                          {row.total?.toLocaleString?.() ?? row.total}
-                        </td>
-                        <td className="p-4 px-6 text-center text-[13px] font-normal border-r border-border/70 dark:border-border/70">
-                          <span className={cn(
-                            row.digitized === 0
-                              ? "text-gray-400 dark:text-zinc-500"
-                              : "text-gray-900 dark:text-zinc-50"
-                          )}>
-                            {row.digitized?.toLocaleString?.() ?? row.digitized} / {row.total?.toLocaleString?.() ?? row.total}
-                          </span>
-                          <span className="text-[10px] text-gray-500 font-medium ml-1.5 dark:text-zinc-400">
-                            ({row.fullyDigitizedRate}%)
-                          </span>
-                        </td>
-                        <td className="p-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-[8px]">
-                            <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-50">
-                              {row.percent != null ? `${row.percent}%` : "0%"}
-                            </span>
-                            <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
-                              <div
-                                className="h-full bg-emerald-600 dark:bg-emerald-500"
-                                style={{ width: `${Math.min(100, row.percent || 0)}%` }}
-                              />
-                            </div>
+                          <div className="flex items-center justify-between gap-1">
+                            <button
+                              onClick={() => handleSort("courseCode")}
+                              className={cn(
+                                "group flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                                sortBy === "courseCode" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                              )}
+                            >
+                              Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
+                            </button>
+                            {isScrolledX && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={resetScroll}
+                                    className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                    aria-label="Reset scroll to start"
+                                  >
+                                    <ReloadIcon size="1em" className="text-xs" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
-                        </td>
-                        </tr>
-                      )
-                    })}
+                        </th>
+                      )}
+                      {visibleColumns.includes("total") && (
+                        <th className="p-4 px-6 w-[22%] text-center">
+                          <button
+                            onClick={() => handleSort("total")}
+                            className={cn(
+                              "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                              sortBy === "total" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Total Students <SortIndicator column="total" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("digitized") && (
+                        <th className="p-4 px-6 w-[22%] text-center">
+                          <button
+                            onClick={() => handleSort("digitized")}
+                            className={cn(
+                              "group mx-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                              sortBy === "digitized" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Fully Digitized <SortIndicator column="digitized" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                      {visibleColumns.includes("percent") && (
+                        <th className="p-4 px-6 w-[24%] text-right">
+                          <button
+                            onClick={() => handleSort("percent")}
+                            className={cn(
+                              "group ml-auto flex items-center text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer",
+                              sortBy === "percent" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Document Coverage <SortIndicator column="percent" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-transparent divide-y divide-border dark:divide-border">
+                    {groupedCourses.map((group) => (
+                      <Fragment key={group.key}>
+                        {groupBy !== "none" && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
+                            <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                              {group.label} ({group.courses.length})
+                            </td>
+                          </tr>
+                        )}
+                        {group.courses.map((row) => {
+                          const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode);
+                          return (
+                            <tr
+                              key={row.courseCode}
+                              className={cn(
+                                "h-[48px] hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group select-none",
+                                isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                              )}
+                            >
+                              {visibleColumns.includes("courseCode") && (
+                                <td
+                                  className={cn(
+                                    "p-4 px-6 text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
+                                    isSelected && "bg-blue-50/60 dark:bg-blue-950/20 group-hover:bg-blue-50/80 dark:group-hover:bg-blue-950/40",
+                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                  )}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCourseFilter(row.courseCode)}
+                                    aria-pressed={isSelected}
+                                    className="rounded-md text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 cursor-pointer"
+                                    title={`${isSelected ? "Remove" : "Add"} ${row.courseCode} ${isSelected ? "from" : "as"} program filter`}
+                                  >
+                                    {row.courseCode || "N/A"}
+                                  </button>
+                                </td>
+                              )}
+                              {visibleColumns.includes("total") && (
+                                <td className="p-4 px-6 text-xs font-normal text-gray-700 dark:text-zinc-300 tabular-nums text-center border-r border-border/70 dark:border-border/70">
+                                  {row.total?.toLocaleString?.() ?? row.total}
+                                </td>
+                              )}
+                              {visibleColumns.includes("digitized") && (
+                                <td className="p-4 px-6 text-center text-xs font-normal border-r border-border/70 dark:border-border/70">
+                                  <span
+                                    className={cn(
+                                      row.digitized === 0
+                                        ? "text-gray-400 dark:text-zinc-500"
+                                        : "text-gray-900 dark:text-zinc-50 tabular-nums"
+                                    )}
+                                  >
+                                    {row.digitized?.toLocaleString?.() ?? row.digitized} / {row.total?.toLocaleString?.() ?? row.total}
+                                  </span>
+                                  <span className="text-[10px] text-gray-500 font-medium ml-1.5 dark:text-zinc-400 tabular-nums">
+                                    ({row.fullyDigitizedRate}%)
+                                  </span>
+                                </td>
+                              )}
+                              {visibleColumns.includes("percent") && (
+                                <td className="p-4 px-6 text-right">
+                                  <div className="flex items-center justify-end gap-[8px]">
+                                    <span className="text-xs font-semibold tabular-nums text-gray-900 dark:text-zinc-50">
+                                      {row.percent != null ? `${row.percent}%` : "0%"}
+                                    </span>
+                                    <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
+                                      <div
+                                        className="h-full bg-emerald-600 dark:bg-emerald-500"
+                                        style={{ width: `${Math.min(100, row.percent || 0)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </Table>
               ) : (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>
                     <EmptyHeader>
-                      <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                      <EmptyMedia>
+                        <EmptySearch01Icon size="1em" />
+                      </EmptyMedia>
                       <EmptyTitle>No data found</EmptyTitle>
                       <EmptyDescription>
                         {tableSearch
@@ -1298,7 +1321,7 @@ function DigitizationComplianceContent({
                           size="sm"
                           onClick={handleClearAll}
                           title="Reset Filters"
-                          className="h-9 px-4 text-xs font-semibold rounded-xl"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                         >
                           Reset Filters
                         </Button>
@@ -1308,6 +1331,8 @@ function DigitizationComplianceContent({
                 </div>
               )}
             </div>
+
+            {/* Mobile View */}
             {sortedByCourse.length > 0 && (
               <div className="space-y-3 p-4 sm:hidden">
                 {paginatedByCourse.map((row) => {
@@ -1317,16 +1342,18 @@ function DigitizationComplianceContent({
                       key={row.courseCode}
                       className={cn(
                         "rounded-xl border border-border bg-white p-4 dark:border-border dark:bg-zinc-900",
-                        isSelected && "border-blue-300 bg-blue-50/60 dark:border-blue-900 dark:bg-blue-950/20",
+                        isSelected && "border-blue-300 bg-blue-50/60 dark:border-blue-900 dark:bg-blue-950/20"
                       )}
                     >
                       <button
                         type="button"
                         onClick={() => toggleCourseFilter(row.courseCode)}
                         aria-pressed={isSelected}
-                        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500"
+                        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500"
                       >
-                        <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{row.courseCode || "N/A"}</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                          {row.courseCode || "N/A"}
+                        </span>
                         <span className="text-[11px] font-medium text-pup-maroon dark:text-red-400">
                           {isSelected ? "Filtered" : "Filter"}
                         </span>
@@ -1334,17 +1361,22 @@ function DigitizationComplianceContent({
                       <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 dark:border-border">
                         <div>
                           <div className="text-[10px] text-gray-500 dark:text-zinc-400">Students</div>
-                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">{row.total?.toLocaleString?.() ?? row.total}</div>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100 tabular-nums">
+                            {row.total?.toLocaleString?.() ?? row.total}
+                          </div>
                         </div>
                         <div>
                           <div className="text-[10px] text-gray-500 dark:text-zinc-400">Fully digitized</div>
-                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                            {row.digitized?.toLocaleString?.() ?? row.digitized} <span className="font-normal text-gray-500">({row.fullyDigitizedRate}%)</span>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100 tabular-nums">
+                            {row.digitized?.toLocaleString?.() ?? row.digitized}{" "}
+                            <span className="font-normal text-gray-500">({row.fullyDigitizedRate}%)</span>
                           </div>
                         </div>
                         <div>
                           <div className="text-[10px] text-gray-500 dark:text-zinc-400">Coverage</div>
-                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100">{row.percent ?? 0}%</div>
+                          <div className="mt-0.5 text-xs font-semibold text-gray-900 dark:text-zinc-100 tabular-nums">
+                            {row.percent ?? 0}%
+                          </div>
                         </div>
                       </div>
                     </article>
@@ -1354,8 +1386,16 @@ function DigitizationComplianceContent({
             )}
 
             {/* Standard Table Pagination Footer */}
-            {!loading && sortedByCourse.length > 0 && (
-              <TablePagination label="Program compliance pages" page={page} pageSize={pageSize} totalCount={sortedByCourse.length} displayedCount={paginatedByCourse.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+            {sortedByCourse.length > 0 && (
+              <TablePagination
+                label="Program compliance pages"
+                page={page}
+                pageSize={pageSize}
+                totalCount={sortedByCourse.length}
+                displayedCount={paginatedByCourse.length}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
             )}
           </div>
         ) : null}
@@ -1381,12 +1421,16 @@ function DigitizationComplianceContent({
         pdfUrl={pdfBlobUrl}
         isPreparing={isGeneratingPdf}
         onDownload={handleDownloadPdf}
-        onPrint={() => onLogAction?.({
-          action: "Print Report",
-          details: "opened print dialog for the physical record compliance report",
-          entityType: "Report",
-        })}
-        onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}
+        onPrint={() =>
+          onLogAction?.({
+            action: "Print Report",
+            details: "opened print dialog for the physical record compliance report",
+            entityType: "Report",
+          })
+        }
+        onPrintError={(error) =>
+          showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)
+        }
       />
     </div>
   );

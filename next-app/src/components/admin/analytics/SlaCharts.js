@@ -17,14 +17,8 @@ import {
   LabelList,
 } from "recharts"
 import { cn } from "@/lib/utils"
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyState,
-} from "@/components/ui/empty"
+import { useAppReducedMotion } from "@/lib/motion"
+import { EmptyState } from "@/components/ui/empty"
 import { Analytics01Icon, PieChartIcon, File02Icon, StarIcon } from "hugeicons-react"
 
 /**
@@ -129,6 +123,7 @@ const formatDocTypeName = (value) => {
 };
 
 const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all" }) {
+  const shouldReduceMotion = useAppReducedMotion()
   const isDark = false
   const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
@@ -171,7 +166,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 Request Trends
               </h3>
               {displayPoint ? (
-                <div className="mt-1.5 flex items-baseline gap-1 animate-fade-in">
+                <div className={cn("mt-1.5 flex items-baseline gap-1", !shouldReduceMotion && "animate-fade-in")}>
                   <span className="text-[28px] font-extrabold text-gray-900 dark:text-zinc-50 leading-none">
                     {displayPoint.count ?? 0}
                   </span>
@@ -250,7 +245,9 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                   />
                   <ChartTooltip 
                     content={<CustomBarTooltip />} 
-                    cursor={false} 
+                    cursor={false}
+                    isAnimationActive={!shouldReduceMotion}
+                    animationDuration={shouldReduceMotion ? 0 : 150}
                   />
                   <Area
                     type="monotone"
@@ -261,21 +258,18 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                     fill="url(#areaBlueGradient)"
                     dot={<RenderCustomDot />}
                     activeDot={<RenderCustomActiveDot />}
+                    isAnimationActive={!shouldReduceMotion}
+                    animationDuration={shouldReduceMotion ? 0 : 500}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <Empty variant="compact">
-                <EmptyHeader>
-                  <EmptyMedia><Analytics01Icon size="1em" /></EmptyMedia>
-                  <EmptyTitle>
-                    No trend data
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    Select a different range to display trend lines.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyState
+                variant="compact"
+                icon={Analytics01Icon}
+                title="No trend data"
+                description="Select a different range to display trend lines."
+              />
             )}
           </div>
         </div>
@@ -287,7 +281,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
               <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 m-0">
                 Document Demand
               </h3>
-              <div className="mt-1.5 flex items-baseline gap-1 animate-fade-in">
+              <div className={cn("mt-1.5 flex items-baseline gap-1", !shouldReduceMotion && "animate-fade-in")}>
                 <span className="text-[28px] font-extrabold text-gray-900 dark:text-zinc-50 leading-none">
                   {(data?.topDocTypes || []).reduce((acc, curr) => acc + (curr.count || 0), 0)}
                 </span>
@@ -343,6 +337,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                   <ChartTooltip 
                     content={<CustomBarTooltip />} 
                     cursor={{ fill: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)" }}
+                    isAnimationActive={!shouldReduceMotion}
+                    animationDuration={shouldReduceMotion ? 0 : 150}
                   />
                   <Bar
                     dataKey="count"
@@ -351,6 +347,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                     barSize={20}
                     onMouseEnter={(entry) => setActiveBarName(entry?.name || null)}
                     onMouseLeave={() => setActiveBarName(null)}
+                    isAnimationActive={!shouldReduceMotion}
+                    animationDuration={shouldReduceMotion ? 0 : 400}
                   >
                     {(data?.topDocTypes || []).map((entry, index) => {
                       const isHighlighted = activeBarName === entry.name;
@@ -359,7 +357,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                           key={`cell-${index}`}
                           fill={isHighlighted ? "#FF6410" : "url(#barOrangeGradientHorizontal)"}
                           opacity={activeBarName && !isHighlighted ? 0.35 : 1}
-                          className="transition-all duration-300"
+                          className={cn(!shouldReduceMotion && "transition-all duration-300")}
                           cursor="pointer"
                         />
                       )
@@ -375,17 +373,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Empty variant="compact">
-                <EmptyHeader>
-                  <EmptyMedia><Analytics01Icon size="1em" /></EmptyMedia>
-                  <EmptyTitle>
-                    No requests found
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    Select a different date range or wait for new requests.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyState
+                variant="compact"
+                icon={Analytics01Icon}
+                title="No requests found"
+                description="Select a different date range or wait for new requests."
+              />
             )}
           </div>
         </div>
@@ -422,6 +415,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                         stroke="none"
                         onMouseEnter={(_, index) => setActivePieIndex(index)}
                         onMouseLeave={() => setActivePieIndex(null)}
+                        isAnimationActive={!shouldReduceMotion}
+                        animationDuration={shouldReduceMotion ? 0 : 500}
                       >
                         {pieData.map((entry, index) => {
                           const isHovered = activePieIndex === index;
@@ -434,22 +429,21 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                           );
                         })}
                       </Pie>
-                      <ChartTooltip content={<CustomPieTooltip />} />
+                      <ChartTooltip 
+                        content={<CustomPieTooltip />} 
+                        isAnimationActive={!shouldReduceMotion}
+                        animationDuration={shouldReduceMotion ? 0 : 150}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </>
               ) : (
-                <Empty variant="compact">
-                  <EmptyHeader>
-                    <EmptyMedia><PieChartIcon size="1em" /></EmptyMedia>
-                    <EmptyTitle>
-                      No status data
-                    </EmptyTitle>
-                    <EmptyDescription>
-                      Status distribution requires active request logs.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+                <EmptyState
+                  variant="compact"
+                  icon={PieChartIcon}
+                  title="No status data"
+                  description="Status distribution requires active request logs."
+                />
               )}
             </div>
             
@@ -549,17 +543,12 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                 ))}
               </div>
             ) : (
-              <Empty variant="compact">
-                <EmptyHeader>
-                  <EmptyMedia><File02Icon size="1em" /></EmptyMedia>
-                  <EmptyTitle>
-                    No requests recorded yet
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    Top requested document types will appear here.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <EmptyState
+                variant="compact"
+                icon={File02Icon}
+                title="No requests recorded yet"
+                description="Top requested document types will appear here."
+              />
             )}
           </div>
         </div>
@@ -614,7 +603,10 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                         </span>
                         <div className="flex-1 h-3 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden relative">
                           <div 
-                            className="h-full rounded-full transition-all duration-500 bg-amber-500 dark:bg-amber-400"
+                            className={cn(
+                              "h-full rounded-full bg-amber-500 dark:bg-amber-400 motion-reduce:transition-none",
+                              shouldReduceMotion ? "transition-none" : "transition-all duration-500"
+                            )}
                             style={{ width: `${pct}%` }}
                           />
                         </div>

@@ -74,11 +74,30 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    let normStartDate = startDate ? toIsoDateString(startDate) : "";
+    let normEndDate = endDate ? toIsoDateString(endDate) : "";
+    if (normStartDate && normEndDate && normStartDate > normEndDate) {
+      [normStartDate, normEndDate] = [normEndDate, normStartDate];
+    }
 
     const standards = await slaStandardsRepo.getStandards();
     const tiers = buildSlaTiers(standards);
 
-    const officeFilter = officeId ? "WHERE dr.office_id = ?" : "";
+    const conditions = [];
+    const params = [];
+    if (officeId) {
+      conditions.push("dr.office_id = ?");
+      params.push(officeId);
+    }
+    if (normStartDate) {
+      conditions.push("dr.created_at >= (?::date::timestamp AT TIME ZONE 'Asia/Manila')");
+      params.push(normStartDate);
+    }
+    if (normEndDate) {
+      conditions.push("dr.created_at < ((?::date + INTERVAL '1 day') AT TIME ZONE 'Asia/Manila')");
+      params.push(normEndDate);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const rows = await dbAll(`
       SELECT 
         dr.id, 
@@ -91,18 +110,10 @@ export async function GET(req) {
         f.comments AS feedback_comments
       FROM document_requests dr
       LEFT JOIN document_request_feedback f ON f.document_request_id = dr.id
-      ${officeFilter}
-    `, officeId ? [officeId] : []);
+      ${where}
+    `, params);
 
     // Normalize date filters
-    let normStartDate = startDate ? toIsoDateString(startDate) : "";
-    let normEndDate = endDate ? toIsoDateString(endDate) : "";
-    if (normStartDate && normEndDate && normStartDate > normEndDate) {
-      const temp = normStartDate;
-      normStartDate = normEndDate;
-      normEndDate = temp;
-    }
-
     let startVal = normStartDate;
     let endVal = normEndDate;
     if (!startVal || !endVal) {

@@ -4,7 +4,7 @@ import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 
 
-import React, { useEffect, useState, useMemo, useCallback } from "react"
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react"
 import {
   Card,
 } from "@/components/ui/card"
@@ -14,12 +14,10 @@ import { Button } from "@/components/ui/button"
 import { SegmentedControl } from "@/components/ui/tabs"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
+  EmptyState,
 } from "@/components/ui/empty"
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import { useAppReducedMotion } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { 
   generateSLACompliancePdf, 
@@ -41,15 +39,26 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
-import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, File02Icon, Files01Icon, HourglassIcon, Loading01Icon, StarIcon, TableIcon} from "hugeicons-react";
+import { 
+  AlertCircleIcon as EmptyAlertCircleIcon, 
+  ArrowDown01Icon, 
+  File02Icon, 
+  Files01Icon, 
+  HourglassIcon, 
+  Loading01Icon, 
+  StarIcon, 
+  TableIcon 
+} from "hugeicons-react";
 const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
+  const loadRequestRef = useRef(0)
   const [loading, setLoading] = useState(true)
   const [manualLoading, setManualLoading] = useState(false)
   const [error, setError] = useState("")
@@ -59,11 +68,14 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isExportingCsv, setIsExportingCsv] = useState(false)
   const [previewReportType, setPreviewReportType] = useState("sla") // "sla", "csm", "comprehensive"
+  const [viewMode, setViewMode] = useState("all") // "all", "sla", "csm"
+  const shouldReduceMotion = useAppReducedMotion()
 
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
   const loadData = useCallback(async (isManual = false) => {
+    const request = ++loadRequestRef.current
     if (isManual) {
       setManualLoading(true)
     } else {
@@ -82,13 +94,17 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load processing time data")
+      if (request !== loadRequestRef.current) return
       setData(json.data)
     } catch (e) {
+      if (request !== loadRequestRef.current) return
       setError(e.message)
       showToast?.(formatErrorMessage(e, "Failed to Load Request Analytics"), true);
     } finally {
-      setLoading(false)
-      setManualLoading(false)
+      if (request === loadRequestRef.current) {
+        setLoading(false)
+        setManualLoading(false)
+      }
     }
   }, [startDate, endDate, showToast])
 
@@ -237,17 +253,37 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
     }
   };
 
+  const formatChipDate = (dateStr) => {
+    if (!dateStr) return "..."
+    try {
+      const [y, m, d] = dateStr.split("-").map(Number)
+      if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr
+      return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    } catch {
+      return dateStr
+    }
+  };
+
   const hasActiveFilters = startDate !== "" || endDate !== "";
 
   const pageDescription = "Monitor request metrics, turnaround times, and constituent feedback."
 
   return (
-    <div data-light-only className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
+    <div data-light-only className={cn("font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6", !shouldReduceMotion && "animate-fade-up")}>
       {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, & Charts */}
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
         <PageHeader
           icon="Analytics01Icon"
-          title="Request Analysis"
+          title={
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span>Request Analysis</span>
+              {data && (
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {total.toLocaleString()} total requests · {completionRate}% completed
+                </span>
+              )}
+            </div>
+          }
           description={pageDescription}
           showBorder={false}
           className="p-6"
@@ -259,135 +295,117 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                 onRefresh={handleRefresh} 
                 isLoading={manualLoading} 
                 title="Refresh Analytics"
+                className="h-9 w-9"
               />
 
-              <div className="flex items-center gap-2">
-                {/* Discrete Export CSV Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={loading || !data || isExportingCsv}
-                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all gap-1.5"
-                    >
-                      {isExportingCsv ? (
-                        <Loading01Icon size="1em" className="animate-spin text-[16px]" />
-                      ) : (
-                        <>
-                          <span>Export CSV</span>
-                          <ArrowDown01Icon size="1em" className="text-[10px] opacity-70" />
-                        </>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    data-light-only
-                    align="end"
-                    sideOffset={6}
-                    className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
+              {/* Discrete Export CSV Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading || !data || isExportingCsv}
+                    className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
                   >
-                    {/* Zone 1: Header */}
-                    <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        Export Dataset
-                      </span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
-                        CSV
-                      </span>
-                    </div>
-
-                    {/* Zone 2: Body */}
-                    <div className="p-1.5 space-y-0.5">
-                      <DropdownMenuItem 
-                        onClick={() => handleCsvExport("sla")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <HourglassIcon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                        <span>On-Time Processing Data</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleCsvExport("csm")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <StarIcon size="1em" className="text-sm text-amber-500" />
-                        <span>CSM Ratings Data</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                      <DropdownMenuItem 
-                        onClick={() => handleCsvExport("comprehensive")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <TableIcon size="1em" className="text-sm text-gray-400" />
-                        <span>Complete Combined Dataset</span>
-                      </DropdownMenuItem>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Discrete Generate Report Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={loading || !data || isGeneratingPdf}
-                      className="h-9 px-4 cursor-pointer gap-1.5"
+                    {isExportingCsv ? (
+                      <Loading01Icon size="1em" className="animate-spin text-[16px]" />
+                    ) : (
+                      <>
+                        <span>Export CSV</span>
+                        <ArrowDown01Icon size="1em" className="text-[12px] text-gray-400 dark:text-zinc-400" />
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={6}
+                  className="w-60 rounded-xl border border-border dark:border-white/10 shadow-lg p-1 bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
+                >
+                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Export Datasets
+                  </DropdownMenuLabel>
+                  <div className="space-y-0.5">
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("sla")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
-                      {isGeneratingPdf ? (
-                        <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
-                      ) : (
-                        <>
-                          <span>{PDF_ACTION_LABELS.preview}</span>
-                          <ArrowDown01Icon size="1em" className="text-[10px] text-white/80 dark:text-zinc-900/80" />
-                        </>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    data-light-only
-                    align="end"
-                    sideOffset={6}
-                    className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
-                  >
-                    {/* Zone 1: Header */}
-                    <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                        Official Report
-                      </span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400">
-                        PDF
-                      </span>
-                    </div>
+                      <HourglassIcon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
+                      <span>On-Time Processing Data</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("csm")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <StarIcon size="1em" className="text-sm text-amber-500 shrink-0" />
+                      <span>CSM Ratings Data</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                    <DropdownMenuItem 
+                      onClick={() => handleCsvExport("comprehensive")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <TableIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                      <span>Complete Combined Dataset</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                    {/* Zone 2: Body */}
-                    <div className="p-1.5 space-y-0.5">
-                      <DropdownMenuItem 
-                        onClick={() => handlePreview("sla")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <File02Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                        <span>Citizen&apos;s Charter Processing Time Report</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handlePreview("csm")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <StarIcon size="1em" className="text-sm text-amber-500" />
-                        <span>Client Satisfaction (CSM) Report</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                      <DropdownMenuItem 
-                        onClick={() => handlePreview("comprehensive")} 
-                        className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <Files01Icon size="1em" className="text-sm text-gray-400" />
-                        <span>Combined Report</span>
-                      </DropdownMenuItem>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {/* Discrete Generate Report Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={loading || !data || isGeneratingPdf}
+                    className="h-9 px-3.5 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {isGeneratingPdf ? (
+                      <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
+                    ) : (
+                      <>
+                        <span>{PDF_ACTION_LABELS.preview}</span>
+                        <ArrowDown01Icon size="1em" className="text-[12px] text-white/80 dark:text-zinc-900/80" />
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={6}
+                  className="w-64 rounded-xl border border-border dark:border-white/10 shadow-lg p-1 bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
+                >
+                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Official Reports
+                  </DropdownMenuLabel>
+                  <div className="space-y-0.5">
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("sla")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <File02Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400 shrink-0" />
+                      <span>Citizen&apos;s Charter Processing Time</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("csm")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <StarIcon size="1em" className="text-sm text-amber-500 shrink-0" />
+                      <span>Client Satisfaction (CSM) Report</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 border-t border-border dark:border-white/10" />
+                    <DropdownMenuItem 
+                      onClick={() => handlePreview("comprehensive")} 
+                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                    >
+                      <Files01Icon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                      <span>Combined Analytics Report</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           }
         />
@@ -395,29 +413,35 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         {/* Color KPI Cards / Skeletons at the Top */}
         {loading && !data ? (
           <div className="px-6 pb-6">
-            <SlaKpiSkeleton />
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <SlaKpiSkeleton />
+            </div>
           </div>
         ) : !error && data ? (
           <div className="px-6 pb-6 relative z-30">
-            <div className={cn(
-              "w-full transition-all duration-500", 
-              (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-            )}>
-              <SlaKpiCards
-                total={total}
-                completionRate={completionRate}
-                completed={completed}
-                sla={data?.sla}
-                feedback={data?.feedback}
-                statusCounts={data?.statusCounts}
-                topDocTypes={data?.topDocTypes}
-              />
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <div className={cn(
+                "w-full", 
+                !shouldReduceMotion ? "transition-all duration-300" : "transition-none",
+                (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+              )}>
+                <SlaKpiCards
+                  total={total}
+                  completionRate={completionRate}
+                  completed={completed}
+                  sla={data?.sla}
+                  feedback={data?.feedback}
+                  statusCounts={data?.statusCounts}
+                />
+              </div>
             </div>
           </div>
         ) : null}
 
         {/* Navigation Toolbar */}
         <SlaFilters 
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -426,66 +450,41 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
         />
 
         {/* Active Filter Chips Row */}
-        {hasActiveFilters && (() => {
-          const formatChipDate = (dateStr) => {
-            if (!dateStr) return "..."
-            try {
-              const [y, m, d] = dateStr.split("-").map(Number)
-              if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr
-              return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-            } catch {
-              return dateStr
-            }
-          }
-          return (
-            <div className="flex-none border-t border-border dark:border-border bg-white dark:bg-card px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
-                {(startDate || endDate) && (
-                  <div className="flex items-center gap-[6px] rounded-lg bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
-                    Date Range: {startDate ? formatChipDate(startDate) : "Earliest"} – {endDate ? formatChipDate(endDate) : "Latest"}
-                    <button
-                      onClick={() => { setStartDate(""); setEndDate(""); }}
-                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
+        {hasActiveFilters && (
+          <div className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5">
+            <ActiveFilterChips
+              chips={[
+                {
+                  id: "dateRange",
+                  groupLabel: "Date Range",
+                  label: `${startDate ? formatChipDate(startDate) : "Earliest"} – ${endDate ? formatChipDate(endDate) : "Latest"}`,
+                  onRemove: () => {
                     setStartDate("")
                     setEndDate("")
-                  }}
-                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )
-        })()}
+                  },
+                },
+              ]}
+              onClearAll={() => {
+                setStartDate("")
+                setEndDate("")
+              }}
+              className="p-0 border-0"
+            />
+          </div>
+        )}
 
         <div className="flex flex-[1_0_auto] flex-col bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
           {loading && !data ? (
             <SlaChartsSkeleton />
           ) : error ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
-                <EmptyTitle>
-                  Data Unavailable
-                </EmptyTitle>
-                <EmptyDescription>
-                  {error || "Could not load request analytics."}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <EmptyState
+              icon={EmptyAlertCircleIcon}
+              title="Data Unavailable"
+              description={error || "Could not load request analytics."}
+            />
           ) : data ? (
-            <div className={cn("space-y-6 transition-all duration-slow", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
+            <div className={cn("space-y-6", !shouldReduceMotion ? "transition-all duration-slow" : "transition-none", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
+              <SlaCharts data={data} pieData={pieData} viewMode={viewMode} onSwitchView={onSwitchView} />
             </div>
           ) : null}
         </div>

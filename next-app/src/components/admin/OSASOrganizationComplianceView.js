@@ -6,20 +6,28 @@ import SheetPagination from "@/components/shared/SheetPagination";
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
 
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
+import { SegmentedControl } from "@/components/ui/tabs";
+import DashboardSearch from "@/components/shared/DashboardSearch";
+import {
+  FilterPopover,
+  SortPopover,
+  GroupPopover,
+  ColumnsPopover,
+  ActiveFilterChips,
+} from "@/components/systemadmin/OfficeTableControls";
+import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import useTableScroll from "@/hooks/useTableScroll";
@@ -49,6 +57,16 @@ import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Clock01Icon, Copy01Icon, CovidInfoIcon, DragDropIcon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+function formatChipDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
 const CATEGORIES = ["All", "Academic", "Non-Academic"];
 
 function getOfficerRoleStyle(position = "") {
@@ -162,6 +180,17 @@ export default function OSASOrganizationComplianceView({
   const [standingFilters, setStandingFilters] = useState([]);
   const [cblFilters, setCblFilters] = useState([]);
   const [officerFilters, setOfficerFilters] = useState([]);
+  const [filterRules, setFilterRules] = useState([]);
+  const [groupBy, setGroupBy] = useState("none");
+  const [visibleColumns, setVisibleColumns] = useState([
+    "name",
+    "adviser",
+    "cbl",
+    "officers",
+    "complianceScore",
+  ]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Sorting
   const [sortBy, setSortBy] = useState("complianceScore");
@@ -281,65 +310,74 @@ export default function OSASOrganizationComplianceView({
     return c;
   }, [organizations]);
 
-  // Unified MultiCriteriaFilter groups
-  const filterGroups = useMemo(
-    () => [
-      {
-        id: "compliance",
-        label: "Compliance Status",
-        options: [
-          { value: "Compliant", label: "Compliant (100%)", indicatorColor: "bg-emerald-500", count: counts.Compliant },
-          { value: "Partially Compliant", label: "Partially Compliant (50-75%)", indicatorColor: "bg-amber-500", count: counts["Partially Compliant"] },
-          { value: "Action Required", label: "Action Required (<50%)", indicatorColor: "bg-rose-500", count: counts["Action Required"] },
-        ],
-      },
-      {
-        id: "standing",
-        label: "Organization Standing",
-        options: [
-          { value: "Active", label: "Active", indicatorColor: "bg-emerald-500", count: counts.Active },
-          { value: "Probationary", label: "Probationary", indicatorColor: "bg-amber-500", count: counts.Probationary },
-          { value: "Inactive", label: "Inactive", indicatorColor: "bg-zinc-400", count: counts.Inactive },
-          { value: "Archived", label: "Archived", indicatorColor: "bg-gray-400", count: counts.Archived },
-        ],
-      },
-      {
-        id: "cbl",
-        label: "Constitution & By-Laws (CBL)",
-        options: [
-          { value: "archived", label: "CBL Archived", indicatorColor: "bg-emerald-500", count: counts.cblArchived },
-          { value: "pending", label: "CBL Pending", indicatorColor: "bg-amber-500", count: counts.cblPending },
-        ],
-      },
-      {
-        id: "officers",
-        label: "Authorized Officers",
-        options: [
-          { value: "roster", label: "Authorized Officers", indicatorColor: "bg-blue-500", count: counts.officersPresent },
-          { value: "empty", label: "No Officers Recorded", indicatorColor: "bg-rose-500", count: counts.officersEmpty },
-        ],
-      },
-    ],
-    [counts]
-  );
+  // Standard Table Control Options
+  const filterFields = useMemo(() => [
+    {
+      id: "compliance",
+      key: "compliance",
+      label: "Compliance Status",
+      type: "select",
+      options: [
+        { value: "Compliant", label: "Compliant (100%)", count: counts.Compliant },
+        { value: "Partially Compliant", label: "Partially Compliant (50-75%)", count: counts["Partially Compliant"] },
+        { value: "Action Required", label: "Action Required (<50%)", count: counts["Action Required"] },
+      ],
+    },
+    {
+      id: "standing",
+      key: "standing",
+      label: "Organization Standing",
+      type: "select",
+      options: [
+        { value: "Active", label: "Active", count: counts.Active },
+        { value: "Probationary", label: "Probationary", count: counts.Probationary },
+        { value: "Inactive", label: "Inactive", count: counts.Inactive },
+        { value: "Archived", label: "Archived", count: counts.Archived },
+      ],
+    },
+    {
+      id: "cbl",
+      key: "cbl",
+      label: "Constitution & By-Laws (CBL)",
+      type: "select",
+      options: [
+        { value: "archived", label: "CBL Archived", count: counts.cblArchived },
+        { value: "pending", label: "CBL Pending", count: counts.cblPending },
+      ],
+    },
+    {
+      id: "officers",
+      key: "officers",
+      label: "Authorized Officers",
+      type: "select",
+      options: [
+        { value: "roster", label: "Authorized Officers", count: counts.officersPresent },
+        { value: "empty", label: "No Officers Recorded", count: counts.officersEmpty },
+      ],
+    },
+  ], [counts]);
 
-  const filterValues = useMemo(
-    () => ({
-      compliance: complianceFilters,
-      standing: standingFilters,
-      cbl: cblFilters,
-      officers: officerFilters,
-    }),
-    [complianceFilters, standingFilters, cblFilters, officerFilters]
-  );
+  const sortOptions = useMemo(() => [
+    { value: "complianceScore", label: "Compliance Score" },
+    { value: "name", label: "Organization Name" },
+    { value: "hasCbl", label: "Archival CBL" },
+    { value: "activeOfficerCount", label: "Authorized Officers" },
+  ], []);
 
-  const handleFilterChange = useCallback((groupId, values) => {
-    if (groupId === "compliance") setComplianceFilters(values);
-    else if (groupId === "standing") setStandingFilters(values);
-    else if (groupId === "cbl") setCblFilters(values);
-    else if (groupId === "officers") setOfficerFilters(values);
-    setPage(1);
-  }, [setPage]);
+  const groupOptions = useMemo(() => [
+    { value: "none", label: "No grouping" },
+    { value: "category", label: "Category" },
+    { value: "compliance", label: "Compliance Status" },
+    { value: "standing", label: "Standing" },
+  ], []);
+
+  const tableColumns = useMemo(() => [
+    { key: "name", label: "Organization" },
+    { key: "adviser", label: "Faculty Adviser" },
+    { key: "cbl", label: "Archival CBL" },
+    { key: "officers", label: "Authorized Officers" },
+    { key: "complianceScore", label: "Compliance" },
+  ], []);
 
   const handleResetFilters = useCallback(() => {
     setSearch("");
@@ -348,6 +386,9 @@ export default function OSASOrganizationComplianceView({
     setStandingFilters([]);
     setCblFilters([]);
     setOfficerFilters([]);
+    setFilterRules([]);
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   }, [setPage]);
 
@@ -382,7 +423,8 @@ export default function OSASOrganizationComplianceView({
         if (!standingFilters.includes(org.status)) return false;
       } else {
         // By default, exclude archived orgs unless Archived is explicitly selected
-        if (org.status === "Archived") return false;
+        const hasArchivedRule = filterRules.some((r) => r.fieldKey === "standing" && r.value === "Archived");
+        if (org.status === "Archived" && !hasArchivedRule) return false;
       }
 
       // 5. CBL filter
@@ -399,6 +441,41 @@ export default function OSASOrganizationComplianceView({
         if (officerFilters.includes("empty") && !officerFilters.includes("roster") && hasOfficers) return false;
       }
 
+      // 7. FilterPopover rules
+      for (const rule of filterRules) {
+        if (rule.fieldKey === "compliance") {
+          const compStatus = org.complianceStatus || org.compliance_status;
+          const match = compStatus === rule.value;
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "standing") {
+          const match = org.status === rule.value;
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "cbl") {
+          const hasCbl = Boolean(org.hasCbl ?? org.checklist?.cbl ?? org.checklist?.has_cbl);
+          const cblVal = hasCbl ? "archived" : "pending";
+          const match = cblVal === rule.value;
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "officers") {
+          const hasOfficers = Boolean((org.activeOfficerCount > 0) || org.checklist?.officers || org.checklist?.has_officers);
+          const offVal = hasOfficers ? "roster" : "empty";
+          const match = offVal === rule.value;
+          if (rule.operator === "is_not" ? match : !match) return false;
+        }
+      }
+
+      // 8. Date Range
+      if (startDate) {
+        const s = new Date(startDate).getTime();
+        const rowDate = org.created_at ? new Date(org.created_at).getTime() : NaN;
+        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
+      }
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        const rowDate = org.created_at ? new Date(org.created_at).getTime() : NaN;
+        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
+      }
+
       return true;
     });
   }, [
@@ -409,6 +486,9 @@ export default function OSASOrganizationComplianceView({
     standingFilters,
     cblFilters,
     officerFilters,
+    filterRules,
+    startDate,
+    endDate,
   ]);
 
   // Active Filter Detection
@@ -594,6 +674,25 @@ export default function OSASOrganizationComplianceView({
     return sortedOrganizations.slice(startIndex, startIndex + pageSize);
   }, [sortedOrganizations, page, pageSize]);
 
+  const groupedPaginatedOrganizations = useMemo(() => {
+    if (groupBy === "none") return [{ groupKey: null, label: null, items: paginatedOrganizations }];
+    const map = new Map();
+    for (const org of paginatedOrganizations) {
+      let key = "Other";
+      if (groupBy === "category") key = org.category || "General";
+      else if (groupBy === "compliance") key = org.complianceStatus || org.compliance_status || "Other";
+      else if (groupBy === "standing") key = org.status || "Active";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(org);
+    }
+    return Array.from(map.entries()).map(([label, items]) => ({
+      groupKey: label,
+      label,
+      items,
+    }));
+  }, [paginatedOrganizations, groupBy]);
+
   const {
     containerRef: tableContainerRef,
     isScrolledX,
@@ -604,7 +703,7 @@ export default function OSASOrganizationComplianceView({
 
   useEffect(() => {
     resetScroll();
-  }, [page, search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters, sortBy, sortOrder, pageSize, resetScroll]);
+  }, [page, search, categoryFilter, filterRules, startDate, endDate, groupBy, sortBy, sortOrder, pageSize, resetScroll]);
 
   const currentOrgIndex = selectedOrgForOfficers
     ? sortedOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
@@ -644,48 +743,32 @@ export default function OSASOrganizationComplianceView({
         onRemove: () => { setSearch(""); setPage(1); },
       });
     }
-    if (categoryFilter !== "All") {
+    filterRules.forEach((rule) => {
+      const field = filterFields.find((f) => f.key === rule.fieldKey);
+      const fieldLabel = field?.label || rule.fieldKey;
+      const optionLabel = field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
       chips.push({
-        id: "category",
-        groupLabel: "Category",
-        label: `${categoryFilter} Orgs`,
-        onRemove: () => { setCategoryFilter("All"); setPage(1); },
+        id: rule.id,
+        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${optionLabel}`,
+        onRemove: () => {
+          setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
+          setPage(1);
+        },
+      });
+    });
+    if (startDate || endDate) {
+      chips.push({
+        id: "dateRange",
+        label: `Date: ${formatChipDate(startDate)} – ${formatChipDate(endDate)}`,
+        onRemove: () => {
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        },
       });
     }
-    complianceFilters.forEach((cf) => {
-      chips.push({
-        id: `compliance-${cf}`,
-        groupLabel: "Compliance",
-        label: cf,
-        onRemove: () => { setComplianceFilters((prev) => prev.filter((v) => v !== cf)); setPage(1); },
-      });
-    });
-    standingFilters.forEach((sf) => {
-      chips.push({
-        id: `standing-${sf}`,
-        groupLabel: "Standing",
-        label: sf,
-        onRemove: () => { setStandingFilters((prev) => prev.filter((v) => v !== sf)); setPage(1); },
-      });
-    });
-    cblFilters.forEach((cbl) => {
-      chips.push({
-        id: `cbl-${cbl}`,
-        groupLabel: "CBL",
-        label: cbl === "archived" ? "CBL Archived" : "CBL Pending",
-        onRemove: () => { setCblFilters((prev) => prev.filter((v) => v !== cbl)); setPage(1); },
-      });
-    });
-    officerFilters.forEach((of) => {
-      chips.push({
-        id: `officers-${of}`,
-        groupLabel: "Officers",
-        label: of === "roster" ? "Authorized Officers" : "No Officers Recorded",
-        onRemove: () => { setOfficerFilters((prev) => prev.filter((v) => v !== of)); setPage(1); },
-      });
-    });
     return chips;
-  }, [search, categoryFilter, complianceFilters, standingFilters, cblFilters, officerFilters, setPage]);
+  }, [search, filterRules, filterFields, startDate, endDate, setPage]);
 
   // PDF Generation
   const handleOpenPdfReport = async () => {
@@ -1166,346 +1249,405 @@ export default function OSASOrganizationComplianceView({
             </div>
           ) : null}
 
-          {/* 3. Navigation Toolbar: Category Line Tabs & Search/Status Controls */}
-          <DataViewToolbar label="Organization compliance search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-            {/* Left: Category Segmented Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-zinc-800/60 rounded-xl border border-border/60 shrink-0 select-none overflow-x-auto">
-              {CATEGORIES.map((cat) => {
-                const isActive = categoryFilter === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => { setCategoryFilter(cat); setPage(1); }}
-                    className={cn(
-                      "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer border-0 whitespace-nowrap",
-                      isActive
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white bg-transparent"
-                    )}
-                  >
-                    {cat === "All" ? "All Organizations" : `${cat} Orgs`}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Connected Row: Category Navigation Segmented Control */}
+          <div
+            role="group"
+            aria-label="Organization categories"
+            className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4 select-none"
+          >
+            <SegmentedControl
+              value={categoryFilter}
+              onValueChange={(val) => { setCategoryFilter(val); setPage(1); }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={CATEGORIES.map((cat) => ({
+                value: cat,
+                label: cat === "All" ? "All Organizations" : `${cat} Orgs`,
+                badge: cat === "All" ? organizations.length : organizations.filter((o) => o.category === cat).length,
+              }))}
+            />
+          </div>
 
-            {/* Right: Search Input & Multi-Criteria Filter */}
-            <div className="flex flex-nowrap items-center gap-3 shrink-0">
-              {/* Search Bar with live count badge */}
-              <div className="w-full sm:w-[260px] lg:w-[280px] relative group shrink-0">
-                <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                  <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-                </div>
-                <Input
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Search org, acronym, adviser..."
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500">
-                  {filteredOrganizations.length}
-                </div>
-              </div>
-
-              {/* Multi-Criteria Filter Popover */}
-              <MultiCriteriaFilter
-                title="Filter Compliance"
-                groups={filterGroups}
-                selectedValues={filterValues}
-                onChange={handleFilterChange}
-                onClearAll={handleResetFilters}
-                totalCount={organizations.length}
-                filteredCount={filteredOrganizations.length}
+          {/* 3. Canonical 2-Zone DataViewToolbar */}
+          <DataViewToolbar
+            label="Organization compliance search and filters"
+            className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+          >
+            {/* Left Zone: DashboardSearch + TableScrollControls */}
+            <div className="flex min-w-0 items-center gap-2">
+              <DashboardSearch
+                value={search}
+                onChange={(val) => { setSearch(val); setPage(1); resetScroll(); }}
+                count={filteredOrganizations.length}
+                loading={loading}
+                placeholder="Search org, acronym, adviser..."
+                label="Search organization compliance"
               />
-
-              <TableScrollControls scrollContainerRef={tableContainerRef}
+              <TableScrollControls
+                scrollContainerRef={tableContainerRef}
                 onScrollLeft={scrollLeft}
                 onScrollRight={scrollRight}
                 onResetScroll={resetScroll}
                 isScrolled={isScrolledX}
               />
             </div>
+
+            {/* Right Zone: Filter -> Sort -> Group -> Columns -> DateRange */}
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <FilterPopover
+                fields={filterFields}
+                filters={filterRules}
+                onFiltersChange={(newRules) => { setFilterRules(newRules); setPage(1); }}
+                entityLabel="organizations"
+              />
+              <SortPopover
+                options={sortOptions}
+                sortBy={sortBy}
+                onSortByChange={(val) => { setSortBy(val); setPage(1); }}
+                sortOrder={sortOrder}
+                onSortOrderChange={(val) => { setSortOrder(val); setPage(1); }}
+              />
+              <GroupPopover
+                options={groupOptions}
+                groupBy={groupBy}
+                onGroupByChange={(val) => { setGroupBy(val); setPage(1); }}
+              />
+              <ColumnsPopover
+                columns={tableColumns}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
+                minVisible={2}
+              />
+              <DateRangeFilterButton
+                startDate={startDate}
+                endDate={endDate}
+                onApply={({ startDate: s, endDate: e }) => { setStartDate(s); setEndDate(e); setPage(1); }}
+                onClear={() => { setStartDate(""); setEndDate(""); setPage(1); }}
+                disableFutureDates={true}
+              />
+            </div>
           </DataViewToolbar>
 
           {/* 4. Active Filter Chips */}
-          <ActiveFilterChips
-            chips={activeChips}
-            onClearAll={handleResetFilters}
-            className="border-t border-border dark:border-border px-6 py-2.5"
-          />
+          {activeChips.length > 0 && (
+            <ActiveFilterChips
+              chips={activeChips}
+              onClearAll={handleResetFilters}
+              className="border-t border-border dark:border-border px-6 py-2.5"
+            />
+          )}
 
-          {/* 5. Main Content Area: Organizations Compliance Table (5 Clean Columns) */}
+          {/* 5. Main Content Area: Organizations Compliance Table */}
           <div className="flex flex-[1_0_auto] flex-col border-t border-border dark:border-border bg-white dark:bg-card">
             <div
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
               {sortedOrganizations.length > 0 ? (
-                <Table columns={[{ kind: "text", maxWidth: 340 }, "text", "status", "number", "number"]} className="min-w-[1050px]">
+                <Table
+                  columns={visibleColumns.map((colKey) => {
+                    if (colKey === "name") return { kind: "text", maxWidth: 340 };
+                    if (colKey === "adviser") return "text";
+                    if (colKey === "cbl" || colKey === "officers") return "status";
+                    return "number";
+                  })}
+                  className="min-w-[1050px]"
+                >
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       {/* Column 1: Organization */}
-                      <th
-                        className={cn(
-                          "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("name")}
-                            className={cn(
-                              "group flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
-                              sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                            )}
-                          >
-                            Organization <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                          </button>
-                          {isScrolledX && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={resetScroll}
-                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                  aria-label="Reset scroll to start"
-                                >
-                                  <ReloadIcon size="1em" className="text-xs" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                            </Tooltip>
+                      {visibleColumns.includes("name") && (
+                        <th
+                          className={cn(
+                            "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
-                        </div>
-                      </th>
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSort("name")}
+                              className={cn(
+                                "group flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
+                                sortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                              )}
+                            >
+                              Organization <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                            </button>
+                            {isScrolledX && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={resetScroll}
+                                    className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
+                                    aria-label="Reset scroll to start"
+                                  >
+                                    <ReloadIcon size="1em" className="text-xs" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </th>
+                      )}
 
                       {/* Column 2: Faculty Adviser */}
-                      <th className="py-3 px-6 w-[22%]">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                          Faculty Adviser
-                        </span>
-                      </th>
+                      {visibleColumns.includes("adviser") && (
+                        <th className="py-3 px-6 w-[22%]">
+                          <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                            Faculty Adviser
+                          </span>
+                        </th>
+                      )}
 
                       {/* Column 3: Archival CBL */}
-                      <th className="py-3 px-6 w-[14%] text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("hasCbl")}
-                          className={cn(
-                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
-                            sortBy === "hasCbl" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Archival CBL <SortIndicator column="hasCbl" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("cbl") && (
+                        <th className="py-3 px-6 w-[14%] text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("hasCbl")}
+                            className={cn(
+                              "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "hasCbl" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Archival CBL <SortIndicator column="hasCbl" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
                       {/* Column 4: Authorized Officers */}
-                      <th className="py-3 px-6 w-[14%] text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("activeOfficerCount")}
-                          className={cn(
-                            "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
-                            sortBy === "activeOfficerCount" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Authorized Officers <SortIndicator column="activeOfficerCount" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("officers") && (
+                        <th className="py-3 px-6 w-[14%] text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("activeOfficerCount")}
+                            className={cn(
+                              "group mx-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "activeOfficerCount" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Authorized Officers <SortIndicator column="activeOfficerCount" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
                       {/* Column 5: Compliance */}
-                      <th className="py-3 px-6 w-[18%] text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("complianceScore")}
-                          className={cn(
-                            "group ml-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
-                            sortBy === "complianceScore" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          Compliance <SortIndicator column="complianceScore" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("complianceScore") && (
+                        <th className="py-3 px-6 w-[18%] text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("complianceScore")}
+                            className={cn(
+                              "group ml-auto flex items-center text-xs font-semibold transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "complianceScore" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            Compliance <SortIndicator column="complianceScore" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {paginatedOrganizations.map((org) => {
-                      const isFullyCompliant = org.complianceScore === 100;
-                      const isPartiallyCompliant = org.complianceScore >= 50 && org.complianceScore < 100;
-                      const score = org.complianceScore || 0;
-                      const barColor = isFullyCompliant
-                        ? "bg-emerald-500 dark:bg-emerald-400"
-                        : isPartiallyCompliant
-                        ? "bg-amber-500 dark:bg-amber-400"
-                        : "bg-rose-500 dark:bg-rose-400";
+                    {groupedPaginatedOrganizations.map((group) => (
+                      <Fragment key={group.groupKey || "root"}>
+                        {group.label && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
+                            <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                              <span className="font-bold">{group.label}</span>
+                              <span className="ml-2 font-normal text-muted-foreground">({group.items.length})</span>
+                            </td>
+                          </tr>
+                        )}
+                        {group.items.map((org) => {
+                          const isFullyCompliant = org.complianceScore === 100;
+                          const isPartiallyCompliant = org.complianceScore >= 50 && org.complianceScore < 100;
+                          const score = org.complianceScore || 0;
+                          const barColor = isFullyCompliant
+                            ? "bg-emerald-500 dark:bg-emerald-400"
+                            : isPartiallyCompliant
+                            ? "bg-amber-500 dark:bg-amber-400"
+                            : "bg-rose-500 dark:bg-rose-400";
 
-                      return (
-                        <tr
-                          key={org.id}
-                          className="group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none"
-                        >
-                          {/* Column 1: Organization (Name, Acronym, Category, Standing) */}
-                          <td
-                            className={cn(
-                              "py-3.5 px-6 min-w-[260px] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}
-                          >
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug tracking-[-0.01em] group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                {org.name}
-                              </span>
-                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                {org.acronym && (
-                                  <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
-                                    {org.acronym}
-                                  </span>
-                                )}
-                                <span className="text-[11px] font-medium text-gray-900 dark:text-zinc-300">
-                                  {org.category}
-                                </span>
-                                <span className="text-gray-300 dark:text-zinc-600">·</span>
-                                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-900 dark:text-zinc-300">
-                                  <span
-                                    className={cn(
-                                      "w-1.5 h-1.5 rounded-full shrink-0",
-                                      org.status === "Active"
-                                        ? "bg-emerald-500 ring-2 ring-emerald-500/20"
-                                        : org.status === "Probationary"
-                                        ? "bg-amber-500 ring-2 ring-amber-500/20"
-                                        : "bg-zinc-400"
-                                    )}
-                                  />
-                                  {org.status}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Column 2: Faculty Adviser */}
-                          <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
-                            {org.adviserName ? (
-                              <div className="min-w-0 max-w-[200px]">
-                                <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                                  {org.adviserName}
-                                </div>
-                                {org.adviserEmail ? (
-                                  <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate mt-0.5">
-                                    {org.adviserEmail}
-                                  </div>
-                                ) : (
-                                  <div className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                                    No email listed
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-100/70 dark:bg-zinc-800/60 dark:text-zinc-400 rounded-lg border border-border/60 dark:border-border">
-                                <UserMinus01Icon size="1em" className="text-[11px] text-gray-400 dark:text-zinc-500" />
-                                <span>Unassigned</span>
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Column 3: Archival CBL (1-Click Preview) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            {org.hasCbl ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setPreviewCbl({
-                                    url: `/api/osas/organizations/${org.id}/bylaws?file=1`,
-                                    title: `${org.name}: Constitution & By-Laws (CBL)`,
-                                    filename: org.cblFilename,
-                                  })
-                                }
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
-                                title={PDF_ACTION_LABELS.preview}
-                              >
-                                <File02Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
-                                <span>Archived PDF</span>
-                              </button>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-                                <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
-                                <span>Pending PDF</span>
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Column 4: Authorized Officers (1-Click Roster View) */}
-                          <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            {org.activeOfficerCount > 0 ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedOrgForOfficers(org);
-                                  setOfficerSearch("");
-                                }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
-                                title="View authorized officers"
-                              >
-                                <UserSearch01Icon size="1em" className="text-xs text-blue-600 dark:text-blue-400" />
-                                <span>
-                                  {org.activeOfficerCount} {org.activeOfficerCount === 1 ? "Officer" : "Officers"}
-                                </span>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedOrgForOfficers(org);
-                                  setOfficerSearch("");
-                                }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
-                                title="Authorize officers"
-                              >
-                                <span>Add Officers</span>
-                              </button>
-                            )}
-                          </td>
-
-                          {/* Column 5: Compliance */}
-                          <td className="py-3.5 px-6 text-right whitespace-nowrap">
-                            <div className="flex flex-col items-end gap-1.5">
-                              <div className="flex items-center gap-2.5">
-                                {/* Mini progress bar */}
-                                <div className="w-16 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden hidden sm:block">
-                                  <div
-                                    className={cn("h-full rounded-full transition-all duration-300", barColor)}
-                                    style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
-                                  />
-                                </div>
-                                <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
-                                  {score}%
-                                </span>
-                                            <span
-                                  className={cn(isFullyCompliant
-                                      ? BADGE_PALETTES.emerald
-                                      : isPartiallyCompliant
-                                      ? BADGE_PALETTES.amber
-                                      : BADGE_PALETTES.rose, BADGE_BASE)}
+                          return (
+                            <tr
+                              key={org.id}
+                              className="group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none"
+                            >
+                              {/* Column 1: Organization (Name, Acronym, Category, Standing) */}
+                              {visibleColumns.includes("name") && (
+                                <td
+                                  className={cn(
+                                    "py-3.5 px-6 min-w-[260px] sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/80 transition-shadow duration-200 border-r border-border/70 dark:border-border/70",
+                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                  )}
                                 >
-                                  {org.complianceStatus}
-                                </span>
-                              </div>
-                              {org.missingRequirements?.length > 0 && (
-                                <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
-                                  <span className="text-gray-400 dark:text-zinc-500">Missing:</span>
-                                  <span className="text-gray-900 dark:text-zinc-300 font-medium truncate max-w-[200px]">
-                                    {org.missingRequirements.join(", ")}
-                                  </span>
-                                </div>
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug tracking-[-0.01em] group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                      {org.name}
+                                    </span>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                      {org.acronym && (
+                                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
+                                          {org.acronym}
+                                        </span>
+                                      )}
+                                      <span className="text-[11px] font-medium text-gray-900 dark:text-zinc-300">
+                                        {org.category}
+                                      </span>
+                                      <span className="text-gray-300 dark:text-zinc-600">·</span>
+                                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-900 dark:text-zinc-300">
+                                        <span
+                                          className={cn(
+                                            "w-1.5 h-1.5 rounded-full shrink-0",
+                                            org.status === "Active"
+                                              ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                                              : org.status === "Probationary"
+                                              ? "bg-amber-500 ring-2 ring-amber-500/20"
+                                              : "bg-zinc-400"
+                                          )}
+                                        />
+                                        {org.status}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
                               )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+
+                              {/* Column 2: Faculty Adviser */}
+                              {visibleColumns.includes("adviser") && (
+                                <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
+                                  {org.adviserName ? (
+                                    <div className="min-w-0 max-w-[200px]">
+                                      <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                                        {org.adviserName}
+                                      </div>
+                                      {org.adviserEmail ? (
+                                        <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate mt-0.5">
+                                          {org.adviserEmail}
+                                        </div>
+                                      ) : (
+                                        <div className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
+                                          No email listed
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-100/70 dark:bg-zinc-800/60 dark:text-zinc-400 rounded-lg border border-border/60 dark:border-border">
+                                      <UserMinus01Icon size="1em" className="text-[11px] text-gray-400 dark:text-zinc-500" />
+                                      <span>Unassigned</span>
+                                    </span>
+                                  )}
+                                </td>
+                              )}
+
+                              {/* Column 3: Archival CBL (1-Click Preview) */}
+                              {visibleColumns.includes("cbl") && (
+                                <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  {org.hasCbl ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPreviewCbl({
+                                          url: `/api/osas/organizations/${org.id}/bylaws?file=1`,
+                                          title: `${org.name}: Constitution & By-Laws (CBL)`,
+                                          filename: org.cblFilename,
+                                        })
+                                      }
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
+                                      title={PDF_ACTION_LABELS.preview}
+                                    >
+                                      <File02Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
+                                      <span>Archived PDF</span>
+                                    </button>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                                      <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
+                                      <span>Pending PDF</span>
+                                    </span>
+                                  )}
+                                </td>
+                              )}
+
+                              {/* Column 4: Authorized Officers (1-Click Roster View) */}
+                              {visibleColumns.includes("officers") && (
+                                <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  {org.activeOfficerCount > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedOrgForOfficers(org);
+                                        setOfficerSearch("");
+                                      }}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                                      title="View authorized officers"
+                                    >
+                                      <UserSearch01Icon size="1em" className="text-xs text-blue-600 dark:text-blue-400" />
+                                      <span>
+                                        {org.activeOfficerCount} {org.activeOfficerCount === 1 ? "Officer" : "Officers"}
+                                      </span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedOrgForOfficers(org);
+                                        setOfficerSearch("");
+                                      }}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
+                                      title="Authorize officers"
+                                    >
+                                      <span>Add Officers</span>
+                                    </button>
+                                  )}
+                                </td>
+                              )}
+
+                              {/* Column 5: Compliance */}
+                              {visibleColumns.includes("complianceScore") && (
+                                <td className="py-3.5 px-6 text-right whitespace-nowrap">
+                                  <div className="flex flex-col items-end gap-1.5">
+                                    <div className="flex items-center gap-2.5">
+                                      {/* Mini progress bar */}
+                                      <div className="w-16 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden hidden sm:block">
+                                        <div
+                                          className={cn("h-full rounded-full transition-all duration-300", barColor)}
+                                          style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
+                                        />
+                                      </div>
+                                      <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
+                                        {score}%
+                                      </span>
+                                      <span
+                                        className={cn(isFullyCompliant
+                                          ? BADGE_PALETTES.emerald
+                                          : isPartiallyCompliant
+                                          ? BADGE_PALETTES.amber
+                                          : BADGE_PALETTES.rose, BADGE_BASE)}
+                                      >
+                                        {org.complianceStatus}
+                                      </span>
+                                    </div>
+                                    {org.missingRequirements?.length > 0 && (
+                                      <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
+                                        <span>Missing:</span>
+                                        <span className="text-rose-600 dark:text-rose-400 font-medium">
+                                          {org.missingRequirements.join(", ")}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </Table>
               ) : loading ? (
@@ -1547,7 +1689,7 @@ export default function OSASOrganizationComplianceView({
           </div>
 
           {/* 6. Standard Table Pagination Footer */}
-          {!loading && sortedOrganizations.length > 0 && (
+          {sortedOrganizations.length > 0 && (
             <TablePagination label="Organization compliance pages" page={page} pageSize={pageSize} totalCount={sortedOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
           )}
         </Card>

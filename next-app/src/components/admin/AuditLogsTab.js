@@ -1,7 +1,7 @@
 "use client"
 
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Button } from "@/components/ui/button"
@@ -9,19 +9,21 @@ import { Card } from "@/components/ui/card"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { format } from "date-fns"
 import { cn, formatLogDetails } from "@/lib/utils"
-import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
-import { formatPHDateTime } from "@/lib/timeFormat"
 import { formatErrorMessage } from "@/lib/errorUtils"
 
 import StatCards from "./audit-logs/StatCards"
-import LogFilters from "./audit-logs/LogFilters"
+import LogFilters, { AUDIT_COLUMNS, DEFAULT_VISIBLE_COLUMNS, AUDIT_FILTER_FIELDS } from "./audit-logs/LogFilters"
 import LogTable from "./audit-logs/LogTable"
 import LogDetailSheet from "./audit-logs/LogDetailSheet"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
+import { useAppReducedMotion } from "@/lib/motion"
+import useTableScroll from "@/hooks/useTableScroll"
+import useViewPreference from "@/hooks/useViewPreference"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { Loading01Icon } from "hugeicons-react";
 
 
@@ -47,8 +49,12 @@ export default function AuditLogsTab({
   setLogSearch,
   logRoleFilter,
   setLogRoleFilter,
+  logExcludeRoleFilter = "",
+  setLogExcludeRoleFilter,
   logSeverityFilter,
   setLogSeverityFilter,
+  logExcludeSeverityFilter = "",
+  setLogExcludeSeverityFilter,
   logStartDate,
   setLogStartDate,
   logEndDate,
@@ -58,7 +64,6 @@ export default function AuditLogsTab({
   logSortOrder,
   setLogSortOrder,
   showToast,
-  onLogAction,
   onRefresh,
 }) {
   const logs = displayLogs || []
@@ -67,11 +72,75 @@ export default function AuditLogsTab({
   const [isExporting, setIsExporting] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
+  const shouldReduceMotion = useAppReducedMotion()
+
+  const [visibleColumns, setVisibleColumns] = useViewPreference(
+    "logs",
+    "visibleColumns",
+    DEFAULT_VISIBLE_COLUMNS
+  )
+
+  const {
+    tableContainerRef,
+    canScrollLeft,
+    canScrollRight,
+    isScrolled,
+    scrollLeft,
+    scrollRight,
+    resetScroll: resetTableScroll,
+  } = useTableScroll([logs?.length]);
+
+  useEffect(() => {
+    resetTableScroll();
+  }, [logPage, logsPerPage, logSearch, logRoleFilter, logExcludeRoleFilter, logSeverityFilter, logExcludeSeverityFilter, logStartDate, logEndDate, resetTableScroll]);
+
+  // Two-way sync filter rules
+  const [filterRules, setFilterRules] = useState(() => {
+    const rules = [];
+    if (logRoleFilter && logRoleFilter !== "All") {
+      logRoleFilter.split(",").map((s) => s.trim()).filter(Boolean).forEach((role, i) => {
+        rules.push({
+          id: `initial-role-${i}`,
+          fieldKey: "role",
+          operator: "is",
+          value: role,
+        });
+      });
+    }
+    if (logExcludeRoleFilter) {
+      logExcludeRoleFilter.split(",").map((s) => s.trim()).filter(Boolean).forEach((role, i) => {
+        rules.push({
+          id: `initial-ex-role-${i}`,
+          fieldKey: "role",
+          operator: "is_not",
+          value: role,
+        });
+      });
+    }
+    return rules;
+  });
+
+  const handleFiltersChange = useCallback((newRules) => {
+    setFilterRules(newRules);
+
+    const activeRoles = newRules
+      .filter((r) => r.fieldKey === "role" && r.operator !== "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]);
+    const excludeRoles = newRules
+      .filter((r) => r.fieldKey === "role" && r.operator === "is_not" && r.value)
+      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]);
+
+    setLogRoleFilter?.(activeRoles.length > 0 ? activeRoles.join(",") : "All");
+    setLogExcludeRoleFilter?.(excludeRoles.length > 0 ? excludeRoles.join(",") : "");
+
+    setLogPage(1);
+  }, [setLogRoleFilter, setLogExcludeRoleFilter, setLogPage]);
 
   // PDF Preview State
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const previewSession = usePdfPreviewSession();
+  const [groupBy, setGroupBy] = useState("none")
 
   // Debounced Search
   useEffect(() => {
@@ -102,58 +171,44 @@ export default function AuditLogsTab({
     setLogPage(1)
   }
 
-  const fetchAllForExport = async () => {
-    const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : ""
-    const sevQuery = logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : ""
+  const buildExportUrl = (formatType) => {
+    const roleQuery = logRoleFilter && logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : ""
+    const excludeRoleQuery = logExcludeRoleFilter ? `&excludeRole=${encodeURIComponent(logExcludeRoleFilter)}` : ""
+    const sevQuery = logSeverityFilter && logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : ""
+    const excludeSevQuery = logExcludeSeverityFilter ? `&excludeSeverity=${encodeURIComponent(logExcludeSeverityFilter)}` : ""
     const startQuery = logStartDate ? `&startDate=${encodeURIComponent(logStartDate)}` : ""
     const endQuery = logEndDate ? `&endDate=${encodeURIComponent(logEndDate)}` : ""
-    const res = await fetch(
-      `/api/audit-logs?limit=50000&search=${encodeURIComponent(logSearch)}${roleQuery}${sevQuery}${startQuery}${endQuery}&sortBy=${logSortBy}&sortOrder=${logSortOrder}`
-    )
-    const json = await res.json()
-    if (!res.ok || !json.ok) throw new Error(json.error || "Export failed")
-    return Array.isArray(json.data) ? json.data : []
+    return `/api/audit-logs?format=${formatType}&search=${encodeURIComponent(logSearch)}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=${logSortBy}&sortOrder=${logSortOrder}`
+  }
+
+  const fetchExportFile = async (formatType) => {
+    const response = await fetch(buildExportUrl(formatType), { cache: "no-store" })
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null)
+      throw new Error(payload?.error || "Unable to export activity history.")
+    }
+    return response.blob()
+  }
+
+  const downloadExportFile = (blob, fileName) => {
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const handleDownloadCSV = async () => {
     if (logTotal === 0 || isExporting) return
     setIsExporting(true)
     try {
-      const allLogs = await fetchAllForExport()
-      const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"]
-      const rows = allLogs.map((log) => [
-        log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
-        log?.severity || "INFO",
-        log?.actor_display_name || log?.actor || "System",
-        log?.role || "N/A",
-        log?.action || "N/A",
-        formatLogDetails(log?.details) || "No known description",
-        log?.ip || "N/A",
-        log?.user_agent || "N/A",
-        log?.entity_type || "N/A",
-        log?.entity_id || "N/A",
-      ])
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-      ].join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const blob = await fetchExportFile("csv")
       const fileName = generateExportFilename("ACTIVITY-HISTORY", "DATA", "csv")
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", fileName)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      downloadExportFile(blob, fileName)
       showToast({ title: "Export Success", description: "Activity history has been exported to CSV successfully." })
-      if (onLogAction) {
-        onLogAction({
-          action: "Exported Activity History to CSV",
-          details: `Exported ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}, Search: ${logSearch || "None"}`,
-          severity: "INFO"
-        })
-      }
     } catch (err) {
       console.error("[Export Error]", err)
       showToast(formatErrorMessage(err, "Export Failed"), true)
@@ -167,25 +222,11 @@ export default function AuditLogsTab({
     setIsGeneratingPdf(true)
     const request = previewSession.begin();
     try {
-      const allLogs = await fetchAllForExport()
-      const blob = await generateAuditLogsPdf(allLogs, {
-        role: logRoleFilter,
-        severity: logSeverityFilter,
-        startDate: logStartDate,
-        endDate: logEndDate,
-        search: logSearch
-      })
+      const blob = await fetchExportFile("pdf")
       const url = previewSession.createUrl(blob, request)
       if (!url) return;
       setPdfPreviewUrl(url)
       setPdfPreviewOpen(true)
-      if (onLogAction) {
-        onLogAction({
-          action: "Generated Activity History PDF Report",
-          details: `Generated report for ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}`,
-          severity: "INFO"
-        })
-      }
     } catch (err) {
       if (!previewSession.isCurrent(request)) return;
       console.error("[PDF Preview Error]", err)
@@ -234,16 +275,31 @@ export default function AuditLogsTab({
     }
   }
 
-  const hasActiveFilters = localSearch !== "" || logRoleFilter !== "All" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "";
+  const hasActiveFilters =
+    localSearch !== "" ||
+    (logRoleFilter && logRoleFilter !== "All") ||
+    Boolean(logExcludeRoleFilter) ||
+    logStartDate !== "" ||
+    logEndDate !== "" ||
+    filterRules.filter((r) => r.fieldKey !== "severity").length > 0;
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
+      <div className={cn("font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6", !shouldReduceMotion && "animate-fade-up")}>
         {/* ONE Single Card Container encapsulating Header, Metrics, Toolbar, Table & Pagination */}
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta flex-[1_0_auto]">
           <PageHeader
             icon="Shield01Icon"
-            title="Activity History"
+            title={
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span>Activity History</span>
+                {logTotal > 0 && (
+                  <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                    {logTotal.toLocaleString()} total events
+                  </span>
+                )}
+              </div>
+            }
             description="Review staff actions, security events, and administrative changes."
             showBorder={false}
             className="p-6"
@@ -255,48 +311,66 @@ export default function AuditLogsTab({
                   onRefresh={onRefresh} 
                   isLoading={isManualLoading} 
                   title="Refresh Activity History"
+                  className="h-9 w-9"
                 />
 
-                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={logTotal === 0 || isExporting || isGeneratingPdf}
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  {isExporting ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
+                </Button>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={handlePreviewPDF}
-                    disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                    className="h-9 shrink-0 px-4 text-xs"
-                  >
-                    {isGeneratingPdf ? (
-                      <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center"></Loading01Icon>
-                    ) : (
-                      PDF_ACTION_LABELS.preview
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handlePreviewPDF}
+                  disabled={logTotal === 0 || isExporting || isGeneratingPdf}
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"
+                >
+                  {isGeneratingPdf ? (
+                    <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
+                  ) : (
+                    PDF_ACTION_LABELS.preview
+                  )}
+                </Button>
               </div>
-            }
-            secondaryActions={
-              <Button
-                variant="outline"
-                onClick={handleDownloadCSV}
-                disabled={logTotal === 0 || isExporting || isGeneratingPdf}
-                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                {isExporting ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
-              </Button>
             }
           />
 
           {/* Stat Cards */}
           <div className="px-6 pb-6">
-            <StatCards isLoading={isLoading} logStats={logStats} />
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <StatCards isLoading={isLoading && !logStats} logStats={logStats} />
+            </div>
+          </div>
+
+          {/* Severity Segmented Control */}
+          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-t border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+            <SegmentedControl
+              value={logSeverityFilter && logSeverityFilter !== "All" ? logSeverityFilter.split(",")[0] : ""}
+              onValueChange={(value) => {
+                setLogSeverityFilter?.(value || "All");
+                setLogPage?.(1);
+              }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr"
+              items={[
+                { value: "", label: "All Levels" },
+                { value: "INFO", label: "Information" },
+                { value: "WARNING", label: "Warning" },
+                { value: "CRITICAL", label: "Critical" },
+              ]}
+            />
           </div>
 
           <LogFilters
             localSearch={localSearch}
             handleSearchChange={handleSearchChange}
-            logRoleFilter={logRoleFilter}
-            logSeverityFilter={logSeverityFilter}
             logStartDate={logStartDate}
             setLogStartDate={setLogStartDate}
             logEndDate={logEndDate}
@@ -304,85 +378,85 @@ export default function AuditLogsTab({
             setLogPage={setLogPage}
             setLocalSearch={setLocalSearch}
             setLogSearch={setLogSearch}
-            setLogRoleFilter={setLogRoleFilter}
-            setLogSeverityFilter={setLogSeverityFilter}
             logTotal={logTotal}
             isLoading={isLoading && !isManualLoading}
+            logSortBy={logSortBy}
+            setLogSortBy={setLogSortBy}
+            logSortOrder={logSortOrder}
+            setLogSortOrder={setLogSortOrder}
+            visibleColumns={visibleColumns}
+            setVisibleColumns={setVisibleColumns}
+            groupBy={groupBy}
+            onGroupByChange={setGroupBy}
+            filterRules={filterRules}
+            onFiltersChange={handleFiltersChange}
+            tableContainerRef={tableContainerRef}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            isScrolled={isScrolled}
+            onScrollLeft={scrollLeft}
+            onScrollRight={scrollRight}
+            onResetScroll={resetTableScroll}
           />
 
           {/* Active Filter Chips Row */}
-          {hasActiveFilters && (() => {
-            const severityValues = (!logSeverityFilter || logSeverityFilter === "All")
-              ? []
-              : logSeverityFilter.split(",").map((s) => s.trim()).filter(Boolean)
-
-            const roleValues = (!logRoleFilter || logRoleFilter === "All")
-              ? []
-              : logRoleFilter.split(",").map((s) => s.trim()).filter(Boolean)
-
-            const extraChips = (logStartDate || logEndDate) ? [
-              {
-                key: "dateRange",
-                label: `${logStartDate ? format(parseDateLocal(logStartDate), "MMM d, yyyy") : "..."} – ${logEndDate ? format(parseDateLocal(logEndDate), "MMM d, yyyy") : "..."}`,
-                onRemove: () => {
-                  setLogStartDate("")
-                  setLogEndDate("")
-                  setLogPage(1)
-                }
-              }
-            ] : []
-
-            return (
-              <ActiveFilterChips
-                groups={[
-                  {
-                    key: "severity",
-                    label: "Severity",
-                    values: severityValues,
-                    onRemove: (val) => {
-                      const next = severityValues.filter((v) => v !== val)
-                      setLogSeverityFilter(next.length === 0 ? "All" : next.join(","))
-                      setLogPage(1)
+          {hasActiveFilters && (
+            <ActiveFilterChips
+              chips={filterRules
+                .filter((rule) => rule.fieldKey !== "severity")
+                .map((rule) => {
+                  const field = AUDIT_FILTER_FIELDS.find((f) => f.key === rule.fieldKey);
+                  const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
+                  const valLabel = opt?.label || rule.value;
+                  return {
+                    id: rule.id,
+                    groupLabel: field?.label || rule.fieldKey,
+                    label: rule.operator === "is_not" ? `is not ${valLabel}` : valLabel,
+                    onRemove: () => {
+                      const next = filterRules.filter((r) => r.id !== rule.id);
+                      handleFiltersChange(next);
                     },
-                    formatValue: (val) => val
-                  },
-                  {
-                    key: "role",
-                    label: "Role",
-                    values: roleValues,
-                    onRemove: (val) => {
-                      const next = roleValues.filter((v) => v !== val)
-                      setLogRoleFilter(next.length === 0 ? "All" : next.join(","))
-                      setLogPage(1)
-                    },
-                    formatValue: (val) => val
-                  }
-                ]}
-                searchQuery={localSearch}
-                onClearSearch={() => {
-                  setLocalSearch("")
-                  setLogSearch("")
-                  setLogPage(1)
-                }}
-                extraChips={extraChips}
-                onClearAll={() => {
-                  setLocalSearch("")
-                  setLogSearch("")
-                  setLogRoleFilter("All")
-                  setLogSeverityFilter("All")
-                  setLogStartDate("")
-                  setLogEndDate("")
-                  setLogPage(1)
-                }}
-                className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-              />
-            )
-          })()}
+                  };
+                })}
+              searchQuery={localSearch}
+              onClearSearch={() => {
+                setLocalSearch("");
+                setLogSearch("");
+                setLogPage(1);
+              }}
+              extraChips={[
+                ...(logStartDate || logEndDate
+                  ? [
+                      {
+                        groupLabel: "Date Range",
+                        label: `${logStartDate ? format(parseDateLocal(logStartDate), "MMM d, yyyy") : "Start"} → ${logEndDate ? format(parseDateLocal(logEndDate), "MMM d, yyyy") : "End"}`,
+                        onClear: () => {
+                          setLogStartDate("");
+                          setLogEndDate("");
+                          setLogPage(1);
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+              onClearAll={() => {
+                setLocalSearch("");
+                setLogSearch("");
+                handleFiltersChange([]);
+                setLogStartDate("");
+                setLogEndDate("");
+                setLogPage(1);
+              }}
+              className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+            />
+          )}
 
+          <div className="relative flex flex-1 flex-col" aria-busy={isLoading || undefined}>
           <LogTable
-            isLoading={isLoading && !isManualLoading}
+            isLoading={isLoading && !isManualLoading && displayLogs === null}
             error={error}
             displayLogs={logs}
+            groupBy={groupBy}
             selectedLog={selectedLog}
             setSelectedLog={setSelectedLog}
             logTotal={logTotal}
@@ -409,7 +483,26 @@ export default function AuditLogsTab({
             handleCopy={handleCopy}
             embedded={true}
             cn={cn}
+            visibleColumns={visibleColumns}
+            tableContainerRef={tableContainerRef}
+            isScrolledX={isScrolled}
+            onClearFilters={() => {
+              setLocalSearch("");
+              setLogSearch("");
+              handleFiltersChange([]);
+              setLogStartDate("");
+              setLogEndDate("");
+              setLogPage(1);
+            }}
           />
+          {isLoading && !isManualLoading && displayLogs !== null && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 dark:bg-card/70">
+              <span role="status" className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
+                Loading activity…
+              </span>
+            </div>
+          )}
+          </div>
         </Card>
 
         {/* Log Detail Side Sheet */}

@@ -54,6 +54,7 @@ export async function countAuditLogs(options) {
   const actorExact = opt.actorExact || "";
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
+  const excludeRole = opt.excludeRole || "";
   const severity = opt.severity || "";
   const excludeSeverity = opt.excludeSeverity || "";
   const startDate = opt.startDate || "";
@@ -77,6 +78,17 @@ export async function countAuditLogs(options) {
       params.push(roleList[0]);
     } else if (roleList.length > 1) {
       whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
+  }
+
+  if (excludeRole) {
+    const roleList = Array.isArray(excludeRole) ? excludeRole : String(excludeRole).split(",").map((s) => s.trim()).filter(Boolean);
+    if (roleList.length === 1) {
+      whereClauses.push("(role IS NULL OR role <> ?)");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`(role IS NULL OR role NOT IN (${roleList.map(() => "?").join(", ")}))`);
       params.push(...roleList);
     }
   }
@@ -144,6 +156,7 @@ export async function listAuditLogs(options) {
   const actorExact = opt.actorExact || "";
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
+  const excludeRole = opt.excludeRole || "";
   const severity = opt.severity || "";
   const excludeSeverity = opt.excludeSeverity || "";
   const startDate = opt.startDate || "";
@@ -172,6 +185,17 @@ export async function listAuditLogs(options) {
       params.push(roleList[0]);
     } else if (roleList.length > 1) {
       whereClauses.push(`role IN (${roleList.map(() => "?").join(", ")})`);
+      params.push(...roleList);
+    }
+  }
+
+  if (excludeRole) {
+    const roleList = Array.isArray(excludeRole) ? excludeRole : String(excludeRole).split(",").map((s) => s.trim()).filter(Boolean);
+    if (roleList.length === 1) {
+      whereClauses.push("(role IS NULL OR role <> ?)");
+      params.push(roleList[0]);
+    } else if (roleList.length > 1) {
+      whereClauses.push(`(role IS NULL OR role NOT IN (${roleList.map(() => "?").join(", ")}))`);
       params.push(...roleList);
     }
   }

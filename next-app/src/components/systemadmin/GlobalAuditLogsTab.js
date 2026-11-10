@@ -12,7 +12,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import AuditLogsTableSkeleton from "@/components/systemadmin/skeletons/AuditLogsTableSkeleton"
 import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
@@ -31,18 +30,17 @@ import {
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
-import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
-import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 
-import { FilterPopover, SortPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
-import { Skeleton } from "@/components/ui/skeleton"
+import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
+import { AUDIT_GROUP_OPTIONS } from "../admin/audit-logs/LogFilters"
+import StatCards from "../admin/audit-logs/StatCards"
 import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 import LogExpandedRow from "../admin/audit-logs/LogExpandedRow"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
@@ -132,6 +130,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [logStats, setLogStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(true)
   const logsRequest = useRef(0)
   const [error, setError] = useState(null)
   const [isManualLoading, setIsManualLoading] = useState(false)
@@ -139,6 +139,17 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [expandedRows, setExpandedRows] = useState({})
   const [visibleColumns, setVisibleColumns] = useViewPreference("logs", "visibleColumns", OPTIONAL_COLUMNS.filter(({ key }) => key !== "ip").map(({ key }) => key))
   const showColumn = (key) => visibleColumns.includes(key)
+
+  const visibleColumnCount =
+    2 +
+    (showColumn("severity") ? 1 : 0) +
+    1 +
+    (showColumn("office_id") ? 1 : 0) +
+    1 +
+    (showColumn("details") ? 1 : 0) +
+    (showColumn("ip") ? 1 : 0) +
+    1
+
   const tableColumns = [
     { kind: "selection" },
     { kind: "date", maxWidth: 205 },
@@ -241,6 +252,27 @@ export default function GlobalAuditLogsTab({ showToast }) {
   // Sorting
   const [sortBy, setSortBy] = useViewPreference("logs", "sortBy", "created_at")
   const [sortOrder, setSortOrder] = useViewPreference("logs", "sortOrder", "DESC")
+  const [groupBy, setGroupBy] = useState("none")
+
+  const groupedLogs = useMemo(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "", logs }]
+    }
+    const map = new Map()
+    for (const log of logs) {
+      let label = ""
+      if (groupBy === "role") {
+        label = log.role || "Unspecified Role"
+      } else if (groupBy === "severity") {
+        label = (log.severity || "INFO").toUpperCase()
+      } else if (groupBy === "office_id") {
+        label = log.office_id ? (log.office_id === "osas" ? "OSAS" : log.office_id === "registrar" ? "Registrar" : String(log.office_id).toUpperCase()) : "Platform Level"
+      }
+      if (!map.has(label)) map.set(label, [])
+      map.get(label).push(log)
+    }
+    return [...map.entries()].map(([label, groupLogs]) => ({ key: label, label, logs: groupLogs }))
+  }, [groupBy, logs])
 
   // Export & Preview States
   const [isExporting, setIsExporting] = useState(false)
@@ -312,16 +344,6 @@ export default function GlobalAuditLogsTab({ showToast }) {
         { value: "Staff", label: "Staff" },
         { value: "Student", label: "Student" },
         { value: "System", label: "System" },
-      ],
-    },
-    {
-      key: "severity",
-      label: "Severity",
-      icon: EmptyAlertCircleIcon,
-      options: [
-        { value: "INFO", label: "Information" },
-        { value: "WARNING", label: "Warning" },
-        { value: "CRITICAL", label: "Critical" },
       ],
     },
   ], [logFilterGroups])
@@ -462,11 +484,27 @@ export default function GlobalAuditLogsTab({ showToast }) {
     [page, limit, buildFilterQueryParams, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
   )
 
+  const fetchLogStats = useCallback(async () => {
+    try {
+      setStatsLoading(true)
+      const res = await fetch("/api/audit-logs/global/stats")
+      const json = await res.json()
+      if (res.ok && json.ok) {
+        setLogStats(json.data)
+      }
+    } catch (err) {
+      console.error("[fetchLogStats] Error fetching global audit stats:", err)
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     queueMicrotask(() => {
       fetchOffices()
+      fetchLogStats()
     })
-  }, [fetchOffices])
+  }, [fetchOffices, fetchLogStats])
 
   useEffect(() => {
     let active = true
@@ -515,7 +553,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     updateUrl(1, search)
   }
 
-  const fetchAllForExport = async () => {
+  const buildExportUrl = (formatType) => {
     const { officeStr, excludeOfficeStr, roleStr, excludeRoleStr, sevStr, excludeSevStr } = buildFilterQueryParams()
     const officeQuery = officeStr ? `&officeId=${encodeURIComponent(officeStr)}` : ""
     const excludeOfficeQuery = excludeOfficeStr ? `&excludeOfficeId=${encodeURIComponent(excludeOfficeStr)}` : ""
@@ -525,65 +563,48 @@ export default function GlobalAuditLogsTab({ showToast }) {
     const excludeSevQuery = excludeSevStr ? `&excludeSeverity=${encodeURIComponent(excludeSevStr)}` : ""
     const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
     const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
-    const res = await fetch(
-      `/api/audit-logs/global?limit=50000&search=${encodeURIComponent(search)}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-    )
-    const json = await res.json()
-    if (!res.ok || !json.ok) throw new Error(json.error || "Export failed")
-    return (json.data || []).map((r) => {
-      const off = (Array.isArray(offices) ? offices : []).find((o) => o.id === r.office_id)
-      return {
-        ...r,
-        officeName: off ? off.short_name : "Global (Platform)",
-        scope: off ? off.short_name : "Global",
-      }
-    })
+    const selectedOffices = logFilters.office || []
+    const selectedSeverities = logFilters.severity || []
+    const offList = Array.isArray(offices) ? offices : []
+    const scopeLabel = selectedOffices.length === 0
+      ? "All Scopes"
+      : selectedOffices.map((off) => {
+        if (off === "global") return "Global (Platform)"
+        const offObj = offList.find((o) => o.id === off)
+        return offObj ? offObj.short_name || offObj.name : off
+      }).join(", ")
+    const severityLabel = selectedSeverities.length === 0 ? "All Severities" : selectedSeverities.join(", ")
+    const labels = formatType === "pdf" ? `&scope=${encodeURIComponent(scopeLabel)}&severityLabel=${encodeURIComponent(severityLabel)}` : ""
+    return `/api/audit-logs/global?format=${formatType}&search=${encodeURIComponent(search)}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=${sortBy}&sortOrder=${sortOrder}${labels}`
+  }
+
+  const fetchExportFile = async (formatType) => {
+    const response = await fetch(buildExportUrl(formatType), { cache: "no-store" })
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null)
+      throw new Error(payload?.error || "Unable to export activity history.")
+    }
+    return response.blob()
+  }
+
+  const downloadExportFile = (blob, fileName) => {
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const handleDownloadCSV = async () => {
     if (total === 0 || isExporting) return
     setIsExporting(true)
     try {
-      const allLogs = await fetchAllForExport()
-      const headers = [
-        "Date & Time",
-        "Severity",
-        "Actor",
-        "Role",
-        "Scope",
-        "Action",
-        "Details",
-        "IP Address",
-        "User Agent",
-        "Entity Type",
-        "Entity ID",
-      ]
-      const rows = allLogs.map((log) => [
-        log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
-        log?.severity || "INFO",
-        log?.actor_display_name || log?.actor || "System",
-        log?.role || "N/A",
-        log?.scope || "Global",
-        log?.action || "N/A",
-        formatLogDetails(log?.details) || "No known description",
-        log?.ip || "N/A",
-        log?.user_agent || "N/A",
-        log?.entity_type || "N/A",
-        log?.entity_id || "N/A",
-      ])
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-      ].join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const blob = await fetchExportFile("csv")
       const fileName = generateExportFilename("PLATFORM-ACTIVITY-HISTORY", "DATA", "csv")
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", fileName)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      downloadExportFile(blob, fileName)
       showToast?.({
         title: "Export Success",
         description: "Platform activity history has been exported to CSV successfully.",
@@ -601,32 +622,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setIsGeneratingPdf(true)
     const request = previewSession.begin();
     try {
-      const allLogs = await fetchAllForExport()
-      const selectedOffices = logFilters.office || []
-      const selectedSeverities = logFilters.severity || []
-
-      const offList = Array.isArray(offices) ? offices : []
-      const scopeLabel =
-        selectedOffices.length === 0
-          ? "All Scopes"
-          : selectedOffices
-            .map((off) => {
-              if (off === "global") return "Global (Platform)"
-              const offObj = offList.find((o) => o.id === off)
-              return offObj ? offObj.short_name || offObj.name : off
-            })
-            .join(", ")
-
-      const severityLabel =
-        selectedSeverities.length === 0 ? "All Severities" : selectedSeverities.join(", ")
-
-      const blob = await generateAuditLogsPdf(allLogs, {
-        scope: scopeLabel,
-        severity: severityLabel,
-        startDate,
-        endDate,
-        search,
-      })
+      const blob = await fetchExportFile("pdf")
       const url = previewSession.createUrl(blob, request)
       if (!url) return;
       setPdfPreviewUrl(url)
@@ -695,7 +691,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const handleClearFilters = useCallback(() => {
     setLocalSearch("")
     setSearch("")
-    setLogFilters((current) => ({ ...current, office: [] }))
+    setLogFilters({ office: [], severity: [] })
     setFilterRules([])
     setStartDate("")
     setEndDate("")
@@ -714,7 +710,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const hasActiveFilters =
     localSearch !== "" ||
     (logFilters.office?.length > 0) ||
-    filterRules.length > 0 ||
+    filterRules.filter((r) => r.fieldKey !== "severity").length > 0 ||
     startDate !== "" ||
     endDate !== ""
 
@@ -730,13 +726,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
             title={
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span>Platform Activity History</span>
-                {loading && total === 0 ? (
-                  <Skeleton aria-hidden="true" className="h-3.5 w-40 rounded dark:bg-muted" />
-                ) : (
-                  <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
-                    {total.toLocaleString()} {total === 1 ? "recorded action" : "recorded actions"}
-                  </span>
-                )}
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                  {total.toLocaleString()} {total === 1 ? "recorded action" : "recorded actions"}
+                </span>
               </div>
             }
             description="Track every institutional action, approval, and system event across the platform."
@@ -746,7 +738,15 @@ export default function GlobalAuditLogsTab({ showToast }) {
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex shrink-0 items-center gap-2">
-                <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
+                <RefreshButton
+                  onRefresh={() => {
+                    fetchLogs(true)
+                    fetchLogStats()
+                  }}
+                  isLoading={isManualLoading}
+                  title="Refresh Activity History"
+                  className="h-9 w-9"
+                />
                 <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs font-semibold">
                   {isExporting ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Exporting...</> : "Export CSV"}
                 </Button>
@@ -757,9 +757,19 @@ export default function GlobalAuditLogsTab({ showToast }) {
             }
           />
 
-          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+          {/* Stat Cards */}
+          <div className="px-6 pb-6">
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              <StatCards
+                isLoading={statsLoading && !logStats}
+                logStats={logStats}
+              />
+            </div>
+          </div>
+
+          <div role="group" aria-label="Activity severity" className="flex items-center px-6 py-2.5 border-t border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
             <SegmentedControl
-              value={logFilters.severity[0] || ""}
+              value={logFilters.severity?.[0] || ""}
               onValueChange={(value) => {
                 setLogFilters((current) => ({ ...current, severity: value ? [value] : [] }))
                 setPage(1)
@@ -786,7 +796,6 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 placeholder="Search logs by actor, action, details..."
                 label="Search platform activity history"
                 count={total}
-                loading={loading && total === 0}
               />
               <TableScrollControls scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}
@@ -812,6 +821,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 entityLabel="activity"
               />
               <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
+              <GroupPopover options={AUDIT_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={setGroupBy} />
               <ColumnsPopover columns={OPTIONAL_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
 
               <DateRangeFilterButton
@@ -835,56 +845,71 @@ export default function GlobalAuditLogsTab({ showToast }) {
           </DataViewToolbar>
 
           {/* Active Filter Chips Row */}
-          <ActiveFilterChips
-            chips={filterRules.map((rule) => {
-              const field = auditFilterFields.find((f) => f.key === rule.fieldKey)
-              const valLabel = field?.options?.find((opt) => String(opt.value) === String(rule.value))?.label || rule.value
-              return {
-                id: rule.id,
-                label: `${field?.label || rule.fieldKey} ${rule.operator === "is_not" ? "is not" : "is"} ${valLabel}`,
-                onRemove: () => {
-                  setFilterRules((current) => current.filter((item) => item.id !== rule.id))
-                  setPage(1)
-                  updateUrl(1, search)
-                },
-              }
-            })}
-            groups={logFilterGroups}
-            selected={logFilters}
-            onRemove={(groupId, val) => {
-              setLogFilters((prev) => ({
-                ...prev,
-                [groupId]: (prev[groupId] || []).filter((v) => v !== val),
-              }))
-              setPage(1)
-              updateUrl(1, search)
-            }}
-            searchQuery={localSearch}
-            onClearSearch={handleClearSearch}
-            extraChips={[
-              ...(startDate || endDate
-                ? [
-                  {
-                    groupLabel: "Date Range",
-                    label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
-                    onClear: () => {
-                      setStartDate("")
-                      setEndDate("")
+          {hasActiveFilters && (
+            <ActiveFilterChips
+              chips={filterRules
+                .filter((rule) => rule.fieldKey !== "severity")
+                .map((rule) => {
+                  const field = auditFilterFields.find((f) => f.key === rule.fieldKey)
+                  const opt = field?.options?.find((o) => String(o.value) === String(rule.value))
+                  const valLabel = opt?.label || rule.value
+                  return {
+                    id: rule.id,
+                    groupLabel: field?.label || rule.fieldKey,
+                    label: rule.operator === "is_not" ? `is not ${valLabel}` : valLabel,
+                    onRemove: () => {
+                      const nextRules = filterRules.filter((item) => item.id !== rule.id)
+                      setFilterRules(nextRules)
+                      if (rule.fieldKey === "office") {
+                        const remainingOffice = nextRules.find((r) => r.fieldKey === "office" && r.operator !== "is_not")
+                        setLogFilters((prev) => ({
+                          ...prev,
+                          office: remainingOffice?.value ? [String(remainingOffice.value)] : [],
+                        }))
+                      }
                       setPage(1)
                       updateUrl(1, search)
                     },
-                  },
-                ]
-                : []),
-            ]}
-            onClearAll={handleClearFilters}
-            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-          />
+                  }
+                })}
+              groups={logFilterGroups}
+              selected={{ office: logFilters.office }}
+              onRemove={(groupId, val) => {
+                setLogFilters((prev) => ({
+                  ...prev,
+                  [groupId]: (prev[groupId] || []).filter((v) => v !== val),
+                }))
+                if (groupId === "office") {
+                  setFilterRules((prev) => prev.filter((r) => !(r.fieldKey === "office" && r.value === val)))
+                }
+                setPage(1)
+                updateUrl(1, search)
+              }}
+              searchQuery={localSearch}
+              onClearSearch={handleClearSearch}
+              extraChips={[
+                ...(startDate || endDate
+                  ? [
+                    {
+                      groupLabel: "Date Range",
+                      label: `${startDate ? format(parseDateLocal(startDate), "MMM d, yyyy") : "Start"} → ${endDate ? format(parseDateLocal(endDate), "MMM d, yyyy") : "End"}`,
+                      onClear: () => {
+                        setStartDate("")
+                        setEndDate("")
+                        setPage(1)
+                        updateUrl(1, search)
+                      },
+                    },
+                  ]
+                  : []),
+              ]}
+              onClearAll={handleClearFilters}
+              className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+            />
+          )}
 
           {/* Content Area inside Single Card */}
-          {loading && (!logs || logs.length === 0) ? (
-            <AuditLogsTableSkeleton rowCount={limit} embedded={true} showScope={true} visibleColumns={visibleColumns} />
-          ) : error ? (
+          {error ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
@@ -1035,12 +1060,21 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     </tr>
                   </thead>
                   <tbody className="bg-transparent divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {logs.map((log) => {
-                      const severityInfo = getSeverityInfo(log.severity)
-                      const isExpanded = !!expandedRows[log.id]
-                      const isSelected = selectedLog && selectedLog.id === log.id
+                    {groupedLogs.map((group) => (
+                      <React.Fragment key={group.key}>
+                        {groupBy !== "none" && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
+                            <td colSpan={visibleColumnCount} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                              {group.label} ({group.logs.length})
+                            </td>
+                          </tr>
+                        )}
+                        {group.logs.map((log) => {
+                          const severityInfo = getSeverityInfo(log.severity)
+                          const isExpanded = !!expandedRows[log.id]
+                          const isSelected = selectedLog && selectedLog.id === log.id
 
-                      const formattedTimestamp = (() => {
+                          const formattedTimestamp = (() => {
                         try {
                           const d = new Date(log.created_at || log.time)
                           if (isNaN(d.getTime())) return log.created_at || log.time
@@ -1196,7 +1230,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                         </React.Fragment>
                       )
                     })}
-                  </tbody>
+                  </React.Fragment>
+                ))}
+              </tbody>
                 </Table>
               </div>
 

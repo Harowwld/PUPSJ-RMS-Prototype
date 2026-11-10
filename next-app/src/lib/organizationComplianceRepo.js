@@ -69,12 +69,14 @@ export async function getOrganizationComplianceSummary({
      ORDER BY so.name ASC`,
     params
   );
+  const orgIds = orgs.map((org) => org.id);
 
-  // 2. Fetch all active officers grouped by organization_id
-  const officers = await query(
+  // 2. Fetch officers only for the selected organizations
+  const officers = orgIds.length ? await query(
     `SELECT oo.id, oo.organization_id, oo.email, oo.student_name,
             oo.student_no, oo.position, oo.status, oo.created_at
      FROM organization_officers oo
+     WHERE oo.organization_id = ANY($1::text[])
      ORDER BY
        CASE
          WHEN lower(oo.position) = 'president' THEN 1
@@ -84,8 +86,9 @@ export async function getOrganizationComplianceSummary({
          WHEN lower(oo.position) LIKE '%auditor%' THEN 5
          ELSE 6
        END,
-       oo.created_at ASC`
-  );
+       oo.created_at ASC`,
+    [orgIds]
+  ) : [];
 
   const identitiesByEmail = await getStudentIdentityMapByEmails(officers.map((officer) => officer.email));
   for (const officer of officers) {
@@ -104,14 +107,16 @@ export async function getOrganizationComplianceSummary({
   }
 
   // 3. Fetch proposals counts grouped by organization_id
-  const proposalCounts = await query(
+  const proposalCounts = orgIds.length ? await query(
     `SELECT organization_id,
        COUNT(id)::int AS total_proposals,
        COUNT(id) FILTER (WHERE status = 'Approved')::int AS approved_proposals
      FROM event_proposals
      WHERE archived_at IS NULL AND status != 'Archived'
-     GROUP BY organization_id`
-  );
+       AND organization_id = ANY($1::text[])
+     GROUP BY organization_id`,
+    [orgIds]
+  ) : [];
 
   const proposalsByOrg = new Map();
   for (const p of proposalCounts) {
