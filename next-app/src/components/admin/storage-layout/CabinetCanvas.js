@@ -10,14 +10,22 @@ import {
 } from "@/components/ui/tooltip"
 import {
   getCabinetEffectiveSize,
-  toPct,
-  SNAP_STEP_X,
-  SNAP_STEP_Y,
 } from "@/lib/storageLayoutUtils"
 import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
 import { cn } from "@/lib/utils"
 import { Copy01Icon, Delete01Icon, Door01Icon, PencilEdit01Icon } from "hugeicons-react";
 
+// Precomputed 40 cols x 25 rows AutoCAD blueprint precision grid path
+const GRID_PATH_DATA = (() => {
+  const parts = []
+  for (let x = 1; x < 40; x++) {
+    parts.push(`M ${x} 0 V 25`)
+  }
+  for (let y = 1; y < 25; y++) {
+    parts.push(`M 0 ${y} H 40`)
+  }
+  return parts.join(" ")
+})()
 
 const CabinetCanvas = memo(({
   canvasRef,
@@ -27,6 +35,9 @@ const CabinetCanvas = memo(({
   collidingIds,
   activePath,
   showGrid,
+  gridOpacity = 100,
+  is3D = false,
+  studentDrawerUsage,
   handleCanvasPointerMove,
   handleCanvasPointerUp,
   setSelectedCabinetIds,
@@ -49,8 +60,8 @@ const CabinetCanvas = memo(({
       )}
       style={{
         ...(!isModalOpen ? { aspectRatio: "16 / 10" } : {}),
-        transform: "rotateX(35deg) scale(0.95)",
-        transformStyle: "preserve-3d",
+        transform: is3D ? "rotateX(35deg) scale(0.95)" : "none",
+        transformStyle: is3D ? "preserve-3d" : "flat",
         containerType: "inline-size",
       }}
       onPointerMove={handleCanvasPointerMove}
@@ -83,18 +94,23 @@ const CabinetCanvas = memo(({
         }
       }}
     >
-      {/* Blueprint AutoCAD precision grid */}
+      {/* Blueprint precision grid with subtle uniform lines */}
       {showGrid && (
-        <div
-          className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, currentColor 1px, transparent 1px),
-              linear-gradient(to bottom, currentColor 1px, transparent 1px)
-            `,
-            backgroundSize: "2.5% 4%, 2.5% 4%",
-          }}
-        />
+        <svg
+          viewBox="0 0 40 25"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          style={{ shapeRendering: "crispEdges" }}
+        >
+          <path
+            d={GRID_PATH_DATA}
+            fill="none"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+            className="stroke-slate-400/15 dark:stroke-slate-400/10 transition-opacity duration-150"
+            style={{ stroke: "var(--storage-grid-line, rgba(148, 163, 184, 0.12))", opacity: Math.max(0.08, Math.min(1, gridOpacity / 100)) }}
+          />
+        </svg>
       )}
 
       {/* Marquee Selection Box */}
@@ -187,31 +203,6 @@ const CabinetCanvas = memo(({
         </div>
       </div>
 
-      {/* Precision Stats Overlay */}
-      <div className="pointer-events-none absolute bottom-3 right-3 z-50 flex flex-col items-end gap-1 select-none">
-        {selectedCabinet && (
-          <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded-md bg-slate-900/90 p-2.5 text-[10px] text-white backdrop-blur-sm border border-white/10 shadow-lg font-medium">
-            <div className="flex items-center gap-2">
-              <span className="opacity-60">Pos:</span>
-              <span className="font-semibold">
-                {toPct(selectedCabinet.rect.x)}%,{" "}
-                {toPct(selectedCabinet.rect.y)}%
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="opacity-60">Dim:</span>
-              <span className="font-semibold">
-                {toPct(selectedCabinet.rect.w)}% x{" "}
-                {toPct(selectedCabinet.rect.h)}%
-              </span>
-            </div>
-          </div>
-        )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 text-[9px] text-slate-200 tracking-tight font-medium">
-          GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
-        </div>
-      </div>
-
       {activeRoom?.cabinets?.map((cab) => {
         const isSelected = selectedCabinetIds.has(cab.id)
         const isConflict = collidingIds.has(cab.id)
@@ -224,6 +215,8 @@ const CabinetCanvas = memo(({
             isSelected={isSelected}
             isConflict={isConflict}
             eff={eff}
+            is3D={is3D}
+            studentDrawerUsage={studentDrawerUsage}
             selectedCabinetIds={selectedCabinetIds}
             setSelectedCabinetIds={setSelectedCabinetIds}
             onOpenRenameCabinet={onOpenRenameCabinet}
@@ -245,6 +238,8 @@ const CabinetElement = memo(({
   isSelected,
   isConflict,
   eff,
+  is3D = false,
+  studentDrawerUsage,
   selectedCabinetIds,
   setSelectedCabinetIds,
   onOpenRenameCabinet,
@@ -271,12 +266,18 @@ const CabinetElement = memo(({
         width: `calc(${eff.w * 100}% + 1px)`,
         height: `calc(${eff.h * 100}% + 1px)`,
         userSelect: "none",
-        transform: "translateY(-12px)",
-        boxShadow: isSelected 
-          ? "0 1px 0 #06b6d4, 0 2px 0 #06b6d4, 0 3px 0 #06b6d4, 0 4px 0 #06b6d4, 0 5px 0 #06b6d4, 0 6px 0 #06b6d4, 0 7px 0 #06b6d4, 0 8px 0 #06b6d4, 0 9px 0 #06b6d4, 0 10px 0 #06b6d4, 0 11px 0 #06b6d4, 0 12px 0 #06b6d4, 0 16px 20px rgba(0,0,0,0.15)"
-          : isConflict 
-            ? "0 1px 0 #ef4444, 0 2px 0 #ef4444, 0 3px 0 #ef4444, 0 4px 0 #ef4444, 0 5px 0 #ef4444, 0 6px 0 #ef4444, 0 7px 0 #ef4444, 0 8px 0 #ef4444, 0 9px 0 #ef4444, 0 10px 0 #ef4444, 0 11px 0 #ef4444, 0 12px 0 #ef4444, 0 16px 20px rgba(0,0,0,0.15)"
-            : "0 1px 0 #e2e8f0, 0 2px 0 #e2e8f0, 0 3px 0 #e2e8f0, 0 4px 0 #e2e8f0, 0 5px 0 #e2e8f0, 0 6px 0 #e2e8f0, 0 7px 0 #e2e8f0, 0 8px 0 #e2e8f0, 0 9px 0 #e2e8f0, 0 10px 0 #e2e8f0, 0 11px 0 #e2e8f0, 0 12px 0 #e2e8f0, 0 16px 20px rgba(0,0,0,0.1)",
+        transform: is3D ? "translateY(-12px)" : "none",
+        boxShadow: is3D
+          ? isSelected
+            ? "0 1px 0 #06b6d4, 0 2px 0 #06b6d4, 0 3px 0 #06b6d4, 0 4px 0 #06b6d4, 0 5px 0 #06b6d4, 0 6px 0 #06b6d4, 0 7px 0 #06b6d4, 0 8px 0 #06b6d4, 0 9px 0 #06b6d4, 0 10px 0 #06b6d4, 0 11px 0 #06b6d4, 0 12px 0 #06b6d4, 0 16px 20px rgba(0,0,0,0.15)"
+            : isConflict
+              ? "0 1px 0 #ef4444, 0 2px 0 #ef4444, 0 3px 0 #ef4444, 0 4px 0 #ef4444, 0 5px 0 #ef4444, 0 6px 0 #ef4444, 0 7px 0 #ef4444, 0 8px 0 #ef4444, 0 9px 0 #ef4444, 0 10px 0 #ef4444, 0 11px 0 #ef4444, 0 12px 0 #ef4444, 0 16px 20px rgba(0,0,0,0.15)"
+              : "0 1px 0 #e2e8f0, 0 2px 0 #e2e8f0, 0 3px 0 #e2e8f0, 0 4px 0 #e2e8f0, 0 5px 0 #e2e8f0, 0 6px 0 #e2e8f0, 0 7px 0 #e2e8f0, 0 8px 0 #e2e8f0, 0 9px 0 #e2e8f0, 0 10px 0 #e2e8f0, 0 11px 0 #e2e8f0, 0 12px 0 #e2e8f0, 0 16px 20px rgba(0,0,0,0.1)"
+          : isSelected
+            ? "0 0 0 2px #06b6d4, 0 4px 12px rgba(6,182,212,0.15)"
+            : isConflict
+              ? "0 0 0 2px #ef4444, 0 4px 12px rgba(239,68,68,0.15)"
+              : "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
       }}
       onPointerDown={(e) => {
         const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
