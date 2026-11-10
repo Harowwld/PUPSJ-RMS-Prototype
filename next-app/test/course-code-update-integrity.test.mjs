@@ -8,11 +8,11 @@ const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 const { pool, query } = await import("../src/lib/postgres.js");
 
 test("course code changes keep student references valid and protect used blocks", async (t) => {
-  const suffix = `${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-  const oldCode = `ZST${suffix}`;
-  const newCode = `ZST${suffix}N`;
-  const blockName = `ZSTUDENT-${suffix}`;
-  const studentNo = `ZZST${suffix}`;
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const oldCode = `Z${suffix}`;
+  const newCode = `ZN${suffix}`;
+  const blockName = `Z-${suffix}`;
+  const studentNo = `2026-${Math.floor(10000 + Math.random() * 89999)}-SJ-0`;
   let courseId;
 
   t.after(async () => {
@@ -70,7 +70,7 @@ test("course code changes keep student references valid and protect used blocks"
 
   const createdStudent = await request("/api/students?officeId=registrar", "POST", {
     studentNo,
-    name: `Course Rename Student ${suffix}`,
+    name: "Course Rename Student",
     courseCode: oldCode,
     yearLevel: 2026,
     section: blockName,

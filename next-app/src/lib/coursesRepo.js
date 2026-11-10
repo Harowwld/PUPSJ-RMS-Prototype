@@ -44,25 +44,75 @@ export async function createCourse(codeRaw, nameRaw, officeId, { upsert = false 
   return await dbGet("SELECT * FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, res.lastInsertRowid]);
 }
 
-export async function updateCourse(id, codeRaw, nameRaw, status = "Active", officeId) {
+export async function updateCourse(id, codeRaw, nameRaw, status, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
   const code = String(codeRaw || "").trim().toUpperCase();
   const name = String(nameRaw || "").trim();
 
   if (!code || !name) throw new Error("Missing code or name");
 
-  const existing = await dbGet("SELECT id FROM courses WHERE office_id = ? AND code = ? AND id != ?", [scopedOfficeId, code, id]);
-  if (existing) throw new Error("Course code already exists");
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const current = await runOne(
+      "SELECT id, code, name, status FROM courses WHERE office_id = $1 AND id = $2 FOR UPDATE",
+      [scopedOfficeId, id]
+    );
+    if (!current) throw new Error("Course not found");
 
-  await dbRun("UPDATE courses SET code = ?, name = ?, status = ? WHERE office_id = ? AND id = ?", [
-    code,
-    name,
-    status,
-    scopedOfficeId,
-    id
-  ]);
+    const existing = await runOne(
+      "SELECT id FROM courses WHERE office_id = $1 AND code = $2 AND id != $3",
+      [scopedOfficeId, code, id]
+    );
+    if (existing) throw new Error("Course code already exists");
 
-  return await dbGet("SELECT * FROM courses WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
+    const nextStatus = status === undefined ? current.status : status;
+    const updated = await runOne(
+      `UPDATE courses SET code = $1, name = $2, status = $3
+       WHERE office_id = $4 AND id = $5
+       RETURNING *`,
+      [code, name, nextStatus, scopedOfficeId, id]
+    );
+
+    if (current.code !== code) {
+      // 1. Cascade to sections
+      await run(
+        `UPDATE sections SET course_code = $1 WHERE office_id = $2 AND course_code = $3`,
+        [code, scopedOfficeId, current.code]
+      );
+
+      // 2. Cascade to students associated with this office
+      await run(
+        `UPDATE students s
+         SET course_code = $1, updated_at = NOW()
+         WHERE s.course_code = $2
+           AND EXISTS (
+             SELECT 1 FROM student_office_memberships som
+             WHERE som.student_no = s.student_no
+               AND som.office_id = $3
+           )`,
+        [code, current.code, scopedOfficeId]
+      );
+
+      // 3. Cascade to document_requests within this office
+      await run(
+        `UPDATE document_requests SET course_code = $1 WHERE office_id = $2 AND course_code = $3`,
+        [code, scopedOfficeId, current.code]
+      );
+    }
+
+    if (nextStatus === "Archived") {
+      await run(
+        "UPDATE sections SET status = 'Archived', course_archived = TRUE WHERE office_id = $1 AND course_code = $2 AND status = 'Active'",
+        [scopedOfficeId, code]
+      );
+    } else if (nextStatus === "Active" && current.status === "Archived") {
+      await run(
+        "UPDATE sections SET status = 'Active', course_archived = FALSE WHERE office_id = $1 AND course_code = $2 AND course_archived = TRUE",
+        [scopedOfficeId, code]
+      );
+    }
+
+    return updated;
+  });
 }
 
 export async function archiveCourse(id, officeId) {

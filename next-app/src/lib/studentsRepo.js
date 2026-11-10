@@ -21,7 +21,7 @@ function normalizeOfficeId(officeId) {
   return value || null;
 }
 
-function buildOfficeScope(officeId, tableAlias = "students") {
+function buildOfficeScope(officeId, tableAlias = "students", { includeArchived = false } = {}) {
   const normalized = normalizeOfficeId(officeId);
   if (!normalized) return { sql: "", params: [] };
   return {
@@ -30,10 +30,17 @@ function buildOfficeScope(officeId, tableAlias = "students") {
       FROM student_office_memberships som
       WHERE som.student_no = ${tableAlias}.student_no
         AND som.office_id = ?
-        AND som.status = 'Active'
+        AND som.status ${includeArchived ? "IN ('Active', 'Archived')" : "= 'Active'"}
     )`,
     params: [normalized],
   };
+}
+
+function withOfficeStudentStatus(row) {
+  const student = decryptStudentRow(row);
+  if (!student) return null;
+  const { office_membership_status: membershipStatus, ...profile } = student;
+  return membershipStatus === "Archived" ? { ...profile, status: "Archived" } : profile;
 }
 
 async function ensureStudentOfficeMembership(studentNo, officeId) {
@@ -42,10 +49,14 @@ async function ensureStudentOfficeMembership(studentNo, officeId) {
   await dbRun(
     `INSERT INTO student_office_memberships (student_no, office_id, status)
      VALUES (?, ?, 'Active')
-     ON CONFLICT (student_no, office_id)
-     DO UPDATE SET status = 'Active', updated_at = CURRENT_TIMESTAMP`,
+     ON CONFLICT (student_no, office_id) DO NOTHING`,
     [studentNo, normalized],
   );
+  const membership = await dbGet(
+    "SELECT status FROM student_office_memberships WHERE student_no = ? AND office_id = ?",
+    [studentNo, normalized]
+  );
+  if (membership?.status !== "Active") throw new Error("Restore the student in this office before updating their record");
 }
 
 function normalizeStudentName(name) {
@@ -73,6 +84,8 @@ export async function createStudent({
   const normalizedName = encryptPII(normalizeStudentName(name));
   const normalizedSection = String(section || "").trim();
   const academicYear = parseInt(yearLevel);
+  const registryStatus = status === "Archived" ? "Active" : (status || "Active");
+  const membershipStatus = status === "Archived" ? "Archived" : "Active";
   const hasStorage = await hasPhysicalStorage();
   await transaction(async ({ query: run, queryOne: runOne }) => {
     const course = await runOne(
@@ -107,28 +120,28 @@ export async function createStudent({
           storage_room, storage_cabinet, storage_drawer, status
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [studentNo, normalizedName, canonicalCourseCode, academicYear, normalizedSection,
-          room, canonicalizeCabinetId(cabinet), drawer, status || "Active"]
+          room, canonicalizeCabinetId(cabinet), drawer, registryStatus]
       );
     } else {
       await run(
         `INSERT INTO students (student_no, name, course_code, year_level, section, status)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [studentNo, normalizedName, canonicalCourseCode, academicYear, normalizedSection, status || "Active"]
+        [studentNo, normalizedName, canonicalCourseCode, academicYear, normalizedSection, registryStatus]
       );
     }
 
     await run(
       `INSERT INTO student_office_memberships (student_no, office_id, status)
-       VALUES ($1, $2, 'Active')
+       VALUES ($1, $2, $3)
        ON CONFLICT (student_no, office_id)
-       DO UPDATE SET status = 'Active', updated_at = CURRENT_TIMESTAMP`,
-      [studentNo, normalizedOfficeId]
+       DO UPDATE SET status = EXCLUDED.status, updated_at = CURRENT_TIMESTAMP`,
+      [studentNo, normalizedOfficeId, membershipStatus]
     );
   });
 
   invalidateOcrStudentRoster(normalizedOfficeId);
 
-  return await getStudentByStudentNo(studentNo, { officeId: normalizedOfficeId });
+  return await getStudentByStudentNo(studentNo, { officeId: normalizedOfficeId, includeArchivedMembership: true });
 }
 
 export async function upsertStudent({
@@ -177,7 +190,7 @@ export async function listStudents({
   const filters = [];
   const params = [];
 
-  const officeScope = buildOfficeScope(officeId);
+  const officeScope = buildOfficeScope(officeId, "students", { includeArchived });
   if (officeScope.sql) {
     filters.push(officeScope.sql);
     params.push(...officeScope.params);
@@ -218,20 +231,24 @@ export async function listStudents({
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+  const officeSelect = normalizeOfficeId(officeId)
+    ? ", (SELECT som.status FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ?) AS office_membership_status"
+    : "";
+  const selectParams = officeSelect ? [normalizeOfficeId(officeId)] : [];
 
   let rows;
   if (!cleanQ || isStudentNoOnly) {
-    const orderClause = isStudentNoOnly ? "ORDER BY student_no ASC" : "ORDER BY updated_at DESC";
+    const orderClause = isStudentNoOnly ? "ORDER BY student_no ASC" : "ORDER BY updated_at DESC, student_no ASC";
     rows = await dbAll(
-      `SELECT ${STUDENT_SELECT} FROM students ${where} ${orderClause} LIMIT ? OFFSET ?`,
-      [...params, lim, off]
+      `SELECT ${STUDENT_SELECT}${officeSelect} FROM students ${where} ${orderClause} LIMIT ? OFFSET ?`,
+      [...selectParams, ...params, lim, off]
     );
-    return (rows || []).map(decryptStudentRow);
+    return (rows || []).map(withOfficeStudentStatus);
   } else {
-    rows = await dbAll(`SELECT ${STUDENT_SELECT} FROM students ${where}`, [...params]);
+    rows = await dbAll(`SELECT ${STUDENT_SELECT}${officeSelect} FROM students ${where}`, [...selectParams, ...params]);
   }
 
-  let decryptedRows = (rows || []).map(decryptStudentRow);
+  let decryptedRows = (rows || []).map(withOfficeStudentStatus);
   if (cleanQ) {
     decryptedRows = decryptedRows.filter((r) =>
       matchesSearchQuery([r.student_no, r.name], cleanQ)
@@ -249,16 +266,23 @@ export async function listStudents({
   return decryptedRows;
 }
 
-export async function getStudentByStudentNo(studentNo, { officeId } = {}) {
-  const officeScope = buildOfficeScope(officeId);
+export async function getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership = false } = {}) {
+  const officeScope = buildOfficeScope(officeId, "students", { includeArchived: includeArchivedMembership });
   const filters = ["student_no = ?"];
   const params = [studentNo];
   if (officeScope.sql) {
     filters.push(officeScope.sql);
     params.push(...officeScope.params);
   }
-  const row = await dbGet(`SELECT ${STUDENT_SELECT} FROM students WHERE ${filters.join(" AND ")}`, params);
-  return decryptStudentRow(row) || null;
+  const normalizedOfficeId = normalizeOfficeId(officeId);
+  const officeSelect = normalizedOfficeId
+    ? ", (SELECT som.status FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ?) AS office_membership_status"
+    : "";
+  const row = await dbGet(
+    `SELECT ${STUDENT_SELECT}${officeSelect} FROM students WHERE ${filters.join(" AND ")}`,
+    [...(normalizedOfficeId ? [normalizedOfficeId] : []), ...params]
+  );
+  return withOfficeStudentStatus(row);
 }
 
 export async function updateStudent(studentNo, patch) {
@@ -339,21 +363,29 @@ export async function updateStudent(studentNo, patch) {
 }
 
 export async function archiveStudent(studentNo, { officeId } = {}) {
-  const existing = await getStudentByStudentNo(studentNo, { officeId });
+  const scopedOfficeId = normalizeOfficeId(officeId);
+  if (!scopedOfficeId) throw new Error("Office scope is required");
+  const existing = await getStudentByStudentNo(studentNo, { officeId: scopedOfficeId });
   if (!existing) return null;
-  const scope = buildOfficeScope(officeId);
-  await dbRun(`UPDATE students SET status = 'Archived' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
-  invalidateOcrStudentRoster(officeId);
+  await dbRun(
+    "UPDATE student_office_memberships SET status = 'Archived', updated_at = CURRENT_TIMESTAMP WHERE student_no = ? AND office_id = ? AND status = 'Active'",
+    [studentNo, scopedOfficeId]
+  );
+  invalidateOcrStudentRoster(scopedOfficeId);
   return { ...existing, status: "Archived" };
 }
 
 export async function restoreStudent(studentNo, { officeId } = {}) {
-  const existing = await getStudentByStudentNo(studentNo, { officeId });
+  const scopedOfficeId = normalizeOfficeId(officeId);
+  if (!scopedOfficeId) throw new Error("Office scope is required");
+  const existing = await getStudentByStudentNo(studentNo, { officeId: scopedOfficeId, includeArchivedMembership: true });
   if (!existing) return null;
-  const scope = buildOfficeScope(officeId);
-  await dbRun(`UPDATE students SET status = 'Active' WHERE student_no = ?${scope.sql ? ` AND ${scope.sql}` : ""}`, [studentNo, ...scope.params]);
-  invalidateOcrStudentRoster(officeId);
-  return { ...existing, status: "Active" };
+  await dbRun(
+    "UPDATE student_office_memberships SET status = 'Active', updated_at = CURRENT_TIMESTAMP WHERE student_no = ? AND office_id = ? AND status = 'Archived'",
+    [studentNo, scopedOfficeId]
+  );
+  invalidateOcrStudentRoster(scopedOfficeId);
+  return getStudentByStudentNo(studentNo, { officeId: scopedOfficeId });
 }
 
 export async function deleteStudent(studentNo, { officeId } = {}) {
@@ -368,8 +400,8 @@ export async function deleteStudent(studentNo, { officeId } = {}) {
 export async function listStudentLocationUsage({ officeId } = {}) {
   const hasStorage = await hasPhysicalStorage();
   if (!hasStorage) return [];
-
-  const scope = buildOfficeScope(officeId);
+  const normalizedOfficeId = normalizeOfficeId(officeId);
+  if (!normalizedOfficeId) throw new Error("Office scope is required");
   return await dbAll(
     `
       SELECT storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer,
@@ -377,10 +409,12 @@ export async function listStudentLocationUsage({ officeId } = {}) {
              SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active_count,
              SUM(CASE WHEN status = 'Archived' THEN 1 ELSE 0 END) as archived_count
       FROM students
-      WHERE status IN ('Active', 'Archived')${scope.sql ? ` AND ${scope.sql}` : ""}
+      WHERE storage_room IS NOT NULL AND storage_cabinet IS NOT NULL AND storage_drawer IS NOT NULL
+        AND EXISTS (SELECT 1 FROM student_office_memberships som
+                     WHERE som.student_no = students.student_no AND som.office_id = ?)
       GROUP BY storage_room, storage_cabinet, storage_drawer
       ORDER BY storage_room ASC, storage_cabinet ASC, storage_drawer ASC
     `,
-    scope.params,
+    [normalizedOfficeId],
   );
 }

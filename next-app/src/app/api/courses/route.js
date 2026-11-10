@@ -188,6 +188,10 @@ export async function PUT(req) {
 
       if (current.code !== normalizedCode) {
         await run(
+          `UPDATE sections SET course_code = $1 WHERE office_id = $2 AND course_code = $3`,
+          [normalizedCode, officeId, current.code]
+        );
+        await run(
           `UPDATE students s
            SET course_code = $1, updated_at = NOW()
            WHERE s.course_code = $2
@@ -195,9 +199,12 @@ export async function PUT(req) {
                SELECT 1 FROM student_office_memberships som
                WHERE som.student_no = s.student_no
                  AND som.office_id = $3
-                 AND som.status = 'Active'
              )`,
           [normalizedCode, current.code, officeId]
+        );
+        await run(
+          `UPDATE document_requests SET course_code = $1 WHERE office_id = $2 AND course_code = $3`,
+          [normalizedCode, officeId, current.code]
         );
       }
 
@@ -214,13 +221,15 @@ export async function PUT(req) {
       }
 
       if (normalizedBlocks) {
+        const sectionStatus = nextStatus === "Archived" ? "Archived" : "Active";
+        const sectionCourseArchived = nextStatus === "Archived";
         for (const blockName of normalizedBlocks) {
           await run(
-            `INSERT INTO sections (office_id, name, course_code, status)
-             VALUES ($1, $2, $3, 'Active')
+            `INSERT INTO sections (office_id, name, course_code, status, course_archived)
+             VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (office_id, name, course_code)
-             DO UPDATE SET status = 'Active', course_archived = FALSE`,
-            [officeId, blockName, normalizedCode]
+             DO UPDATE SET status = EXCLUDED.status, course_archived = EXCLUDED.course_archived`,
+            [officeId, blockName, normalizedCode, sectionStatus, sectionCourseArchived]
           );
         }
         await run(

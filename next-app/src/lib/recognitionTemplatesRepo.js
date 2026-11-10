@@ -28,7 +28,7 @@ export async function listRecognitionTemplates({ includeArchived = false, docume
     params.push(String(officeId).trim().toLowerCase());
     filters.push(`rt.office_id = $${params.length}`);
   }
-  if (!includeArchived) filters.push("rt.status = 'Active'");
+  if (!includeArchived) filters.push("rt.status = 'Active'", "dt.status = 'Active'");
   if (documentTypeId) {
     params.push(documentTypeId);
     filters.push(`rt.document_type_id = $${params.length}`);
@@ -62,6 +62,7 @@ export async function getRecognitionTemplateByDocumentType(documentType, officeI
      JOIN document_types dt ON dt.id = rt.document_type_id AND dt.office_id = rt.office_id
      WHERE rt.office_id = $2
        AND rt.status = 'Active'
+       AND dt.status = 'Active'
        AND lower(dt.name) = lower($1)
      ORDER BY rt.version DESC
      LIMIT 1`,
@@ -81,7 +82,7 @@ export async function createRecognitionTemplate({ officeId, documentTypeId, name
       [`recognition-template:${normalizedOfficeId}:${documentTypeId}:${templateName}`]
     );
     const documentType = await queryOneInTransaction(
-      "SELECT id FROM document_types WHERE id = $1 AND office_id = $2 AND status = 'Active'",
+      "SELECT id FROM document_types WHERE id = $1 AND office_id = $2 AND status = 'Active' FOR UPDATE",
       [documentTypeId, normalizedOfficeId],
     );
     if (!documentType) throw new Error("Document type is not available in this office");
@@ -133,7 +134,8 @@ export async function updateRecognitionTemplate(id, { name, version, pageIndex, 
 export async function archiveRecognitionTemplate(id, actorId, officeId) {
   if (!officeId) throw new Error("Office scope is required");
   return queryOne(
-    `UPDATE recognition_templates SET status = 'Archived', updated_by = $2, updated_at = NOW()
+    `UPDATE recognition_templates
+     SET status = 'Archived', archived_with_document_type = FALSE, updated_by = $2, updated_at = NOW()
      WHERE id = $1 AND office_id = $3 RETURNING *`,
     [id, actorId || null, String(officeId).trim().toLowerCase()]
   );
@@ -141,11 +143,24 @@ export async function archiveRecognitionTemplate(id, actorId, officeId) {
 
 export async function restoreRecognitionTemplate(id, actorId, officeId) {
   if (!officeId) throw new Error("Office scope is required");
-  return queryOne(
-    `UPDATE recognition_templates SET status = 'Active', updated_by = $2, updated_at = NOW()
-     WHERE id = $1 AND office_id = $3 RETURNING *`,
-    [id, actorId || null, String(officeId).trim().toLowerCase()]
-  );
+  const normalizedOfficeId = String(officeId).trim().toLowerCase();
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const documentType = await runOne(
+      `SELECT dt.id
+       FROM recognition_templates rt
+       JOIN document_types dt ON dt.id = rt.document_type_id AND dt.office_id = rt.office_id
+       WHERE rt.id = $1 AND rt.office_id = $2 AND dt.status = 'Active'
+       FOR UPDATE OF dt`,
+      [id, normalizedOfficeId]
+    );
+    if (!documentType) throw new Error("Restore the document type before restoring its recognition template");
+    return runOne(
+      `UPDATE recognition_templates
+       SET status = 'Active', archived_with_document_type = FALSE, updated_by = $2, updated_at = NOW()
+       WHERE id = $1 AND office_id = $3 RETURNING *`,
+      [id, actorId || null, normalizedOfficeId]
+    );
+  });
 }
 
 export async function deleteRecognitionTemplate(id, officeId) {

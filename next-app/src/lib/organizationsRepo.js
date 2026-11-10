@@ -363,7 +363,8 @@ export async function listOrganizationBylawsVersions(orgId) {
        obv.*,
        obv.version_tag AS version_number,
        obv.review_note AS review_notes,
-       st.fname || ' ' || st.lname AS approved_by_name
+       st.fname AS approved_by_fname,
+       st.lname AS approved_by_lname
      FROM organization_bylaws_versions obv
      LEFT JOIN staff st ON st.id = obv.approved_by
      WHERE obv.organization_id = $1
@@ -375,6 +376,7 @@ export async function listOrganizationBylawsVersions(orgId) {
     const identity = identitiesByEmail.get(String(r.submitted_by_email || "").trim().toLowerCase());
     return {
       ...r,
+      approved_by_name: [decryptPII(r.approved_by_fname), decryptPII(r.approved_by_lname)].filter(Boolean).join(" ") || null,
       submitted_by_name: identity?.student_name || r.submitted_by_email || null,
       submitted_by_student_no: identity?.student_no || null,
       file_url: `/api/osas/organizations/${orgId}/bylaws?file=1&versionId=${r.id}`,
@@ -594,27 +596,35 @@ export async function addOfficer(orgId, {
     throw new Error("Officer position is required.");
   }
 
-  const row = await queryOne(
-    `INSERT INTO organization_officers (
-      organization_id, email, position, student_name, student_no, status, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, 'Active', NOW(), NOW())
-    ON CONFLICT (organization_id, email) DO UPDATE SET
-      position = EXCLUDED.position,
-      student_name = COALESCE(EXCLUDED.student_name, organization_officers.student_name),
-      student_no = COALESCE(EXCLUDED.student_no, organization_officers.student_no),
-      status = 'Active',
-      updated_at = NOW()
-    RETURNING *`,
-    [
-      orgId,
-      cleanEmail,
-      cleanPosition,
-      studentName ? String(studentName).trim() : null,
-      studentNo ? String(studentNo).trim().toUpperCase() : null,
-    ]
-  );
+  return transaction(async ({ queryOne: runOne }) => {
+    const organization = await runOne(
+      `SELECT id FROM student_organizations
+       WHERE id = $1 AND status = 'Active' AND archived_at IS NULL
+       FOR UPDATE`,
+      [orgId]
+    );
+    if (!organization) throw new Error("Cannot authorize officers for an archived organization");
 
-  return row;
+    return runOne(
+      `INSERT INTO organization_officers (
+        organization_id, email, position, student_name, student_no, status, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, 'Active', NOW(), NOW())
+      ON CONFLICT (organization_id, email) DO UPDATE SET
+        position = EXCLUDED.position,
+        student_name = COALESCE(EXCLUDED.student_name, organization_officers.student_name),
+        student_no = COALESCE(EXCLUDED.student_no, organization_officers.student_no),
+        status = 'Active',
+        updated_at = NOW()
+      RETURNING *`,
+      [
+        orgId,
+        cleanEmail,
+        cleanPosition,
+        studentName ? String(studentName).trim() : null,
+        studentNo ? String(studentNo).trim().toUpperCase() : null,
+      ]
+    );
+  });
 }
 
 /**

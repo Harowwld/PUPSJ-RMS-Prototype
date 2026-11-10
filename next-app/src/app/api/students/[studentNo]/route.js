@@ -38,9 +38,7 @@ export async function GET(req, ctx) {
 
   const officeId = resolveOfficeId(access.user, req);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const row = await getStudentByStudentNo(studentNo, {
-    officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-  });
+  const row = await getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership: true });
   if (!row || !canAccessResource(access.user, "student", { ...row, office_id: officeId })) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -62,9 +60,7 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const existingStudent = await getStudentByStudentNo(studentNo, {
-    officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-  });
+  const existingStudent = await getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership: true });
   if (!existingStudent || !canAccessResource(access.user, "student", { ...existingStudent, office_id: officeId })) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -95,7 +91,7 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: "At least one field is required" }, { status: 400 });
   }
 
-  const validStatuses = new Set(["Active", "Inactive", "Archived"]);
+  const validStatuses = new Set(["Active", "Archived"]);
   if (body.status !== undefined && !validStatuses.has(String(body.status).trim())) {
     return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
   }
@@ -143,6 +139,9 @@ export async function PATCH(req, ctx) {
       { status: 400 }
     );
   }
+  if (hasProfileFields && existingStudent.status !== "Active") {
+    return NextResponse.json({ ok: false, error: "Restore the student in this office before editing their record" }, { status: 400 });
+  }
 
   if (body.room !== undefined || body.cabinet !== undefined || body.drawer !== undefined) {
     const room = Number(body.room ?? existingStudent.room);
@@ -177,23 +176,19 @@ export async function PATCH(req, ctx) {
         }, { status: 400 });
       }
 
-      const row = await restoreStudent(studentNo, {
-        officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-      });
+      const row = await restoreStudent(studentNo, { officeId });
       if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       await writeAuditLog(req, `Restore Student`, {
-        details: `restored active system status for student record '${row.name}' (ID: ${studentNo})`,
+        details: `restored student record '${row.name}' (ID: ${studentNo}) in office '${officeId}'`,
         entity_type: "Student",
         entity_id: studentNo
       });
       return NextResponse.json({ ok: true, data: sanitizeUser(row) });
     } else if (body.status === "Archived") {
-      const row = await archiveStudent(studentNo, {
-        officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-      });
+      const row = await archiveStudent(studentNo, { officeId });
       if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       await writeAuditLog(req, `Archive Student`, {
-        details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive and disabled associated processing`,
+        details: `archived student record '${row.name}' (ID: ${studentNo}) in office '${officeId}'`,
         severity: "WARNING",
         entity_type: "Student",
         entity_id: studentNo
@@ -211,7 +206,6 @@ export async function PATCH(req, ctx) {
     room: body.room,
     cabinet: body.cabinet === undefined ? undefined : canonicalizeCabinetId(body.cabinet),
     drawer: body.drawer,
-    status: body.status === undefined ? undefined : String(body.status).trim(),
     officeId,
   });
 
@@ -241,20 +235,16 @@ export async function DELETE(req, ctx) {
 
   const officeId = resolveOfficeId(access.user, req);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const existingStudent = await getStudentByStudentNo(studentNo, {
-    officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-  });
+  const existingStudent = await getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership: true });
   if (!existingStudent || !canAccessResource(access.user, "student", { ...existingStudent, office_id: officeId })) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  const row = await archiveStudent(studentNo, {
-    officeId: isSystemAdminRole(access.user.role) ? undefined : officeId,
-  });
+  const row = await archiveStudent(studentNo, { officeId });
   if (!row || !canAccessResource(access.user, "student", { ...row, office_id: officeId })) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
   await writeAuditLog(req, `Archive Student`, {
-    details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive and disabled its requirement logic`,
+    details: `archived student record '${row.name}' (ID: ${studentNo}) in office '${officeId}'`,
     severity: "WARNING",
     entity_type: "Student",
     entity_id: studentNo

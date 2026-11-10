@@ -123,8 +123,8 @@ export async function createOffice({
       throw error;
     }
     await run(
-      "INSERT INTO staff(id,office_id,fname,lname,role,section,status,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,$4,'Admin','Administrative','Active',$5,$6,NOW(),NOW())",
-      [adminId, oid, encryptPII(short_name || oid), encryptPII("Admin"), encryptPII(email), hashPassword(DEFAULT_STAFF_PASSWORD)]
+      "INSERT INTO staff(id,office_id,fname,lname,role,section,status,archived_by_office,email,password_hash,password_last_changed,updated_at) VALUES($1,$2,$3,$4,'Admin','Administrative',$5,$6,$7,$8,NOW(),NOW())",
+      [adminId, oid, encryptPII(short_name || oid), encryptPII("Admin"), officeStatus === "Active" ? "Active" : "Archived", officeStatus !== "Active", encryptPII(email), hashPassword(DEFAULT_STAFF_PASSWORD)]
     );
     admin = { id: adminId, email, defaultPassword: DEFAULT_STAFF_PASSWORD, created: true };
 
@@ -138,9 +138,11 @@ export async function createOffice({
 }
 
 export async function updateOffice(id, p) {
-  if (!await getOfficeById(id)) return null;
-  await query(
-    `UPDATE offices SET 
+  const office = await transaction(async ({ query: run, queryOne: runOne }) => {
+    const current = await runOne("SELECT * FROM offices WHERE id = $1 FOR UPDATE", [id]);
+    if (!current) return null;
+    await run(
+      `UPDATE offices SET
        name = COALESCE($1, name),
        short_name = COALESCE($2, short_name),
        description = COALESCE($3, description),
@@ -152,20 +154,35 @@ export async function updateOffice(id, p) {
        scanner_model = COALESCE($9, scanner_model),
        updated_at = NOW() 
      WHERE id = $10`,
-    [
-      p.name !== undefined ? p.name : null,
-      p.short_name !== undefined ? p.short_name : null,
-      p.description !== undefined ? p.description : null,
-      p.icon !== undefined ? p.icon : null,
-      p.accent_color !== undefined ? p.accent_color : null,
-      p.status !== undefined ? p.status : null,
-      p.station_name !== undefined ? p.station_name : null,
-      p.ingest_token !== undefined ? p.ingest_token : null,
-      p.scanner_model !== undefined ? p.scanner_model : null,
-      id,
-    ]
-  );
-  return getOfficeById(id);
+      [
+        p.name !== undefined ? p.name : null,
+        p.short_name !== undefined ? p.short_name : null,
+        p.description !== undefined ? p.description : null,
+        p.icon !== undefined ? p.icon : null,
+        p.accent_color !== undefined ? p.accent_color : null,
+        p.status !== undefined ? p.status : null,
+        p.station_name !== undefined ? p.station_name : null,
+        p.ingest_token !== undefined ? p.ingest_token : null,
+        p.scanner_model !== undefined ? p.scanner_model : null,
+        id,
+      ]
+    );
+    if (p.status === "Inactive" && current.status !== "Inactive") {
+      await run(
+        `UPDATE staff SET status = 'Archived', archived_by_office = TRUE, updated_at = NOW()
+         WHERE office_id = $1 AND status = 'Active'`,
+        [id]
+      );
+    } else if (p.status === "Active" && current.status !== "Active") {
+      await run(
+        `UPDATE staff SET status = 'Active', archived_by_office = FALSE, updated_at = NOW()
+         WHERE office_id = $1 AND archived_by_office = TRUE`,
+        [id]
+      );
+    }
+    return runOne("SELECT * FROM offices WHERE id = $1", [id]);
+  });
+  return withFixedPaths(office);
 }
 export const deactivateOffice=id=>updateOffice(id,{status:"Inactive"});export const activateOffice=id=>updateOffice(id,{status:"Active"});
 export async function listOfficesWithStats(){

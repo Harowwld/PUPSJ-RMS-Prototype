@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
+import { transaction } from "./postgres.js";
 
 function requireOfficeId(officeId) {
   const value = String(officeId || "").trim().toLowerCase();
@@ -123,45 +124,98 @@ export async function updateDocType(id, nameRaw, status, officeId, { isRequestab
   if (!name) throw new Error("Missing name");
 
   const nameNorm = normalizeDocTypeKey(name);
-  const existing = await dbGet("SELECT id FROM document_types WHERE office_id = ? AND name_norm = ? AND id != ?", [scopedOfficeId, nameNorm, id]);
-  if (existing) throw new Error("Document type already exists");
 
-  const current = await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  if (!current) throw new Error("Document type not found");
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const current = await runOne(
+      "SELECT * FROM document_types WHERE office_id = $1 AND id = $2 FOR UPDATE",
+      [scopedOfficeId, id]
+    );
+    if (!current) throw new Error("Document type not found");
 
-  const effectiveIsRequestable = isRequestable !== undefined ? Boolean(isRequestable) : Boolean(current.is_requestable);
-  const effectiveIsCompliance = isCompliance !== undefined ? Boolean(isCompliance) : Boolean(current.is_compliance);
-  const effectiveCategory = complianceCategory !== undefined ? String(complianceCategory).trim() : (current.compliance_category || "General Requirements");
-  const effectiveStatus = status !== undefined ? status : current.status;
+    const existing = await runOne(
+      "SELECT id FROM document_types WHERE office_id = $1 AND name_norm = $2 AND id != $3",
+      [scopedOfficeId, nameNorm, id]
+    );
+    if (existing) throw new Error("Document type already exists");
 
-  await dbRun(
-    `UPDATE document_types
-     SET name = ?, name_norm = ?, status = ?, is_requestable = ?, is_compliance = ?, compliance_category = ?
-     WHERE office_id = ? AND id = ?`,
-    [
-      name,
-      nameNorm,
-      effectiveStatus,
-      effectiveIsRequestable,
-      effectiveIsCompliance,
-      effectiveCategory,
-      scopedOfficeId,
-      id
-    ]
-  );
-  return await dbGet("SELECT * FROM document_types WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
+    const effectiveIsRequestable = isRequestable !== undefined ? Boolean(isRequestable) : Boolean(current.is_requestable);
+    const effectiveIsCompliance = isCompliance !== undefined ? Boolean(isCompliance) : Boolean(current.is_compliance);
+    const effectiveCategory = complianceCategory !== undefined ? String(complianceCategory).trim() : (current.compliance_category || "General Requirements");
+    const effectiveStatus = status !== undefined ? status : current.status;
+
+    const updated = await runOne(
+      `UPDATE document_types
+       SET name = $1, name_norm = $2, status = $3, is_requestable = $4, is_compliance = $5, compliance_category = $6
+       WHERE office_id = $7 AND id = $8
+       RETURNING *`,
+      [
+        name,
+        nameNorm,
+        effectiveStatus,
+        effectiveIsRequestable,
+        effectiveIsCompliance,
+        effectiveCategory,
+        scopedOfficeId,
+        id
+      ]
+    );
+
+    if (current.name !== name) {
+      // Cascade rename to documents, document_requests, and unpromoted ingest queue items
+      await run(
+        `UPDATE documents SET doc_type = $1 WHERE office_id = $2 AND doc_type = $3`,
+        [name, scopedOfficeId, current.name]
+      );
+      await run(
+        `UPDATE document_requests SET doc_type = $1 WHERE office_id = $2 AND doc_type = $3`,
+        [name, scopedOfficeId, current.name]
+      );
+      await run(
+        `UPDATE ingest_queue SET proposed_doc_type = $1 WHERE office_id = $2 AND proposed_doc_type = $3`,
+        [name, scopedOfficeId, current.name]
+      );
+    }
+
+    return updated;
+  });
 }
 
 export async function archiveDocType(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  await dbRun("UPDATE document_types SET status = 'Archived' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  return true;
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const documentType = await runOne(
+      "SELECT id FROM document_types WHERE office_id = $1 AND id = $2 FOR UPDATE",
+      [scopedOfficeId, id]
+    );
+    if (!documentType) return false;
+    await run("UPDATE document_types SET status = 'Archived' WHERE office_id = $1 AND id = $2", [scopedOfficeId, id]);
+    await run(
+      `UPDATE recognition_templates
+       SET status = 'Archived', archived_with_document_type = TRUE, updated_at = NOW()
+       WHERE office_id = $1 AND document_type_id = $2 AND status = 'Active'`,
+      [scopedOfficeId, id]
+    );
+    return true;
+  });
 }
 
 export async function restoreDocType(id, officeId) {
   const scopedOfficeId = requireOfficeId(officeId);
-  await dbRun("UPDATE document_types SET status = 'Active' WHERE office_id = ? AND id = ?", [scopedOfficeId, id]);
-  return true;
+  return transaction(async ({ query: run, queryOne: runOne }) => {
+    const documentType = await runOne(
+      "SELECT id FROM document_types WHERE office_id = $1 AND id = $2 FOR UPDATE",
+      [scopedOfficeId, id]
+    );
+    if (!documentType) return false;
+    await run("UPDATE document_types SET status = 'Active' WHERE office_id = $1 AND id = $2", [scopedOfficeId, id]);
+    await run(
+      `UPDATE recognition_templates
+       SET status = 'Active', archived_with_document_type = FALSE, updated_at = NOW()
+       WHERE office_id = $1 AND document_type_id = $2 AND archived_with_document_type = TRUE`,
+      [scopedOfficeId, id]
+    );
+    return true;
+  });
 }
 
 export async function deleteDocType(id, officeId) {

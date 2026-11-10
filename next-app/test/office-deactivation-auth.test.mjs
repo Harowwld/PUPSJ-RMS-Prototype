@@ -56,6 +56,13 @@ test("office deactivation blocks office staff sessions until reactivation", asyn
   });
   assert.equal(created.status, 201, await created.text());
   officeCreated = true;
+  const previouslyArchivedId = `PUP${officeId.toUpperCase()}-002`;
+  await query(
+    `INSERT INTO staff (id, office_id, fname, lname, role, section, status, email, password_hash)
+     SELECT $1, office_id, fname, lname, 'Staff', section, 'Archived', $2, password_hash
+       FROM staff WHERE id = $3`,
+    [previouslyArchivedId, `archived-${suffix}@example.test`, adminId]
+  );
 
   const officeUrl = `${BASE_URL}/api/offices/${encodeURIComponent(officeId)}`;
   const officeRead = await fetch(officeUrl, { headers: systemHeaders });
@@ -113,6 +120,20 @@ test("office deactivation blocks office staff sessions until reactivation", asyn
   });
   assert.equal(archived.status, 200);
 
+  const archivedStaff = await query(
+    "SELECT id, status, archived_by_office FROM staff WHERE office_id = $1 ORDER BY id",
+    [officeId]
+  );
+  assert.deepEqual(archivedStaff, [
+    { id: adminId, status: "Archived", archived_by_office: true },
+    { id: previouslyArchivedId, status: "Archived", archived_by_office: false },
+  ]);
+  const directory = await fetch(`${BASE_URL}/api/staff?officeId=${encodeURIComponent(officeId)}&limit=500`, {
+    headers: systemHeaders,
+  });
+  assert.equal(directory.status, 200);
+  assert.equal((await directory.json()).data.find((member) => member.id === adminId)?.status, "Archived");
+
   const existingSession = await fetch(officeCoursesUrl, { headers: staffHeaders });
   assert.equal(existingSession.status, 401, "Existing staff session is rejected after office deactivation");
 
@@ -126,6 +147,39 @@ test("office deactivation blocks office staff sessions until reactivation", asyn
   });
   assert.equal(restored.status, 200);
 
+  const restoredStaff = await query(
+    "SELECT id, status, archived_by_office FROM staff WHERE office_id = $1 ORDER BY id",
+    [officeId]
+  );
+  assert.deepEqual(restoredStaff, [
+    { id: adminId, status: "Active", archived_by_office: false },
+    { id: previouslyArchivedId, status: "Archived", archived_by_office: false },
+  ]);
+
   const resumedSession = await fetch(officeCoursesUrl, { headers: staffHeaders });
   assert.equal(resumedSession.status, 200, "Unchanged staff account resumes after office reactivation");
+
+  const patchedArchive = await fetch(officeUrl, {
+    method: "PATCH",
+    headers: systemHeaders,
+    body: JSON.stringify({ status: "Inactive" }),
+  });
+  assert.equal(patchedArchive.status, 200);
+  const patchedArchivedStaff = await query(
+    "SELECT status, archived_by_office FROM staff WHERE id = $1",
+    [adminId]
+  );
+  assert.deepEqual(patchedArchivedStaff[0], { status: "Archived", archived_by_office: true });
+
+  const patchedRestore = await fetch(officeUrl, {
+    method: "PATCH",
+    headers: systemHeaders,
+    body: JSON.stringify({ status: "Active" }),
+  });
+  assert.equal(patchedRestore.status, 200);
+  const patchedRestoredStaff = await query(
+    "SELECT status, archived_by_office FROM staff WHERE id = $1",
+    [adminId]
+  );
+  assert.deepEqual(patchedRestoredStaff[0], { status: "Active", archived_by_office: false });
 });
