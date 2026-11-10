@@ -15,7 +15,12 @@ export async function GET(req) {
   const access = await requireOfficeModule("document_requests", { officeId: "registrar" }, req);
   if (access === null) return NextResponse.json({ ok: false, error: "Authentication required" }, { status: 401 });
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-  const rows = await query(`
+  const { searchParams } = new URL(req.url);
+  const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get("limit") || "20", 10) || 20));
+  const offset = Math.max(0, Number.parseInt(searchParams.get("offset") || "0", 10) || 0);
+  const [countRows, rows] = await Promise.all([
+    query("SELECT COUNT(*)::int AS total FROM document_requests WHERE office_id = 'registrar'"),
+    query(`
     SELECT
       dr.*,
       s.name AS s_name,
@@ -36,8 +41,11 @@ export async function GET(req) {
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
     WHERE dr.office_id = 'registrar'
-    ORDER BY dr.created_at DESC
-  `);
+    ORDER BY dr.created_at DESC, dr.id DESC
+    LIMIT $1 OFFSET $2
+  `, [limit, offset]),
+  ]);
+  const total = countRows[0]?.total || 0;
 
   const requestIds = rows.map((r) => r.id);
   const attachmentRows = requestIds.length
@@ -93,5 +101,5 @@ export async function GET(req) {
           : null,
       };
     });
-  return NextResponse.json({ ok: true, data: processedRows });
+  return NextResponse.json({ ok: true, data: processedRows, total });
 }

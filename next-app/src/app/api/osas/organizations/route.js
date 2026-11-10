@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
-import { listOrganizations, createOrganization } from "@/lib/organizationsRepo";
+import { listOrganizations, countOrganizations, getOrganizationArchiveSummary, createOrganization } from "@/lib/organizationsRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -17,12 +17,22 @@ export async function GET(req) {
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
+  if (searchParams.get("mode") === "archive-summary") {
+    return NextResponse.json({ ok: true, data: await getOrganizationArchiveSummary() });
+  }
   const status = searchParams.get("status") || "All";
   const category = searchParams.get("category") || "All";
   const search = searchParams.get("search") || "";
+  const paged = searchParams.has("limit");
+  const limit = paged ? Math.max(1, Math.min(100, Number.parseInt(searchParams.get("limit") || "10", 10) || 10)) : undefined;
+  const offset = paged ? Math.max(0, Number.parseInt(searchParams.get("offset") || "0", 10) || 0) : 0;
 
-  const rows = await listOrganizations({ status, category, search });
-  return NextResponse.json({ ok: true, data: rows });
+  const filters = { status, category, search };
+  const [rows, total] = await Promise.all([
+    listOrganizations({ ...filters, limit, offset, sortBy: searchParams.get("sortBy") || "name", sortOrder: searchParams.get("sortOrder") || "ASC" }),
+    paged ? countOrganizations(filters) : Promise.resolve(undefined),
+  ]);
+  return NextResponse.json({ ok: true, data: rows, ...(paged ? { total } : {}) });
 }
 
 export async function POST(req) {

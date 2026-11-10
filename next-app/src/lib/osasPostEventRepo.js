@@ -62,9 +62,14 @@ export async function createPostEventReport({
 /**
  * Lists post-event reports for OSAS staff review
  */
-export async function listPostEventReports({ status, organizationId, search } = {}) {
+export async function listPostEventReports({ status, organizationId, organizationIds, search, limit, offset = 0 } = {}) {
   const conditions = [];
   const params = [];
+
+  if (organizationIds) {
+    params.push(organizationIds);
+    conditions.push(`per.organization_id = ANY($${params.length}::text[])`);
+  }
 
   if (status && status !== "All") {
     params.push(status);
@@ -112,8 +117,9 @@ export async function listPostEventReports({ status, organizationId, search } = 
      JOIN student_organizations so ON so.id = per.organization_id
      LEFT JOIN staff st ON st.id = per.reviewed_by
      ${whereClause}
-     ORDER BY per.created_at DESC`,
-    params
+     ORDER BY per.created_at DESC, per.id DESC
+     ${limit ? `LIMIT $${params.length + 1} OFFSET $${params.length + 2}` : ""}`,
+    limit ? [...params, limit, offset] : params
   );
 
   return rows.map((r) => {

@@ -49,7 +49,7 @@ export async function getStudentIdentityMapByEmails(emailValues = []) {
 /**
  * List student organizations with officer count and proposal count
  */
-export async function listOrganizations({ status, category, search } = {}) {
+function organizationFilters({ status, category, search } = {}) {
   const conditions = [];
   const params = [];
 
@@ -96,7 +96,15 @@ export async function listOrganizations({ status, category, search } = {}) {
     )`);
   }
 
-  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  return { whereClause: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "", params };
+}
+
+export async function listOrganizations({ status, category, search, limit, offset = 0, sortBy = "name", sortOrder = "ASC" } = {}) {
+  const { whereClause, params } = organizationFilters({ status, category, search });
+  const paged = Number.isInteger(Number(limit)) && Number(limit) > 0;
+  const pageSql = paged ? `LIMIT $${params.length + 1} OFFSET $${params.length + 2}` : "";
+  const orderColumn = sortBy === "studentNo" ? "so.id" : "so.name";
+  const direction = sortOrder === "DESC" ? "DESC" : "ASC";
 
   const sql = `
     SELECT
@@ -114,10 +122,27 @@ export async function listOrganizations({ status, category, search } = {}) {
     LEFT JOIN event_proposals ep ON ep.organization_id = so.id
     ${whereClause}
     GROUP BY so.id
-    ORDER BY so.name ASC
+    ORDER BY ${orderColumn} ${direction}, so.id ASC
+    ${pageSql}
   `;
 
-  return query(sql, params);
+  return query(sql, paged ? [...params, Math.min(Number(limit), 100), Math.max(0, Number(offset) || 0)] : params);
+}
+
+export async function countOrganizations(filters = {}) {
+  const { whereClause, params } = organizationFilters(filters);
+  const row = await queryOne(`SELECT count(*)::int AS total FROM student_organizations so ${whereClause}`, params);
+  return row?.total || 0;
+}
+
+export async function getOrganizationArchiveSummary() {
+  const rows = await query(`SELECT coalesce(category, 'Academic') AS category, status, count(*)::int AS count
+    FROM student_organizations GROUP BY 1, 2 ORDER BY 1, 2`);
+  return {
+    categories: rows,
+    active: rows.filter((row) => row.status !== 'Archived').reduce((sum, row) => sum + row.count, 0),
+    archived: rows.filter((row) => row.status === 'Archived').reduce((sum, row) => sum + row.count, 0),
+  };
 }
 
 /**

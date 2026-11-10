@@ -45,8 +45,7 @@ export async function GET(req) {
   }
 
   // Fetch reports for affiliated organizations
-  const allReports = await listPostEventReports();
-  const studentReports = allReports.filter((r) => orgIds.includes(r.organization_id));
+  const studentReports = await listPostEventReports({ organizationIds: orgIds });
 
   // Fetch approved events awaiting reports
   const pendingEvents = await listApprovedEventsAwaitingReports({ studentEmail });

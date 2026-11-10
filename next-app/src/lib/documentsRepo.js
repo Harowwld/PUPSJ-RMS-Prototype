@@ -2,8 +2,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
-import { transaction } from "./postgres.js";
+import { query, queryOne, transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
+import { matchesSearchQuery } from "./searchUtils.js";
 import { getLocalDataDir, getOfficeUploadsDir } from "./officePaths.js";
 import {
   DOCUMENT_MAX_SIZE_BYTES,
@@ -363,6 +364,127 @@ export async function listDocuments({
     [...params, lim, off]
   );
   return (rows || []).map(decryptDocumentRow);
+}
+
+export async function listArchiveDocuments({ officeId, q = "", year, page = 1, pageSize = 10 }) {
+  await ensureReviewColumns();
+  const params = [officeId];
+  const conditions = ["d.office_id = $1", "d.approval_status <> 'Declined'"];
+  if (year) {
+    params.push(String(year));
+    conditions.push(`split_part(d.student_no, '-', 1) = $${params.length}`);
+  }
+  const where = `WHERE ${conditions.join(" AND ")}`;
+  const search = String(q || "").trim();
+  if (search) {
+    const rows = (await query(`SELECT d.* FROM documents d ${where} ORDER BY d.created_at DESC, d.id DESC`, params)).map(decryptDocumentRow);
+    const matched = rows.filter((doc) => matchesSearchQuery([doc.student_no, doc.student_name, doc.doc_type, doc.original_filename], search));
+    return { rows: matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length };
+  }
+  const total = Number((await queryOne(`SELECT count(*)::int AS total FROM documents d ${where}`, params))?.total || 0);
+  params.push(pageSize, (page - 1) * pageSize);
+  const rows = await query(`SELECT d.* FROM documents d ${where} ORDER BY d.created_at DESC, d.id DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
+  return { rows: rows.map(decryptDocumentRow), total };
+}
+
+export async function listOsasArchiveDocuments({ q = "", organizationId, page = 1, pageSize = 10, allForOrganization = false }) {
+  const params = [];
+  const conditions = [];
+  if (organizationId) {
+    params.push(organizationId);
+    conditions.push(`archive_docs.organization_id = $${params.length}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const cte = `WITH archive_docs AS (
+    SELECT d.id::text AS id, d.office_id, d.student_no, d.student_name, d.organization_id,
+      coalesce(so.name, d.student_name) AS organization_name, so.acronym AS org_acronym,
+      d.doc_type, d.original_filename, d.mime_type, d.size_bytes, d.approval_status,
+      d.created_at, null::text AS source_type, null::bigint AS source_id
+    FROM documents d LEFT JOIN student_organizations so ON so.id = d.organization_id
+    WHERE d.office_id = 'osas' AND d.approval_status <> 'Declined'
+    UNION ALL
+    SELECT ('event-proposal-' || ep.id)::text AS id, ep.office_id, ep.student_no,
+      coalesce(sip.display_name, s.name, ep.student_no) AS student_name, ep.organization_id,
+      coalesce(so.name, ep.organization_name) AS organization_name, so.acronym AS org_acronym,
+      'Event Proposal'::text AS doc_type, ep.original_filename, ep.mime_type, ep.size_bytes,
+      CASE WHEN ep.status = 'Approved' THEN 'Approved' ELSE 'Pending' END AS approval_status,
+      ep.created_at, 'event_proposal'::text AS source_type, ep.id AS source_id
+    FROM event_proposals ep
+    LEFT JOIN students s ON s.student_no = ep.student_no
+    LEFT JOIN student_identity_profiles sip ON sip.id = ep.identity_profile_id
+    LEFT JOIN student_organizations so ON so.id = ep.organization_id
+    WHERE ep.office_id = 'osas' AND ep.archived_at IS NULL AND ep.status <> 'Archived'
+  )`;
+  const from = `FROM archive_docs ${where}`;
+  const search = String(q || "").trim();
+  const normalize = (row) => ({
+    ...decryptDocumentRow(row),
+    file_url: row.source_type === "event_proposal" ? `/api/osas/event-proposals/${row.source_id}?file=1` : undefined,
+  });
+  if (search) {
+    const rows = (await query(`${cte} SELECT * ${from} ORDER BY archive_docs.created_at DESC, archive_docs.id DESC`, params)).map(normalize);
+    const matched = rows.filter((doc) => matchesSearchQuery([doc.student_no, doc.student_name, doc.organization_name, doc.org_acronym, doc.doc_type, doc.original_filename], search));
+    return { rows: allForOrganization ? matched : matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length };
+  }
+  const total = Number((await queryOne(`${cte} SELECT count(*)::int AS total ${from}`, params))?.total || 0);
+  const paging = allForOrganization ? "" : `LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+  const rows = await query(`${cte} SELECT * ${from} ORDER BY archive_docs.created_at DESC, archive_docs.id DESC ${paging}`,
+    allForOrganization ? params : [...params, pageSize, (page - 1) * pageSize]);
+  return { rows: rows.map(normalize), total };
+}
+
+export async function listReviewDocuments({ officeId, page = 1, pageSize = 20, statusFilters = [], docTypeFilters = [], dateFrom, dateTo, filterRules = [], search = "", sortBy = "created_at", sortOrder = "DESC" }) {
+  const conditions = [];
+  const params = [];
+  const add = (value) => { params.push(value); return `$${params.length}`; };
+  if (officeId) conditions.push(`d.office_id = ${add(String(officeId).trim().toLowerCase())}`);
+  if (statusFilters.length) conditions.push(`d.approval_status = ANY(${add(statusFilters)}::text[])`);
+  if (docTypeFilters.length) conditions.push(`d.doc_type = ANY(${add(docTypeFilters)}::text[])`);
+  if (dateFrom) conditions.push(`d.created_at >= (${add(dateFrom)}::date::timestamp AT TIME ZONE 'Asia/Manila')`);
+  if (dateTo) conditions.push(`d.created_at < ((${add(dateTo)}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`);
+  for (const rule of filterRules) {
+    const column = rule.fieldKey === "status" ? "d.approval_status" : rule.fieldKey === "doc_type" ? "d.doc_type" : null;
+    if (!column) continue;
+    conditions.push(`${column} ${rule.operator === "is_not" ? "<>" : "="} ${add(String(rule.value || ""))}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const from = `FROM documents d LEFT JOIN student_organizations so ON so.id = d.organization_id ${where}`;
+  const stats = await queryOne(`SELECT
+    count(*)::int AS total,
+    count(*) FILTER (WHERE approval_status = 'Pending')::int AS pending,
+    count(*) FILTER (WHERE approval_status = 'Approved')::int AS approved,
+    count(*) FILTER (WHERE approval_status = 'Declined')::int AS declined,
+    count(*) FILTER (WHERE approval_status = 'Pending' AND (created_at AT TIME ZONE 'Asia/Manila')::date = (now() AT TIME ZONE 'Asia/Manila')::date)::int AS pending_today,
+    count(*) FILTER (WHERE approval_status = 'Approved' AND (reviewed_at AT TIME ZONE 'Asia/Manila')::date = (now() AT TIME ZONE 'Asia/Manila')::date)::int AS approved_today,
+    count(*) FILTER (WHERE approval_status = 'Declined' AND (reviewed_at AT TIME ZONE 'Asia/Manila')::date = (now() AT TIME ZONE 'Asia/Manila')::date)::int AS declined_today
+    FROM documents ${officeId ? "WHERE office_id = $1" : ""}`, officeId ? [officeId] : []);
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
+  const currentPage = Math.max(1, Number(page) || 1);
+  const sortColumns = { created_at: "d.created_at", student_no: "d.student_no", doc_type: "d.doc_type", approval_status: "d.approval_status" };
+  const order = sortOrder === "ASC" ? "ASC" : "DESC";
+  const queryRows = `SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name ${from}`;
+  let rows;
+  let total;
+  if (search.trim() || sortBy === "student_name") {
+    rows = (await query(queryRows, params)).map(decryptDocumentRow);
+    if (search.trim()) rows = rows.filter((row) => matchesSearchQuery([row.student_no, row.student_name, row.doc_type, row.original_filename], search));
+    const field = sortColumns[sortBy] ? sortBy : "student_name";
+    rows.sort((a, b) => {
+      const result = String(a[field] || "").toLowerCase().localeCompare(String(b[field] || "").toLowerCase());
+      return order === "ASC" ? result : -result;
+    });
+    total = rows.length;
+    rows = rows.slice((currentPage - 1) * size, currentPage * size);
+  } else {
+    total = Number((await queryOne(`SELECT count(*)::int AS count ${from}`, params))?.count || 0);
+    const offset = add((currentPage - 1) * size);
+    const limit = add(size);
+    rows = (await query(`${queryRows} ORDER BY ${sortColumns[sortBy] || sortColumns.created_at} ${order}, d.id ${order} OFFSET ${offset} LIMIT ${limit}`, params)).map(decryptDocumentRow);
+  }
+  return { rows, total, stats: {
+    total: Number(stats?.total || 0), pending: Number(stats?.pending || 0), totalApproved: Number(stats?.approved || 0), totalDeclined: Number(stats?.declined || 0),
+    pendingToday: Number(stats?.pending_today || 0), approvedToday: Number(stats?.approved_today || 0), declinedToday: Number(stats?.declined_today || 0),
+  } };
 }
 
 export async function countPendingDocuments({ officeId } = {}) {
