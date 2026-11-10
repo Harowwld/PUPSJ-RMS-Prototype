@@ -382,6 +382,7 @@ export default function AppleProfileCover({
                               {isCurrentMood && (
                                 <motion.span
                                   layoutId="active-cover-mood-ring"
+                                  initial={false}
                                   transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                                   className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none"
                                 />

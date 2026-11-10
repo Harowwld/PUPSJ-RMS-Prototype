@@ -160,12 +160,21 @@ export default function ResilientPDFViewer({
             {loadState === "missing" && showReupload && docId ? (
               <>
                 <input type="file" ref={fileInputRef} accept="application/pdf" className="hidden" onChange={handleFileSelect} />
-                <Button onClick={() => fileInputRef.current?.click()} disabled={isReuploading}>
-                  {isReuploading ? <><Loading01Icon size={16} className="animate-spin" /> Re-attaching Scanned PDF…</> : "Re-attach Scanned PDF"}
+                <Button size="sm" className="h-9 px-4 text-xs font-semibold rounded-xl" onClick={() => fileInputRef.current?.click()} disabled={isReuploading}>
+                  {isReuploading ? (
+                    <>
+                      <Loading01Icon size={14} className="animate-spin mr-1.5" />
+                      <span>Re-attaching Scanned PDF…</span>
+                    </>
+                  ) : (
+                    "Re-attach Scanned PDF"
+                  )}
                 </Button>
               </>
             ) : loadState === "error" ? (
-              <Button variant="outline" onClick={() => setAttempt((value) => value + 1)}>Retry Preview</Button>
+              <Button variant="outline" size="sm" className="h-9 px-4 text-xs font-semibold rounded-xl" onClick={() => setAttempt((value) => value + 1)}>
+                Retry Preview
+              </Button>
             ) : null}
           </EmptyState>
         </div>

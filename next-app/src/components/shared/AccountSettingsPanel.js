@@ -29,6 +29,7 @@ import {
 import { validateSecurityAnswer } from "@/lib/authSchemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Tabs,
   TabsList,
@@ -3381,68 +3382,28 @@ export default function AccountSettingsPanel() {
                       </div>
 
                       <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
-                        {/* Wide Rounded-Rectangle Slider Track with Internal Tick Marks & Vertical Bar Indicator */}
-                        <div
-                          data-slot="slider-track"
-                          className="relative h-8 w-full sm:w-60 rounded-lg bg-gray-100 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.1] overflow-hidden flex items-center select-none shadow-2xs"
-                        >
-                          {/* Active Fill */}
-                          <div
-                            className="absolute inset-y-0 left-0 bg-gray-200/90 dark:bg-zinc-700/85 pointer-events-none transition-[width] duration-75 ease-out"
-                            style={{ width: `${Math.round(soundVolume * 100)}%` }}
-                          />
-
-                          {/* Internal Tick Marks (9 evenly spaced ticks across 10%-90%) */}
-                          <div className="relative z-10 w-full flex items-center justify-between px-4 pointer-events-none">
-                            {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((tickPct) => (
-                              <span
-                                key={tickPct}
-                                className={cn(
-                                  "w-[1.5px] h-1.5 rounded-full transition-colors",
-                                  Math.round(soundVolume * 100) >= tickPct
-                                    ? "bg-gray-500/70 dark:bg-zinc-400/70"
-                                    : "bg-gray-400/45 dark:bg-zinc-600/70"
-                                )}
-                              />
-                            ))}
-                          </div>
-
-                          {/* Vertical Bar Indicator at Current Value Edge */}
-                          <div
-                            className="absolute top-1.5 bottom-1.5 w-[2.5px] rounded-full bg-gray-900 dark:bg-zinc-100 shadow-2xs pointer-events-none z-20 -translate-x-1/2 transition-[left] duration-75 ease-out"
-                            style={{
-                              left: `clamp(5px, ${Math.round(soundVolume * 100)}%, calc(100% - 5px))`,
-                            }}
-                          />
-
-                          {/* Native Range Input Overlay for Full Drag, Keyboard & SoundEffectListener Support */}
-                          <input
-                            type="range"
-                            min={0}
-                            max={1}
-                            step={0.05}
-                            value={soundVolume}
-                            aria-label="Interface Volume"
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-valuenow={Math.round(soundVolume * 100)}
-                            onChange={(e) => handleSoundVolumeInput(parseFloat(e.target.value))}
-                            onMouseUp={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
-                            onTouchEnd={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
-                            onKeyUp={(e) => handleSoundVolumeCommit(parseFloat(e.currentTarget.value))}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30 m-0"
-                          />
-                        </div>
-
-                        {/* Percentage Readout */}
-                        <span className="text-xs font-semibold tabular-nums text-gray-700 dark:text-zinc-300 w-10 text-right select-none shrink-0">
-                          {Math.round(soundVolume * 100)}%
-                        </span>
+                        {/* Redesigned Stepped Capsule Slider (Light Mode First, Concentric Border Radius) */}
+                        <Slider
+                          label="Volume"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={soundVolume}
+                          disabled={!soundEnabled}
+                          onChange={(val) => handleSoundVolumeInput(val)}
+                          onChangeCommit={(val) => handleSoundVolumeCommit(val)}
+                          formatValue={(val) => Math.round(val * 100)}
+                          ariaLabel="Interface Volume"
+                          className="w-full sm:w-56"
+                        />
 
                         {/* Back to Default (50%) Icon Button */}
                         <button
                           type="button"
-                          disabled={Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)}
+                          disabled={
+                            !soundEnabled ||
+                            Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)
+                          }
                           onClick={() => {
                             handleSoundVolumeInput(DEFAULT_SOUND_VOLUME);
                             handleSoundVolumeCommit(DEFAULT_SOUND_VOLUME);
@@ -3454,10 +3415,10 @@ export default function AccountSettingsPanel() {
                           title={`Reset volume to default (${Math.round(DEFAULT_SOUND_VOLUME * 100)}%)`}
                           aria-label={`Reset volume to default (${Math.round(DEFAULT_SOUND_VOLUME * 100)}%)`}
                           className={cn(
-                            "size-7 rounded-lg flex items-center justify-center transition-all shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/30",
-                            Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)
-                              ? "text-gray-300 dark:text-zinc-600 cursor-default opacity-50"
-                              : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/[0.05] dark:hover:bg-white/[0.06] cursor-pointer active:scale-95"
+                            "size-8 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-100/90 dark:bg-zinc-800 flex items-center justify-center transition-all shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/30 shadow-2xs",
+                            !soundEnabled || Math.round(soundVolume * 100) === Math.round(DEFAULT_SOUND_VOLUME * 100)
+                              ? "text-gray-300 dark:text-zinc-600 cursor-default opacity-50 bg-gray-50/50 dark:bg-zinc-900 border-dashed"
+                              : "text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100 hover:bg-gray-200/80 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
                           )}
                         >
                           <ReloadIcon size={14} aria-hidden="true" />
@@ -3702,7 +3663,7 @@ export default function AccountSettingsPanel() {
                     {ZOOM_PERCENTAGES.map((pct, idx) => {
                       const isSelected = activeZoomNode === idx;
                       const zoomLabel = ["Compact", "Snug", "Cozy", "Default", "Roomy", "Large", "Largest"][idx] ?? `${pct}%`;
-                                      return (
+                      return (
                         <button
                           key={pct}
                           type="button"
@@ -4166,6 +4127,7 @@ export default function AccountSettingsPanel() {
                                   {isCurrentColor && (
                                     <motion.span
                                       layoutId="active-backdrop-swatch-ring"
+                                      initial={false}
                                       transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                                       className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none"
                                     />
@@ -4263,6 +4225,7 @@ export default function AccountSettingsPanel() {
                                   {isCurrentPalette && (
                                     <motion.span
                                       layoutId="active-beam-palette-ring"
+                                      initial={false}
                                       transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                                       className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none"
                                     />

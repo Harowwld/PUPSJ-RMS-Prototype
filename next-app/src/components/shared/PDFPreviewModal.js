@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Slider } from "@/components/ui/slider"
 import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer"
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview"
 import { cn } from "@/lib/utils"
@@ -37,6 +38,23 @@ function PDFPreviewContent({
   const [fileState, setFileState] = useState("loading")
   const [preparedFile, setPreparedFile] = useState(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(() => {
+    if (typeof window === "undefined") return 100
+    try {
+      const stored = localStorage.getItem("pup_pdf_preview_zoom")
+      if (stored !== null) {
+        const val = Number(stored)
+        if (!isNaN(val) && val >= 50 && val <= 200) return val
+      }
+    } catch {}
+    return 100
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("pup_pdf_preview_zoom", String(zoomLevel))
+    } catch {}
+  }, [zoomLevel])
 
   const docId = preview?.docId || preview?.id
   const source = pdfUrl || preview?.url || preview?.fileUrl || (docId ? "/api/documents/" + docId : null)
@@ -99,15 +117,26 @@ function PDFPreviewContent({
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-100 dark:bg-muted">
           {isFullscreen && (
             <div className="absolute top-4 right-4 z-20">
-              <Button ref={exitFullscreenRef} variant="outline" size="icon" onClick={() => setIsFullscreen(false)} aria-label="Exit fullscreen preview" className="h-11 w-11 rounded-xl sm:h-10 sm:w-10">
-                <Cancel01Icon size={18} aria-hidden="true" />
+              <Button
+                ref={exitFullscreenRef}
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFullscreen(false)}
+                aria-label="Exit fullscreen preview"
+                className="h-9 w-9 p-0 rounded-xl"
+              >
+                <Cancel01Icon size={16} aria-hidden="true" />
               </Button>
             </div>
           )}
           {error ? (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <EmptyState icon={AlertCircleIcon} title="PDF Preview Unavailable" description={error}>
-                {onRetry && <Button variant="outline" onClick={onRetry}>Retry Preview</Button>}
+                {onRetry && (
+                  <Button variant="outline" size="sm" onClick={onRetry} className="h-9 px-4 text-xs font-semibold rounded-xl">
+                    Retry Preview
+                  </Button>
+                )}
               </EmptyState>
             </div>
           ) : isPreparing ? (
@@ -117,18 +146,27 @@ function PDFPreviewContent({
               <Skeleton className="h-[55vh] w-full" />
             </div>
           ) : source ? (
-            <ResilientPDFViewer
-              key={source}
-              src={source}
-              docId={docId}
-              preview={preview}
-              frameRef={frameRef}
-              title="PDF Preview"
-              onStatusChange={setFileState}
-              onReadyChange={setFrameReady}
-              onPreviewReady={setPreparedFile}
-              onFileReplaced={onFileReplaced}
-            />
+            <div
+              className="relative h-full w-full overflow-auto flex items-center justify-center"
+              style={{
+                transform: zoomLevel === 100 ? "none" : `scale(${zoomLevel / 100})`,
+                transformOrigin: "center center",
+                transition: "transform 120ms ease-out",
+              }}
+            >
+              <ResilientPDFViewer
+                key={source}
+                src={source}
+                docId={docId}
+                preview={preview}
+                frameRef={frameRef}
+                title="PDF Preview"
+                onStatusChange={setFileState}
+                onReadyChange={setFrameReady}
+                onPreviewReady={setPreparedFile}
+                onFileReplaced={onFileReplaced}
+              />
+            </div>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <EmptyState icon={FileRemoveIcon} title="No Document Attached" description="This record has no attached document." />
@@ -137,40 +175,78 @@ function PDFPreviewContent({
         </div>
 
         <div data-pdf-preview-footer className={cn("flex shrink-0 flex-wrap items-center gap-2.5 px-6 py-3.5 border-t border-border/80 dark:border-white/10 bg-gray-50/40 dark:bg-zinc-900/30", isFullscreen && "hidden")}>
-          <Button
-            ref={fullscreenButtonRef}
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsFullscreen(true)}
-            disabled={!ready}
-            aria-label="Enter fullscreen preview"
-            title="Fullscreen"
-            className="h-11 w-11 rounded-xl border-0 p-0 text-gray-500 shadow-none sm:h-10 sm:w-10 dark:text-zinc-400"
-          >
-            <FullscreenIcon size={16} aria-hidden="true" />
-          </Button>
-          <div className="ml-auto flex min-w-0 flex-1 flex-wrap justify-end gap-2.5 max-sm:[&_[data-slot=button]]:min-h-11">
-            <Button variant="outline" onClick={onClose} className="px-4">Close</Button>
-            {originalAvailable && <Button asChild variant="outline"><a href={source} download={originalName}>{PDF_ACTION_LABELS.original}</a></Button>}
+          <div className="flex items-center gap-2.5">
+            <Button
+              ref={fullscreenButtonRef}
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(true)}
+              disabled={!ready}
+              aria-label="Enter fullscreen preview"
+              title="Fullscreen"
+              className="h-9 w-9 p-0 rounded-xl"
+            >
+              <FullscreenIcon size={16} aria-hidden="true" />
+            </Button>
+
+            {ready && (
+              <Slider
+                label="Zoom"
+                min={50}
+                max={200}
+                step={10}
+                value={zoomLevel}
+                onChange={setZoomLevel}
+                formatValue={(v) => `${v}%`}
+                ticks={[50, 75, 100, 125, 150, 175, 200]}
+                ariaLabel="PDF Document Zoom"
+                className="w-36 hidden sm:flex"
+              />
+            )}
+          </div>
+          <div className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2.5">
+            <Button variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-xs font-semibold rounded-xl">
+              Close
+            </Button>
+            {originalAvailable && (
+              <Button asChild variant="outline" size="sm" className="h-9 px-4 text-xs font-semibold rounded-xl">
+                <a href={source} download={originalName}>{PDF_ACTION_LABELS.original}</a>
+              </Button>
+            )}
             {handleUpdate && (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   onClose?.()
                   handleUpdate()
                 }}
-                className="px-4"
+                className="h-9 px-4 text-xs font-semibold rounded-xl"
               >
                 {PDF_ACTION_LABELS.update}
               </Button>
             )}
-            <Button variant="outline" disabled={!ready} onClick={print} className="px-4">{PDF_ACTION_LABELS.print}</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!ready}
+              onClick={print}
+              className="h-9 px-4 text-xs font-semibold rounded-xl"
+            >
+              {PDF_ACTION_LABELS.print}
+            </Button>
             {onDownload ? (
-              <Button onClick={onDownload} disabled={!ready}>{PDF_ACTION_LABELS.download}</Button>
+              <Button size="sm" onClick={onDownload} disabled={!ready} className="h-9 px-4 text-xs font-semibold rounded-xl">
+                {PDF_ACTION_LABELS.download}
+              </Button>
             ) : ready ? (
-              <Button asChild><a href={activeFile.url} download={pdfName}>{PDF_ACTION_LABELS.download}</a></Button>
+              <Button asChild size="sm" className="h-9 px-4 text-xs font-semibold rounded-xl">
+                <a href={activeFile.url} download={pdfName}>{PDF_ACTION_LABELS.download}</a>
+              </Button>
             ) : (
-              <Button disabled>{PDF_ACTION_LABELS.download}</Button>
+              <Button size="sm" disabled className="h-9 px-4 text-xs font-semibold rounded-xl">
+                {PDF_ACTION_LABELS.download}
+              </Button>
             )}
           </div>
         </div>
