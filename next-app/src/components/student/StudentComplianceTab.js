@@ -1,5 +1,4 @@
 "use client";
-import { Table } from "@/components/ui/table";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -27,22 +26,24 @@ import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
+import NarrativeText from "@/components/shared/NarrativeText";
 import {
   generateStudentComplianceSlipPdf,
 } from "@/lib/pdfGenerator";
-import useTableScroll from "@/hooks/useTableScroll";
-import TableScrollControls from "@/components/shared/TableScrollControls";
+import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
   FilterPopover,
   SortPopover,
   GroupPopover,
-  ColumnsPopover,
   ActiveFilterChips,
 } from "@/components/systemadmin/OfficeTableControls";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
-import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon, ArrowRight02Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, Clock01Icon, FoldersIcon, Loading01Icon, Location01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
+import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowRight02Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, Clock01Icon, FoldersIcon, Loading01Icon, Location01Icon, Shield01Icon, Tick01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 
 function getRequirementCategoryIcon(category) {
@@ -76,21 +77,34 @@ export default function StudentComplianceTab({ authUser, initialData }) {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState(null);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const previewSession = usePdfPreviewSession();
 
-  // Search & Standard 5-Control Toolbar state
+  const { density } = useTablePreferences();
+  const densityClasses = getListDensityClasses(density);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+
+  const toggleGroup = (key) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Search & Standard Toolbar state
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("priority");
+  const [sortBy, setSortBy] = useState("docType");
   const [sortOrder, setSortOrder] = useState("asc");
   const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState(["docType", "category", "status", "actions"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState("list");
 
-  const loadComplianceData = async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
+  const loadComplianceData = async () => {
+    setRefreshing(true);
 
     try {
       const res = await fetch("/api/student/compliance", {
@@ -110,18 +124,45 @@ export default function StudentComplianceTab({ authUser, initialData }) {
         description: "Failed to connect to the records server.",
       });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    if (!initialData) {
-      loadComplianceData();
-    }
+    if (initialData) return;
+    let active = true;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/student/compliance", {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        const json = await res.json();
+        if (!active) return;
+        if (json.ok && json.data) {
+          setData(json.data);
+        } else {
+          toast.error("Could not load requirements", {
+            description: json.error || "Failed to retrieve student compliance data.",
+          });
+        }
+      } catch (err) {
+        if (!active) return;
+        console.error("Failed to load compliance data:", err);
+        toast.error("Network Error", {
+          description: "Failed to connect to the records server.",
+        });
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [initialData]);
 
-  const requirements = data?.requirements || [];
+  const requirements = useMemo(() => data?.requirements || [], [data?.requirements]);
   const summary = data?.summary || {
     total: 0,
     submitted: 0,
@@ -155,25 +196,16 @@ export default function StudentComplianceTab({ authUser, initialData }) {
 
   // Sort options
   const sortOptions = useMemo(() => [
-    { value: "priority", label: "Default Priority" },
     { value: "docType", label: "Requirement Name" },
     { value: "status", label: "Compliance Status" },
     { value: "category", label: "Category" },
   ], []);
 
-  // Group options
+  // Group options (No grouping is the last choice)
   const groupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "category", label: "Category" },
     { value: "status", label: "Status" },
-  ], []);
-
-  // Table columns
-  const tableColumns = useMemo(() => [
-    { key: "docType", label: "Requirement / Document" },
-    { key: "category", label: "Category" },
-    { key: "status", label: "Status" },
-    { key: "actions", label: "Actions" },
+    { value: "none", label: "No grouping" },
   ], []);
 
   // Filtered requirements
@@ -222,18 +254,13 @@ export default function StudentComplianceTab({ authUser, initialData }) {
   const sortedRequirements = useMemo(() => {
     return [...filteredRequirements].sort((a, b) => {
       let comp = 0;
-      if (sortBy === "docType") {
-        comp = a.docType.localeCompare(b.docType);
-      } else if (sortBy === "category") {
+      if (sortBy === "category") {
         comp = a.category.localeCompare(b.category);
       } else if (sortBy === "status") {
         const order = { "Not Submitted": 0, Submitted: 1 };
         comp = (order[a.status] ?? 2) - (order[b.status] ?? 2);
       } else {
-        // "priority" (Not Submitted first, then Submitted, then alphabetical)
-        const order = { "Not Submitted": 0, Submitted: 1 };
-        const diff = (order[a.status] ?? 2) - (order[b.status] ?? 2);
-        comp = diff !== 0 ? diff : a.docType.localeCompare(b.docType);
+        comp = a.docType.localeCompare(b.docType);
       }
       return sortOrder === "desc" ? -comp : comp;
     });
@@ -283,19 +310,6 @@ export default function StudentComplianceTab({ authUser, initialData }) {
     }
     return chips;
   }, [filterRules, filterFields, startDate, endDate]);
-
-  const {
-    tableContainerRef,
-    canScrollLeft,
-    canScrollRight,
-    isScrolledX,
-    scrollTable,
-    resetScroll,
-  } = useTableScroll([sortedRequirements?.length]);
-
-  useEffect(() => {
-    resetScroll();
-  }, [searchQuery, filterRules, viewMode, resetScroll]);
 
   if (loading && !data) {
     return <StudentComplianceSkeleton />;
@@ -347,6 +361,34 @@ export default function StudentComplianceTab({ authUser, initialData }) {
     }
   };
 
+  const handlePreviewPdf = async () => {
+    setIsGeneratingPdf(true);
+    setPrintModalOpen(true);
+    const request = previewSession.begin();
+    try {
+      const blob = await generateStudentComplianceSlipPdf(
+        student,
+        sortedRequirements,
+        summary
+      );
+      const url = previewSession.createUrl(blob, request);
+      if (url) {
+        setPdfPreviewUrl(url);
+      }
+    } catch (err) {
+      if (!previewSession.isCurrent(request)) return;
+      console.error("PDF Preview generation failed:", err);
+      toast.error("Preview Failed", {
+        description: "Failed to generate compliance slip preview.",
+      });
+      setPrintModalOpen(false);
+    } finally {
+      if (previewSession.isCurrent(request)) {
+        setIsGeneratingPdf(false);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col w-full flex-[1_0_auto]">
       {/* 1. Main Unified Container Card */}
@@ -357,23 +399,22 @@ export default function StudentComplianceTab({ authUser, initialData }) {
         {/* A. Header */}
         <PageHeader
           icon="CheckListIcon"
-          title="Document Checklist & Compliance"
+          title={
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span>Document Checklist & Compliance</span>
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                {requirements.length} {requirements.length === 1 ? "requirement" : "requirements"}
+                {student.studentNo ? ` · ${student.studentNo}` : ""}
+              </span>
+            </div>
+          }
           description="Track your submitted credentials and monitor required documents for university records compliance."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-2">
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "hidden md:inline-flex")}>
-                Viewer Only
-              </span>
-              {student.studentNo && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "hidden sm:inline-flex")}>
-                  {student.studentNo}
-                </span>
-              )}
-
               <RefreshButton
                 onRefresh={() => loadComplianceData(true)}
                 isLoading={refreshing}
@@ -383,6 +424,7 @@ export default function StudentComplianceTab({ authUser, initialData }) {
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleDownloadPdf}
                 disabled={downloadingPdf || loading}
                 className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
@@ -400,10 +442,18 @@ export default function StudentComplianceTab({ authUser, initialData }) {
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setPrintModalOpen(true)}
+                onClick={handlePreviewPdf}
+                disabled={isGeneratingPdf || loading}
                 className="h-9 px-4 border-0 cursor-pointer"
               >
-                {PDF_ACTION_LABELS.preview}
+                {isGeneratingPdf ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loading01Icon size="1em" className="animate-spin text-sm" />
+                    Generating...
+                  </span>
+                ) : (
+                  PDF_ACTION_LABELS.preview
+                )}
               </Button>
             </div>
           }
@@ -414,44 +464,12 @@ export default function StudentComplianceTab({ authUser, initialData }) {
           <StudentComplianceKpiCards summary={summary} />
         </div>
 
-        {/* Connected Row: View Mode Switcher (Grid / Table) */}
-        <div
-          role="group"
-          aria-label="Student compliance view options"
-          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4 select-none"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Admission Credentials</span>
-            <span className="text-[11px] text-gray-500 dark:text-zinc-400">({filteredRequirements.length} requirements)</span>
-          </div>
-          <div className="ml-auto shrink-0">
-            <SegmentedControl
-              value={viewMode === "cards" ? "grid" : viewMode}
-              onValueChange={setViewMode}
-              variant="capsule"
-              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
-              items={[
-                {
-                  value: "grid",
-                  label: "Grid",
-                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
-                },
-                {
-                  value: "table",
-                  label: "Table",
-                  icon: <ViewModeIcon mode="table" className="text-sm" />,
-                },
-              ]}
-            />
-          </div>
-        </div>
-
         {/* C. Canonical 2-Zone DataViewToolbar */}
         <DataViewToolbar
           label="Compliance search, views, and filters"
           className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
         >
-          {/* Left Zone: DashboardSearch + TableScrollControls */}
+          {/* Left Zone: DashboardSearch */}
           <div className="flex min-w-0 items-center gap-2">
             <DashboardSearch
               value={searchQuery}
@@ -461,18 +479,9 @@ export default function StudentComplianceTab({ authUser, initialData }) {
               label="Search requirements"
               placeholder="Search requirements..."
             />
-            {viewMode === "table" && (
-              <TableScrollControls
-                scrollContainerRef={tableContainerRef}
-                canScrollLeft={canScrollLeft}
-                canScrollRight={canScrollRight}
-                onScrollLeft={() => scrollTable("left")}
-                onScrollRight={() => scrollTable("right")}
-              />
-            )}
           </div>
 
-          {/* Right Zone: Filter -> Sort -> Group -> Columns -> DateRange */}
+          {/* Right Zone: Filter -> Sort -> Group -> DateRange -> View Mode Switcher */}
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover
               fields={filterFields}
@@ -495,14 +504,6 @@ export default function StudentComplianceTab({ authUser, initialData }) {
               groupBy={groupBy}
               onGroupByChange={setGroupBy}
             />
-            {viewMode === "table" && (
-              <ColumnsPopover
-                columns={tableColumns}
-                visibleColumns={visibleColumns}
-                onVisibleColumnsChange={setVisibleColumns}
-                minVisible={2}
-              />
-            )}
             <DateRangeFilterButton
               startDate={startDate}
               endDate={endDate}
@@ -515,6 +516,26 @@ export default function StudentComplianceTab({ authUser, initialData }) {
                 setEndDate("");
               }}
               disableFutureDates={true}
+            />
+            <SegmentedControl
+              value={viewMode === "cards" ? "grid" : viewMode}
+              onValueChange={setViewMode}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                {
+                  value: "grid",
+                  title: "Grid View",
+                  ariaLabel: "Grid View",
+                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
+                },
+                {
+                  value: "list",
+                  title: "List View",
+                  ariaLabel: "List View",
+                  icon: <ViewModeIcon mode="list" className="text-sm" />,
+                },
+              ]}
             />
           </div>
         </DataViewToolbar>
@@ -533,11 +554,11 @@ export default function StudentComplianceTab({ authUser, initialData }) {
           />
         )}
 
-        {/* E. Requirements Content (Cards or Table) */}
+        {/* E. Requirements Content (Cards or List) */}
         <div
           className={cn(
             "flex flex-[1_0_auto] flex-col border-t border-border dark:border-border",
-            sortedRequirements.length > 0 && viewMode === "table" ? "min-w-0" : "p-6"
+            sortedRequirements.length > 0 && viewMode === "list" ? "min-w-0" : "p-6"
           )}
         >
           {sortedRequirements.length === 0 ? (
@@ -576,117 +597,155 @@ export default function StudentComplianceTab({ authUser, initialData }) {
                 )}
               </Empty>
             </div>
-          ) : viewMode === "table" ? (
-            /* Table View */
-            <div
-              ref={tableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-            >
-              <Table
-                columns={visibleColumns.map((colKey) => {
-                  if (colKey === "docType") return { kind: "text", maxWidth: 340 };
-                  if (colKey === "category") return "category";
-                  if (colKey === "status") return "status";
-                  return "actions";
-                })}
-                className="min-w-[750px]"
-              >
-                <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                    {visibleColumns.includes("docType") && (
-                      <th className="p-4 pl-6 w-[44%]">Requirement</th>
-                    )}
-                    {visibleColumns.includes("category") && (
-                      <th className="p-4 w-[22%] whitespace-nowrap">Category</th>
-                    )}
-                    {visibleColumns.includes("status") && (
-                      <th className="p-4 w-[22%] whitespace-nowrap">Status</th>
-                    )}
-                    {visibleColumns.includes("actions") && (
-                      <th className="p-4 pr-6 w-[12%] text-right whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        Actions
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border dark:divide-border">
-                  {groupedRequirements.map((group) => (
-                    <tbody key={group.key} className="divide-y divide-border dark:divide-border contents">
-                      {group.label && (
-                        <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
-                          <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                            <span className="font-bold">{group.label}</span>
-                            <span className="ml-2 font-normal text-muted-foreground">({group.items.length})</span>
-                          </td>
-                        </tr>
-                      )}
-                      {group.items.map((item) => {
-                        const isSubmitted = item.status === "Submitted";
+          ) : viewMode === "list" ? (
+            /* SuperAdmin-Inspired Sleek Horizontal List View */
+            <div className="flex flex-col flex-1 divide-y divide-border dark:divide-border bg-white dark:bg-card font-jakarta">
+              {groupedRequirements.map((group) => {
+                const isCollapsed = Boolean(collapsedGroups[group.key]);
+                const isGrouped = Boolean(group.label && groupBy !== "none");
 
-                        return (
-                          <tr
-                            key={item.id}
-                            onClick={() => setSelectedRequirement(item)}
-                            className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none group"
-                          >
-                            {visibleColumns.includes("docType") && (
-                              <td className="p-4 pl-6 overflow-hidden border-r border-border/70 dark:border-border/70">
-                                <div className="font-semibold text-gray-900 dark:text-zinc-100 text-xs truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors" title={item.docType}>
-                                  {item.docType}
-                                </div>
-                                <div className="text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5" title={item.description}>
-                                  {item.description}
-                                </div>
-                              </td>
+                return (
+                  <div key={group.key} className="flex flex-col">
+                    {/* Collapsible Group Header (if grouped) */}
+                    {isGrouped && (
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        className="w-full flex items-center justify-between border-b border-border text-left hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs"
+                        aria-expanded={!isCollapsed}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <ArrowDown01Icon
+                            size="1em"
+                            className={cn(
+                              "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
+                              isCollapsed && "-rotate-90"
                             )}
-                            {visibleColumns.includes("category") && (
-                              <td className="p-4 text-xs font-medium text-gray-900 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                {item.category}
-                              </td>
-                            )}
-                            {visibleColumns.includes("status") && (
-                              <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                          />
+                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                            {group.label}
+                          </span>
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
+                            {group.items.length}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
+                          {isCollapsed ? "Expand" : "Collapse"}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Group Items */}
+                    {!isCollapsed && (
+                      <div className="divide-y divide-gray-100 dark:divide-zinc-800/60">
+                        {group.items.map((item) => {
+                          const isSubmitted = item.status === "Submitted";
+
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedRequirement(item)}
+                              className={cn(
+                                "group flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
+                                densityClasses.paddingX,
+                                densityClasses.paddingY,
+                                densityClasses.gap,
+                                densityClasses.minHeight
+                              )}
+                            >
+                              {/* Left: Category Icon, Title, and Formatted Description Context */}
+                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
+                                <div
+                                  className={cn(
+                                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs",
+                                    isSubmitted
+                                      ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                                      : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                                  )}
+                                >
+                                  <AppIcon className="text-base" icon={getRequirementCategoryIcon(item.category)} />
+                                </div>
+
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate">
+                                    {item.docType}
+                                  </span>
+
+                                  {item.description && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="text-[11px] sm:text-xs text-gray-500 dark:text-zinc-400 truncate block mt-0.5 max-w-xl font-normal select-text">
+                                          <NarrativeText text={item.description} mode="compact" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent
+                                        side="top"
+                                        className="max-w-[440px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
+                                      >
+                                        <NarrativeText text={item.description} mode="full" />
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right: Category Pill, Status Pill, Timestamp, and Action Button */}
+                              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "hidden sm:inline-flex")}>
+                                  {item.category}
+                                </span>
+
                                 {isSubmitted ? (
-                                  <div className="flex items-center gap-2">
-                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                                      Completed
-                                    </span>
-                                    {item.document?.createdAt && (
-                                      <span className="text-[10.5px] font-sans tabular-nums text-gray-400 dark:text-zinc-500">
-                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                                    Completed
+                                  </span>
                                 ) : (
                                   <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                                     Pending Submission
                                   </span>
                                 )}
-                              </td>
-                            )}
-                            {visibleColumns.includes("actions") && (
-                              <td className="p-4 pr-6 text-right whitespace-nowrap">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedRequirement(item);
-                                  }}
-                                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5 opacity-70 group-hover:opacity-100 hover:opacity-100 focus-within:opacity-100"
-                                >
-                                  View Details
-                                </Button>
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  ))}
-                </tbody>
-              </Table>
+
+                                {isSubmitted && item.document?.createdAt && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-normal tabular-nums hidden lg:inline shrink-0">
+                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Archived on {formatPHDateTime(item.document.createdAt)}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+
+                                <div className="flex items-center justify-end ml-1">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedRequirement(item);
+                                        }}
+                                        aria-label="View Details"
+                                        title="View Details"
+                                        className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+                                      >
+                                        <ViewIcon size="1em" className="text-[14px]" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>View Details</TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             /* Cards View */
@@ -748,9 +807,12 @@ export default function StudentComplianceTab({ authUser, initialData }) {
                               </h4>
                             </div>
 
-                            <p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-3 mb-5 flex-grow">
-                              {item.description || "Required document submission for student institutional archive."}
-                            </p>
+                            <div className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-3 mb-5 flex-grow leading-relaxed">
+                              <NarrativeText
+                                text={item.description || "Required document submission for student institutional archive."}
+                                mode="full"
+                              />
+                            </div>
                           </div>
 
                           <div className="pt-4 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between text-xs">
@@ -779,11 +841,31 @@ export default function StudentComplianceTab({ authUser, initialData }) {
       {printModalOpen && (
         <PDFPreviewModal
           isOpen={printModalOpen}
-          onClose={() => setPrintModalOpen(false)}
+          onClose={() => {
+            previewSession.cancel();
+            setIsGeneratingPdf(false);
+            setPdfPreviewUrl(null);
+            setPrintModalOpen(false);
+          }}
           title="Admission Credentials Checklist"
           subtitle={`${student.name} (${student.studentNo}) · ${student.courseCode} ${student.section}`}
-          pdfGenerator={async () => generateStudentComplianceSlipPdf(student, sortedRequirements, summary)}
+          pdfUrl={pdfPreviewUrl}
+          isPreparing={isGeneratingPdf}
+          onDownload={handleDownloadPdf}
           filename={generateExportFilename("STUDENT-COMPLIANCE", student.studentNo || "SUMMARY", "pdf")}
+        />
+      )}
+
+      {/* Individual Attached Document Preview Modal */}
+      {previewDoc && (
+        <PDFPreviewModal
+          open={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          title={previewDoc.title || "Document Preview"}
+          description={previewDoc.subtitle || "Archived digitized credential"}
+          pdfUrl={previewDoc.url}
+          preview={previewDoc}
+          downloadFilename={previewDoc.originalFilename}
         />
       )}
 
@@ -794,8 +876,29 @@ export default function StudentComplianceTab({ authUser, initialData }) {
           onOpenChange={(open) => {
             if (!open) setSelectedRequirement(null);
           }}
-          requirement={selectedRequirement}
+          item={selectedRequirement}
+          items={sortedRequirements}
+          currentIndex={sortedRequirements.findIndex((r) => r.id === selectedRequirement.id)}
+          onNavigatePrev={() => {
+            const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement.id);
+            if (idx > 0) setSelectedRequirement(sortedRequirements[idx - 1]);
+          }}
+          onNavigateNext={() => {
+            const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement.id);
+            if (idx >= 0 && idx < sortedRequirements.length - 1) setSelectedRequirement(sortedRequirements[idx + 1]);
+          }}
           student={student}
+          onPreviewDocument={(reqItem) => {
+            if (reqItem?.document?.fileUrl || reqItem?.document?.id) {
+              setPreviewDoc({
+                id: reqItem.document.id,
+                url: reqItem.document.fileUrl,
+                originalFilename: reqItem.document.originalFilename,
+                title: reqItem.docType,
+                subtitle: `${student.name} (${student.studentNo})`,
+              });
+            }
+          }}
         />
       )}
     </div>

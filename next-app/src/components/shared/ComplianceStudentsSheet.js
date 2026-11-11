@@ -202,11 +202,11 @@ function ComplianceStudentsSheetContent({
         <SheetContent
           side="right"
           size="default"
-          className="overflow-hidden p-0 flex flex-col bg-white dark:bg-zinc-900 border-l border-black/[0.06] dark:border-white/[0.08] shadow-2xl"
+          className="overflow-hidden p-0 flex flex-col"
         >
           {/* Standard Sheet Header */}
           <SheetHeader className="shrink-0 p-0">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-black/[0.06] dark:border-white/[0.08]">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle className="text-[17px] font-bold text-gray-900 dark:text-zinc-100">
                   Incomplete Records
@@ -276,7 +276,7 @@ function ComplianceStudentsSheetContent({
             ) : (
               <>
                 {/* Summary Spec Strip Card */}
-                <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-850/50 border border-black/[0.04] dark:border-white/[0.06] p-4 flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div className="rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60 p-4 flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-[20px] font-bold tracking-tight text-gray-900 dark:text-zinc-50 tabular-nums">
@@ -329,7 +329,7 @@ function ComplianceStudentsSheetContent({
           </div>
 
           {/* Standard Space-Between Sheet Footer */}
-          <SheetFooter className="shrink-0 p-4 px-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-row items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md">
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
             <Button
               size="sm"
               variant="outline"

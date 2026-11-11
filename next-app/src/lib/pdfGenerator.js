@@ -248,10 +248,10 @@ export async function generateStudentComplianceSlipPdf(student = {}, requirement
     ["Submission progress", total > 0 ? `${submitted} of ${total} submitted (${percent(summary.complianceRate ?? Math.round(submitted / total * 100))})` : "No mandatory requirements configured"],
   ])
   report.section("Document Requirements")
-  report.table(["Requirement / Credential", "Category", "Status"], reqs.map((requirement) => [
-    requirement?.docType || requirement?.name || "Not recorded", requirement?.category || "Not recorded",
+  report.table(["Requirement / Credential", "Status"], reqs.map((requirement) => [
+    requirement?.docType || requirement?.name || "Not recorded",
     requirement?.status === "Submitted" || requirement?.submitted ? "Submitted" : "Not Submitted",
-  ]), { empty: "No requirements are configured for this record.", columnStyles: { 1: { cellWidth: 120 }, 2: { cellWidth: 95 } } })
+  ]), { empty: "No requirements are configured for this record.", columnStyles: { 1: { cellWidth: 100 } } })
   report.paragraph("Source: The student's recorded document requirements. Submission status does not replace verification of the uploaded documents.", { size: 9 })
   return report.finish()
 }
