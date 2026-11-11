@@ -13,7 +13,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import NarrativeText from "@/components/shared/NarrativeText";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
@@ -200,13 +200,13 @@ export default function LogDetailSheet({
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
               <strong className="font-semibold">
-                {severityInfo?.label ? `${severityInfo.label} Audit Event:` : "Forensic Audit Log:"}
+                {severityInfo?.label ? `${severityInfo.label} Audit Event:` : "Activity Log:"}
               </strong>{" "}
               {severityInfo?.label === "Critical" || severityInfo?.label === "Security"
-                ? "High-priority security or administrative event recorded to immutable audit ledger."
+                ? "High-priority security or administrative event recorded in activity history."
                 : severityInfo?.label === "Warning"
                 ? "Precautionary system event flagged for operational review."
-                : "Verified ledger entry recorded with cryptographic timestamp and actor attribution."}
+                : "Recorded activity with a timestamp and actor attribution."}
             </span>
           </div>
         )}
@@ -218,30 +218,27 @@ export default function LogDetailSheet({
               <div className="flex items-center gap-3.5 min-w-0">
                 <AuditActorAvatar
                   log={selectedLog}
-                  className="size-11 border border-black/10 dark:border-white/10"
+                  className="size-11 border-0"
                   fallbackClassName="font-bold text-sm"
                 />
                 <div className="min-w-0">
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
-                    {hideActor ? "Account Activity" : (selectedLog.user || selectedLog.actor || "System")}
+                    {hideActor ? "Account Activity" : (selectedLog.actor_display_name || selectedLog.user || selectedLog.actor || "System")}
                   </span>
                   <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
-                    {hideActor ? (selectedLog.user || selectedLog.actor) : (selectedLog.role || "System")}
+                    {hideActor ? (selectedLog.actor_display_name || selectedLog.user || selectedLog.actor) : (selectedLog.role || "System")}
                     {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs")}>
+                <span className={cn(BADGE_PALETTES.gray, "font-sans tabular-nums text-xs", BADGE_BASE)}>
                   #LOG-{selectedLog.rawId ?? selectedLog.id}
                 </span>
                 {severityInfo && (
                   <span
-                    className={cn(
-                      BADGE_BASE,
-                      severityInfo.classes
-                    )}
+                    className={cn(severityInfo.classes, BADGE_BASE)}
                   >
                     {severityInfo.label}
                   </span>
@@ -294,10 +291,7 @@ export default function LogDetailSheet({
                 >
                   {severityInfo && (
                     <span
-                      className={cn(
-                        BADGE_BASE,
-                        severityInfo.classes
-                      )}
+                      className={cn(severityInfo.classes, BADGE_BASE)}
                     >
                       {severityInfo.label}
                     </span>
@@ -319,7 +313,7 @@ export default function LogDetailSheet({
                     label="Responsible Actor"
                   >
                     <span>
-                      {selectedLog.user || selectedLog.actor}
+                      {selectedLog.actor_display_name || selectedLog.user || selectedLog.actor}
                       <span className="text-gray-500 dark:text-zinc-400 font-normal ml-1">
                         ({selectedLog.role || "User"}{selectedLog.officeName ? ` • ${selectedLog.officeName}` : ""})
                       </span>

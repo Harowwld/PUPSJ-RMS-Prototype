@@ -39,6 +39,7 @@ import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 import { generateExportFilename } from "@/lib/exportHelpers"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 
 import { FilterPopover, SortPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -68,18 +69,18 @@ function getSeverityInfo(sev) {
   if (s === "CRITICAL") {
     return {
       label: "Critical",
-      classes: "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400",
+      classes: BADGE_PALETTES.rose,
     }
   }
   if (s === "WARNING") {
     return {
       label: "Warning",
-      classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400",
+      classes: BADGE_PALETTES.amber,
     }
   }
   return {
     label: "Info",
-    classes: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400",
+    classes: BADGE_PALETTES.emerald,
   }
 }
 
@@ -110,7 +111,7 @@ const OPTIONAL_COLUMNS = [
   { key: "actor", label: "Actor", kind: "text", maxWidth: 240 },
   { key: "office_id", label: "Scope", kind: "status", maxWidth: 180 },
   { key: "details", label: "Description", kind: "text", maxWidth: 340 },
-  { key: "ip", label: "IP Address", kind: "text", maxWidth: 200 },
+  { key: "ip", label: "IP Address", kind: "text", maxWidth: 200, defaultHidden: true },
 ]
 const SORT_OPTIONS = [
   { key: "created_at", label: "Timestamp" },
@@ -411,6 +412,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               time: formatPHDateTime(r.created_at),
               user: r.actor,
               actor: r.actor,
+              actor_display_name: r.actor_display_name,
               actor_id: r.actor_id,
               role: r.role,
               office_id: r.office_id,
@@ -559,7 +561,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       const rows = allLogs.map((log) => [
         log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
         log?.severity || "INFO",
-        log?.actor || "System",
+        log?.actor_display_name || log?.actor || "System",
         log?.role || "N/A",
         log?.scope || "Global",
         log?.action || "N/A",
@@ -745,10 +747,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
             actions={
               <div className="flex shrink-0 items-center gap-2">
                 <RefreshButton onRefresh={() => fetchLogs(true)} isLoading={isManualLoading} title="Refresh Activity History" className="h-9 w-9" />
-                <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs">
+                <Button type="button" variant="outline" onClick={handleDownloadCSV} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs font-semibold">
                   {isExporting ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Exporting...</> : "Export CSV"}
                 </Button>
-                <Button type="button" onClick={handlePreviewPDF} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs">
+                <Button type="button" onClick={handlePreviewPDF} disabled={total === 0 || isExporting || isGeneratingPdf} className="h-9 shrink-0 px-4 text-xs font-semibold">
                   {isGeneratingPdf ? <><Loading01Icon size={14} aria-hidden="true" className="mr-1.5 animate-spin" />Generating...</> : PDF_ACTION_LABELS.preview}
                 </Button>
               </div>
@@ -897,9 +899,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 <EmptyContent>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => fetchLogs(true)}
                     title="Retry Loading"
-                    className="flex h-10 items-center justify-center gap-2 px-5"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl"
                   >
                     Retry Loading
                   </Button>
@@ -922,9 +925,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                   <EmptyContent>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 px-5"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>
@@ -1092,7 +1096,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             {showColumn("severity") && <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
                               <span
                                 className={cn(
-                                  "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
+                                  BADGE_BASE,
                                   severityInfo.classes
                                 )}
                               >
@@ -1105,12 +1109,12 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <AuditActorAvatar
                                   log={log}
-                                  className="size-8 border border-border"
+                                  className="size-8 border-0"
                                   fallbackClassName="text-[10px] font-semibold"
                                 />
                                 <div className="flex flex-col overflow-hidden min-w-0">
-                                  <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor)}>
-                                    {formatTitleCase(log.actor)}
+                                  <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor_display_name || log.actor)}>
+                                    {formatTitleCase(log.actor_display_name || log.actor)}
                                   </span>
                                   <span className="truncate text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
                                     {log.role}
@@ -1123,7 +1127,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             {showColumn("office_id") && <td className="p-4 align-middle whitespace-nowrap overflow-hidden text-xs font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                               {log.office_id ? (
                                 <span
-                                  className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-[11px] font-medium border-0 select-none"
+                                  className={cn(BADGE_BASE, "systemadmin-office-badge w-fit select-none")}
                                   style={{ "--office-accent": log.office_accent || "#800000" }}
                                   title={log.officeName}
                                 >
@@ -1131,7 +1135,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                                 </span>
                               ) : (
                                 <span
-                                  className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none"
+                                  className={cn(BADGE_BASE, "w-fit bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}
                                   title={log.officeName}
                                 >
                                   Platform Level

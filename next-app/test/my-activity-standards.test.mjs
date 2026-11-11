@@ -42,12 +42,15 @@ test("MyActivityPanel aligns strictly with DASHBOARD_LAYOUT_AND_TOOLBAR_STANDARD
   assert.ok(code.includes("renderFormattedDetails"), "Must implement formatted narrative parser");
 
   // 8. Standardized rounded-full Badge Border Radius (Section 8.1)
-  assert.ok(code.includes("px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border select-none shrink-0"), "Severity badges must use standard rounded-full with border");
+  assert.ok(code.includes("BADGE_BASE"), "Severity badges must use standard BADGE_BASE");
   assert.ok(!code.includes("px-2 py-0.5 text-[10px]"), "Must eliminate non-standard badge sizing");
 
   // 9. Semantic Action Icons & Avatar Badges
   assert.ok(code.includes("<ActionIcon size={18} aria-hidden=\"true\" />"), "Must render direct ActionIcon component");
   assert.ok(code.includes("getActivityVisual"), "Must implement action-aware getActivityVisual");
+
+  // 10. Footer hidden when empty
+  assert.ok(code.includes("!error && rows.length > 0 &&"), "Pagination footer must only render when there are activity rows");
 });
 
 test("AccountSettingsPanel does not contain orphan MyActivityPanel embedding", () => {

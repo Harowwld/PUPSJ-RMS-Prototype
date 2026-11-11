@@ -396,7 +396,7 @@ export default function MyActivityPanel() {
               </span>
             </div>
           }
-          description="A personal audit trail of every action your account takes on the system."
+          description="A history of selected account, security, and record actions."
           showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -500,7 +500,7 @@ export default function MyActivityPanel() {
 
         {/* 5. Grouped Activity Feed / Skeleton / States */}
         {loading && !rows.length ? (
-          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border" />
+          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border rounded-b-2xl" />
         ) : error ? (
           <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
             <Empty>
@@ -604,11 +604,7 @@ export default function MyActivityPanel() {
                                 {actionTitle}
                               </h4>
                               <span
-                                className={cn(
-                                  BADGE_BASE,
-                                  "tracking-wide select-none shrink-0",
-                                  visuals.chipClass
-                                )}
+                                className={cn("tracking-wide select-none shrink-0", visuals.chipClass, BADGE_BASE)}
                               >
                                 {visuals.label}
                               </span>
@@ -661,7 +657,7 @@ export default function MyActivityPanel() {
         )}
 
         {/* 6. Pagination Footer */}
-        {!error && (
+        {!error && rows.length > 0 && (
           <TablePagination
             label="My activity pages"
             page={displayPage}

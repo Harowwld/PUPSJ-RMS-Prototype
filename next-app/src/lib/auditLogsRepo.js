@@ -24,9 +24,33 @@ export async function createAuditLog(data) {
   return createGlobalAuditLog(data);
 }
 
+function applyActorFilter(whereClauses, params, { actorId, actorExact }) {
+  const cleanActorId = String(actorId || "").trim();
+  const actorList = (Array.isArray(actorExact) ? actorExact : [actorExact])
+    .map((a) => String(a || "").trim())
+    .filter(Boolean);
+
+  if (cleanActorId && actorList.length > 0) {
+    whereClauses.push(
+      `(actor_id = ? OR (actor_id IS NULL AND LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})))`
+    );
+    params.push(cleanActorId, ...actorList);
+  } else if (cleanActorId) {
+    whereClauses.push("actor_id = ?");
+    params.push(cleanActorId);
+  } else if (actorList.length === 1) {
+    whereClauses.push("LOWER(TRIM(actor)) = LOWER(TRIM(?))");
+    params.push(actorList[0]);
+  } else if (actorList.length > 1) {
+    whereClauses.push(`LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`);
+    params.push(...actorList);
+  }
+}
+
 export async function countAuditLogs(options) {
   const opt = options || {};
   const search = opt.search || "";
+  const actorId = opt.actorId || opt.actor_id || "";
   const actorExact = opt.actorExact || "";
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
@@ -44,18 +68,7 @@ export async function countAuditLogs(options) {
     params.push(officeId);
   }
 
-  if (actorExact) {
-    const actorList = (Array.isArray(actorExact) ? actorExact : [actorExact])
-      .map((a) => String(a || "").trim())
-      .filter(Boolean);
-    if (actorList.length === 1) {
-      whereClauses.push("LOWER(TRIM(actor)) = LOWER(TRIM(?))");
-      params.push(actorList[0]);
-    } else if (actorList.length > 1) {
-      whereClauses.push(`LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`);
-      params.push(...actorList);
-    }
-  }
+  applyActorFilter(whereClauses, params, { actorId, actorExact });
 
   if (role && role !== "All") {
     const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
@@ -109,9 +122,9 @@ export async function countAuditLogs(options) {
   }
 
   if (search) {
-    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ? OR entity_type ILIKE ? OR entity_id ILIKE ?)");
+    whereClauses.push("(actor ILIKE ? OR actor_id ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ? OR entity_type ILIKE ? OR entity_id ILIKE ?)");
     const term = "%" + search + "%";
-    params.push(term, term, term, term, term, term);
+    params.push(term, term, term, term, term, term, term);
   }
 
   if (whereClauses.length > 0) {
@@ -127,6 +140,7 @@ export async function listAuditLogs(options) {
   const limit = opt.limit !== undefined ? opt.limit : 20;
   const offset = opt.offset !== undefined ? opt.offset : 0;
   const search = opt.search || "";
+  const actorId = opt.actorId || opt.actor_id || "";
   const actorExact = opt.actorExact || "";
   const officeId = opt.officeId || opt.office_id || "";
   const role = opt.role || "";
@@ -149,18 +163,7 @@ export async function listAuditLogs(options) {
     params.push(officeId);
   }
 
-  if (actorExact) {
-    const actorList = (Array.isArray(actorExact) ? actorExact : [actorExact])
-      .map((a) => String(a || "").trim())
-      .filter(Boolean);
-    if (actorList.length === 1) {
-      whereClauses.push("LOWER(TRIM(actor)) = LOWER(TRIM(?))");
-      params.push(actorList[0]);
-    } else if (actorList.length > 1) {
-      whereClauses.push(`LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})`);
-      params.push(...actorList);
-    }
-  }
+  applyActorFilter(whereClauses, params, { actorId, actorExact });
 
   if (role && role !== "All") {
     const roleList = Array.isArray(role) ? role : String(role).split(",").map((s) => s.trim()).filter(Boolean);
@@ -214,9 +217,9 @@ export async function listAuditLogs(options) {
   }
 
   if (search) {
-    whereClauses.push("(actor ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ? OR entity_type ILIKE ? OR entity_id ILIKE ?)");
+    whereClauses.push("(actor ILIKE ? OR actor_id ILIKE ? OR action ILIKE ? OR details ILIKE ? OR ip ILIKE ? OR entity_type ILIKE ? OR entity_id ILIKE ?)");
     const term = "%" + search + "%";
-    params.push(term, term, term, term, term, term);
+    params.push(term, term, term, term, term, term, term);
   }
 
   if (whereClauses.length > 0) {
@@ -239,8 +242,21 @@ export async function listAuditLogs(options) {
   return await dbAll(query, params);
 }
 
-export async function getAuditLogStats(actor = "", officeId = "") {
-  const actorList = (Array.isArray(actor) ? actor : [actor])
+export async function getAuditLogStats(actor = "", officeId = "", options = {}) {
+  let optActorId = "";
+  let optActor = actor;
+  let optOfficeId = officeId;
+
+  if (typeof actor === "object" && !Array.isArray(actor) && actor !== null) {
+    optActorId = actor.actorId || actor.actor_id || "";
+    optActor = actor.actorExact || actor.actor || "";
+    optOfficeId = actor.officeId || actor.office_id || "";
+  } else if (typeof options === "object") {
+    optActorId = options.actorId || options.actor_id || "";
+  }
+
+  const cleanActorId = String(optActorId || "").trim();
+  const actorList = (Array.isArray(optActor) ? optActor : [optActor])
     .map((a) => String(a || "").trim())
     .filter(Boolean);
 
@@ -255,11 +271,19 @@ export async function getAuditLogStats(actor = "", officeId = "") {
     "FROM global_audit_logs";
   
   let mainParams = [];
-  if (officeId) {
+  if (optOfficeId) {
     mainQuery += " WHERE office_id = ?";
-    mainParams.push(officeId);
+    mainParams.push(optOfficeId);
   }
-  if (actorList.length === 1) {
+
+  if (cleanActorId && actorList.length > 0) {
+    const clause = `(actor_id = ? OR (actor_id IS NULL AND LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})))`;
+    mainQuery += mainParams.length ? ` AND ${clause}` : ` WHERE ${clause}`;
+    mainParams.push(cleanActorId, ...actorList);
+  } else if (cleanActorId) {
+    mainQuery += mainParams.length ? " AND actor_id = ?" : " WHERE actor_id = ?";
+    mainParams.push(cleanActorId);
+  } else if (actorList.length === 1) {
     mainQuery += mainParams.length ? " AND LOWER(TRIM(actor)) = LOWER(TRIM(?))" : " WHERE LOWER(TRIM(actor)) = LOWER(TRIM(?))";
     mainParams.push(actorList[0]);
   } else if (actorList.length > 1) {
@@ -288,11 +312,19 @@ export async function getAuditLogStats(actor = "", officeId = "") {
     "WHERE (created_at AT TIME ZONE 'Asia/Manila')::date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date - INTERVAL '6 days' ";
   
   let trendParams = [];
-  if (officeId) {
+  if (optOfficeId) {
     trendQuery += " AND office_id = ? ";
-    trendParams.push(officeId);
+    trendParams.push(optOfficeId);
   }
-  if (actorList.length === 1) {
+
+  if (cleanActorId && actorList.length > 0) {
+    const clause = `(actor_id = ? OR (actor_id IS NULL AND LOWER(TRIM(actor)) IN (${actorList.map(() => "LOWER(TRIM(?))").join(", ")})))`;
+    trendQuery += ` AND ${clause} `;
+    trendParams.push(cleanActorId, ...actorList);
+  } else if (cleanActorId) {
+    trendQuery += " AND actor_id = ? ";
+    trendParams.push(cleanActorId);
+  } else if (actorList.length === 1) {
     trendQuery += " AND LOWER(TRIM(actor)) = LOWER(TRIM(?)) ";
     trendParams.push(actorList[0]);
   } else if (actorList.length > 1) {
@@ -335,6 +367,7 @@ export async function getAuditLogStats(actor = "", officeId = "") {
  */
 export async function createGlobalAuditLog(data) {
   const actor = data.actor;
+  const actor_id = data.actor_id || data.actorId || null;
   const role = data.role;
   const officeId = data.officeId || data.office_id || null;
   const action = data.action;
@@ -345,8 +378,8 @@ export async function createGlobalAuditLog(data) {
   const entity_type = data.entity_type || "";
   const entity_id = data.entity_id || "";
 
-  const sql = "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, user_agent, entity_type, entity_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  await sysDbRun(sql, [actor, role, officeId, action, details, severity, user_agent, entity_type, entity_id, ip]);
+  const sql = "INSERT INTO global_audit_logs (actor, actor_id, role, office_id, action, details, severity, user_agent, entity_type, entity_id, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  await sysDbRun(sql, [actor, actor_id, role, officeId, action, details, severity, user_agent, entity_type, entity_id, ip]);
 }
 
 function expandAuditRoleList(raw) {
@@ -617,3 +650,98 @@ export async function getGlobalAuditLogStats(options = {}) {
     trends
   };
 }
+
+function applyStaffActivityWhereClauses(whereClauses, params, { staffId, staffName, staffEmail, actors, search, severity }) {
+  const rawTerms = Array.isArray(actors) && actors.length > 0
+    ? actors
+    : [staffName, staffEmail, staffId];
+  const actorTerms = rawTerms
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+
+  const identityClauses = [];
+  if (staffId) {
+    identityClauses.push("actor_id = ?");
+    params.push(String(staffId).trim());
+  }
+
+  if (actorTerms.length === 1) {
+    identityClauses.push("(actor_id IS NULL AND LOWER(TRIM(actor)) = LOWER(TRIM(?)))");
+    params.push(actorTerms[0]);
+  } else if (actorTerms.length > 1) {
+    identityClauses.push(`(actor_id IS NULL AND LOWER(TRIM(actor)) IN (${actorTerms.map(() => "LOWER(TRIM(?))").join(", ")}))`);
+    params.push(...actorTerms);
+  }
+
+  if (staffId) {
+    identityClauses.push("entity_id = ?");
+    params.push(String(staffId).trim());
+
+    identityClauses.push("(entity_type = 'User' AND details ILIKE ?)");
+    params.push(`%${String(staffId).trim()}%`);
+  }
+
+  if (identityClauses.length > 0) {
+    whereClauses.push(`(${identityClauses.join(" OR ")})`);
+  }
+
+  if (severity && severity !== "All") {
+    const sevList = (Array.isArray(severity) ? severity : String(severity).split(","))
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean);
+    if (sevList.length === 1) {
+      whereClauses.push("UPPER(TRIM(severity)) = ?");
+      params.push(sevList[0]);
+    } else if (sevList.length > 1) {
+      whereClauses.push(`UPPER(TRIM(severity)) IN (${sevList.map(() => "?").join(", ")})`);
+      params.push(...sevList);
+    }
+  }
+
+  if (search) {
+    whereClauses.push("(action ILIKE ? OR details ILIKE ? OR ip ILIKE ?)");
+    const term = `%${String(search).trim()}%`;
+    params.push(term, term, term);
+  }
+}
+
+/**
+ * List audit activity logs for a specific personnel account.
+ */
+export async function listStaffActivityLogs(options = {}) {
+  const limit = options.limit !== undefined ? options.limit : 20;
+  const offset = options.offset !== undefined ? options.offset : 0;
+  const whereClauses = [];
+  const params = [];
+
+  applyStaffActivityWhereClauses(whereClauses, params, options);
+
+  let query = "SELECT * FROM global_audit_logs";
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  query += " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
+
+  return await sysDbAll(query, params);
+}
+
+/**
+ * Count audit activity logs for a specific personnel account.
+ */
+export async function countStaffActivityLogs(options = {}) {
+  const whereClauses = [];
+  const params = [];
+
+  applyStaffActivityWhereClauses(whereClauses, params, options);
+
+  let query = "SELECT COUNT(*)::int as count FROM global_audit_logs";
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  const row = await sysDbGet(query, params);
+  return Number(row?.count || 0);
+}
+

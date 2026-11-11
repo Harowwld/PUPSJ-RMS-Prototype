@@ -347,7 +347,7 @@ export async function archiveStaff(id, { officeId } = {}) {
   if (!existing) return null;
   const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    `UPDATE staff SET status = 'Archived', archived_by_office = FALSE, updated_at = datetime('now') WHERE id = ?${scope.clause}`,
     [id, ...scope.params]
   );
   return await getStaffById(id, { officeId });
@@ -358,7 +358,7 @@ export async function restoreStaff(id, { officeId } = {}) {
   if (!existing) return null;
   const scope = buildStaffScope(officeId);
   await dbRun(
-    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?${scope.clause}`,
+    `UPDATE staff SET status = 'Active', archived_by_office = FALSE, updated_at = datetime('now') WHERE id = ?${scope.clause}`,
     [id, ...scope.params]
   );
   return await getStaffById(id, { officeId });
@@ -479,6 +479,16 @@ export function getStaffDisplayName(staff) {
     return `${fname} ${lname}`;
   }
   const fullName = `${fname} ${lname}`.trim();
+  if (fullName) return fullName;
+  if (staff.email && !staff.email.startsWith("enc:v1:")) return staff.email;
+  return staff.id || "Staff Member";
+}
+
+export function getStaffFullName(staff) {
+  if (!staff) return "System";
+  const fname = staff.fname && !staff.fname.startsWith("enc:v1:") ? staff.fname.trim() : "";
+  const lname = staff.lname && !staff.lname.startsWith("enc:v1:") ? staff.lname.trim() : "";
+  const fullName = [fname, lname].filter(Boolean).join(" ");
   if (fullName) return fullName;
   if (staff.email && !staff.email.startsWith("enc:v1:")) return staff.email;
   return staff.id || "Staff Member";

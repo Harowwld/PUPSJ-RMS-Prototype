@@ -124,7 +124,7 @@ export default function AuditLogsTab({
       const rows = allLogs.map((log) => [
         log?.created_at ? formatPHDateTime(log.created_at) : "N/A",
         log?.severity || "INFO",
-        log?.actor || "System",
+        log?.actor_display_name || log?.actor || "System",
         log?.role || "N/A",
         log?.action || "N/A",
         formatLogDetails(log?.details) || "No known description",

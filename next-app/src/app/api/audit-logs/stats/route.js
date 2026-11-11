@@ -3,6 +3,7 @@ import { getAuditLogStats } from "../../../../lib/auditLogsRepo";
 import { isAdmin, requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { getPrincipalOfficeId } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
+import { getPrincipalActorIdentities } from "../../../../lib/auditActor";
 
 export const runtime = "nodejs";
 
@@ -21,25 +22,13 @@ export async function GET(req) {
       if (!isStudent && !isGlobalAdmin && !officeId) return createAuthErrorResponse("Office scope is required", 403);
     }
 
+    let actorId = "";
     let resolvedActors = [];
     if (mine) {
-      if (isStudent) {
-        resolvedActors = [
-          auth.user.studentNo,
-          auth.user.email,
-          `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim(),
-        ].filter(Boolean);
-      } else {
-        const displayName = `${auth.user.fname || ""} ${auth.user.lname || ""}`.trim();
-        resolvedActors = [
-          displayName,
-          auth.user.email,
-          auth.user.id,
-          auth.user.username,
-        ].filter(Boolean);
-      }
+      actorId = isStudent ? (auth.user.studentNo || auth.user.student_no || auth.user.id) : auth.user.id;
+      resolvedActors = await getPrincipalActorIdentities(auth.user);
 
-      if (resolvedActors.length === 0) {
+      if (!actorId && resolvedActors.length === 0) {
         return NextResponse.json({
           ok: true,
           data: { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0, trends: [] },
@@ -47,7 +36,11 @@ export async function GET(req) {
       }
     }
 
-    const stats = await getAuditLogStats(mine ? resolvedActors : "", mine ? "" : officeId);
+    const stats = await getAuditLogStats(
+      mine ? resolvedActors : "",
+      mine ? "" : officeId,
+      mine ? { actorId } : {}
+    );
     return NextResponse.json({ ok: true, data: stats });
   } catch {
     return NextResponse.json(

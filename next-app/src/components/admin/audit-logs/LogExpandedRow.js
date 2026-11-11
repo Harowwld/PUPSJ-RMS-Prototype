@@ -112,7 +112,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
     return formatPHDateTime(raw);
   })();
 
-  const actorName = log?.actor || log?.user || "System Process";
+  const actorName = log?.actor_display_name || log?.actor || log?.user || "System Process";
   const actorRole = log?.role || (log?.actor ? "Personnel" : "Automated");
 
   return (
@@ -131,11 +131,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
               </h5>
             </div>
             <span
-              className={cn(
-                BADGE_BASE,
-                "tracking-wide shrink-0",
-                severityBadge.className
-              )}
+              className={cn("tracking-wide shrink-0", severityBadge.className, BADGE_BASE)}
             >
               {severityBadge.label}
             </span>
@@ -151,7 +147,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
             <div className="pt-3 border-t border-black/[0.04] dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 {log?.action && (
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "truncate")}>
+                  <span className={cn(BADGE_PALETTES.gray, "truncate", BADGE_BASE)}>
                     {log.action}
                   </span>
                 )}
@@ -184,7 +180,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 Security & Network
               </h5>
             </div>
-            <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
+            <span className={cn(BADGE_PALETTES.gray, BADGE_BASE)}>
               {isLoopback ? "Loopback" : "Direct Client"}
             </span>
           </div>
@@ -223,7 +219,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                   Client Platform
                 </span>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1.5 truncate max-w-[170px]")}>
+                  <span className={cn(BADGE_PALETTES.gray, "gap-1.5 truncate max-w-[170px]", BADGE_BASE)}>
                     <ComputerIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs shrink-0" />
                     <span className="truncate">{uaParsed.summary}</span>
                   </span>
@@ -287,7 +283,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 Resource & Scope
               </h5>
             </div>
-            <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+            <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
               {entityTypeText}
             </span>
           </div>
@@ -327,7 +323,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                 <span className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                   Scope
                 </span>
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "truncate max-w-[190px]")}>
+                <span className={cn(BADGE_PALETTES.gray, "truncate max-w-[190px]", BADGE_BASE)}>
                   {scopeText}
                 </span>
               </div>

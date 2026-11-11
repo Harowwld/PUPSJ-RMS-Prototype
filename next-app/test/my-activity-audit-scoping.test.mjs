@@ -1,7 +1,16 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 
 import { listAuditLogs, countAuditLogs, getAuditLogStats } from "../src/lib/auditLogsRepo.js";
+import { getPrincipalActorIdentities, addAuditActorIds } from "../src/lib/auditActor.js";
+import { getStaffById } from "../src/lib/staffRepo.js";
+import { pool } from "../src/lib/postgres.js";
+
+after(async () => {
+  try {
+    await pool.end();
+  } catch {}
+});
 
 test("Audit logs repo - actorExact multi-alias array and case-insensitivity", async () => {
   // Query with single actor string
@@ -34,6 +43,31 @@ test("Audit logs repo - officeId scoping isolation", async () => {
   const allCount = await countAuditLogs({});
   assert.equal(typeof allCount, "number");
   assert.ok(allCount >= osasCount, "Total count without office filter should be >= office-scoped count");
+});
+
+test("Audit logs repo - actorId dual-field query and fallback", async () => {
+  const { createGlobalAuditLog } = await import("../src/lib/auditLogsRepo.js");
+  
+  const uniqueAction = `Test Actor ID Action ${Date.now()}`;
+  await createGlobalAuditLog({
+    actor: "Arbitrary Custom Display Name",
+    actor_id: "TEST-ACTOR-001",
+    action: uniqueAction,
+    role: "Admin",
+    details: "Test actor_id querying regardless of display name",
+  });
+
+  // Querying by actorId finds the log even though actor name is "Arbitrary Custom Display Name"
+  const logsById = await listAuditLogs({ actorId: "TEST-ACTOR-001", limit: 5 });
+  const found = logsById.find(l => l.action === uniqueAction);
+  assert.ok(found, "Should find log by actorId regardless of actor display name");
+  assert.equal(found.actor_id, "TEST-ACTOR-001");
+  assert.equal(found.actor, "Arbitrary Custom Display Name");
+
+  // Querying by a different actorId does not return this log
+  const logsByOtherId = await listAuditLogs({ actorId: "TEST-ACTOR-999", limit: 5 });
+  const notFound = logsByOtherId.find(l => l.action === uniqueAction);
+  assert.equal(notFound, undefined, "Should not return log for different actorId");
 });
 
 test("HTTP API - personal activity (mine=1) vs office-scoped admin audit logs", async () => {
@@ -114,5 +148,29 @@ test("HTTP API - personal activity (mine=1) vs office-scoped admin audit logs", 
     assert.equal(staffOfficeRes.status, 403, "Staff must NOT be allowed to view office-wide audit logs without admin role");
   }
 });
+
+test("Actor identities resolution covers preferred display name formats and aliases", async () => {
+  const superadmin = await getStaffById("PUPSUPERADMIN-001");
+  if (superadmin) {
+    const identities = await getPrincipalActorIdentities(superadmin);
+    assert.ok(Array.isArray(identities));
+    assert.ok(identities.includes("PUPSUPERADMIN-001"), "Should include staff ID");
+    assert.ok(identities.includes(superadmin.email), "Should include email");
+    if (superadmin.fname) {
+      assert.ok(identities.includes(superadmin.fname), "Should include first name");
+    }
+    assert.ok(identities.includes("System Administrator"), "Should include legacy SuperAdmin alias");
+
+    // Ensure enriched actor IDs resolve
+    const sampleLogs = [
+      { id: 999991, actor: superadmin.fname || "Solt", role: "SuperAdmin", action: "Test Action" },
+      { id: 999992, actor: "System Administrator", role: "SuperAdmin", action: "Test Action" }
+    ];
+    const enriched = await addAuditActorIds(sampleLogs);
+    assert.equal(enriched[0].actor_id, "PUPSUPERADMIN-001", "Should resolve first name to PUPSUPERADMIN-001");
+    assert.equal(enriched[1].actor_id, "PUPSUPERADMIN-001", "Should resolve System Administrator to PUPSUPERADMIN-001");
+  }
+});
+
 
 

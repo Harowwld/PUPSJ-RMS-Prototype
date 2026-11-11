@@ -1,7 +1,10 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import {
   parseNarrativeTokens,
   getDeterministicColor,
@@ -61,7 +64,7 @@ export default function NarrativeText({
               );
             }
 
-            // Full mode: Apple Inset capsule with initial avatar
+            // Full mode: Apple Inset capsule with queried avatar
             const initial = (token.value || "U")[0].toUpperCase();
             return (
               <span
@@ -75,20 +78,18 @@ export default function NarrativeText({
                     : undefined
                 }
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text shadow-2xs mx-0.5",
+                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text mx-0.5 border-0",
                   onMentionClick && "hover:bg-black/[0.08] dark:hover:bg-white/[0.1] cursor-pointer active:scale-95"
                 )}
                 title={`User: ${token.value}`}
               >
-                <span
-                  className={cn(
-                    "inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold uppercase",
-                    getDeterministicColor(token.value)
-                  )}
-                  aria-hidden="true"
-                >
-                  {initial}
-                </span>
+                <ProfileAvatar
+                  id={token.value}
+                  name={token.value}
+                  initials={initial}
+                  className="size-3.5 shrink-0 rounded-full border-0"
+                  fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(token.value))}
+                />
                 <span className="truncate max-w-[200px]">{token.value}</span>
               </span>
             );
@@ -108,7 +109,7 @@ export default function NarrativeText({
             return (
               <span
                 key={key}
-                className="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[11px] font-medium bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-gray-800 dark:text-zinc-200 tabular-nums select-text mx-0.5"
+                className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200 tabular-nums select-text mx-0.5 border-0", BADGE_BASE)}
               >
                 {token.value}
               </span>
@@ -138,7 +139,7 @@ export default function NarrativeText({
             return (
               <span
                 key={key}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.04] dark:border-white/[0.06] text-[11px] font-medium select-text mx-0.5"
+                className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.03] dark:bg-white/[0.05] text-[11px] font-medium select-text mx-0.5 border-0", BADGE_BASE)}
               >
                 <span className="text-gray-500 dark:text-zinc-400 line-through opacity-75">{token.from}</span>
                 <span className="text-gray-400 dark:text-zinc-500 font-bold">→</span>

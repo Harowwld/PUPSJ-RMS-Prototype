@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table, TableRow } from "@/components/ui/table";
 
 
@@ -146,10 +148,7 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
           <span
-            className={cn(
-              "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all",
-              severityInfo.classes
-            )}
+            className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide shadow-none transition-all", severityInfo.classes, BADGE_BASE)}
           >
             {severityInfo.label}
           </span>
@@ -158,12 +157,12 @@ const LogRow = React.memo(function LogRow({
           <div className="flex items-center gap-2.5 min-w-0">
             <AuditActorAvatar
               log={log}
-              className="size-8 border border-border"
+              className="size-8 border-0"
               fallbackClassName="text-[10px] font-semibold"
             />
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.user || log.actor)}>
-                {formatTitleCase(log.user || log.actor)}
+              <span className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100" title={formatTitleCase(log.actor_display_name || log.user || log.actor)}>
+                {formatTitleCase(log.actor_display_name || log.user || log.actor)}
               </span>
               <span className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={log.role}>
                 {log.role}
@@ -346,8 +345,9 @@ export default function LogTable({
                       setLogEndDate("")
                       setLogPage(1)
                     }}
+                    size="sm"
                     title="Reset Filters"
-                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl"
                   >
                     Reset Filters
                   </Button>

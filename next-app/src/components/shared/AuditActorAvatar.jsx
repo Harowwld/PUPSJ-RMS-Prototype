@@ -12,14 +12,19 @@ function getInitials(name) {
 }
 
 export default function AuditActorAvatar({ log, className, fallbackClassName }) {
-  const name = log?.user || log?.actor || "System";
+  const name = log?.actor_display_name || log?.user || log?.actor || "System";
   const id =
     log?.actor_id ||
-    (String(log?.role || "").toLowerCase() === "student" ? log?.actor : null);
+    log?.actorId ||
+    log?.created_by ||
+    (String(log?.role || "").toLowerCase() === "student" ? log?.actor : null) ||
+    name;
+  const avatarFilename = log?.avatar_filename || log?.avatarFilename || null;
 
   return (
     <ProfileAvatar
       id={id}
+      avatarFilename={avatarFilename}
       name={name}
       initials={getInitials(name)}
       className={className}

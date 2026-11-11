@@ -1,6 +1,24 @@
 import { createGlobalAuditLog } from "./auditLogsRepo.js";
 import { getSessionCookieName, verifySessionToken } from "./jwt.js";
-import { getStaffById, getStaffDisplayName } from "./staffRepo.js";
+import { getStaffById, getStaffFullName } from "./staffRepo.js";
+import { queryOne } from "./postgres.js";
+import { decryptPII } from "./piiEncryption.js";
+
+export async function getStudentAuditName(accountId, studentNo) {
+  if (!accountId && !studentNo) return null;
+  const row = await queryOne(
+    `SELECT sip.first_name, sip.last_name, sip.display_name
+       FROM student_accounts sa
+       JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+      WHERE ($1::bigint IS NOT NULL AND sa.id = $1::bigint)
+         OR ($2::text IS NOT NULL AND sa.student_no = $2::text)
+      LIMIT 1`,
+    [Number.isSafeInteger(Number(accountId)) ? Number(accountId) : null, studentNo || null]
+  ).catch(() => null);
+  if (!row) return null;
+  return [decryptPII(row.first_name), decryptPII(row.last_name)].filter(Boolean).join(" ").trim()
+    || decryptPII(row.display_name) || null;
+}
 
 function extractIp(req) {
   const forwarded = req?.headers?.get?.("x-forwarded-for") || "";
@@ -19,16 +37,19 @@ async function resolveActor(req) {
       if (match) token = decodeURIComponent(match[1]);
     }
 
-    if (!token) return { actor: "System", role: "System", officeId: null };
+    if (!token) return { actor: "System", actor_id: null, role: "System", officeId: null };
 
     const payload = await verifySessionToken(token);
     const id = String(payload?.sub || "").trim();
-    if (!id) return { actor: "System", role: "System", officeId: null };
+    if (!id) return { actor: "System", actor_id: null, role: "System", officeId: null };
 
     const role = payload?.role || "";
     if (String(role).toLowerCase() === "student" || payload?.principal_type === "student" || payload?.student_no) {
+      const studentActorId = payload?.student_no || payload?.account_id || id;
+      const studentName = await getStudentAuditName(payload?.account_id || id, payload?.student_no);
       return {
-        actor: payload?.student_no || payload?.username || id,
+        actor: studentName || payload?.student_no || payload?.username || id,
+        actor_id: studentActorId,
         role: "Student",
         officeId: null,
       };
@@ -36,12 +57,13 @@ async function resolveActor(req) {
 
     const staff = await getStaffById(id);
     return {
-      actor: getStaffDisplayName(staff) || id,
+      actor: getStaffFullName(staff) || id,
+      actor_id: id,
       role: staff?.role || role || "Unknown",
       officeId: staff?.office_id || payload?.office_id || null,
     };
   } catch {
-    return { actor: "System", role: "System", officeId: null };
+    return { actor: "System", actor_id: null, role: "System", officeId: null };
   }
 }
 
@@ -51,6 +73,7 @@ export async function writeAuditLog(req, action, overrides = {}) {
     const userAgent = req?.headers?.get?.("user-agent") || "";
     await createGlobalAuditLog({
       actor: overrides.actor || base.actor,
+      actor_id: overrides.actor_id || overrides.actorId || base.actor_id || null,
       role: overrides.role || base.role,
       officeId: overrides.officeId || overrides.office_id || base.officeId || null,
       action: String(action || "").trim(),
@@ -73,6 +96,7 @@ export async function writeGlobalAuditLog(req, action, overrides = {}) {
 
     await createGlobalAuditLog({
       actor: overrides.actor || base.actor,
+      actor_id: overrides.actor_id || overrides.actorId || base.actor_id || null,
       role: overrides.role || base.role,
       officeId: overrides.officeId || overrides.office_id || base.officeId || null,
       action: String(action || "").trim(),
