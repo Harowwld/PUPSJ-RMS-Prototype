@@ -24,7 +24,7 @@ export default function DocumentRequestsSkeleton() {
         </div>
 
         {/* 2. Connected Segmented Tabs Row */}
-        <div className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4">
+        <div className="flex items-center justify-between px-6 py-2.5 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4">
           <Skeleton className="h-8 w-80 rounded-full" />
           <Skeleton className="h-8 w-44 rounded-full ml-auto" />
         </div>
