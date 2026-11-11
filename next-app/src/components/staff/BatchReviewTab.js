@@ -4,6 +4,7 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,15 +77,15 @@ const REGION_LABELS = {
 export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
-  const [statusFilters, setStatusFilters] = useState(["Needs Review"]);
-  const [docTypeFilters, setDocTypeFilters] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("DESC");
-  const [groupBy, setGroupBy] = useState("none");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [query, setQuery] = useState("");
+  const [statusFilters, setStatusFilters] = useOsasViewPreference("batch_review", "statusFilters", ["Needs Review"]);
+  const [docTypeFilters, setDocTypeFilters] = useOsasViewPreference("batch_review", "docTypeFilters", []);
+  const [filterRules, setFilterRules] = useOsasViewPreference("batch_review", "filterRules", []);
+  const [sortBy, setSortBy] = useOsasViewPreference("batch_review", "sortBy", "created_at");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("batch_review", "sortOrder", "DESC");
+  const [groupBy, setGroupBy] = useOsasViewPreference("batch_review", "groupBy", "none");
+  const [startDate, setStartDate] = useOsasViewPreference("batch_review", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("batch_review", "endDate", "");
+  const [query, setQuery] = useOsasViewPreference("batch_review", "query", "");
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -625,7 +626,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </span>
             }
             description="Assign a student and document type before creating formal records."
-            className="p-6 border-b border-border dark:border-border"
+            showBorder={false}
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px] max-md:hidden"
             actions={
@@ -729,7 +731,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           {loading && !hasLoaded ? (
             <BatchReviewSkeleton />
           ) : (
-            <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
+            <div className={cn(
+              "relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 transition-opacity duration-150 motion-reduce:transition-none",
+              loading ? "pointer-events-none opacity-60 delay-200" : "opacity-100 delay-0"
+            )} style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
               {/* Left Column: Review Queue */}
               <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
                 <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
@@ -1244,11 +1249,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </div>
                 )}
               </div>
-              {loading && hasLoaded && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                  Loading review queue…
-                </div>
-              )}
             </div>
           </div>
         )}

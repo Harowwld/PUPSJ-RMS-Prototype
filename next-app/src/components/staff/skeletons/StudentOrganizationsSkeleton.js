@@ -25,20 +25,40 @@ export default function StudentOrganizationsSkeleton() {
         </div>
 
         {/* 2. Top Summary KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="p-4 rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-3.5 w-24 rounded" />
-                <Skeleton className="h-6 w-6 rounded-lg" />
-              </div>
-              <Skeleton className="h-7 w-16 rounded" />
-              <Skeleton className="h-3 w-40 rounded" />
+        <div className="px-6 pb-6">
+          <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="size-5 rounded-full" />
+                      <Skeleton className="h-3.5 w-24 rounded" />
+                    </div>
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                  </div>
+                  <Skeleton className="h-7 w-16 rounded mt-2" />
+                  <Skeleton className="h-3 w-40 rounded mt-2" />
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Connected Row: Category Navigation & View Switcher */}
+        <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
+          <div className="inline-flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08]">
+            <Skeleton className="h-7 w-28 rounded-full" />
+            <Skeleton className="h-7 w-24 rounded-full" />
+            <Skeleton className="h-7 w-32 rounded-full" />
+          </div>
+          <div className="inline-flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08]">
+            <Skeleton className="h-7 w-14 rounded-full" />
+            <Skeleton className="h-7 w-14 rounded-full" />
+          </div>
         </div>
 
         {/* 3. Toolbar */}
@@ -63,28 +83,39 @@ export default function StudentOrganizationsSkeleton() {
 
         {/* 5. Main Table */}
         <div className="w-full flex-[1_0_auto] overflow-x-auto border-t border-border dark:border-border bg-white dark:bg-card">
-          <Table columns={["text", "category", "text", "number", "status", "status", "actions"]} className="min-w-[1240px]">
+          <Table
+            columns={[
+              { kind: "text", minWidth: 360, maxWidth: 540, growthWeight: 3 },
+              { kind: "category", minWidth: 120, maxWidth: 150, growthWeight: 0 },
+              { kind: "text", minWidth: 180, maxWidth: 260, growthWeight: 1 },
+              { kind: "number", minWidth: 110, maxWidth: 140, growthWeight: 0 },
+              { kind: "status", minWidth: 150, maxWidth: 170, growthWeight: 0 },
+              { kind: "status", minWidth: 100, maxWidth: 120, growthWeight: 0 },
+              "actions",
+            ]}
+            className="min-w-[1180px]"
+          >
             <thead className="border-b border-border bg-gray-50/90 dark:bg-zinc-900/90">
               <tr>
-                <th className="p-4 pl-6 w-[280px]">
-                  <Skeleton className="h-3.5 w-28 rounded" />
+                <th className="p-4 pl-6 w-[380px]">
+                  <Skeleton className="h-3.5 w-32 rounded" />
                 </th>
-                <th className="p-4 w-[140px]">
+                <th className="p-4 w-[130px]">
                   <Skeleton className="h-3.5 w-20 rounded" />
                 </th>
                 <th className="p-4 w-[200px]">
                   <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[130px] text-center">
+                <th className="p-4 w-[120px] text-center">
                   <Skeleton className="h-3.5 w-16 mx-auto rounded" />
                 </th>
-                <th className="p-4 w-[180px]">
-                  <Skeleton className="h-3.5 w-32 rounded" />
+                <th className="p-4 w-[160px]">
+                  <Skeleton className="h-3.5 w-28 rounded" />
                 </th>
-                <th className="p-4 w-[120px] text-center">
+                <th className="p-4 w-[110px] text-center">
                   <Skeleton className="h-3.5 w-14 mx-auto rounded" />
                 </th>
-                <th className="p-4 pr-6 text-right w-[90px]">
+                <th className="p-4 pr-6 text-right w-[80px]">
                   <Skeleton className="h-3.5 w-12 ml-auto rounded" />
                 </th>
               </tr>
@@ -96,7 +127,7 @@ export default function StudentOrganizationsSkeleton() {
                     <div className="flex items-center gap-2">
                       <Skeleton className="w-2.5 h-2.5 rounded-full shrink-0" />
                       <Skeleton className="h-5 w-12 rounded" />
-                      <Skeleton className="h-4 w-40 rounded" />
+                      <Skeleton className="h-4 w-52 rounded" />
                     </div>
                   </td>
                   <td className="p-4 border-r border-border/70 dark:border-border/70">

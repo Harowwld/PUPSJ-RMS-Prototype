@@ -1,11 +1,11 @@
 "use client"
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
-import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
 
 import useUrlPage from "@/hooks/useUrlPage"
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { useState, useEffect, useMemo } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
@@ -30,14 +30,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { SortPopover } from "@/components/systemadmin/OfficeTableControls"
 import {
   Empty,
   EmptyHeader,
@@ -47,11 +40,8 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import { SegmentedControl } from "@/components/ui/tabs"
-import useTableScroll from "@/hooks/useTableScroll"
 import StudentProfileSheet from "./StudentProfileSheet"
 import StudentDriveFilesView from "./StudentDriveFilesView"
 import EditStudentModal from "./EditStudentModal"
@@ -97,8 +87,52 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import OfficeDocumentsTable from "@/components/staff/OfficeDocumentsTable"
 import { fetchAllPages } from "@/lib/fetchAllPages"
 import { cn, formatTitleCase } from "@/lib/utils"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, UserGroupIcon as EmptyUserGroupIcon , Alert01Icon, ArrowDown01Icon, ArrowRight01Icon, Calendar01Icon, File02Icon, Files01Icon, FolderOpenIcon, LayoutGridIcon, Location01Icon, Menu01Icon, PaintBoardIcon, Search01Icon, Tick01Icon, UserIcon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import {
+  Archive01Icon as EmptyArchive01Icon,
+  Building03Icon as EmptyBuilding03Icon,
+  UserGroupIcon as EmptyUserGroupIcon,
+  Alert01Icon,
+  ArrowRight01Icon,
+  Calendar01Icon,
+  File02Icon,
+  Files01Icon,
+  FolderOpenIcon,
+  LayoutGridIcon,
+  Location01Icon,
+  Menu01Icon,
+  PaintBoardIcon,
+  Search01Icon,
+  Tick01Icon,
+  UserIcon,
+  UserSearch01Icon,
+  ViewIcon,
+} from "hugeicons-react";
+
+const FOLDER_SORT_OPTIONS_REGISTRAR = [
+  { key: "year", label: "School Year" },
+  { key: "count", label: "Record Count" },
+  { key: "name", label: "Folder Name" },
+];
+
+const FOLDER_SORT_OPTIONS_OSAS = [
+  { key: "name", label: "Category Name" },
+  { key: "count", label: "Record Count" },
+];
+
+const RECORD_SORT_OPTIONS_REGISTRAR = [
+  { key: "name", label: "Student Name" },
+  { key: "studentNo", label: "Student Number" },
+  { key: "courseCode", label: "Degree Program" },
+  { key: "section", label: "Section" },
+  { key: "room", label: "Physical Archive" },
+  { key: "documents", label: "Document Count" },
+];
+
+const RECORD_SORT_OPTIONS_OSAS = [
+  { key: "name", label: "Organization Name" },
+  { key: "studentNo", label: "Acronym" },
+];
+
 function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -313,22 +347,24 @@ export default function RecordsArchiveTab({
   refreshVersion = 0,
 }) {
   const isOsas = officeLabel === "OSAS"
-  const [listType, setListType] = useState("card")
-  const [showArchived, setShowArchived] = useState(false)
+  const [showArchived, setShowArchived] = useOsasViewPreference("records_archive", "showArchived", false)
   const [page, setPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [folderSortBy, setFolderSortBy] = useState("default") // "default", "year-desc", "year-asc", "name-asc", "name-desc", "count-desc"
+  const [itemsPerPage, setItemsPerPage] = useOsasViewPreference("records_archive", "pageSize", 20)
+  const [folderSortBy, setFolderSortBy] = useOsasViewPreference("records_archive", "folderSortBy", isOsas ? "name" : "year")
+  const [folderSortOrder, setFolderSortOrder] = useOsasViewPreference("records_archive", "folderSortOrder", isOsas ? "ASC" : "DESC")
+  const [recordSortBy, setRecordSortBy] = useOsasViewPreference("records_archive", "recordSortBy", "name")
+  const [recordSortOrder, setRecordSortOrder] = useOsasViewPreference("records_archive", "recordSortOrder", "ASC")
   const [browseSummary, setBrowseSummary] = useState(null)
   const [browsePage, setBrowsePage] = useState({ rows: [], total: 0 })
   const [browseResults, setBrowseResults] = useState({ rows: [], total: 0 })
   const [browseLoading, setBrowseLoading] = useState(false)
+  const [browseSortPending, setBrowseSortPending] = useState(false)
   const [quickSearchLoading, setQuickSearchLoading] = useState(false)
   const [browseVersion, setBrowseVersion] = useState(0)
   const [selectedDocs, setSelectedDocs] = useState({ studentNo: null, rows: [] })
   const selectedYear = Number(breadcrumbs?.find((b) => b.level === "students")?.label.match(/\d{4}/)?.[0]) || null
   const archiveCategory = breadcrumbs?.find((b) => b.level === "organizations")?.label.replace(/ Organizations$/, "") || null
-  const browseSortBy = folderSortBy === "name-asc" || folderSortBy === "name-desc" ? "name" : "studentNo"
-  const browseSortOrder = folderSortBy === "name-desc" || folderSortBy === "year-desc" ? "DESC" : "ASC"
+
 
   useEffect(() => {
     const controller = new AbortController()
@@ -345,20 +381,41 @@ export default function RecordsArchiveTab({
   }, [isOsas, browseVersion, refreshVersion, showToast])
 
   useEffect(() => {
-    if ((!isOsas && !selectedYear) || (isOsas && !archiveCategory)) return
+    if ((!isOsas && !selectedYear) || (isOsas && !archiveCategory)) {
+      setBrowseSortPending(false)
+      return
+    }
     const controller = new AbortController()
     const params = isOsas
-      ? new URLSearchParams({ status: showArchived ? "Archived" : "Active,Inactive", category: archiveCategory, limit: String(itemsPerPage), offset: String((page - 1) * itemsPerPage), sortBy: browseSortBy, sortOrder: browseSortOrder })
-      : new URLSearchParams({ archived: String(showArchived), folderYear: String(selectedYear), page: String(page), pageSize: String(itemsPerPage), sortBy: browseSortBy, sortOrder: browseSortOrder })
+      ? new URLSearchParams({
+          status: showArchived ? "Archived" : "Active,Inactive",
+          category: archiveCategory,
+          limit: String(itemsPerPage),
+          offset: String((page - 1) * itemsPerPage),
+          sortBy: recordSortBy,
+          sortOrder: recordSortOrder,
+        })
+      : new URLSearchParams({
+          archived: String(showArchived),
+          folderYear: String(selectedYear),
+          page: String(page),
+          pageSize: String(itemsPerPage),
+          sortBy: recordSortBy,
+          sortOrder: recordSortOrder,
+        })
     const url = isOsas ? `/api/osas/organizations?${params}` : `/api/students/browse?${params}`
     const loadingTimer = setTimeout(() => setBrowseLoading(true), 0)
     fetch(url, { cache: "no-store", signal: controller.signal })
       .then((res) => res.json())
       .then((json) => { if (json?.ok) setBrowsePage(isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data) })
       .catch(() => {})
-      .finally(() => { if (!controller.signal.aborted) setBrowseLoading(false) })
+      .finally(() => {
+        if (controller.signal.aborted) return
+        setBrowseLoading(false)
+        setBrowseSortPending(false)
+      })
     return () => { clearTimeout(loadingTimer); controller.abort() }
-  }, [isOsas, selectedYear, archiveCategory, showArchived, page, itemsPerPage, browseSortBy, browseSortOrder, browseVersion, refreshVersion])
+  }, [isOsas, selectedYear, archiveCategory, showArchived, page, itemsPerPage, recordSortBy, recordSortOrder, browseVersion, refreshVersion])
 
   useEffect(() => {
     if (!quickQuery.trim()) {
@@ -412,7 +469,6 @@ export default function RecordsArchiveTab({
     currentLevel,
     showArchived,
     quickQuery,
-    listType
   })
 
   const toggleSelect = (id) => {
@@ -437,14 +493,13 @@ export default function RecordsArchiveTab({
   if (
     prevFilters.currentLevel !== currentLevel ||
     prevFilters.showArchived !== showArchived ||
-    prevFilters.quickQuery !== quickQuery ||
-    prevFilters.listType !== listType
+    prevFilters.quickQuery !== quickQuery
   ) {
-    setPrevFilters({ currentLevel, showArchived, quickQuery, listType })
+    setPrevFilters({ currentLevel, showArchived, quickQuery })
     setPage(1)
   }
   // View Mode: "folders" (3D Mac folders) or "master-list" (flat all documents table)
-  const [archiveViewMode, setArchiveViewMode] = useState("folders")
+  const [archiveViewMode, setArchiveViewMode] = useOsasViewPreference("records_archive", "viewMode", "folders")
 
   // Restore Modal State
   const [restoreStudentOpen, setRestoreStudentOpen] = useState(false)
@@ -545,6 +600,36 @@ export default function RecordsArchiveTab({
     ? currentLevel === "organizations" || currentLevel === "students"
     : currentLevel === "students"
 
+  const sortOptions = useMemo(() => {
+    if (!isLeafLevel) {
+      return isOsas ? FOLDER_SORT_OPTIONS_OSAS : FOLDER_SORT_OPTIONS_REGISTRAR
+    }
+    return isOsas ? RECORD_SORT_OPTIONS_OSAS : RECORD_SORT_OPTIONS_REGISTRAR
+  }, [isLeafLevel, isOsas])
+
+  const currentSortBy = isLeafLevel ? recordSortBy : folderSortBy
+  const currentSortOrder = isLeafLevel ? recordSortOrder : folderSortOrder
+
+  const handleSortByChange = (key) => {
+    if (isLeafLevel) {
+      setBrowseSortPending(recordSortBy !== key || page !== 1)
+      setRecordSortBy(key)
+      setPage(1)
+    } else {
+      setFolderSortBy(key)
+    }
+  }
+
+  const handleSortOrderChange = (order) => {
+    if (isLeafLevel) {
+      setBrowseSortPending(recordSortOrder !== order || page !== 1)
+      setRecordSortOrder(order)
+      setPage(1)
+    } else {
+      setFolderSortOrder(order)
+    }
+  }
+
   // Derived filtered results
   const filteredQuickResults = useMemo(() => {
     return quickQuery.trim().length >= 2 ? browseResults.rows : []
@@ -596,18 +681,26 @@ export default function RecordsArchiveTab({
         })
       }
 
-      // Sort folders based on folderSortBy
+      // Sort folders based on folderSortBy and folderSortOrder
       const sorted = [...items]
-      if (folderSortBy === "year-desc") {
-        sorted.sort((a, b) => (b._year ?? 0) - (a._year ?? 0))
-      } else if (folderSortBy === "year-asc") {
-        sorted.sort((a, b) => (a._year ?? 0) - (b._year ?? 0))
-      } else if (folderSortBy === "name-asc") {
-        sorted.sort((a, b) => String(a._name || "").localeCompare(String(b._name || ""), undefined, { numeric: true }))
-      } else if (folderSortBy === "name-desc") {
-        sorted.sort((a, b) => String(b._name || "").localeCompare(String(a._name || ""), undefined, { numeric: true }))
-      } else if (folderSortBy === "count-desc") {
-        sorted.sort((a, b) => (b._count ?? 0) - (a._count ?? 0))
+      if (folderSortBy === "year") {
+        if (folderSortOrder === "ASC") {
+          sorted.sort((a, b) => (a._year ?? 0) - (b._year ?? 0))
+        } else {
+          sorted.sort((a, b) => (b._year ?? 0) - (a._year ?? 0))
+        }
+      } else if (folderSortBy === "name") {
+        if (folderSortOrder === "DESC") {
+          sorted.sort((a, b) => String(b._name || "").localeCompare(String(a._name || ""), undefined, { numeric: true }))
+        } else {
+          sorted.sort((a, b) => String(a._name || "").localeCompare(String(b._name || ""), undefined, { numeric: true }))
+        }
+      } else if (folderSortBy === "count") {
+        if (folderSortOrder === "ASC") {
+          sorted.sort((a, b) => (a._count ?? 0) - (b._count ?? 0))
+        } else {
+          sorted.sort((a, b) => (b._count ?? 0) - (a._count ?? 0))
+        }
       } else {
         // default: years newest first, or category alphabetical
         if (!isOsas) {
@@ -625,18 +718,6 @@ export default function RecordsArchiveTab({
   const paginatedExplorerItems = useMemo(() => {
     return filteredExplorerItems
   }, [filteredExplorerItems])
-
-  const {
-    containerRef: tableContainerRef,
-    isScrolledX,
-    scrollLeft,
-    scrollRight,
-    resetScroll,
-  } = useTableScroll([paginatedExplorerItems.length]);
-
-  useEffect(() => {
-    resetScroll();
-  }, [page, currentEffectiveLevel, showArchived, resetScroll]);
 
   const totalItems = isLeafLevel ? browsePage.total : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
@@ -753,11 +834,12 @@ export default function RecordsArchiveTab({
             onPreviewDocument={onPreviewDocument}
             onRescan={onRescan}
             embedded={true}
+            borderTop={false}
           />
         ) : (
           <>
             {/* Filter Section: Tabs (Active/Archived), Controls (Sort, Select All, View Toggle), Search */}
-            <div className="border-t border-border dark:border-border p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-card select-none">
+            <div className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-card select-none">
           {/* Left: Active / Archived Tabs */}
           <SegmentedControl
             value={showArchived ? "archived" : "active"}
@@ -864,168 +946,42 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            {/* 2. Sort Dropdown, Select All, View Mode (Hidden when viewing student files) */}
+            {/* 2. Sort Popover, Select All, View Mode (Hidden when viewing student files) */}
             {!selectedStudent && (
               <>
-                <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all shrink-0"
-                  title="Arrange Folders and Records"
-                >
-                  <span>
-                    {folderSortBy === "default" && "Sort: Default"}
-                    {folderSortBy === "year-desc" && "Sort: Newest First"}
-                    {folderSortBy === "year-asc" && "Sort: Oldest First"}
-                    {folderSortBy === "name-asc" && "Sort: Name (A-Z)"}
-                    {folderSortBy === "name-desc" && "Sort: Name (Z-A)"}
-                    {folderSortBy === "count-desc" && "Sort: Most Records"}
-                  </span>
-                  <ArrowDown01Icon size="1em" className="text-[10px] text-gray-400 ml-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                sideOffset={6}
-                className="w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none"
-              >
-                {/* Zone 1: Header */}
-                <div className="px-4 py-2.5 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    Arrange Records
-                  </span>
-                  {folderSortBy !== "default" && (
-                    <button
-                      type="button"
-                      onClick={() => setFolderSortBy("default")}
-                      className="text-[11px] font-semibold text-pup-maroon dark:text-red-400 hover:underline cursor-pointer"
-                    >
-                      Reset
-                    </button>
-                  )}
-                </div>
+                <SortPopover
+                  options={sortOptions}
+                  sortBy={currentSortBy}
+                  onSortByChange={handleSortByChange}
+                  sortOrder={currentSortOrder}
+                  onSortOrderChange={handleSortOrderChange}
+                  align="end"
+                />
 
-                {/* Zone 2: Body */}
-                <div className="p-1.5 space-y-0.5">
-                  {!isOsas && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => setFolderSortBy("year-desc")}
-                        className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Calendar01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                          <span>Newest Year First</span>
-                        </div>
-                        {folderSortBy === "year-desc" && (
-                          <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setFolderSortBy("year-asc")}
-                        className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Calendar01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                          <span>Oldest Year First</span>
-                        </div>
-                        {folderSortBy === "year-asc" && (
-                          <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-                        )}
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuItem
-                    onClick={() => setFolderSortBy("name-asc")}
-                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <div className="flex items-center gap-2">
-                      <AppIcon className=" SortingUpIcon text-sm text-pup-maroon dark:text-red-400" />
-                      <span>Alphabetical (A to Z)</span>
-                    </div>
-                    {folderSortBy === "name-asc" && (
-                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
+                {/* 3. Select All / Deselect (When at record level) */}
+                {isLeafLevel && paginatedExplorerItems.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleSelectAll(paginatedExplorerItems)}
+                    title={paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
+                    className={cn(
+                      "h-9 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer shadow-xs active:scale-95 shrink-0",
+                      paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))
+                        ? "border-pup-maroon/30 text-pup-maroon bg-pup-maroon/5 dark:border-red-400/30 dark:text-red-400 dark:bg-red-950/20"
+                        : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
                     )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setFolderSortBy("name-desc")}
-                    className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
                   >
-                    <div className="flex items-center gap-2">
-                      <AppIcon className=" SortingDownIcon text-sm text-pup-maroon dark:text-red-400" />
-                      <span>Alphabetical (Z to A)</span>
-                    </div>
-                    {folderSortBy === "name-desc" && (
-                      <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-                    )}
-                  </DropdownMenuItem>
-                  {!isLeafLevel && (
-                    <DropdownMenuItem
-                      onClick={() => setFolderSortBy("count-desc")}
-                      className="cursor-pointer text-xs font-medium rounded-lg flex items-center justify-between py-1.5 px-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Files01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                        <span>Most Records First</span>
-                      </div>
-                      {folderSortBy === "count-desc" && (
-                        <Tick01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-                      )}
-                    </DropdownMenuItem>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* 3. Select All / Deselect (When at record level) */}
-            {isLeafLevel && paginatedExplorerItems.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => toggleSelectAll(paginatedExplorerItems)}
-                title={paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
-                className={cn(
-                  "h-9 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer shadow-xs active:scale-95 shrink-0",
-                  paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))
-                    ? "border-pup-maroon/30 text-pup-maroon bg-pup-maroon/5 dark:border-red-400/30 dark:text-red-400 dark:bg-red-950/20"
-                    : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                    {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
+                  </Button>
                 )}
-              >
-                {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
-              </Button>
+              </>
             )}
-
-            {/* 4. View Mode Segmented Control: Grid vs Table */}
-            {isLeafLevel && (
-              <SegmentedControl
-                value={listType}
-                onValueChange={setListType}
-                variant="capsule"
-                className="inline-grid grid-flow-col auto-cols-fr"
-                items={[
-                  {
-                    value: "card",
-                    label: "Grid",
-                    icon: <ViewModeIcon mode="card" className="text-sm" />,
-                  },
-                  {
-                    value: "table",
-                    label: "Table",
-                    icon: <ViewModeIcon mode="table" className="text-sm" />,
-                  },
-                ]}
-              />
-            )}
-            </>
-          )}
         </div>
       </div>
 
-        {/* 3. Breadcrumb Sub-Header & Table Scroll Controls */}
+        {/* 3. Breadcrumb Sub-Header & Location Controls */}
         <DataViewToolbar label="Archive location and table controls" className="min-h-[46px] py-1.5 justify-between gap-4 border-t border-border bg-white px-6 text-sm dark:border-border dark:bg-card select-none">
           <div className="flex items-center gap-3 min-w-0">
             <Breadcrumb className="flex items-center select-none">
@@ -1058,17 +1014,9 @@ export default function RecordsArchiveTab({
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          {isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 && (
-            <TableScrollControls scrollContainerRef={tableContainerRef}
-              isScrolledX={isScrolledX}
-              onResetScroll={resetScroll}
-              onScrollLeft={() => scrollLeft(400)}
-              onScrollRight={() => scrollRight(400)}
-            />
-          )}
         </DataViewToolbar>
 
-            <div className={cn("w-full flex-[1_0_auto] flex flex-col bg-white dark:bg-card", isLeafLevel && !selectedStudent && listType === "table" && paginatedExplorerItems.length > 0 ? "p-0" : "p-6", selectedStudent && "rounded-b-2xl")}>
+            <div className={cn("w-full flex-[1_0_auto] flex flex-col bg-white dark:bg-card", selectedStudent?.rawOrg ? "p-0 rounded-none" : selectedStudent ? "p-6 rounded-b-2xl" : "p-6")}>
               {selectedStudent ? (
                 <StudentDriveFilesView
                   student={selectedStudent}
@@ -1188,7 +1136,7 @@ export default function RecordsArchiveTab({
                     </EmptyHeader>
                   </Empty>
                 </div>
-              ) : listType === "card" ? (
+              ) : (
                 <div 
                   key={`cards-${currentLevel}-${showArchived}`}
                   className="animate-fade-up grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
@@ -1402,148 +1350,6 @@ export default function RecordsArchiveTab({
                     )
                   })}
                 </div>
-              ) : (
-                <div 
-                  ref={tableContainerRef}
-                  key={`table-${currentLevel}-${showArchived}`}
-                  className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
-                >
-                  <Table columns={["selection", "identifier", "text", ...(isOsas ? ["category"] : []), "text", "actions"]} className="min-w-[850px]">
-                    <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
-                      <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        <th className="w-12 py-2.5 px-3 text-center">
-                           <input
-                             type="checkbox"
-                             className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border"
-                             checked={paginatedExplorerItems.length > 0 && paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))}
-                             onChange={() => toggleSelectAll(paginatedExplorerItems)}
-                           />
-                        </th>
-                        <th className={isOsas ? "py-2.5 px-4 w-[18%]" : "py-2.5 px-4 w-[22%]"}>{isOsas ? "Acronym" : "Student No."}</th>
-                        <th className={isOsas ? "py-2.5 px-4 w-[32%]" : "py-2.5 px-4 w-[42%]"}>{isOsas ? "Organization Name" : "Full Name"}</th>
-                        {isOsas && <th className="w-[16%] py-2.5 px-4">Category</th>}
-                        <th className={isOsas ? "py-2.5 px-4 w-[24%]" : "py-2.5 px-4 w-[28%]"}>Physical Location</th>
-                        <th className="w-24 py-2.5 px-4 pr-6 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                      {paginatedExplorerItems.map((row) => {
-                        const isSelected = selectedIds.has(row.student.studentNo)
-                        return (
-                          <tr
-                            key={row.key}
-                            selected={isSelected}
-                            className={cn(
-                              "group cursor-pointer transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none",
-                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
-                            )}
-                            onClick={() => handleStudentSelect(row.student)}
-                          >
-                            <td className="w-12 py-2.5 px-3 align-middle text-center border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
-                               <input
-                                 type="checkbox"
-                                 className={cn(
-                                   "h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                                   isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                                 )}
-                                 checked={isSelected}
-                                 onChange={() => toggleSelect(row.student.studentNo)}
-                               />
-                            </td>
-                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
-                                {row.student.acronym || row.student.studentNo}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <div className="flex flex-col min-w-0">
-                                <div className="flex items-center gap-2 min-w-0 text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                  <span className="truncate" title={formatTitleCase(row.student.name)}>
-                                    {formatTitleCase(row.student.name)}
-                                  </span>
-                                  {isOsas && row.student.hasCbl && (
-                                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                                      CBL
-                                    </span>
-                                  )}
-                                </div>
-                                {isOsas && row.student.adviser && (
-                                  <div className="truncate text-xs font-normal text-gray-500 dark:text-zinc-400 mt-0.5" title={`Adviser: ${row.student.adviser} · ${row.student.activeOfficerCount ?? 0} Officers · ${row.student.proposalCount ?? 0} Proposals`}>
-                                    Adviser: {row.student.adviser} · {row.student.activeOfficerCount ?? 0} Officers · {row.student.proposalCount ?? 0} Proposals
-                                  </div>
-                                )}
-                                {showArchived && (
-                                  <div className="truncate text-xs font-normal text-red-650 dark:text-red-400 mt-0.5">
-                                    Archived Record
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            {isOsas && (
-                              <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                <span className="inline-flex items-center rounded-md bg-gray-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-gray-700 dark:text-zinc-300">
-                                  {row.student.category || "Academic"}
-                                </span>
-                              </td>
-                            )}
-                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap", BADGE_BASE)}>
-                                 Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
-                               </div>
-                            </td>
-                            <td className="py-2.5 px-4 pr-6 align-middle text-right">
-                              <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                 {isOsas && row.student.hasCbl && (
-                                   <button
-                                     type="button"
-                                     onClick={() => {
-                                       onPreviewDocument(
-                                         "Constitution and By-Laws",
-                                         row.student.name,
-                                         row.student.acronym || row.student.studentNo,
-                                         row.student.rawOrg?.bylaws_storage_filename || row.student.bylawsStorageFilename || ""
-                                       );
-                                     }}
-                                     title={PDF_ACTION_LABELS.preview}
-                                     className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                   >
-                                     <File02Icon size="1em" className="text-[15px]"></File02Icon>
-                                   </button>
-                                 )}
-                                 <Tooltip>
-                                   <TooltipTrigger asChild>
-                                     <button
-                                       type="button"
-                                       onClick={() => handleOpenStudentProfile(row.student)}
-                                       title={isOsas ? "View Organization Details" : "View Student Details"}
-                                       className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                     >
-                                       <ViewIcon size="1em" className="text-[15px]"></ViewIcon>
-                                     </button>
-                                   </TooltipTrigger>
-                                   <TooltipContent>{isOsas ? "View Organization Details" : "View Student Details"}</TooltipContent>
-                                 </Tooltip>
-                                 <Tooltip>
-                                   <TooltipTrigger asChild>
-                                     <button
-                                       type="button"
-                                       onClick={() => handleLocateStudentClick(row.student)}
-                                       title="Locate Archive Drawer"
-                                       className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
-                                     >
-                                       <Location01Icon size="1em" className="text-[15px]"></Location01Icon>
-                                     </button>
-                                   </TooltipTrigger>
-                                   <TooltipContent>Locate Drawer</TooltipContent>
-                                 </Tooltip>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </Table>
-                </div>
               )}
             </div>
 
@@ -1561,7 +1367,7 @@ export default function RecordsArchiveTab({
             )}
           </>
         )}
-        {browseLoading && browseSummary && !selectedStudent && !loading && (
+        {browseLoading && !browseSortPending && browseSummary && !selectedStudent && !loading && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
             Loading archive…
           </div>

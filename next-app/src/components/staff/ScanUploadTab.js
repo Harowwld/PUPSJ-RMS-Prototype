@@ -3,6 +3,7 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
+import useOsasViewPreference from "@/hooks/useOsasViewPreference"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Button } from "@/components/ui/button"
@@ -97,7 +98,7 @@ export default function ScanUploadTab({
 }) {
   const isOsas = Boolean(propIsOsas ?? ((authUser?.office_id || "").toLowerCase() === "osas"))
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
-  const [showPagesSidebar, setShowPagesSidebar] = useState(true)
+  const [showPagesSidebar, setShowPagesSidebar] = useOsasViewPreference("scan_upload", "showPagesSidebar", true)
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)

@@ -25,7 +25,7 @@ export default function NotificationsTabSkeleton() {
         </div>
 
         {/* 2. Navigation Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
+        <div className="p-5 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
           <div className="inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] shrink-0 select-none">
             <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-xs">
               <span>Unread</span>

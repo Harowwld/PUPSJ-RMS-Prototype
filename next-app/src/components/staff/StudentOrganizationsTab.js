@@ -11,7 +11,7 @@ import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Reorder } from "framer-motion";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -177,7 +177,7 @@ const getBannerStatusDotClass = (status) => {
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, Contact01Icon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
@@ -256,96 +256,32 @@ function getInitials(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const STORAGE_KEY = "pupsj_student_orgs_kpi_order";
-const DEFAULT_ORDER = ["organizations", "officers", "proposals"];
-
 export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const fetchRequestRef = useRef(0);
-  const [search, setSearchState] = useState("");
-  const [categoryFilters, setCategoryFiltersState] = useState([]);
-  const [statusFilters, setStatusFiltersState] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState(() => ORG_TABLE_COLUMNS.map((c) => c.key));
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
+  const [search, setSearchState] = useOsasViewPreference("student_organizations", "search", "");
+  const [categoryFilters, setCategoryFiltersState] = useOsasViewPreference("student_organizations", "categoryFilters", []);
+  const [statusFilters, setStatusFiltersState] = useOsasViewPreference("student_organizations", "statusFilters", []);
+  const [filterRules, setFilterRules] = useOsasViewPreference("student_organizations", "filterRules", []);
+  const [groupBy, setGroupBy] = useOsasViewPreference("student_organizations", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useOsasViewPreference(
+    "student_organizations",
+    "visibleColumns",
+    ORG_TABLE_COLUMNS.map((c) => c.key)
+  );
+  const [startDate, setStartDate] = useOsasViewPreference("student_organizations", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("student_organizations", "endDate", "");
+  const [sortBy, setSortBy] = useOsasViewPreference("student_organizations", "sortBy", "name");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("student_organizations", "sortOrder", "ASC");
+  const [viewMode, setViewMode] = useOsasViewPreference("student_organizations", "viewMode", "grid");
   const [orgPage, setOrgPage] = useState(1);
-  const [orgPageSize, setOrgPageSize] = useState(10);
+  const [orgPageSize, setOrgPageSize] = useOsasViewPreference("student_organizations", "pageSize", 10);
   const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, []);
   const setCategoryFilters = useCallback((value) => { setCategoryFiltersState(value); setOrgPage(1); }, []);
   const setStatusFilters = useCallback((value) => { setStatusFiltersState(value); setOrgPage(1); }, []);
-
-  // Category Navigation Slider (horizontal scroll & drag)
-  const categoryTabsRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [isTabsDragging, setIsTabsDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragScrollLeft, setDragScrollLeft] = useState(0);
-
-  const checkTabsScroll = useCallback(() => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 2);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    checkTabsScroll();
-    el.addEventListener("scroll", checkTabsScroll, { passive: true });
-    window.addEventListener("resize", checkTabsScroll);
-
-    let ro;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(() => checkTabsScroll());
-      ro.observe(el);
-    }
-
-    return () => {
-      el.removeEventListener("scroll", checkTabsScroll);
-      window.removeEventListener("resize", checkTabsScroll);
-      ro?.disconnect();
-    };
-  }, [checkTabsScroll, organizations.length]);
-
-  const slideCategories = (direction) => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const offset = direction === "left" ? -220 : 220;
-    el.scrollBy({ left: offset, behavior: "smooth" });
-  };
-
-  const handleTabsMouseDown = (e) => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    setIsTabsDragging(true);
-    setDragStartX(e.pageX - el.offsetLeft);
-    setDragScrollLeft(el.scrollLeft);
-  };
-
-  const handleTabsMouseMove = (e) => {
-    if (!isTabsDragging) return;
-    e.preventDefault();
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - dragStartX) * 1.5;
-    el.scrollLeft = dragScrollLeft - walk;
-  };
-
-  const handleTabsMouseUpOrLeave = () => {
-    setIsTabsDragging(false);
-  };
 
   const allCategories = useMemo(() => {
     const dynamicCats = new Set(["Academic", "Non-Academic"]);
@@ -356,56 +292,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     });
     return ["All", ...Array.from(dynamicCats)];
   }, [organizations]);
-
-  // Draggable KPI Stat Cards & Interactive Popover State
-  const [kpiOrder, setKpiOrder] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (
-            Array.isArray(parsed) &&
-            parsed.length === 3 &&
-            parsed.every((k) => DEFAULT_ORDER.includes(k))
-          ) {
-            return parsed;
-          }
-        }
-      } catch {
-        // Fallback to default
-      }
-    }
-    return DEFAULT_ORDER;
-  });
-
-  const handleReorder = (newOrder) => {
-    setKpiOrder(newOrder);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const statCardsRef = useRef(null);
-
-  // Close dropdown details when clicking outside
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
 
   // Whitelist Sheet State
   const [selectedOrgForOfficers, setSelectedOrgForOfficers] = useState(null);
@@ -1082,13 +968,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         onRemove: () => { setStartDate(""); setEndDate(""); },
       });
     }
-    categoryFilters.forEach((cat) => {
-      chips.push({
-        id: `cat-${cat}`,
-        label: `Category: ${cat}`,
-        onRemove: () => setCategoryFilters((prev) => prev.filter((c) => c !== cat)),
-      });
-    });
+    // Note: categoryFilters represents the top-level segmented scope tabs (All Organizations, Academic Orgs, Non-Academic Orgs) and is intentionally excluded from activeChips so switching tabs does not activate the filter chips row.
     statusFilters.forEach((st) => {
       chips.push({
         id: `status-${st}`,
@@ -1097,10 +977,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
     });
     return chips;
-  }, [search, filterRules, startDate, endDate, categoryFilters, statusFilters, setSearch, setCategoryFilters, setStatusFilters]);
+  }, [search, filterRules, startDate, endDate, statusFilters, setSearch, setStatusFilters]);
 
   const hasActiveFilters = Boolean(
-    search.trim() || categoryFilters.length > 0 || statusFilters.length > 0 || filterRules.length > 0 || startDate !== "" || endDate !== ""
+    search.trim() || statusFilters.length > 0 || filterRules.length > 0 || startDate !== "" || endDate !== ""
   );
 
   // Standard KPI Metrics & Detailed Breakdown for Popovers
@@ -1230,511 +1110,114 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             }
           />
 
-          {/* 2. Top Summary Metrics Banner (Standard Reorderable Stat Cards Grid) */}
+          {/* 2. Top Summary Metrics Banner */}
           <div className="px-6 pb-6">
-            {loading && !hasLoaded ? (
-              <KpiStatCardsSkeleton count={3} />
-            ) : (
-              <Reorder.Group
-                as="div"
-                axis="x"
-                values={kpiOrder}
-                onReorder={handleReorder}
-                ref={statCardsRef}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start relative z-20"
-              >
-                {kpiOrder.map((key) => {
-                  if (key === "organizations") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="organizations"
-                        key="organizations"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "organizations" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "organizations" ? null : "organizations"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "organizations"
-                              ? "border-pup-maroon/50 ring-1 ring-pup-maroon/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Recognized Orgs
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                              <Building01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? <Skeleton className="h-7 w-12" /> : kpiStats.total}
-                              </span>
-                              <span className="text-xs font-medium text-pup-maroon dark:text-red-400 mb-1">
-                                Campus Active
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              {loading && !hasLoaded ? (
+                <KpiStatCardsSkeleton count={3} />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  {/* Card 1: Recognized Orgs */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <Building01Icon size="0.75em" />
                         </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "organizations"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Academic
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.academicCount}
-                                </span>
-                              </div>
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Non-Academic
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.nonAcademicCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center text-xs">
-                              <span className="font-semibold text-emerald-800 dark:text-emerald-300">
-                                CBL On File (Archived)
-                              </span>
-                              <span className="font-bold text-emerald-900 dark:text-emerald-200">
-                                {kpiStats.cblArchivedCount} of {kpiStats.total} orgs
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Active Organizations Preview
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.orgRosterPreview.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No active organizations
-                                  </p>
-                                ) : (
-                                  kpiStats.orgRosterPreview.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <div className="truncate max-w-[170px]" title={org.name}>
-                                        <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                          {org.acronym || org.name}
-                                        </span>
-                                        <span className="text-gray-400 dark:text-zinc-500 text-[10px] ml-1.5">
-                                          ({org.category})
-                                        </span>
-                                      </div>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                        {org.status}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  if (key === "officers") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="officers"
-                        key="officers"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "officers" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "officers" ? null : "officers"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "officers"
-                              ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Authorized Officers
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                              <Shield01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? (
-                                  <Skeleton className="h-7 w-12" />
-                                ) : (
-                                  kpiStats.totalOfficers
-                                )}
-                              </span>
-                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                Authorized Submitters
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "officers"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Configured Orgs
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.orgsWithOfficersCount}
-                                </span>
-                              </div>
-                              <div className="bg-blue-50/60 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                  Pending Roster
-                                </span>
-                                <span className="text-lg font-black text-blue-700 dark:text-blue-400">
-                                  {kpiStats.orgsWithoutOfficersCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                              <span className="font-semibold text-gray-600 dark:text-zinc-300">
-                                Average Officers Per Org
-                              </span>
-                              <span className="font-bold text-gray-900 dark:text-zinc-100">
-                                {kpiStats.avgOfficers}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Top Officer Rosters
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.topOrgsByOfficers.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No officers configured
-                                  </p>
-                                ) : (
-                                  kpiStats.topOrgsByOfficers.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <span
-                                        className="truncate max-w-[170px] font-medium"
-                                        title={org.name}
-                                      >
-                                        {org.acronym || org.name}
-                                      </span>
-                                      <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                        {org.active_officer_count || 0}{" "}
-                                        {org.active_officer_count === 1
-                                          ? "officer"
-                                          : "officers"}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  if (key === "proposals") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="proposals"
-                        key="proposals"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "proposals" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "proposals" ? null : "proposals"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "proposals"
-                              ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Event Proposals
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                              <CalendarCheckIn01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? (
-                                  <Skeleton className="h-7 w-12" />
-                                ) : (
-                                  kpiStats.totalProposals
-                                )}
-                              </span>
-                              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                                Activity Proposals
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "proposals"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Active Proponents
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.orgsWithProposalsCount}
-                                </span>
-                              </div>
-                              <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                  No Proposals Yet
-                                </span>
-                                <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                                  {kpiStats.orgsWithoutProposalsCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                              <span className="font-semibold text-gray-600 dark:text-zinc-300">
-                                Total Activity Submissions
-                              </span>
-                              <span className="font-bold text-gray-900 dark:text-zinc-100">
-                                {kpiStats.totalProposals}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Top Activity Proponents
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.topOrgsByProposals.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No activity proposals submitted
-                                  </p>
-                                ) : (
-                                  kpiStats.topOrgsByProposals.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <span
-                                        className="truncate max-w-[170px] font-medium"
-                                        title={org.name}
-                                      >
-                                        {org.acronym || org.name}
-                                      </span>
-                                      <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                        {org.proposal_count || 0}{" "}
-                                        {org.proposal_count === 1
-                                          ? "proposal"
-                                          : "proposals"}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  return null;
-                })}
-              </Reorder.Group>
-            )}
-          </div>
-
-          {/* Connected Tabs & View Switcher Row */}
-          <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
-            {/* Category Navigation Slider */}
-            <div className="relative min-w-[220px] flex-1 max-w-full overflow-hidden flex items-center">
-              {/* Left Gradient Mask & Chevron */}
-              {canScrollLeft && (
-                <div className="absolute left-0 inset-y-0 z-10 flex items-center pr-3 bg-gradient-to-r from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
-                  <button
-                    type="button"
-                    onClick={() => slideCategories("left")}
-                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
-                    title="Slide left"
-                    aria-label="Slide categories left"
-                  >
-                    <ArrowLeft01Icon size="1em" className="text-xs" />
-                  </button>
-                </div>
-              )}
-
-              {/* Scrollable / Draggable Tabs Track */}
-              <div
-                ref={categoryTabsRef}
-                onMouseDown={handleTabsMouseDown}
-                onMouseMove={handleTabsMouseMove}
-                onMouseUp={handleTabsMouseUpOrLeave}
-                onMouseLeave={handleTabsMouseUpOrLeave}
-                className={cn(
-                  "flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth select-none py-1 px-0.5 w-full",
-                  isTabsDragging ? "cursor-grabbing" : "cursor-grab"
-                )}
-              >
-                {allCategories.map((cat) => {
-                  const isActive =
-                    cat === "All"
-                      ? categoryFilters.length === 0
-                      : categoryFilters.length === 1 && categoryFilters[0] === cat;
-                  const count =
-                    cat === "All"
-                      ? organizations.length
-                      : organizations.filter((o) => o.category === cat).length;
-
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={(e) => {
-                        setCategoryFilters(cat === "All" ? [] : [cat]);
-                        e.currentTarget.scrollIntoView({
-                          behavior: "smooth",
-                          block: "nearest",
-                          inline: "center",
-                        });
-                      }}
-                      className={cn(
-                        "relative h-8 px-3 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer border whitespace-nowrap shrink-0 select-none",
-                        isActive
-                          ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white border-border/80 dark:border-white/10 shadow-xs"
-                          : "bg-transparent text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white border-transparent hover:bg-gray-100/60 dark:hover:bg-zinc-800/40"
-                      )}
-                    >
-                      <span>{cat === "All" ? "All Organizations" : cat}</span>
-                      <span
-                        className={cn("px-1.5 py-0.2 rounded-full text-[10px] font-sans tabular-nums", isActive
-                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300 font-bold"
-                            : "bg-gray-200/60 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 font-medium", BADGE_BASE)}
-                      >
-                        {count}
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Recognized Orgs
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Building01Icon size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Campus Active</span>
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.total.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.academicCount} Academic · {kpiStats.nonAcademicCount} Non-Academic
+                    </div>
+                  </div>
 
-              {/* Right Gradient Mask & Chevron */}
-              {canScrollRight && (
-                <div className="absolute right-0 inset-y-0 z-10 flex items-center pl-3 bg-gradient-to-l from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
-                  <button
-                    type="button"
-                    onClick={() => slideCategories("right")}
-                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
-                    title="Slide right"
-                    aria-label="Slide categories right"
-                  >
-                    <ArrowRight01Icon size="1em" className="text-xs" />
-                  </button>
+                  {/* Card 2: Authorized Officers */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Shield01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Authorized Officers
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Tick01Icon size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Authorized Submitters</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.totalOfficers.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.orgsWithOfficersCount} orgs configured · {kpiStats.orgsWithoutOfficersCount} pending roster
+                    </div>
+                  </div>
+
+                  {/* Card 3: Event Proposals */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <CalendarCheckIn01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Event Proposals
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <CalendarCheckIn01Icon size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Activity Proposals</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.totalProposals.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.orgsWithProposalsCount} active proponents · {kpiStats.totalProposals} submissions
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Connected Row: Category Navigation & View Switcher */}
+          <div
+            role="group"
+            aria-label="Organization categories and view switcher"
+            className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card overflow-x-auto scrollbar-none gap-4 select-none"
+          >
+            <SegmentedControl
+              value={categoryFilters.length === 1 ? categoryFilters[0] : categoryFilters.length > 1 ? "" : "All"}
+              onValueChange={(val) => {
+                setCategoryFilters(val === "All" ? [] : [val]);
+              }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={allCategories.map((cat) => ({
+                value: cat,
+                label: cat === "All" ? "All Organizations" : cat.endsWith("Orgs") || cat.endsWith("Organizations") ? cat : `${cat} Orgs`,
+                badge: cat === "All" ? organizations.length : organizations.filter((o) => o.category === cat).length,
+              }))}
+            />
 
             <SegmentedControl
               value={viewMode}
               onValueChange={setViewMode}
               variant="capsule"
-              className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-4"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-auto"
               items={[
                 {
                   value: "grid",
@@ -1915,12 +1398,23 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={[{ kind: "text", maxWidth: 340 }, "category", "text", "number", "status", "status", "actions"]} className="min-w-[1240px]">
+                <Table
+                  columns={[
+                    { kind: "text", minWidth: 360, maxWidth: 540, growthWeight: 3 },
+                    { kind: "category", minWidth: 120, maxWidth: 150, growthWeight: 0 },
+                    { kind: "text", minWidth: 180, maxWidth: 260, growthWeight: 1 },
+                    { kind: "number", minWidth: 110, maxWidth: 140, growthWeight: 0 },
+                    { kind: "status", minWidth: 150, maxWidth: 170, growthWeight: 0 },
+                    { kind: "status", minWidth: 100, maxWidth: 120, growthWeight: 0 },
+                    "actions",
+                  ]}
+                  className="min-w-[1180px]"
+                >
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th
                         className={cn(
-                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                          "p-4 pl-6 w-[380px] min-w-[380px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
                           isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                         )}
                       >
@@ -1941,12 +1435,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           )}
                         </div>
                       </th>
-                      <th className="p-4 w-[140px] min-w-[140px]">Category</th>
+                      <th className="p-4 w-[130px] min-w-[130px]">Category</th>
                       <th className="p-4 w-[200px] min-w-[200px]">Faculty Adviser</th>
-                      <th className="p-4 w-[130px] min-w-[130px] text-center">Officers</th>
-                      <th className="p-4 w-[180px] min-w-[180px]">Constitution & By-Laws</th>
-                      <th className="p-4 w-[120px] min-w-[120px] text-center">Status</th>
-                      <th className="p-4 pr-6 text-right w-[90px] min-w-[90px]">Actions</th>
+                      <th className="p-4 w-[120px] min-w-[120px] text-center">Officers</th>
+                      <th className="p-4 w-[160px] min-w-[160px]">Constitution & By-Laws</th>
+                      <th className="p-4 w-[110px] min-w-[110px] text-center">Status</th>
+                      <th className="p-4 pr-6 text-right w-[80px] min-w-[80px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -2459,7 +1953,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               </div>
 
               {/* Organization Profile Strip */}
-              <div className="flex items-center gap-3 px-6 pb-3 pt-1 border-gray-100/80 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/30">
+              <div className="flex items-center gap-3 px-6 pb-3 pt-1 border-gray-100/80 dark:border-zinc-800/60">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     {selectedOrgForOfficers?.acronym && (
@@ -2530,72 +2024,32 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
 
             {/* Sub-tab segmented switcher */}
-            <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("info")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "info"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <AppIcon className=" Contact01Icon text-xs" />
-                  <span>Organization Info</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("officers")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "officers"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <UserSearch01Icon size="1em" className="text-xs" />
-                  <span>Authorized Officers</span>
-                  <span
-                    className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
-                      sheetSubTab === "officers"
-                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
-                      BADGE_BASE
-                    )}
-                  >
-                    {officersList.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("cbl")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "cbl"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <BookBookmark01Icon size="1em" className="text-xs" />
-                  <span>Constitution & By-Laws</span>
-                  <span
-                    className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
-                      sheetSubTab === "cbl"
-                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
-                      BADGE_BASE
-                    )}
-                  >
-                    {bylawsHistory.length}
-                  </span>
-                </button>
-              </div>
+            <div className="px-6 py-2.5 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
+              <SegmentedControl
+                value={sheetSubTab}
+                onValueChange={setSheetSubTab}
+                variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+                items={[
+                  {
+                    value: "info",
+                    label: "Organization Info",
+                    icon: <Contact01Icon size="1em" className="text-xs" />,
+                  },
+                  {
+                    value: "officers",
+                    label: "Authorized Officers",
+                    icon: <UserSearch01Icon size="1em" className="text-xs" />,
+                    badge: officersList.length,
+                  },
+                  {
+                    value: "cbl",
+                    label: "Constitution & By-Laws",
+                    icon: <BookBookmark01Icon size="1em" className="text-xs" />,
+                    badge: bylawsHistory.length,
+                  },
+                ]}
+              />
 
               {sheetSubTab === "cbl" && (
                 <Button
@@ -2729,7 +2183,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           {BANNER_GRADIENT_PRESETS.find((p) => p.id === (orgForm.bannerGradient || "maroon"))?.label}
                         </span>
                       </div>
-                      <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
+                      <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-800/40">
                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 place-items-center">
                           {BANNER_GRADIENT_PRESETS.map((preset) => {
                             const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
@@ -2882,7 +2336,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         description="No student officers are authorized for this organization yet. Add an officer's account email above."
                       />
                     ) : (
-                      <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900 shadow-2xs">
+                      <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900/40 shadow-2xs">
                         {officersList.map((officer) => {
                           const roleStyle = getOfficerRoleStyle(officer.position);
                           const displayName =
@@ -2906,7 +2360,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           return (
                             <div
                               key={officer.id}
-                              className="p-3.5 flex items-center justify-between gap-3.5 hover:bg-gray-50/60 dark:hover:bg-zinc-800/50 transition-colors group"
+                              className="p-3.5 flex items-center justify-between gap-3.5 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                             >
                               {/* Left: Modern Circular Avatar + Officer Details */}
                               <div className="flex items-center gap-3 min-w-0">
@@ -3005,7 +2459,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       {bylawsHistory.map((ver) => (
                         <div
                           key={ver.id}
-                          className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
+                          className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -3069,7 +2523,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200"
                                 : ver.status === "Declined"
                                 ? "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-900/30 text-rose-900 dark:text-rose-200"
-                                : "bg-gray-50 dark:bg-zinc-800/50 border-border dark:border-border text-gray-600 dark:text-zinc-300"
+                                : "bg-gray-50/70 dark:bg-zinc-800/40 border-border dark:border-border text-gray-600 dark:text-zinc-300"
                             )}>
                               <strong className="font-semibold">
                                 {ver.status === "Needs Revision"

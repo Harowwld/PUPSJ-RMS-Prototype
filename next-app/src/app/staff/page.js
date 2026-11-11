@@ -28,6 +28,7 @@ import {
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
 import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
@@ -77,6 +78,7 @@ function resolveRequestedStaffView(rawView) {
 }
 
 function isStaffViewEnabled(view, user) {
+  if (view === "documents" && String(user?.office_id || "").toLowerCase() === "osas") return false;
   const enabledModules = user?.enabled_modules;
   const requiredModule = STAFF_VIEW_MODULES[view];
   return !requiredModule || !Array.isArray(enabledModules) || enabledModules.length === 0 || enabledModules.includes(requiredModule);
@@ -279,6 +281,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const result = []
     for (const group of groups) {
       const activeChildren = group.children.filter(child => {
+        if (child.key === "documents" && isOsas) return false;
         const requiredModule = MODULE_KEY_MAP[child.key]
         if (!requiredModule) return true
         return enabled.has(requiredModule)
@@ -289,13 +292,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
     }
     return result
-  }, [authUser?.enabled_modules, notificationsUnread])
+  }, [authUser?.enabled_modules, isOsas, notificationsUnread])
 
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [archivedOrganizations, setArchivedOrganizations] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useOsasViewPreference("records_archive", "selectedCategory", null);
   const [docTypes, setDocTypes] = useState([]);
   const [requestableDocTypes, setRequestableDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -303,10 +306,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [storageLayout, setStorageLayout] = useState(null);
   const [allDocs, setAllDocs] = useState([]);
 
-  const [currentLevel, setCurrentLevel] = useState("years");
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [currentLevel, setCurrentLevel] = useOsasViewPreference("records_archive", "currentLevel", "years");
+  const [selectedYear, setSelectedYear] = useOsasViewPreference("records_archive", "selectedYear", null);
 
-  const [quickQuery, setQuickQuery] = useState("");
+  const [quickQuery, setQuickQuery] = useOsasViewPreference("records_archive", "quickQuery", "");
   const [archiveRefreshVersion, setArchiveRefreshVersion] = useState(0);
 
   const [activeStudent, setActiveStudent] = useState(null);
@@ -341,9 +344,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     });
   }, [students, archivedStudents, organizations, archivedOrganizations, authUser?.office_id]);
 
-  const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [selectedCabinet, setSelectedCabinet] = useState(null);
+  const [currentLocatorLevel, setCurrentLocatorLevel] = useOsasViewPreference("storage_explorer", "currentLocatorLevel", "rooms");
+  const [selectedRoom, setSelectedRoom] = useOsasViewPreference("storage_explorer", "selectedRoom", null);
+  const [selectedCabinet, setSelectedCabinet] = useOsasViewPreference("storage_explorer", "selectedCabinet", null);
 
   /** When true, submit attaches the PDF to an existing student (no new student row). */
   const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
@@ -1020,7 +1023,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         docId: id,
         originalFilename: matchedDoc?.original_filename || null,
         mimeType: matchedDoc?.mime_type || null,
-        sourceType: matchedDoc?.source_type || null,
+        sourceType: matchedDoc?.source_type || (strId.startsWith("cbl-") ? "organization_bylaws" : null),
         fileUrl,
         url: fileUrl,
         refId: `DOC-${Date.now()}`,
@@ -1989,15 +1992,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
+        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
             className={cn(
               "p-2 flex flex-col w-full",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1",
-              view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
+              (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "flex-1 h-full min-h-0 [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
             )}
           >
-            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", view === "batch_review" ? "h-full flex-1" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
+            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "h-full flex-1 min-h-0 [&>*]:h-full [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
             {view === "students" && (
             <StudentDirectoryTab
               authUser={authUser}

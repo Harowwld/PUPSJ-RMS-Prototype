@@ -9,6 +9,7 @@ import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 
 import useUrlPage from "@/hooks/useUrlPage";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,41 +161,55 @@ export default function DocumentRequestsTab({
   error = null,
   officeId = "registrar",
 }) {
+  const isOsasOffice = String(officeId || "").toLowerCase() === "osas";
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const listRequest = useRef(0);
   const [isManualLoading, setIsManualLoading] = useState(false);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useOsasViewPreference("document_requests", "search", "");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [statusFilters, setStatusFilters] = useState([]);
-  const [clientTypeFilters, setClientTypeFilters] = useState([]);
-  const [docTypeFilters, setDocTypeFilters] = useState([]);
-  const [charterFilters, setCharterFilters] = useState([]);
+  const [statusFilters, setStatusFilters] = useOsasViewPreference("document_requests", "statusFilters", []);
+  const [clientTypeFilters, setClientTypeFilters] = useOsasViewPreference("document_requests", "clientTypeFilters", []);
+  const [docTypeFilters, setDocTypeFilters] = useOsasViewPreference("document_requests", "docTypeFilters", []);
+  const [charterFilters, setCharterFilters] = useOsasViewPreference("document_requests", "charterFilters", []);
   const [slaStandards, setSlaStandards] = useState(null);
   const [page, setPage] = useUrlPage();
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("DESC");
+  const [itemsPerPage, setItemsPerPage] = useOsasViewPreference("document_requests", "pageSize", 20);
+  const [sortBy, setSortBy] = useOsasViewPreference("document_requests", "sortBy", "created_at");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("document_requests", "sortOrder", "DESC");
 
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("pup_doc_requests_view_mode");
-        if (saved && ["list", "table", "kanban"].includes(saved)) return saved;
-      } catch {}
-    }
+  const [osasViewMode, setOsasViewMode] = useOsasViewPreference("document_requests", "viewMode", "table", {
+    legacyKey: "pup_doc_requests_view_mode",
+  });
+  const [otherOfficeViewMode, setOtherOfficeViewMode] = useState(() => {
+    if (isOsasOffice || typeof window === "undefined") return "table";
+    try {
+      const saved = localStorage.getItem("pup_doc_requests_view_mode");
+      if (saved && ["list", "table", "kanban"].includes(saved)) return saved;
+    } catch {}
     return "table";
   });
+  const viewMode = isOsasOffice ? osasViewMode : otherOfficeViewMode;
+  const setViewMode = (mode) => {
+    if (isOsasOffice) {
+      setOsasViewMode(mode);
+      return;
+    }
+    setOtherOfficeViewMode(mode);
+    try {
+      localStorage.setItem("pup_doc_requests_view_mode", mode);
+    } catch {}
+  };
   const viewModeRef = useRef(viewMode);
   viewModeRef.current = viewMode;
 
-  const [filterRules, setFilterRules] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [groupBy, setGroupBy] = useState("status");
-  const [visibleColumns, setVisibleColumns] = useState([
+  const [filterRules, setFilterRules] = useOsasViewPreference("document_requests", "filterRules", []);
+  const [startDate, setStartDate] = useOsasViewPreference("document_requests", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("document_requests", "endDate", "");
+  const [groupBy, setGroupBy] = useOsasViewPreference("document_requests", "groupBy", "status");
+  const [visibleColumns, setVisibleColumns] = useOsasViewPreference("document_requests", "visibleColumns", [
     "id",
     "student_no",
     "student",
@@ -257,8 +272,8 @@ export default function DocumentRequestsTab({
   const groupOptions = useMemo(() => [
     { key: "status", label: "Status", icon: UserStatusIcon },
     { key: "doc_type", label: "Document Type", icon: GraduationScrollIcon },
-    { key: "client_type", label: "Client Type", icon: StudentIcon },
     { key: "none", label: "No grouping" },
+    { key: "client_type", label: "Client Type", icon: StudentIcon },
   ], []);
 
   const tableColumns = useMemo(() => [
@@ -272,6 +287,29 @@ export default function DocumentRequestsTab({
     { key: "createdAt", label: "Date Filed" },
   ], []);
 
+  const dynamicTableColumns = useMemo(() => {
+    const columnMap = {
+      id: { kind: "identifier", width: 80 },
+      student_no: { kind: "identifier", width: 170 },
+      student: { kind: "text", minWidth: 280, maxWidth: 460, growthWeight: 2 },
+      docType: { kind: "category", minWidth: 190, maxWidth: 300, growthWeight: 2 },
+      status: { kind: "status", width: 140 },
+      charter: { kind: "text", minWidth: 240, maxWidth: 290, growthWeight: 1 },
+      targetDate: { kind: "date", width: 150 },
+      createdAt: { kind: "date", width: 150 },
+    };
+    return [
+      ...tableColumns.filter((c) => visibleColumns.includes(c.key)).map((c) => columnMap[c.key] || "text"),
+      "actions",
+    ];
+  }, [tableColumns, visibleColumns]);
+
+  const dynamicTableMinWidthClass = useMemo(() => {
+    if (visibleColumns.length >= 7) return "min-w-[1360px]";
+    if (visibleColumns.length >= 6) return "min-w-[1080px]";
+    return "min-w-[900px]";
+  }, [visibleColumns.length]);
+
   const [createOpen, setCreateOpen] = useState(false);
   const { attachForm, ...repeat } = useCreateAnother(createOpen);
   const [createClientType, setCreateClientType] = useState("Student");
@@ -281,11 +319,9 @@ export default function DocumentRequestsTab({
   const [createRequesterRelationship, setCreateRequesterRelationship] = useState("Mother");
   const [createRequesterContact, setCreateRequesterContact] = useState("");
   const [createAttachments, setCreateAttachments] = useState([]);
-  const [isDraggingAttachment, setIsDraggingAttachment] = useState(false);
   const [createDocType, setCreateDocType] = useState("");
   const [createNotes, setCreateNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const attachmentInputRef = useRef(null);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -481,9 +517,6 @@ export default function DocumentRequestsTab({
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
     viewModeRef.current = mode;
-    try {
-      localStorage.setItem("pup_doc_requests_view_mode", mode);
-    } catch {}
 
     if (mode === "kanban" && rows.length < 100 && rows.length < total) {
       loadList({ showLoading: false, viewModeOverride: "kanban" });
@@ -754,6 +787,21 @@ export default function DocumentRequestsTab({
       return;
     }
 
+    const oversized = createAttachments.filter((item) => {
+      const f = item.file || item;
+      return f && f.size > 10 * 1024 * 1024;
+    });
+    if (oversized.length > 0) {
+      showToast?.(
+        {
+          title: "File Too Large",
+          description: `Attachment "${oversized[0].file?.name || "file"}" exceeds the 10 MB limit. Please remove or replace it.`,
+        },
+        true
+      );
+      return;
+    }
+
     if (!repeat.beginSave()) return;
     setSubmitting(true);
     try {
@@ -793,74 +841,6 @@ export default function DocumentRequestsTab({
     } finally {
       setSubmitting(false);
       repeat.endSave();
-    }
-  };
-
-  const processAttachmentFiles = (filesList) => {
-    const files = Array.from(filesList || []);
-    if (!files.length) return;
-    const allowedTypes = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
-    const validFiles = files.filter((file) => {
-      if (file.size > 10 * 1024 * 1024) return false;
-      if (!allowedTypes.has(String(file.type || "").toLowerCase())) return false;
-      return true;
-    });
-    if (validFiles.length !== files.length) {
-      showToast?.({ title: "Unsupported Attachment", description: "Choose PDF, PNG, JPG, or WEBP files up to 10 MB each." }, true);
-    }
-    const remaining = 5 - createAttachments.length;
-    if (remaining <= 0) {
-      showToast?.({ title: "Attachment Limit", description: "Maximum of 5 files allowed." }, true);
-      return;
-    }
-    const accepted = validFiles.slice(0, remaining).map((file) => {
-      const lowerName = file.name.toLowerCase();
-      const attachmentType = createClientType === "Parent"
-        ? (lowerName.includes("id") || lowerName.includes("passport") || lowerName.includes("license") ? "valid_id" : "spa")
-        : lowerName.includes("receipt") || lowerName.includes("pay") || lowerName.includes("proof")
-        ? "receipt"
-        : lowerName.includes("clearance")
-        ? "clearance"
-        : "evidence";
-      return { id: `${Date.now()}-${Math.random()}`, file, attachmentType };
-    });
-    if (validFiles.length > remaining) {
-      showToast?.({ title: "Attachment Limit", description: "You can add up to 5 files." }, true);
-    }
-    setCreateAttachments((current) => [...current, ...accepted]);
-  };
-
-  const handleAddAttachments = (event) => {
-    processAttachmentFiles(event.target.files);
-    event.target.value = "";
-  };
-
-  const handleAttachmentDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (createAttachments.length < 5) {
-      setIsDraggingAttachment(true);
-    }
-  };
-
-  const handleAttachmentDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.currentTarget.contains(e.relatedTarget)) return;
-    setIsDraggingAttachment(false);
-  };
-
-  const handleAttachmentDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingAttachment(false);
-    if (createAttachments.length >= 5) {
-      showToast?.({ title: "Attachment Limit", description: "You already have 5 files attached." }, true);
-      return;
-    }
-    const droppedFiles = e.dataTransfer.files;
-    if (droppedFiles && droppedFiles.length > 0) {
-      processAttachmentFiles(droppedFiles);
     }
   };
 
@@ -923,6 +903,7 @@ export default function DocumentRequestsTab({
         </div>
 
         <FileAttachmentDropzone
+          animateCards={false}
           value={createAttachments}
           onChange={(val) => {
             if (typeof val === "function") {
@@ -933,6 +914,8 @@ export default function DocumentRequestsTab({
           }}
           mode="multiple"
           maxFiles={5}
+          maxSizeBytes={10 * 1024 * 1024}
+          showToast={showToast}
           categories={categories}
           title={
             required
@@ -940,7 +923,7 @@ export default function DocumentRequestsTab({
               : "Drag and drop supporting files here, or browse"
           }
           subtitle="Supports PDF, PNG, JPG, or WEBP up to 10 MB each (maximum 5 files)."
-          accept="application/pdf,image/png,image/jpeg,image/webp"
+          accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
         />
       </div>
     );
@@ -1221,7 +1204,7 @@ export default function DocumentRequestsTab({
           <div
             role="group"
             aria-label="Requests client type and view mode"
-            className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4"
+            className="flex items-center justify-between px-6 py-2.5 bg-white dark:bg-card overflow-x-auto scrollbar-none gap-4"
           >
             {/* Left: Client Type Tabs */}
             <SegmentedControl
@@ -1439,7 +1422,7 @@ export default function DocumentRequestsTab({
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 border-t border-border dark:border-border"
               >
-                <Table columns={["identifier", "identifier", { kind: "text", maxWidth: 360 }, "text", "status", "text", "date", "date", "actions"]} className="min-w-[1360px]">
+                <Table columns={dynamicTableColumns} className={dynamicTableMinWidthClass}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                       {visibleColumns.includes("id") && (
@@ -1478,7 +1461,7 @@ export default function DocumentRequestsTab({
                         </th>
                       )}
                       {visibleColumns.includes("student_no") && (
-                        <th className="py-2.5 px-4 w-[150px] min-w-[150px]">
+                        <th className="py-2.5 px-4 w-[170px] min-w-[170px]">
                           <button
                             type="button"
                             onClick={() => handleSort("student_no")}
@@ -1493,7 +1476,7 @@ export default function DocumentRequestsTab({
                         </th>
                       )}
                       {visibleColumns.includes("student") && (
-                        <th className="py-2.5 px-4 w-[280px] min-w-[280px]">
+                        <th className="py-2.5 px-4 min-w-[280px] max-w-[460px]">
                           <button
                             type="button"
                             onClick={() => handleSort("student")}
@@ -1508,7 +1491,7 @@ export default function DocumentRequestsTab({
                         </th>
                       )}
                       {visibleColumns.includes("docType") && (
-                        <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
+                        <th className="py-2.5 px-4 w-[200px] min-w-[190px] max-w-[300px]">
                           <button
                             type="button"
                             onClick={() => handleSort("doc_type")}
@@ -1538,7 +1521,7 @@ export default function DocumentRequestsTab({
                         </th>
                       )}
                       {visibleColumns.includes("charter") && (
-                        <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
+                        <th className="py-2.5 px-4 w-[240px] min-w-[240px]">
                           <span>Processing Time</span>
                         </th>
                       )}
@@ -1562,7 +1545,7 @@ export default function DocumentRequestsTab({
                           </button>
                         </th>
                       )}
-                      <th className="py-2.5 px-4 pr-6 text-right w-[80px] min-w-[80px]">
+                      <th className="w-16 py-2.5 px-3 text-center">
                         <span>Actions</span>
                       </th>
                     </tr>
@@ -1591,7 +1574,7 @@ export default function DocumentRequestsTab({
                                   isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                                 )}
                               >
-                                #{r.id}
+                                {r.id}
                               </td>
                             )}
                             {visibleColumns.includes("student_no") && (
@@ -1606,7 +1589,7 @@ export default function DocumentRequestsTab({
                               </td>
                             )}
                             {visibleColumns.includes("student") && (
-                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[460px]">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span
                                     className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
@@ -1640,7 +1623,7 @@ export default function DocumentRequestsTab({
                               </td>
                             )}
                             {visibleColumns.includes("docType") && (
-                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 max-w-[300px]">
                                 <div className={cn("inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200", BADGE_BASE)}>
                                   <span className="truncate" title={r.doc_type}>
                                     {r.doc_type}
@@ -1677,8 +1660,8 @@ export default function DocumentRequestsTab({
                                 {formatPHDateTime(r.created_at)}
                               </td>
                             )}
-                            <td className="py-2.5 px-4 pr-6 align-middle text-right">
-                              <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                            <td className="w-16 py-2.5 px-3 align-middle text-center">
+                              <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <button
