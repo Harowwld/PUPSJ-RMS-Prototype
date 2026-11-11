@@ -2,14 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
+import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
   ArrowDown01Icon,
   CalendarCheckIn01Icon,
-  ClipboardIcon,
   ViewIcon,
 } from "hugeicons-react";
 
@@ -30,33 +31,11 @@ const POST_EVENT_STATUS_GROUPS = [
 ];
 
 export function getProposalStatusBadgeClass(status) {
-  switch (status) {
-    case "Approved":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40";
-    case "Under Review":
-      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40";
-    case "Needs Revision":
-      return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40";
-    case "Declined":
-      return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
-    default:
-      return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40";
-  }
+  return getStatusBadgeClass(status);
 }
 
 export function getPostEventStatusBadgeClass(status) {
-  switch (status) {
-    case "Cleared":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40";
-    case "Under Review":
-      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40";
-    case "Needs Revision":
-      return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40";
-    case "Declined":
-      return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700";
-    default:
-      return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40";
-  }
+  return status === "Cleared" ? BADGE_PALETTES.emerald : getStatusBadgeClass(status);
 }
 
 export default function OsasRecordList({
@@ -135,23 +114,26 @@ export default function OsasRecordList({
                   type="button"
                   onClick={() => toggleGroup(group.key)}
                   aria-expanded={!isCollapsed}
-                  className="w-full flex items-center justify-between px-6 py-2.5 bg-gray-50/75 dark:bg-zinc-900/60 hover:bg-gray-100/75 dark:hover:bg-zinc-800/60 transition-colors text-left cursor-pointer border-b border-border/70 dark:border-border/70"
+                  className="w-full flex items-center justify-between px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors text-left cursor-pointer border-b border-border dark:border-border"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <ArrowDown01Icon
                       size="1em"
                       className={cn(
-                        "text-xs text-gray-500 dark:text-zinc-400 transition-transform duration-200 shrink-0",
+                        "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
                         isCollapsed && "-rotate-90"
                       )}
                     />
-                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] truncate">
+                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                       {group.label}
                     </span>
-                    <span className={cn("px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/[0.06] dark:bg-white/10 text-gray-600 dark:text-zinc-300 tabular-nums", BADGE_BASE)}>
+                    <span className={cn("px-1.5 py-0.2 rounded-full text-[10px] bg-black/[0.06] dark:bg-white/10 text-gray-600 dark:text-zinc-300 tabular-nums", BADGE_BASE)}>
                       {group.items.length}
                     </span>
                   </div>
+                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
+                    {isCollapsed ? "Expand" : "Collapse"}
+                  </span>
                 </button>
               </h3>
             )}
@@ -169,13 +151,7 @@ export default function OsasRecordList({
                   const badgeClass = isPostEvent
                     ? getPostEventStatusBadgeClass(status)
                     : getProposalStatusBadgeClass(status);
-                  const dateFormatted = item.created_at
-                    ? new Date(item.created_at).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                    : "Date unavailable";
+                  const rel = formatRelativeTime(item.created_at);
                   const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
                   const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
 
@@ -185,96 +161,74 @@ export default function OsasRecordList({
                       role="listitem"
                       onClick={() => onSelect?.(item)}
                       className={cn(
-                        "group flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer",
+                        "group flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
                         densityClasses.paddingY,
                         densityClasses.paddingX,
                         densityClasses.gap,
                         densityClasses.minHeight
                       )}
                     >
-                      {/* Left: Main details */}
-                      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400 tabular-nums shrink-0">
-                            #{item.id}
-                          </span>
-                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate">
-                            {title || "Untitled Submission"}
-                          </span>
-                          {organization && (
-                            <span className="text-xs text-gray-500 dark:text-zinc-400 truncate">
-                              · {item.org_acronym ? `${item.org_acronym} — ` : ""}{organization}
+                      {/* Left: Identifier, title, and supporting context */}
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                        <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[70px]">
+                          {item.id}
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate max-w-[200px] sm:max-w-[320px] lg:max-w-md">
+                              {title || "Untitled Submission"}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Metadata strip */}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-zinc-400">
-                          <span className="font-medium text-gray-700 dark:text-zinc-300 truncate">
-                            {submittedBy}
-                            {submitterId ? ` (${submitterId})` : ""}
-                          </span>
-
-                          {isPostEvent ? (
-                            <span className="tabular-nums">
-                              {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                            {organization && (
+                              <span className="text-xs text-gray-400 dark:text-zinc-500 truncate hidden md:inline">
+                                — {item.org_acronym ? `${item.org_acronym} · ` : ""}{organization}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-x-2 gap-y-1 min-w-0 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
+                            <span className="text-gray-700 dark:text-zinc-300 truncate shrink-0 max-w-[180px]">
+                              {submittedBy}{submitterId ? ` (${submitterId})` : ""}
                             </span>
-                          ) : (
-                            <>
-                              {item.officer_position && (
-                                <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal">
-                                  {item.officer_position}
-                                </span>
-                              )}
-                              {item.has_bylaws != null && (
-                                <span className={cn(
-                                  "px-1.5 py-0.2 rounded text-[10px] font-semibold border",
-                                  item.has_bylaws
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40"
-                                    : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/40"
-                                )}>
-                                  {item.has_bylaws ? "CBL Active" : "No CBL"}
-                                </span>
-                              )}
-                              {item.post_event_status && item.status === "Approved" && (
-                                <span className="text-[10px] text-purple-700 dark:text-purple-300 font-medium">
-                                  Post-Event: {item.post_event_status}
-                                </span>
-                              )}
-                            </>
-                          )}
-
-                          <span className="tabular-nums text-gray-400 dark:text-zinc-500">
-                            Submitted {dateFormatted}
-                          </span>
+                            {isPostEvent ? (
+                              <span className="tabular-nums truncate">
+                                {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                              </span>
+                            ) : (
+                              <>
+                                {item.officer_position && <span className="truncate">{item.officer_position}</span>}
+                                {item.has_bylaws != null && <span className="truncate">{item.has_bylaws ? "CBL Active" : "No CBL"}</span>}
+                                {item.post_event_status && item.status === "Approved" && <span className="truncate">Post-Event: {item.post_event_status}</span>}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Right: Text-Only Badge & Action Button */}
-                      <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
-                        {/* Apple HIG Text-Only Status Badge (NO indicator dot) */}
-                        <div
-                          className={cn(badgeClass, BADGE_BASE)}
-                        >
+                      {/* Right: Status, relative time, and details action */}
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
+                        <span className={cn(badgeClass, BADGE_BASE)}>
                           {status}
-                        </div>
+                        </span>
 
-                        {/* Review / Details Action Button */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() => onReview?.(item)}
-                              aria-label={isPostEvent ? `Review clearance for ${title}` : `Review proposal for ${title}`}
-                              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 cursor-pointer active:scale-95 transition-all"
-                            >
-                              <ClipboardIcon size={16} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {isPostEvent ? "Review Clearance" : "Review Proposal"}
-                          </TooltipContent>
-                        </Tooltip>
+                        {item.created_at && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium tabular-nums hidden sm:inline ml-1 shrink-0">
+                                {rel.relative || rel.date}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Submitted on {formatPHDateTime(item.created_at)}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onReview?.(item)}
+                          className="h-7 px-3 text-[11px] font-semibold rounded-lg cursor-pointer"
+                        >
+                          View Details
+                        </Button>
                       </div>
                     </div>
                   );

@@ -88,10 +88,10 @@ async function runTests() {
     console.log("\n[Step 2] Testing security authorization boundaries (403)...");
     const dummyPdf = await createTestPdf("UNAUTHORIZED ATTEMPT");
 
-    // 2a. Post-event submission by unwhitelisted student (student@pup.local is not an officer for jpcs)
+    // 2a. Post-event submission by unwhitelisted student (student@pup.local is not an officer for jfinex)
     const unwhitelistedReportForm = new FormData();
     unwhitelistedReportForm.append("eventProposalId", "1");
-    unwhitelistedReportForm.append("organizationId", "jpcs");
+    unwhitelistedReportForm.append("organizationId", "jfinex");
     unwhitelistedReportForm.append("narrativeFile", new Blob([dummyPdf], { type: "application/pdf" }), "unauth.pdf");
 
     const unauthReportRes = await fetch(`${BASE_URL}/api/student/post-event-reports`, {

@@ -24,6 +24,7 @@ import {
   getPostEventStatusBadgeClass,
   FirstPagePreview,
 } from "@/components/staff/OsasMonitoringTab";
+import NarrativeText from "@/components/shared/NarrativeText";
 import { Alert02Icon, ArrowRight02Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, HourglassIcon, JusticeScale01Icon, Loading01Icon, ReloadIcon, Shield01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
@@ -219,8 +220,7 @@ export default function OsasProposalReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={cn(BADGE_PALETTES.maroon, "font-sans tracking-wider text-[10px]", BADGE_BASE)}>
-                  {selected.org_acronym ? `[${selected.org_acronym}] ` : ""}
+                <span className="text-xs text-gray-600 dark:text-zinc-400">
                   {selected.verified_org_name || selected.organization_name}
                 </span>
                 {selected.is_verified_officer && (
@@ -264,26 +264,6 @@ export default function OsasProposalReviewSheet({
               Proposal Specification
             </h4>
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-              <InfoRow icon="Building01Icon" label="Organization">
-                <span>
-                  {selected.organization_name}
-                  {selected.org_acronym && (
-                    <span className="text-gray-400 font-normal ml-1">({selected.org_acronym})</span>
-                  )}
-                </span>
-              </InfoRow>
-
-              <InfoRow icon="UserIcon" label="Proponent">
-                <span>
-                  {selected.student_name}
-                  {selected.officer_position && (
-                    <span className="ml-1.5 px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 text-[10px] font-semibold border border-sky-200/50 dark:border-sky-800/30">
-                      {selected.officer_position}
-                    </span>
-                  )}
-                </span>
-              </InfoRow>
-
               <InfoRow icon="Contact01Icon" label="Student Number" value={selected.student_no} />
 
               <InfoRow icon="Mail01Icon" label="Email Address" value={selected.submitted_by_email || "N/A"} />
@@ -309,14 +289,6 @@ export default function OsasProposalReviewSheet({
               <InfoRow icon="Location01Icon" label="Venue" value={selected.venue || "None specified"} />
 
               <InfoRow icon="Clock01Icon" label="Date Submitted" value={submittedDateStr} />
-
-              <InfoRow icon="PieChartIcon" label="Current Stage">
-                <span
-                  className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}
-                >
-                  {selected.status}
-                </span>
-              </InfoRow>
             </div>
           </div>
 
@@ -458,7 +430,7 @@ export default function OsasProposalReviewSheet({
                 onOpenPreview={() => handleOpenPdfPreview?.(selected)}
               />
             ) : (
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between">
+              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
                     <File02Icon size={16}  />
@@ -485,6 +457,53 @@ export default function OsasProposalReviewSheet({
               </div>
             )}
           </div>
+
+          {selected.versions?.length > 1 && (
+            <details className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                <span>Submitted PDF versions</span>
+                <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                  {selected.versions.length}
+                </span>
+              </summary>
+              <div className="space-y-2 px-3 pb-3">
+                {[...selected.versions].reverse().map((version, index) => (
+                  <div key={version.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 dark:bg-zinc-900/40">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-zinc-100">
+                        Revision {version.revision_number}{index === 0 ? " · Current" : ""}
+                      </p>
+                      <p className="truncate text-[11px] text-gray-500 dark:text-zinc-400" title={version.original_filename}>
+                        {version.original_filename} · {version.created_at ? new Date(version.created_at).toLocaleDateString() : "Date unavailable"}
+                      </p>
+                    </div>
+                    {version.file_pruned_at ? (
+                      <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPdfPreviewData?.({
+                            url: `/api/osas/event-proposals/${selected.id}?file=1&revisionId=${version.id}`,
+                            title: `${selected.title} · Revision ${version.revision_number}`,
+                            subtitle: `Submitted for ${selected.organization_name || "OSAS"}.`,
+                            docType: "Event Proposal",
+                            originalFilename: version.original_filename || "Proposal.pdf",
+                          });
+                          setPdfPreviewOpen?.(true);
+                        }}
+                        className="h-8 shrink-0 rounded-lg px-3 text-xs"
+                      >
+                        {PDF_ACTION_LABELS.preview}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
 
           {/* SECTION 4: Evaluation & Stage Decision */}
           <div className="space-y-3.5 pt-2 border-t border-border/80 dark:border-border">
@@ -636,7 +655,7 @@ export default function OsasProposalReviewSheet({
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
                         <span
-                          className={cn("inline-flex items-center rounded-full border px-2 py-0.2 text-[9px] font-bold", getProposalStatusBadgeClass(update.status), BADGE_BASE)}
+                          className={cn("inline-flex items-center rounded-full border px-2 py-0.2 text-[9px]", getProposalStatusBadgeClass(update.status), BADGE_BASE)}
                         >
                           {update.status}
                         </span>
@@ -662,9 +681,9 @@ export default function OsasProposalReviewSheet({
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-gray-50/60 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-border/80 dark:border-border">
-                      {update.message}
-                    </p>
+                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-gray-50/70 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-border/70 dark:border-border/60">
+                      <NarrativeText text={update.message} mode="full" />
+                    </div>
                   </li>
                 ))}
               </ol>

@@ -6,8 +6,7 @@ import SheetPagination from "@/components/shared/SheetPagination";
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage";
-import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Reorder } from "framer-motion";
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -55,7 +54,7 @@ import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Clock01Icon, Copy01Icon, CovidInfoIcon, DragDropIcon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Copy01Icon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function formatChipDate(dateStr) {
   if (!dateStr) return "";
@@ -196,30 +195,9 @@ export default function OSASOrganizationComplianceView({
   const [sortBy, setSortBy] = useState("complianceScore");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // Draggable KPI Stat Cards
-  const [kpiOrder, setKpiOrder] = useState(["accreditation", "organizations", "cbl"]);
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const statCardsRef = useRef(null);
-
   // Pagination
   const [page, setPage] = useUrlPage();
-  const [pageSize, setPageSize] = useState(10);
-
-  // Click outside to close selected KPI popover
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
+  const [pageSize, setPageSize] = useState(20);
 
   // Modals
   const [selectedOrgForOfficers, setSelectedOrgForOfficers] = useState(null);
@@ -365,10 +343,10 @@ export default function OSASOrganizationComplianceView({
   ], []);
 
   const groupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "category", label: "Category" },
     { value: "compliance", label: "Compliance Status" },
     { value: "standing", label: "Standing" },
+    { value: "none", label: "No grouping" },
   ], []);
 
   const tableColumns = useMemo(() => [
@@ -877,13 +855,30 @@ export default function OSASOrganizationComplianceView({
                   onRefresh={() => load(true)}
                   isLoading={manualLoading}
                   title="Refresh Compliance"
+                  className="h-9 w-9"
                 />
 
                 <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCsv}
+                  disabled={loading || organizations.length === 0 || isExportingCsv}
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  {isExportingCsv ? (
+                    <Loading01Icon size="1em" className="animate-spin text-[16px]" />
+                  ) : (
+                    "Export CSV"
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
                   onClick={handleOpenPdfReport}
                   disabled={loading || organizations.length === 0 || isGeneratingPdf}
-                  className="h-9 shrink-0 px-4 cursor-pointer"
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"
                 >
                   {isGeneratingPdf ? (
                     <Loading01Icon size="1em" className="animate-spin text-[16px] flex items-center justify-center" />
@@ -893,358 +888,101 @@ export default function OSASOrganizationComplianceView({
                 </Button>
               </div>
             }
-            secondaryActions={
-              <Button type="button" variant="outline" onClick={handleExportCsv} disabled={loading || organizations.length === 0 || isExportingCsv} className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all">
-                {isExportingCsv ? <Loading01Icon size="1em" className="animate-spin text-[16px]" /> : "Export CSV"}
-              </Button>
-            }
           />
 
-          {/* 2. Top Summary Metrics Banner */}
-          {loading && !data ? (
+          {/* 2. Top Summary Metrics Banner (Clean, Non-interactive Steady Stat Cards) */}
+          {loading && !manualLoading && !data ? (
             <div className="px-6 pb-6">
-              <KpiStatCardsSkeleton count={3} />
+              <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+                <KpiStatCardsSkeleton count={3} />
+              </div>
             </div>
           ) : !error && data ? (
             <div className="px-6 pb-6">
               <div
                 className={cn(
-                  "transition-all duration-slow",
+                  "p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08] transition-all duration-slow",
                   loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}
               >
-                <Reorder.Group
-                  as="div"
-                  axis="x"
-                  values={kpiOrder}
-                  onReorder={setKpiOrder}
-                  ref={statCardsRef}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-20"
-                >
-                  {kpiOrder.map((key) => {
-                    if (key === "accreditation") {
-                      return (
-                        <Reorder.Item
-                          as="div"
-                          value="accreditation"
-                          key="accreditation"
-                          className={cn(selectedKpi === "accreditation" ? "z-30" : "z-10")}
-                        >
-                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "accreditation" ? "z-30" : "z-10")}>
-                            <div
-                              onClick={() => setSelectedKpi(selectedKpi === "accreditation" ? null : "accreditation")}
-                              className={cn(
-                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                                selectedKpi === "accreditation"
-                                  ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                                  : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                              )}
-                            >
-                              <div className="flex justify-between items-start p-4 pb-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                    Accreditation Rate
-                                  </span>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
-                                    </TooltipTrigger>
-                                    <TooltipContent
-                                      side="right"
-                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
-                                    >
-                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Accreditation Formula</p>
-                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
-                                        Percentage of recognized student organizations with 100% completed compliance requirements.
-                                      </p>
-                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
-                                        (Compliant Orgs / Total Orgs) × 100
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#22c55e]">
-                                  <CheckmarkBadge01Icon size="1em" className="text-[15px]" />
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-end p-4 pt-1">
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                    {filteredSummary.overallComplianceRate}%
-                                  </span>
-                                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                                    {filteredSummary.fullyCompliantCount} of {filteredSummary.totalOrganizations} Accredited
-                                    {isFiltered && (
-                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
-                                        · Campus: {summary?.overallComplianceRate ?? 0}%
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                              </div>
-                            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  {/* Card 1: Accreditation Rate */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <CheckmarkBadge01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Accreditation Rate
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                          <Tick01Icon size={8} className="stroke-[3]" />
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Accredited</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {filteredSummary.overallComplianceRate}%
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium tabular-nums">
+                      {filteredSummary.fullyCompliantCount} of {filteredSummary.totalOrganizations} accredited
+                      {isFiltered ? ` · Campus: ${summary?.overallComplianceRate ?? 0}%` : ""}
+                    </div>
+                  </div>
 
-                            {/* Absolute details popover */}
-                            <div
-                              className={cn(
-                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                                selectedKpi === "accreditation"
-                                  ? "scale-y-100 opacity-100 translate-y-0"
-                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                              )}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                    <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Fully Compliant</span>
-                                    <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{filteredSummary.fullyCompliantCount}</span>
-                                  </div>
-                                  <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                                    <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Partially Compliant</span>
-                                    <span className="text-lg font-black text-amber-700 dark:text-amber-400">{filteredSummary.partiallyCompliantCount}</span>
-                                  </div>
-                                </div>
+                  {/* Card 2: Recognized Orgs */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <Building01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Recognized Orgs
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Building01Icon size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Active Cycle</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400 font-jakarta mt-2 tabular-nums">
+                      {filteredSummary.totalOrganizations.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium tabular-nums">
+                      {filteredSummary.academicCount} Academic · {filteredSummary.nonAcademicCount} Non-Academic
+                      {isFiltered ? ` (of ${organizations.length})` : ""}
+                    </div>
+                  </div>
 
-                                <div className="bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 flex justify-between items-center text-xs">
-                                  <span className="font-semibold text-rose-700 dark:text-rose-400">Action Required (&lt;50%)</span>
-                                  <span className="font-bold text-rose-800 dark:text-rose-300">{filteredSummary.actionRequiredCount} orgs</span>
-                                </div>
-
-                                {filteredSummary.categoryBreakdown.length > 0 && (
-                                  <div>
-                                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">Category Performance</h4>
-                                    <div className="space-y-1">
-                                      {filteredSummary.categoryBreakdown.map((cat) => (
-                                        <div key={cat.category} className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300">
-                                          <span className="truncate max-w-[150px] font-medium">{cat.category}</span>
-                                          <span className="font-bold text-gray-900 dark:text-zinc-50">{cat.complianceRate}% ({cat.compliantCount}/{cat.totalOrgs})</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </Reorder.Item>
-                      );
-                    }
-
-                    if (key === "organizations") {
-                      return (
-                        <Reorder.Item
-                          as="div"
-                          value="organizations"
-                          key="organizations"
-                          className={cn(selectedKpi === "organizations" ? "z-30" : "z-10")}
-                        >
-                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "organizations" ? "z-30" : "z-10")}>
-                            <div
-                              onClick={() => setSelectedKpi(selectedKpi === "organizations" ? null : "organizations")}
-                              className={cn(
-                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                                selectedKpi === "organizations"
-                                  ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                                  : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                              )}
-                            >
-                              <div className="flex justify-between items-start p-4 pb-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                    Recognized Orgs
-                                  </span>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
-                                    </TooltipTrigger>
-                                    <TooltipContent
-                                      side="right"
-                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
-                                    >
-                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">Recognized Organizations</p>
-                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300">
-                                        All student organizations officially chartered and accredited under OSAS for the active academic cycle.
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                                  <Building01Icon size="1em" className="text-[15px]" />
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-end p-4 pt-1">
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                    {filteredSummary.totalOrganizations.toLocaleString()}
-                                  </span>
-                                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                    {filteredSummary.academicCount} Academic · {filteredSummary.nonAcademicCount} Non-Academic
-                                    {isFiltered && (
-                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
-                                        (of {organizations.length})
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                              </div>
-                            </div>
-
-                            {/* Absolute details popover */}
-                            <div
-                              className={cn(
-                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                                selectedKpi === "organizations"
-                                  ? "scale-y-100 opacity-100 translate-y-0"
-                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                              )}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                    <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Academic</span>
-                                    <span className="text-lg font-black text-blue-700 dark:text-blue-400">{filteredSummary.academicCount}</span>
-                                  </div>
-                                  <div className="bg-indigo-50 dark:bg-indigo-950/30 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
-                                    <span className="block text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Non-Academic</span>
-                                    <span className="text-lg font-black text-indigo-700 dark:text-indigo-400">{filteredSummary.nonAcademicCount}</span>
-                                  </div>
-                                </div>
-
-                                <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border space-y-1.5 text-xs">
-                                  <div className="flex justify-between items-center">
-                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Authorized Officers</span>
-                                    <span className="font-bold text-gray-900 dark:text-zinc-100">{filteredSummary.withOfficersCount} orgs</span>
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <span className="font-medium text-gray-600 dark:text-zinc-400">With Assigned Adviser</span>
-                                    <span className="font-bold text-gray-900 dark:text-zinc-100">{filteredSummary.withAdvisersCount} orgs</span>
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1 uppercase tracking-wide">Status Distribution</h4>
-                                  <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-zinc-300">
-                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Active: {filteredSummary.statusDistribution.Active || 0}</span>
-                                    <span>·</span>
-                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Probationary: {filteredSummary.statusDistribution.Probationary || 0}</span>
-                                    <span>·</span>
-                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-zinc-400 inline-block" /> Inactive: {filteredSummary.statusDistribution.Inactive || 0}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Reorder.Item>
-                      );
-                    }
-
-                    if (key === "cbl") {
-                      return (
-                        <Reorder.Item
-                          as="div"
-                          value="cbl"
-                          key="cbl"
-                          className={cn(selectedKpi === "cbl" ? "z-30" : "z-10")}
-                        >
-                          <div className={cn("relative group rounded-xl cursor-grab active:cursor-grabbing", selectedKpi === "cbl" ? "z-30" : "z-10")}>
-                            <div
-                              onClick={() => setSelectedKpi(selectedKpi === "cbl" ? null : "cbl")}
-                              className={cn(
-                                "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                                selectedKpi === "cbl"
-                                  ? "border-amber-500/50 ring-1 ring-amber-500/20"
-                                  : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                              )}
-                            >
-                              <div className="flex justify-between items-start p-4 pb-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                    CBL Archival Rate
-                                  </span>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <CovidInfoIcon size="1em" className="cursor-help text-xs text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" />
-                                    </TooltipTrigger>
-                                    <TooltipContent
-                                      side="right"
-                                      className="max-w-[280px] bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 p-3 rounded-xl shadow-xl border border-border dark:border-border text-xs font-normal"
-                                    >
-                                      <p className="font-semibold text-pup-maroon dark:text-red-400 mb-1">CBL Archival Formula</p>
-                                      <p className="leading-relaxed text-gray-600 dark:text-zinc-300 mb-2">
-                                        Constitution & By-Laws (CBL) digitization and verification completion across all registered organizations.
-                                      </p>
-                                      <div className="p-2 bg-gray-50 dark:bg-zinc-800/60 rounded-lg text-[11px] font-sans tabular-nums border border-border/60 dark:border-border">
-                                        (Archived CBLs / Total Organizations) × 100
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#f59e0b]">
-                                  <File02Icon size="1em" className="text-[15px]" />
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-end p-4 pt-1">
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                    {filteredSummary.cblArchivedRate}%
-                                  </span>
-                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">
-                                    {filteredSummary.cblArchivedCount} of {filteredSummary.totalOrganizations} Digitized
-                                    {isFiltered && (
-                                      <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
-                                        · Campus: {summary?.cblArchivedRate ?? 0}%
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                              </div>
-                            </div>
-
-                            {/* Absolute details popover */}
-                            <div
-                              className={cn(
-                                "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                                selectedKpi === "cbl"
-                                  ? "scale-y-100 opacity-100 translate-y-0"
-                                  : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                              )}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                    <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Archived & Verified</span>
-                                    <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{filteredSummary.cblArchivedCount}</span>
-                                  </div>
-                                  <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                                    <span className="block text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending Submission</span>
-                                    <span className="text-lg font-black text-amber-700 dark:text-amber-400">{filteredSummary.cblPendingCount}</span>
-                                  </div>
-                                </div>
-
-                                <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                                  <span className="font-semibold text-gray-600 dark:text-zinc-400">Digitization Progress</span>
-                                  <span className="font-bold text-amber-600 dark:text-amber-400">{filteredSummary.cblArchivedRate}% completed</span>
-                                </div>
-
-                                <p className="text-[11px] leading-relaxed text-gray-900 dark:text-zinc-300 italic">
-                                  Ratified Constitution & By-Laws must be formally uploaded to the repository for legal compliance and university recognition.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </Reorder.Item>
-                      );
-                    }
-
-                    return null;
-                  })}
-                </Reorder.Group>
+                  {/* Card 3: CBL Archival Rate */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <File02Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          CBL Archival Rate
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <File02Icon size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Digitized</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 font-jakarta mt-2 tabular-nums">
+                      {filteredSummary.cblArchivedRate}%
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium tabular-nums">
+                      {filteredSummary.cblArchivedCount} of {filteredSummary.totalOrganizations} digitized
+                      {isFiltered ? ` · Campus: ${summary?.cblArchivedRate ?? 0}%` : ""}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
@@ -1346,12 +1084,13 @@ export default function OSASOrganizationComplianceView({
               {sortedOrganizations.length > 0 ? (
                 <Table
                   columns={visibleColumns.map((colKey) => {
-                    if (colKey === "name") return { kind: "text", maxWidth: 340 };
-                    if (colKey === "adviser") return "text";
-                    if (colKey === "cbl" || colKey === "officers") return "status";
-                    return "number";
+                    if (colKey === "name") return { kind: "text", maxWidth: 380 };
+                    if (colKey === "adviser") return { kind: "text", maxWidth: 350 };
+                    if (colKey === "cbl") return { kind: "status", width: 180 };
+                    if (colKey === "officers") return { kind: "status", width: 180 };
+                    return { kind: "number", width: 220 };
                   })}
-                  className="min-w-[1050px]"
+                  className="min-w-[920px]"
                 >
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
@@ -1359,7 +1098,7 @@ export default function OSASOrganizationComplianceView({
                       {visibleColumns.includes("name") && (
                         <th
                           className={cn(
-                            "py-3 px-6 w-[32%] min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
+                            "py-3 px-6 min-w-[260px] sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                             isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
@@ -1395,7 +1134,7 @@ export default function OSASOrganizationComplianceView({
 
                       {/* Column 2: Faculty Adviser */}
                       {visibleColumns.includes("adviser") && (
-                        <th className="py-3 px-6 w-[22%]">
+                        <th className="py-3 px-6">
                           <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
                             Faculty Adviser
                           </span>
@@ -1404,7 +1143,7 @@ export default function OSASOrganizationComplianceView({
 
                       {/* Column 3: Archival CBL */}
                       {visibleColumns.includes("cbl") && (
-                        <th className="py-3 px-6 w-[14%] text-center">
+                        <th className="py-3 px-6 text-center">
                           <button
                             type="button"
                             onClick={() => handleSort("hasCbl")}
@@ -1420,7 +1159,7 @@ export default function OSASOrganizationComplianceView({
 
                       {/* Column 4: Authorized Officers */}
                       {visibleColumns.includes("officers") && (
-                        <th className="py-3 px-6 w-[14%] text-center">
+                        <th className="py-3 px-6 text-center">
                           <button
                             type="button"
                             onClick={() => handleSort("activeOfficerCount")}
@@ -1436,7 +1175,7 @@ export default function OSASOrganizationComplianceView({
 
                       {/* Column 5: Compliance */}
                       {visibleColumns.includes("complianceScore") && (
-                        <th className="py-3 px-6 w-[18%] text-right">
+                        <th className="py-3 px-6 text-right">
                           <button
                             type="button"
                             onClick={() => handleSort("complianceScore")}
@@ -1492,7 +1231,7 @@ export default function OSASOrganizationComplianceView({
                                     </span>
                                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                       {org.acronym && (
-                                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
+                                        <span className="px-1.5 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border shrink-0">
                                           {org.acronym}
                                         </span>
                                       )}
@@ -1522,7 +1261,7 @@ export default function OSASOrganizationComplianceView({
                               {visibleColumns.includes("adviser") && (
                                 <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
                                   {org.adviserName ? (
-                                    <div className="min-w-0 max-w-[200px]">
+                                    <div className="min-w-0 max-w-[400px]">
                                       <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                                         {org.adviserName}
                                       </div>
@@ -1558,15 +1297,13 @@ export default function OSASOrganizationComplianceView({
                                           filename: org.cblFilename,
                                         })
                                       }
-                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
+                                      className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
                                       title={PDF_ACTION_LABELS.preview}
                                     >
-                                      <File02Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
-                                      <span>Archived PDF</span>
+                                      <span>Preview PDF</span>
                                     </button>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-                                      <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
+                                    <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
                                       <span>Pending PDF</span>
                                     </span>
                                   )}
@@ -1583,43 +1320,44 @@ export default function OSASOrganizationComplianceView({
                                         setSelectedOrgForOfficers(org);
                                         setOfficerSearch("");
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
                                       title="View authorized officers"
                                     >
                                       <UserSearch01Icon size="1em" className="text-xs text-blue-600 dark:text-blue-400" />
                                       <span>
-                                        {org.activeOfficerCount} {org.activeOfficerCount === 1 ? "Officer" : "Officers"}
+                                        View roster ({org.activeOfficerCount})
                                       </span>
                                     </button>
                                   ) : (
-                                    <button
+                                    <Button
                                       type="button"
+                                      variant="secondary"
+                                      size="xs"
                                       onClick={() => {
                                         setSelectedOrgForOfficers(org);
                                         setOfficerSearch("");
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer active:scale-95"
                                       title="Authorize officers"
                                     >
-                                      <span>Add Officers</span>
-                                    </button>
+                                      Add Officers
+                                    </Button>
                                   )}
                                 </td>
                               )}
 
                               {/* Column 5: Compliance */}
                               {visibleColumns.includes("complianceScore") && (
-                                <td className="py-3.5 px-6 text-right whitespace-nowrap">
-                                  <div className="flex flex-col items-end gap-1.5">
-                                    <div className="flex items-center gap-2.5">
+                                <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                                  <div className="flex flex-col items-end gap-1 min-w-0">
+                                    <div className="flex items-center justify-end gap-2">
                                       {/* Mini progress bar */}
-                                      <div className="w-16 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden hidden sm:block">
+                                      <div className="w-10 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden hidden sm:block shrink-0">
                                         <div
                                           className={cn("h-full rounded-full transition-all duration-300", barColor)}
                                           style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
                                         />
                                       </div>
-                                      <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[32px] text-right">
+                                      <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100 min-w-[28px] text-right shrink-0">
                                         {score}%
                                       </span>
                                       <span
@@ -1627,14 +1365,17 @@ export default function OSASOrganizationComplianceView({
                                           ? BADGE_PALETTES.emerald
                                           : isPartiallyCompliant
                                           ? BADGE_PALETTES.amber
-                                          : BADGE_PALETTES.rose, BADGE_BASE)}
+                                          : BADGE_PALETTES.rose, BADGE_BASE, "shrink-0")}
                                       >
                                         {org.complianceStatus}
                                       </span>
                                     </div>
                                     {org.missingRequirements?.length > 0 && (
-                                      <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500">
-                                        <span>Missing:</span>
+                                      <div
+                                        className="max-w-full truncate text-[10px] text-gray-400 dark:text-zinc-500"
+                                        title={`Missing: ${org.missingRequirements.join(", ")}`}
+                                      >
+                                        <span>Missing: </span>
                                         <span className="text-rose-600 dark:text-rose-400 font-medium">
                                           {org.missingRequirements.join(", ")}
                                         </span>
@@ -1797,38 +1538,49 @@ export default function OSASOrganizationComplianceView({
               {/* Summary Strip */}
               <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
                 <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 flex items-center justify-center text-xl shrink-0 font-bold border border-blue-500/20 dark:border-blue-800/40 mt-0.5">
-                  <Shield01Icon size={16}  />
+                  <Shield01Icon size={16} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    {selectedOrgForOfficers?.acronym && (
+                  {selectedOrgForOfficers?.acronym && (
+                    <div className="mb-1">
                       <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums tracking-wider rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border border-border/70 dark:border-border">
                         {selectedOrgForOfficers.acronym}
                       </span>
-                    )}
-                    <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      {selectedOrgForOfficers?.category || "Student Org"}
-                    </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
-                      {selectedOrgForOfficers?.status || "Active"}
-                    </span>
-                  </div>
+                    </div>
+                  )}
                   <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                     {selectedOrgForOfficers?.name}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Adviser: <strong className="text-gray-900 dark:text-zinc-200">{selectedOrgForOfficers?.adviserName || "Unassigned"}</strong>
-                  </p>
+                  {selectedOrgForOfficers?.description ? (
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 line-clamp-2">
+                      {selectedOrgForOfficers.description}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
-              {/* SECTION 1: Leadership Overview (Unboxed InfoRow) */}
+              {/* SECTION 1: Organization & Compliance Summary (Unboxed InfoRow) */}
               <div className="space-y-2">
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Organization Standing
+                  Organization & Compliance Summary
                 </h4>
                 <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                   <InfoRow icon="Tag01Icon" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
+
+                  <InfoRow icon="Shield01Icon" label="Standing">
+                    <span
+                      className={cn(
+                        selectedOrgForOfficers?.status === "Active"
+                          ? BADGE_PALETTES.emerald
+                          : selectedOrgForOfficers?.status === "Probationary"
+                          ? BADGE_PALETTES.amber
+                          : BADGE_PALETTES.slate || BADGE_PALETTES.rose,
+                        BADGE_BASE
+                      )}
+                    >
+                      {selectedOrgForOfficers?.status || "Active"}
+                    </span>
+                  </InfoRow>
 
                   <InfoRow icon="TeacherIcon" label="Faculty Adviser">
                     <span>
@@ -1839,15 +1591,46 @@ export default function OSASOrganizationComplianceView({
                     </span>
                   </InfoRow>
 
-                  <InfoRow
-                    icon="Shield01Icon"
-                    label="Accredited Officers"
-                    value={`${selectedOrgForOfficers?.activeOfficerCount || 0} Authorized ${selectedOrgForOfficers?.activeOfficerCount === 1 ? "Officer" : "Officers"}`}
-                  />
+                  <InfoRow icon="File02Icon" label="Archival CBL">
+                    {selectedOrgForOfficers?.hasCbl ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreviewCbl({
+                            url: `/api/osas/organizations/${selectedOrgForOfficers.id}/bylaws?file=1`,
+                            title: `${selectedOrgForOfficers.name}: Constitution & By-Laws (CBL)`,
+                            filename: selectedOrgForOfficers.cblFilename,
+                          })
+                        }
+                        className="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer active:scale-95"
+                        title={PDF_ACTION_LABELS.preview}
+                      >
+                        Archived PDF
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-md dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                        Pending PDF
+                      </span>
+                    )}
+                  </InfoRow>
 
-                  <InfoRow icon="PieChartIcon" label="Accreditation Status">
-                    <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
-                      {selectedOrgForOfficers?.status || "Active"}
+                  <InfoRow icon="PieChartIcon" label="Compliance">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="font-sans tabular-nums font-bold text-gray-900 dark:text-zinc-100">
+                        {selectedOrgForOfficers?.complianceScore ?? 0}%
+                      </span>
+                      <span
+                        className={cn(
+                          selectedOrgForOfficers?.complianceScore === 100
+                            ? BADGE_PALETTES.emerald
+                            : (selectedOrgForOfficers?.complianceScore ?? 0) >= 50
+                            ? BADGE_PALETTES.amber
+                            : BADGE_PALETTES.rose,
+                          BADGE_BASE
+                        )}
+                      >
+                        {selectedOrgForOfficers?.complianceStatus || "Action Required"}
+                      </span>
                     </span>
                   </InfoRow>
                 </div>
@@ -1916,7 +1699,7 @@ export default function OSASOrganizationComplianceView({
                       return (
                         <div
                           key={officer.id || officer.email}
-                          className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/40 dark:bg-zinc-900/40 hover:border-border dark:hover:border-white/20 transition-all shadow-2xs group"
+                          className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 hover:border-border dark:hover:border-white/20 transition-all shadow-2xs group"
                         >
                           {/* Left: Avatar + Details */}
                           <div className="flex items-center gap-3 min-w-0">

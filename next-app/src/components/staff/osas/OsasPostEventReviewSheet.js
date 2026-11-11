@@ -206,8 +206,7 @@ export default function OsasPostEventReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={cn(BADGE_PALETTES.maroon, "font-sans tracking-wider text-[10px]", BADGE_BASE)}>
-                  {selectedPostEvent.organization_acronym ? `[${selectedPostEvent.organization_acronym}] ` : ""}
+                <span className="text-xs text-gray-600 dark:text-zinc-400">
                   {selectedPostEvent.organization_name}
                 </span>
                 <span className={cn("font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300", BADGE_BASE)}>
@@ -317,7 +316,7 @@ export default function OsasPostEventReviewSheet({
 
             {/* Previous Review Remarks */}
             {(selectedPostEvent.review_note || selectedPostEvent.review_notes) && (
-              <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-3.5 space-y-1.5">
+              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pb-1.5 border-b border-border/80 dark:border-border">
                   <span>
                     Previous Evaluation by:{" "}
@@ -351,7 +350,7 @@ export default function OsasPostEventReviewSheet({
 
             <div className="space-y-2">
               {/* Narrative Report Row */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between gap-3">
+              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
                     <File02Icon size={16}  />
@@ -387,7 +386,7 @@ export default function OsasPostEventReviewSheet({
               </div>
 
               {/* Financial Liquidation Row */}
-              <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 p-3.5 flex items-center justify-between gap-3">
+              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
                     <AppIcon className=" Invoice01Icon" />
