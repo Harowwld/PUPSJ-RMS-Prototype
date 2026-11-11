@@ -90,6 +90,7 @@ import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
 import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Download01Icon, Loading01Icon, Shield01Icon, StarIcon, Tick01Icon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
+import { getRequestAffiliation, hasLinkedStudentRecord, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import AppIcon from "@/components/ui/app-icon";
 const RATING_LABELS = {
   1: "Poor",
@@ -249,7 +250,7 @@ function StudentDashboard() {
     clientType: "Student",
     courseCode: "",
     requesterName: "",
-    requesterRelationship: "Mother",
+    requesterRelationship: "",
     requesterContact: "",
     attachments: [],
   });
@@ -258,7 +259,10 @@ function StudentDashboard() {
   const [revisionTargetProposal, setRevisionTargetProposal] = useState(null);
   const [myOrganizations, setMyOrganizations] = useState([]);
   const [selectedOsasOrgId, setSelectedOsasOrgId] = useState("");
-  const [view, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
+  const [selectedView, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
+  const canViewStudentRecords = hasLinkedStudentRecord(me);
+  const isParentAccount = me?.client_type === "Parent";
+  const view = ["compliance", "osas"].includes(selectedView) && !canViewStudentRecords ? "overview" : selectedView;
   const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -1305,12 +1309,13 @@ function StudentDashboard() {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    const target = normalizeStudentTab(nextView) || "overview";
+    const normalized = normalizeStudentTab(nextView) || "overview";
+    const target = ["compliance", "osas"].includes(normalized) && !canViewStudentRecords ? "overview" : normalized;
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-  }, [router]);
+  }, [router, canViewStudentRecords]);
 
   // Synchronize view from switch-view events (Command Palette & deep linking)
   useEffect(() => {
@@ -1346,19 +1351,20 @@ function StudentDashboard() {
         return;
       }
       setMe(session.data);
+      const linkedStudent = hasLinkedStudentRecord(session.data);
       setRequestForm((prev) => ({
         ...prev,
-        clientType: session.data.client_type || prev.clientType || "Student",
-        studentNo: prev.studentNo || session.data.student_no || "",
+        clientType: session.data.client_type || "Student",
+        studentNo: prev.studentNo || (session.data.client_type === "Parent" ? "" : session.data.student_no) || "",
       }));
       const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes, complianceRes] = await Promise.all([
         fetch("/api/student/document-requests", { cache: "no-store" }),
-        fetch("/api/student/event-proposals", { cache: "no-store" }),
+        linkedStudent ? fetch("/api/student/event-proposals", { cache: "no-store" }) : null,
         fetch("/api/doc-types?scope=requestable", { cache: "no-store" }),
         fetch("/api/courses", { cache: "no-store" }),
-        fetch("/api/student/organizations", { cache: "no-store" }),
-        fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
-        fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
+        linkedStudent ? fetch("/api/student/organizations", { cache: "no-store" }) : null,
+        linkedStudent ? fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })) : null,
+        linkedStudent ? fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })) : null,
       ]);
       const parseJsonSafe = async (res) => {
         if (!res) return {};
@@ -1375,15 +1381,13 @@ function StudentDashboard() {
         parseJsonSafe(typesRes),
         parseJsonSafe(coursesRes),
         parseJsonSafe(orgsRes),
-        postEventRes.ok ? parseJsonSafe(postEventRes) : {},
-        complianceRes.ok ? parseJsonSafe(complianceRes) : {},
+        postEventRes?.ok ? parseJsonSafe(postEventRes) : {},
+        complianceRes?.ok ? parseJsonSafe(complianceRes) : {},
       ]);
-      if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
+      if (!requestRes.ok || !requestJson?.ok || (linkedStudent && (!proposalRes?.ok || !proposalJson?.ok))) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
       }
-      if (complianceJson?.ok && complianceJson?.data) {
-        setComplianceData(complianceJson.data);
-      }
+      setComplianceData(complianceJson?.ok ? complianceJson.data : null);
       setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
       setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
       const loadedOrgs = Array.isArray(orgsJson?.data) ? orgsJson.data : [];
@@ -1472,7 +1476,7 @@ function StudentDashboard() {
       const studentNo = String(requestForm.studentNo || "").trim().toUpperCase() || null;
       const docType = String(requestForm.docType || "").trim();
       const notes = String(requestForm.notes || "").trim();
-      const clientType = String(requestForm.clientType || me?.client_type || "Student").trim();
+      const clientType = getRequestAffiliation(me?.client_type || "Student", requestForm.clientType);
       const courseCode = String(requestForm.courseCode || "").trim().toUpperCase() || null;
       const requesterName = String(requestForm.requesterName || "").trim() || null;
       const requesterRelationship = String(requestForm.requesterRelationship || "").trim() || null;
@@ -1497,18 +1501,22 @@ function StudentDashboard() {
           return;
         }
         const hasSpa = attachments.some(
-          (a) => a.attachmentType === "spa" || /spa|power|auth/i.test(a.file?.name || "")
+          (a) => a.file && a.attachmentType === "spa"
         );
         const hasValidId = attachments.some(
-          (a) => a.attachmentType === "valid_id" || /valid|passport|license|(^|[^a-z])id([^a-z]|$)/i.test(a.file?.name || "")
+          (a) => a.file && a.attachmentType === "valid_id"
         );
         if (!hasSpa || !hasValidId) {
-          showToast("Authorization Documents Required", "Under RA 10173 (Data Privacy Act), attach both a signed SPA or Authorization Letter and a valid government ID.", true);
+          showToast("Authorization Documents Required", "Attach a signed authorization letter or SPA and a valid government ID. Select the matching category for each file.", true);
           return;
         }
       }
       if (clientType === "Alumni" && !studentNo && !courseCode) {
         showToast("Academic Program Required", "Please select your degree program or course to assist records retrieval.", true);
+        return;
+      }
+      if (clientType === "Student" && !studentNo) {
+        showToast("Student Number Required", "Enter your student number so the Registrar can locate your record.", true);
         return;
       }
       if (!docType) {
@@ -1571,9 +1579,9 @@ function StudentDashboard() {
         docType: "",
         notes: "",
         courseCode: "",
-        studentNo: me?.student_no || "",
+        studentNo: isParentAccount ? "" : me?.student_no || "",
         requesterName: "",
-        requesterRelationship: "Mother",
+        requesterRelationship: "",
         requesterContact: "",
         attachments: [],
       }));
@@ -1893,8 +1901,7 @@ function StudentDashboard() {
 
   if (!me || (loading && !hasLoaded)) {
     const requestedView = normalizeStudentTab(searchParams?.get("view"));
-    const preferredView = me ? normalizeStudentTab(me.preferences?.default_home_view) || "overview" : null;
-    return <StudentDashboardSkeleton view={requestedView || preferredView} />;
+    return <StudentDashboardSkeleton view={me ? view : requestedView} />;
   }
 
   const readyRequestsCount = (data.requests || []).filter(
@@ -1918,7 +1925,7 @@ function StudentDashboard() {
       iconClass: " FileUploadIcon",
       badge: readyRequestsCount > 0 ? readyRequestsCount : undefined,
     },
-    {
+    ...(canViewStudentRecords ? [{
       key: "compliance",
       label: "Document Checklist",
       iconClass: " ClipboardIcon",
@@ -1930,7 +1937,7 @@ function StudentDashboard() {
       label: "OSAS Submissions",
       iconClass: " StudentIcon",
       badge: osasActionCount > 0 ? osasActionCount : undefined,
-    },
+    }] : []),
   ];
 
   async function handleLogout() {
@@ -1961,7 +1968,7 @@ function StudentDashboard() {
           setZoomNode={setZoomNode}
           handleZoomMouseDown={handleZoomMouseDown}
           accentColor="#800000"
-          officeName="Student Portal"
+          officeName={isParentAccount || me.client_type === "Alumni" ? "Records Portal" : "Student Portal"}
           authUser={me}
           bottomContent={
             <StudentSidebarFeedbackCard
@@ -2062,7 +2069,7 @@ function StudentDashboard() {
                               className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                               title="Open Request Form"
                             >
-                              Open Request Form
+                              {isParentAccount ? "Request on Behalf of a Student" : "Open Request Form"}
                             </Button>
                           )}
                         </div>
@@ -2100,7 +2107,7 @@ function StudentDashboard() {
                                 <AddCircleIcon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Document Request</h2>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{requestForm.clientType === "Parent" ? "Request on Behalf of a Student" : "New Document Request"}</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
                               </div>
                             </div>
@@ -2113,11 +2120,14 @@ function StudentDashboard() {
                               <Shield01Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                               <div className="space-y-1 text-[11px] leading-relaxed">
                                 <span className="font-semibold block text-amber-950 dark:text-amber-100">
-                                  Data Privacy Act (RA 10173) & Third-Party Request Policy
+                                  What you need for this request
                                 </span>
-                                <p>
-                                  Under RA 10173 and university regulations, requests submitted by parents or guardians strictly require an attached <strong>Special Power of Attorney (SPA)</strong> or Authorization Letter along with a photocopy of a <strong>valid government ID</strong>.
-                                </p>
+                                <ul className="list-disc space-y-1 pl-4">
+                                  <li>The student’s student number</li>
+                                  <li>A signed authorization letter or Special Power of Attorney (SPA)</li>
+                                  <li>A copy of a valid government ID</li>
+                                </ul>
+                                <p>The Registrar reviews your authorization with the request.</p>
                               </div>
                             </div>
                           )}
@@ -2127,17 +2137,28 @@ function StudentDashboard() {
                             {/* Client Type */}
                             <div className="min-w-0">
                               <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Client Type
+                                Requesting as
                               </label>
                               <Select
                                 id="student-client-type"
                                 value={requestForm.clientType}
-                                onChange={(e) => setRequestForm({ ...requestForm, clientType: e.target.value })}
+                                disabled={isParentAccount}
+                                onChange={(e) => {
+                                  const clientType = e.target.value;
+                                  setRequestForm((prev) => ({
+                                    ...prev,
+                                    clientType,
+                                    studentNo: clientType === "Parent" ? "" : me?.student_no || "",
+                                    attachments: prev.attachments.filter(({ attachmentType }) =>
+                                      attachmentType !== "spa" && attachmentType !== "valid_id"
+                                    ),
+                                  }));
+                                }}
                                 className="h-10 w-full rounded-xl text-xs font-normal text-gray-800 dark:text-zinc-100 border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               >
-                                <option value="Student">Current Student</option>
-                                <option value="Alumni">Alumni / Former Student</option>
-                                <option value="Parent">Parent / Legal Guardian</option>
+                                {STUDENT_AFFILIATIONS.map(({ value, label }) => (
+                                  <option key={value} value={value}>{label}</option>
+                                ))}
                               </Select>
                             </div>
 
@@ -2145,7 +2166,7 @@ function StudentDashboard() {
                             <div className="min-w-0">
                               <div className="flex items-center justify-between mb-1.5">
                                 <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Student Number {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
+                                  {requestForm.clientType === "Parent" ? "Student’s Student Number" : "Student Number"} {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
                                 </label>
                               </div>
                               <Input
@@ -2159,6 +2180,7 @@ function StudentDashboard() {
                                     : "YYYY-XXXXX-SJ-0"
                                 }
                                 value={requestForm.studentNo || ""}
+                                readOnly={Boolean(me?.student_no) && requestForm.clientType !== "Parent"}
                                 onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
                                 className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               />
@@ -2210,7 +2232,8 @@ function StudentDashboard() {
                                 <p className="mt-1 text-xs text-amber-600">No active requestable Registrar document types are available.</p>
                               ) : (
                                 <p className="mt-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                                  Only university-issued credentials and certifications may be requested here. For submission of enrollment records (e.g. Health Information Sheet, PSA Birth Certificate), visit the <strong className="font-semibold text-pup-maroon dark:text-red-400">Compliance Checklist</strong> tab.
+                                  Only university-issued credentials and certifications may be requested here.
+                                  {canViewStudentRecords && requestForm.clientType === "Student" && " For enrollment records, open Document Checklist."}
                                 </p>
                               )}
                             </div>
@@ -2240,10 +2263,11 @@ function StudentDashboard() {
                                 </label>
                                 <Select
                                   id="parent-relationship-select"
-                                  value={requestForm.requesterRelationship || "Mother"}
+                                  value={requestForm.requesterRelationship}
                                   onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
                                   className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 >
+                                  <option value="" disabled>Select a relationship</option>
                                   <option value="Mother">Mother</option>
                                   <option value="Father">Father</option>
                                   <option value="Legal Guardian">Legal Guardian</option>
@@ -2316,7 +2340,7 @@ function StudentDashboard() {
                               categories={
                                 requestForm.clientType === "Parent"
                                   ? [
-                                      { value: "spa", label: "Special Power of Attorney (SPA)" },
+                                      { value: "spa", label: "Authorization Letter or SPA" },
                                       { value: "valid_id", label: "Valid Government ID" },
                                       { value: "evidence", label: "Supporting Evidence" },
                                       { value: "receipt", label: "Proof of Payment" },
@@ -3599,21 +3623,14 @@ function StudentDashboard() {
                                       </div>
                                     </div>
                                     <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 dark:border-border">
-                                      <div className="min-w-0">
-                                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">OSAS review note · {report.status}</span>
-                                          {(report.reviewed_at || report.created_at) && (
-                                            <span className="text-gray-400 dark:text-zinc-500">{formatPHDateTime(report.reviewed_at || report.created_at)}</span>
-                                          )}
-                                        </div>
-                                        {report.review_note ? (
+                                      {(report.status === "Needs Revision" || report.status === "Declined") && report.review_note && (
+                                        <div className="min-w-0 space-y-1">
+                                          <p className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300">OSAS Review Note</p>
                                           <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
                                             <NarrativeText text={report.review_note} mode="compact" />
                                           </div>
-                                        ) : (
-                                          <p className="text-xs text-gray-500 dark:text-zinc-400">No evaluation updates yet.</p>
-                                        )}
-                                      </div>
+                                        </div>
+                                      )}
                                       <div className="flex justify-end">
                                         <button
                                           type="button"
@@ -4034,21 +4051,14 @@ function StudentDashboard() {
                                     </div>
 
                                     <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 dark:border-border">
-                                      <div className="min-w-0">
-                                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">
-                                            {ver.review_notes ? `OSAS review feedback · ${ver.status}` : `Amendment summary · ${ver.status}`}
-                                          </span>
-                                          {(ver.reviewed_at || ver.created_at) && (
-                                            <span className="text-gray-400 dark:text-zinc-500">
-                                              {formatPHDateTime(ver.reviewed_at || ver.created_at)}
-                                            </span>
-                                          )}
+                                      {(ver.status === "Needs Revision" || ver.status === "Declined") && ver.review_notes && (
+                                        <div className="min-w-0 space-y-1">
+                                          <p className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300">OSAS Review Feedback</p>
+                                          <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
+                                            <NarrativeText text={ver.review_notes} mode="compact" />
+                                          </div>
                                         </div>
-                                        <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
-                                          <NarrativeText text={ver.review_notes || ver.amendment_summary || "Constitution & By-Laws official document"} mode="compact" />
-                                        </div>
-                                      </div>
+                                      )}
                                       <div className="flex justify-end">
                                         <button
                                           type="button"
@@ -4218,9 +4228,6 @@ function StudentDashboard() {
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Verifying Office" value="Office of the Campus Registrar" />
                 <InfoRow icon="Tag01Icon" label="Client Classification" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
-                <InfoRow icon="PieChartIcon" label="Current Status">
-                  <StatusBadge status={selectedRequestForDetail?.status} />
-                </InfoRow>
                 {selectedRequestForDetail?.status === "Ready" && (
                   <InfoRow icon="Door01Icon" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
                 )}

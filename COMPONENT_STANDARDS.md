@@ -840,10 +840,10 @@ The shared `Table` accepts native structural children (`thead`, `tbody`, `tr`, `
 
 ### 9.4 Sizing, Sticky Columns, and Truncation
 
-- Ordinary record tables use content-aware layout at `w-full`; the browser distributes available width from content and column count. Declare suitable minimum table widths and retain a single `overflow-x-auto` viewport. Toolbars and pagination must not scroll horizontally with the data.
+- Ordinary record tables fill their viewport and size columns from the visible content and declared widths. Retain a single `overflow-x-auto` viewport for tables whose visible columns need more room. Toolbars and pagination must not scroll horizontally with the data.
 - Selection and action columns are exactly **48px** in both header and body. The Actions heading is visually hidden but available to assistive technology. Do not add outer-cell padding that expands the column.
 - The action column sticks to the right. Sticky headers and identity columns must have opaque theme-aware backgrounds, appropriate stacking, and matching column offsets.
-- Keep short categorical, year, and numeric columns content-sized. Use `{ kind: "text", maxWidth: 340 }` for designated long-text fields. These columns can use available width up to **340px**, then truncate at the cell boundary. This is a cap, not a universal width for every column.
+- Keep short categorical, year, and numeric columns content-sized. Use `{ kind: "text", maxWidth: 340 }` for designated long-text fields. This caps the visible text, which truncates with an ellipsis. The column can grow past that cap when needed to fill the viewport.
 - `TableText` uses `w-full min-w-0 truncate`. Keep every intervening flex/grid wrapper shrinkable. Remove nested arbitrary text caps such as `max-w-[120px]` that truncate before the actual column border.
 - Use an ellipsis for single-line names, emails, titles, filenames, and identifiers. Provide the full value through the existing detail view or an accessible tooltip. Do not rely on a mouse-only title for information that has no other accessible path.
 - Preserve existing secondary lines. Use the same app font for identifiers and timestamps; never introduce monospace.
@@ -935,6 +935,8 @@ import { ViewIcon } from "hugeicons-react";
 ```
 
 ### 9.9 Loading, Empty, Error, and Verification
+
+Admin and staff portals mount their page components directly. Authentication uses the shared neutral `WorkspaceLoading` status until navigation is available; do not show a sidebar-only skeleton or add a second page-shaped dynamic-import fallback. Each mounted page owns one initial data-loading state. Keep its real header, tabs, and toolbar mounted, and use content-only skeletons for tables, lists, cards, or charts. Never nest a full-page skeleton inside an existing page card. Reuse live column definitions and the selected view mode. Once data exists, retain it during refreshes with a busy indicator instead of replacing it with skeletons. Layout editors may use a single full-layout skeleton when their layout data is not yet available.
 
 Skeletons use `Table` and the same semantic column order, control widths, minimum table width, sticky offsets, and inherited density as live data. Do not hardcode a separate skeleton row height or render multiple action placeholders in a 48px column.
 

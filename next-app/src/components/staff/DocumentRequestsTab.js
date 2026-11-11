@@ -14,8 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import DocumentRequestsTableSkeleton from "@/components/staff/skeletons/DocumentRequestsTableSkeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { SegmentedControl } from "@/components/ui/tabs";
@@ -28,7 +27,7 @@ import {
 } from "@/components/systemadmin/OfficeTableControls";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import DocumentRequestRecordList from "@/components/staff/requests/DocumentRequestRecordList";
-import DocumentRequestKanbanPipeline from "@/components/staff/requests/DocumentRequestKanbanPipeline";
+import DocumentRequestKanbanPipeline, { ODRS_KANBAN_COLUMNS } from "@/components/staff/requests/DocumentRequestKanbanPipeline";
 import {
   Dialog,
   DialogContent,
@@ -501,8 +500,6 @@ export default function DocumentRequestsTab({
             }),
             true
           );
-          setRows([]);
-          setTotal(0);
         }
       } finally {
         if (request === listRequest.current) {
@@ -1347,9 +1344,9 @@ export default function DocumentRequestsTab({
 
           {/* 4. Full-Width Table Body */}
           <div className={cn("relative w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")} aria-busy={loading}>
-            {(loading && !hasLoaded && !isManualLoading) ? (
-              <DocumentRequestsTableSkeleton rowCount={itemsPerPage} embedded={true} />
-            ) : error ? (
+            {(loading && !hasLoaded) ? (
+              <DataContentSkeleton columns={dynamicTableColumns} viewMode={viewMode} kanbanColumnCount={ODRS_KANBAN_COLUMNS.length} className={dynamicTableMinWidthClass} />
+            ) : error && !hasLoaded ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                 <Empty>
                   <EmptyHeader>
@@ -1685,9 +1682,7 @@ export default function DocumentRequestsTab({
               </div>
             )}
             {loading && hasLoaded && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                Loading requests…
-              </div>
+              <span role="status" className="sr-only">Loading requests…</span>
             )}
           </div>
 

@@ -4,7 +4,6 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
@@ -149,7 +148,6 @@ export default function DocumentRequestRecordList({
                   const isParent = item.client_type === "Parent" || Boolean(item.requester_relationship);
                   const isAlumni = item.client_type === "Alumni" || Boolean(item.is_alumni);
                   const charter = getRequestCharterStatus(item, slaStandards);
-                  const dateFormatted = item.created_at ? formatPHDateTime(item.created_at) : "Date unavailable";
                   const badgeStyle = statusBadgeClass ? statusBadgeClass(item.status) : "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
 
                   return (
@@ -171,17 +169,6 @@ export default function DocumentRequestRecordList({
                         {/* ID */}
                         <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[48px] select-none">
                           {item.id}
-                        </span>
-
-                        {/* Requester ID */}
-                        <span className="font-sans tabular-nums text-xs font-semibold text-gray-700 dark:text-zinc-300 shrink-0 min-w-[140px] select-none">
-                          {item.student_no ? (
-                            item.student_no
-                          ) : (
-                            <span className="italic text-amber-600 dark:text-amber-400 font-normal text-[11px]">
-                              No Student ID
-                            </span>
-                          )}
                         </span>
 
                         {/* Requester Name & Badges */}
@@ -253,7 +240,7 @@ export default function DocumentRequestRecordList({
                       </div>
 
                       {/* Mobile/Tablet Subline for Document Type & SLA */}
-                      <div className="flex md:hidden flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-zinc-400 pl-[48px]">
+                      <div className="flex md:hidden flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-zinc-400">
                         <span className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                           {item.doc_type}
                         </span>
@@ -269,9 +256,9 @@ export default function DocumentRequestRecordList({
                       </div>
 
                       {/* Right: Target Date, Status Pill, Date, and Centered Action */}
-                      <div className="flex shrink-0 items-center justify-between lg:justify-end gap-3 pt-1 lg:pt-0 pl-[48px] lg:pl-0">
-                        {/* Target Date (Wide screens) */}
-                        <div className="hidden 2xl:flex flex-col items-end text-right shrink-0">
+                      <div className="flex shrink-0 items-center justify-between lg:justify-end gap-3 pt-1 lg:pt-0">
+                        {/* Target Date */}
+                        <div className="flex shrink-0 flex-col items-start sm:items-end">
                           <span className="text-[10px] uppercase font-semibold text-gray-400 dark:text-zinc-500 tracking-wider">
                             Target
                           </span>
@@ -280,7 +267,7 @@ export default function DocumentRequestRecordList({
                           </span>
                         </div>
 
-                        {/* Status Pill & Date Filed */}
+                        {/* Status */}
                         <div className="flex flex-col items-start sm:items-end gap-0.5 shrink-0 min-w-[100px]">
                           <span
                             className={cn("inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap select-none", badgeStyle, BADGE_BASE)}
@@ -290,9 +277,6 @@ export default function DocumentRequestRecordList({
                               : item.status === "PendingPayment"
                               ? "Pending Payment"
                               : item.status}
-                          </span>
-                          <span className="text-[11px] font-normal tabular-nums text-gray-500 dark:text-zinc-400">
-                            {dateFormatted}
                           </span>
                         </div>
 

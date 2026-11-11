@@ -1,7 +1,8 @@
+import { isStudentAffiliation } from "@/lib/studentAffiliation";
 import { NextResponse } from "next/server";
 import { updateStaff, getStaffByUsername, getStaffById } from "@/lib/staffRepo";
 import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { queryOne, transaction } from "@/lib/postgres";
+import { query, queryOne } from "@/lib/postgres";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
 import { encryptPII, decryptPII } from "@/lib/piiEncryption";
 import { PersonNameSchema } from "@/lib/validationSchemas";
@@ -69,8 +70,11 @@ export async function POST(req) {
       if (!lastCheck.success) {
         return NextResponse.json({ ok: false, error: lastCheck.error.issues[0]?.message || "Invalid last name" }, { status: 400 });
       }
-      if (!["Student", "Alumni"].includes(cleanClientType)) {
-        return NextResponse.json({ ok: false, error: "Invalid client type. Must be Student or Alumni." }, { status: 400 });
+      if (!isStudentAffiliation(cleanClientType)) {
+        return NextResponse.json({ ok: false, error: "Select a valid affiliation." }, { status: 400 });
+      }
+      if (currentStudentNo && cleanClientType === "Parent" && studentAccount.profile_client_type !== "Parent") {
+        return NextResponse.json({ ok: false, error: "Use the parent or guardian option on the request form to request on behalf of a student." }, { status: 400 });
       }
 
       if (newStudentNo !== normalizedCurrentStudentNo) {
@@ -80,24 +84,13 @@ export async function POST(req) {
       const middleInitial = cleanMiddle ? ` ${cleanMiddle[0].toUpperCase()}.` : "";
       const formattedFullName = `${cleanLast.toUpperCase()}, ${cleanFirst.toUpperCase()}${middleInitial}`;
 
-      await transaction(async (tx) => {
-        if (currentStudentNo) {
-          await tx.query(
-            `UPDATE students
-             SET name = $1, updated_at = NOW()
-             WHERE upper(student_no) = upper($2)`,
-            [encryptPII(formattedFullName), currentStudentNo]
-          );
-        }
-
-        await tx.query(
-          `UPDATE student_identity_profiles
-           SET first_name = $1, middle_name = $2, last_name = $3,
-               display_name = $4, client_type = $5, updated_at = NOW()
-           WHERE id = $6`,
-          [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(formattedFullName), cleanClientType, studentAccount.identity_profile_id]
-        );
-      });
+      await query(
+        `UPDATE student_identity_profiles
+         SET first_name = $1, middle_name = $2, last_name = $3,
+             display_name = $4, client_type = $5, updated_at = NOW()
+         WHERE id = $6`,
+        [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(formattedFullName), cleanClientType, studentAccount.identity_profile_id]
+      );
 
       await writeGlobalAuditLog(req, "Student profile updated", {
         actor: currentStudentNo || cleanEmail,

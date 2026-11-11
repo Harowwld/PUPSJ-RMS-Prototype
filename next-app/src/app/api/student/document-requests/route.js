@@ -10,6 +10,8 @@ import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validationSchemas";
 import { ATTACHMENT_MAX_SIZE_BYTES, ATTACHMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
+import { getRequestAffiliation, hasLinkedStudentRecord, isStudentAffiliation } from "@/lib/studentAffiliation";
+
 export const runtime = "nodejs";
 
 const MAX_ATTACHMENT_SIZE = ATTACHMENT_MAX_SIZE_BYTES;
@@ -36,26 +38,6 @@ export async function GET(req) {
   try {
     const access = await requireStudent(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
-  const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
-
-  let accountId = session.accountId;
-  let studentNo = session.studentNo;
-  const email = session.email;
-
-  if (!accountId && email) {
-    const acc = await queryOne(
-      `SELECT sa.id, sa.student_no
-         FROM student_accounts sa
-         JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
-        WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = lower($2)`,
-      [encryptPII(email.toLowerCase()), email]
-    );
-    if (acc) {
-      accountId = acc.id;
-      studentNo = studentNo || acc.student_no;
-    }
-  }
-
   const requests = await query(
     `SELECT dr.*, d.approval_status AS linked_document_status,
             COALESCE(dr.course_code, s.course_code) AS course_code,
@@ -77,14 +59,10 @@ export async function GET(req) {
   );
   const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
 
-  const studentNos = Array.from(
-    new Set([studentNo, ...authorizedRequests.map((r) => r.student_no)].filter(Boolean))
-  );
-
-  const documents = studentNos.length
+  const documents = hasLinkedStudentRecord(access.user)
     ? (await query(
-        "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = ANY($1::text[]) ORDER BY created_at DESC",
-        [studentNos]
+        "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = $1 ORDER BY created_at DESC",
+        [access.user.studentNo]
       )).filter((item) => canAccessResource(access.user, "document", item))
     : [];
 
@@ -256,14 +234,16 @@ export async function POST(req) {
     if (acc) accountId = acc.id;
   }
 
-  const clientType = requestedClientType || acc?.client_type || (session.studentNo && session.studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
+  const affiliation = access.user.clientType || acc?.client_type
+    || (session.studentNo?.startsWith("ALUM-") ? "Alumni" : "Student");
+  const clientType = getRequestAffiliation(affiliation, requestedClientType);
 
-  if (!clientType) {
-    return NextResponse.json({ ok: false, error: "Client type is required." }, { status: 400 });
+  if (!isStudentAffiliation(clientType)) {
+    return NextResponse.json({ ok: false, error: "Select a valid request affiliation." }, { status: 400 });
   }
 
   // Determine effective student number based on client type
-  const effectiveStudentNo = (clientType === "Parent" && requestedStudentNo) ? requestedStudentNo : (session.studentNo || requestedStudentNo);
+  const effectiveStudentNo = clientType === "Parent" ? requestedStudentNo : (session.studentNo || requestedStudentNo);
 
   if (clientType !== "Parent" && requestedStudentNo && session.studentNo && requestedStudentNo !== session.studentNo) {
     return NextResponse.json({ ok: false, error: "Student identity is taken from the authenticated account." }, { status: 403 });
@@ -295,7 +275,7 @@ export async function POST(req) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Under RA 10173 (Data Privacy Act) and University Policy, third-party requests submitted by parents or guardians strictly require an attached Special Power of Attorney (SPA) / Authorization Letter and valid government ID.",
+          error: "Attach an authorization letter or Special Power of Attorney (SPA) and a valid government ID.",
         },
         { status: 400 }
       );
@@ -307,6 +287,10 @@ export async function POST(req) {
       { ok: false, error: "Degree / academic program is required for alumni without a student number." },
       { status: 400 }
     );
+  }
+
+  if (clientType === "Student" && !effectiveStudentNo) {
+    return NextResponse.json({ ok: false, error: "Enter your student number so the Registrar can locate your record." }, { status: 400 });
   }
 
   if (effectiveStudentNo) {

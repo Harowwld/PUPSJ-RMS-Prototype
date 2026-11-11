@@ -218,7 +218,9 @@ test("Narrative Formatter Integration: Overview, Document Requests, and OSAS Sub
   assert.ok(studentPageContent.includes("<NarrativeText text={selectedRequestForDetail.notes} mode=\"full\" />"), "Request detail sheet should render notes with NarrativeText in full mode");
   assert.ok(studentPageContent.includes("<NarrativeText text={latestUpdate.message || \"Status updated by OSAS\"} mode=\"compact\" />"), "Proposals list should render latest update with NarrativeText");
   assert.ok(studentPageContent.includes("<NarrativeText text={report.review_note} mode=\"compact\" />"), "Post-event list should render OSAS review note with NarrativeText");
-  assert.ok(studentPageContent.includes("<NarrativeText text={ver.review_notes || ver.amendment_summary || \"Constitution & By-Laws official document\"} mode=\"compact\" />"), "CBL card summary should use NarrativeText");
+  assert.ok(studentPageContent.includes('<NarrativeText text={ver.review_notes} mode="compact" />'), "CBL cards should format actionable review feedback");
+  assert.ok(studentPageContent.includes('ver.status === "Needs Revision" || ver.status === "Declined"'), "CBL cards should surface feedback that needs attention");
+  assert.ok(studentPageContent.includes('<NarrativeText text={selectedCblVersionForDetail.review_notes} mode="full" />'), "CBL details should retain full review feedback");
 
   // 3. Staff Request & OSAS Sheets
   assert.ok(requestSheetContent.includes("NarrativeText"), "DocumentRequestDetailSheet should import NarrativeText");

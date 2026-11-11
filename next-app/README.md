@@ -162,13 +162,13 @@ POSTGRES_DB="pupsj_rms"
 POSTGRES_USER="pupsj_rms"
 POSTGRES_PASSWORD="pupsj_rms_local"
 
-# Email Settings
-SMTP_HOST=smtp.gmail.com
+# Optional email settings. Leave host and sender empty for offline use.
+SMTP_HOST=
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=
 SMTP_PASSWORD=
-SMTP_FROM="PUP eManage <no-reply@example.com>"
+SMTP_FROM=
 
 # TOTP 2FA configuration
 TOTP_SECRET_KEY="replace_with_a_long_random_value"
@@ -177,7 +177,13 @@ TOTP_WINDOW=2
 
 Do not commit `.env`. The default Docker Compose database values are intended for local development only.
 
-SMTP settings are needed for credential emails after staff creation, office-admin provisioning, student self-registration, and staff password recovery. `SMTP_FROM` must be an address permitted by your mail provider. Use port 465 with `SMTP_SECURE=true`, or port 587 with `SMTP_SECURE=false`. Docker Compose passes these values to the app container. Without SMTP configured, account creation still succeeds and its API response reports `credentialEmail.sent: false`. Newly provisioned accounts receive their assigned password; student self-registration confirms the email username and tells the student to use the password they chose, without repeating it in email.
+New student signups require a six-digit email verification code and completion of the required recovery questions before the app creates an account and opens the student portal. Codes expire after 10 minutes. To demo signup with Gmail, configure SMTP and give the app server access to the mail provider. For an offline demo, point SMTP at a local mail catcher and enable **Demo Accounts** to use a `@pup.local` signup address. Existing accounts can still sign in with their current credentials.
+
+During Account Setup, choose **Current student**, **Alumni or former student**, or **Parent or guardian**. The enrollment checklist requires a current student account linked to a Registrar record. Alumni can request and track academic documents. Parents and guardians request documents on behalf of a student and attach an authorization letter or Special Power of Attorney plus a valid government ID for Registrar review. Existing users can review their affiliation in Account Settings.
+
+SuperAdmin can find completed signups under **Personnel & Access → ODRS Portal Accounts**. To link an eligible account, sign in as a Registrar administrator, switch to the staff workspace, and open the student’s record in **Student Directory**. Select **Link Portal Account**, look up the portal email, and confirm the student’s identity before linking. The account keeps its existing requests and can then open the student’s enrollment checklist.
+
+SMTP settings enable account notices and staff email recovery. `SMTP_FROM` must be an address permitted by your mail provider. Use port 465 with `SMTP_SECURE=true`, or port 587 with `SMTP_SECURE=false`. Docker Compose passes these values to the app container. Staff creation and office-admin provisioning still succeed with SMTP disabled and report `credentialEmail.sent: false`. When email is configured, newly provisioned accounts receive their assigned password.
 
 For staff password recovery, enter the registered email address or Staff ID, then click **Reset Password** in the recovery email and enter the new password twice. Links expire after 15 minutes and cannot be reused. A new request replaces previous links, and a successful reset invalidates earlier login sessions. Recovery requires configured SMTP and a deliverable registered email address; demo `@pup.local` addresses cannot receive mail through a public email provider. The request response does not disclose whether an account exists.
 

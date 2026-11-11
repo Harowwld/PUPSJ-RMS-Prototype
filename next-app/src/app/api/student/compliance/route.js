@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/postgres";
 import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
+import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
@@ -106,63 +107,22 @@ export async function GET(req) {
     );
   }
 
-  const { studentNo, accountId } = access.user;
-
-  // 1. Fetch Student Profile
-  let student = null;
-  if (studentNo) {
-    student = await queryOne(
-      `SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
-              s.storage_room, s.storage_cabinet, s.storage_drawer,
-              c.name AS course_name
-         FROM students s
-    LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
-        WHERE s.student_no = $1`,
-      [studentNo]
-    );
-    if (student?.name) {
-      student.name = decryptPII(student.name);
-    }
+  if (!hasLinkedStudentRecord(access.user)) {
+    return createAuthErrorResponse("The document checklist is available to current students with a linked record.", 403);
   }
 
-  if (!student && accountId) {
-    const acc = await queryOne(
-      `SELECT sa.id, sa.student_no, sip.email, sip.first_name, sip.middle_name, sip.last_name, sip.client_type,
-              s.name AS s_name, s.course_code, s.year_level, s.section, s.status,
-              s.storage_room, s.storage_cabinet, s.storage_drawer,
-              c.name AS course_name
-         FROM student_accounts sa
-    JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
-    LEFT JOIN students s ON s.student_no = sa.student_no
-    LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
-        WHERE sa.id = $1`,
-      [accountId]
-    );
-    if (acc) {
-      const fName = decryptPII(acc.first_name);
-      const mName = decryptPII(acc.middle_name);
-      const lName = decryptPII(acc.last_name);
-      const email = decryptPII(acc.email);
-      const sName = decryptPII(acc.s_name);
-      const computedName = fName && lName
-        ? `${lName.toUpperCase()}, ${fName.toUpperCase()}${mName ? ` ${mName[0].toUpperCase()}.` : ""}`
-        : (sName || email);
-      student = {
-        student_no: acc.student_no || studentNo || null,
-        name: computedName,
-        course_code: acc.course_code || "BSIT",
-        course_name: acc.course_name || "Bachelor of Science in Information Technology",
-        year_level: acc.year_level || 2024,
-        section: acc.section || "1-1",
-        status: acc.status || "Active",
-        storage_room: acc.storage_room || null,
-        storage_cabinet: acc.storage_cabinet || null,
-        storage_drawer: acc.storage_drawer || null,
-      };
-    }
-  }
-
-  const effectiveStudentNo = student?.student_no || studentNo;
+  const { studentNo } = access.user;
+  const student = await queryOne(
+    `SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
+            s.storage_room, s.storage_cabinet, s.storage_drawer, c.name AS course_name
+       FROM students s
+       LEFT JOIN courses c ON c.code = s.course_code AND c.office_id = 'registrar'
+      WHERE s.student_no = $1`,
+    [studentNo]
+  );
+  if (!student) return createAuthErrorResponse("Linked student record not found.", 404);
+  if (student.name) student.name = decryptPII(student.name);
+  const effectiveStudentNo = student.student_no;
 
   // 2. Fetch Active Compliance Document Types for Registrar
   const docTypes = await query(

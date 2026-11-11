@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/popover";
 import { isSystemAdminRole, isAdminRole, canAccessPage } from "@/lib/roleUtils";
 import { invalidateClientSession, getClientSession } from "@/lib/clientAuth";
-import { LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
+import { fetchJsonOnce } from "@/lib/clientRequest";
+import { formatRegistrarStudentName, LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
+import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Alert01Icon, ArrowRight02Icon, CovidInfoIcon, Loading01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -95,14 +97,6 @@ const DEMO_ACCOUNTS = [
   },
 ];
 
-function formatRegistrarStudentName({ firstName, middleName, lastName }) {
-  const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
-  const last = String(lastName || "").trim().replace(/\s+/g, " ").toUpperCase();
-  const middleLetters = String(middleName || "").replace(/[^a-z]/gi, "");
-  const middleInitial = middleLetters ? ` ${middleLetters[0].toUpperCase()}.` : "";
-  return first && last ? `${last}, ${first}${middleInitial}` : "";
-}
-
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState("login"); // "login" or "forgot"
@@ -146,6 +140,11 @@ export default function Home() {
   const [studentSignup, setStudentSignup] = useState({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [studentSignupError, setStudentSignupError] = useState("");
   const [studentSignupLoading, setStudentSignupLoading] = useState(false);
+  const [signupChallengeId, setSignupChallengeId] = useState("");
+  const [signupCode, setSignupCode] = useState("");
+  const [signupSetup, setSignupSetup] = useState(null);
+  const [signupAnswers, setSignupAnswers] = useState({});
+  const [signupAffiliation, setSignupAffiliation] = useState("");
   const [firstNameFocused, setFirstNameFocused] = useState(false);
   const [middleNameFocused, setMiddleNameFocused] = useState(false);
   const [lastNameFocused, setLastNameFocused] = useState(false);
@@ -158,6 +157,11 @@ export default function Home() {
     setStudentSignup({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
     setStudentSignupError("");
     setStudentSignupLoading(false);
+    setSignupChallengeId("");
+    setSignupCode("");
+    setSignupSetup(null);
+    setSignupAnswers({});
+    setSignupAffiliation("");
     setFirstNameFocused(false);
     setMiddleNameFocused(false);
     setLastNameFocused(false);
@@ -468,36 +472,59 @@ export default function Home() {
       return;
     }
 
+    await submitSignupStep("send");
+  }
+
+  async function submitSignupStep(action) {
     setStudentSignupError("");
     setStudentSignupLoading(true);
     try {
-      const formattedName = formatRegistrarStudentName(studentSignup);
-      const res = await fetch("/api/auth/student/register", {
+      const payload = { action, email: studentSignup.email.trim().toLowerCase() };
+      if (action !== "verify") {
+        const { firstName, middleName, lastName, password } = studentSignup;
+        Object.assign(payload, { firstName, middleName, lastName, password });
+      }
+      if (action === "send" && signupSetup) payload.setupToken = signupSetup.setupToken;
+      if (action === "verify") {
+        Object.assign(payload, { challengeId: signupChallengeId, code: signupCode });
+      }
+      if (action === "complete") {
+        Object.assign(payload, {
+          setupToken: signupSetup.setupToken,
+          answers: signupAnswers,
+          clientType: signupAffiliation,
+        });
+      }
+      const result = await fetchJsonOnce("/api/auth/student/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formattedName,
-          email: studentSignup.email.trim().toLowerCase(),
-          firstName: studentSignup.firstName.trim(),
-          middleName: studentSignup.middleName.trim(),
-          lastName: studentSignup.lastName.trim(),
-          suffix: studentSignup.suffix.trim(),
-          studentNo: studentSignup.studentNo.trim(),
-          courseCode: studentSignup.courseCode.trim(),
-          password: studentSignup.password,
-        }),
+        body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Unable to create student account.");
+      if (!result.ok || !result.body?.ok || !result.data) {
+        const fallback = action === "send"
+          ? "Unable to send the verification code."
+          : action === "verify"
+            ? "Unable to verify the code."
+            : "Unable to complete account setup.";
+        throw new Error(result.error || `${fallback} The server returned an unexpected response (HTTP ${result.status}).`);
+      }
+      if (action === "send") {
+        setSignupChallengeId(result.data.challengeId);
+        setSignupCode("");
+        setSignupSetup(null);
+        setSignupAnswers({});
+        return;
+      }
+      if (action === "verify") {
+        setSignupSetup(result.data);
+        setSignupCode("");
+        return;
       }
 
       localStorage.setItem("pup-session-recovered", Date.now().toString());
       localStorage.removeItem("pup-logout");
       toast.success("Account Created", {
-        description: json.credentialEmail?.sent
-          ? "Your login details were emailed to you. Welcome to eManage Student Portal!"
-          : "Your account is ready, but we could not send the credential email. You can still sign in with the password you chose.",
+        description: "Use your email address and the password you chose to sign in again.",
       });
       resetStudentSignupState();
       router.replace("/student");
@@ -1020,6 +1047,84 @@ export default function Home() {
                   </button>
                 </div>
 
+                {signupChallengeId ? (
+                  <form
+                    className="mt-3 w-full space-y-4 text-left"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      submitSignupStep(signupSetup ? "complete" : "verify");
+                    }}
+                  >
+                    <h2 className="text-base font-semibold">{signupSetup ? "Account Setup" : "Verify Your Email"}</h2>
+                    {signupSetup ? (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          {signupSetup.questions.length
+                            ? "Set up your recovery questions to finish creating your account."
+                            : "Your email is verified. Finish creating your account to continue."}
+                        </p>
+                        <label htmlFor="signup-affiliation" className="block text-sm font-medium">
+                          How are you using eManage?
+                        </label>
+                        <Select
+                          id="signup-affiliation"
+                          value={signupAffiliation}
+                          onChange={(event) => setSignupAffiliation(event.target.value)}
+                        >
+                          <option value="" disabled>Select your affiliation</option>
+                          {STUDENT_AFFILIATIONS.map(({ value, label }) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </Select>
+                        {signupSetup.questions.map(({ id, question }) => (
+                          <label key={id} className="block space-y-1 text-sm">
+                            <span>{question}</span>
+                            <Input
+                              type="password"
+                              autoComplete="off"
+                              required
+                              minLength={3}
+                              maxLength={100}
+                              value={signupAnswers[id] || ""}
+                              onChange={(event) => setSignupAnswers((answers) => ({ ...answers, [id]: event.target.value }))}
+                            />
+                          </label>
+                        ))}
+                      </>
+                    ) : (
+                      <label className="block space-y-2 text-sm">
+                        <span>Enter the six-digit code sent to <strong className="break-all">{studentSignup.email.trim()}</strong>.</span>
+                        <Input
+                          autoFocus
+                          autoComplete="one-time-code"
+                          inputMode="numeric"
+                          pattern="[0-9]{6}"
+                          maxLength={6}
+                          required
+                          aria-label="Email verification code"
+                          value={signupCode}
+                          onChange={(event) => setSignupCode(event.target.value.replace(/\D/g, ""))}
+                        />
+                      </label>
+                    )}
+                    {studentSignupError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{studentSignupError}</p>}
+                    <Button type="submit" className="w-full" disabled={studentSignupLoading || (Boolean(signupSetup) && !signupAffiliation)}>
+                      {signupSetup ? "Complete Account Setup" : "Verify Email"}
+                    </Button>
+                    <Button type="button" variant="outline" className="w-full" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
+                      {signupSetup ? "Request New Code" : "Resend Verification Code"}
+                    </Button>
+                    {!signupSetup && (
+                      <Button type="button" variant="outline" className="w-full" disabled={studentSignupLoading} onClick={() => {
+                        setSignupChallengeId("");
+                        setSignupCode("");
+                        setStudentSignupError("");
+                      }}>
+                        Edit Signup Details
+                      </Button>
+                    )}
+                  </form>
+                ) : (
                 <form onSubmit={handleStudentSignup} className="w-full flex flex-col mt-2">
                   <div className="w-full text-left">
                     {/* Merged Field Container */}
@@ -1179,7 +1284,7 @@ export default function Home() {
                       {studentSignupLoading ? (
                         <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
-                        <span>Create eManage Account</span>
+                        <span>Send Verification Code</span>
                       )}
                     </Button>
                     <div className="text-center">
@@ -1196,6 +1301,7 @@ export default function Home() {
                     </div>
                   </div>
                 </form>
+                )}
               </div>
             )}
           </div>

@@ -266,25 +266,10 @@ export default function DocumentRequestDetailSheet({
                         {displayName}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
-                      {detail.student_no ? `Student No: ${detail.student_no}` : `Client: ${detail.client_type || "Requester"}`}
-                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {(studentForRequest || detail.room) && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleLocateCoordinates}
-                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      title="Locate filing location on archive map"
-                    >
-                      Locate Drawer
-                    </Button>
-                  )}
                   <span
                     className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
                   >
@@ -303,12 +288,6 @@ export default function DocumentRequestDetailSheet({
                 </div>
 
                 <div className="divide-y-0">
-                  <InfoRow
-                    icon=" UserIcon"
-                    label="Requester Name"
-                    value={displayName}
-                  />
-
                   <InfoRow
                     icon=" Tag01Icon"
                     label="Classification"
@@ -474,9 +453,10 @@ export default function DocumentRequestDetailSheet({
                         </span>
                         <Button
                           type="button"
+                          variant="outline"
                           size="sm"
                           onClick={handleLocateCoordinates}
-                          className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                          className="h-7 px-2.5"
                         >
                           Locate Drawer
                         </Button>

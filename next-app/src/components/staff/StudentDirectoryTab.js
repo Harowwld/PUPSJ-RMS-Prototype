@@ -30,7 +30,7 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
 import RegisterStudentModal from "./RegisterStudentModal";
 import BulkImportStudentsModal from "./BulkImportStudentsModal";
@@ -74,14 +74,14 @@ const STUDENT_GROUP_OPTIONS = [
 ];
 
 const STUDENT_TABLE_COLUMNS = [
-  { key: "studentNo", label: "Student Number" },
-  { key: "name", label: "Student Name" },
-  { key: "courseCode", label: "Program" },
-  { key: "yearLevel", label: "Year Level" },
-  { key: "section", label: "Section" },
-  { key: "location", label: "Storage Location" },
-  { key: "documentCount", label: "Documents" },
-  { key: "status", label: "Status" },
+  { key: "studentNo", label: "Student Number", size: { kind: "identifier", minWidth: 160 } },
+  { key: "name", label: "Student Name", size: { kind: "text", minWidth: 240, maxWidth: 340 } },
+  { key: "courseCode", label: "Program", size: { kind: "category", minWidth: 120 } },
+  { key: "section", label: "Section", size: { kind: "category", minWidth: 100 } },
+  { key: "yearLevel", label: "Year Level", size: { kind: "year", minWidth: 104 } },
+  { key: "location", label: "Storage Location", size: { kind: "text", minWidth: 200, maxWidth: 280 } },
+  { key: "documentCount", label: "Documents", size: { kind: "number", minWidth: 100 } },
+  { key: "status", label: "Status", size: { kind: "status", minWidth: 120 } },
 ];
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -132,6 +132,11 @@ export default function StudentDirectoryTab({
     "visibleColumns",
     STUDENT_TABLE_COLUMNS.map((c) => c.key)
   );
+  const studentTableColumns = [
+    "selection",
+    ...STUDENT_TABLE_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ size }) => size),
+    "actions",
+  ];
   const [startDate, setStartDate] = useOsasViewPreference("student_directory", "startDate", "");
   const [endDate, setEndDate] = useOsasViewPreference("student_directory", "endDate", "");
 
@@ -922,12 +927,8 @@ export default function StudentDirectoryTab({
 
           {/* 4. Main Data Table */}
           <div className={cn("relative w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredCount === 0 && "rounded-b-2xl")} aria-busy={browseLoading}>
-            {loading || (browseLoading && !hasLoadedPage) ? (
-              <div className="p-6 space-y-3 rounded-b-2xl">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
-                ))}
-              </div>
+            {(loading || browseLoading) && !hasLoadedPage ? (
+              <DataContentSkeleton columns={studentTableColumns} />
             ) : paginatedStudents.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                 <Empty>
@@ -962,7 +963,7 @@ export default function StudentDirectoryTab({
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
+                <Table columns={studentTableColumns}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 py-2.5 px-3 text-center sticky left-0 z-20 bg-white dark:bg-card">
@@ -974,90 +975,108 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      <th
-                        className={cn(
-                          "py-2.5 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("studentNo")}
-                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                          >
-                            <span>Student No.</span>
-                            <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
-                          </button>
-                          {isScrolledX && (
+                      {visibleColumns.includes("studentNo") && (
+                        <th
+                          className={cn(
+                            "py-2.5 px-4 sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-1">
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset table scroll"
-                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              onClick={() => handleSort("studentNo")}
+                              className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                             >
-                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              <span>Student No.</span>
+                              <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                          )}
-                        </div>
-                      </th>
+                            {isScrolledX && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetScroll();
+                                }}
+                                title="Reset table scroll"
+                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              >
+                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[240px] min-w-[240px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("name")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Full Name</span>
-                          <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("name") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("name")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Full Name</span>
+                            <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[190px] min-w-[190px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("courseCode")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Program & Section</span>
-                          <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("courseCode") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("courseCode")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Program</span>
+                            <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[130px] min-w-[130px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("yearLevel")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Year / Batch</span>
-                          <SortIndicator column="yearLevel" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("section") && (
+                        <th>Section</th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
-                        <span>Physical Archive</span>
-                      </th>
+                      {visibleColumns.includes("yearLevel") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("yearLevel")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Year / Batch</span>
+                            <SortIndicator column="yearLevel" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[100px] min-w-[100px] text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("documents")}
-                          className="group inline-flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Files</span>
-                          <SortIndicator column="documents" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("location") && (
+                        <th className="py-2.5 px-4">
+                          <span>Physical Archive</span>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[120px] min-w-[120px] text-center">
-                        <span>Status</span>
-                      </th>
+                      {visibleColumns.includes("documentCount") && (
+                        <th className="py-2.5 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("documents")}
+                            className="group inline-flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Files</span>
+                            <SortIndicator column="documents" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="w-28 min-w-[112px] py-2.5 px-4 pr-6 text-right">
+                      {visibleColumns.includes("status") && (
+                        <th className="py-2.5 px-4 text-center">
+                          <span>Status</span>
+                        </th>
+                      )}
+
+                      <th className="w-28 py-2.5 px-4 pr-6 text-right">
                         <span>Actions</span>
                       </th>
                     </tr>
@@ -1068,7 +1087,7 @@ export default function StudentDirectoryTab({
                       <React.Fragment key={group.key}>
                         {groupBy !== "none" && (
                           <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={9} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                            <td colSpan={studentTableColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                               {group.label} ({group.students.length})
                             </td>
                           </tr>
@@ -1110,70 +1129,78 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          <td
-                            className={cn(
-                              "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                              isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}
-                          >
-                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
-                              {s.studentNo}
-                            </span>
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
-                              {formatTitleCase(s.name)}
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <Badge
-                                variant="outline"
-                                className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full border-border dark:border-border shrink-0", BADGE_BASE)}
-                              >
-                                {s.courseCode || "N/A"}
-                              </Badge>
-                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium truncate" title={`Sec ${s.section || "N/A"}`}>
-                                Sec {s.section || "N/A"}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
-                            {s.yearLevel || "N/A"}
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
-                              <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
-                              <span>
-                                Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <span className="tabular-nums">
-                              {docCount} {docCount === 1 ? "file" : "files"}
-                            </span>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <span
+                          {visibleColumns.includes("studentNo") && (
+                            <td
                               className={cn(
-                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
-                                isStudentArchived
-                                  ? BADGE_PALETTES.amber
-                                  : BADGE_PALETTES.emerald,
-                                BADGE_BASE
+                                "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                               )}
                             >
-                              {s.status || "Active"}
-                            </span>
-                          </td>
+                              <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
+                                {s.studentNo}
+                              </span>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("name") && (
+                            <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
+                                {formatTitleCase(s.name)}
+                              </div>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("courseCode") && (
+                            <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <Badge variant="outline" className={BADGE_BASE}>{s.courseCode || "N/A"}</Badge>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("section") && (
+                            <td>{s.section || "N/A"}</td>
+                          )}
+
+                          {visibleColumns.includes("yearLevel") && (
+                            <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
+                              {s.yearLevel || "N/A"}
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("location") && (
+                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                                <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
+                                <span>
+                                  Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("documentCount") && (
+                            <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                              <span className="tabular-nums">
+                                {docCount} {docCount === 1 ? "file" : "files"}
+                              </span>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("status") && (
+                            <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                              <span
+                                className={cn(
+                                  "text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
+                                  isStudentArchived
+                                    ? BADGE_PALETTES.amber
+                                    : BADGE_PALETTES.emerald,
+                                  BADGE_BASE
+                                )}
+                              >
+                                {s.status || "Active"}
+                              </span>
+                            </td>
+                          )}
 
                           <td className="w-28 py-2.5 px-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
@@ -1271,14 +1298,12 @@ export default function StudentDirectoryTab({
               </div>
             )}
             {browseLoading && hasLoadedPage && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                Loading students…
-              </div>
+              <span role="status" className="sr-only">Loading students…</span>
             )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
-          {!loading && filteredStudents.length > 0 && (
+          {filteredStudents.length > 0 && (
             <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredCount} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading || browseLoading} />
           )}
         </Card>

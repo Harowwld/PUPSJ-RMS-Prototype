@@ -6,7 +6,10 @@ import { getSessionVersion, isSessionActive, registerSessionToken } from "./auth
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
 import { validatePasswordPolicy } from "./passwordPolicy.js";
 
-export async function registerStudent({ studentNo, name, firstName, lastName, middleName, password, email, clientType }) {
+export async function registerStudent(
+  { studentNo, name, firstName, lastName, middleName, password, email, clientType },
+  { tx, securityAnswers = [] } = {},
+) {
   const cleanEmail = String(email || "").trim().toLowerCase();
   const cleanPass = String(password || "");
   const cleanFirst = String(firstName || "").trim();
@@ -30,7 +33,7 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
   }
 
   // 1. Check whether an identity profile already owns this email
-  const existingEmail = await queryOne(
+  const existingEmail = await (tx?.queryOne || queryOne)(
     `SELECT id, email
        FROM student_identity_profiles
       WHERE email = $1 OR lower(coalesce(email, '')) = $2
@@ -51,22 +54,29 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
   }
 
   // 3. Create the student_account (student_no can be NULL if left empty)
-  const newAccount = await transaction(async (tx) => {
-    const profile = await tx.queryOne(
+  const createAccount = async (db) => {
+    const profile = await db.queryOne(
       `INSERT INTO student_identity_profiles (
          first_name, middle_name, last_name, display_name, email, client_type
        ) VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, first_name, middle_name, last_name, email, client_type`,
       [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(fullName), encryptPII(cleanEmail), resolvedClientType]
     );
-    const newAccount = await tx.queryOne(
+    const newAccount = await db.queryOne(
       `INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status)
        VALUES ($1, $2, $3, 'Active')
        RETURNING id, student_no`,
       [student ? student.student_no : null, profile.id, hashPassword(cleanPass)]
     );
+    for (const { questionId, answerHash } of securityAnswers) {
+      await db.query(
+        "INSERT INTO student_security_answers (student_account_id, question_id, answer_hash) VALUES ($1, $2, $3)",
+        [newAccount.id, questionId, answerHash],
+      );
+    }
     return newAccount;
-  });
+  };
+  const newAccount = tx ? await createAccount(tx) : await transaction(createAccount);
 
   return {
     id: newAccount.id,
