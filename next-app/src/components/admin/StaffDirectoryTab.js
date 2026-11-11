@@ -73,6 +73,7 @@ import {
   Building01Icon,
   Cancel01Icon,
   CheckmarkCircle01Icon,
+  Contact01Icon,
   Copy01Icon,
   FilterIcon,
   Layers01Icon,
@@ -188,24 +189,48 @@ const StaffGridCard = React.memo(({
   onDeleteUser,
   onInspectUser,
 }) => {
+  const [copiedId, setCopiedId] = useState(false)
   const initials = `${s.fname?.charAt(0) || ""}${s.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
   const cleanName = getStaffCleanName(s)
   const cleanEmail = getStaffCleanEmail(s)
+  const isArchived = s.status === "Archived" || s.status === "Inactive"
+  const roleLabel =
+    s.role === "SuperAdmin" || s.role === "SystemAdmin"
+      ? "System Admin"
+      : getOfficeRoleLabel(s.role, s, offices)
+  const lastLoginText =
+    !active.relative && (!active.date || active.date === "N/A")
+      ? "Never active"
+      : active.relative || formatLastLoginDate(active.date)
+
+  const handleCopyId = (e) => {
+    e.stopPropagation()
+    if (!s.id) return
+    navigator.clipboard?.writeText(s.id)
+    setCopiedId(true)
+    toast.success(`Copied ${s.id} to clipboard`)
+    setTimeout(() => setCopiedId(false), 2000)
+  }
 
   return (
     <Card
       onClick={() => onInspectUser(s)}
       className={cn(
-        "group relative flex flex-col p-4 rounded-2xl border border-border bg-white dark:bg-card shadow-xs transition-all duration-200 hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 cursor-pointer select-none",
-        isSelected && "ring-2 ring-blue-500/80 bg-blue-50/30 dark:bg-blue-950/20"
+        "group relative flex flex-col justify-between p-4 rounded-2xl border bg-white dark:bg-card cursor-pointer select-none",
+        "transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out motion-safe:active:scale-[0.985]",
+        isArchived
+          ? "border-dashed border-black/[0.12] dark:border-white/15 bg-gray-50/70 dark:bg-zinc-900/40 opacity-85"
+          : "border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:border-black/[0.15] dark:hover:border-white/20 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)]",
+        isSelected &&
+          "border-gray-950 dark:border-white bg-gray-100/70 dark:bg-zinc-800/80 ring-1 ring-black/10 dark:ring-white/20"
       )}
     >
-      {/* Top Row: Checkbox, Avatar, Name & Email, Kebab Action Menu */}
+      {/* Zone 1: Identity Header (Checkbox, macOS Avatar, Name & Email, Overflow Menu) */}
       <div className="flex items-start justify-between gap-2.5 min-w-0">
-        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           {!isCurrentUser && (
             <div
-              className="pt-0.5"
+              className="-m-1 p-1 rounded-md flex items-center justify-center shrink-0"
               onClick={(e) => {
                 e.stopPropagation()
                 toggleSelect(s.id, e)
@@ -215,8 +240,8 @@ const StaffGridCard = React.memo(({
                 type="checkbox"
                 aria-label={`Select ${cleanName}`}
                 className={cn(
-                  "h-3.5 w-3.5 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity",
-                  isSelected ? "opacity-100" : "opacity-40 group-hover:opacity-80"
+                  "h-3.5 w-3.5 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity duration-150",
+                  isSelected ? "opacity-100" : "opacity-45 group-hover:opacity-85"
                 )}
                 checked={isSelected}
                 onChange={() => {}}
@@ -228,26 +253,31 @@ const StaffGridCard = React.memo(({
             staffId={s.id}
             name={cleanName}
             initials={initials}
-            className="size-9 rounded-full border shadow-2xs shrink-0"
+            className="size-9 rounded-full border border-black/[0.08] dark:border-white/10 shadow-2xs shrink-0"
             fallbackClassName="text-xs font-bold"
           />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <h3
-                className="truncate text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors leading-tight"
+                className="truncate text-[13.5px] font-semibold tracking-[-0.012em] text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors duration-150 leading-snug"
                 title={cleanName}
               >
                 {cleanName}
               </h3>
               {isCurrentUser && (
-                <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9.5px] px-1 py-0 leading-tight")}>
+                <span
+                  className={cn(
+                    BADGE_BASE,
+                    "h-4.5 min-h-4.5 bg-blue-100/90 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0"
+                  )}
+                >
                   You
                 </span>
               )}
             </div>
             <p
-              className="truncate text-[11px] text-gray-500 dark:text-zinc-400 mt-0.5"
+              className="truncate text-[11.5px] font-normal text-gray-500 dark:text-zinc-400 leading-tight mt-0.5"
               title={cleanEmail}
             >
               {cleanEmail}
@@ -274,53 +304,93 @@ const StaffGridCard = React.memo(({
         </div>
       </div>
 
-      {/* Row 2: ID Pill & Section */}
-      <div className="mt-3 flex items-center justify-between gap-2 min-w-0">
-        <span className={cn("font-sans tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0", BADGE_BASE)}>
-          {s.id}
-        </span>
-        <span className="truncate text-[11px] font-medium text-gray-500 dark:text-zinc-400 text-right" title={s.section || "Administration"}>
-          {s.section || "Administration"}
-        </span>
+      {/* Zone 2: Apple Inset Grouped Metadata Block */}
+      <div className="mt-3.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/80 dark:bg-zinc-900/50 divide-y divide-black/[0.05] dark:divide-white/[0.06] overflow-hidden">
+        {/* Row 1: Employee ID with Quick Copy */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <Contact01Icon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>ID</span>
+          </span>
+          <div className="flex items-center gap-1 min-w-0">
+            <span
+              className="font-sans tabular-nums text-[11.5px] font-semibold text-gray-900 dark:text-zinc-100 truncate"
+              title={s.id}
+            >
+              {s.id}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyId}
+              className="size-5 rounded-md inline-flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-black/[0.05] dark:hover:text-zinc-200 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer shrink-0 motion-safe:active:scale-96"
+              title="Copy Employee ID"
+              aria-label={`Copy Employee ID ${s.id}`}
+            >
+              {copiedId ? (
+                <Tick01Icon size={11} aria-hidden="true" className="text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Copy01Icon size={11} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Assigned Section */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <Building01Icon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>Section</span>
+          </span>
+          <span
+            className="truncate text-[11.5px] font-medium text-gray-800 dark:text-zinc-200 text-right"
+            title={s.section || "Administration"}
+          >
+            {s.section || "Administration"}
+          </span>
+        </div>
+
+        {/* Row 3: Two-Factor Security Status */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <SecurityCheckIcon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>Security</span>
+          </span>
+          {s.totp_enabled ? (
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1.5 shrink-0">
+              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              2FA Enabled
+            </span>
+          ) : (
+            <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 inline-flex items-center gap-1.5 shrink-0">
+              <span className="size-1.5 rounded-full bg-gray-300 dark:bg-zinc-600" aria-hidden="true" />
+              Off
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Row 3: Role Badge & 2FA Status */}
-      <div className="mt-2 flex items-center justify-between gap-2 min-w-0">
-        <div
+      {/* Zone 3: Footer (Role Pill & Last Active Session) */}
+      <div className="mt-3 pt-0.5 flex items-center justify-between gap-2 min-w-0">
+        <span
           className={cn(
-            "inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10.5px] font-medium tracking-wide truncate",
+            BADGE_BASE,
+            "h-5.5 min-h-5.5 px-2.5 text-[10.5px] font-semibold tracking-[-0.01em] truncate",
             s.role === "SystemAdmin" || s.role === "SuperAdmin"
               ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
               : s.role === "Admin"
-                ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-                : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
-            BADGE_BASE
+                ? "bg-[#800000]/10 text-[#800000] dark:bg-red-950/40 dark:text-red-300"
+                : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/50 dark:text-amber-200"
           )}
         >
-          {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
-        </div>
-        {s.totp_enabled ? (
-          <span className="text-[10.5px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shrink-0">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            2FA
-          </span>
-        ) : (
-          <span className="text-[10.5px] font-normal text-gray-400 dark:text-zinc-500 flex items-center gap-1 shrink-0">
-            <span className="size-1.5 rounded-full bg-gray-300 dark:bg-zinc-600" />
-            Off
-          </span>
-        )}
-      </div>
+          {roleLabel}
+        </span>
 
-      {/* Card Divider & Last Active */}
-      <div className="my-2.5 h-px bg-border/50 dark:bg-border/30" />
-
-      <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-zinc-400">
-        <span className="text-[10.5px] text-gray-400 dark:text-zinc-500">Last login</span>
-        <span className="text-[11px] font-medium text-gray-800 dark:text-zinc-200 tabular-nums">
-          {(!active.relative && (!active.date || active.date === "N/A"))
-            ? "Never active"
-            : (active.relative || formatLastLoginDate(active.date))}
+        <span
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400 tabular-nums shrink-0"
+          title={`Last login: ${lastLoginText}`}
+        >
+          <Clock01Icon size={12} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+          <span>{lastLoginText}</span>
         </span>
       </div>
     </Card>
@@ -590,7 +660,7 @@ export default function StaffDirectoryTab({
   })
 
   const [currentPage, setCurrentPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
   const [groupBy, setGroupBy] = useState(() => {
@@ -1344,15 +1414,15 @@ export default function StaffDirectoryTab({
                           type="button"
                           onClick={() => onSwitchView("create")}
                           disabled={isLoading}
-                          className="group flex min-h-[148px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border p-4 text-gray-500 shadow-2xs transition-all hover:border-gray-900/40 hover:bg-gray-100/60 hover:text-gray-950 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 active:scale-[0.98]"
+                          className="group flex min-h-[196px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-black/[0.14] dark:border-white/15 bg-white/60 dark:bg-zinc-900/30 p-4 text-gray-500 transition-[transform,background-color,border-color] duration-150 ease-out hover:border-black/[0.28] hover:bg-white hover:text-gray-950 dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 enabled:motion-safe:active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Register Staff"
                         >
-                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
-                            <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.06] dark:border-white/10 bg-gray-100/90 dark:bg-zinc-800 text-lg shadow-2xs transition-transform duration-150 ease-out motion-safe:group-hover:scale-105">
+                            <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors duration-150 group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
                           </span>
                           <span className="text-center">
-                            <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Register Staff</span>
-                            <span className="mt-0.5 block text-[11px] text-gray-400 dark:text-zinc-500">Add a new personnel account to this office.</span>
+                            <span className="block text-[12.5px] font-semibold tracking-[-0.01em] text-gray-800 dark:text-zinc-200">Register Staff</span>
+                            <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-zinc-400">Add a new personnel account to this office.</span>
                           </span>
                         </button>
                       )}
@@ -1366,15 +1436,15 @@ export default function StaffDirectoryTab({
                       type="button"
                       onClick={() => onSwitchView("create")}
                       disabled={isLoading}
-                      className="group flex min-h-[148px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border p-4 text-gray-500 shadow-2xs transition-all hover:border-gray-900/40 hover:bg-gray-100/60 hover:text-gray-950 dark:border-border dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 active:scale-[0.98]"
+                      className="group flex min-h-[196px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-black/[0.14] dark:border-white/15 bg-white/60 dark:bg-zinc-900/30 p-4 text-gray-500 transition-[transform,background-color,border-color] duration-150 ease-out hover:border-black/[0.28] hover:bg-white hover:text-gray-950 dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 enabled:motion-safe:active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Register Staff"
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg shadow-2xs transition-transform group-hover:scale-110 dark:bg-zinc-800">
-                        <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.06] dark:border-white/10 bg-gray-100/90 dark:bg-zinc-800 text-lg shadow-2xs transition-transform duration-150 ease-out motion-safe:group-hover:scale-105">
+                        <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors duration-150 group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
                       </span>
                       <span className="text-center">
-                        <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-200">Register Staff</span>
-                        <span className="mt-0.5 block text-[11px] text-gray-400 dark:text-zinc-500">Add a new personnel account to this office.</span>
+                        <span className="block text-[12.5px] font-semibold tracking-[-0.01em] text-gray-800 dark:text-zinc-200">Register Staff</span>
+                        <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-zinc-400">Add a new personnel account to this office.</span>
                       </span>
                     </button>
                   </div>

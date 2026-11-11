@@ -87,34 +87,39 @@ export default function StaffDirectorySkeleton({ rowCount = 8, layoutView = "tab
                 {Array.from({ length: 7 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex flex-col p-4 rounded-2xl border border-border bg-white dark:bg-card shadow-xs"
+                    className="flex flex-col justify-between p-4 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-card shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)]"
                   >
                     <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
                         <Skeleton className="size-9 rounded-full dark:bg-muted shrink-0" />
-                        <div className="flex-1 space-y-1 min-w-0">
-                          <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
-                          <Skeleton className="h-2.5 w-32 rounded dark:bg-muted" />
+                        <div className="flex-1 space-y-1.5 min-w-0">
+                          <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
+                          <Skeleton className="h-2.5 w-36 rounded dark:bg-muted" />
                         </div>
                       </div>
                       <Skeleton className="size-6 rounded-lg dark:bg-muted shrink-0" />
                     </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <Skeleton className="h-4 w-20 rounded-full dark:bg-muted" />
-                      <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
+                    <div className="mt-3.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/80 dark:bg-zinc-900/50 divide-y divide-black/[0.05] dark:divide-white/[0.06] overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <Skeleton className="h-3 w-10 rounded dark:bg-muted" />
+                        <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <Skeleton className="h-3 w-14 rounded dark:bg-muted" />
+                        <Skeleton className="h-3 w-20 rounded dark:bg-muted" />
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <Skeleton className="h-3 w-14 rounded dark:bg-muted" />
+                        <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <Skeleton className="h-4 w-18 rounded-full dark:bg-muted" />
-                      <Skeleton className="h-3 w-8 rounded dark:bg-muted" />
-                    </div>
-                    <div className="my-2.5 h-px bg-border/50 dark:bg-border/30" />
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-2.5 w-14 rounded dark:bg-muted" />
-                      <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
+                    <div className="mt-3 pt-0.5 flex items-center justify-between">
+                      <Skeleton className="h-5 w-24 rounded-full dark:bg-muted" />
+                      <Skeleton className="h-3 w-20 rounded dark:bg-muted" />
                     </div>
                   </div>
                 ))}
-                <div className="flex min-h-[148px] w-full flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border p-4">
+                <div className="flex min-h-[196px] w-full flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-black/[0.14] dark:border-white/15 bg-white/60 dark:bg-zinc-900/30 p-4">
                   <Skeleton className="size-10 rounded-full dark:bg-muted" />
                   <Skeleton className="h-3 w-20 rounded dark:bg-muted" />
                   <Skeleton className="h-2.5 w-32 rounded dark:bg-muted" />
