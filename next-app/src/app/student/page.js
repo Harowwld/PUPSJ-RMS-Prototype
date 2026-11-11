@@ -1,5 +1,4 @@
 "use client";
-import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -7,17 +6,25 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 import useUrlPage from "@/hooks/useUrlPage";
-import { useCallback, useEffect, useState, useMemo, useRef, Suspense } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef, Suspense, Fragment } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import Sidebar from "@/components/shared/Sidebar";
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
-import { formatPHDateTime } from "@/lib/timeFormat";
+import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat";
 import { Card } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -28,7 +35,9 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Select } from "@/components/ui/select";
+import { SegmentedControl } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getClientSession } from "@/lib/clientAuth";
 import { canAccessPage } from "@/lib/roleUtils";
 import { PhoneSchema, StudentNoSchema } from "@/lib/validationSchemas";
@@ -61,36 +70,27 @@ import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import StudentOverviewTab from "@/components/student/StudentOverviewTab";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
+import NarrativeText from "@/components/shared/NarrativeText";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
   FilterPopover,
   SortPopover,
   GroupPopover,
-  ColumnsPopover,
   ActiveFilterChips as TableActiveFilterChips,
 } from "@/components/systemadmin/OfficeTableControls";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
+import { formatDateIso, parseDateLocal } from "@/lib/dateRangeUtils";
+import { format } from "date-fns";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { ContentSwap } from "@/components/ui/motion";
 import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
-import useTableScroll from "@/hooks/useTableScroll";
-import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
-import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Shield01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
+import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Download01Icon, Loading01Icon, Shield01Icon, StarIcon, Tick01Icon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-function SortIndicator({ column, sortBy, sortOrder }) {
-  if (sortBy !== column) {
-    return <ArrowUpDownIcon size="1em"  className="ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></ArrowUpDownIcon>;
-  }
-  return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowUp01Icon>
-  ) : (
-    <ArrowDown01Icon size="1em"  className="ml-1 text-[12px] text-gray-400"></ArrowDown01Icon>
-  );
-}
-
 const RATING_LABELS = {
   1: "Poor",
   2: "Fair",
@@ -118,57 +118,71 @@ export function normalizeProposalStatus(status) {
   return status || "";
 }
 
+function formatProposalEventDate(value) {
+  const date = parseDateLocal(String(value || "").slice(0, 10));
+  return date ? format(date, "MMM d, yyyy") : "To Be Announced";
+}
+
 function StatusBadge({ status }) {
   const s = String(status || "").toLowerCase().trim();
-  let badgeClass = "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
+  let palette = BADGE_PALETTES.gray;
   let label = status;
+
   if (s === "approved") {
-    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    palette = BADGE_PALETTES.emerald;
     label = "Approved";
+  } else if (s === "cleared") {
+    palette = BADGE_PALETTES.emerald;
+    label = "Cleared";
   } else if (s === "completed") {
-    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    palette = BADGE_PALETTES.emerald;
     label = "Completed";
   } else if (s === "ready") {
-    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40";
+    palette = BADGE_PALETTES.sky;
     label = "Ready";
   } else if (s === "under review") {
-    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    palette = BADGE_PALETTES.blue;
     label = "Under Review";
   } else if (s === "inprogress" || s === "in progress") {
-    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    palette = BADGE_PALETTES.blue;
     label = "In Progress";
   } else if (s === "processing") {
-    badgeClass = "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40";
+    palette = BADGE_PALETTES.blue;
     label = "Processing";
   } else if (s === "deficient") {
-    badgeClass = "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800";
+    palette = BADGE_PALETTES.amber;
     label = "Action Required";
   } else if (s === "pendingpayment") {
-    badgeClass = "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800";
+    palette = BADGE_PALETTES.amber;
     label = "Pending Payment";
   } else if (s === "needs revision" || s === "revision") {
-    badgeClass = "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
+    palette = BADGE_PALETTES.orange;
     label = "Needs Revision";
   } else if (s === "submitted") {
-    badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
+    palette = BADGE_PALETTES.amber;
     label = "Submitted";
   } else if (s === "pending") {
-    badgeClass = "bg-sky-50 text-sky-800 border-sky-200/80 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800/40";
+    palette = BADGE_PALETTES.amber;
     label = "Pending";
   } else if (s === "declined") {
-    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    palette = BADGE_PALETTES.rose;
     label = "Declined";
   } else if (s === "cancelled") {
-    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    palette = BADGE_PALETTES.zinc;
     label = "Cancelled";
   } else if (s === "rejected") {
-    badgeClass = "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40";
+    palette = BADGE_PALETTES.rose;
     label = "Rejected";
   } else if (s === "superseded") {
-    badgeClass = "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-border";
+    palette = BADGE_PALETTES.zinc;
     label = "Superseded";
   }
-  return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>{label}</span>;
+
+  return (
+    <span className={cn(BADGE_BASE, palette)}>
+      {label}
+    </span>
+  );
 }
 
 /**
@@ -211,8 +225,17 @@ function StudentDashboard() {
         );
       }
     };
+    const handleAvatarChanged = (e) => {
+      if (e?.detail && "avatar_filename" in e.detail) {
+        setMe((prev) => (prev ? { ...prev, avatar_filename: e.detail.avatar_filename } : prev));
+      }
+    };
     window.addEventListener("user-preferences-changed", handlePreferencesChanged);
-    return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+    window.addEventListener("avatar-changed", handleAvatarChanged);
+    return () => {
+      window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
+      window.removeEventListener("avatar-changed", handleAvatarChanged);
+    };
   }, []);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -230,8 +253,11 @@ function StudentDashboard() {
     requesterContact: "",
     attachments: [],
   });
-  const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
+  const [proposalForm, setProposalForm] = useState({ title: "", eventDate: "", file: null });
+  const [eventDatePickerOpen, setEventDatePickerOpen] = useState(false);
+  const [revisionTargetProposal, setRevisionTargetProposal] = useState(null);
   const [myOrganizations, setMyOrganizations] = useState([]);
+  const [selectedOsasOrgId, setSelectedOsasOrgId] = useState("");
   const [view, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
   const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -241,7 +267,7 @@ function StudentDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const attachmentInputRef = useRef(null);
 
-  // Table state for Request History
+  // Request history list state
   const [requestSearch, setRequestSearch] = useState("");
   const [requestFilters, setRequestFilters] = useState({
     status: [],
@@ -249,14 +275,12 @@ function StudentDashboard() {
   });
   const [requestFilterRules, setRequestFilterRules] = useState([]);
   const [requestGroupBy, setRequestGroupBy] = useState("none");
-  const [requestVisibleColumns, setRequestVisibleColumns] = useState([
-    "id",
-    "doc_type",
-    "notes",
-    "status",
-    "created_at",
-    "actions",
-  ]);
+  const { density } = useTablePreferences();
+  const requestListDensity = getListDensityClasses(density);
+  const [collapsedRequestGroups, setCollapsedRequestGroups] = useState({});
+  const toggleRequestGroup = (key) => {
+    setCollapsedRequestGroups((previous) => ({ ...previous, [key]: !previous[key] }));
+  };
   const [requestStartDate, setRequestStartDate] = useState("");
   const [requestEndDate, setRequestEndDate] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
@@ -265,6 +289,8 @@ function StudentDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState(null);
+  const [selectedPostEventReportForDetail, setSelectedPostEventReportForDetail] = useState(null);
+  const [selectedCblVersionForDetail, setSelectedCblVersionForDetail] = useState(null);
 
   // Proposals Table & Filter state
   const [proposalFilterRules, setProposalFilterRules] = useState([]);
@@ -273,6 +299,24 @@ function StudentDashboard() {
   const [proposalGroupBy, setProposalGroupBy] = useState("none");
   const [proposalStartDate, setProposalStartDate] = useState("");
   const [proposalEndDate, setProposalEndDate] = useState("");
+
+  // Post-Event Reports Table & Filter state
+  const [postEventSearch, setPostEventSearch] = useState("");
+  const [postEventFilterRules, setPostEventFilterRules] = useState([]);
+  const [postEventSortBy, setPostEventSortBy] = useState("created_at");
+  const [postEventSortOrder, setPostEventSortOrder] = useState("DESC");
+  const [postEventGroupBy, setPostEventGroupBy] = useState("none");
+  const [postEventStartDate, setPostEventStartDate] = useState("");
+  const [postEventEndDate, setPostEventEndDate] = useState("");
+
+  // CBL Versions Table & Filter state
+  const [cblSearch, setCblSearch] = useState("");
+  const [cblFilterRules, setCblFilterRules] = useState([]);
+  const [cblSortBy, setCblSortBy] = useState("created_at");
+  const [cblSortOrder, setCblSortOrder] = useState("DESC");
+  const [cblGroupBy, setCblGroupBy] = useState("none");
+  const [cblStartDate, setCblStartDate] = useState("");
+  const [cblEndDate, setCblEndDate] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [isDuplicateAlertDismissed, setIsDuplicateAlertDismissed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -285,20 +329,6 @@ function StudentDashboard() {
     setIsDuplicateAlertDismissed(true);
     try {
       sessionStorage.setItem("pupsj_student_duplicate_ticket_alert_dismissed", "true");
-    } catch {}
-  };
-
-  const [isOfficerAlertDismissed, setIsOfficerAlertDismissed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("pupsj_student_officer_alert_dismissed") === "true";
-    }
-    return false;
-  });
-
-  const handleDismissOfficerAlert = () => {
-    setIsOfficerAlertDismissed(true);
-    try {
-      sessionStorage.setItem("pupsj_student_officer_alert_dismissed", "true");
     } catch {}
   };
 
@@ -327,7 +357,6 @@ function StudentDashboard() {
   const [pendingPostEvents, setPendingPostEvents] = useState([]);
   const [postEventForm, setPostEventForm] = useState({
     eventProposalId: "",
-    organizationId: "",
     actualAttendance: "",
     totalExpenses: "",
     narrativeFile: null,
@@ -336,7 +365,6 @@ function StudentDashboard() {
   const [postEventSubmitting, setPostEventSubmitting] = useState(false);
 
   // Constitution & By-Laws (CBL) Governance States
-  const [selectedCblOrgId, setSelectedCblOrgId] = useState("");
   const [cblVersions, setCblVersions] = useState([]);
   const [cblOrgData, setCblOrgData] = useState(null);
   const [cblLoading, setCblLoading] = useState(false);
@@ -347,12 +375,58 @@ function StudentDashboard() {
   });
   const [cblSubmitting, setCblSubmitting] = useState(false);
 
+  const selectedOsasOrganization = myOrganizations.find(
+    (org) => String(org.organization_id) === String(selectedOsasOrgId)
+  ) || null;
+  const organizationProposals = useMemo(
+    () => selectedOsasOrgId
+      ? (data.proposals || []).filter((proposal) => String(proposal.organization_id) === String(selectedOsasOrgId))
+      : [],
+    [data.proposals, selectedOsasOrgId]
+  );
+  const organizationPostEventReports = useMemo(
+    () => selectedOsasOrgId
+      ? postEventReports.filter((report) => String(report.organization_id) === String(selectedOsasOrgId))
+      : [],
+    [postEventReports, selectedOsasOrgId]
+  );
+  const organizationPendingPostEvents = useMemo(
+    () => selectedOsasOrgId
+      ? pendingPostEvents.filter((event) => String(event.organization_id) === String(selectedOsasOrgId))
+      : [],
+    [pendingPostEvents, selectedOsasOrgId]
+  );
+  const selectedProposalStatus = normalizeProposalStatus(selectedProposalForDetail?.status);
+
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
   const [proposalFilters, setProposalFilters] = useState({
     status: [],
     organization: [],
   });
+
+  const handleOsasOrganizationChange = (organizationId) => {
+    setSelectedOsasOrgId(organizationId);
+    fetch("/api/auth/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferences: { selected_osas_org_id: String(organizationId || "") } }),
+    }).then((response) => {
+      if (!response.ok) console.error("Failed to save selected OSAS organization preference.");
+    }).catch((error) => {
+      console.error("Failed to save selected OSAS organization preference:", error);
+    });
+    setPostEventForm((prev) => ({ ...prev, eventProposalId: "" }));
+    setSelectedProposalForDetail(null);
+    setProposalFilters((prev) => ({ ...prev, organization: [] }));
+    setProposalFilterRules((prev) => prev.filter((rule) => rule.fieldKey !== "organization"));
+    setPostEventFilterRules((prev) => prev.filter((rule) => rule.fieldKey !== "organization"));
+    setSelectedPostEventReportForDetail(null);
+    setCblLoading(true);
+    setCblOrgData(null);
+    setCblVersions([]);
+    setSelectedCblVersionForDetail(null);
+  };
 
   const handleOpenPdfPreview = useCallback((proposal, customOpts = null) => {
     if (customOpts) {
@@ -398,7 +472,7 @@ function StudentDashboard() {
 
   const requestSortOptions = useMemo(() => [
     { value: "created_at", label: "Date Requested" },
-    { value: "id", label: "Ticket #" },
+    { value: "id", label: "Ticket No." },
     { value: "doc_type", label: "Document Type" },
     { value: "status", label: "Status" },
   ], []);
@@ -407,15 +481,6 @@ function StudentDashboard() {
     { value: "none", label: "No grouping" },
     { value: "status", label: "Status" },
     { value: "doc_type", label: "Document Type" },
-  ], []);
-
-  const requestTableColumns = useMemo(() => [
-    { key: "id", label: "Ticket #" },
-    { key: "doc_type", label: "Document" },
-    { key: "notes", label: "Purpose & Notes" },
-    { key: "status", label: "Status" },
-    { key: "created_at", label: "Date Requested" },
-    { key: "actions", label: "Actions" },
   ], []);
 
   const proposalFilterFields = useMemo(() => [
@@ -435,12 +500,14 @@ function StudentDashboard() {
       key: "organization",
       label: "Organization",
       type: "select",
-      options: myOrganizations.map((org) => ({
-        value: org.name,
-        label: org.name,
+      options: myOrganizations
+        .filter((org) => String(org.organization_id) === String(selectedOsasOrgId))
+        .map((org) => ({
+        value: org.organization_name,
+        label: org.organization_name,
       })),
     },
-  ], [myOrganizations]);
+  ], [myOrganizations, selectedOsasOrgId]);
 
   const proposalSortOptions = useMemo(() => [
     { value: "created_at", label: "Date Submitted" },
@@ -450,9 +517,77 @@ function StudentDashboard() {
   ], []);
 
   const proposalGroupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "status", label: "Status" },
     { value: "organization", label: "Organization" },
+    { value: "none", label: "No grouping" },
+  ], []);
+
+  const postEventFilterFields = useMemo(() => [
+    {
+      key: "status",
+      label: "Clearance Status",
+      type: "select",
+      options: [
+        { value: "Submitted", label: "Submitted" },
+        { value: "Under Review", label: "Under Review" },
+        { value: "Needs Revision", label: "Needs Revision" },
+        { value: "Cleared", label: "Cleared" },
+        { value: "Declined", label: "Declined" },
+      ],
+    },
+    {
+      key: "organization",
+      label: "Organization",
+      type: "select",
+      options: myOrganizations
+        .filter((org) => String(org.organization_id) === String(selectedOsasOrgId))
+        .map((org) => ({
+          value: org.organization_name,
+          label: org.organization_name,
+        })),
+    },
+  ], [myOrganizations, selectedOsasOrgId]);
+
+  const postEventSortOptions = useMemo(() => [
+    { value: "created_at", label: "Date Submitted" },
+    { value: "event_title", label: "Event Title" },
+    { value: "event_date", label: "Event Date" },
+    { value: "actual_attendance", label: "Attendees" },
+    { value: "total_expenses", label: "Liquidated Expenses" },
+    { value: "status", label: "Status" },
+  ], []);
+
+  const postEventGroupOptions = useMemo(() => [
+    { value: "status", label: "Status" },
+    { value: "organization", label: "Organization" },
+    { value: "none", label: "No grouping" },
+  ], []);
+
+  const cblFilterFields = useMemo(() => [
+    {
+      key: "status",
+      label: "Review Status",
+      type: "select",
+      options: [
+        { value: "Pending", label: "Pending" },
+        { value: "Needs Revision", label: "Needs Revision" },
+        { value: "Approved", label: "Approved" },
+        { value: "Declined", label: "Declined" },
+        { value: "Superseded", label: "Superseded" },
+      ],
+    },
+  ], []);
+
+  const cblSortOptions = useMemo(() => [
+    { value: "created_at", label: "Date Submitted" },
+    { value: "version_tag", label: "Version Title" },
+    { value: "effective_date", label: "Effective Date" },
+    { value: "status", label: "Status" },
+  ], []);
+
+  const cblGroupOptions = useMemo(() => [
+    { value: "status", label: "Status" },
+    { value: "none", label: "No grouping" },
   ], []);
 
   const hasActiveFilters =
@@ -681,7 +816,7 @@ function StudentDashboard() {
     const selectedStatuses = proposalFilters.status || [];
     const selectedOrgs = proposalFilters.organization || [];
 
-    return (data.proposals || []).filter((item) => {
+    return organizationProposals.filter((item) => {
       const matchesSearch =
         !q ||
         (item.title || "").toLowerCase().includes(q) ||
@@ -728,7 +863,7 @@ function StudentDashboard() {
 
       return true;
     });
-  }, [data.proposals, proposalSearch, proposalFilters, proposalFilterRules, proposalStartDate, proposalEndDate]);
+  }, [organizationProposals, proposalSearch, proposalFilters, proposalFilterRules, proposalStartDate, proposalEndDate]);
 
   const proposalActiveChips = useMemo(() => {
     const chips = [];
@@ -791,6 +926,207 @@ function StudentDashboard() {
     }));
   }, [sortedProposals, proposalGroupBy]);
 
+  const filteredPostEventReports = useMemo(() => {
+    const q = (postEventSearch || "").trim().toLowerCase();
+
+    return organizationPostEventReports.filter((item) => {
+      const matchesSearch =
+        !q ||
+        (item.event_title || "").toLowerCase().includes(q) ||
+        (item.organization_name || "").toLowerCase().includes(q) ||
+        (item.status || "").toLowerCase().includes(q) ||
+        (item.review_note || "").toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      for (const rule of postEventFilterRules) {
+        if (rule.fieldKey === "status") {
+          const match = String(item.status || "").toLowerCase() === String(rule.value || "").toLowerCase();
+          if (rule.operator === "is_not" ? match : !match) return false;
+        } else if (rule.fieldKey === "organization") {
+          const match = (item.organization_name || "General").toLowerCase() === String(rule.value || "").toLowerCase();
+          if (rule.operator === "is_not" ? match : !match) return false;
+        }
+      }
+
+      if (postEventStartDate) {
+        const s = new Date(postEventStartDate).getTime();
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
+      }
+      if (postEventEndDate) {
+        const e = new Date(postEventEndDate);
+        e.setHours(23, 59, 59, 999);
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
+      }
+
+      return true;
+    });
+  }, [organizationPostEventReports, postEventSearch, postEventFilterRules, postEventStartDate, postEventEndDate]);
+
+  const postEventActiveChips = useMemo(() => {
+    const chips = [];
+    postEventFilterRules.forEach((rule) => {
+      const field = postEventFilterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setPostEventFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
+    if (postEventStartDate || postEventEndDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${postEventStartDate || "Any"} to ${postEventEndDate || "Any"}`,
+        onRemove: () => {
+          setPostEventStartDate("");
+          setPostEventEndDate("");
+        },
+      });
+    }
+    return chips;
+  }, [postEventFilterRules, postEventFilterFields, postEventStartDate, postEventEndDate]);
+
+  const sortedPostEventReports = useMemo(() => {
+    return [...filteredPostEventReports].sort((a, b) => {
+      let valA = a[postEventSortBy];
+      let valB = b[postEventSortBy];
+
+      if (postEventSortBy === "created_at" || postEventSortBy === "event_date") {
+        const timeA = new Date(valA || 0).getTime();
+        const timeB = new Date(valB || 0).getTime();
+        return postEventSortOrder === "ASC" ? timeA - timeB : timeB - timeA;
+      } else if (postEventSortBy === "actual_attendance" || postEventSortBy === "total_expenses") {
+        const numA = Number(valA || 0);
+        const numB = Number(valB || 0);
+        return postEventSortOrder === "ASC" ? numA - numB : numB - numA;
+      } else if (typeof valA === "string" || typeof valB === "string") {
+        valA = String(valA || "").toLowerCase();
+        valB = String(valB || "").toLowerCase();
+      }
+
+      if (valA < valB) return postEventSortOrder === "ASC" ? -1 : 1;
+      if (valA > valB) return postEventSortOrder === "ASC" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredPostEventReports, postEventSortBy, postEventSortOrder]);
+
+  const groupedPostEventReports = useMemo(() => {
+    if (postEventGroupBy === "none") return [{ key: "all", label: null, items: sortedPostEventReports }];
+    const map = new Map();
+    for (const item of sortedPostEventReports) {
+      let key = "Other";
+      if (postEventGroupBy === "status") key = item.status || "Submitted";
+      else if (postEventGroupBy === "organization") key = item.organization_name || "General";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
+  }, [sortedPostEventReports, postEventGroupBy]);
+
+  const filteredCblVersions = useMemo(() => {
+    const q = (cblSearch || "").trim().toLowerCase();
+
+    return cblVersions.filter((item) => {
+      const matchesSearch =
+        !q ||
+        (item.version_tag || "").toLowerCase().includes(q) ||
+        (item.amendment_summary || "").toLowerCase().includes(q) ||
+        (item.review_notes || "").toLowerCase().includes(q) ||
+        (item.status || "").toLowerCase().includes(q) ||
+        (item.original_filename || "").toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      for (const rule of cblFilterRules) {
+        if (rule.fieldKey === "status") {
+          const match = String(item.status || "").toLowerCase() === String(rule.value || "").toLowerCase();
+          if (rule.operator === "is_not" ? match : !match) return false;
+        }
+      }
+
+      if (cblStartDate) {
+        const s = new Date(cblStartDate).getTime();
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
+      }
+      if (cblEndDate) {
+        const e = new Date(cblEndDate);
+        e.setHours(23, 59, 59, 999);
+        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
+        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
+      }
+
+      return true;
+    });
+  }, [cblVersions, cblSearch, cblFilterRules, cblStartDate, cblEndDate]);
+
+  const cblActiveChips = useMemo(() => {
+    const chips = [];
+    cblFilterRules.forEach((rule) => {
+      const field = cblFilterFields.find((f) => f.key === rule.fieldKey);
+      chips.push({
+        id: rule.id,
+        label: `${field?.label || rule.fieldKey}: ${rule.operator === "is_not" ? "not " : ""}${rule.value}`,
+        onRemove: () => setCblFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
+      });
+    });
+    if (cblStartDate || cblEndDate) {
+      chips.push({
+        id: "date-range",
+        label: `Date: ${cblStartDate || "Any"} to ${cblEndDate || "Any"}`,
+        onRemove: () => {
+          setCblStartDate("");
+          setCblEndDate("");
+        },
+      });
+    }
+    return chips;
+  }, [cblFilterRules, cblFilterFields, cblStartDate, cblEndDate]);
+
+  const sortedCblVersions = useMemo(() => {
+    return [...filteredCblVersions].sort((a, b) => {
+      let valA = a[cblSortBy];
+      let valB = b[cblSortBy];
+
+      if (cblSortBy === "created_at" || cblSortBy === "effective_date") {
+        const timeA = new Date(valA || 0).getTime();
+        const timeB = new Date(valB || 0).getTime();
+        return cblSortOrder === "ASC" ? timeA - timeB : timeB - timeA;
+      } else if (typeof valA === "string" || typeof valB === "string") {
+        valA = String(valA || "").toLowerCase();
+        valB = String(valB || "").toLowerCase();
+      }
+
+      if (valA < valB) return cblSortOrder === "ASC" ? -1 : 1;
+      if (valA > valB) return cblSortOrder === "ASC" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredCblVersions, cblSortBy, cblSortOrder]);
+
+  const groupedCblVersions = useMemo(() => {
+    if (cblGroupBy === "none") return [{ key: "all", label: null, items: sortedCblVersions }];
+    const map = new Map();
+    for (const item of sortedCblVersions) {
+      let key = "Other";
+      if (cblGroupBy === "status") key = item.status || "Pending";
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
+  }, [sortedCblVersions, cblGroupBy]);
+
   const sortedRequests = useMemo(() => {
     return [...filteredRequests].sort((a, b) => {
       let valA = a[sortBy];
@@ -839,19 +1175,6 @@ function StudentDashboard() {
     }));
   }, [paginatedRequests, requestGroupBy]);
 
-  const {
-    tableContainerRef,
-    canScrollLeft,
-    canScrollRight,
-    isScrolledX,
-    scrollTable,
-    resetScroll,
-  } = useTableScroll([paginatedRequests?.length]);
-
-  useEffect(() => {
-    resetScroll();
-  }, [currentPage, sortBy, sortOrder, requestSearch, requestFilters, requestFilterRules, requestGroupBy, resetScroll]);
-
   const handleKeyDown = useCallback(
     (e) => {
       if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
@@ -893,6 +1216,38 @@ function StudentDashboard() {
   const handleNextProposalDetail = () => {
     if (currentProposalDetailIndex >= 0 && currentProposalDetailIndex < filteredProposals.length - 1) {
       setSelectedProposalForDetail(filteredProposals[currentProposalDetailIndex + 1]);
+    }
+  };
+
+  const currentPostEventReportDetailIndex = selectedPostEventReportForDetail
+    ? sortedPostEventReports.findIndex((report) => String(report.id) === String(selectedPostEventReportForDetail.id))
+    : -1;
+
+  const handlePrevPostEventReportDetail = () => {
+    if (currentPostEventReportDetailIndex > 0) {
+      setSelectedPostEventReportForDetail(sortedPostEventReports[currentPostEventReportDetailIndex - 1]);
+    }
+  };
+
+  const handleNextPostEventReportDetail = () => {
+    if (currentPostEventReportDetailIndex >= 0 && currentPostEventReportDetailIndex < sortedPostEventReports.length - 1) {
+      setSelectedPostEventReportForDetail(sortedPostEventReports[currentPostEventReportDetailIndex + 1]);
+    }
+  };
+
+  const currentCblVersionDetailIndex = selectedCblVersionForDetail
+    ? sortedCblVersions.findIndex((version) => String(version.id) === String(selectedCblVersionForDetail.id))
+    : -1;
+
+  const handlePrevCblVersionDetail = () => {
+    if (currentCblVersionDetailIndex > 0) {
+      setSelectedCblVersionForDetail(sortedCblVersions[currentCblVersionDetailIndex - 1]);
+    }
+  };
+
+  const handleNextCblVersionDetail = () => {
+    if (currentCblVersionDetailIndex >= 0 && currentCblVersionDetailIndex < sortedCblVersions.length - 1) {
+      setSelectedCblVersionForDetail(sortedCblVersions[currentCblVersionDetailIndex + 1]);
     }
   };
 
@@ -1005,14 +1360,23 @@ function StudentDashboard() {
         fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
         fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
       ]);
+      const parseJsonSafe = async (res) => {
+        if (!res) return {};
+        try {
+          return await res.json();
+        } catch {
+          return { ok: false, error: res.statusText ? `Server returned ${res.status} (${res.statusText})` : `Server error (${res.status})` };
+        }
+      };
+
       const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson, complianceJson] = await Promise.all([
-        requestRes.json(),
-        proposalRes.json(),
-        typesRes.json(),
-        coursesRes.json(),
-        orgsRes.json(),
-        postEventRes.ok ? postEventRes.json().catch(() => ({})) : {},
-        complianceRes.ok ? complianceRes.json().catch(() => ({})) : {},
+        parseJsonSafe(requestRes),
+        parseJsonSafe(proposalRes),
+        parseJsonSafe(typesRes),
+        parseJsonSafe(coursesRes),
+        parseJsonSafe(orgsRes),
+        postEventRes.ok ? parseJsonSafe(postEventRes) : {},
+        complianceRes.ok ? parseJsonSafe(complianceRes) : {},
       ]);
       if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
         throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
@@ -1024,18 +1388,15 @@ function StudentDashboard() {
       setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
       const loadedOrgs = Array.isArray(orgsJson?.data) ? orgsJson.data : [];
       setMyOrganizations(loadedOrgs);
-      if (loadedOrgs.length > 0) {
-        setProposalForm((prev) => ({
-          ...prev,
-          organizationId: prev.organizationId || loadedOrgs[0].organization_id,
-          organizationName: prev.organizationName || loadedOrgs[0].organization_name,
-        }));
-        setPostEventForm((prev) => ({
-          ...prev,
-          organizationId: prev.organizationId || loadedOrgs[0].organization_id,
-        }));
-        setSelectedCblOrgId((prev) => prev || loadedOrgs[0].organization_id);
-      }
+      const savedOsasOrgId = String(session.data.preferences?.selected_osas_org_id || "");
+      setSelectedOsasOrgId((prev) => {
+        const preferredOrganization = savedOsasOrgId || prev;
+        const currentOrganizationIsAuthorized = loadedOrgs.some(
+          (org) => String(org.organization_id) === String(preferredOrganization)
+        );
+        if (currentOrganizationIsAuthorized) return String(preferredOrganization);
+        return loadedOrgs.length === 1 ? String(loadedOrgs[0].organization_id) : "";
+      });
       setPostEventReports(postEventJson?.data?.reports || []);
       setPendingPostEvents(postEventJson?.data?.pendingEvents || []);
       setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [] });
@@ -1300,11 +1661,22 @@ function StudentDashboard() {
   };
 
   async function submitProposal(event) {
-    event.preventDefault(); setProposalSubmitting(true);
+    event.preventDefault();
+    if (!proposalForm.eventDate) {
+      showToast("Event Date Required", "Select the event date before submitting.", true);
+      return;
+    }
+    setProposalSubmitting(true);
     try {
-      const selectedOrg = myOrganizations.find((o) => o.organization_id === proposalForm.organizationId) || myOrganizations[0];
+      const selectedOrg = selectedOsasOrganization;
       if (!selectedOrg) {
-        throw new Error("You must be an authorized officer of a recognized student organization to submit proposals.");
+        throw new Error("Select an authorized organization before submitting a proposal.");
+      }
+      if (revisionTargetProposal && String(selectedOrg.organization_id) !== String(revisionTargetProposal.organization_id)) {
+        throw new Error("A revision must be submitted under the proposal’s original organization.");
+      }
+      if (revisionTargetProposal && !proposalForm.file) {
+        throw new Error("Upload the revised proposal PDF before submitting.");
       }
       const form = new FormData();
       form.set("title", proposalForm.title);
@@ -1313,7 +1685,12 @@ function StudentDashboard() {
       form.set("eventDate", proposalForm.eventDate);
       if (proposalForm.file) form.set("file", proposalForm.file);
 
-      const res = await fetch("/api/student/event-proposals", { method: "POST", body: form });
+      const res = await fetch(
+        revisionTargetProposal
+          ? `/api/student/event-proposals/${revisionTargetProposal.id}`
+          : "/api/student/event-proposals",
+        { method: "POST", body: form }
+      );
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         showToast(
@@ -1325,8 +1702,14 @@ function StudentDashboard() {
         );
         return;
       }
-      setProposalForm({ title: "", organizationId: myOrganizations[0]?.organization_id || "", organizationName: "", eventDate: "", file: null });
-      showToast("Event Proposal Submitted", "Your proposal has been routed to OSAS for evaluation.");
+      setProposalForm({ title: "", eventDate: "", file: null });
+      if (revisionTargetProposal) {
+        setRevisionTargetProposal(null);
+        setIsFormOpen(false);
+        showToast("Revised Proposal Submitted", "Your updated proposal has been routed to OSAS under the same record.");
+      } else {
+        showToast("Event Proposal Submitted", "Your proposal has been routed to OSAS for evaluation.");
+      }
       await load();
     } catch (error) {
       showToast(
@@ -1339,13 +1722,41 @@ function StudentDashboard() {
     } finally { setProposalSubmitting(false); }
   }
 
+  function startProposalRevision(proposal) {
+    const organizationId = String(proposal?.organization_id || "");
+    const authorizedOrganization = myOrganizations.find((org) => String(org.organization_id) === organizationId);
+    if (!authorizedOrganization) {
+      showToast("Organization Authorization Required", "Contact OSAS to confirm that you can submit for this organization.", true);
+      return;
+    }
+    handleOsasOrganizationChange(organizationId);
+    setProposalForm({
+      title: proposal.title || "",
+      eventDate: proposal.event_date ? String(proposal.event_date).slice(0, 10) : "",
+      file: null,
+    });
+    setRevisionTargetProposal(proposal);
+    setView("osas");
+    setOsasSubView("proposals");
+    setIsFormOpen(true);
+    setSelectedProposalForDetail(null);
+  }
+
+  function closeProposalForm() {
+    setIsFormOpen(false);
+    if (revisionTargetProposal) {
+      setRevisionTargetProposal(null);
+      setProposalForm({ title: "", eventDate: "", file: null });
+    }
+  }
+
   async function submitPostEventReport(event) {
     event.preventDefault();
     setPostEventSubmitting(true);
     try {
-      const selectedOrg = myOrganizations.find((o) => o.organization_id === postEventForm.organizationId) || myOrganizations[0];
+      const selectedOrg = selectedOsasOrganization;
       if (!selectedOrg) {
-        throw new Error("You must be an authorized officer of a recognized student organization to submit post-event reports.");
+        throw new Error("Select an authorized organization before submitting a post-event report.");
       }
       if (!postEventForm.eventProposalId) {
         throw new Error("Please select an approved event proposal.");
@@ -1384,7 +1795,6 @@ function StudentDashboard() {
       }
       setPostEventForm({
         eventProposalId: "",
-        organizationId: myOrganizations[0]?.organization_id || "",
         actualAttendance: "",
         totalExpenses: "",
         narrativeFile: null,
@@ -1423,19 +1833,19 @@ function StudentDashboard() {
   }, []);
 
   useEffect(() => {
-    if (osasSubView === "cbl" && selectedCblOrgId) {
-      const timer = setTimeout(() => loadCblData(selectedCblOrgId), 0);
+    if (osasSubView === "cbl" && selectedOsasOrgId) {
+      const timer = setTimeout(() => loadCblData(selectedOsasOrgId), 0);
       return () => clearTimeout(timer);
     }
-  }, [osasSubView, selectedCblOrgId, loadCblData]);
+  }, [osasSubView, selectedOsasOrgId, loadCblData]);
 
   async function submitCbl(event) {
     event.preventDefault();
     setCblSubmitting(true);
     try {
-      const selectedOrg = myOrganizations.find((o) => o.organization_id === selectedCblOrgId) || myOrganizations[0];
+      const selectedOrg = selectedOsasOrganization;
       if (!selectedOrg) {
-        throw new Error("You must be an officer authorized by OSAS to submit Constitution and By-Laws documents.");
+        throw new Error("Select an authorized organization before submitting Constitution and By-Laws documents.");
       }
       if (!cblForm.file) {
         throw new Error("Please upload the Constitution & By-Laws PDF document.");
@@ -1615,19 +2025,22 @@ function StudentDashboard() {
                     {/* 1. Page Header */}
                     <PageHeader
                       icon="InboxIcon"
-                      title="Document Requests"
+                      title={
+                        <div className="flex flex-wrap items-baseline gap-2">
+                          <span>Document Requests</span>
+                          <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                            {filteredRequests.length} {filteredRequests.length === 1 ? "record" : "records"}
+                            {me?.student_no ? ` · ${me.student_no}` : ""}
+                          </span>
+                        </div>
+                      }
                       description="Request official academic records and track Registrar processing updates."
                       showBorder={false}
                       className="p-6"
                       titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                       descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                       actions={
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          {me?.student_no && (
-                            <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                              {me.student_no}
-                            </span>
-                          )}
+                        <div className="flex items-center gap-2">
                           <RefreshButton
                             onRefresh={async () => {
                               setRefreshing(true);
@@ -1646,10 +2059,10 @@ function StudentDashboard() {
                               type="button"
                               size="sm"
                               onClick={() => setIsFormOpen(true)}
-                              className="flex h-9 px-4 cursor-pointer border-0"
-                              title="New Document Request"
+                              className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer"
+                              title="Open Request Form"
                             >
-                              Request
+                              Open Request Form
                             </Button>
                           )}
                         </div>
@@ -1889,6 +2302,7 @@ function StudentDashboard() {
                             </div>
 
                             <FileAttachmentDropzone
+                              animateCards={false}
                               value={requestForm.attachments}
                               onChange={(val) => {
                                 if (typeof val === "function") {
@@ -1965,34 +2379,22 @@ function StudentDashboard() {
 
                     {/* 3. Toolbar & Request History Header */}
                     <DataViewToolbar label="Request history search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
-                      {/* Left: DashboardSearch + TableScrollControls */}
+                      {/* Left: DashboardSearch */}
                       <div className="flex min-w-0 items-center gap-2">
                         <DashboardSearch
                           value={requestSearch}
                           onChange={(val) => {
                             setRequestSearch(val);
                             setCurrentPage(1);
-                            resetScroll();
                           }}
                           count={filteredRequests.length}
                           loading={loading}
                           placeholder="Search ticket, document, notes..."
                           label="Search requests"
                         />
-                        {paginatedRequests.length > 0 && (
-                          <TableScrollControls
-                            scrollContainerRef={tableContainerRef}
-                            canScrollLeft={canScrollLeft}
-                            canScrollRight={canScrollRight}
-                            isScrolledX={isScrolledX}
-                            onResetScroll={resetScroll}
-                            onScrollLeft={() => scrollTable("left")}
-                            onScrollRight={() => scrollTable("right")}
-                          />
-                        )}
                       </div>
 
-                      {/* Right: Filter -> Sort -> Group -> Columns -> DateRange */}
+                      {/* Right: Filter -> Sort -> Group -> DateRange */}
                       <div className="ml-auto flex shrink-0 items-center gap-2">
                         <FilterPopover
                           fields={requestFilterFields}
@@ -2023,12 +2425,6 @@ function StudentDashboard() {
                             setRequestGroupBy(val);
                             setCurrentPage(1);
                           }}
-                        />
-                        <ColumnsPopover
-                          columns={requestTableColumns}
-                          visibleColumns={requestVisibleColumns}
-                          onVisibleColumnsChange={setRequestVisibleColumns}
-                          minVisible={2}
                         />
                         <DateRangeFilterButton
                           startDate={requestStartDate}
@@ -2063,7 +2459,7 @@ function StudentDashboard() {
                       />
                     )}
 
-                    {/* 5. Request History Table / Empty State */}
+                    {/* 5. Request History List / Empty State */}
                     {hasLoaded && sortedRequests.length === 0 ? (
                       <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
                         <Empty>
@@ -2098,230 +2494,144 @@ function StudentDashboard() {
                                 type="button"
                                 size="sm"
                                 onClick={() => setIsFormOpen(true)}
-                                title="Submit Request"
+                                title="Open Request Form"
                                 className="flex h-9 px-4 disabled:opacity-50 cursor-pointer border-0"
                               >
-                                Submit Request
+                                Open Request Form
                               </Button>
                             )}
                           </EmptyContent>
                         </Empty>
                       </div>
                     ) : (
-                      <div
-                        ref={tableContainerRef}
-                        className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
-                      >
-                      <Table columns={["identifier", "text", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[900px]">
-                          <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                            <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                              {requestVisibleColumns.includes("id") && (
-                                <th className="p-4 pl-6 w-[10%] min-w-[90px] whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSort("id")}
-                                    className={cn(
-                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                      sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                    )}
-                                  >
-                                    Ticket #
-                                    <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                                  </button>
-                                </th>
-                              )}
-                              {requestVisibleColumns.includes("doc_type") && (
-                                <th className="p-4 w-[22%] min-w-[200px] whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSort("doc_type")}
-                                    className={cn(
-                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                      sortBy === "doc_type" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                    )}
-                                  >
-                                    Document Type
-                                    <SortIndicator column="doc_type" sortBy={sortBy} sortOrder={sortOrder} />
-                                  </button>
-                                </th>
-                              )}
-                              {requestVisibleColumns.includes("notes") && (
-                                <th className="p-4 w-[32%] min-w-[240px] whitespace-nowrap">
-                                  <span className="flex items-center text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                                    Purpose / Description
+                      <div className="w-full flex-1 border-t border-border dark:border-border divide-y divide-border dark:divide-border bg-white dark:bg-card font-jakarta">
+                        {loading && !hasLoaded ? (
+                          <StudentRequestsTableRowsSkeleton rowCount={Math.min(itemsPerPage || 6, 6)} />
+                        ) : groupedPaginatedRequests.map((group) => {
+                          const isGrouped = Boolean(group.label && requestGroupBy !== "none");
+                          const isCollapsed = Boolean(collapsedRequestGroups[group.key]);
+
+                          return (
+                            <section key={group.key || "root"} className="flex flex-col">
+                              {isGrouped && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleRequestGroup(group.key)}
+                                  aria-expanded={!isCollapsed}
+                                  className="flex w-full items-center justify-between border-b border-border bg-gray-50/80 px-5 py-2.5 text-left transition-colors hover:bg-gray-100/60 dark:border-border dark:bg-zinc-900/60 dark:hover:bg-zinc-800/40"
+                                >
+                                  <span className="flex min-w-0 items-center gap-2.5">
+                                    <ArrowDown01Icon size="1em" className={cn("shrink-0 text-sm text-gray-400 transition-transform dark:text-zinc-500", isCollapsed && "-rotate-90")} />
+                                    <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100">{group.label}</span>
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>{group.items.length}</span>
                                   </span>
-                                </th>
+                                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">{isCollapsed ? "Expand" : "Collapse"}</span>
+                                </button>
                               )}
-                              {requestVisibleColumns.includes("status") && (
-                                <th className="p-4 w-[14%] min-w-[130px] whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSort("status")}
-                                    className={cn(
-                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                      sortBy === "status" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                    )}
-                                  >
-                                    Status
-                                    <SortIndicator column="status" sortBy={sortBy} sortOrder={sortOrder} />
-                                  </button>
-                                </th>
-                              )}
-                              {requestVisibleColumns.includes("created_at") && (
-                                <th className="p-4 w-[14%] min-w-[150px] whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSort("created_at")}
-                                    className={cn(
-                                      "group flex items-center gap-1.5 transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                                      sortBy === "created_at" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                                    )}
-                                  >
-                                    Date Requested
-                                    <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
-                                  </button>
-                                </th>
-                              )}
-                              {requestVisibleColumns.includes("actions") && (
-                                <th className="p-4 pr-6 text-right w-[8%] min-w-[90px] whitespace-nowrap text-xs font-semibold text-gray-500 dark:text-zinc-400">Actions</th>
-                              )}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                            {loading && !hasLoaded ? (
-                              <StudentRequestsTableRowsSkeleton rowCount={itemsPerPage || 6} />
-                            ) : (
-                              groupedPaginatedRequests.map((group) => (
-                                <tbody key={group.key || "root"} className="divide-y divide-border dark:divide-border contents">
-                                  {group.label && (
-                                    <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
-                                      <td colSpan={requestVisibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                        <span className="font-bold">{group.label}</span>
-                                        <span className="ml-2 font-normal text-muted-foreground">({group.items.length})</span>
-                                      </td>
-                                    </tr>
-                                  )}
+
+                              {!isCollapsed && (
+                                <div role="list" className="w-full divide-y divide-gray-100 dark:divide-zinc-800/60">
                                   {group.items.map((item) => (
-                                    <tr
+                                    <article
                                       key={item.id}
+                                      role="listitem"
+                                      tabIndex={0}
                                       onClick={() => setSelectedRequestForDetail(item)}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                          event.preventDefault();
+                                          setSelectedRequestForDetail(item);
+                                        }
+                                      }}
                                       className={cn(
-                                        "group h-[52px] border-b border-border dark:border-border last:border-b-0 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
-                                        ["Deficient", "PendingPayment"].includes(item.status) &&
-                                          "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
+                                        "group flex cursor-pointer items-center justify-between border-b border-gray-100 transition-colors hover:bg-gray-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:border-zinc-800/60 dark:hover:bg-zinc-800/40",
+                                        requestListDensity.paddingX,
+                                        requestListDensity.paddingY,
+                                        requestListDensity.gap,
+                                        requestListDensity.minHeight,
+                                        ["Deficient", "PendingPayment"].includes(item.status) && "border-l-2 border-l-amber-500 bg-amber-50/60 dark:bg-amber-950/20"
                                       )}
                                     >
-                                      {requestVisibleColumns.includes("id") && (
-                                        <td className="p-4 pl-6 align-middle whitespace-nowrap text-xs font-semibold text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
-                                          #{item.id}
-                                        </td>
-                                      )}
-                                      {requestVisibleColumns.includes("doc_type") && (
-                                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                          <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                                              {item.doc_type}
-                                            </span>
-                                            {item.client_type === "Parent" && (
-                                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40 shrink-0">
-                                                Parent/Guardian
-                                              </span>
-                                            )}
-                                            {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
-                                              <span
-                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0"
-                                                title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
-                                              >
-                                                <Attachment01Icon size="1em" className="text-[11px]" />
-                                                {item.attachment_count || item.attachments?.length}
-                                              </span>
-                                            )}
-                                          </div>
-                                        </td>
-                                      )}
+                                      <div className="mr-2 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                                        <span className="min-w-[70px] shrink-0 select-none font-sans text-xs font-medium tabular-nums text-gray-500 dark:text-zinc-400">{item.id}</span>
+                                        <span className="max-w-[200px] shrink-0 truncate text-xs font-medium text-gray-900 transition-colors group-hover:text-[#800000] dark:text-zinc-100 dark:group-hover:text-red-400 sm:max-w-[320px] sm:text-sm lg:max-w-md">
+                                          {item.doc_type || "Document Request"}
+                                        </span>
+                                        {item.client_type === "Parent" && (
+                                          <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>Parent/Guardian</span>
+                                        )}
+                                        {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
+                                          <span
+                                            className={cn(BADGE_BASE, BADGE_PALETTES.slate, "shrink-0 tabular-nums")}
+                                            title={`${item.attachment_count || item.attachments?.length} attachment(s)`}
+                                          >
+                                            <Attachment01Icon size="1em" className="text-[11px]" />
+                                            {item.attachment_count || item.attachments?.length}
+                                          </span>
+                                        )}
+                                        <span className="hidden truncate text-xs font-normal text-gray-400 dark:text-zinc-500 md:inline">
+                                          — {item.notes ? <NarrativeText text={item.notes} mode="compact" /> : "Document request"}
+                                        </span>
+                                      </div>
 
-                                      {requestVisibleColumns.includes("notes") && (
-                                        <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                          <div className="truncate text-xs font-normal text-gray-600 dark:text-zinc-400" title={item.notes}>
-                                            {item.notes || "N/A"}
-                                          </div>
-                                        </td>
-                                      )}
-                                      {requestVisibleColumns.includes("status") && (
-                                        <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                          <StatusBadge status={item.status} />
-                                        </td>
-                                      )}
-                                      {requestVisibleColumns.includes("created_at") && (
-                                        <td className="p-4 align-middle text-xs font-normal text-gray-700 dark:text-zinc-300 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                          {formatPHDateTime(item.created_at)}
-                                        </td>
-                                      )}
-                                      {requestVisibleColumns.includes("actions") && (
-                                        <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                                          <div className="flex items-center justify-end gap-1.5">
-                                            {item.feedback ? (
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                      setFeedbackRequest(item);
-                                                      setFeedbackInitialRating(item.feedback.rating || 0);
-                                                      setFeedbackModalOpen(true);
-                                                    }}
-                                                    aria-label={`Rated ${item.feedback.rating}/5 stars. Click to edit feedback.`}
-                                                    className="table-action-button rounded-lg text-amber-500 hover:text-amber-600 dark:text-amber-400 active:scale-95 cursor-pointer"
-                                                  >
-                                                    <StarIcon size="1em" className="text-[15px]" />
-                                                  </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Rated {item.feedback.rating}/5 stars. Click to edit.</TooltipContent>
-                                              </Tooltip>
-                                            ) : (
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                      setFeedbackRequest(item);
-                                                      setFeedbackInitialRating(0);
-                                                      setFeedbackModalOpen(true);
-                                                    }}
-                                                    aria-label="Rate Service"
-                                                    className="table-action-button rounded-lg text-gray-400 hover:text-amber-500 active:scale-95 cursor-pointer"
-                                                  >
-                                                    <StarIcon size="1em" className="text-[15px]" />
-                                                  </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Rate Service</TooltipContent>
-                                              </Tooltip>
-                                            )}
+                                      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2" onClick={(event) => event.stopPropagation()}>
+                                        <StatusBadge status={item.status} />
+                                        {item.created_at && (() => {
+                                          const relativeTime = formatRelativeTime(item.created_at);
+                                          return (
                                             <Tooltip>
                                               <TooltipTrigger asChild>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setSelectedRequestForDetail(item)}
-                                                  aria-label="View Request Updates Timeline"
-                                                  className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
-                                                >
-                                                  <Time01Icon size="1em" className="text-[15px]" />
-                                                </button>
+                                                <span className="ml-1 hidden shrink-0 text-[11px] font-normal tabular-nums text-gray-400 dark:text-zinc-500 sm:inline">
+                                                  {relativeTime.relative || relativeTime.date}
+                                                </span>
                                               </TooltipTrigger>
-                                              <TooltipContent>View Timeline</TooltipContent>
+                                              <TooltipContent>Requested on {formatPHDateTime(item.created_at)}</TooltipContent>
                                             </Tooltip>
-                                          </div>
-                                        </td>
-                                      )}
-                                    </tr>
+                                          );
+                                        })()}
+                                        <div className="flex items-center gap-1">
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setFeedbackRequest(item);
+                                                  setFeedbackInitialRating(item.feedback?.rating || 0);
+                                                  setFeedbackModalOpen(true);
+                                                }}
+                                                aria-label={item.feedback ? `Rated ${item.feedback.rating}/5 stars. Click to edit feedback.` : "Rate Service"}
+                                                className={cn("table-action-button rounded-lg active:scale-95 cursor-pointer", item.feedback ? "text-amber-500 hover:text-amber-600 dark:text-amber-400" : "text-gray-400 hover:text-amber-500")}
+                                              >
+                                                <StarIcon size="1em" className="text-[15px]" />
+                                              </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>{item.feedback ? `Rated ${item.feedback.rating}/5 stars. Click to edit.` : "Rate Service"}</TooltipContent>
+                                          </Tooltip>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <button
+                                                type="button"
+                                                onClick={() => setSelectedRequestForDetail(item)}
+                                                aria-label="View Request Updates Timeline"
+                                                className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                                              >
+                                                <Time01Icon size="1em" className="text-[15px]" />
+                                              </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>View Timeline</TooltipContent>
+                                          </Tooltip>
+                                        </div>
+                                      </div>
+                                    </article>
                                   ))}
-                                </tbody>
-                              ))
-                            )}
-                        </tbody>
-                      </Table>
-                    </div>
-                  )}
+                                </div>
+                              )}
+                            </section>
+                          );
+                        })}
+                      </div>
+
+                    )}
 
                     {/* 6. Pagination Bar */}
                     {loading && !hasLoaded ? (
@@ -2339,19 +2649,74 @@ function StudentDashboard() {
                   {/* 1. Page Header */}
                   <PageHeader
                     icon="File02Icon"
-                    title="OSAS Submissions"
+                    title={
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <span>OSAS Submissions</span>
+                        <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                          {osasSubView === "proposals"
+                            ? `${organizationProposals.length} ${organizationProposals.length === 1 ? "proposal" : "proposals"}`
+                            : osasSubView === "post_event"
+                            ? `${organizationPostEventReports.length} ${organizationPostEventReports.length === 1 ? "report" : "reports"}`
+                            : `${cblVersions.length} ${cblVersions.length === 1 ? "charter" : "charters"}`}
+                          {me?.student_no ? ` · ${me.student_no}` : ""}
+                        </span>
+                      </div>
+                    }
                     description="Submit organization event proposals and follow evaluation progress."
-                    showBorder={true}
+                    showBorder={false}
                     className="p-6"
                     titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
                     descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                     actions={
-                      <div className="flex items-center gap-3 sm:gap-4">
-                        {me?.student_no && (
-                          <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/30 dark:border-red-900/30">
-                            {me.student_no}
-                          </span>
-                        )}
+                      <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                        {myOrganizations.length > 1 ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label={`Choose organization. Current organization: ${selectedOsasOrganization?.organization_name || "none selected"}.`}
+                                disabled={Boolean(revisionTargetProposal)}
+                                className="group flex h-10 max-w-72 min-w-0 items-center gap-2 rounded-full border border-black/[0.06] bg-white py-1 pl-1 pr-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-white/[0.05]"
+                              >
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-gray-600 dark:bg-white/[0.07] dark:text-zinc-300">
+                                  <Building01Icon size={16} />
+                                </span>
+                                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-800 dark:text-zinc-100">
+                                  {selectedOsasOrganization?.organization_name || "Choose organization"}
+                                </span>
+                                <ArrowDown01Icon size={14} className="shrink-0 text-gray-400 transition-colors group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" sideOffset={6} className="w-80">
+                              {myOrganizations.map((org) => {
+                                const isSelected = String(org.organization_id) === String(selectedOsasOrgId);
+                                return (
+                                  <DropdownMenuItem
+                                    key={org.organization_id}
+                                    onClick={() => handleOsasOrganizationChange(String(org.organization_id))}
+                                    className="min-h-12 px-2 py-2"
+                                  >
+                                    <Building01Icon size={16} className="shrink-0 text-gray-500 dark:text-zinc-400" />
+                                    <span className="flex min-w-0 flex-1 flex-col">
+                                      <span className="truncate">{org.organization_name}{org.acronym ? ` (${org.acronym})` : ""}</span>
+                                      <span className="truncate text-[10px] font-normal text-gray-500 dark:text-zinc-400">{org.officer_position}</span>
+                                    </span>
+                                    {isSelected && <Tick01Icon size={16} className="shrink-0 text-blue-600 dark:text-blue-300" />}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : myOrganizations.length === 1 ? (
+                          <div className="flex h-10 max-w-72 min-w-0 items-center gap-2 rounded-full border border-black/[0.06] bg-white py-1 pl-1 pr-3 dark:border-white/10 dark:bg-zinc-900">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-gray-600 dark:bg-white/[0.07] dark:text-zinc-300">
+                              <Building01Icon size={16} />
+                            </span>
+                            <span className="truncate text-xs font-semibold text-gray-800 dark:text-zinc-100">
+                              {selectedOsasOrganization?.organization_name || "Organization"}
+                            </span>
+                          </div>
+                        ) : null}
                         <RefreshButton
                           onRefresh={async () => {
                             setRefreshing(true);
@@ -2370,132 +2735,95 @@ function StudentDashboard() {
                             type="button"
                             size="sm"
                             onClick={() => setIsFormOpen(true)}
-                            disabled={myOrganizations.length === 0}
-                            title={myOrganizations.length === 0 ? "You must be an officer authorized by OSAS to submit proposals" : osasSubView === "proposals" ? "New Proposal" : osasSubView === "post_event" ? "New Report" : "Submit CBL"}
+                            disabled={!selectedOsasOrganization}
+                            title={!selectedOsasOrganization ? "Select an organization above to continue" : osasSubView === "proposals" ? "Open Proposal Form" : osasSubView === "post_event" ? "Open Report Form" : "Open CBL Form"}
                             className={cn(
-                              "flex h-9 px-4 cursor-pointer border-0",
-                              myOrganizations.length === 0 && "opacity-50 cursor-not-allowed"
+                              "h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50",
+                              !selectedOsasOrganization && "opacity-50 cursor-not-allowed"
                             )}
                           >
-                            {osasSubView === "proposals" ? "Submit Proposal" : osasSubView === "post_event" ? "Submit Report" : "Submit CBL"}
+                              {osasSubView === "proposals" ? "Open Proposal Form" : osasSubView === "post_event" ? "Open Report Form" : "Open CBL Form"}
                           </Button>
                         )}
                       </div>
                     }
                   />
 
-                  {/* Verified Officer Status Alert (Attached edge-to-edge dismissable alert) */}
-                  {myOrganizations.length > 0 ? (
-                    !isOfficerAlertDismissed && (
-                      <div className="flex items-center justify-between gap-3 border-b border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-900/40 dark:bg-emerald-950/25 px-5 sm:px-6 py-2.5 text-xs text-emerald-950 dark:text-emerald-200 animate-in fade-in transition-all">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Shield01Icon size="1em" className="text-[16px] shrink-0 text-emerald-600 dark:text-emerald-400" />
-                          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                            You are signed in as a verified student officer authorized to submit OSAS proposals and reports.
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleDismissOfficerAlert}
-                          className="shrink-0 p-1 rounded-lg text-emerald-700 hover:text-emerald-950 hover:bg-emerald-100/80 dark:text-emerald-400 dark:hover:text-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
-                          aria-label="Dismiss notice"
-                          title="Dismiss notice"
-                        >
-                          <Cancel01Icon size="1em" className="text-sm" />
-                        </button>
-                      </div>
-                    )
-                  ) : (
+                  {myOrganizations.length === 0 && (
                     <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in transition-all">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <CovidInfoIcon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
                         <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                          Officer authorization required: Only recognized student officers may submit proposals and reports. Contact OSAS to authorize your account.
+                          Officer authorization required: Only student officers authorized for a recognized organization may submit proposals, reports, or charter documents. Contact OSAS to authorize your account.
                         </span>
                       </div>
                     </div>
                   )}
 
                   {/* OSAS Stream Switcher */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-gray-100/80 dark:bg-zinc-800/60 border border-border/60 dark:border-border mx-6 my-4">
-                    <button
-                      type="button"
-                      onClick={() => setOsasSubView("proposals")}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                        osasSubView === "proposals"
-                          ? "bg-pup-maroon text-white shadow-xs"
-                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      <Calendar01Icon size="1em" className="text-sm" />
-                      <span>Event Proposals</span>
-                      <span className={cn(
-                        "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
-                        osasSubView === "proposals" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                      )}>
-                        {data.proposals.length}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setOsasSubView("post_event")}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                        osasSubView === "post_event"
-                          ? "bg-pup-maroon text-white shadow-xs"
-                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      <ClipboardIcon size="1em" className="text-sm" />
-                      <span>Post-Event & Liquidation</span>
-                      {pendingPostEvents.length > 0 ? (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
-                          {pendingPostEvents.length} Action
-                        </span>
-                      ) : (
-                        <span className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
-                          osasSubView === "post_event" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                        )}>
-                          {postEventReports.length}
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setOsasSubView("cbl")}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                        osasSubView === "cbl"
-                          ? "bg-pup-maroon text-white shadow-xs"
-                          : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                      )}
-                    >
-                      <BookBookmark01Icon size="1em" className="text-sm" />
-                      <span>Constitution & By-Laws</span>
-                      {cblVersions.filter((v) => v.status === "Pending").length > 0 ? (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
-                          Pending
-                        </span>
-                      ) : (
-                        <span className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
-                          osasSubView === "cbl" ? "bg-white/20 text-white" : "bg-gray-200/80 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
-                        )}>
-                          {cblVersions.length}
-                        </span>
-                      )}
-                    </button>
+                  <div className="border-b border-border/80 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 overflow-x-auto scrollbar-none">
+                    <SegmentedControl
+                      value={osasSubView}
+                      onValueChange={setOsasSubView}
+                      variant="capsule"
+                      className="w-max"
+                      items={[
+                        {
+                          value: "proposals",
+                          label: "Event Proposals",
+                          icon: <Calendar01Icon size="1em" className="text-sm" />,
+                          badge: organizationProposals.length,
+                        },
+                        {
+                          value: "post_event",
+                          label: "Post-Event & Liquidation",
+                          icon: <ClipboardIcon size="1em" className="text-sm" />,
+                          badge: organizationPendingPostEvents.length > 0
+                            ? `${organizationPendingPostEvents.length} Action`
+                            : organizationPostEventReports.length,
+                          badgeClassName: organizationPendingPostEvents.length > 0
+                            ? BADGE_PALETTES.amber
+                            : undefined,
+                        },
+                        {
+                          value: "cbl",
+                          label: "Constitution & By-Laws",
+                          icon: <BookBookmark01Icon size="1em" className="text-sm" />,
+                          badge: cblVersions.filter((version) => version.status === "Pending").length > 0
+                            ? "Pending"
+                            : cblVersions.length,
+                          badgeClassName: cblVersions.some((version) => version.status === "Pending")
+                            ? BADGE_PALETTES.amber
+                            : undefined,
+                        },
+                      ]}
+                    />
                   </div>
 
+                  {selectedOsasOrganization && isFormOpen && (
+                    <div
+                      role="status"
+                      className="flex w-full items-start gap-2.5 border-b border-blue-200 bg-blue-50/80 px-5 py-3 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/25 dark:text-blue-200 sm:px-6"
+                    >
+                      <Building01Icon size={16} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-300" />
+                      <p>
+                        You’re currently submitting for <span className="font-semibold">{selectedOsasOrganization.organization_name}</span>.
+                        <span className="ml-1 text-blue-800/80 dark:text-blue-200/80">
+                          New proposals, reports, and charter submissions will be associated with this organization.
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  <ContentSwap
+                    id={`osas-${osasSubView}`}
+                    className="flex flex-[1_0_auto] flex-col w-full"
+                  >
                   {/* STREAM 1: EVENT PROPOSALS */}
                   {osasSubView === "proposals" && (
                     <>
                       {/* Inline Proposal Form Section */}
-                      {isFormOpen && myOrganizations.length > 0 && (
+                      {isFormOpen && selectedOsasOrganization && (
                         <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
@@ -2503,14 +2831,20 @@ function StudentDashboard() {
                                 <AddCircleIcon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Event Proposal</h2>
-                                <p className="text-xs text-gray-500 dark:text-zinc-400">Upload a PDF proposal for OSAS review and evaluation.</p>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">
+                                  {revisionTargetProposal ? "Revise Event Proposal" : "New Event Proposal"}
+                                </h2>
+                                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                                  {revisionTargetProposal
+                                    ? `Update the proposal requested by OSAS · Submitting for ${selectedOsasOrganization.organization_name}`
+                                    : `Upload a PDF proposal for OSAS review and evaluation · Submitting for ${selectedOsasOrganization.organization_name}`}
+                                </p>
                               </div>
                             </div>
                           </div>
 
                           <form onSubmit={submitProposal} className="flex flex-col gap-4 mt-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="min-w-0">
                                 <label htmlFor="osas-event-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                   Event Title
@@ -2526,45 +2860,41 @@ function StudentDashboard() {
                               </div>
 
                               <div className="min-w-0">
-                                <label htmlFor="osas-org-name" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Authorized Organization
-                                </label>
-                                <Select
-                                  id="osas-org-name"
-                                  value={proposalForm.organizationId || (myOrganizations[0]?.organization_id || "")}
-                                  onChange={(e) => {
-                                    const orgId = e.target.value;
-                                    const org = myOrganizations.find((o) => o.organization_id === orgId);
-                                    setProposalForm({
-                                      ...proposalForm,
-                                      organizationId: orgId,
-                                      organizationName: org?.organization_name || "",
-                                    });
-                                  }}
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
-                                >
-                                  {myOrganizations.map((o) => (
-                                    <option key={o.organization_id} value={o.organization_id}>
-                                      {o.organization_name} {o.acronym ? `(${o.acronym})` : ""} : {o.officer_position}
-                                    </option>
-                                  ))}
-                                </Select>
-                              </div>
-
-                              <div className="min-w-0">
                                 <label htmlFor="osas-event-date" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                   Event Date
                                 </label>
-                                <Input
-                                  id="osas-event-date"
-                                  type="date"
-                                  aria-label="Event date"
-                                  value={proposalForm.eventDate}
-                                  onClick={(e) => e.currentTarget.showPicker?.()}
-                                  onChange={(e) => setProposalForm({ ...proposalForm, eventDate: e.target.value })}
-                                  required
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                                />
+                                <Popover open={eventDatePickerOpen} onOpenChange={setEventDatePickerOpen}>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      id="osas-event-date"
+                                      type="button"
+                                      variant="outline"
+                                      aria-label="Event date"
+                                      aria-required="true"
+                                      aria-haspopup="dialog"
+                                      className="h-10 w-full justify-start gap-2 rounded-xl border border-border bg-white px-3 text-left text-xs font-normal text-gray-900 shadow-none hover:bg-gray-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                                    >
+                                      <Calendar01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />
+                                      <span className={proposalForm.eventDate ? "" : "text-gray-400 dark:text-zinc-500"}>
+                                        {proposalForm.eventDate
+                                          ? format(parseDateLocal(proposalForm.eventDate), "MMM d, yyyy")
+                                          : "Select event date"}
+                                      </span>
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="start" className="w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
+                                    <Calendar
+                                      mode="single"
+                                      selected={parseDateLocal(proposalForm.eventDate)}
+                                      defaultMonth={parseDateLocal(proposalForm.eventDate)}
+                                      onSelect={(date) => {
+                                        if (!date) return;
+                                        setProposalForm((current) => ({ ...current, eventDate: formatDateIso(date) }));
+                                        setEventDatePickerOpen(false);
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                             </div>
 
@@ -2573,11 +2903,12 @@ function StudentDashboard() {
                                 Proposal PDF
                               </label>
                               <FileAttachmentDropzone
+                                animateCards={false}
                                 value={proposalForm.file ? { file: proposalForm.file, original_filename: proposalForm.file.name, size_bytes: proposalForm.file.size } : null}
                                 onChange={(item) => setProposalForm({ ...proposalForm, file: item?.file || null })}
                                 mode="single"
                                 accept="application/pdf"
-                                title="Drop activity proposal PDF here, or browse"
+                                title={revisionTargetProposal ? "Drop revised proposal PDF here, or browse" : "Drop activity proposal PDF here, or browse"}
                                 subtitle="Must be an official PDF document (up to 25 MB)"
                                 maxSizeBytes={25 * 1024 * 1024}
                               />
@@ -2592,25 +2923,25 @@ function StudentDashboard() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setIsFormOpen(false)}
+                                  onClick={closeProposalForm}
                                   className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
-                                  Hide
+                                  {revisionTargetProposal ? "Cancel Revision" : "Hide"}
                                 </Button>
                                 <Button
                                   type="submit"
                                   size="sm"
-                                  disabled={proposalSubmitting}
-                                  title="Submit Proposal"
+                                  disabled={proposalSubmitting || (Boolean(revisionTargetProposal) && !proposalForm.file)}
+                                  title={revisionTargetProposal ? "Submit Revised Proposal" : "Submit Proposal"}
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {proposalSubmitting ? (
                                     <>
                                       <Loading01Icon size="1em" className="animate-spin text-sm"></Loading01Icon>
-                                      Submitting...
+                                      {revisionTargetProposal ? "Submitting Revision..." : "Submitting..."}
                                     </>
                                   ) : (
-                                    "Submit Proposal"
+                                    revisionTargetProposal ? "Submit Revised Proposal" : "Submit Proposal"
                                   )}
                                 </Button>
                               </div>
@@ -2689,28 +3020,36 @@ function StudentDashboard() {
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
-                        ) : data.proposals.length === 0 ? (
+                        ) : organizationProposals.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty>
                               <EmptyHeader>
                                 <EmptyMedia><EmptyFile02Icon size="1em" /></EmptyMedia>
                                 <EmptyTitle>
-                                  No Event Proposals Yet
+                                  {selectedOsasOrganization
+                                    ? "No Event Proposals Yet"
+                                    : myOrganizations.length === 0
+                                    ? "No Authorized Organization"
+                                    : "Choose an Organization"}
                                 </EmptyTitle>
                                 <EmptyDescription>
-                                  You haven&apos;t submitted any event proposals yet. Use the form above to submit your first proposal.
+                                  {selectedOsasOrganization
+                                    ? `No event proposals have been submitted for ${selectedOsasOrganization.organization_name} yet.`
+                                    : myOrganizations.length === 0
+                                    ? "Contact OSAS to confirm your officer authorization."
+                                    : "Choose an organization above to view its OSAS submissions."}
                                 </EmptyDescription>
                               </EmptyHeader>
-                              {myOrganizations.length > 0 && (
+                              {selectedOsasOrganization && (
                                 <EmptyContent>
                                   <Button
                                     type="button"
                                     size="sm"
                                     onClick={() => setIsFormOpen(true)}
-                                    title="Submit Proposal"
+                                    title="Open Proposal Form"
                                     className="flex h-9 px-4 cursor-pointer border-0"
                                   >
-                                    Submit Proposal
+                                    Open Proposal Form
                                   </Button>
                                 </EmptyContent>
                               )}
@@ -2735,6 +3074,9 @@ function StudentDashboard() {
                                   onClick={() => {
                                     setProposalSearch("");
                                     setProposalFilters({ status: [], organization: [] });
+                                    setProposalFilterRules([]);
+                                    setProposalStartDate("");
+                                    setProposalEndDate("");
                                   }}
                                   title="Reset Filters"
                                   className="h-9 px-4 text-xs font-semibold rounded-xl"
@@ -2754,7 +3096,9 @@ function StudentDashboard() {
                                     <span className="text-muted-foreground font-normal">({group.items.length})</span>
                                   </div>
                                 )}
-                                {group.items.map((item) => (
+                                {group.items.map((item) => {
+                                  const latestUpdate = item.updates?.[item.updates.length - 1];
+                                  return (
                                   <article
                                     key={item.id}
                                     onClick={() => setSelectedProposalForDetail(item)}
@@ -2773,35 +3117,25 @@ function StudentDashboard() {
                                             handleOpenPdfPreview(item);
                                           }}
                                           title={PDF_ACTION_LABELS.preview}
-                                          className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                          aria-label={PDF_ACTION_LABELS.preview}
+                                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
                                         >
-                                          <File02Icon size="1em" className="text-[16px]"></File02Icon>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedProposalForDetail(item);
-                                          }}
-                                          title="View Proposal Details & Timeline"
-                                          className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
-                                        >
-                                          <Time01Icon size="1em" className="text-[16px]"></Time01Icon>
+                                          <File02Icon size="1em" className="text-[16px]" />
                                         </button>
                                       </div>
                                     </div>
                                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                                       <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
-                                        {item.organization_name} · {item.event_date}
+                                        {item.organization_name} · {formatProposalEventDate(item.event_date)}
                                       </p>
                                       {item.status === "Approved" && (
                                         <div className="flex items-center gap-2">
                                           {item.post_event_status === "Cleared" ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                               Post-Event Cleared
                                             </span>
                                           ) : item.post_event_status === "Submitted" || item.post_event_status === "Under Review" ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+                                            <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
                                               Post-Event In Review
                                             </span>
                                           ) : (
@@ -2809,32 +3143,61 @@ function StudentDashboard() {
                                               type="button"
                                               onClick={(e) => {
                                                 e.stopPropagation();
+                                                if (!myOrganizations.some((org) => String(org.organization_id) === String(item.organization_id))) {
+                                                  showToast("Organization authorization required", "Contact OSAS to restore your officer authorization for this organization.", true);
+                                                  return;
+                                                }
+                                                handleOsasOrganizationChange(String(item.organization_id));
                                                 setOsasSubView("post_event");
                                                 setPostEventForm((prev) => ({
                                                   ...prev,
                                                   eventProposalId: String(item.id),
-                                                  organizationId: item.organization_id || myOrganizations[0]?.organization_id || "",
                                                 }));
                                                 setIsFormOpen(true);
                                               }}
-                                              title="Submit Post-Event Report"
-                                              className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                              title="Open Report Form"
+                                              className="group/btn inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline underline-offset-4 cursor-pointer"
                                             >
-                                              Submit
+                                              <span>Open Report Form</span>
+                                              <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
                                             </button>
                                           )}
                                         </div>
                                       )}
                                     </div>
-                                    <ol className="mt-3 space-y-2 border-l-2 border-border pl-4 text-xs text-gray-500 dark:border-border dark:text-zinc-400">
-                                      {item.updates?.map((update) => (
-                                        <li key={update.id}>
-                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">{update.status}</span> : {update.message || "Status updated"}
-                                        </li>
-                                      ))}
-                                    </ol>
+                                    <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 dark:border-border">
+                                      {latestUpdate ? (
+                                        <div className="min-w-0">
+                                          <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                                            <span className="font-semibold text-gray-700 dark:text-zinc-300">Latest update · {latestUpdate.status}</span>
+                                            {latestUpdate.created_at && (
+                                              <span className="text-gray-400 dark:text-zinc-500">{formatPHDateTime(latestUpdate.created_at)}</span>
+                                            )}
+                                          </div>
+                                          <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
+                                            <NarrativeText text={latestUpdate.message || "Status updated by OSAS"} mode="compact" />
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <p className="text-xs text-gray-500 dark:text-zinc-400">No evaluation updates yet.</p>
+                                      )}
+                                      <div className="flex justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedProposalForDetail(item);
+                                          }}
+                                          className="group/more inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline underline-offset-4 dark:text-red-400 cursor-pointer"
+                                        >
+                                          <span>{item.updates?.length ? "View full timeline" : "View proposal details"}</span>
+                                          <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/more:translate-x-0.5 group-hover/more:-translate-y-0.5" />
+                                        </button>
+                                      </div>
+                                    </div>
                                   </article>
-                                ))}
+                                  );
+                                })}
                               </div>
                             ))}
                           </div>
@@ -2846,19 +3209,19 @@ function StudentDashboard() {
                   {/* STREAM 2: POST-EVENT & LIQUIDATION REPORTS */}
                   {osasSubView === "post_event" && (
                     <div className="flex flex-col flex-[1_0_auto] min-h-0">
-                      {pendingPostEvents.length > 0 && !isPostEventAlertDismissed && (
-                        <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all mb-4">
+                      {organizationPendingPostEvents.length > 0 && !isPostEventAlertDismissed && (
+                        <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Alert01Icon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
                             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
                               <strong className="font-semibold text-amber-950 dark:text-amber-100">Pending Post-Event Compliance:</strong> You have{" "}
-                              <strong>{pendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
+                              <strong>{organizationPendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={handleDismissPostEventAlert}
-                            className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                            className="shrink-0 p-1 rounded-full text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
                             aria-label="Dismiss notice"
                             title="Dismiss notice"
                           >
@@ -2868,15 +3231,19 @@ function StudentDashboard() {
                       )}
 
                       {/* Post-Event Submission Form */}
-                      {isFormOpen && myOrganizations.length > 0 && (
+                      {isFormOpen && selectedOsasOrganization && (
                         <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                          <div className="flex items-center gap-3 pb-4 border-b border-border dark:border-border">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                              <ClipboardIcon size="1em" className="text-xl" />
-                            </div>
-                            <div>
-                              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Post-Event & Liquidation Report</h2>
-                              <p className="text-xs text-gray-500 dark:text-zinc-400">Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event.</p>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                <ClipboardIcon size="1em" className="text-xl" />
+                              </div>
+                              <div>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Post-Event & Liquidation Report</h2>
+                                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                                  Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event · Submitting for {selectedOsasOrganization.organization_name}
+                                </p>
+                              </div>
                             </div>
                           </div>
 
@@ -2890,19 +3257,14 @@ function StudentDashboard() {
                                   value={postEventForm.eventProposalId}
                                   onChange={(e) => {
                                     const pId = e.target.value;
-                                    const p = (data.proposals || []).find((x) => String(x.id) === pId);
-                                    setPostEventForm((prev) => ({
-                                      ...prev,
-                                      eventProposalId: pId,
-                                      organizationId: p?.organization_id || prev.organizationId,
-                                    }));
+                                    setPostEventForm((prev) => ({ ...prev, eventProposalId: pId }));
                                   }}
                                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
                                   <option value="">Select an approved event...</option>
-                                  {data.proposals?.filter((p) => p.status === "Approved").map((p) => (
+                                  {organizationProposals.filter((p) => p.status === "Approved").map((p) => (
                                     <option key={p.id} value={p.id}>
-                                      {p.title} ({p.event_date}) : {p.organization_name}
+                                      {p.title} ({formatProposalEventDate(p.event_date)}) : {p.organization_name}
                                     </option>
                                   ))}
                                 </Select>
@@ -2944,6 +3306,7 @@ function StudentDashboard() {
                                   Narrative Accomplishment Report (PDF)
                                 </label>
                                 <FileAttachmentDropzone
+                                  animateCards={false}
                                   value={postEventForm.narrativeFile ? { file: postEventForm.narrativeFile, original_filename: postEventForm.narrativeFile.name, size_bytes: postEventForm.narrativeFile.size } : null}
                                   onChange={(item) => setPostEventForm({ ...postEventForm, narrativeFile: item?.file || null })}
                                   mode="single"
@@ -2959,6 +3322,7 @@ function StudentDashboard() {
                                   Financial Liquidation & Receipts (PDF) <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                                 </label>
                                 <FileAttachmentDropzone
+                                  animateCards={false}
                                   value={postEventForm.liquidationFile ? { file: postEventForm.liquidationFile, original_filename: postEventForm.liquidationFile.name, size_bytes: postEventForm.liquidationFile.size } : null}
                                   onChange={(item) => setPostEventForm({ ...postEventForm, liquidationFile: item?.file || null })}
                                   mode="single"
@@ -2991,7 +3355,14 @@ function StudentDashboard() {
                                   title="Submit Post-Event Report"
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
-                                  {postEventSubmitting ? "Submitting..." : "Submit Post-Event Report"}
+                                  {postEventSubmitting ? (
+                                    <>
+                                      <Loading01Icon size="1em" className="animate-spin text-sm" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Post-Event Report"
+                                  )}
                                 </Button>
                               </div>
                             </div>
@@ -2999,102 +3370,269 @@ function StudentDashboard() {
                         </div>
                       )}
 
-                      {/* Post-Event Reports List */}
-                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Post-Event Reports History</h3>
-                          <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Official post-event accomplishment reports, liquidation audit records, and OSAS clearance.</p>
+                      {/* Post-Event Reports History Toolbar */}
+                      <DataViewToolbar label="Post-event reports search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <DashboardSearch
+                            value={postEventSearch}
+                            onChange={(val) => setPostEventSearch(val)}
+                            count={filteredPostEventReports.length}
+                            loading={loading}
+                            placeholder="Search reports..."
+                            label="Search post-event reports"
+                          />
                         </div>
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
-                          {postEventReports.length} total
-                        </span>
-                      </div>
 
-                      <div className="border-t border-border dark:border-border flex flex-col flex-[1_0_auto] p-5 space-y-3">
-                        {postEventReports.length === 0 ? (
+                        <div className="ml-auto flex shrink-0 items-center gap-2">
+                          <FilterPopover
+                            fields={postEventFilterFields}
+                            filters={postEventFilterRules}
+                            onFiltersChange={(newRules) => setPostEventFilterRules(newRules)}
+                            entityLabel="reports"
+                          />
+                          <SortPopover
+                            options={postEventSortOptions}
+                            sortBy={postEventSortBy}
+                            onSortByChange={(val) => setPostEventSortBy(val)}
+                            sortOrder={postEventSortOrder}
+                            onSortOrderChange={(val) => setPostEventSortOrder(val)}
+                          />
+                          <GroupPopover
+                            options={postEventGroupOptions}
+                            groupBy={postEventGroupBy}
+                            onGroupByChange={(val) => setPostEventGroupBy(val)}
+                          />
+                          <DateRangeFilterButton
+                            startDate={postEventStartDate}
+                            endDate={postEventEndDate}
+                            onApply={({ startDate: s, endDate: e }) => {
+                              setPostEventStartDate(s);
+                              setPostEventEndDate(e);
+                            }}
+                            onClear={() => {
+                              setPostEventStartDate("");
+                              setPostEventEndDate("");
+                            }}
+                            disableFutureDates={false}
+                          />
+                        </div>
+                      </DataViewToolbar>
+
+                      {postEventActiveChips.length > 0 && (
+                        <TableActiveFilterChips
+                          chips={postEventActiveChips}
+                          onClearAll={() => {
+                            setPostEventSearch("");
+                            setPostEventFilterRules([]);
+                            setPostEventStartDate("");
+                            setPostEventEndDate("");
+                          }}
+                          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                        />
+                      )}
+
+                      <div className="border-t border-border dark:border-border flex-1">
+                        {loading && !hasLoaded ? (
+                          <div className="p-5">
+                            <StudentOsasProposalsListSkeleton count={3} />
+                          </div>
+                        ) : organizationPostEventReports.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty>
                               <EmptyHeader>
                                 <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
                                 <EmptyTitle>
-                                  No Post-Event Reports Yet
+                                  {selectedOsasOrganization
+                                    ? "No Post-Event Reports Yet"
+                                    : myOrganizations.length === 0
+                                    ? "No Authorized Organization"
+                                    : "Choose an Organization"}
                                 </EmptyTitle>
                                 <EmptyDescription>
-                                  You haven&apos;t submitted any accomplishment or liquidation reports yet. Use the form above to submit your report.
+                                  {selectedOsasOrganization
+                                    ? `No accomplishment or liquidation reports have been submitted for ${selectedOsasOrganization.organization_name} yet.`
+                                    : myOrganizations.length === 0
+                                    ? "Contact OSAS to confirm your officer authorization."
+                                    : "Choose an organization above to view its OSAS submissions."}
                                 </EmptyDescription>
                               </EmptyHeader>
-                              {myOrganizations.length > 0 && !isFormOpen && (
+                              {selectedOsasOrganization && !isFormOpen && (
                                 <EmptyContent>
                                   <Button
                                     type="button"
                                     size="sm"
                                     onClick={() => setIsFormOpen(true)}
-                                    title="Submit Post-Event Report"
+                                    title="Open Report Form"
                                     className="flex h-9 px-4 cursor-pointer border-0"
                                   >
-                                    Submit Post-Event Report
+                                    Open Report Form
                                   </Button>
                                 </EmptyContent>
                               )}
                             </Empty>
                           </div>
+                        ) : filteredPostEventReports.length === 0 ? (
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
+                                  No Matches Found
+                                </EmptyTitle>
+                                <EmptyDescription>
+                                  Try adjusting your search query or filter criteria.
+                                </EmptyDescription>
+                              </EmptyHeader>
+                              <EmptyContent>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setPostEventSearch("");
+                                    setPostEventFilterRules([]);
+                                    setPostEventStartDate("");
+                                    setPostEventEndDate("");
+                                  }}
+                                  title="Reset Filters"
+                                  className="h-9 px-4 text-xs font-semibold rounded-xl"
+                                >
+                                  Reset Filters
+                                </Button>
+                              </EmptyContent>
+                            </Empty>
+                          </div>
                         ) : (
-                          postEventReports.map((report) => (
-                            <div key={report.id} className="p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 space-y-3">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{report.event_title}</h4>
-                                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                                    {report.organization_name} · Attendees: <strong>{report.actual_attendance || 0}</strong> · Expenses: <strong>₱{Number(report.total_expenses || 0).toLocaleString()}</strong>
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <StatusBadge status={report.status} />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleOpenPdfPreview(null, {
-                                      url: `/api/student/post-event-reports/${report.id}?file=narrative`,
-                                      title: `Narrative Report: ${report.event_title}`,
-                                      subtitle: `Submitted by ${report.submitted_by_email}`,
-                                      studentName: me?.name || "Student",
-                                      docType: "Post-Event Narrative Report",
-                                      originalFilename: report.narrative_original_filename,
-                                    })}
-                                    title={PDF_ACTION_LABELS.preview}
-                                    className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
+                          <div className="p-5 space-y-4">
+                            {groupedPostEventReports.map((group) => (
+                              <div key={group.key || "all"} className="space-y-3">
+                                {group.label && (
+                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                    <span className="font-bold">{group.label}</span>
+                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
+                                  </div>
+                                )}
+                                {group.items.map((report) => (
+                                  <article
+                                    key={report.id}
+                                    onClick={() => setSelectedPostEventReportForDetail(report)}
+                                    className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
                                   >
-                                    Preview
-                                  </Button>
-                                  {report.liquidation_storage_filename && (
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleOpenPdfPreview(null, {
-                                        url: `/api/student/post-event-reports/${report.id}?file=liquidation`,
-                                        title: `Financial Liquidation: ${report.event_title}`,
-                                        subtitle: `Submitted by ${report.submitted_by_email}`,
-                                        studentName: me?.name || "Student",
-                                        docType: "Financial Liquidation Report",
-                                        originalFilename: report.liquidation_original_filename,
-                                      })}
-                                      title={PDF_ACTION_LABELS.preview}
-                                      className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
-                                    >
-                                      Preview
-                                    </Button>
-                                  )}
-                                </div>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                        {report.event_title}
+                                      </h3>
+                                      <div className="flex items-center gap-2">
+                                        <StatusBadge status={report.status} />
+                                        {report.liquidation_storage_filename ? (
+                                          <div className="flex items-center gap-1">
+                                            <button
+                                              type="button"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                handleOpenPdfPreview(null, {
+                                                  url: `/api/student/post-event-reports/${report.id}?file=narrative`,
+                                                  title: `Narrative Report: ${report.event_title}`,
+                                                  subtitle: `Submitted by ${report.submitted_by_email}`,
+                                                  studentName: me?.name || "Student",
+                                                  docType: "Post-Event Narrative Report",
+                                                  originalFilename: report.narrative_original_filename,
+                                                });
+                                              }}
+                                              title="Preview Narrative Report"
+                                              aria-label="Preview Narrative Report"
+                                              className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                            >
+                                              <File02Icon size="1em" className="text-[14px]" />
+                                              <span>Narrative</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                handleOpenPdfPreview(null, {
+                                                  url: `/api/student/post-event-reports/${report.id}?file=liquidation`,
+                                                  title: `Financial Liquidation: ${report.event_title}`,
+                                                  subtitle: `Submitted by ${report.submitted_by_email}`,
+                                                  studentName: me?.name || "Student",
+                                                  docType: "Financial Liquidation Report",
+                                                  originalFilename: report.liquidation_original_filename,
+                                                });
+                                              }}
+                                              title="Preview Financial Liquidation"
+                                              aria-label="Preview Financial Liquidation"
+                                              className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                            >
+                                              <File02Icon size="1em" className="text-[14px]" />
+                                              <span>Liquidation</span>
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              handleOpenPdfPreview(null, {
+                                                url: `/api/student/post-event-reports/${report.id}?file=narrative`,
+                                                title: `Narrative Report: ${report.event_title}`,
+                                                subtitle: `Submitted by ${report.submitted_by_email}`,
+                                                studentName: me?.name || "Student",
+                                                docType: "Post-Event Narrative Report",
+                                                originalFilename: report.narrative_original_filename,
+                                              });
+                                            }}
+                                            title={PDF_ACTION_LABELS.preview}
+                                            aria-label={PDF_ACTION_LABELS.preview}
+                                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                          >
+                                            <File02Icon size="1em" className="text-[16px]" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                                        {report.organization_name} · {formatProposalEventDate(report.event_date)}
+                                      </p>
+                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-zinc-400">
+                                        <span>Attendees: <strong className="font-semibold text-gray-700 dark:text-zinc-300">{report.actual_attendance || 0}</strong></span>
+                                        <span>Expenses: <strong className="font-semibold text-gray-700 dark:text-zinc-300">₱{Number(report.total_expenses || 0).toLocaleString()}</strong></span>
+                                      </div>
+                                    </div>
+                                    <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 dark:border-border">
+                                      <div className="min-w-0">
+                                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">OSAS review note · {report.status}</span>
+                                          {(report.reviewed_at || report.created_at) && (
+                                            <span className="text-gray-400 dark:text-zinc-500">{formatPHDateTime(report.reviewed_at || report.created_at)}</span>
+                                          )}
+                                        </div>
+                                        {report.review_note ? (
+                                          <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
+                                            <NarrativeText text={report.review_note} mode="compact" />
+                                          </div>
+                                        ) : (
+                                          <p className="text-xs text-gray-500 dark:text-zinc-400">No evaluation updates yet.</p>
+                                        )}
+                                      </div>
+                                      <div className="flex justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedPostEventReportForDetail(report);
+                                          }}
+                                          className="group/more inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline underline-offset-4 dark:text-red-400 cursor-pointer"
+                                        >
+                                          <span>View report details</span>
+                                          <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/more:translate-x-0.5 group-hover/more:-translate-y-0.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </article>
+                                ))}
                               </div>
-                              {report.review_note && (
-                                <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-800/60 border border-border dark:border-border text-xs text-gray-600 dark:text-zinc-300">
-                                  <span className="font-semibold text-gray-800 dark:text-zinc-100">OSAS Note:</span> {report.review_note}
-                                </div>
-                              )}
-                            </div>
-                          ))
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -3102,33 +3640,15 @@ function StudentDashboard() {
 
                   {/* STREAM 3: CONSTITUTION & BY-LAWS */}
                   {osasSubView === "cbl" && (
-                    <div className="flex flex-col flex-[1_0_auto] space-y-0">
-                      {/* Organization Selector for students in multiple organizations */}
-                      {myOrganizations.length > 1 && (
-                        <div className="border-t border-border dark:border-border p-4 bg-gray-50/70 dark:bg-zinc-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <Building01Icon size={16} className="text-pup-maroon dark:text-red-400" />
-                            <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Active Organization Context:</span>
-                          </div>
-                          <Select
-                            value={selectedCblOrgId}
-                            onChange={(e) => {
-                              setSelectedCblOrgId(e.target.value);
-                              loadCblData(e.target.value);
-                            }}
-                            className="w-full sm:w-72 h-9 text-xs"
-                          >
-                            {myOrganizations.map((o) => (
-                              <option key={o.organization_id} value={o.organization_id}>
-                                {o.organization_name} ({o.officer_position})
-                              </option>
-                            ))}
-                          </Select>
+                    <div className="flex flex-col flex-[1_0_auto] min-h-0">
+                      {!selectedOsasOrganization && (
+                        <div className="border-t border-border px-5 py-4 text-xs text-gray-500 dark:text-zinc-400">
+                          Select an organization above to view its charter and submission history.
                         </div>
                       )}
 
                       {/* Inline CBL Submission Form */}
-                      {isFormOpen && myOrganizations.length > 0 && (
+                      {isFormOpen && selectedOsasOrganization && (
                         <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
@@ -3136,9 +3656,9 @@ function StudentDashboard() {
                                 <BookOpen01Icon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">Submit Constitution & By-Laws (CBL)</h2>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Constitution & By-Laws Submission</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
-                                  Submit a ratified charter, baseline document, or amendment for OSAS review and archival.
+                                  Submit a ratified charter, baseline document, or amendment for OSAS review and archival · Submitting for {selectedOsasOrganization.organization_name}
                                 </p>
                               </div>
                             </div>
@@ -3180,6 +3700,7 @@ function StudentDashboard() {
                                 Official PDF Document
                               </label>
                               <FileAttachmentDropzone
+                                animateCards={false}
                                 value={cblForm.file ? { file: cblForm.file, original_filename: cblForm.file.name, size_bytes: cblForm.file.size } : null}
                                 onChange={(item) => setCblForm({ ...cblForm, file: item?.file || null })}
                                 mode="single"
@@ -3190,100 +3711,208 @@ function StudentDashboard() {
                               />
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsFormOpen(false)}
-                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="submit"
-                                size="sm"
-                                disabled={cblSubmitting}
-                                title="Submit to OSAS"
-                                className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
-                              >
-                                {cblSubmitting ? (
-                                  <>
-                                    <Loading01Icon size="1em" className="ph animate-spin text-sm" />
-                                    <span>Submitting...</span>
-                                  </>
-                                ) : (
-                                  <span>Submit Constitution & By-Laws</span>
-                                )}
-                              </Button>
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                              <span className="text-xs text-gray-500 dark:text-zinc-400">
+                                Charter submissions and amendments are reviewed and archived by the OSAS office.
+                              </span>
+                              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setIsFormOpen(false)}
+                                  className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                >
+                                  Hide
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  size="sm"
+                                  disabled={cblSubmitting}
+                                  title="Submit Constitution & By-Laws"
+                                  className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                >
+                                  {cblSubmitting ? (
+                                    <>
+                                      <Loading01Icon size="1em" className="animate-spin text-sm" />
+                                      <span>Submitting...</span>
+                                    </>
+                                  ) : (
+                                    <span>Submit Constitution & By-Laws</span>
+                                  )}
+                                </Button>
+                              </div>
                             </div>
                           </form>
                         </div>
                       )}
 
-                      {/* Active Charter Status Card */}
-                      <div className="border-t border-border dark:border-border p-5 bg-gray-50/40 dark:bg-zinc-900/30 space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-2">
+                      {/* Current Charter Status and Document */}
+                      <div className={cn("border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/30", !selectedOsasOrganization && "hidden")}>
+                        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-8">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100">
                                 Current Active Charter
                               </h3>
-                              {cblOrgData?.hasBylaws ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40">
+                              {cblLoading ? (
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>Checking Status</span>
+                              ) : cblOrgData?.hasBylaws ? (
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                   Active & Ratified
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                                   Not Yet Archived
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                              {cblOrgData?.hasBylaws
-                                ? `Official Constitution & By-Laws on file for ${cblOrgData.name} (${cblOrgData.originalFilename || "CBL.pdf"}).`
-                                : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || "this organization"}. Click "Submit CBL" above to submit the baseline charter.`}
+                            <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                              {cblLoading
+                                ? `Checking the charter on file for ${selectedOsasOrganization?.organization_name || "this organization"}.`
+                                : cblOrgData?.hasBylaws
+                                ? `Official Constitution & By-Laws on file for ${cblOrgData.name}.`
+                                : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || selectedOsasOrganization?.organization_name || "this organization"}.`}
                             </p>
+                            {!cblLoading && cblOrgData?.hasBylaws && cblOrgData.updatedAt && (
+                              <p className="mt-3 text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                                Last updated <span className="tabular-nums text-gray-700 dark:text-zinc-300">{formatPHDateTime(cblOrgData.updatedAt)}</span>
+                              </p>
+                            )}
                           </div>
-                        </div>
 
-                        {cblOrgData?.hasBylaws && selectedCblOrgId && (
-                          <div className="pt-1">
-                            <AttachedFileCard
-                              item={{
-                                original_filename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
-                                url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
-                                mime_type: "application/pdf",
-                              }}
-                              readOnly={true}
-                              onPreview={() => handleOpenPdfPreview(null, {
-                                url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1`,
-                                title: `${cblOrgData.name}: Constitution & By-Laws`,
-                                subtitle: `Official ratified charter on file with OSAS.`,
-                                studentName: me?.name || "Student Officer",
-                                docType: "Constitution & By-Laws",
-                                originalFilename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
-                              })}
-                            />
-                          </div>
-                        )}
+                          {cblLoading ? (
+                            <Skeleton className="h-[88px] w-full rounded-xl" />
+                          ) : cblOrgData?.hasBylaws && selectedOsasOrgId ? (
+                            <div className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/80 bg-white p-4 dark:border-border dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                  <File02Icon size={18} aria-hidden="true" />
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
+                                    Active charter document
+                                  </p>
+                                  <p
+                                    className="mt-0.5 truncate text-xs font-semibold text-gray-900 dark:text-zinc-100"
+                                    title={cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf"}
+                                  >
+                                    {cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenPdfPreview(null, {
+                                    url: `/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1`,
+                                    title: `${cblOrgData.name}: Constitution & By-Laws`,
+                                    subtitle: "Official ratified charter on file with OSAS.",
+                                    studentName: me?.name || "Student Officer",
+                                    docType: "Constitution & By-Laws",
+                                    originalFilename: cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf",
+                                  })}
+                                  className="h-9 rounded-xl px-4 text-xs font-semibold"
+                                >
+                                  View Current Charter
+                                </Button>
+                                <a
+                                  href={`/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1`}
+                                  download={cblOrgData.originalFilename || "Constitution-and-By-Laws.pdf"}
+                                  className="inline-flex h-9 items-center justify-center rounded-xl border border-border bg-white px-4 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                                >
+                                  Download PDF
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-white/70 p-4 dark:bg-zinc-900/40 sm:flex-row sm:items-center sm:justify-between">
+                              <p className="text-xs text-gray-600 dark:text-zinc-400">
+                                The approved charter document will appear here once it is on file with OSAS.
+                              </p>
+                              {!isFormOpen && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => setIsFormOpen(true)}
+                                  className="h-9 shrink-0 px-4"
+                                >
+                                  Open CBL Form
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Submissions & Versions History */}
-                      <div className="border-t border-border dark:border-border flex flex-col flex-[1_0_auto] p-5 bg-white dark:bg-zinc-900/50 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                            CBL Submission & Revision History ({cblVersions.length})
-                          </h4>
-                          <span className="text-[11px] text-gray-400">
-                            Review feedback and version milestones
-                          </span>
+                      {/* CBL Submissions History Toolbar */}
+                      <DataViewToolbar label="Constitution and by-laws search and controls" className={cn("border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none", !selectedOsasOrganization && "hidden")}>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <DashboardSearch
+                            value={cblSearch}
+                            onChange={(val) => setCblSearch(val)}
+                            count={filteredCblVersions.length}
+                            loading={cblLoading}
+                            placeholder="Search charters..."
+                            label="Search charter submissions"
+                          />
                         </div>
 
+                        <div className="ml-auto flex shrink-0 items-center gap-2">
+                          <FilterPopover
+                            fields={cblFilterFields}
+                            filters={cblFilterRules}
+                            onFiltersChange={(newRules) => setCblFilterRules(newRules)}
+                            entityLabel="charters"
+                          />
+                          <SortPopover
+                            options={cblSortOptions}
+                            sortBy={cblSortBy}
+                            onSortByChange={(val) => setCblSortBy(val)}
+                            sortOrder={cblSortOrder}
+                            onSortOrderChange={(val) => setCblSortOrder(val)}
+                          />
+                          <GroupPopover
+                            options={cblGroupOptions}
+                            groupBy={cblGroupBy}
+                            onGroupByChange={(val) => setCblGroupBy(val)}
+                          />
+                          <DateRangeFilterButton
+                            startDate={cblStartDate}
+                            endDate={cblEndDate}
+                            onApply={({ startDate: s, endDate: e }) => {
+                              setCblStartDate(s);
+                              setCblEndDate(e);
+                            }}
+                            onClear={() => {
+                              setCblStartDate("");
+                              setCblEndDate("");
+                            }}
+                            disableFutureDates={false}
+                          />
+                        </div>
+                      </DataViewToolbar>
+
+                      {cblActiveChips.length > 0 && selectedOsasOrganization && (
+                        <TableActiveFilterChips
+                          chips={cblActiveChips}
+                          onClearAll={() => {
+                            setCblSearch("");
+                            setCblFilterRules([]);
+                            setCblStartDate("");
+                            setCblEndDate("");
+                          }}
+                          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                        />
+                      )}
+
+                      {/* Submissions & Versions History */}
+                      <div className={cn("border-t border-border dark:border-border flex-1", !selectedOsasOrganization && "hidden")}>
                         {cblLoading ? (
-                          <div className="space-y-3">
-                            <Skeleton className="h-20 w-full rounded-2xl" />
-                            <Skeleton className="h-20 w-full rounded-2xl" />
+                          <div className="p-5">
+                            <StudentOsasProposalsListSkeleton count={3} />
                           </div>
                         ) : cblVersions.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
@@ -3297,105 +3926,145 @@ function StudentDashboard() {
                                   Click the button below to submit your organization&apos;s Constitution & By-Laws or proposed amendments.
                                 </EmptyDescription>
                               </EmptyHeader>
-                              {myOrganizations.length > 0 && !isFormOpen && (
+                              {selectedOsasOrganization && !isFormOpen && (
                                 <EmptyContent>
                                   <Button
                                     type="button"
                                     size="sm"
                                     onClick={() => setIsFormOpen(true)}
-                                    title="Submit CBL Document"
+                                    title="Open CBL Form"
                                     className="flex h-9 px-4 cursor-pointer border-0"
                                   >
-                                    Submit CBL Document
+                                    Open CBL Form
                                   </Button>
                                 </EmptyContent>
                               )}
                             </Empty>
                           </div>
+                        ) : filteredCblVersions.length === 0 ? (
+                          <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
+                            <Empty>
+                              <EmptyHeader>
+                                <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
+                                <EmptyTitle>
+                                  No Matches Found
+                                </EmptyTitle>
+                                <EmptyDescription>
+                                  Try adjusting your search query or filter criteria.
+                                </EmptyDescription>
+                              </EmptyHeader>
+                              <EmptyContent>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setCblSearch("");
+                                    setCblFilterRules([]);
+                                    setCblStartDate("");
+                                    setCblEndDate("");
+                                  }}
+                                  title="Reset Filters"
+                                  className="h-9 px-4 text-xs font-semibold rounded-xl"
+                                >
+                                  Reset Filters
+                                </Button>
+                              </EmptyContent>
+                            </Empty>
+                          </div>
                         ) : (
-                          <div className="space-y-3">
-                            {cblVersions.map((ver) => (
-                              <div
-                                key={ver.id}
-                                className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
-                              >
-                                {/* 1. Version / Tag Header */}
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                      {ver.version_tag || `v${ver.version_number || "1.0"}`}
-                                    </span>
-                                    <StatusBadge status={ver.status} />
-                                    {ver.effective_date && (
-                                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                        Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                                    {ver.created_at
-                                      ? new Date(ver.created_at).toLocaleDateString(undefined, {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                        })
-                                      : ""}
-                                  </span>
-                                </div>
-
-                                {/* 2. Summary */}
-                                <div className="text-xs text-gray-700 dark:text-zinc-300 bg-gray-50/70 dark:bg-zinc-800/40 rounded-xl p-3 border border-border/60">
-                                  <p className="font-medium">
-                                    {ver.amendment_summary || "Constitution & By-Laws official document"}
-                                  </p>
-                                </div>
-
-                                {/* 3. Attachment */}
-                                {selectedCblOrgId && (
-                                  <div className="pt-1">
-                                    <AttachedFileCard
-                                      item={{
-                                        original_filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
-                                        url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
-                                        mime_type: "application/pdf",
-                                      }}
-                                      readOnly={true}
-                                      onPreview={() =>
-                                        handleOpenPdfPreview(null, {
-                                          url: `/api/student/organizations/${selectedCblOrgId}/bylaws?file=1&versionId=${ver.id}`,
-                                          title: `${cblOrgData?.name || "Organization"}: ${ver.version_tag || "CBL"}`,
-                                          subtitle: `Submitted by ${ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}. Status: ${ver.status}`,
-                                          studentName: ver.submitted_by_name || me?.name || "Student",
-                                          docType: "Constitution & By-Laws",
-                                          originalFilename: ver.original_filename || "Constitution-and-By-Laws.pdf",
-                                        })
-                                      }
-                                    />
+                          <div className="p-5 space-y-4">
+                            {groupedCblVersions.map((group) => (
+                              <div key={group.key || "all"} className="space-y-3">
+                                {group.label && (
+                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                    <span className="font-bold">{group.label}</span>
+                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
                                   </div>
                                 )}
+                                {group.items.map((ver) => (
+                                  <article
+                                    key={ver.id}
+                                    onClick={() => setSelectedCblVersionForDetail(ver)}
+                                    className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                        {ver.version_tag || `v${ver.version_number || "1.0"}`}
+                                      </h3>
+                                      <div className="flex items-center gap-2">
+                                        <StatusBadge status={ver.status} />
+                                        {selectedOsasOrgId && (
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              handleOpenPdfPreview(null, {
+                                                url: `/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${ver.id}`,
+                                                title: `${cblOrgData?.name || "Organization"}: ${ver.version_tag || "CBL"}`,
+                                                subtitle: `Submitted by ${ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}. Status: ${ver.status}`,
+                                                studentName: ver.submitted_by_name || me?.name || "Student",
+                                                docType: "Constitution & By-Laws",
+                                                originalFilename: ver.original_filename || "Constitution-and-By-Laws.pdf",
+                                              });
+                                            }}
+                                            title={PDF_ACTION_LABELS.preview}
+                                            aria-label={PDF_ACTION_LABELS.preview}
+                                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-pup-maroon dark:hover:text-red-400 transition-colors cursor-pointer"
+                                          >
+                                            <File02Icon size="1em" className="text-[16px]" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
 
-                                <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
-                                  <span>
-                                    Submitted by {ver.submitted_by_name || ver.submitted_by_email || "Student Officer"}
-                                    {ver.submitted_by_student_no ? ` (${ver.submitted_by_student_no})` : ""}
-                                  </span>
-                                  <span>
-                                    {ver.created_at
-                                      ? new Date(ver.created_at).toLocaleDateString(undefined, {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                        })
-                                      : ""}
-                                  </span>
-                                </div>
+                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                                        {selectedOsasOrganization?.organization_name || cblOrgData?.name || "Organization"}
+                                        {ver.effective_date
+                                          ? ` · Effective ${formatProposalEventDate(ver.effective_date)}`
+                                          : ver.created_at
+                                          ? ` · ${formatPHDateTime(ver.created_at)}`
+                                          : ""}
+                                      </p>
+                                      {ver.effective_date && ver.created_at && (
+                                        <span className="text-xs text-gray-500 dark:text-zinc-400">
+                                          Submitted {formatPHDateTime(ver.created_at)}
+                                        </span>
+                                      )}
+                                    </div>
 
-                                {ver.review_notes && (
-                                  <div className="text-[11px] bg-amber-50/70 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200">
-                                    <strong className="font-semibold">OSAS Review Feedback:</strong> {ver.review_notes}
-                                  </div>
-                                )}
+                                    <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 dark:border-border">
+                                      <div className="min-w-0">
+                                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                                          <span className="font-semibold text-gray-700 dark:text-zinc-300">
+                                            {ver.review_notes ? `OSAS review feedback · ${ver.status}` : `Amendment summary · ${ver.status}`}
+                                          </span>
+                                          {(ver.reviewed_at || ver.created_at) && (
+                                            <span className="text-gray-400 dark:text-zinc-500">
+                                              {formatPHDateTime(ver.reviewed_at || ver.created_at)}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
+                                          <NarrativeText text={ver.review_notes || ver.amendment_summary || "Constitution & By-Laws official document"} mode="compact" />
+                                        </div>
+                                      </div>
+                                      <div className="flex justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedCblVersionForDetail(ver);
+                                          }}
+                                          className="group/more inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon hover:underline underline-offset-4 dark:text-red-400 cursor-pointer"
+                                        >
+                                          <span>View charter details</span>
+                                          <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/more:translate-x-0.5 group-hover/more:-translate-y-0.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </article>
+                                ))}
                               </div>
                             ))}
                           </div>
@@ -3403,6 +4072,7 @@ function StudentDashboard() {
                       </div>
                     </div>
                   )}
+                  </ContentSwap>
                 </Card>
               )}
                 </ContentSwap>
@@ -3521,13 +4191,13 @@ function StudentDashboard() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Request Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
                 <File02Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                    Request #{selectedRequestForDetail?.id}
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
+                    Request {selectedRequestForDetail?.id}
                   </span>
                   <StatusBadge status={selectedRequestForDetail?.status} />
                 </div>
@@ -3569,9 +4239,9 @@ function StudentDashboard() {
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                   Purpose / Notes
                 </h4>
-                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                  {selectedRequestForDetail.notes}
-                </p>
+                <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  <NarrativeText text={selectedRequestForDetail.notes} mode="full" />
+                </div>
               </div>
             )}
 
@@ -3583,11 +4253,11 @@ function StudentDashboard() {
                     Parent / Representative Authorization
                   </h4>
                   {selectedRequestForDetail.spa_verified ? (
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                       SPA Verified
                     </span>
                   ) : (
-                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40">
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                       SPA Pending
                     </span>
                   )}
@@ -3674,7 +4344,7 @@ function StudentDashboard() {
                     {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-gray-100 dark:bg-zinc-800 border border-border/70 dark:border-border/60 px-2 py-0.5 text-[10.5px] font-medium text-gray-700 dark:text-zinc-300"
+                        className={cn(BADGE_BASE, BADGE_PALETTES.slate)}
                       >
                         {tag}
                       </span>
@@ -3683,9 +4353,9 @@ function StudentDashboard() {
                 )}
 
                 {selectedRequestForDetail.feedback.comments && (
-                  <p className="text-xs text-gray-600 dark:text-zinc-400 italic">
-                    &ldquo;{selectedRequestForDetail.feedback.comments}&rdquo;
-                  </p>
+                  <div className="text-xs text-gray-600 dark:text-zinc-400 italic">
+                    &ldquo;<NarrativeText text={selectedRequestForDetail.feedback.comments} mode="full" />&rdquo;
+                  </div>
                 )}
               </div>
             ) : (!selectedRequestForDetail?.feedback && (selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed")) ? (
@@ -3728,6 +4398,7 @@ function StudentDashboard() {
                   Drop your receipt or payment confirmation slip here or browse to upload (PDF, PNG, JPG, or WEBP up to 10 MB).
                 </p>
                 <FileAttachmentDropzone
+                  animateCards={false}
                   mode="single"
                   accept=".pdf,.png,.jpg,.jpeg,.webp"
                   title="Drop receipt or payment slip here, or browse"
@@ -3763,7 +4434,7 @@ function StudentDashboard() {
                             setPdfPreviewData({
                               url: fileUrl,
                               title: att.original_filename,
-                              subtitle: `Attached file for Request #${selectedRequestForDetail.id}`,
+                              subtitle: `Attached file for Request ${selectedRequestForDetail.id}`,
                               studentName: selectedRequestForDetail.student_name || "Requester",
                               docType: "Supporting Document",
                               originalFilename: att.original_filename,
@@ -3824,9 +4495,7 @@ function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Follow-Up Notice" : formatStatusLabel(upd.status)}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-border/60 dark:border-border">
-                                {formatStatusLabel(upd.status)}
-                              </span>
+                              <StatusBadge status={upd.status} />
                             )}
                           </div>
                           {upd.created_at && (
@@ -3835,9 +4504,9 @@ function StudentDashboard() {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          {upd.message || "Status updated by Registrar"}
-                        </p>
+                        <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          <NarrativeText text={upd.message || "Status updated by Registrar"} mode="full" />
+                        </div>
                       </div>
                     );
                   })}
@@ -3861,14 +4530,17 @@ function StudentDashboard() {
                                 ? "Ready for Claiming"
                                 : selectedRequestForDetail.status}
                             </span>
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                               Current Active Status
                             </span>
                           </div>
                         </div>
-                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          Your document request has been updated to {selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Deficient" ? "Action Required" : selectedRequestForDetail.status === "PendingPayment" ? "Pending Payment" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.
-                        </p>
+                        <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          <NarrativeText
+                            text={`Your document request has been updated to ${selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Deficient" ? "Action Required" : selectedRequestForDetail.status === "PendingPayment" ? "Pending Payment" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.`}
+                            mode="full"
+                          />
+                        </div>
                       </div>
                     )}
                 </div>
@@ -3950,11 +4622,11 @@ function StudentDashboard() {
           <div
             className={cn(
               "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-              selectedProposalForDetail?.status === "Approved"
+              selectedProposalStatus === "Approved"
                 ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : selectedProposalForDetail?.status === "RevisionRequested"
+                : selectedProposalStatus === "Needs Revision"
                 ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                : selectedProposalForDetail?.status === "Rejected"
+                : selectedProposalStatus === "Declined"
                 ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
                 : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
             )}
@@ -3962,30 +4634,30 @@ function StudentDashboard() {
             <AppIcon
               className={cn(
                 " text-[15px] shrink-0",
-                selectedProposalForDetail?.status === "Approved"
+                selectedProposalStatus === "Approved"
                   ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                  : selectedProposalForDetail?.status === "RevisionRequested"
+                  : selectedProposalStatus === "Needs Revision"
                   ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                  : selectedProposalForDetail?.status === "Rejected"
+                  : selectedProposalStatus === "Declined"
                   ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
                   : "Clock01Icon text-blue-600 dark:text-blue-400"
               )}
             />
             <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
               <strong className="font-semibold">
-                {selectedProposalForDetail?.status === "Approved"
+                {selectedProposalStatus === "Approved"
                   ? "Proposal Sanctioned:"
-                  : selectedProposalForDetail?.status === "RevisionRequested"
+                  : selectedProposalStatus === "Needs Revision"
                   ? "Revision Required:"
-                  : selectedProposalForDetail?.status === "Rejected"
+                  : selectedProposalStatus === "Declined"
                   ? "Proposal Declined:"
                   : "Under OSAS Evaluation:"}
               </strong>{" "}
-              {selectedProposalForDetail?.status === "Approved"
+              {selectedProposalStatus === "Approved"
                 ? "Official event proposal has been sanctioned and cleared by the Office of Student Affairs."
-                : selectedProposalForDetail?.status === "RevisionRequested"
+                : selectedProposalStatus === "Needs Revision"
                 ? "Please review the evaluator notes in the timeline and re-upload an updated event proposal."
-                : selectedProposalForDetail?.status === "Rejected"
+                : selectedProposalStatus === "Declined"
                 ? "This event proposal was not approved for campus staging."
                 : "Your proposal is undergoing administrative and safety review by OSAS."}
             </span>
@@ -3994,13 +4666,13 @@ function StudentDashboard() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Proposal Summary Strip (Unboxed) */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
                 <CalendarCheckIn01Icon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                    Proposal #{selectedProposalForDetail?.id}
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
+                    Proposal {selectedProposalForDetail?.id}
                   </span>
                   <StatusBadge status={selectedProposalForDetail?.status} />
                 </div>
@@ -4020,7 +4692,7 @@ function StudentDashboard() {
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
-                <InfoRow icon="Calendar01Icon" label="Target Event Date" value={selectedProposalForDetail?.event_date || "To Be Announced"} />
+                <InfoRow icon="Calendar01Icon" label="Target Event Date" value={formatProposalEventDate(selectedProposalForDetail?.event_date)} />
                 <InfoRow icon="PieChartIcon" label="Evaluation Stage">
                   <StatusBadge status={selectedProposalForDetail?.status} />
                 </InfoRow>
@@ -4035,7 +4707,7 @@ function StudentDashboard() {
                 </h4>
                 <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20 dark:border-red-900/40">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                       <File02Icon size="1em" className="text-base" />
                     </div>
                     <div className="min-w-0">
@@ -4061,6 +4733,52 @@ function StudentDashboard() {
                   </Button>
                 </div>
               </div>
+            )}
+
+            {selectedProposalForDetail?.versions?.length > 0 && (
+              <details className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                  <span>Submitted PDF versions</span>
+                  <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                    {selectedProposalForDetail.versions.length}
+                  </span>
+                </summary>
+                <div className="space-y-2 px-3 pb-3">
+                  {[...selectedProposalForDetail.versions].reverse().map((version, index) => (
+                    <div key={version.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 dark:bg-zinc-900/40">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-800 dark:text-zinc-100">
+                          Revision {version.revision_number}{index === 0 ? " · Current" : ""}
+                        </p>
+                        <p className="truncate text-[11px] text-gray-500 dark:text-zinc-400" title={version.original_filename}>
+                          {version.original_filename} · {formatPHDateTime(version.created_at)}
+                        </p>
+                      </div>
+                      {version.file_pruned_at ? (
+                        <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenPdfPreview(null, {
+                            url: `/api/student/event-proposals/${selectedProposalForDetail.id}?file=1&revisionId=${version.id}`,
+                            title: `${selectedProposalForDetail.title} · Revision ${version.revision_number}`,
+                            subtitle: `Submitted for ${selectedProposalForDetail.organization_name || "OSAS"}.`,
+                            studentName: me?.name || "Student",
+                            docType: "Event Proposal",
+                            originalFilename: version.original_filename || "Proposal.pdf",
+                          })}
+                          className="h-8 shrink-0 rounded-lg px-3 text-xs"
+                        >
+                          <ViewIcon size="1em" className="mr-1 text-xs" />
+                          Preview
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
 
             {/* Review Timeline & Updates */}
@@ -4104,9 +4822,7 @@ function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Evaluation Follow-Up" : upd.status}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-border/60 dark:border-border">
-                                {upd.status}
-                              </span>
+                              <StatusBadge status={upd.status} />
                             )}
                           </div>
                           {upd.created_at && (
@@ -4115,9 +4831,9 @@ function StudentDashboard() {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          {upd.message || "Status updated by OSAS"}
-                        </p>
+                        <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
+                          <NarrativeText text={upd.message || "Status updated by OSAS"} mode="full" />
+                        </div>
                       </div>
                     );
                   })}
@@ -4141,7 +4857,497 @@ function StudentDashboard() {
             >
               Close
             </Button>
+            {selectedProposalStatus === "Needs Revision" && (
+              <Button
+                size="sm"
+                onClick={() => startProposalRevision(selectedProposalForDetail)}
+                disabled={!myOrganizations.some((org) => String(org.organization_id) === String(selectedProposalForDetail?.organization_id))}
+                title={!myOrganizations.some((org) => String(org.organization_id) === String(selectedProposalForDetail?.organization_id)) ? "Contact OSAS to confirm organization authorization" : "Upload a revised proposal PDF"}
+                className="h-9 px-4 text-xs font-semibold"
+              >
+                Revise &amp; Resubmit
+              </Button>
+            )}
           </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* OSAS Post-Event Report Details: Sheet Slide-Over */}
+      <Sheet
+        open={Boolean(selectedPostEventReportForDetail)}
+        onOpenChange={(open) => !open && setSelectedPostEventReportForDetail(null)}
+      >
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+              <div>
+                <SheetTitle>Post-Event Report Details</SheetTitle>
+                <SheetDescription className="sr-only">
+                  Submitted event report details, attachments, and OSAS review note
+                </SheetDescription>
+              </div>
+
+              <div className="ml-auto flex items-center gap-3">
+                {sortedPostEventReports.length > 1 && (
+                  <SheetPagination
+                    compact
+                    label="Post-event report navigation"
+                    page={Math.max(1, currentPostEventReportDetailIndex + 1)}
+                    totalPages={sortedPostEventReports.length}
+                    onPrevious={handlePrevPostEventReportDetail}
+                    onNext={handleNextPostEventReportDetail}
+                    previousDisabled={currentPostEventReportDetailIndex <= 0}
+                    nextDisabled={currentPostEventReportDetailIndex >= sortedPostEventReports.length - 1}
+                    previousLabel="Previous Report"
+                    nextLabel="Next Report"
+                  />
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedPostEventReportForDetail(null)}
+                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <Cancel01Icon size="1em" className="text-sm" />
+                </button>
+              </div>
+            </div>
+          </SheetHeader>
+
+          {selectedPostEventReportForDetail && (
+            <>
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                  selectedPostEventReportForDetail.status === "Cleared"
+                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                    : selectedPostEventReportForDetail.status === "Needs Revision"
+                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                    : selectedPostEventReportForDetail.status === "Declined"
+                    ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                    : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+                )}
+              >
+                <Shield01Icon
+                  size="1em"
+                  className={cn(
+                    "text-[15px] shrink-0",
+                    selectedPostEventReportForDetail.status === "Cleared"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : selectedPostEventReportForDetail.status === "Needs Revision"
+                      ? "text-amber-600 dark:text-amber-400"
+                      : selectedPostEventReportForDetail.status === "Declined"
+                      ? "text-rose-600 dark:text-rose-400"
+                      : "text-blue-600 dark:text-blue-400"
+                  )}
+                />
+                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                  <strong className="font-semibold">
+                    {selectedPostEventReportForDetail.status === "Cleared"
+                      ? "Post-Event Report Cleared:"
+                      : selectedPostEventReportForDetail.status === "Needs Revision"
+                      ? "Revision Required:"
+                      : selectedPostEventReportForDetail.status === "Declined"
+                      ? "Post-Event Report Declined:"
+                      : selectedPostEventReportForDetail.status === "Under Review"
+                      ? "Under OSAS Review:"
+                      : "Post-Event Report Submitted:"}
+                  </strong>{" "}
+                  {selectedPostEventReportForDetail.status === "Cleared"
+                    ? "OSAS has cleared the submitted narrative and liquidation report."
+                    : selectedPostEventReportForDetail.status === "Needs Revision"
+                    ? "OSAS requested changes to this post-event report."
+                    : selectedPostEventReportForDetail.status === "Declined"
+                    ? "OSAS declined this post-event report."
+                    : selectedPostEventReportForDetail.status === "Under Review"
+                    ? "OSAS is reviewing your post-event report and liquidation documents."
+                    : "Your report has been received by OSAS."}
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+                <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+                  <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
+                    <ClipboardIcon size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
+                        Report {selectedPostEventReportForDetail.id}
+                      </span>
+                      <StatusBadge status={selectedPostEventReportForDetail.status} />
+                    </div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                      {selectedPostEventReportForDetail.event_title}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                      Submitted on {selectedPostEventReportForDetail.created_at ? formatPHDateTime(selectedPostEventReportForDetail.created_at) : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Post-Event Specification
+                  </h4>
+                  <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                    <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventReportForDetail.organization_name} />
+                    <InfoRow icon="Calendar01Icon" label="Event Date" value={formatProposalEventDate(selectedPostEventReportForDetail.event_date)} />
+                    {selectedPostEventReportForDetail.venue && (
+                      <InfoRow icon="Location01Icon" label="Venue" value={selectedPostEventReportForDetail.venue} />
+                    )}
+                    <InfoRow icon="UserIcon" label="Submitter" value={selectedPostEventReportForDetail.student_name || selectedPostEventReportForDetail.submitted_by_email || me?.name} />
+                    <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${Number(selectedPostEventReportForDetail.actual_attendance ?? selectedPostEventReportForDetail.actual_attendees ?? 0).toLocaleString()} attendees`} />
+                    <InfoRow icon="Coins01Icon" label="Liquidated Spend" value={`₱${Number(selectedPostEventReportForDetail.total_expenses ?? selectedPostEventReportForDetail.actual_expenses ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+                    {selectedPostEventReportForDetail.event_proposal_id && (
+                      <InfoRow icon="CalendarCheckIn01Icon" label="Event Proposal" value={`Proposal #${selectedPostEventReportForDetail.event_proposal_id}`} />
+                    )}
+                    <InfoRow icon="PieChartIcon" label="Clearance Status">
+                      <StatusBadge status={selectedPostEventReportForDetail.status} />
+                    </InfoRow>
+                  </div>
+                </div>
+
+                {selectedPostEventReportForDetail.narrative_summary && (
+                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                      Accomplishment Summary
+                    </h4>
+                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                      <NarrativeText text={selectedPostEventReportForDetail.narrative_summary} mode="full" />
+                    </div>
+                  </div>
+                )}
+
+                {selectedPostEventReportForDetail.review_note && (
+                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                        OSAS Review Note
+                      </h4>
+                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                        {selectedPostEventReportForDetail.reviewer_name || "OSAS"}
+                        {selectedPostEventReportForDetail.reviewed_at && ` · ${formatPHDateTime(selectedPostEventReportForDetail.reviewed_at)}`}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                      <NarrativeText text={selectedPostEventReportForDetail.review_note} mode="full" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Submitted Documents
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        key: "narrative",
+                        label: "Narrative Report",
+                        docType: "Post-Event Narrative Report",
+                        filename: selectedPostEventReportForDetail.narrative_original_filename,
+                        storageFilename: selectedPostEventReportForDetail.narrative_storage_filename,
+                      },
+                      {
+                        key: "liquidation",
+                        label: "Financial Liquidation",
+                        docType: "Financial Liquidation Report",
+                        filename: selectedPostEventReportForDetail.liquidation_original_filename,
+                        storageFilename: selectedPostEventReportForDetail.liquidation_storage_filename,
+                      },
+                    ].map((file) => (
+                      <div key={file.key} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                            <File02Icon size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{file.label}</p>
+                            <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate" title={file.filename || "No file attached"}>
+                              {file.filename || "No file attached"}
+                            </p>
+                          </div>
+                        </div>
+                        {file.storageFilename ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenPdfPreview(null, {
+                              url: `/api/student/post-event-reports/${selectedPostEventReportForDetail.id}?file=${file.key}`,
+                              title: `${file.label}: ${selectedPostEventReportForDetail.event_title}`,
+                              subtitle: `Submitted by ${selectedPostEventReportForDetail.submitted_by_email || me?.email || "Student Officer"}`,
+                              studentName: me?.name || "Student",
+                              docType: file.docType,
+                              originalFilename: file.filename || `${file.key}.pdf`,
+                            })}
+                            className="h-8 shrink-0 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
+                          >
+                            View {file.key === "narrative" ? "Narrative" : "Liquidation"}
+                          </Button>
+                        ) : (
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedPostEventReportForDetail(null)}
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Close
+                </Button>
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* OSAS Constitution & By-Laws Details: Sheet Slide-Over */}
+      <Sheet
+        open={Boolean(selectedCblVersionForDetail)}
+        onOpenChange={(open) => !open && setSelectedCblVersionForDetail(null)}
+      >
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+              <div>
+                <SheetTitle>Constitution &amp; By-Laws Details</SheetTitle>
+                <SheetDescription className="sr-only">
+                  Charter version details, submitted document, and OSAS feedback
+                </SheetDescription>
+              </div>
+
+              <div className="ml-auto flex items-center gap-3">
+                {sortedCblVersions.length > 1 && (
+                  <SheetPagination
+                    compact
+                    label="Charter version navigation"
+                    page={Math.max(1, currentCblVersionDetailIndex + 1)}
+                    totalPages={sortedCblVersions.length}
+                    onPrevious={handlePrevCblVersionDetail}
+                    onNext={handleNextCblVersionDetail}
+                    previousDisabled={currentCblVersionDetailIndex <= 0}
+                    nextDisabled={currentCblVersionDetailIndex >= sortedCblVersions.length - 1}
+                    previousLabel="Previous Version"
+                    nextLabel="Next Version"
+                  />
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedCblVersionForDetail(null)}
+                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <Cancel01Icon size="1em" className="text-sm" />
+                </button>
+              </div>
+            </div>
+          </SheetHeader>
+
+          {selectedCblVersionForDetail && (
+            <>
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                  selectedCblVersionForDetail.status === "Approved"
+                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                    : selectedCblVersionForDetail.status === "Needs Revision"
+                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
+                    : selectedCblVersionForDetail.status === "Declined"
+                    ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                    : selectedCblVersionForDetail.status === "Superseded"
+                    ? "border-gray-200/90 bg-gray-50/90 text-gray-800 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
+                    : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+                )}
+              >
+                <BookBookmark01Icon
+                  size="1em"
+                  className={cn(
+                    "text-[15px] shrink-0",
+                    selectedCblVersionForDetail.status === "Approved"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : selectedCblVersionForDetail.status === "Needs Revision"
+                      ? "text-amber-600 dark:text-amber-400"
+                      : selectedCblVersionForDetail.status === "Declined"
+                      ? "text-rose-600 dark:text-rose-400"
+                      : selectedCblVersionForDetail.status === "Superseded"
+                      ? "text-gray-500 dark:text-zinc-400"
+                      : "text-blue-600 dark:text-blue-400"
+                  )}
+                />
+                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                  <strong className="font-semibold">
+                    {selectedCblVersionForDetail.status === "Approved"
+                      ? "Charter Approved:"
+                      : selectedCblVersionForDetail.status === "Needs Revision"
+                      ? "Revision Requested:"
+                      : selectedCblVersionForDetail.status === "Declined"
+                      ? "Submission Declined:"
+                      : selectedCblVersionForDetail.status === "Superseded"
+                      ? "Superseded:"
+                      : "Pending OSAS Review:"}
+                  </strong>{" "}
+                  {selectedCblVersionForDetail.status === "Approved"
+                    ? "OSAS approved this Constitution & By-Laws version."
+                    : selectedCblVersionForDetail.status === "Needs Revision"
+                    ? "OSAS requested changes to this charter submission."
+                    : selectedCblVersionForDetail.status === "Declined"
+                    ? "OSAS did not approve this charter version."
+                    : selectedCblVersionForDetail.status === "Superseded"
+                    ? "A newer approved charter version has replaced this submission."
+                    : "This charter submission is awaiting review."}
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+                <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+                  <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
+                    <BookBookmark01Icon size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
+                        {selectedCblVersionForDetail.version_tag || `v${selectedCblVersionForDetail.version_number || "1.0"}`}
+                      </span>
+                      <StatusBadge status={selectedCblVersionForDetail.status} />
+                    </div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                      Constitution &amp; By-Laws
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                      Submitted on {selectedCblVersionForDetail.created_at ? formatPHDateTime(selectedCblVersionForDetail.created_at) : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Charter Specification
+                  </h4>
+                  <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+                    <InfoRow icon="Building01Icon" label="Organization" value={selectedOsasOrganization?.organization_name || cblOrgData?.name} />
+                    <InfoRow icon="BookBookmark01Icon" label="Version" value={selectedCblVersionForDetail.version_tag || `v${selectedCblVersionForDetail.version_number || "1.0"}`} />
+                    {selectedCblVersionForDetail.effective_date && (
+                      <InfoRow icon="Calendar01Icon" label="Effective Date" value={formatProposalEventDate(selectedCblVersionForDetail.effective_date)} />
+                    )}
+                    <InfoRow icon="PieChartIcon" label="Review Status">
+                      <StatusBadge status={selectedCblVersionForDetail.status} />
+                    </InfoRow>
+                    <InfoRow icon="UserIcon" label="Submitted By" value={selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"} />
+                    {selectedCblVersionForDetail.submitted_by_student_no && (
+                      <InfoRow icon="IdIcon" label="Student Number" value={selectedCblVersionForDetail.submitted_by_student_no} />
+                    )}
+                    {selectedCblVersionForDetail.size_bytes && (
+                      <InfoRow icon="File02Icon" label="File Size" value={`${(selectedCblVersionForDetail.size_bytes / 1024).toFixed(1)} KB`} />
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Amendment Summary
+                  </h4>
+                  <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                    <NarrativeText text={selectedCblVersionForDetail.amendment_summary || "No amendment summary was provided."} mode="full" />
+                  </div>
+                </div>
+
+                {selectedCblVersionForDetail.review_notes && (
+                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                      OSAS Review Feedback
+                    </h4>
+                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                      <NarrativeText text={selectedCblVersionForDetail.review_notes} mode="full" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                    Submitted Document
+                  </h4>
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                        <File02Icon size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Constitution &amp; By-Laws PDF</p>
+                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate" title={selectedCblVersionForDetail.original_filename || "No file attached"}>
+                          {selectedCblVersionForDetail.original_filename || "No file attached"}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedCblVersionForDetail.storage_filename && selectedOsasOrgId ? (
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenPdfPreview(null, {
+                            url: `/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`,
+                            title: `${cblOrgData?.name || "Organization"}: ${selectedCblVersionForDetail.version_tag || "CBL"}`,
+                            subtitle: `Submitted by ${selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"}. Status: ${selectedCblVersionForDetail.status}`,
+                            studentName: selectedCblVersionForDetail.submitted_by_name || me?.name || "Student",
+                            docType: "Constitution & By-Laws",
+                            originalFilename: selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf",
+                          })}
+                          className="h-8 shrink-0 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
+                        >
+                          View Document
+                        </Button>
+                        <a
+                          href={`/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`}
+                          download={selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf"}
+                          aria-label="Download Constitution & By-Laws document"
+                          title="Download Constitution & By-Laws document"
+                          className="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors"
+                        >
+                          <Download01Icon size={16} aria-hidden="true" />
+                        </a>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCblVersionForDetail(null)}
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                >
+                  Close
+                </Button>
+              </SheetFooter>
+            </>
+          )}
         </SheetContent>
       </Sheet>
 
