@@ -6,7 +6,7 @@ import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty";
@@ -56,10 +56,11 @@ export default function OfficeDocumentsTable({
   onRescan,
   embedded = true,
   serverPaged = false,
+  borderTop = true,
 }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useUrlPage();
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [serverPage, setServerPage] = useState({ rows: [], total: 0 });
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [filterRules, setFilterRules] = useState([]);
@@ -272,7 +273,10 @@ export default function OfficeDocumentsTable({
   } = useTableScroll([visibleRows.length]);
 
   const containerClasses = embedded
-    ? "border-t border-border dark:border-border w-full bg-white dark:bg-card flex flex-[1_0_auto] flex-col rounded-b-2xl overflow-hidden"
+    ? cn(
+        borderTop && "border-t border-border dark:border-border",
+        "w-full bg-white dark:bg-card flex flex-[1_0_auto] flex-col rounded-b-2xl overflow-hidden"
+      )
     : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-[1_0_auto] flex-col overflow-hidden";
 
   return (
@@ -280,7 +284,10 @@ export default function OfficeDocumentsTable({
       {/* Canonical 2-Zone DataViewToolbar */}
       <DataViewToolbar
         label={`${officeLabel} document search and controls`}
-        className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+        className={cn(
+          borderTop && "border-t border-border dark:border-border",
+          "p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+        )}
       >
         {/* Left Zone: DashboardSearch + TableScrollControls */}
         <div className="flex min-w-0 items-center gap-2">
@@ -454,7 +461,7 @@ export default function OfficeDocumentsTable({
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {groupedDisplayRows.map((group) => (
-                  <tbody key={group.groupKey || "root"} className="divide-y divide-border dark:divide-border contents">
+                  <Fragment key={group.groupKey || "root"}>
                     {group.label && (
                       <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
                         <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -550,7 +557,7 @@ export default function OfficeDocumentsTable({
                         )}
                       </tr>
                     ))}
-                  </tbody>
+                  </Fragment>
                 ))}
               </tbody>
             </Table>

@@ -20,7 +20,7 @@ export default function RecordsArchiveSkeleton() {
         </div>
 
         {/* 2. Toolbar */}
-        <div className="border-t border-border dark:border-border p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-card">
+        <div className="p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-card">
           <Skeleton className="h-9 w-44 rounded-full" />
           <div className="flex items-center gap-2.5">
             <Skeleton className="h-9 w-72 rounded-xl" />

@@ -584,7 +584,7 @@ export default function StudentProfileSheet({
             </div>
 
             {!isOrg && complianceView === "checklist" && requirementsList.length > 0 ? (
-              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/30">
+              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/40">
                 {requirementsList.map((req, index) => {
                   const isApproved = req.status === "Approved";
                   const isPending = req.status === "Pending";
@@ -706,7 +706,7 @@ export default function StudentProfileSheet({
                   : "No digitized records uploaded for this student yet."}
               />
             ) : (
-              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/30">
+              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/40">
                 {studentDocs.map((doc, docIdx) => (
                   <div
                     key={doc.id || `doc-${docIdx}`}
@@ -818,7 +818,7 @@ export default function StudentProfileSheet({
                   description="No document requests recorded for this student."
                 />
               ) : (
-                <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/30">
+                <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/40">
                   {requests.map((req, reqIdx) => (
                     <div key={req.id || `req-hist-${reqIdx}`} className="p-3 text-xs space-y-1">
                       <div className="flex items-center justify-between gap-2">
@@ -861,7 +861,7 @@ export default function StudentProfileSheet({
             Close
           </Button>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {isArchived ? (
               onRestoreStudent && (
                 <Button
@@ -872,7 +872,7 @@ export default function StudentProfileSheet({
                     onOpenChange(false);
                     onRestoreStudent?.(student.studentNo);
                   }}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isOrg ? "Restore Organization Record" : "Restore Student Record"}
                 </Button>
@@ -887,7 +887,7 @@ export default function StudentProfileSheet({
                     onOpenChange(false);
                     onArchiveStudent?.(student.studentNo);
                   }}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
                   {isOrg ? "Archive Organization Record" : "Archive Student Record"}
                 </Button>
