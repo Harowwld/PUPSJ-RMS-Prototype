@@ -896,9 +896,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </div>
               <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-3 sm:p-5">
                 {selected ? (
-                  <div className="grid min-h-0 min-w-0 w-full grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
+                  <div className="grid min-h-0 min-w-0 w-full grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 overflow-y-auto sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
                     {/* Preview Sub-column */}
-                    <div className="flex min-w-0 flex-col gap-3">
+                    <div className="flex min-h-0 min-w-0 flex-col gap-3">
                       {selected.review_status === "Processing" && (
                         <div className="rounded-xl border border-blue-200 bg-blue-50/70 px-3.5 py-2.5 text-xs text-blue-800 dark:border-blue-900/30 dark:bg-blue-950/20 dark:text-blue-200">
                           <strong>OCR retry in progress.</strong> This item is still in the review queue and will update when processing finishes.
@@ -926,7 +926,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           </div>
                         )}
 
-                        <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border border-border bg-gray-300 p-3 max-md:h-10 max-md:flex-none max-md:p-1 dark:border-border dark:bg-zinc-800">
+                        <div className="relative flex h-[clamp(14rem,42vh,28rem)] w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-gray-300 p-2 dark:border-border dark:bg-zinc-800 sm:p-3">
                           <button
                             type="button"
                             onClick={openFullscreenPreview}
@@ -949,7 +949,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                                   openFullscreenPreview();
                                 }
                               }}
-                              className="relative hidden h-full min-h-0 w-full cursor-zoom-in items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon lg:flex"
+                              className="relative flex h-full min-h-0 w-full cursor-zoom-in items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
                             >
                               <Image
                                 src={previewUrl}
@@ -986,7 +986,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               })}
                             </div>
                           ) : (
-                          <div className="hidden h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl lg:flex">
+                          <div className="flex h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
                             <PDFPreview
                               title="Scanned document preview"
                               src={previewUrl}
@@ -1004,7 +1004,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
 
                       {!Object.keys(ocrRegions).length && (
                         <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[11px] text-amber-800 max-md:hidden dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
-                          No OCR field regions were saved for this item. Click <strong>Retry</strong> to apply the current recognition template and display highlighted boxes.
+                          No OCR field regions were saved for this item. Use the preview to verify the student and document type.
                         </div>
                       )}
                     </div>

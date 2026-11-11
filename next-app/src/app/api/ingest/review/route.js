@@ -24,6 +24,9 @@ export async function GET(req) {
   const offset = Math.max(Number(searchParams.get("offset") || 0), 0);
   const values = [officeId];
   const filters = ["office_id = $1"];
+  if (searchParams.get("monitor") === "1") {
+    filters.push("review_status <> 'Rejected' AND status NOT IN ('rejected', 'abandoned')");
+  }
 
   if (status) {
     const rawTokens = status.split(",").map((s) => s.trim()).filter(Boolean);

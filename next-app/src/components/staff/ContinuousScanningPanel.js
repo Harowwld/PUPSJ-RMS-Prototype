@@ -25,40 +25,28 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   const [workerConnected, setWorkerConnected] = useState(false);
   const [batch, setBatch] = useState(null);
   const [stats, setStats] = useState(EMPTY_STATS);
-  const [recentSuccesses, setRecentSuccesses] = useState([]);
   const [completedScans, setCompletedScans] = useState([]);
   const [currentFile, setCurrentFile] = useState("");
   const [retryingFile, setRetryingFile] = useState("");
   const [queueBusy, setQueueBusy] = useState(false);
   const [paused, setPaused] = useState(false);
   const [controlLoading, setControlLoading] = useState(false);
+  const [feederAvailable, setFeederAvailable] = useState(false);
+  const [feederScanning, setFeederScanning] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [completedPage, setCompletedPage] = useState(1);
   const [completedPageSize, setCompletedPageSize] = useState(10);
   const [completedQuery, setCompletedQuery] = useState("");
   const [completedStatus, setCompletedStatus] = useState("");
   const loadMonitor = useCallback(async () => {
-    const response = await fetch("/api/ingest/review?limit=100", { cache: "no-store" });
+    const response = await fetch("/api/ingest/review?limit=100&monitor=1", { cache: "no-store" });
     const json = await response.json().catch(() => null);
     if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to read OCR queue");
     const rows = Array.isArray(json.data?.rows) ? json.data.rows : [];
     const queueStats = json.data?.stats || {};
     const successfulRows = rows.filter((row) => row.ocr_status === "completed");
     setBatch({ total: Number(json.data?.total || 0), rows });
-    if (successfulRows.length) {
-      setCompletedScans((current) => {
-        const merged = [...successfulRows, ...current].filter((row, index, all) => (
-          all.findIndex((candidate) => Number(candidate.id) === Number(row.id)) === index
-        ));
-        return merged;
-      });
-      setRecentSuccesses((current) => {
-        const merged = [...successfulRows, ...current].filter((row, index, all) => (
-          all.findIndex((candidate) => Number(candidate.id) === Number(row.id)) === index
-        ));
-        return merged.slice(0, 5);
-      });
-    }
+    setCompletedScans(successfulRows);
     const active = json.data?.active;
     setCurrentFile(active?.original_filename || "");
     setRetryingFile(Number(active?.auto_retry_count) > 0 ? active.original_filename : "");
@@ -75,6 +63,37 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
     } : EMPTY_STATS);
     return rows;
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/ingest/scan-feeder", { cache: "no-store", signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((json) => setFeederAvailable(Boolean(json?.data?.available)))
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const scanFeeder = async () => {
+    setFeederScanning(true);
+    try {
+      const csrfToken = decodeURIComponent(document.cookie.match(/(?:^|;\s*)pup_csrf=([^;]+)/)?.[1] || "");
+      const response = await fetch("/api/ingest/scan-feeder", {
+        method: "POST",
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.ok) throw new Error(json?.error || "Unable to scan the feeder");
+      const { pages } = json.data;
+      showToast({
+        title: "Feeder Scan Complete",
+        description: `${pages} ${pages === 1 ? "page was" : "pages were"} sent to intake for individual review.`,
+      });
+    } catch (error) {
+      showToast(formatErrorMessage(error, { title: "Feeder Scan Failed", actionContext: "Scanning the feeder" }), true);
+    } finally {
+      setFeederScanning(false);
+    }
+  };
 
   const toggleScanning = useCallback(async () => {
     setControlLoading(true);
@@ -150,10 +169,8 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   }, [loadMonitor, showToast]);
 
   const percent = stats.total ? Math.min(100, Math.round(((stats.succeeded + stats.failed) / stats.total) * 100)) : 0;
-  // Keep this separate from `batch`: continuous scanning rolls over to a new
-  // batch when the current one is empty, but completed results must remain
-  // available in the current workspace.
   const completedRows = completedScans;
+  const recentSuccesses = completedRows.slice(0, 5);
   const filteredCompletedRows = completedRows.filter((row) => {
     const search = completedQuery.trim().toLowerCase();
     const matchesSearch = !search || [row.original_filename, row.ocr_name, row.proposed_doc_type]
@@ -176,7 +193,12 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
             {paused ? "Scanning is paused. Incoming documents will wait in the queue." : "OCR starts automatically when a stable inbound file is received."}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {feederAvailable && (
+            <Button size="sm" disabled={feederScanning} onClick={scanFeeder}>
+              {feederScanning ? "Scanning Feeder…" : "Scan Feeder"}
+            </Button>
+          )}
           <span className={cn(
             "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
             workerConnected
@@ -198,7 +220,7 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
                 : "border-rose-200 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-500/30 dark:bg-zinc-800 dark:text-rose-300 dark:hover:bg-zinc-700"
             )}
           >
-            {controlLoading ? "Updating…" : paused ? "Resume scanning" : "Stop scanning"}
+            {controlLoading ? "Updating…" : paused ? "Resume OCR" : "Pause OCR"}
           </Button>
           <Button
             size="sm"

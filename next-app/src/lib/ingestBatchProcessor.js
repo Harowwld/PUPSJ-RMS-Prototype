@@ -20,16 +20,6 @@ import {
   saveOcrResult,
 } from "./ingestQueueRepo.js";
 
-function extractNameCandidate(text) {
-  return String(text || "")
-    .split(/\r?\n/)
-    .map((line) => line.replace(/[^A-Za-z,.' -]/g, " ").replace(/\s+/g, " ").trim())
-    .find((line) => {
-      const words = line.split(/\s+/).filter(Boolean);
-      return words.length >= 2 && words.length <= 6 && words.every((word) => word.length > 1 || /^[A-Z]\.?$/i.test(word));
-    }) || null;
-}
-
 export async function processNextBatchItem(batchId, officeId) {
   if (!String(officeId || "").trim()) throw new Error("Office scope is required");
   const item = await claimNextBatchItem(batchId, officeId);
@@ -56,7 +46,7 @@ export async function processNextBatchItem(batchId, officeId) {
       return saveOcrResult(item.id, { text, name: null, docType: null, error: "OCR engine returned no text or observations." }, { officeId });
     }
 
-    const docType = detectDocType(text, docTypes.map((row) => row.name));
+    const docType = detectDocType(text, docTypes.map((row) => row.name), { requireEvidence: true });
 
     // Continuous Scanning must use the same saved coordinate recognition setup
     // as Scan & Upload. Templates are selected after document-type detection.
@@ -103,7 +93,7 @@ export async function processNextBatchItem(batchId, officeId) {
     // plausible roster records remain in review for staff to disambiguate.
     const autoMatchedStudent = studentMatches.length === 1 ? studentMatches[0] : null;
     const studentCandidates = studentMatches.map(({ studentNo, mismatchPercent }) => ({ studentNo, mismatchPercent }));
-    const ocrName = templateName || (studentMatches.length === 1 ? studentMatches[0].name : extractNameCandidate(text));
+    const ocrName = templateName || (studentMatches.length === 1 ? studentMatches[0].name : null);
     const duplicate = await findDuplicateIngest(item.id, item.content_sha256, { officeId });
 
     const saved = await saveOcrResult(item.id, {

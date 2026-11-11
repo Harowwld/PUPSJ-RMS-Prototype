@@ -170,12 +170,12 @@ const DOC_CLUSTERS = [
   },
 ];
 
-export function detectDocType(rawText, docTypes) {
+export function detectDocType(rawText, docTypes, { requireEvidence = false } = {}) {
   if (!Array.isArray(docTypes) || docTypes.length === 0) return "";
   const fallback = docTypes[0]; // guaranteed non-blank
 
   const hay = String(rawText ?? "").toLowerCase();
-  if (!hay.trim()) return fallback;
+  if (!hay.trim()) return requireEvidence ? "" : fallback;
 
   // --- Phase A: score every cluster against the OCR text ---
   let bestCluster = null;
@@ -238,7 +238,7 @@ export function detectDocType(rawText, docTypes) {
 
    
   console.log("[OCR] docType →", bestType, { cluster: bestCluster?.id, clScore: bestClusterScore, dtScore: bestScore });
-  return bestType;
+  return requireEvidence && bestScore < 500 ? "" : bestType;
 }
 
 // ─── 4. NAME EXTRACTION ────────────────────────────────────────────────────

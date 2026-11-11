@@ -4,17 +4,21 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-const { query, pool } = await import("../src/lib/postgres.js");
+const { pool } = await import("../src/lib/postgres.js");
 
-const localDir = path.resolve(process.env.LOCAL_DATA_DIR || ".local");
+const { getHotFolderRoot, getLocalDataDir, getOfficeHotFolderDirs } = await import("../src/lib/officePaths.js");
+
+const localDir = getLocalDataDir();
+const hotFolderRoot = getHotFolderRoot();
 const scannerDirs = [
-  path.join(localDir, "hot-folder", "INBOUND"),
-  path.join(localDir, "hot-folder", "DONE"),
-  path.join(localDir, "hot-folder", "FAILED"),
-  path.join(localDir, "hot-folder", "PROCESSING"),
+  path.join(hotFolderRoot, "INBOUND"),
+  path.join(hotFolderRoot, "DONE"),
+  path.join(hotFolderRoot, "FAILED"),
+  path.join(hotFolderRoot, "PROCESSING"),
   path.join(localDir, "ingest"),
-  path.join(localDir, "uploads"),
 ];
+
+const { getDocumentFilePath } = await import("../src/lib/documentsRepo.js");
 
 const client = await pool.connect();
 try {
@@ -25,10 +29,28 @@ try {
       (SELECT COUNT(*)::int FROM ingest_queue) AS ingest_queue
   `)).rows[0];
 
+  const { rows: offices } = await client.query("SELECT id FROM offices");
+  for (const { id } of offices) {
+    scannerDirs.push(...Object.values(getOfficeHotFolderDirs(id)));
+  }
+
+  const { rows: documents } = await client.query("SELECT office_id, storage_filename FROM documents");
+  const documentFiles = new Set(documents.map(getDocumentFilePath).filter(Boolean));
+
   // Clear queue rows first because they reference promoted documents.
   await client.query("DELETE FROM ingest_queue");
   await client.query("DELETE FROM documents");
   await client.query("COMMIT");
+
+  let clearedDocumentFiles = 0;
+  for (const filename of documentFiles) {
+    try {
+      await fs.unlink(filename);
+      clearedDocumentFiles += 1;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
 
   const clearedFiles = {};
   for (const dir of scannerDirs) {
@@ -47,6 +69,7 @@ try {
   console.log(JSON.stringify({
     deleted: before,
     clearedFiles,
+    clearedDocumentFiles,
     preserved: ["students", "staff", "student_accounts", "recognition_templates", "document_types", "offices", "settings"],
   }, null, 2));
 } catch (error) {
