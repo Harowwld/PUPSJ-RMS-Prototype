@@ -858,39 +858,13 @@ export default function RecognitionTemplatesTab({ showToast }) {
               items={[
                 {
                   value: "Active",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <span>Active</span>
-                      <span
-                        className={cn(
-                          "rounded-full px-1.5 py-0.2 text-[10px] font-semibold tabular-nums",
-                          templateFilter === "Active"
-                            ? "bg-white/20 text-white"
-                            : "bg-black/5 text-muted-foreground dark:bg-white/10"
-                        )}
-                      >
-                        {activeTemplates.length}
-                      </span>
-                    </span>
-                  ),
+                  label: "Active",
+                  badge: activeTemplates.length,
                 },
                 {
                   value: "Archived",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <span>Archived</span>
-                      <span
-                        className={cn(
-                          "rounded-full px-1.5 py-0.2 text-[10px] font-semibold tabular-nums",
-                          templateFilter === "Archived"
-                            ? "bg-white/20 text-white"
-                            : "bg-black/5 text-muted-foreground dark:bg-white/10"
-                        )}
-                      >
-                        {archivedTemplates.length}
-                      </span>
-                    </span>
-                  ),
+                  label: "Archived",
+                  badge: archivedTemplates.length,
                 },
               ]}
               className="w-full"

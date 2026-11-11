@@ -25,6 +25,8 @@ import CabinetSidebar from "./storage-layout/CabinetSidebar"
 import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
 import { Select } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { SegmentedControl } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -43,7 +45,7 @@ import {
   snapValue,
   calculatePath,
 } from "@/lib/storageLayoutUtils"
-import { Add01Icon, Alert02Icon, ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowTurnBackwardIcon, ArrowTurnForwardIcon, Delete01Icon, Door01Icon, LayoutGridIcon, Loading01Icon, Magnet01Icon, MoreVerticalIcon, PencilEdit01Icon, ReloadIcon, SaveEnergy01Icon, Tick01Icon } from "hugeicons-react";
+import { Add01Icon, Alert02Icon, ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowTurnBackwardIcon, ArrowTurnForwardIcon, Delete01Icon, Door01Icon, Loading01Icon, MoreVerticalIcon, PencilEdit01Icon, ReloadIcon, SaveEnergy01Icon, Tick01Icon } from "hugeicons-react";
 
 
 export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
@@ -1675,112 +1677,114 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     </div>
   )
 
-  const renderToolbar = () => (
-    <div className="flex flex-wrap items-center justify-between px-6 py-2.5 border-b border-border dark:border-border bg-white dark:bg-card select-none gap-4">
-      {/* Zone A: Editing Actions (History Group + Add Cabinet) */}
-      <div className="flex items-center gap-2.5 flex-none">
-        {/* History (Undo / Redo) */}
-        <div className="flex items-center h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-xs p-0.5">
-          <button
+  const renderCanvasControls = () => (
+    <div className="space-y-5">
+      <section className="space-y-2.5">
+        <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Room editing</h4>
+        <div className="flex items-center gap-2">
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
+            onClick={addCabinet}
+            disabled={!activeRoom}
+            className="h-9 min-w-0 flex-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+          >
+            Add Cabinet
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={undo}
             disabled={historyIndex <= 0}
-            className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+            className="h-9 w-9 shrink-0 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             title="Undo (Ctrl+Z)"
+            aria-label="Undo"
           >
-            <ArrowTurnBackwardIcon size="1em" className="text-[14px]" />
-          </button>
-          <div className="h-4 w-px bg-gray-200 dark:bg-white/10" />
-          <button
+            <ArrowTurnBackwardIcon size={16} aria-hidden="true" />
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={redo}
             disabled={historyIndex >= history.length - 1}
-            className="h-full w-8 flex items-center justify-center rounded-lg text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700/60 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer active:scale-95"
+            className="h-9 w-9 shrink-0 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             title="Redo (Ctrl+Y)"
+            aria-label="Redo"
           >
-            <ArrowTurnForwardIcon size="1em" className="text-[14px]" />
-          </button>
+            <ArrowTurnForwardIcon size={16} aria-hidden="true" />
+          </Button>
         </div>
+      </section>
 
-        {/* Cabinet Insertion (Text-only action per Apple HIG) */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addCabinet}
-          disabled={!activeRoom}
-          className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-          title="Add a new cabinet to the room"
-        >
-          Add Cabinet
-        </Button>
-      </div>
-
-      {/* Zone B: Canvas View Controls & Templates */}
-      <div className="flex items-center gap-2.5 flex-none">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setShowGrid(!showGrid)}
-            className={cn(
-              "h-9 px-3 flex items-center gap-1.5 rounded-xl border text-xs transition-all cursor-pointer active:scale-95 shadow-xs",
-              showGrid
-                ? "bg-gray-100 border-border dark:bg-zinc-700 dark:border-border text-gray-900 dark:text-white font-semibold"
-                : "bg-white border-border dark:bg-zinc-800 dark:border-border text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-700 font-medium"
-            )}
-            title={showGrid ? "Hide Grid Lines (G)" : "Show Grid Lines (G)"}
-          >
-            <LayoutGridIcon size="1em" className="text-[14px]" />
-            <span>Grid</span>
-          </button>
-
-          {showGrid && (
-            <Slider
-              label="Opacity"
-              min={10}
-              max={100}
-              step={5}
-              value={gridOpacity}
-              onChange={setGridOpacity}
-              formatValue={(v) => `${v}%`}
-              ariaLabel="Grid Line Opacity"
-              className="w-36 hidden sm:flex"
+      <section className="space-y-3">
+        <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Canvas view</h4>
+        <div className="divide-y divide-border border-y border-border dark:divide-border">
+          <div className="flex items-center justify-between gap-3 py-3">
+            <div>
+              <p className="text-xs font-medium text-gray-800 dark:text-zinc-200">Grid lines</p>
+              <p className="mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">Show room alignment guides.</p>
+            </div>
+            <Switch
+              size="sm"
+              checked={showGrid}
+              onCheckedChange={setShowGrid}
+              aria-label="Show room grid lines"
             />
+          </div>
+          {showGrid && (
+            <div className="py-3">
+              <Slider
+                label="Grid opacity"
+                min={10}
+                max={100}
+                step={5}
+                value={gridOpacity}
+                onChange={setGridOpacity}
+                formatValue={(value) => `${value}%`}
+                ariaLabel="Grid line opacity"
+                className="w-full max-w-none"
+              />
+            </div>
           )}
-          
-          <button
-            type="button"
-            onClick={() => setSnapToGrid(!snapToGrid)}
-            className={cn(
-              "h-9 px-3 flex items-center gap-1.5 rounded-xl border text-xs transition-all cursor-pointer active:scale-95 shadow-xs",
-              snapToGrid
-                ? "bg-gray-100 border-border dark:bg-zinc-700 dark:border-border text-gray-900 dark:text-white font-semibold"
-                : "bg-white border-border dark:bg-zinc-800 dark:border-border text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-700 font-medium"
-            )}
-            title={snapToGrid ? "Disable Snap to Grid (S)" : "Enable Snap to Grid (S)"}
-          >
-            <Magnet01Icon size="1em" className="text-[14px]" />
-            <span>Snap</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIs3D(!is3D)}
-            className={cn(
-              "h-9 px-3 flex items-center gap-1.5 rounded-xl border text-xs transition-all cursor-pointer active:scale-95 shadow-xs",
-              is3D
-                ? "bg-gray-100 border-border dark:bg-zinc-700 dark:border-border text-gray-900 dark:text-white font-semibold"
-                : "bg-white border-border dark:bg-zinc-800 dark:border-border text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-700 font-medium"
-            )}
-            title="Switch between 2D Top-Down Blueprint and 3D Isometric View"
-          >
-            <span>{is3D ? "3D View" : "2D Blueprint"}</span>
-          </button>
+          <div className="flex items-center justify-between gap-3 py-3">
+            <div>
+              <p className="text-xs font-medium text-gray-800 dark:text-zinc-200">Snap to grid</p>
+              <p className="mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">Align cabinets as you move them.</p>
+            </div>
+            <Switch
+              size="sm"
+              checked={snapToGrid}
+              onCheckedChange={setSnapToGrid}
+              aria-label="Snap cabinets to grid"
+            />
+          </div>
         </div>
 
-        <div className="h-4 w-px bg-border dark:border-border" />
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-gray-700 dark:text-zinc-300">Perspective</p>
+          <SegmentedControl
+            value={is3D ? "3d" : "2d"}
+            onValueChange={(value) => setIs3D(value === "3d")}
+            variant="capsule"
+            className="w-full"
+            listClassName="w-full"
+            aria-label="Canvas perspective"
+            items={[
+              { value: "2d", label: "2D Blueprint" },
+              { value: "3d", label: "3D Isometric" },
+            ]}
+          />
+        </div>
+      </section>
 
-        {/* Sleek Templates Popover Button */}
+      <section className="space-y-3 border-t border-border pt-4 dark:border-border">
+        <div>
+          <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Layout templates</h4>
+          <p className="mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">Apply or save a cabinet arrangement.</p>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -1788,9 +1792,9 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               variant="outline"
               size="sm"
               disabled={!activeRoom}
-              className="h-9 px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+              className="h-9 w-full justify-between px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <span>Templates</span>
+              <span>Browse Templates</span>
               <ArrowDown01Icon size="1em" className="text-[12px] text-gray-400 dark:text-zinc-400" />
             </Button>
           </DropdownMenuTrigger>
@@ -1840,7 +1844,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </section>
     </div>
   )
 
@@ -1923,12 +1927,9 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       {/* Room Switcher Row */}
       {renderRoomSwitcher()}
 
-      {/* Canvas Controls Toolbar */}
-      {renderToolbar()}
-
       {/* 2-Pane Split: Left Canvas Pane & Right Inspector Pane */}
-      <div className="relative flex flex-1 flex-col lg:flex-row min-h-[620px] w-full">
-        <div className="flex-1 min-w-0 p-6 flex flex-col items-center justify-center bg-[#f8fafc] dark:bg-zinc-950/20 relative overflow-hidden">
+      <div className="relative flex flex-1 flex-col lg:flex-none lg:h-[min(80vh,900px)] lg:flex-row min-h-[620px] w-full">
+        <div className="flex-1 min-w-0 p-6 flex flex-col items-center justify-center bg-neutral-50 dark:bg-zinc-950/20 relative overflow-hidden">
           <CabinetCanvas 
             canvasRef={canvasRef}
             activeRoom={activeRoom}
@@ -1957,7 +1958,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             isModalOpen={false}
           />
         </div>
-        <div className="w-full lg:w-[380px] shrink-0 border-t lg:border-t-0 lg:border-l border-border dark:border-border bg-white dark:bg-card flex flex-col select-none">
+        <div className="w-full h-[min(60vh,480px)] lg:h-full lg:w-[380px] min-h-0 shrink-0 overflow-hidden border-t lg:border-t-0 lg:border-l border-border dark:border-border bg-white dark:bg-card flex flex-col select-none">
           <CabinetSidebar 
             activeRoom={activeRoom}
             carouselIndex={carouselIndex}
@@ -1975,6 +1976,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             historyIndex={historyIndex}
             revertToHistoryState={revertToHistoryState}
             studentDrawerUsage={studentDrawerUsage}
+            canvasControls={renderCanvasControls()}
           />
         </div>
       </div>

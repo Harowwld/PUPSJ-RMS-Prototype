@@ -30,6 +30,7 @@ import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import DashboardSearch from "@/components/shared/DashboardSearch"
 import useTableScroll from "@/hooks/useTableScroll"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import {
@@ -42,7 +43,7 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ClipboardIcon, CursorPointer01Icon, PencilEdit01Icon, Search01Icon, Archive01Icon} from "hugeicons-react";
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, ClipboardIcon, CursorPointer01Icon, PencilEdit01Icon, Archive01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ sortState, column }) {
   if (sortState?.key !== column) {
@@ -322,21 +323,18 @@ export default function DocTypesTab({
         <DataViewToolbar label="Document type search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
           {/* Search Input, Matches Count, Export, Add */}
           <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
-            <div className="flex-1 max-w-md relative group">
-              <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-              </div>
-              <Input
-                type="text"
-                placeholder="Filter document name..."
-                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredDocTypesFull.length}
-              </div>
-            </div>
+            <DashboardSearch
+              value={localSearch}
+              onChange={setLocalSearch}
+              onClear={() => {
+                setLocalSearch("")
+                setDocSearch("")
+                setPageDoc(1)
+              }}
+              count={filteredDocTypesFull.length}
+              placeholder="Filter document name..."
+              label="Search document types"
+            />
 
             <TableScrollControls scrollContainerRef={tableContainerRef}
               onScrollLeft={scrollLeft}

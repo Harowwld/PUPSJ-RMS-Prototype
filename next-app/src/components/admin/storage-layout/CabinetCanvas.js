@@ -55,7 +55,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-border bg-[#f8fafc] dark:bg-zinc-800 dark:border-border transition-all duration-normal rounded-2xl",
+        "relative w-full overflow-hidden border border-border bg-neutral-50 dark:bg-zinc-800 dark:border-border transition-all duration-normal rounded-2xl",
         isModalOpen ? "h-full" : ""
       )}
       style={{
@@ -147,7 +147,7 @@ const CabinetCanvas = memo(({
       <div
         className={cn(
           "group absolute z-20 cursor-move",
-          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] dark:ring-offset-zinc-950 rounded-lg" : ""
+          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-neutral-50 dark:ring-offset-zinc-950 rounded-lg" : ""
         )}
         style={{
           left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
