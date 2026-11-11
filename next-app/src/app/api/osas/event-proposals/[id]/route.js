@@ -35,10 +35,10 @@ async function getAuthorizedProposal(id, access) {
   return proposal;
 }
 
-function resolveProposalFilePath(storageFilename) {
-  if (!storageFilename) return null;
+function proposalFilePathCandidates(storageFilename) {
+  if (!storageFilename || path.basename(storageFilename) !== storageFilename) return [];
   const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
-  const candidates = [
+  return [...new Set([
     path.resolve(localDir, "storage", "osas", "uploads", storageFilename),
     path.resolve(localDir, "osas", "uploads", storageFilename),
     path.resolve(process.cwd(), ".local", "storage", "osas", "uploads", storageFilename),
@@ -47,8 +47,43 @@ function resolveProposalFilePath(storageFilename) {
     path.resolve(process.cwd(), "..", ".local", "osas", "uploads", storageFilename),
     path.resolve(process.cwd(), "next-app", ".local", "storage", "osas", "uploads", storageFilename),
     path.resolve(process.cwd(), "next-app", ".local", "osas", "uploads", storageFilename),
-  ];
-  return candidates.find((p) => fs.existsSync(p)) || null;
+  ])];
+}
+
+function resolveProposalFilePath(storageFilename) {
+  return proposalFilePathCandidates(storageFilename).find((filePath) => fs.existsSync(/*turbopackIgnore: true*/ filePath)) || null;
+}
+
+async function pruneSupersededProposalFiles(proposalId, storageFilenames, approvedFilename) {
+  const removedFilenames = [];
+  for (const filename of new Set(storageFilenames)) {
+    if (!filename || filename === approvedFilename || path.basename(filename) !== filename) continue;
+    const references = await queryOne(
+      `SELECT
+         EXISTS (SELECT 1 FROM event_proposals WHERE id <> $2 AND storage_filename = $1) AS used_by_proposal,
+         EXISTS (SELECT 1 FROM event_proposal_versions WHERE event_proposal_id <> $2 AND storage_filename = $1 AND file_pruned_at IS NULL) AS used_by_version,
+         EXISTS (SELECT 1 FROM documents WHERE storage_filename = $1) AS used_by_document,
+         EXISTS (SELECT 1 FROM osas_post_event_reports WHERE narrative_storage_filename = $1 OR liquidation_storage_filename = $1) AS used_by_post_event`,
+      [filename, proposalId]
+    );
+    if (references?.used_by_proposal || references?.used_by_version || references?.used_by_document || references?.used_by_post_event) continue;
+
+    let removed = false;
+    let removalFailed = false;
+    for (const filePath of proposalFilePathCandidates(filename)) {
+      try {
+        fs.unlinkSync(filePath);
+        removed = true;
+      } catch (error) {
+        if (error?.code !== "ENOENT") {
+          removalFailed = true;
+          console.warn(`Could not remove superseded proposal PDF ${filename}:`, error?.message);
+        }
+      }
+    }
+    if (removed && !removalFailed) removedFilenames.push(filename);
+  }
+  return removedFilenames;
 }
 
 async function synthesizeFallbackPdf(proposal) {
@@ -93,16 +128,33 @@ export async function GET(req, ctx) {
   const proposal = await getAuthorizedProposal(id, access);
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
 
-  if (new URL(req.url).searchParams.get("file") === "1") {
-    let filePath = resolveProposalFilePath(proposal.storage_filename);
+  const searchParams = new URL(req.url).searchParams;
+  if (searchParams.get("file") === "1") {
+    let fileProposal = proposal;
+    const revisionId = searchParams.get("revisionId");
+    if (revisionId) {
+      if (!/^\d+$/.test(revisionId)) return NextResponse.json({ ok: false, error: "Proposal version not found." }, { status: 404 });
+      const version = await queryOne(
+        `SELECT title, event_date, original_filename, storage_filename, mime_type, size_bytes, file_pruned_at
+         FROM event_proposal_versions
+         WHERE id = $1 AND event_proposal_id = $2`,
+        [revisionId, id]
+      );
+      if (!version) return NextResponse.json({ ok: false, error: "Proposal version not found." }, { status: 404 });
+      if (version.file_pruned_at) {
+        return NextResponse.json({ ok: false, error: "This earlier PDF was removed after the proposal was approved." }, { status: 410 });
+      }
+      fileProposal = { ...proposal, ...version };
+    }
+    let filePath = resolveProposalFilePath(fileProposal.storage_filename);
     let bytes;
     if (filePath && fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
       bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     } else {
-      bytes = await synthesizeFallbackPdf(proposal);
+      bytes = await synthesizeFallbackPdf(fileProposal);
       try {
         const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
-        const savePath = path.resolve(localDir, "storage", "osas", "uploads", proposal.storage_filename);
+        const savePath = path.resolve(localDir, "storage", "osas", "uploads", fileProposal.storage_filename);
         fs.mkdirSync(path.dirname(savePath), { recursive: true });
         fs.writeFileSync(savePath, bytes);
       } catch (err) {
@@ -111,8 +163,8 @@ export async function GET(req, ctx) {
     }
     return new NextResponse(bytes, {
       headers: {
-        "Content-Type": proposal.mime_type || "application/pdf",
-        "Content-Disposition": `inline; filename="${proposal.original_filename || "proposal.pdf"}"`,
+        "Content-Type": fileProposal.mime_type || "application/pdf",
+        "Content-Disposition": `inline; filename="${fileProposal.original_filename || "proposal.pdf"}"`,
         ...FILE_SECURITY_HEADERS,
       },
     });
@@ -157,19 +209,28 @@ export async function GET(req, ctx) {
       created_at: u.created_at,
     };
   });
+  const versions = await query(
+    `SELECT id, event_proposal_id, revision_number, title, event_date,
+            original_filename, size_bytes, submitted_by_email,
+            submitted_by_student_no, created_at, file_pruned_at
+     FROM event_proposal_versions
+     WHERE event_proposal_id = $1
+     ORDER BY revision_number ASC`,
+    [id]
+  );
   await writeGlobalAuditLog(req, "Viewed OSAS proposal", {
     officeId: "osas",
     details: `Viewed ${proposal.title}.`,
     entity_type: "event_proposal",
     entity_id: String(id),
   });
-  return NextResponse.json({ ok: true, data: { ...proposal, updates } });
+  return NextResponse.json({ ok: true, data: { ...proposal, updates, versions } });
 }
 
 export const ALLOWED_TRANSITIONS = {
   "Submitted": ["Under Review", "Approved", "Declined"],
   "Under Review": ["Needs Revision", "Approved", "Declined"],
-  "Needs Revision": ["Under Review", "Declined"],
+  "Needs Revision": ["Declined"],
   "Approved": ["Under Review", "Declined"],
   "Declined": ["Under Review"],
 };
@@ -251,6 +312,7 @@ export async function PATCH(req, ctx) {
 
   const studentNote = note || `Status updated to ${status} by OSAS.`;
   let proposal;
+  let supersededFilenames = [];
   try {
     proposal = await transaction(async (tx) => {
       const locked = await tx.queryOne(
@@ -285,6 +347,18 @@ export async function PATCH(req, ctx) {
             RETURNING *`,
           [status, id],
         );
+        if (status === "Approved") {
+          const pruned = await tx.query(
+            `UPDATE event_proposal_versions
+                SET file_pruned_at = NOW()
+              WHERE event_proposal_id = $1
+                AND storage_filename <> $2
+                AND file_pruned_at IS NULL
+              RETURNING storage_filename`,
+            [id, updated.storage_filename]
+          );
+          supersededFilenames = pruned.rows.map((row) => row.storage_filename).filter(Boolean);
+        }
       }
       await tx.query(
         `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
@@ -300,9 +374,19 @@ export async function PATCH(req, ctx) {
     throw error;
   }
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  let removedFileCount = 0;
+  if (status === "Approved" && status !== currentStatus && supersededFilenames.length) {
+    try {
+      removedFileCount = (await pruneSupersededProposalFiles(id, supersededFilenames, proposal.storage_filename)).length;
+    } catch (error) {
+      console.warn("Could not finish pruning superseded proposal PDFs:", error?.message);
+    }
+  }
   await writeGlobalAuditLog(req, status === currentStatus ? "Added note to OSAS proposal" : "Updated OSAS proposal status", {
     officeId: "osas",
-    details: status === currentStatus ? `Added note to ${proposal.title}: ${note}` : `Changed ${proposal.title} to ${status}. ${studentNote}`,
+    details: status === currentStatus
+      ? `Added note to ${proposal.title}: ${note}`
+      : `Changed ${proposal.title} to ${status}. ${studentNote}${removedFileCount ? ` Removed ${removedFileCount} superseded PDF file${removedFileCount === 1 ? "" : "s"} from active storage.` : ""}`,
     entity_type: "event_proposal",
     entity_id: String(id),
   });
