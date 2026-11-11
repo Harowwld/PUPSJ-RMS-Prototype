@@ -13,6 +13,7 @@ const allowedValues = {
     tableSortOrder: ["ASC", "DESC"],
   },
   student_organizations: {
+    organizationScope: ["active", "archive"],
     viewMode: ["grid", "table"],
     sortOrder: ["ASC", "DESC"],
   },

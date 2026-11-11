@@ -1,4 +1,5 @@
 "use client";
+import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -17,6 +18,7 @@ import {
 } from "@/lib/accessibility";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CopyButton from "@/components/shared/CopyButton";
 import AppIcon from "@/components/ui/app-icon";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
@@ -152,16 +154,32 @@ export default function CommandPalette({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const isOsas = !isStudent && !isSuperAdmin && activeView !== "systemadmin"
+    && (authUser?.office_id === "osas" || authUser?.section === "OSAS");
+
   const [internalOpen, setInternalOpen] = useState(false);
   const isPaletteOpen = open !== undefined ? open : internalOpen;
   const setIsPaletteOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeScope, setActiveScope] = useState("all");
+  const isStudentPalette = isStudent || activeView === "student";
+  const canSearchStudents = !isStudentPalette && !isSuperAdmin && !isOsas && (
+    (activeView === "staff" && authUser?.enabled_modules?.includes("student_directory")) ||
+    (activeView === "admin" && hasAdminRights && authUser?.enabled_modules?.includes("records_review"))
+  );
+  const canSearchStaffRequests = !isStudentPalette && !isSuperAdmin && !isOsas && activeView === "staff" &&
+    authUser?.enabled_modules?.includes("document_requests");
+  const canSearchOrganizations = !isStudentPalette && isOsas &&
+    (activeView === "staff" || (activeView === "admin" && hasAdminRights)) &&
+    authUser?.enabled_modules?.includes("student_organizations");
+  const searchContext = JSON.stringify([authUser?.id, authUser?.office_id, activeView, isStudentPalette, debouncedQuery]);
+  const [liveSearchContext, setLiveSearchContext] = useState(null);
+  const [selectedScope, setActiveScope] = useState("all");
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   // Live university data search states
+  const [liveOrganizations, setLiveOrganizations] = useState(null);
   const [liveStudents, setLiveStudents] = useState([]);
   const [liveRequests, setLiveRequests] = useState([]);
   const [isLiveSearching, setIsLiveSearching] = useState(false);
@@ -327,7 +345,7 @@ export default function CommandPalette({
   // LIVE DATABASE ASYNCHRONOUS SEARCH (STUDENTS & REQUESTS)
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
+    if (!isPaletteOpen || debouncedQuery.length < 2 || !(isStudentPalette || canSearchStudents || canSearchStaffRequests)) {
       const timer = setTimeout(() => {
         setLiveStudents([]);
         setLiveRequests([]);
@@ -346,11 +364,13 @@ export default function CommandPalette({
       setIsLiveSearching(true);
     }, 0);
 
-    if (isStudent) {
+    if (isStudentPalette) {
       // Student portal live search (their own requests)
       fetch(`/api/student/document-requests`, { signal: ac.signal })
         .then((res) => (res.ok ? res.json() : null))
         .then((payload) => {
+          if (ac.signal.aborted) return;
+          setLiveSearchContext(searchContext);
           if (!payload?.ok || !Array.isArray(payload.data)) {
             setLiveRequests([]);
             return;
@@ -366,10 +386,10 @@ export default function CommandPalette({
           setLiveRequests(filtered);
         })
         .catch(() => {
-          setLiveRequests([]);
+          if (!ac.signal.aborted) setLiveRequests([]);
         })
         .finally(() => {
-          setIsLiveSearching(false);
+          if (!ac.signal.aborted) setIsLiveSearching(false);
         });
       return () => {
         clearTimeout(startTimer);
@@ -379,16 +399,18 @@ export default function CommandPalette({
 
     // Staff & Admin live search: fetch both students and requests in parallel
     Promise.allSettled([
-      fetch(`/api/students?q=${encodeURIComponent(debouncedQuery)}&limit=5`, { signal: ac.signal })
+      canSearchStudents ? fetch(`/api/students?q=${encodeURIComponent(debouncedQuery)}&limit=5`, { signal: ac.signal })
         .then((res) => (res.ok ? res.json() : null))
-        .then((res) => (res?.ok && Array.isArray(res.data) ? res.data : [])),
-      fetch(`/api/document-requests?q=${encodeURIComponent(debouncedQuery)}&limit=5`, {
+        .then((res) => (res?.ok && Array.isArray(res.data) ? res.data : [])) : [],
+      canSearchStaffRequests ? fetch(`/api/document-requests?q=${encodeURIComponent(debouncedQuery)}&limit=5`, {
         signal: ac.signal,
       })
         .then((res) => (res.ok ? res.json() : null))
-        .then((res) => (res?.ok && Array.isArray(res.data) ? res.data : [])),
+        .then((res) => (res?.ok && Array.isArray(res.data) ? res.data : [])) : [],
     ])
       .then(([studentsRes, requestsRes]) => {
+        if (ac.signal.aborted) return;
+        setLiveSearchContext(searchContext);
         if (studentsRes.status === "fulfilled") {
           setLiveStudents(studentsRes.value || []);
         } else {
@@ -402,27 +424,46 @@ export default function CommandPalette({
         }
       })
       .finally(() => {
-        setIsLiveSearching(false);
+        if (!ac.signal.aborted) setIsLiveSearching(false);
       });
 
     return () => {
       clearTimeout(startTimer);
       ac.abort();
     };
-  }, [debouncedQuery, isStudent]);
+  }, [debouncedQuery, isStudentPalette, canSearchStudents, canSearchStaffRequests, isPaletteOpen, searchContext]);
+
+  useEffect(() => {
+    if (!canSearchOrganizations || !isPaletteOpen || debouncedQuery.length < 2) return;
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({ search: debouncedQuery, limit: "5" });
+    fetch(`/api/osas/organizations?${params}`, { signal: controller.signal })
+      .then((response) => response.json())
+      .then((result) => {
+        if (!controller.signal.aborted) {
+          setLiveOrganizations({ context: searchContext, rows: result.ok ? result.data : [] });
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setLiveOrganizations({ context: searchContext, rows: [] });
+        }
+      });
+
+    return () => controller.abort();
+  }, [debouncedQuery, canSearchOrganizations, isPaletteOpen, searchContext]);
 
   // ---------------------------------------------------------------------------
   // CANDIDATE GROUPS DEFINITION & FILTERING
   // ---------------------------------------------------------------------------
-  const { filteredGroups, flatSuggestions } = useMemo(() => {
+  const { filteredGroups, flatSuggestions, availableCommands, scopeTabs, activeScope } = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const enabledModules = new Set(authUser?.enabled_modules || []);
-    const hasModuleFilter =
-      Array.isArray(authUser?.enabled_modules) && authUser.enabled_modules.length > 0;
 
     let candidateGroups = [];
 
-    if (activeView === "systemadmin") {
+    if (!isStudentPalette && isSuperAdmin && activeView === "systemadmin") {
       candidateGroups = [
         {
           id: "sys_ops",
@@ -600,6 +641,16 @@ export default function CommandPalette({
                 "Manage staff records, office assignments, administrative designations, and accounts.",
             },
             {
+              id: "sys-portal-accounts",
+              label: "ODRS Portal Accounts",
+              view: "portal_accounts",
+              icon: UserSearch01Icon,
+              scope: "navigation",
+              breadcrumb: "Personnel & Access • View",
+              keywords: "portal accounts student alumni parent guardian online document requests affiliation",
+              description: "Find accounts used to submit and track document requests.",
+            },
+            {
               id: "sys-security",
               label: "Security Questions",
               view: "security",
@@ -645,7 +696,7 @@ export default function CommandPalette({
           ],
         },
       ];
-    } else if (activeView === "admin") {
+    } else if (!isStudentPalette && hasAdminRights && activeView === "admin") {
       const allAdminGroups = [
         {
           id: "adm_verification",
@@ -654,7 +705,7 @@ export default function CommandPalette({
           items: [
             {
               id: "adm-review",
-              label: "Records Review",
+              label: isOsas ? "Organization Document Review" : "Records Review",
               view: "review",
               icon: CheckmarkBadge01Icon,
               module: "records_review",
@@ -662,8 +713,9 @@ export default function CommandPalette({
               breadcrumb: "Records & Verification • View",
               keywords:
                 "approve decline pending documents review scans verify verification records review queue",
-              description:
-                "Verify ingested digital scans, inspect student credentials, and approve or decline submissions.",
+              description: isOsas
+                ? "Review and approve or decline scanned organization documents."
+                : "Verify ingested digital scans, inspect student credentials, and approve or decline submissions.",
             },
             {
               id: "adm-compliance",
@@ -785,11 +837,11 @@ export default function CommandPalette({
         .map((group) => ({
           ...group,
           items: group.items.filter(
-            (item) => !hasModuleFilter || !item.module || enabledModules.has(item.module)
+            (item) => !item.module || enabledModules.has(item.module)
           ),
         }))
         .filter((group) => group.items.length > 0);
-    } else if (activeView === "staff") {
+    } else if (!isStudentPalette && !isSuperAdmin && activeView === "staff") {
       const allStaffGroups = [
         {
           id: "stf_requests",
@@ -839,8 +891,9 @@ export default function CommandPalette({
               breadcrumb: "Scanning & Document Upload • View",
               keywords:
                 "scan upload ocr document new ingest single upload file scanner digitization",
-              description:
-                "Digitize incoming paperwork with assisted OCR, student identification, and physical location mapping.",
+              description: isOsas
+                ? "Digitize organization paperwork and assign its physical storage location."
+                : "Digitize incoming paperwork with assisted OCR, student identification, and physical location mapping.",
             },
             {
               id: "stf-batch-review",
@@ -859,7 +912,7 @@ export default function CommandPalette({
         },
         {
           id: "stf_roster",
-          title: "Student & Organization Roster",
+          title: isOsas ? "Student Organizations" : "Student & Organization Roster",
           badge: "Staff",
           items: [
             {
@@ -897,16 +950,18 @@ export default function CommandPalette({
           items: [
             {
               id: "stf-records-search",
-              label: "Records & Archive",
+              label: isOsas ? "Organization Archive" : "Records & Archive",
               view: "search",
               icon: Archive01Icon,
               module: "records_archive",
               scope: "records",
               breadcrumb: "Archive & Storage • View",
-              keywords:
-                "records archive search students repository files folders year levels browse files",
-              description:
-                "Deep archive repository browser by academic year, course partition, and permanent student envelopes.",
+              keywords: isOsas
+                ? "organization archive charters bylaws proposals records search"
+                : "records archive search students repository files folders year levels browse files",
+              description: isOsas
+                ? "Browse archived student organizations and their documents."
+                : "Deep archive repository browser by academic year, course partition, and permanent student envelopes.",
             },
             {
               id: "stf-storage-explorer",
@@ -918,8 +973,9 @@ export default function CommandPalette({
               breadcrumb: "Archive & Storage • View",
               keywords:
                 "physical archive explorer room cabinet drawer storage 2d locator map locator",
-              description:
-                "Interactive 2D room map to physically locate cabinets, drawers, and student folder envelopes.",
+              description: isOsas
+                ? "Locate organization folders in physical archive rooms, cabinets, and drawers."
+                : "Interactive 2D room map to physically locate cabinets, drawers, and student folder envelopes.",
             },
           ],
         },
@@ -930,16 +986,18 @@ export default function CommandPalette({
           items: [
             {
               id: "stf-documents",
-              label: "Student Documents",
+              label: isOsas ? "Organization Documents" : "Student Documents",
               view: "documents",
               icon: File02Icon,
               module: "documents",
               scope: "records",
               breadcrumb: "Records & Communications • View",
-              keywords:
-                "documents student records files matrix status table repository search documents",
-              description:
-                "Master document matrix showing Form 137, Birth Certificate, TOR, and Good Moral records.",
+              keywords: isOsas
+                ? "organizations documents charters bylaws proposals files"
+                : "documents student records files matrix status table repository search documents",
+              description: isOsas
+                  ? "Browse documents filed for student organizations."
+                  : "Master document matrix showing Form 137, Birth Certificate, TOR, and Good Moral records.",
             },
             {
               id: "stf-notifications",
@@ -961,12 +1019,13 @@ export default function CommandPalette({
         .map((group) => ({
           ...group,
           items: group.items.filter((item) => {
-            if (!hasModuleFilter || !item.module) return true;
+            if (isOsas && (item.module === "student_directory" || item.module === "document_requests")) return false;
+            if (!item.module) return true;
             return enabledModules.has(item.module);
           }),
         }))
         .filter((group) => group.items.length > 0);
-    } else if (isStudent || activeView === "student") {
+    } else if (isStudentPalette) {
       candidateGroups = [
         {
           id: "stu_general",
@@ -997,7 +1056,7 @@ export default function CommandPalette({
               label: "Document Requests",
               view: "odrs",
               icon: FileUploadIcon,
-              scope: "records",
+              scope: "navigation",
               breadcrumb: "Academic Records • View",
               keywords:
                 "document requests odrs transcript diploma certificate grades official records tracking new request status",
@@ -1009,7 +1068,7 @@ export default function CommandPalette({
               label: "Document Checklist & Compliance",
               view: "compliance",
               icon: ClipboardIcon,
-              scope: "records",
+              scope: "navigation",
               breadcrumb: "Academic Records • View",
               keywords:
                 "document checklist compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
@@ -1028,7 +1087,7 @@ export default function CommandPalette({
               label: "OSAS Submissions",
               view: "osas",
               icon: StudentIcon,
-              scope: "records",
+              scope: "navigation",
               breadcrumb: "Student Affairs • View",
               keywords:
                 "osas submissions event proposals activity student affairs organizations clearance submit proposal",
@@ -1038,6 +1097,14 @@ export default function CommandPalette({
           ],
         },
       ];
+      if (!hasLinkedStudentRecord(authUser)) {
+        candidateGroups = candidateGroups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter(({ view }) => view !== "compliance" && view !== "osas"),
+          }))
+          .filter(({ items }) => items.length);
+      }
     }
 
     // Universal Controls
@@ -1082,7 +1149,7 @@ export default function CommandPalette({
           description:
             "Minimize interface transitions, remove layout travel and eliminate spring overshoot.",
         },
-        ...(!isStudent
+        ...(!isStudentPalette
           ? [
               {
                 id: "ctrl-zoom-reset",
@@ -1116,7 +1183,7 @@ export default function CommandPalette({
               },
             ]
           : []),
-        ...(hasAdminRights && !isSuperAdmin
+        ...(!isStudentPalette && hasAdminRights && !isSuperAdmin
           ? [
               activeView === "admin"
                 ? {
@@ -1204,8 +1271,33 @@ export default function CommandPalette({
 
     // Live University Data Groups (When Searching)
     let liveGroups = [];
+    const liveResultsAreCurrent = liveSearchContext === searchContext && debouncedQuery === searchQuery.trim();
 
-    if (liveStudents.length > 0) {
+    if (
+      canSearchOrganizations &&
+      debouncedQuery === searchQuery.trim() &&
+      liveOrganizations?.context === searchContext &&
+      liveOrganizations.rows.length > 0
+    ) {
+      liveGroups.push({
+        id: "live_organizations",
+        title: "Student Organizations",
+        items: liveOrganizations.rows.map((org) => ({
+          id: `org-${org.id}`,
+          label: org.name,
+          icon: Building01Icon,
+          iconName: "Building01Icon",
+          scope: "records",
+          type: "organization",
+          badge: org.acronym,
+          breadcrumb: "Student Organizations",
+          description: [org.category, org.status, org.description].filter(Boolean).join(" • "),
+          url: `/staff?${new URLSearchParams({ view: "organizations", organization: org.id })}`,
+        })),
+      });
+    }
+
+    if (canSearchStudents && liveResultsAreCurrent && liveStudents.length > 0) {
       liveGroups.push({
         id: "live_students",
         title: "Student Records & Archive Folders",
@@ -1235,7 +1327,7 @@ export default function CommandPalette({
       });
     }
 
-    if (liveRequests.length > 0) {
+    if ((isStudentPalette || canSearchStaffRequests) && liveResultsAreCurrent && liveRequests.length > 0) {
       liveGroups.push({
         id: "live_requests",
         title: "Document Requests & Fulfillment",
@@ -1266,6 +1358,17 @@ export default function CommandPalette({
       accountGroup,
     ];
 
+    const availableScopes = new Set(
+      [...candidateGroups, controlsGroup, accountGroup].flatMap((group) =>
+        group.items.map((item) => item.scope)
+      )
+    );
+    if (canSearchStudents || canSearchStaffRequests || canSearchOrganizations) {
+      availableScopes.add("records");
+    }
+    const scopeTabs = SCOPE_TABS.filter((tab) => tab.id === "all" || availableScopes.has(tab.id));
+    const activeScope = scopeTabs.some((tab) => tab.id === selectedScope) ? selectedScope : "all";
+
     // Filter by query and active scope tab
     const filtered = allCandidateGroups
       .map((group) => {
@@ -1279,7 +1382,7 @@ export default function CommandPalette({
         // Query filter
         if (q) {
           items = items.filter((item) =>
-            matchesSearchQuery(
+            item.type === "organization" || matchesSearchQuery(
               [item.label, item.breadcrumb, item.keywords, item.description, group.title, item.badge],
               searchQuery
             )
@@ -1291,56 +1394,49 @@ export default function CommandPalette({
       .filter((group) => group.items.length > 0);
 
     return {
+      availableCommands: new Map(allCandidateGroups.flatMap((group) => group.items.map((item) => [item.id, item]))),
+      scopeTabs,
+      activeScope,
       filteredGroups: filtered,
       flatSuggestions: filtered.flatMap((g) => g.items),
     };
   }, [
     searchQuery,
-    activeScope,
+    selectedScope,
     activeView,
     authUser,
-    isStudent,
+    isStudentPalette,
     isSuperAdmin,
+    isOsas,
     hasAdminRights,
     isMac,
-    pathname,
+    canSearchStudents,
+    canSearchStaffRequests,
+    canSearchOrganizations,
+    searchContext,
+    liveSearchContext,
+    debouncedQuery,
     isHighContrast,
     isReduceMotion,
+    liveOrganizations,
     liveStudents,
     liveRequests,
     isAtDefaultHome,
     defaultHome,
   ]);
 
-  // Save selected item to recents
+  const recentContext = JSON.stringify([authUser?.id, authUser?.office_id, activeView, isStudentPalette]);
+  const visibleRecents = recentCommands
+    .filter((item) => item?.context === recentContext)
+    .map((item) => availableCommands.get(item.id))
+    .filter(Boolean);
+
   const saveRecentCommand = useCallback((item) => {
-    if (!item || !item.label) return;
+    if (!authUser?.id || item.type) return;
     try {
       setRecentCommands((prev) => {
-        const filtered = prev.filter((r) => r.id !== item.id && r.label !== item.label);
-        const iconName =
-          typeof item.icon === "string"
-            ? item.icon
-            : item.icon?.displayName?.replace(/Icon$/, "") ||
-              item.iconName ||
-              "ArrowRight01Icon";
-        const updated = [
-          {
-            id: item.id || item.label,
-            label: item.label,
-            iconName: iconName,
-            breadcrumb: item.breadcrumb,
-            scope: item.scope,
-            action: item.action,
-            view: item.view,
-            section: item.section,
-            type: item.type,
-            badge: item.badge,
-            studentNo: item.studentNo,
-            rawStudent: item.rawStudent,
-          },
-          ...filtered,
-        ].slice(0, MAX_RECENTS);
+        const filtered = prev.filter((recent) => recent.context !== recentContext || recent.id !== item.id);
+        const updated = [{ id: item.id, context: recentContext }, ...filtered].slice(0, MAX_RECENTS);
         if (typeof window !== "undefined") {
           localStorage.setItem(RECENT_COMMANDS_KEY, JSON.stringify(updated));
         }
@@ -1349,7 +1445,7 @@ export default function CommandPalette({
     } catch {
       // Ignore storage errors
     }
-  }, []);
+  }, [authUser?.id, recentContext]);
 
   const clearRecentCommands = useCallback((e) => {
     e?.stopPropagation();
@@ -1364,7 +1460,9 @@ export default function CommandPalette({
   // SELECTION HANDLER (EXECUTES ACTIONS, VIEWS, DEEP STUDENT LOCATING)
   // ---------------------------------------------------------------------------
   const handleSelectSuggestion = useCallback(
-    (item) => {
+    (suggestion) => {
+      const item = availableCommands.get(suggestion.id);
+      if (!item) return;
       saveRecentCommand(item);
       setSearchQuery("");
       setIsPaletteOpen(false);
@@ -1377,7 +1475,8 @@ export default function CommandPalette({
 
         if (activeView === "staff") {
           // If student has storage and we are on staff view, offer instant physical location
-          if (student.room || student.cabinet || student.drawer) {
+          if (authUser?.enabled_modules?.includes("storage_explorer") &&
+              (student.room || student.cabinet || student.drawer)) {
             window.dispatchEvent(
               new CustomEvent("switch-view", { detail: { view: "storage" } })
             );
@@ -1411,7 +1510,7 @@ export default function CommandPalette({
       // Document request clicked
       if (item.type === "request" && item.rawRequest) {
         const req = item.rawRequest;
-        const targetView = isStudent ? "odrs" : "requests";
+        const targetView = isStudentPalette ? "odrs" : "requests";
         window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: targetView } }));
         toast.info(`Opening Request #${req.id}`, {
           description: `${req.doc_type || "Document"} • ${req.status || "Pending"}`,
@@ -1519,7 +1618,7 @@ export default function CommandPalette({
         const params = new URLSearchParams({ view: item.view });
         if (item.section) params.set("section", item.section);
 
-        if (isStudent) {
+        if (isStudentPalette) {
           if (!pathname?.startsWith("/student")) {
             router.push(`/student?${params.toString()}`);
           } else {
@@ -1532,7 +1631,7 @@ export default function CommandPalette({
         } else if (isSysAdmin && !onSysAdminPage) {
           router.push(`/systemadmin?${params.toString()}`);
         } else if (pathname === "/account") {
-          const targetPath = isStudent
+          const targetPath = isStudentPalette
             ? "/student"
             : isSysAdmin
               ? "/systemadmin"
@@ -1550,17 +1649,19 @@ export default function CommandPalette({
       }
     },
     [
+      availableCommands,
+      defaultHome.path,
       saveRecentCommand,
       setIsPaletteOpen,
       activeView,
-      isStudent,
-      isSuperAdmin,
+      isStudentPalette,
       onViewSwitch,
       onMainDashboard,
       onLogout,
       router,
       pathname,
       authUser?.id,
+      authUser?.enabled_modules,
     ]
   );
 
@@ -1569,11 +1670,11 @@ export default function CommandPalette({
     // Tab cycles category scopes
     if (e.key === "Tab") {
       e.preventDefault();
-      const currentIdx = SCOPE_TABS.findIndex((t) => t.id === activeScope);
+      const currentIdx = scopeTabs.findIndex((t) => t.id === activeScope);
       const nextIdx = e.shiftKey
-        ? (currentIdx - 1 + SCOPE_TABS.length) % SCOPE_TABS.length
-        : (currentIdx + 1) % SCOPE_TABS.length;
-      setActiveScope(SCOPE_TABS[nextIdx].id);
+        ? (currentIdx - 1 + scopeTabs.length) % scopeTabs.length
+        : (currentIdx + 1) % scopeTabs.length;
+      setActiveScope(scopeTabs[nextIdx].id);
       setFocusedIndex(0);
       return;
     }
@@ -1649,8 +1750,10 @@ export default function CommandPalette({
             aria-label="Spotlight Command Search"
             placeholder={
               isStudent
-                ? "Search student views, requests, compliance..."
-                : "Search views, actions, students (e.g. 2024-), or requests..."
+                ? "Search portal views and requests..."
+                : isOsas
+                  ? "Search organizations by name or acronym, views, or actions..."
+                  : "Search views, actions, students (e.g. 2024-), or requests..."
             }
             value={searchQuery}
             onChange={(e) => {
@@ -1686,29 +1789,22 @@ export default function CommandPalette({
         {/* SCOPE FILTER PILLS BAR (RAYCAST / SPOTLIGHT TABS)                 */}
         {/* ----------------------------------------------------------------- */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-black/[0.05] dark:border-white/[0.06] bg-black/[0.015] dark:bg-white/[0.01]">
-          <div className="inline-flex items-center gap-1 p-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] overflow-x-auto [scrollbar-width:none]">
-            {SCOPE_TABS.map((tab) => {
-              const isActive = activeScope === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveScope(tab.id);
-                    setFocusedIndex(0);
-                  }}
-                  className={cn(
-                    "px-3 py-0.5 rounded-full text-xs transition-all duration-150 cursor-pointer select-none font-medium flex items-center gap-1.5 active:scale-[0.98]",
-                    isActive
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)] font-semibold"
-                      : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100"
-                  )}
-                >
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <Tabs
+            value={activeScope}
+            onValueChange={(scope) => {
+              setActiveScope(scope);
+              setFocusedIndex(0);
+            }}
+            className="min-w-0 overflow-x-auto [scrollbar-width:none]"
+          >
+            <TabsList variant="capsule" size="capsule" aria-label="Search scopes">
+              {scopeTabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id}>
+                  {isOsas && tab.id === "records" ? "Organizations" : tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
           <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500">
             <span>Tab to cycle scopes</span>
@@ -1725,7 +1821,7 @@ export default function CommandPalette({
           {/* LEFT COLUMN: LIST RESULTS */}
           <div className="flex-1 min-w-0 overflow-y-auto p-2.5 [scrollbar-width:thin] border-r border-black/[0.06] dark:border-white/[0.08]">
             {/* Empty search: Show Recent Commands if available */}
-            {!searchQuery && activeScope === "all" && recentCommands.length > 0 && (
+            {!searchQuery && activeScope === "all" && visibleRecents.length > 0 && (
               <div className="mb-3">
                 <div className="px-3 pt-1.5 pb-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
                   <span className="flex items-center gap-1.5">
@@ -1742,7 +1838,7 @@ export default function CommandPalette({
                   </button>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  {recentCommands.map((item, idx) => (
+                  {visibleRecents.map((item, idx) => (
                     <button
                       key={`recent-${item.id}-${idx}`}
                       type="button"
@@ -1953,7 +2049,9 @@ export default function CommandPalette({
                   No Matching Results
                 </h4>
                 <p className="text-[12px] text-gray-500 dark:text-zinc-400 max-w-xs mt-1 leading-relaxed">
-                  Try searching with student number (e.g. 2024-), request ID, or view name.
+                  {isOsas
+                    ? "Try an organization name, acronym, or view name."
+                    : "Try searching with student number (e.g. 2024-), request ID, or view name."}
                 </p>
               </div>
             )}
@@ -1991,7 +2089,7 @@ export default function CommandPalette({
                     <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
                     <span className="font-medium text-gray-500 dark:text-zinc-400">
                       {focusedItem.scope === "records"
-                        ? "Records & Data"
+                        ? (isOsas ? "Organizations" : "Records & Data")
                         : focusedItem.scope === "actions"
                           ? "Quick Action"
                           : focusedItem.scope === "system"
@@ -2095,8 +2193,10 @@ export default function CommandPalette({
                 >
                   {focusedItem.type === "student"
                     ? "Open Student Record"
-                    : focusedItem.type === "request"
-                      ? "Open Document Request"
+                    : focusedItem.type === "organization"
+                      ? "Open Organization"
+                      : focusedItem.type === "request"
+                        ? "Open Document Request"
                       : focusedItem.action
                         ? "Run Action"
                         : "Navigate to View"}

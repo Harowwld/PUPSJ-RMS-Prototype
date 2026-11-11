@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getDefaultHomeView } from "../src/lib/roleUtils.js";
+import { getRequestAffiliation } from "../src/lib/studentAffiliation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,11 +14,13 @@ test("getDefaultHomeView resolves correctly across roles and user preferences", 
   // 1. Student Role
   const studentDefault = getDefaultHomeView({ role: "Student" });
   assert.equal(studentDefault.view, "overview");
-  assert.equal(studentDefault.label, "Overview & Compliance");
+  assert.equal(studentDefault.label, "Overview");
   assert.equal(studentDefault.path, "/student?view=overview");
 
   const studentCompliance = getDefaultHomeView({
     role: "Student",
+    client_type: "Student",
+    student_no: "2024-00123-SJ-0",
     preferences: { default_home_view: "compliance" },
   });
   assert.equal(studentCompliance.view, "compliance");
@@ -182,4 +185,22 @@ test("Campus Operations is placed as the very first section in systemadmin navig
     candidateSlice.indexOf("sys_ops") < candidateSlice.indexOf("sys_gov"),
     "Sidebar candidateGroups must place sys_ops before sys_gov"
   );
+});
+
+test("only linked current students can use the checklist as their home view", () => {
+  const preferences = { default_home_view: "compliance" };
+  for (const account of [
+    { client_type: "Student", student_no: "" },
+    { client_type: "Alumni", student_no: "2024-00123-SJ-0" },
+    { client_type: "Parent", student_no: "2024-00123-SJ-0" },
+  ]) {
+    assert.equal(getDefaultHomeView({ role: "Student", preferences, ...account }).view, "overview");
+  }
+});
+
+test("parent accounts always use the parent request workflow", () => {
+  assert.equal(getRequestAffiliation("Parent", "Student"), "Parent");
+  assert.equal(getRequestAffiliation("Parent", "Alumni"), "Parent");
+  assert.equal(getRequestAffiliation("Student", "Parent"), "Parent");
+  assert.equal(getRequestAffiliation("Alumni", ""), "Alumni");
 });

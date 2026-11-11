@@ -2,7 +2,6 @@
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
 
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
@@ -29,35 +28,9 @@ import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
-import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
-import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
-import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
-import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton";
-import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
-import StudentDirectorySkeleton from "@/components/staff/skeletons/StudentDirectorySkeleton";
-import StudentOrganizationsSkeleton from "@/components/staff/skeletons/StudentOrganizationsSkeleton";
-import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton";
-import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton";
-import DocumentsTabSkeleton from "@/components/staff/skeletons/DocumentsTabSkeleton";
-import NotificationsTabSkeleton from "@/components/staff/skeletons/NotificationsTabSkeleton";
+import WorkspaceLoading from "@/components/shared/WorkspaceLoading";
 
 import AppIcon from "@/components/ui/app-icon";
-const STAFF_NAV_ITEMS = [
-  { key: "requests", label: "Document Requests" },
-  { key: "osas_monitoring", label: "OSAS Monitoring" },
-  { type: "header", label: "Scanning & Document Upload" },
-  { key: "upload", label: "Scan & Upload" },
-  { key: "batch_review", label: "Batch Review" },
-  { type: "header", label: "Student & Organization Roster" },
-  { key: "students", label: "Student Directory" },
-  { key: "organizations", label: "Student Organizations" },
-  { type: "header", label: "Archive & Storage" },
-  { key: "search", label: "Records & Archive" },
-  { key: "storage", label: "Storage Explorer" },
-  { type: "header", label: "Records & Communications" },
-  { key: "documents", label: "Student Documents" },
-  { key: "notifications", label: "Notifications" },
-];
 
 const STAFF_VIEWS = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"];
 const STAFF_VIEW_MODULES = {
@@ -94,40 +67,17 @@ function resolveStaffView(rawView, user) {
   return STAFF_VIEWS.find((view) => isStaffViewEnabled(view, user)) || officeDefault;
 }
 
-function StaffContentSkeleton({ view }) {
-  switch (view) {
-    case "requests": return <DocumentRequestsSkeleton />;
-    case "osas_monitoring": return <OsasMonitoringSkeleton />;
-    case "organizations": return <StudentOrganizationsSkeleton />;
-    case "students": return <StudentDirectorySkeleton />;
-    case "upload": return <ScanUploadSkeleton />;
-    case "batch_review": return <BatchReviewSkeleton />;
-    case "documents": return <DocumentsTabSkeleton />;
-    case "notifications": return <NotificationsTabSkeleton />;
-    case "search": return <RecordsArchiveSkeleton />;
-    case "storage": return <StorageExplorerSkeleton />;
-    default: return null;
-  }
-}
 
-function StaffDashboardLoadingSkeleton({ view }) {
-  return (
-    <DashboardShellSkeleton items={STAFF_NAV_ITEMS}>
-      <StaffContentSkeleton view={view} />
-    </DashboardShellSkeleton>
-  );
-}
-
-const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: () => <StaffContentSkeleton view="search" /> });
-const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: () => <StaffContentSkeleton view="storage" /> });
-const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: () => <StaffContentSkeleton view="upload" /> });
-const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: () => <StaffContentSkeleton view="batch_review" /> });
-const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: () => <StaffContentSkeleton view="documents" /> });
-const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: () => <StaffContentSkeleton view="notifications" /> });
-const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: () => <StaffContentSkeleton view="requests" /> });
-const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: () => <StaffContentSkeleton view="osas_monitoring" /> });
-const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: () => <StaffContentSkeleton view="organizations" /> });
-const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: () => <StaffContentSkeleton view="students" /> });
+import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
+import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
+import ScanUploadTab from "@/components/staff/ScanUploadTab";
+import BatchReviewTab from "@/components/staff/BatchReviewTab";
+import DocumentsTab from "@/components/staff/DocumentsTab";
+import NotificationsTab from "@/components/staff/NotificationsTab";
+import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
+import OsasMonitoringTab from "@/components/staff/OsasMonitoringTab";
+import StudentOrganizationsTab from "@/components/staff/StudentOrganizationsTab";
+import StudentDirectoryTab from "@/components/staff/StudentDirectoryTab";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -1917,7 +1867,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
 
   if (loading) {
-    return <StaffDashboardLoadingSkeleton view={view} />;
+    return <WorkspaceLoading />;
   }
 
   return (
@@ -2018,7 +1968,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
           {view === "search" && (
             <RecordsArchiveTab
-              loading={!storageLayout}
               refreshVersion={archiveRefreshVersion}
               onSelectYear={(year) => { setSelectedYear(year); setCurrentLevel("students"); }}
               quickQuery={quickQuery}
@@ -2316,9 +2265,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 }
 
 function StaffPageWithView() {
-  const searchParams = useSearchParams();
-  const requestedView = resolveRequestedStaffView(searchParams?.get("view") || searchParams?.get("tab"));
-  const fallback = <StaffDashboardLoadingSkeleton view={requestedView} />;
+  const fallback = <WorkspaceLoading />;
 
   return (
     <StaffGuard fallback={fallback}>
@@ -2331,7 +2278,7 @@ function StaffPageWithView() {
 
 export default function StaffPage() {
   return (
-    <Suspense fallback={<StaffDashboardLoadingSkeleton />}>
+    <Suspense fallback={<WorkspaceLoading />}>
       <StaffPageWithView />
     </Suspense>
   );
