@@ -14,7 +14,7 @@ import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../li
 import { LoginSchema } from "../../../../lib/authSchemas";
 import { query, queryOne } from "@/lib/postgres";
 import { authDebug } from "@/lib/authDebug";
-import { authenticateStudent, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
+import { authenticateStudent, createStudent2FAChallenge, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
 import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
@@ -127,6 +127,13 @@ async function _POST(req) {
     // Check if it's a student trying to log in
     const student = await authenticateStudent({ studentNo: cleanUsername, password });
     if (student) {
+      if (student.totp_enabled) {
+        const tempToken = await createStudent2FAChallenge(student);
+        return addSecurityHeaders(NextResponse.json({
+          ok: true,
+          data: { totpRequired: true, tempToken, username: student.email || student.student_no },
+        }));
+      }
       const token = await createStudentSession(student);
       await audit(
         req,

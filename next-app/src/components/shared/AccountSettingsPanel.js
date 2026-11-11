@@ -2256,7 +2256,7 @@ export default function AccountSettingsPanel() {
                                 type="button"
                                 variant="outline"
                                 onClick={handleDiscardProfileChanges}
-                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Discard
                               </Button>
@@ -2772,7 +2772,7 @@ export default function AccountSettingsPanel() {
                               type="button"
                               onClick={() => setTotpStep("disable-flow")}
                               variant="outline"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable 2FA
                             </Button>
@@ -2919,7 +2919,7 @@ export default function AccountSettingsPanel() {
                               }}
                               disabled={recoveryCodesLoading}
                               variant="outline"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable Codes
                             </Button>
@@ -3268,7 +3268,7 @@ export default function AccountSettingsPanel() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowAvatarModal(true)}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                     >
                       Choose Avatar...
                     </Button>
@@ -3487,7 +3487,7 @@ export default function AccountSettingsPanel() {
                                   { force: true, volumeOverride: soundVolume || DEFAULT_SOUND_VOLUME, userId: authUser?.id }
                                 )
                               }
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Preview Sound
                             </Button>
@@ -4161,14 +4161,14 @@ export default function AccountSettingsPanel() {
                           size="sm"
                           disabled={avatarSaving}
                           onClick={handleShuffle}
-                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <motion.span
                             animate={{ rotate: characterShuffleCount * 180 }}
                             transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
                             className="inline-flex items-center justify-center"
                           >
-                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                            <DiceFaces03Icon size="1em" className="text-gray-500 dark:text-zinc-400" />
                           </motion.span>
                           <span>
                             {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
@@ -4259,14 +4259,14 @@ export default function AccountSettingsPanel() {
                           size="sm"
                           disabled={avatarSaving}
                           onClick={handleShuffle}
-                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <motion.span
                             animate={{ rotate: characterShuffleCount * 180 }}
                             transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
                             className="inline-flex items-center justify-center"
                           >
-                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                            <DiceFaces03Icon size="1em" className="text-gray-500 dark:text-zinc-400" />
                           </motion.span>
                           <span>
                             {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
@@ -4282,7 +4282,7 @@ export default function AccountSettingsPanel() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowAvatarModal(false)}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Cancel
                     </Button>

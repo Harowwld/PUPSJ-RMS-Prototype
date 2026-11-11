@@ -82,6 +82,7 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   const cleanNo = String(rawId).trim().toUpperCase();
   const cleanEmail = String(rawId).trim().toLowerCase();
   const select = `SELECT sa.id, sa.student_no, sa.password_hash, sa.status,
+                         sa.totp_secret, sa.totp_enabled, sa.serial_key_hash,
                          sip.email, sip.first_name, sip.middle_name, sip.last_name,
                          sip.client_type, COALESCE(sip.display_name, s.name) AS name,
                          s.status AS student_status,
@@ -134,7 +135,7 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   return row;
 }
 
-export async function createStudentSession(student) {
+export async function createStudentSession(student, { authLevel = "password" } = {}) {
   const accountId = student.id ? String(student.id) : null;
   const studentNo = student.student_no || null;
   const sessionVersion = await getSessionVersion(accountId || studentNo || student.email);
@@ -154,9 +155,57 @@ export async function createStudentSession(student) {
     principalType: "student",
     role: "Student",
     username: student.email || studentNo,
-    authLevel: "password",
+    authLevel,
   });
   return token;
+}
+
+export async function createStudent2FAChallenge(student) {
+  const accountId = Number(student?.id);
+  if (!Number.isSafeInteger(accountId) || accountId <= 0) throw new Error("Invalid student account");
+  const username = student.email || student.student_no || String(accountId);
+  const token = await signSessionToken({
+    sub: String(accountId),
+    role: "Student",
+    principal_type: "student",
+    account_id: accountId,
+    student_no: student.student_no || null,
+    email: student.email || null,
+    username,
+    purpose: "2fa",
+    session_version: await getSessionVersion(String(accountId)),
+  }, "5m");
+  await registerSessionToken(token, {
+    principalId: accountId,
+    principalType: "student",
+    role: "Student",
+    username,
+    authLevel: "2fa-challenge",
+  });
+  return token;
+}
+
+export async function getStudentAccountFor2FA(accountId) {
+  const id = Number(accountId);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const row = await queryOne(
+    `SELECT sa.id, sa.student_no, sa.status, sa.totp_secret, sa.totp_enabled, sa.serial_key_hash,
+            sip.email, sip.first_name, sip.middle_name, sip.last_name,
+            sip.client_type, COALESCE(sip.display_name, s.name) AS name,
+            s.status AS student_status,
+            EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
+            EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office
+       FROM student_accounts sa
+       JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+       LEFT JOIN students s ON s.student_no = sa.student_no
+      WHERE sa.id = $1`,
+    [id],
+  );
+  const student = decryptStudentRow(row);
+  if (!student || String(student.status).toLowerCase() !== "active" ||
+      (student.student_status && String(student.student_status).toLowerCase() !== "active") ||
+      (student.has_archived_office && !student.has_active_office)) return null;
+  return student;
 }
 
 export async function getStudentSession(req) {
