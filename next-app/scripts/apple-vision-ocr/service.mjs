@@ -149,7 +149,7 @@ export class AppleVisionOcrService {
           if (!socket.destroyed) socket.end(`${JSON.stringify({ result })}\n`);
         })
         .catch((error) => {
-          if (!socket.destroyed) socket.end(`${JSON.stringify({ error: error.message })}\n`);
+          if (!socket.destroyed) socket.end(`${JSON.stringify({ error: error.message, code: error.code })}\n`);
         });
     };
     socket.on("data", receive);
@@ -201,6 +201,9 @@ export class AppleVisionOcrService {
         await this.initialWarmup;
         if (!child.ready) throw new WorkerLostError(`${this.engineName} worker exited during startup warmup`);
         const response = await this.send(child, { type: "scan", id: randomUUID(), filePath }, this.scanTimeoutMs);
+        if (response.errorCode === "INVALID_OCR_FILE") {
+          throw Object.assign(new Error(response.error), { code: response.errorCode });
+        }
         if (!response.ok) throw new VisionRecognitionError(response.error || `${this.engineName} scan failed`);
         const result = response.result;
         if (!result || typeof result.text !== "string" || !Array.isArray(result.pages)) {
@@ -213,6 +216,7 @@ export class AppleVisionOcrService {
         this.consecutiveVisionErrors = 0;
         return result;
       } catch (error) {
+        if (error.code === "INVALID_OCR_FILE") throw error;
         lastError = error;
         if (error instanceof WorkerLostError || error instanceof WorkerTimeoutError) {
           await this.recycleWorker(error.message);

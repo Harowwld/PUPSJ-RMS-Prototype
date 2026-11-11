@@ -22,14 +22,21 @@ export async function POST(req) {
   }
 
   try {
-    const form = await req.formData();
-    const file = form.get("file");
+    const form = await req.formData().catch(() => null);
+    const file = form?.get("file");
 
     if (!file || typeof file === "string") {
       return NextResponse.json(
         { ok: false, error: "Missing or invalid file" },
         { status: 400 }
       );
+    }
+
+    if (!file.size) {
+      return NextResponse.json({ ok: false, error: "The uploaded file is empty." }, { status: 400 });
+    }
+    if (!(file.type.startsWith("image/") || file.type === "application/pdf" || /\.pdf$/i.test(file.name))) {
+      return NextResponse.json({ ok: false, error: "Upload a PDF or image file for OCR." }, { status: 415 });
     }
 
     if (file.size > DOCUMENT_MAX_SIZE_BYTES) {
@@ -91,6 +98,9 @@ export async function POST(req) {
     });
 
   } catch (err) {
+    if (err.code === "INVALID_OCR_FILE") {
+      return NextResponse.json({ ok: false, error: "The uploaded file could not be decoded. Check that it opens and try again." }, { status: 422 });
+    }
     console.error("[POST /api/ingest/ocr] failed:", err);
     return NextResponse.json(
       { ok: false, error: "Failed to process native OCR" },

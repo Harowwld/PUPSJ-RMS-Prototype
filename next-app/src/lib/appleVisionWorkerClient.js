@@ -55,7 +55,7 @@ export function requestAppleVisionOcr(filePath, {
       if (end < 0) return;
       try {
         const reply = JSON.parse(response.slice(0, end));
-        finish(reply.error ? new Error(reply.error) : null, reply.result);
+        finish(reply.error ? Object.assign(new Error(reply.error), { code: reply.code }) : null, reply.result);
       } catch (error) {
         finish(error);
       }

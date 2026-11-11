@@ -117,7 +117,7 @@ export const ForgotPasswordIdentifySchema = z.object({
 });
 
 export const StudentRegistrationSchema = z.object({
-  studentNo: StudentNoSchema,
+  studentNo: StudentNoSchema.transform((value) => value.toUpperCase()),
   name: PersonNameSchema("Student Name"),
   courseCode: z
     .string({ required_error: "Course code is required" })

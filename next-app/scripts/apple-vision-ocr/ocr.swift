@@ -139,7 +139,8 @@ func recognizeImages(_ images: [(Int, CGImage)], source: String) -> [OcrRecognit
 }
 
 func renderPDFPage(_ page: PDFPage, scale: CGFloat) -> CGImage? {
-    let bounds = page.bounds(for: .mediaBox)
+    guard let pdfPage = page.pageRef else { return nil }
+    let bounds = pdfPage.getBoxRect(.mediaBox)
     let width = Int(ceil(bounds.width * scale))
     let height = Int(ceil(bounds.height * scale))
     guard width > 0, height > 0 else { return nil }
@@ -160,9 +161,28 @@ func renderPDFPage(_ page: PDFPage, scale: CGFloat) -> CGImage? {
     context.saveGState()
     context.scaleBy(x: scale, y: scale)
     context.translateBy(x: -bounds.origin.x, y: -bounds.origin.y)
-    page.draw(with: .mediaBox, to: context)
+    context.drawPDFPage(pdfPage)
     context.restoreGState()
     return context.makeImage()
+}
+
+// Recognize the unrotated PDF content, then map the boxes back to the displayed page.
+func displayedPage(_ page: OcrPage, rotation: Int) -> OcrPage {
+    let angle = (rotation % 360 + 360) % 360
+    guard [90, 180, 270].contains(angle) else { return page }
+    let observations = page.observations.map { box -> OcrObservation in
+        switch angle {
+        case 90:
+            return OcrObservation(text: box.text, x: 1 - box.y - box.height, y: box.x, width: box.height, height: box.width)
+        case 180:
+            return OcrObservation(text: box.text, x: 1 - box.x - box.width, y: 1 - box.y - box.height, width: box.width, height: box.height)
+        default:
+            return OcrObservation(text: box.text, x: box.y, y: 1 - box.x - box.width, width: box.height, height: box.width)
+        }
+    }
+    let swapped = angle != 180
+    return OcrPage(pageIndex: page.pageIndex, width: swapped ? page.height : page.width,
+                   height: swapped ? page.width : page.height, observations: observations)
 }
 
 func normalizeImage(_ image: CGImage) -> CGImage? {
@@ -190,7 +210,7 @@ func recognizeFile(at filePath: String) throws -> OcrPayload {
     }
 
     if fileURL.pathExtension.lowercased() == "pdf" {
-        guard let pdf = PDFDocument(url: fileURL) else {
+        guard let pdf = PDFDocument(url: fileURL), !pdf.isLocked, pdf.pageCount > 0 else {
             throw NSError(domain: "NativeOcr", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not load PDF document"])
         }
 
@@ -211,7 +231,9 @@ func recognizeFile(at filePath: String) throws -> OcrPayload {
             if let failedPage = recognized.first(where: { $0.failed }) {
                 throw NSError(domain: "NativeOcr", code: 4, userInfo: [NSLocalizedDescriptionKey: "Vision recognition failed for page \(failedPage.page.pageIndex): \(failedPage.error ?? "unknown Vision error")"])
             }
-            pages.append(contentsOf: recognized.map(\.page))
+            pages.append(contentsOf: recognized.map { result in
+                displayedPage(result.page, rotation: pdf.page(at: result.page.pageIndex)?.rotation ?? 0)
+            })
         }
         let fullText = pages.flatMap { $0.observations.map(\.text) }.joined(separator: "\n")
         return OcrPayload(pages: pages, text: fullText.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -244,6 +266,7 @@ struct WorkerResponse: Encodable {
     let ok: Bool
     let result: OcrPayload?
     let error: String?
+    var errorCode: String? = nil
 }
 
 func writeWorkerLine<T: Encodable>(_ value: T) throws {
@@ -302,7 +325,10 @@ if args.dropFirst().first == "--worker" {
                         throw NSError(domain: "NativeOcr", code: 8, userInfo: [NSLocalizedDescriptionKey: "Unknown OCR worker command"])
                     }
                 } catch {
-                    try writeWorkerLine(WorkerResponse(id: command.id, type: command.type, ok: false, result: nil, error: error.localizedDescription))
+                    let failure = error as NSError
+                    let invalidFile = failure.domain == "NativeOcr" && [2, 3].contains(failure.code)
+                    try writeWorkerLine(WorkerResponse(id: command.id, type: command.type, ok: false, result: nil,
+                                                       error: error.localizedDescription, errorCode: invalidFile ? "INVALID_OCR_FILE" : nil))
                 }
             } catch {
                 fputs("Invalid OCR worker command: \(error.localizedDescription)\n", stderr)
