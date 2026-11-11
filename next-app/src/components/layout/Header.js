@@ -1493,7 +1493,7 @@ export default function Header({ authUser, onLogout, children }) {
                 setFocusedIndex(0);
                 setCommandOpen(true);
               }}
-              className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-gray-100/80 hover:bg-gray-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-gray-500 dark:text-zinc-400 text-xs border border-gray-200/80 dark:border-white/10 transition-colors cursor-pointer select-none"
+              className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.1] text-gray-500 dark:text-zinc-400 text-xs border border-black/[0.06] dark:border-white/10 transition-colors cursor-pointer select-none"
             >
               <div className="flex items-center gap-2.5">
                 <Search01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />

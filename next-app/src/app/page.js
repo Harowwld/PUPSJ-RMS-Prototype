@@ -22,35 +22,35 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-[100dvh] w-full max-w-full flex flex-col bg-[#ffffff] text-[#1D1D1F] selection:bg-red-100 selection:text-red-900 font-jakarta overflow-x-hidden">
-      
-      {/* Subdued ambient liquid background */}
-      <div className="liquid-container opacity-30">
-        <div className="liquid-blob liquid-blob-1" />
-        <div className="liquid-blob liquid-blob-2" />
-        <div className="liquid-blob liquid-blob-3" />
-      </div>
-
-      {/* Floating Apple Navbar */}
+    <>
       <LandingNavbar />
+      <div className="relative min-h-[100dvh] w-full max-w-full flex flex-col bg-[#ffffff] text-[#1D1D1F] selection:bg-red-100 selection:text-red-900 font-jakarta overflow-x-hidden">
 
-      {/* Main Page Layout */}
-      <main className="relative z-10 flex-1 w-full max-w-full overflow-hidden">
-        <div className="w-full bg-[#ffffff]">
-          <LandingHero />
+        {/* Subdued ambient liquid background */}
+        <div className="liquid-container opacity-30">
+          <div className="liquid-blob liquid-blob-1" />
+          <div className="liquid-blob liquid-blob-2" />
+          <div className="liquid-blob liquid-blob-3" />
         </div>
-        <div className="w-full bg-[#ffffff]">
-          <LandingBento />
-          <ProcessWorkflow />
-          <DocumentCatalog />
-          <FAQSection />
-        </div>
-      </main>
 
-      {/* Apple Clean Footer */}
-      <LandingFooter />
+        {/* Main Page Layout */}
+        <main className="relative z-10 flex-1 w-full max-w-full overflow-hidden">
+          <div className="w-full bg-[#ffffff]">
+            <LandingHero />
+          </div>
+          <div className="w-full bg-[#ffffff]">
+            <LandingBento />
+            <ProcessWorkflow />
+            <DocumentCatalog />
+            <FAQSection />
+          </div>
+        </main>
 
-    </div>
+        {/* Apple Clean Footer */}
+        <LandingFooter />
+
+      </div>
+    </>
   );
 }
 
