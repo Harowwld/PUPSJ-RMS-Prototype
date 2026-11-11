@@ -31,7 +31,7 @@ export function formatLogDetails(text) {
 
   // Normalize common acronyms at sentence starts or after punctuation
   formatted = formatted.replace(
-    /(^\s*|['"“‘(\[]\s*|[.!?]\s+)\b(ip|2fa|csv|pdf|sla|totp|osas|pup|rms|id)\b/gi,
+    /(^\s*|['"“‘(\[]\s*|[.!?]\s+)\b(ip|2fa|csv|pdf|sla|totp|osas|pup|rms|id|psa|secpa|caepup|shs|sar|sf|ctc|tor|mdss|odrs|cbl|nbi|gwa|spa|cog|coe|cor|hd|gmc)\b/gi,
     (match, prefix, word) => {
       const lower = word.toLowerCase();
       if (lower === "2fa") return prefix + "2FA";

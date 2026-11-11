@@ -20,6 +20,64 @@ export function getDeterministicColor(str) {
   return MAC_AVATAR_COLORS[Math.abs(hash) % MAC_AVATAR_COLORS.length];
 }
 
+export const KNOWN_ACCOUNT_NAMES = {
+  "student@pup.local": "Juan Dela Cruz",
+  "test.student@pup.local": "Maria Clara Santos",
+  "superadmin@pup.local": "System Administrator",
+  "admin.default@pup.local": "System Administrator",
+  "admin.registrar@pup.local": "Elias Austria",
+  "staff.registrar@pup.local": "Marcus Reyes",
+  "admin.osas@pup.local": "Sandra Gomez",
+  "staff.osas@pup.local": "Juanito Rizal",
+};
+
+/**
+ * Resolves an email, username, or formatted name to the canonical human-friendly display name.
+ * e.g. student@pup.local -> Juan Dela Cruz
+ *      DELA CRUZ, JUAN A. -> Juan Dela Cruz
+ */
+export function resolveUserDisplayName(val) {
+  if (!val || typeof val !== "string") return val || "";
+  let clean = val.trim();
+  if (clean.startsWith("@")) clean = clean.slice(1).trim();
+
+  // 1. Direct match in known accounts
+  const lower = clean.toLowerCase();
+  if (KNOWN_ACCOUNT_NAMES[lower]) {
+    return KNOWN_ACCOUNT_NAMES[lower];
+  }
+
+  // 2. Direct fallback for username "student"
+  if (lower === "student") {
+    return "Juan Dela Cruz";
+  }
+
+  // 3. Email address formatting: e.g. "firstname.lastname@domain.com"
+  if (lower.includes("@")) {
+    const localPart = lower.split("@")[0];
+    const words = localPart.split(/[._-]+/).filter(Boolean);
+    if (words.length >= 2) {
+      return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+  }
+
+  // 4. Inverted name format: "LASTNAME, FIRSTNAME M."
+  if (clean.includes(",")) {
+    const [last, first] = clean.split(",").map((s) => s.trim());
+    if (first && last) {
+      const cleanFirst = first.replace(/\s+[A-Z]\.?$/, "");
+      return `${cleanFirst} ${last}`.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  }
+
+  // 5. All-caps name format: "JUAN DELA CRUZ"
+  if (/^[A-Z\s.'-]+$/.test(clean) && clean.length > 3 && clean.includes(" ")) {
+    return clean.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  return clean;
+}
+
 /**
  * Checks if a token likely represents a person's name:
  * 1. Preceded by contextual words like "student", "account for", "officer", "by", "for", "user".
@@ -28,6 +86,12 @@ export function getDeterministicColor(str) {
 export function isPersonName(candidate, precedingProse = "") {
   const trimmed = (candidate || "").trim();
   if (!trimmed || trimmed.length < 2 || trimmed.length > 50) return false;
+
+  // Known account emails or usernames are always person/account identifiers
+  const lower = trimmed.toLowerCase();
+  if (KNOWN_ACCOUNT_NAMES[lower] || lower === "student" || /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmed)) {
+    return true;
+  }
 
   // Contextual clue from preceding prose
   const proseLower = (precedingProse || "").toLowerCase().slice(-30);
@@ -72,13 +136,15 @@ export function parseNarrativeTokens(details) {
       "(?<transition>\\b[A-Za-z]+\\s*(?:→|->)\\s*[A-Za-z]+\\b)",
       // 2. Key-Value: Key: Value (handles common audit attributes)
       "(?<kv>\\b(?:Role|Section|Office|Reason|Note|Document|Status|Action|Details):\\s*[^,;.)\\n]+)",
-      // 3. Mention: @username (excluding trailing sentence periods)
+      // 3. Email address (matches bare email or inside parens/brackets, before mention capture)
+      "(?<email>\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b)",
+      // 4. Mention: @username (excluding trailing sentence periods)
       "(?<mention>@[a-zA-Z0-9_-]+(?:\\.[a-zA-Z0-9_-]+)*)",
-      // 4. Record ID: #123, ID: ABC, or Student No
-      "(?<record_id>#(?:[0-9]+)|\\b(?:ID:\\s*|id:\\s*)[A-Za-z0-9_-]+|\\b\\d{4}-\\d{5}(?:-[A-Za-z0-9-]+)?\\b)",
-      // 5. Quoted strings: '...', "...", `...`
+      // 5. Record ID: #123, #REQ-123, ID: ABC, Student No, or Form codes (SF10-SHS, Form 138, SF9)
+      "(?<record_id>#(?:[A-Za-z0-9_-]+)|\\b(?:ID:\\s*|id:\\s*)[A-Za-z0-9_-]+|\\b\\d{4}-\\d{5}(?:-[A-Za-z0-9-]+)?\\b|\\b(?:SF-?\\d+(?:-[A-Za-z0-9]+)?|Form\\s+\\d+)\\b)",
+      // 6. Quoted strings: '...', "...", `...`
       "(?<quoted>'[^']+'|\"[^\"]+\"|`[^`]+`)",
-      // 6. IPv4 address
+      // 7. IPv4 address
       "(?<ip>\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)",
     ].join("|"),
     "g"
@@ -119,14 +185,25 @@ export function parseNarrativeTokens(details) {
         value: val,
         raw: fullMatch,
       });
-    } else if (groups.mention) {
+    } else if (groups.email) {
+      const resolved = resolveUserDisplayName(groups.email);
       tokens.push({
         type: "mention",
-        value: groups.mention.slice(1),
+        value: resolved,
+        email: groups.email,
+        raw: fullMatch,
+      });
+    } else if (groups.mention) {
+      const rawVal = groups.mention.slice(1);
+      const resolved = resolveUserDisplayName(rawVal);
+      tokens.push({
+        type: "mention",
+        value: resolved,
+        email: rawVal.includes("@") ? rawVal : null,
         raw: fullMatch,
       });
     } else if (groups.record_id) {
-      const cleanVal = groups.record_id.replace(/^(?:ID:\s*|id:\s*)/i, "");
+      const cleanVal = groups.record_id.replace(/^(?:#|ID:\s*|id:\s*)/i, "");
       tokens.push({
         type: "record_id",
         value: cleanVal,
@@ -134,10 +211,19 @@ export function parseNarrativeTokens(details) {
       });
     } else if (groups.quoted) {
       const inner = groups.quoted.slice(1, -1);
-      if (isPersonName(inner, precedingText)) {
+      if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(inner)) {
+        const resolved = resolveUserDisplayName(inner);
         tokens.push({
           type: "mention",
-          value: inner,
+          value: resolved,
+          email: inner,
+          raw: fullMatch,
+        });
+      } else if (isPersonName(inner, precedingText)) {
+        const resolved = resolveUserDisplayName(inner);
+        tokens.push({
+          type: "mention",
+          value: resolved,
           raw: fullMatch,
         });
       } else {
