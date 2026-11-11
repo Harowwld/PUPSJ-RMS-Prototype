@@ -92,7 +92,7 @@ export default function StudentDriveFilesView({
   return (
     <div className="w-full space-y-4">
       {/* 1. Header Banner: Back button, Student identity, Physical storage pill, and Locate button */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 bg-white dark:bg-card rounded-2xl border border-border/80 dark:border-border shadow-xs">
+      <div className={cn("flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 bg-white dark:bg-card rounded-2xl border border-border/80 dark:border-border shadow-xs", student.rawOrg && "rounded-none")}>
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           {/* Back Button */}
           <Button
@@ -243,7 +243,7 @@ export default function StudentDriveFilesView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 px-6"
         >
           {studentDocs.map((doc, idx) => (
             <GoogleDrivePdfCard
@@ -263,7 +263,7 @@ export default function StudentDriveFilesView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="space-y-2"
+          className="space-y-2 px-6"
         >
           {studentDocs.map((doc, idx) => (
             <GoogleDrivePdfCard
