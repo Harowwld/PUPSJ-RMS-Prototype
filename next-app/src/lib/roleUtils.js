@@ -288,7 +288,7 @@ export function getAvailableRoles(includeSystemAdmin = false) {
 export function getDefaultDashboardPath(role) {
   if (isSystemAdminRole(role)) return "/systemadmin";
   if (isAdminRole(role)) return "/admin";
-  if (String(role || "").toLowerCase() === "student") return "/student";
+  if (normalizeRole(role) === "Student") return "/student";
   return "/staff";
 }
 
@@ -325,6 +325,12 @@ export function canAccessPage(pathname, role, { authenticated = true } = {}) {
   }
 
   return true;
+}
+
+export function getPageAccessRedirect(pathname, role) {
+  if (canAccessPage(pathname, role)) return null;
+  if (!normalizeRole(role)) return "/login";
+  return getDefaultDashboardPath(role);
 }
 
 /**
