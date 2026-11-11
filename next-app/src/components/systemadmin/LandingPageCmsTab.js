@@ -15,7 +15,7 @@ import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
 import LandingFaqCmsView from "./LandingFaqCmsView"
 import LandingFooterCmsView from "./LandingFooterCmsView"
-import LandingHeroSkeleton from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
+import { LandingHeroSkeletonContent } from "@/components/systemadmin/skeletons/LandingHeroSkeleton"
 import LandingCmsSectionTabs, { LANDING_CMS_SECTIONS } from "./LandingCmsSectionTabs"
 import { cn } from "@/lib/utils"
 import useCmsDraft from "@/hooks/useCmsDraft"
@@ -337,8 +337,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "footer" && <LandingFooterCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
-      {currentSection === "hero" && loading && <LandingHeroSkeleton />}
-      {currentSection === "hero" && !loading && (
+      {currentSection === "hero" && (
         <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col gap-0 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none isolate font-jakarta">
           <PageHeader
             icon=" DashboardSquare01Icon"
@@ -368,7 +367,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                 <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={saving || !isDirty}
+                  disabled={loading || saving || !isDirty}
                   className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "Saving Changes..." : "Save Landing Content"}
@@ -377,8 +376,8 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
             }
             secondaryActions={
               <>
-                <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-                {isDirty && <Button type="button" variant="outline" onClick={() => { setHeroData(savedData); notify("Draft changes discarded. Reverted to saved hero content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+                <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
+                {isDirty && <Button type="button" variant="outline" onClick={() => { setHeroData(savedData); notify("Draft changes discarded. Reverted to saved hero content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
               </>
             }
           />
@@ -386,6 +385,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
           {/* SuperAdmin Navigation Segmented Tabs */}
           <LandingCmsViewTabs activeTab={activeTab === "slides" ? "content" : activeTab} onChange={(tab) => setActiveTab(tab === "content" ? "slides" : "preview")} contentLabel="Hero Content" contentCount={heroData.slides.length} />
 
+        {loading ? <LandingHeroSkeletonContent /> : (
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
             {/* TAB 1: Hero Content (Messaging + Carousel Combined) */}
             {activeTab === "slides" && (
@@ -762,6 +762,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
               </div>
             )}
           </CardContent>
+        )}
         </Card>
       )}
 

@@ -485,13 +485,14 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
 
   const duplicateSelectedCabinet = useCallback(() => {
     if (!activeRoom || !selectedCabinet) return
-    const existingIds = new Set(activeRoom.cabinets.map((c) => c.id))
-    let id = ""
-    let counter = 2020
-    while (true) {
-      id = String(counter)
-      if (!existingIds.has(id)) break
-      counter++
+    const existingIds = new Set(activeRoom.cabinets.map((c) => String(c.id).toLowerCase()))
+    const sourceId = String(selectedCabinet.id || "Cabinet").trim()
+    const baseId = sourceId.replace(/\s+\(Copy(?: \d+)?\)$/i, "").trim() || sourceId
+    let copyNumber = 1
+    let id = `${baseId} (Copy)`
+    while (existingIds.has(id.toLowerCase())) {
+      copyNumber++
+      id = `${baseId} (Copy ${copyNumber})`
     }
     const eff = getCabinetEffectiveSize(selectedCabinet)
     const foundX = clamp(selectedCabinet.rect.x + 0.05, 0, 1 - eff.w)
@@ -1511,12 +1512,6 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     }
   }
 
-  if (loading && !layout) {
-    return <StorageLayoutSkeleton />
-  }
-
-  if (!layout) return null
-
   const renderRoomSwitcher = () => (
     <div className="flex items-center justify-between gap-3 px-6 py-2.5 border-b border-border dark:border-border bg-white dark:bg-card select-none flex-nowrap min-w-0 w-full overflow-hidden">
       {/* Scrollable Room Tabs with Left/Right Navigation Chevrons + Unified Room Actions Button Group */}
@@ -1545,7 +1540,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           className="flex items-center min-w-0 flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-zinc-600 hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-zinc-500 scrollbar-track-transparent py-0.5"
         >
           <div className="flex items-center gap-1 p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shrink-0">
-            {layout.rooms.map((r) => {
+            {layout?.rooms?.map((r) => {
               const isActive = String(r.id) === String(activeRoomId)
               const cabCount = (r.cabinets || []).length
               return (
@@ -1610,6 +1605,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             variant="ghost"
             size="sm"
             onClick={addRoom}
+            disabled={!layout}
             className="h-7.5 px-3 text-xs font-semibold rounded-lg text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer"
             title="Add a new storage room"
           >
@@ -1660,14 +1656,16 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             variant="ghost"
             size="sm"
             onClick={() => setDeleteRoomConfirmOpen(true)}
-            disabled={!activeRoom || activeRoomStudentCount > 0 || (layout.rooms || []).length <= 1}
+            disabled={!activeRoom || activeRoomStudentCount > 0 || totalStats.rooms <= 1}
             className="h-7.5 px-3 text-xs font-semibold rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
             title={
-              activeRoomStudentCount > 0
-                ? `Cannot delete room with ${activeRoomStudentCount} assigned student record(s)`
-                : (layout.rooms || []).length <= 1
-                  ? "At least one storage room must remain in the system"
-                  : `Delete ${activeRoom?.name || `Room ${activeRoom?.id}`}`
+              !activeRoom
+                ? "Select a storage room to delete"
+                : activeRoomStudentCount > 0
+                  ? `Cannot delete room with ${activeRoomStudentCount} assigned student record(s)`
+                  : totalStats.rooms <= 1
+                    ? "At least one storage room must remain in the system"
+                    : `Delete ${activeRoom.name || `Room ${activeRoom.id}`}`
             }
           >
             Delete Room
@@ -1860,7 +1858,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                 {totalStats.rooms} {totalStats.rooms === 1 ? "room" : "rooms"} · {totalStats.cabinets} cabinets · {totalStats.drawers} drawers · {totalStats.records} assigned records
               </span>
             )}
-            <span
+            {layout && <span
               className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none"
               role="status"
               aria-live="polite"
@@ -1882,7 +1880,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
                   <span className="font-medium text-gray-500 dark:text-zinc-400">All changes saved</span>
                 </>
               )}
-            </span>
+            </span>}
           </div>
         }
         description="Organize how cabinets are placed and arranged in your storage rooms."
@@ -1910,7 +1908,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             )}
             <Button
               onClick={saveLayout}
-              disabled={saving || !isDirty || hasAnyCollisions}
+              disabled={!layout || saving || !isDirty || hasAnyCollisions}
               className="h-9 shrink-0 px-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? (
@@ -1927,7 +1925,13 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       {/* Room Switcher Row */}
       {renderRoomSwitcher()}
 
-      {/* 2-Pane Split: Left Canvas Pane & Right Inspector Pane */}
+      {loading && !layout ? (
+        <StorageLayoutSkeleton />
+      ) : !layout ? (
+        <div className="flex min-h-80 items-center justify-center p-6 text-sm text-muted-foreground" role="status">
+          Could not load the storage layout. Use Refresh Storage Layout to try again.
+        </div>
+      ) : (
       <div className="relative flex flex-1 flex-col lg:flex-none lg:h-[min(80vh,900px)] lg:flex-row min-h-[620px] w-full">
         <div className="flex-1 min-w-0 p-6 flex flex-col items-center justify-center bg-neutral-50 dark:bg-zinc-950/20 relative overflow-hidden">
           <CabinetCanvas 
@@ -1980,6 +1984,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           />
         </div>
       </div>
+      )}
     </div>
   )
 

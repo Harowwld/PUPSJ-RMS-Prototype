@@ -4,7 +4,6 @@ import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
@@ -14,12 +13,11 @@ import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import OsasKanbanPipeline from "@/components/staff/OsasKanbanPipeline";
 import OsasProposalReviewSheet from "@/components/staff/osas/OsasProposalReviewSheet";
 import OsasPostEventReviewSheet from "@/components/staff/osas/OsasPostEventReviewSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import PDFPreview from "@/components/shared/PDFPreview";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
@@ -50,7 +48,7 @@ import {
   EmptyContent,
   EmptyState,
 } from "@/components/ui/empty";
-import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
+import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -229,29 +227,6 @@ export function getPostEventStatusDotClass(status) {
   return "bg-slate-400 dark:bg-zinc-400";
 }
 
-export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Official submission PDF" }) {
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const previewUrl = fileUrl || (proposalId ? `/api/osas/event-proposals/${proposalId}?file=1` : null);
-  return (
-    <>
-      <div className="space-y-2">
-        <div className="relative h-[360px] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
-          {previewUrl ? <PDFPreview src={previewUrl} title={title || "Official submission PDF"} /> : (
-            <EmptyState variant="compact" icon={File02Icon} title="No Document Attached" description="This submission has no attached PDF." />
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">{subtext}</span>
-          <Button variant="outline" size="sm" disabled={!previewUrl} onClick={() => onOpenPreview ? onOpenPreview() : setPreviewOpen(true)}>
-            {PDF_ACTION_LABELS.preview}
-          </Button>
-        </div>
-      </div>
-      <PDFPreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)} preview={{ url: previewUrl, title: title || "Official submission PDF", subtitle: "Review the complete submitted document." }} />
-    </>
-  );
-}
-
 function getTableSortValue(item, column, stream) {
   const isPostEvent = stream === "post_events";
 
@@ -335,7 +310,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [endDate, setEndDate] = useOsasViewPreference("osas_monitoring", `${activeStream}.endDate`, "");
   const [statusFilters, setStatusFilters] = useOsasViewPreference("osas_monitoring", `${activeStream}.statusFilters`, []);
   const [orgFilters, setOrgFilters] = useOsasViewPreference("osas_monitoring", `${activeStream}.orgFilters`, []);
-  const [groupBy, setGroupBy] = useOsasViewPreference("osas_monitoring", `${activeStream}.groupBy`, "status", {
+  const [groupBy, setGroupBy] = useOsasViewPreference("osas_monitoring", `${activeStream}.groupBy`, "none", {
     legacyKey: OSAS_GROUP_BY_STORAGE_KEY,
   });
   const [visibleColumns, setVisibleColumns] = useOsasViewPreference("osas_monitoring", `${activeStream}.visibleColumns`, [
@@ -949,7 +924,7 @@ export default function OsasMonitoringTab({ showToast }) {
     if (visibleColumns.includes("event")) cols.push({ kind: "text", minWidth: 320, maxWidth: 420, growthWeight: 4 });
     if (visibleColumns.includes("organization")) cols.push({ kind: "text", minWidth: 190, maxWidth: 340, growthWeight: 2 });
     if (visibleColumns.includes("proponent")) cols.push({ kind: "text", minWidth: 220, maxWidth: 300, growthWeight: 1 });
-    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 120 });
+    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 150 });
     if (visibleColumns.includes("submitted")) cols.push({ kind: "date", width: 160 });
     cols.push("actions");
     return cols;
@@ -957,12 +932,12 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const postEventTableColumnsConfig = useMemo(() => {
     const cols = [];
-    if (visibleColumns.includes("id")) cols.push({ kind: "identifier", width: 140 });
+    if (visibleColumns.includes("id")) cols.push({ kind: "identifier", width: 110 });
     if (visibleColumns.includes("event")) cols.push({ kind: "text", minWidth: 320, maxWidth: 480, growthWeight: 4 });
     if (visibleColumns.includes("organization")) cols.push({ kind: "text", minWidth: 190, maxWidth: 300, growthWeight: 2 });
     if (visibleColumns.includes("proponent")) cols.push({ kind: "text", minWidth: 220, maxWidth: 300, growthWeight: 1 });
     if (visibleColumns.includes("attendance")) cols.push("number");
-    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 120 });
+    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 150 });
     if (visibleColumns.includes("submitted")) cols.push({ kind: "date", width: 160 });
     cols.push("actions");
     return cols;
@@ -1367,9 +1342,6 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  if (loading && !hasLoaded) {
-    return <OsasMonitoringSkeleton />;
-  }
 
   return (
     <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
@@ -1566,6 +1538,9 @@ export default function OsasMonitoringTab({ showToast }) {
 
         {/* 5. Main Content Area */}
         <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", activeFilteredList.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          {loading && !hasLoaded ? (
+            <DataContentSkeleton columns={activeStream === "proposals" ? proposalTableColumnsConfig : postEventTableColumnsConfig} viewMode={viewMode} />
+          ) : <>
           {/* STREAM 1: Pre-Event Proposals */}
           {activeStream === "proposals" && (
             <>
@@ -1604,7 +1579,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       ref={tableContainerRef}
                       className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                     >
-                      <Table columns={proposalTableColumnsConfig} className="min-w-[1200px]">
+                      <Table columns={proposalTableColumnsConfig}>
                         <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                           <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                             {visibleColumns.includes("id") && (
@@ -1901,7 +1876,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       ref={tableContainerRef}
                       className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                     >
-                      <Table columns={postEventTableColumnsConfig} className="min-w-[1200px]">
+                      <Table columns={postEventTableColumnsConfig}>
                         <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                           <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                             {visibleColumns.includes("id") && (
@@ -2158,6 +2133,7 @@ export default function OsasMonitoringTab({ showToast }) {
               )}
             </>
           )}
+          </>}
         </div>
 
         {/* 6. Apple HIG Pagination Footer (Unified for both record views) */}

@@ -14,6 +14,8 @@ import {
   ViewIcon,
 } from "hugeicons-react";
 
+const POST_EVENT_FOLLOW_UP = new Set(["Pending Submission", "Needs Revision", "Overdue"]);
+
 const PROPOSAL_STATUS_GROUPS = [
   { key: "Submitted", label: "Submitted" },
   { key: "Under Review", label: "Under Review" },
@@ -145,8 +147,9 @@ export default function OsasRecordList({
                   const organization = isPostEvent
                     ? item.organization_name
                     : item.verified_org_name || item.organization_name;
-                  const submittedBy = item.student_name || item.submitted_by_name || "Unknown submitter";
-                  const submitterId = item.submitted_by_email || item.student_no;
+                  const submittedBy = item.student_name || item.submitted_by_name;
+                  const needsPostEventFollowUp = !isPostEvent && item.status === "Approved"
+                    && POST_EVENT_FOLLOW_UP.has(item.post_event_status);
                   const status = item.status || "Submitted";
                   const badgeClass = isPostEvent
                     ? getPostEventStatusBadgeClass(status)
@@ -178,28 +181,19 @@ export default function OsasRecordList({
                             <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate max-w-[200px] sm:max-w-[320px] lg:max-w-md">
                               {title || "Untitled Submission"}
                             </span>
-                            {organization && (
-                              <span className="text-xs text-gray-400 dark:text-zinc-500 truncate hidden md:inline">
-                                — {item.org_acronym ? `${item.org_acronym} · ` : ""}{organization}
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-center gap-x-2 gap-y-1 min-w-0 text-[11px] text-gray-400 dark:text-zinc-500 font-normal">
-                            <span className="text-gray-700 dark:text-zinc-300 truncate shrink-0 max-w-[180px]">
-                              {submittedBy}{submitterId ? ` (${submitterId})` : ""}
-                            </span>
-                            {isPostEvent ? (
-                              <span className="tabular-nums truncate">
-                                {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
-                              </span>
-                            ) : (
-                              <>
-                                {item.officer_position && <span className="truncate">{item.officer_position}</span>}
-                                {item.has_bylaws != null && <span className="truncate">{item.has_bylaws ? "CBL Active" : "No CBL"}</span>}
-                                {item.post_event_status && item.status === "Approved" && <span className="truncate">Post-Event: {item.post_event_status}</span>}
-                              </>
-                            )}
-                          </div>
+                          {(organization || submittedBy || isPostEvent || needsPostEventFollowUp) && (
+                            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500 dark:text-zinc-400">
+                              {organization && <span className="truncate" title={organization}>{organization}</span>}
+                              {submittedBy && <span className="truncate" title={submittedBy}>{submittedBy}</span>}
+                              {isPostEvent && (
+                                <span className="tabular-nums">
+                                  {Number(attendees).toLocaleString()} attendees · ₱{expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })} liquidated
+                                </span>
+                              )}
+                              {needsPostEventFollowUp && <span>Post-Event: {item.post_event_status}</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
 

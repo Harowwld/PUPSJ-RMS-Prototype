@@ -301,11 +301,9 @@ export default function CoursesTab({
           className="p-6"
         />
 
-        {/* Connected Segmented Tabs Row: Active vs Archived */}
-        <div
-          role="group"
-          aria-label="Degree programs status filters"
-          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none"
+        <DataViewToolbar
+          label="Degree program tabs, search, and filters"
+          className="justify-between gap-3 border-t border-border bg-white px-4 py-2.5 sm:px-6 dark:border-border dark:bg-card"
         >
           <SegmentedControl
             value={showArchived ? "archived" : "active"}
@@ -328,12 +326,7 @@ export default function CoursesTab({
               },
             ]}
           />
-        </div>
-
-        {/* Navigation Toolbar */}
-        <DataViewToolbar label="Course search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-          {/* Search Input, Matches Count, Export, Add */}
-          <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
+          <div className="ml-auto flex items-center gap-3 select-none">
             <DashboardSearch
               value={localSearch}
               onChange={setLocalSearch}

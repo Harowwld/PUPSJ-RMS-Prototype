@@ -453,7 +453,7 @@ export default function AuditLogsTab({
 
           <div className="relative flex flex-1 flex-col" aria-busy={isLoading || undefined}>
           <LogTable
-            isLoading={isLoading && !isManualLoading && displayLogs === null}
+            isLoading={isLoading && displayLogs === null}
             error={error}
             displayLogs={logs}
             groupBy={groupBy}
@@ -496,11 +496,7 @@ export default function AuditLogsTab({
             }}
           />
           {isLoading && !isManualLoading && displayLogs !== null && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 dark:bg-card/70">
-              <span role="status" className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
-                Loading activity…
-              </span>
-            </div>
+            <span role="status" className="sr-only">Loading activity…</span>
           )}
           </div>
         </Card>

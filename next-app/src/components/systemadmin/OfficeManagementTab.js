@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import OfficeGridSkeleton from "@/components/systemadmin/skeletons/OfficeGridSkeleton"
-import OfficeManagementPageSkeleton from "@/components/systemadmin/skeletons/OfficeManagementPageSkeleton"
 import {
   Dialog,
   DialogContent,
@@ -909,8 +908,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     const customCount = form.selectedModules.filter(id => !availableModules.find(m => m.id === id)?.is_system).length
     return Math.min(availableModules.length, sysCount + customCount)
   }, [availableModules, form.selectedModules])
-
-  if (loading) return <OfficeManagementPageSkeleton />
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">

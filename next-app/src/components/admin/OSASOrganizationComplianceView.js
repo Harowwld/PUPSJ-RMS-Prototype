@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import OsasComplianceTableSkeleton from "./skeletons/OsasComplianceTableSkeleton";
 import { SegmentedControl } from "@/components/ui/tabs";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
@@ -54,7 +54,7 @@ import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Copy01Icon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon, UserSearch01Icon } from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Copy01Icon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function formatChipDate(dateStr) {
   if (!dateStr) return "";
@@ -1083,14 +1083,13 @@ export default function OSASOrganizationComplianceView({
             >
               {sortedOrganizations.length > 0 ? (
                 <Table
-                  columns={visibleColumns.map((colKey) => {
-                    if (colKey === "name") return { kind: "text", maxWidth: 380 };
+                  columns={tableColumns.filter(({ key }) => visibleColumns.includes(key)).map(({ key: colKey }) => {
+                    if (colKey === "name") return { kind: "text", minWidth: 260, maxWidth: 380 };
                     if (colKey === "adviser") return { kind: "text", maxWidth: 350 };
                     if (colKey === "cbl") return { kind: "status", width: 180 };
                     if (colKey === "officers") return { kind: "status", width: 180 };
                     return { kind: "number", width: 220 };
                   })}
-                  className="min-w-[920px]"
                 >
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
@@ -1288,8 +1287,10 @@ export default function OSASOrganizationComplianceView({
                               {visibleColumns.includes("cbl") && (
                                 <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   {org.hasCbl ? (
-                                    <button
+                                    <Button
                                       type="button"
+                                      variant="outline"
+                                      size="xs"
                                       onClick={() =>
                                         setPreviewCbl({
                                           url: `/api/osas/organizations/${org.id}/bylaws?file=1`,
@@ -1297,15 +1298,12 @@ export default function OSASOrganizationComplianceView({
                                           filename: org.cblFilename,
                                         })
                                       }
-                                      className="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-2xs active:scale-95"
                                       title={PDF_ACTION_LABELS.preview}
                                     >
                                       <span>Preview PDF</span>
-                                    </button>
+                                    </Button>
                                   ) : (
-                                    <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-lg dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-                                      <span>Pending PDF</span>
-                                    </span>
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>Pending PDF</span>
                                   )}
                                 </td>
                               )}
@@ -1314,24 +1312,22 @@ export default function OSASOrganizationComplianceView({
                               {visibleColumns.includes("officers") && (
                                 <td className="py-3.5 px-6 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   {org.activeOfficerCount > 0 ? (
-                                    <button
+                                    <Button
                                       type="button"
+                                      variant="outline"
+                                      size="xs"
                                       onClick={() => {
                                         setSelectedOrgForOfficers(org);
                                         setOfficerSearch("");
                                       }}
-                                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50 transition-all cursor-pointer active:scale-95 shadow-2xs"
                                       title="View authorized officers"
                                     >
-                                      <UserSearch01Icon size="1em" className="text-xs text-blue-600 dark:text-blue-400" />
-                                      <span>
-                                        View roster ({org.activeOfficerCount})
-                                      </span>
-                                    </button>
+                                      View roster ({org.activeOfficerCount})
+                                    </Button>
                                   ) : (
                                     <Button
                                       type="button"
-                                      variant="secondary"
+                                      variant="outline"
                                       size="xs"
                                       onClick={() => {
                                         setSelectedOrgForOfficers(org);
@@ -1391,12 +1387,8 @@ export default function OSASOrganizationComplianceView({
                     ))}
                   </tbody>
                 </Table>
-              ) : loading ? (
-                <div className="p-6 space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full rounded-xl dark:bg-muted" />
-                  ))}
-                </div>
+              ) : loading && !data ? (
+                <OsasComplianceTableSkeleton visibleColumns={visibleColumns} />
               ) : (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>

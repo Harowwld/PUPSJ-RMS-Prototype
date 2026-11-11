@@ -351,11 +351,6 @@ export default function OfficeDetailSheet({
                 }
               />
               <InfoRow
-                icon=" TextAlignLeftIcon"
-                label="Full Designation"
-                value={<span className="font-medium text-gray-800 dark:text-zinc-200 leading-relaxed">{displayOffice.name}</span>}
-              />
-              <InfoRow
                 icon=" PaintBoardIcon"
                 label="Brand Accent"
                 value={

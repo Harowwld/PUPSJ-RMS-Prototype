@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import LandingFaqSkeleton from "@/components/systemadmin/skeletons/LandingFaqSkeleton"
+import { LandingFaqSkeletonContent } from "@/components/systemadmin/skeletons/LandingFaqSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
@@ -321,9 +321,6 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
     new Set(faqData.faqs.map((f) => f.category || "General"))
   )
 
-  if (loading) {
-    return <LandingFaqSkeleton />
-  }
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -357,7 +354,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !isDirty}
+                disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save FAQ Content"}
@@ -366,8 +363,8 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={() => { setFaqData(savedData); notify("Draft changes discarded. Reverted to saved FAQ content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setFaqData(savedData); notify("Draft changes discarded. Reverted to saved FAQ content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
             </>
           }
         />
@@ -375,6 +372,9 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
         {/* Standardized SuperAdmin Navigation Segmented Tabs */}
         <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="FAQ Content" contentCount={faqData.faqs.length} />
 
+        {loading ? (
+          <LandingFaqSkeletonContent />
+        ) : (
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: FAQ Content Management */}
           {activeTab === "content" && (
@@ -877,6 +877,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* Reset Defaults Confirmation Modal */}

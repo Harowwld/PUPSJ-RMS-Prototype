@@ -223,7 +223,7 @@ export default function DocumentsTab({
         }
       }
     } catch (failure) {
-      if (!controller.signal.aborted) { setMatrixReport(null); setMatrixError(failure.message); }
+      if (!controller.signal.aborted) setMatrixError(failure.message);
     } finally { if (!controller.signal.aborted) setMatrixLoading(false); }
   }, [matrixQuery]);
 
@@ -742,9 +742,12 @@ export default function DocumentsTab({
 
               {/* 5. Matrix Table Content */}
               <div className="relative flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border" aria-busy={docsLoading}>
+                {docsError && matrixReport && (
+                  <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{docsError}</p>
+                )}
                 {docsLoading && !matrixReport ? (
                   <DocumentsMatrixSkeleton rowCount={7} embedded={true} docTypes={complianceDocTypes} />
-                ) : docsError ? (
+                ) : docsError && !matrixReport ? (
                   <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                     <Empty>
                       <EmptyHeader>
@@ -1069,9 +1072,7 @@ export default function DocumentsTab({
                   <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
                 )}
                 {docsLoading && matrixReport && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                    Loading documents…
-                  </div>
+                  <span role="status" className="sr-only">Loading documents…</span>
                 )}
               </div>
         </Card>

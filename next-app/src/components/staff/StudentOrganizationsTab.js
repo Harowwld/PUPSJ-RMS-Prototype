@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -10,7 +10,8 @@ import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import {
@@ -38,6 +40,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { TableActions } from "@/components/shared/TableActions";
 import PageHeader from "@/components/shared/PageHeader";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
@@ -77,7 +80,7 @@ import {
 } from "@/components/systemadmin/OfficeTableControls";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
-import { Building01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
+import { Archive02Icon, Building01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
 
 const ORG_SORT_OPTIONS = [
   { key: "name", label: "Organization Name" },
@@ -94,13 +97,15 @@ const ORG_GROUP_OPTIONS = [
   { key: "none", label: "No grouping" },
 ];
 
+const organizationCountFormat = new Intl.NumberFormat("en-PH");
+
 const ORG_TABLE_COLUMNS = [
-  { key: "name", label: "Organization" },
-  { key: "category", label: "Category" },
-  { key: "status", label: "Status" },
-  { key: "adviser", label: "Adviser" },
-  { key: "proposal_count", label: "Submissions" },
-  { key: "created_at", label: "Date Added" },
+  { key: "name", label: "Organization", size: { kind: "text", minWidth: 360, maxWidth: 540, growthWeight: 3 } },
+  { key: "category", label: "Category", size: { kind: "category", minWidth: 150, maxWidth: 180, growthWeight: 1 } },
+  { key: "adviser", label: "Adviser", size: { kind: "text", minWidth: 150, maxWidth: 230 } },
+  { key: "status", label: "Status", size: { kind: "status", minWidth: 100, maxWidth: 120 } },
+  { key: "proposal_count", label: "Submissions", size: { kind: "number", width: 92, paddingX: 8 }, defaultHidden: true },
+  { key: "created_at", label: "Date Added", size: { kind: "date" }, defaultHidden: true },
 ];
 
 const ORG_FILTER_FIELDS = [
@@ -120,15 +125,8 @@ const ORG_FILTER_FIELDS = [
     options: [
       { value: "Active", label: "Active" },
       { value: "Inactive", label: "Inactive" },
-      { value: "Archived", label: "Archived" },
     ],
   },
-];
-
-const CATEGORIES = [
-  "All",
-  "Academic",
-  "Non-Academic",
 ];
 
 const OFFICER_POSITIONS = [
@@ -152,12 +150,6 @@ const getOrgStatusBadgeClass = (status) => {
     return "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40";
   }
   return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
-};
-
-const getOrgStatusDotClass = (status) => {
-  if (status === "Active") return "bg-emerald-500";
-  if (status === "Archived") return "bg-amber-500";
-  return "bg-zinc-400";
 };
 
 const getBannerStatusClass = (status) => {
@@ -205,7 +197,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-[#800000] via-[#991b1b] to-[#b91c1c] text-white",
       ring: "ring-red-500/30 dark:ring-red-400/30",
-      badge: "bg-red-50 text-pup-maroon border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900/50",
       icon: " CrownIcon",
     };
   }
@@ -213,7 +204,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
       ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
-      badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
       icon: " Shield01Icon",
     };
   }
@@ -221,7 +211,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
       ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
-      badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
       icon: " Notebook01Icon",
     };
   }
@@ -229,7 +218,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
       ring: "ring-amber-500/30 dark:ring-amber-400/30",
-      badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
       icon: " Coins01Icon",
     };
   }
@@ -237,14 +225,12 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
       ring: "ring-purple-500/30 dark:ring-purple-400/30",
-      badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
       icon: " JusticeScale01Icon",
     };
   }
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
-    badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
     icon: " UserCheck01Icon",
   };
 }
@@ -263,15 +249,23 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [refreshing, setRefreshing] = useState(false);
   const fetchRequestRef = useRef(0);
   const [search, setSearchState] = useOsasViewPreference("student_organizations", "search", "");
-  const [categoryFilters, setCategoryFiltersState] = useOsasViewPreference("student_organizations", "categoryFilters", []);
-  const [statusFilters, setStatusFiltersState] = useOsasViewPreference("student_organizations", "statusFilters", []);
+  const [organizationScope, setOrganizationScope] = useOsasViewPreference("student_organizations", "organizationScope", "active");
+  const showArchived = organizationScope === "archive";
   const [filterRules, setFilterRules] = useOsasViewPreference("student_organizations", "filterRules", []);
   const [groupBy, setGroupBy] = useOsasViewPreference("student_organizations", "groupBy", "none");
   const [visibleColumns, setVisibleColumns] = useOsasViewPreference(
     "student_organizations",
     "visibleColumns",
-    ORG_TABLE_COLUMNS.map((c) => c.key)
+    ORG_TABLE_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
   );
+  const visibleOrgSizes = ORG_TABLE_COLUMNS.filter(({ key }) => visibleColumns.includes(key));
+  const organizationTableColumns = [
+    ...visibleOrgSizes.filter(({ key }) => ["name", "category", "adviser"].includes(key)).map(({ size }) => size),
+    { kind: "number", minWidth: 150, maxWidth: 170 },
+    { kind: "status", minWidth: 200, maxWidth: 220 },
+    ...visibleOrgSizes.filter(({ key }) => ["status", "proposal_count", "created_at"].includes(key)).map(({ size }) => size),
+    "actions",
+  ];
   const [startDate, setStartDate] = useOsasViewPreference("student_organizations", "startDate", "");
   const [endDate, setEndDate] = useOsasViewPreference("student_organizations", "endDate", "");
   const [sortBy, setSortBy] = useOsasViewPreference("student_organizations", "sortBy", "name");
@@ -279,20 +273,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [viewMode, setViewMode] = useOsasViewPreference("student_organizations", "viewMode", "grid");
   const [orgPage, setOrgPage] = useState(1);
   const [orgPageSize, setOrgPageSize] = useOsasViewPreference("student_organizations", "pageSize", 10);
-  const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, []);
-  const setCategoryFilters = useCallback((value) => { setCategoryFiltersState(value); setOrgPage(1); }, []);
-  const setStatusFilters = useCallback((value) => { setStatusFiltersState(value); setOrgPage(1); }, []);
-
-  const allCategories = useMemo(() => {
-    const dynamicCats = new Set(["Academic", "Non-Academic"]);
-    organizations.forEach((org) => {
-      if (org.category && typeof org.category === "string") {
-        dynamicCats.add(org.category.trim());
-      }
-    });
-    return ["All", ...Array.from(dynamicCats)];
-  }, [organizations]);
-
+  const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, [setSearchState]);
   // Whitelist Sheet State
   const [selectedOrgForOfficers, setSelectedOrgForOfficers] = useState(null);
   const [sheetSubTab, setSheetSubTab] = useState("officers"); // "info" | "officers"
@@ -327,6 +308,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     description: "",
   });
   const [savingOrg, setSavingOrg] = useState(false);
+  const [organizationToArchive, setOrganizationToArchive] = useState(null);
+  const [archivingOrganization, setArchivingOrganization] = useState(false);
 
   // CBL Upload / Preview State
   const [cblUploadOrg, setCblUploadOrg] = useState(null);
@@ -478,7 +461,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     [showToast]
   );
 
-  const openManageOrgSheet = (org, defaultTab = "info") => {
+  const openManageOrgSheet = useCallback((org, defaultTab = "info") => {
     setSelectedOrgForOfficers(org);
     setEditingOrg(org);
     setSheetSubTab(defaultTab);
@@ -500,7 +483,35 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     });
     loadOfficers(org.id);
     loadBylawsHistory(org.id);
-  };
+  }, [loadOfficers, loadBylawsHistory]);
+
+  const requestedOrganization = useSearchParams()?.get("organization");
+  useEffect(() => {
+    if (!requestedOrganization) return;
+
+    const controller = new AbortController();
+    fetch(`/api/osas/organizations/${encodeURIComponent(requestedOrganization)}`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (!result.ok || !result.data) throw new Error(result.error);
+        if (!controller.signal.aborted) openManageOrgSheet(result.data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) toast.error("Could not open the organization.");
+      })
+      .finally(() => {
+        if (controller.signal.aborted) return;
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("organization") !== requestedOrganization) return;
+        url.searchParams.delete("organization");
+        window.history.replaceState(null, "", url);
+      });
+
+    return () => controller.abort();
+  }, [requestedOrganization, openManageOrgSheet]);
 
   const handleAddOfficer = async (e) => {
     e.preventDefault();
@@ -778,73 +789,62 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     }
   };
 
-  // Counts for filters
-  const counts = useMemo(() => {
-    const c = {
-      Active: 0,
-      Inactive: 0,
-      Archived: 0,
-      Academic: 0,
-      "Non-Academic": 0,
-    };
-    organizations.forEach((org) => {
-      if (c[org.status] !== undefined) c[org.status] += 1;
-      if (c[org.category] !== undefined) c[org.category] += 1;
-    });
-    return c;
-  }, [organizations]);
+  const handleArchiveOrganization = async () => {
+    if (!organizationToArchive || archivingOrganization) return;
 
-  const filterGroups = useMemo(() => [
-    {
-      id: "status",
-      label: "Organization Status",
-      options: [
-        { value: "Active", label: "Active", indicatorColor: "bg-emerald-500", count: counts.Active },
-        { value: "Inactive", label: "Inactive", indicatorColor: "bg-zinc-400", count: counts.Inactive },
-        { value: "Archived", label: "Archived", indicatorColor: "bg-amber-500", count: counts.Archived },
-      ],
-    },
-    {
-      id: "category",
-      label: "Organization Category",
-      options: [
-        { value: "Academic", label: "Academic", indicatorColor: "bg-blue-500", count: counts.Academic },
-        { value: "Non-Academic", label: "Non-Academic", indicatorColor: "bg-purple-500", count: counts["Non-Academic"] },
-      ],
-    },
-  ], [counts]);
+    setArchivingOrganization(true);
+    try {
+      const response = await fetch(
+        `/api/osas/organizations/${encodeURIComponent(organizationToArchive.id)}`,
+        { method: "DELETE" }
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.ok) {
+        throw new Error(result?.error || "Could not archive the organization.");
+      }
 
-  const filterValues = useMemo(() => ({
-    status: statusFilters,
-    category: categoryFilters,
-  }), [statusFilters, categoryFilters]);
+      setOrganizations((current) => current.map((org) =>
+        org.id === organizationToArchive.id ? { ...org, status: "Archived" } : org
+      ));
+      setOrganizationToArchive(null);
+      showToast({
+        title: "Organization Archived",
+        description: `${organizationToArchive.name} moved to the Archive tab.`,
+      });
+      await fetchOrganizations();
+    } catch (error) {
+      showToast(formatErrorMessage(error, {
+        title: "Organization Archive Failed",
+        actionContext: "Archiving a student organization",
+      }), true);
+    } finally {
+      setArchivingOrganization(false);
+    }
+  };
 
-  const handleFilterChange = useCallback((groupId, values) => {
-    if (groupId === "status") setStatusFilters(values);
-    else if (groupId === "category") setCategoryFilters(values);
-  }, [setCategoryFilters, setStatusFilters]);
+  const archivedCount = organizations.filter((org) => org.status === "Archived").length;
+  const filterFields = useMemo(() => {
+    const [categoryField, statusField] = ORG_FILTER_FIELDS;
+    const categories = new Set(categoryField.options.map(({ value }) => value));
+    organizations.forEach(({ category }) => { if (category) categories.add(category); });
+    const fields = [{ ...categoryField, options: [...categories].map((value) => ({ value, label: value })) }];
+    if (!showArchived) fields.push(statusField);
+    return fields;
+  }, [organizations, showArchived]);
+  const activeFilterRules = useMemo(() => filterRules.filter((rule) =>
+    rule.fieldKey !== "status" || (!showArchived && rule.value !== "Archived")
+  ), [filterRules, showArchived]);
 
-  const handleResetFilters = useCallback(() => {
+  const handleResetFilters = () => {
     setSearch("");
-    setCategoryFilters([]);
-    setStatusFilters([]);
     setFilterRules([]);
     setStartDate("");
     setEndDate("");
-  }, [setSearch, setCategoryFilters, setStatusFilters]);
+  };
 
   const filteredOrganizations = useMemo(() => {
     const list = organizations.filter((org) => {
-      if (statusFilters.length > 0) {
-        if (!statusFilters.includes(org.status)) return false;
-      } else {
-        // By default, if no status filter is selected, exclude archived organizations
-        if (org.status === "Archived") return false;
-      }
-
-      if (categoryFilters.length > 0 && !categoryFilters.includes(org.category)) {
-        return false;
-      }
+      if ((org.status === "Archived") !== showArchived) return false;
 
       if (startDate || endDate) {
         const itemDate = org.created_at ? new Date(org.created_at) : null;
@@ -855,8 +855,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         }
       }
 
-      if (filterRules.length > 0) {
-        const matchesRules = filterRules.every((rule) => {
+      if (activeFilterRules.length > 0) {
+        const matchesRules = activeFilterRules.every((rule) => {
           let actual = org[rule.fieldKey] || "";
           const ruleVal = String(rule.value || "").toLowerCase();
           const actVal = String(actual || "").toLowerCase();
@@ -890,8 +890,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
       return 0;
     });
-  }, [organizations, statusFilters, categoryFilters, filterRules, startDate, endDate, search, sortBy, sortOrder]);
+  }, [organizations, showArchived, activeFilterRules, startDate, endDate, search, sortBy, sortOrder]);
 
+  const maxSubmissionCount = filteredOrganizations.reduce(
+    (max, org) => Math.max(max, Number(org.proposal_count) || 0),
+    0
+  );
   const safeOrgPage = Math.min(orgPage, Math.max(1, Math.ceil(filteredOrganizations.length / orgPageSize)));
   const paginatedOrganizations = filteredOrganizations.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
 
@@ -921,7 +925,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
   useEffect(() => {
     resetScroll();
-  }, [viewMode, search, statusFilters, categoryFilters, resetScroll]);
+  }, [viewMode, search, organizationScope, activeFilterRules, resetScroll]);
 
   const groupedOrganizations = useMemo(() => {
     if (groupBy === "none") {
@@ -950,7 +954,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         onRemove: () => setSearch(""),
       });
     }
-    filterRules.forEach((rule) => {
+    activeFilterRules.forEach((rule) => {
       const field = ORG_FILTER_FIELDS.find((f) => f.key === rule.fieldKey);
       const fieldLabel = field?.label || rule.fieldKey;
       const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
@@ -968,20 +972,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         onRemove: () => { setStartDate(""); setEndDate(""); },
       });
     }
-    // Note: categoryFilters represents the top-level segmented scope tabs (All Organizations, Academic Orgs, Non-Academic Orgs) and is intentionally excluded from activeChips so switching tabs does not activate the filter chips row.
-    statusFilters.forEach((st) => {
-      chips.push({
-        id: `status-${st}`,
-        label: `Status: ${st}`,
-        onRemove: () => setStatusFilters((prev) => prev.filter((s) => s !== st)),
-      });
-    });
     return chips;
-  }, [search, filterRules, startDate, endDate, statusFilters, setSearch, setStatusFilters]);
+  }, [search, activeFilterRules, startDate, endDate, setSearch, setFilterRules, setStartDate, setEndDate]);
 
-  const hasActiveFilters = Boolean(
-    search.trim() || statusFilters.length > 0 || filterRules.length > 0 || startDate !== "" || endDate !== ""
-  );
+  const hasActiveFilters = activeChips.length > 0;
 
   // Standard KPI Metrics & Detailed Breakdown for Popovers
   const kpiStats = useMemo(() => {
@@ -1193,24 +1187,24 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             </div>
           </div>
 
-          {/* Connected Row: Category Navigation & View Switcher */}
+          {/* Connected Row: Organization Scope & View Switcher */}
           <div
             role="group"
-            aria-label="Organization categories and view switcher"
+            aria-label="Organization status tabs and view switcher"
             className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card overflow-x-auto scrollbar-none gap-4 select-none"
           >
             <SegmentedControl
-              value={categoryFilters.length === 1 ? categoryFilters[0] : categoryFilters.length > 1 ? "" : "All"}
-              onValueChange={(val) => {
-                setCategoryFilters(val === "All" ? [] : [val]);
+              value={organizationScope}
+              onValueChange={(value) => {
+                setOrganizationScope(value);
+                setOrgPage(1);
               }}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr shrink-0"
-              items={allCategories.map((cat) => ({
-                value: cat,
-                label: cat === "All" ? "All Organizations" : cat.endsWith("Orgs") || cat.endsWith("Organizations") ? cat : `${cat} Orgs`,
-                badge: cat === "All" ? organizations.length : organizations.filter((o) => o.category === cat).length,
-              }))}
+              items={[
+                { value: "active", label: "Active", badge: organizations.length - archivedCount },
+                { value: "archive", label: "Archive", badge: archivedCount },
+              ]}
             />
 
             <SegmentedControl
@@ -1259,9 +1253,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             {/* Right Zone: Filter, Sort, Group, Columns, Date Range */}
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <FilterPopover
-                fields={ORG_FILTER_FIELDS}
-                filters={filterRules}
-                onFiltersChange={setFilterRules}
+                fields={filterFields}
+                filters={activeFilterRules}
+                onFiltersChange={(rules) => {
+                  setFilterRules(rules);
+                  setOrgPage(1);
+                }}
                 entityLabel="organizations"
               />
               <SortPopover
@@ -1274,11 +1271,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 sortOrder={sortOrder}
                 onSortOrderChange={setSortOrder}
               />
-              <GroupPopover
-                options={ORG_GROUP_OPTIONS}
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-              />
+              {viewMode === "table" && (
+                <GroupPopover
+                  options={ORG_GROUP_OPTIONS}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                />
+              )}
               {viewMode === "table" && (
                 <ColumnsPopover
                   columns={ORG_TABLE_COLUMNS}
@@ -1319,52 +1318,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           {/* 5. Main Content Area (Dual View Engine) */}
           <div className={cn("flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredOrganizations.length === 0 && "rounded-b-2xl")}>
             {loading && !hasLoaded ? (
-              viewMode === "table" ? (
-                <div className="p-6 space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full rounded-xl" />
-                  ))}
-                </div>
-              ) : (
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col justify-between"
-                    >
-                      <div className="bg-gray-100 dark:bg-zinc-800 p-5 space-y-3 rounded-t-[15px]">
-                        <div className="flex items-center justify-between">
-                          <Skeleton className="h-5 w-16 rounded-md" />
-                          <Skeleton className="h-5 w-20 rounded-full" />
-                        </div>
-                        <Skeleton className="h-5 w-3/4 rounded-md" />
-                      </div>
-                      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                        <div className="space-y-3">
-                          <Skeleton className="h-4 w-1/2 rounded" />
-                          <Skeleton className="h-12 w-full rounded-xl" />
-                          <Skeleton className="h-10 w-full rounded-xl" />
-                        </div>
-                        <div className="pt-3 border-t border-border dark:border-border">
-                          <Skeleton className="h-9 w-full rounded-xl" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
+              <DataContentSkeleton columns={organizationTableColumns} viewMode={viewMode} />
             ) : filteredOrganizations.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia><EmptyBuilding03Icon size="1em" /></EmptyMedia>
                     <EmptyTitle>
-                      No Student Organizations Found
+                      {showArchived ? "No Archived Organizations Found" : "No Student Organizations Found"}
                     </EmptyTitle>
                     <EmptyDescription>
                       {hasActiveFilters
-                        ? "Try adjusting your search criteria or resetting category filters."
-                        : "Register recognized student organizations to manage their Constitution and By-Laws and authorized officers."}
+                        ? "Try adjusting your search or resetting the filters."
+                        : showArchived
+                          ? "Archived organizations will appear here."
+                          : "Register recognized student organizations to manage their Constitution and By-Laws and authorized officers."}
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -1378,7 +1346,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         Reset Filters
                       </Button>
-                    ) : (
+                    ) : !showArchived ? (
                       <Button
                         type="button"
                         size="sm"
@@ -1388,7 +1356,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         Register Organization
                       </Button>
-                    )}
+                    ) : null}
                   </EmptyContent>
                 </Empty>
               </div>
@@ -1398,256 +1366,279 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table
-                  columns={[
-                    { kind: "text", minWidth: 360, maxWidth: 540, growthWeight: 3 },
-                    { kind: "category", minWidth: 120, maxWidth: 150, growthWeight: 0 },
-                    { kind: "text", minWidth: 180, maxWidth: 260, growthWeight: 1 },
-                    { kind: "number", minWidth: 110, maxWidth: 140, growthWeight: 0 },
-                    { kind: "status", minWidth: 150, maxWidth: 170, growthWeight: 0 },
-                    { kind: "status", minWidth: 100, maxWidth: 120, growthWeight: 0 },
-                    "actions",
-                  ]}
-                  className="min-w-[1180px]"
-                >
+                <Table columns={organizationTableColumns}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th
-                        className={cn(
-                          "p-4 pl-6 w-[380px] min-w-[380px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span>Organization</span>
-                          {isScrolledX && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset table scroll"
-                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                            >
-                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                            </button>
+                      {visibleColumns.includes("name") && (
+                        <th
+                          className={cn(
+                            "p-4 pl-6 sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
-                        </div>
-                      </th>
-                      <th className="p-4 w-[130px] min-w-[130px]">Category</th>
-                      <th className="p-4 w-[200px] min-w-[200px]">Faculty Adviser</th>
-                      <th className="p-4 w-[120px] min-w-[120px] text-center">Officers</th>
-                      <th className="p-4 w-[160px] min-w-[160px]">Constitution & By-Laws</th>
-                      <th className="p-4 w-[110px] min-w-[110px] text-center">Status</th>
-                      <th className="p-4 pr-6 text-right w-[80px] min-w-[80px]">Actions</th>
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span>Organization</span>
+                            {isScrolledX && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetScroll();
+                                }}
+                                title="Reset table scroll"
+                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              >
+                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.includes("category") && (
+                        <th className="p-4">Category</th>
+                      )}
+                      {visibleColumns.includes("adviser") && (
+                        <th className="p-4">Faculty Adviser</th>
+                      )}
+                      <th className="p-4 text-center">Officers</th>
+                      <th className="p-4">Constitution & By-Laws</th>
+                      {visibleColumns.includes("status") && (
+                        <th className="p-4 text-center">Status</th>
+                      )}
+                      {visibleColumns.includes("proposal_count") && <th>Submissions</th>}
+                      {visibleColumns.includes("created_at") && <th>Date Added</th>}
+                      <th scope="col" className="w-12 min-w-12"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {paginatedOrganizations.map((org) => {
-                      const hasCbl = Boolean(org.bylaws_storage_filename);
-                      const officerCount = parseInt(org.active_officer_count, 10) || 0;
+                    {groupedOrganizations.map((group) => (
+                      <Fragment key={group.key}>
+                        {group.label && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
+                            <td colSpan={organizationTableColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                              {group.label} ({group.orgs.length})
+                            </td>
+                          </tr>
+                        )}
+                        {group.orgs.map((org) => {
+                          const hasCbl = Boolean(org.bylaws_storage_filename);
+                          const officerCount = parseInt(org.active_officer_count, 10) || 0;
+                          const submissionCount = Math.max(0, Number(org.proposal_count) || 0);
 
-                      return (
-                        <tr
-                          key={org.id}
-                          className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
-                        >
-                          {/* Org Name & Acronym */}
-                          <td
-                            className={cn(
-                              "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}
-                          >
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs border border-black/10 dark:border-white/20"
-                                  style={{
-                                    background: BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.previewGradient || BANNER_GRADIENT_PRESETS[0].previewGradient,
-                                  }}
-                                  title={`Theme: ${BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.label || "PUP Maroon"}`}
-                                />
-                                {org.acronym && (
-                                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
-                                    {org.acronym}
-                                  </span>
-                                )}
-                                <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate" title={org.name}>
-                                  {org.name}
-                                </span>
-                              </div>
-                              {org.description ? (
-                                <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
-                                  {org.description}
-                                </p>
-                              ) : (
-                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
-                                  No description provided
-                                </span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* Category Badge */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                              {org.category}
-                            </span>
-                          </td>
-
-                          {/* Faculty Adviser */}
-                          <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
-                              {org.adviser_name || (
-                                <span className="text-gray-400 italic">Not assigned</span>
-                              )}
-                            </div>
-                            {org.adviser_email && (
-                              <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums mt-0.5 truncate" title={org.adviser_email}>
-                                {org.adviser_email}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Authorized Officers */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <button
-                              type="button"
-                              onClick={() => openManageOrgSheet(org, "officers")}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
-                              title="Manage authorized officers"
+                          return (
+                            <tr
+                              key={org.id}
+                              onClick={(event) => {
+                                if (event.target.closest("button, a")) return;
+                                openManageOrgSheet(org, "info");
+                              }}
+                              className="cursor-pointer hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                             >
-                              <Shield01Icon size="1em" className="text-xs" />
-                              <span>
-                                {officerCount} {officerCount === 1 ? "Officer" : "Officers"}
-                              </span>
-                            </button>
-                          </td>
-
-                          {/* Constitution & By-Laws */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            {Number(org.pending_cbl_count) > 0 ? (
-                              <button
-                                type="button"
-                                onClick={() => openManageOrgSheet(org, "cbl")}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
-                                title="Click to review pending CBL submission"
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                <span>{org.pending_cbl_count} Pending Review</span>
-                              </button>
-                            ) : hasCbl ? (
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                  <File02Icon size="1em" className="text-xs" />
-                                  <span>Archived</span>
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => handlePreviewCbl(org)}
-                                        aria-label={PDF_ACTION_LABELS.preview}
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                      >
-                                        <ViewIcon size="1em" className="text-xs" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Preview CBL (PDF)</TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setCblUploadOrg(org);
-                                          setCblFile(null);
+                              {/* Org Name & Acronym */}
+                              {visibleColumns.includes("name") && (
+                                <td
+                                  className={cn(
+                                    "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                  )}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span
+                                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs border border-black/10 dark:border-white/20"
+                                        style={{
+                                          background: BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.previewGradient || BANNER_GRADIENT_PRESETS[0].previewGradient,
                                         }}
-                                        aria-label="Replace Archival CBL"
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                      >
-                                        <Upload01Icon size="1em" className="text-xs" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Replace CBL</TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setCblUploadOrg(org);
-                                        setCblFile(null);
-                                      }}
-                                      aria-label="Upload Archival CBL"
-                                      className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                    >
-                                      <Upload01Icon size="1em" className="text-xs" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Upload Archival CBL</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            )}
-                          </td>
+                                        title={`Theme: ${BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.label || "PUP Maroon"}`}
+                                      />
+                                      {org.acronym && (
+                                        <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
+                                          {org.acronym}
+                                        </span>
+                                      )}
+                                      <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate" title={org.name}>
+                                        {org.name}
+                                      </span>
+                                    </div>
+                                    {org.description ? (
+                                      <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
+                                        {org.description}
+                                      </p>
+                                    ) : (
+                                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
+                                        No description provided
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                              )}
 
-                          {/* Status */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <span
-                              className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(org.status), BADGE_BASE)}
-                            >
-                              <span
-                                className={cn(
-                                  "w-1.5 h-1.5 rounded-full",
-                                  getOrgStatusDotClass(org.status)
+                              {/* Category Badge */}
+                              {visibleColumns.includes("category") && (
+                                <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                    {org.category}
+                                  </span>
+                                </td>
+                              )}
+
+                              {/* Faculty Adviser */}
+                              {visibleColumns.includes("adviser") && (
+                                <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
+                                    {org.adviser_name || (
+                                      <span className="text-gray-400 italic">Not assigned</span>
+                                    )}
+                                  </div>
+                                  {org.adviser_email && (
+                                    <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums mt-0.5 truncate" title={org.adviser_email}>
+                                      {org.adviser_email}
+                                    </div>
+                                  )}
+                                </td>
+                              )}
+
+                              {/* Authorized Officers */}
+                              <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <button
+                                  type="button"
+                                  onClick={() => openManageOrgSheet(org, "officers")}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                                  title="Manage authorized officers"
+                                >
+                                  <span>
+                                    {officerCount} {officerCount === 1 ? "Officer" : "Officers"}
+                                  </span>
+                                </button>
+                              </td>
+
+                              {/* Constitution & By-Laws */}
+                              <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                {Number(org.pending_cbl_count) > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openManageOrgSheet(org, "cbl")}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
+                                    title="Click to review pending CBL submission"
+                                  >
+                                    <span>{org.pending_cbl_count} Pending Review</span>
+                                  </button>
+                                ) : hasCbl ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                      <File02Icon size="1em" className="text-xs" />
+                                      <span>Archived</span>
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => handlePreviewCbl(org)}
+                                            aria-label={PDF_ACTION_LABELS.preview}
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <ViewIcon size="1em" className="text-xs" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Preview CBL (PDF)</TooltipContent>
+                                      </Tooltip>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setCblUploadOrg(org);
+                                              setCblFile(null);
+                                            }}
+                                            aria-label="Replace Archival CBL"
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <Upload01Icon size="1em" className="text-xs" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Replace CBL</TooltipContent>
+                                      </Tooltip>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setCblUploadOrg(org);
+                                            setCblFile(null);
+                                          }}
+                                          aria-label="Upload Archival CBL"
+                                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                        >
+                                          <Upload01Icon size="1em" className="text-xs" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Upload Archival CBL</TooltipContent>
+                                    </Tooltip>
+                                  </div>
                                 )}
-                              />
-                              {org.status}
-                            </span>
-                          </td>
+                              </td>
 
-                          {/* Actions */}
-                          <td className="p-4 pr-6 text-right whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => openManageOrgSheet(org, "info")}
-                                    aria-label="Manage Organization Info"
-                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                              {/* Status */}
+                              {visibleColumns.includes("status") && (
+                                <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  <span
+                                    className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(org.status), BADGE_BASE)}
                                   >
-                                    <PencilEdit01Icon size="1em" className="text-[16px]" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Organization Details</TooltipContent>
-                              </Tooltip>
+                                    {org.status}
+                                  </span>
+                                </td>
+                              )}
 
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => openManageOrgSheet(org, "officers")}
-                                    aria-label="Manage authorized officers"
-                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <UserSearch01Icon size="1em" className="text-[16px]" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Manage Officers</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                              {visibleColumns.includes("proposal_count") && (
+                                <td>
+                                  <span className="flex items-center justify-end gap-1.5">
+                                    <span
+                                      aria-hidden="true"
+                                      className="h-1.5 w-9 shrink overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700"
+                                    >
+                                      <span
+                                        className="block h-full rounded-full bg-pup-maroon"
+                                        style={{ width: maxSubmissionCount ? `${100 * submissionCount / maxSubmissionCount}%` : "0%" }}
+                                      />
+                                    </span>
+                                    <span className="shrink-0">{organizationCountFormat.format(submissionCount)}</span>
+                                  </span>
+                                </td>
+                              )}
+                              {visibleColumns.includes("created_at") && (
+                                <td>{org.created_at ? new Date(org.created_at).toLocaleDateString("en-PH", {
+                                  year: "numeric", month: "short", day: "numeric", timeZone: "Asia/Manila",
+                                }) : "N/A"}</td>
+                              )}
+
+                              {/* Actions */}
+                              <td className="w-12 min-w-12 px-2 text-center">
+                                <TableActions
+                                  label={`More actions for ${org.name}`}
+                                  menuClassName="w-52"
+                                  menuAlign="end"
+                                  actions={[
+                                    { label: "Manage Organization Info", icon: PencilEdit01Icon, onClick: () => openManageOrgSheet(org, "info") },
+                                    { label: "Manage Authorized Officers", icon: UserSearch01Icon, onClick: () => openManageOrgSheet(org, "officers") },
+                                    ...(org.status !== "Archived" ? [{
+                                      label: "Archive Organization",
+                                      separatorBefore: true,
+                                      icon: Archive02Icon,
+                                      onClick: () => setOrganizationToArchive(org),
+                                    }] : []),
+                                  ]}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </Table>
               </div>
@@ -1655,7 +1646,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               /* Grid View Mode */
               <div className="p-6 flex-[1_0_auto] content-start grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {paginatedOrganizations.map((org) => {
-                  const hasCbl = Boolean(org.bylaws_storage_filename);
+                  const pendingCharterCount = Number(org.pending_cbl_count) || 0;
                   const officerCount = parseInt(org.active_officer_count, 10) || 0;
                   const proposalCount = parseInt(org.proposal_count, 10) || 0;
 
@@ -1735,14 +1726,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 </span>
                               </div>
                             </div>
-                            {org.adviser_email && (
-                              <span
-                                className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate max-w-[130px] self-end mb-0.5"
-                                title={org.adviser_email}
-                              >
-                                {org.adviser_email}
-                              </span>
-                            )}
                           </div>
 
                           {/* Key Metrics - Unified Segmented Tile */}
@@ -1776,98 +1759,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             </div>
                           </div>
 
-                          {/* CBL Archival Row */}
-                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/50 dark:bg-zinc-800/30 border border-border/60 dark:border-border gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span
-                                className={cn(
-                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                  Number(org.pending_cbl_count) > 0
-                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
-                                    : hasCbl
-                                    ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
-                                    : "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
-                                )}
-                              >
-                                <AppIcon
-                                  className={cn(
-                                    " text-sm",
-                                    hasCbl ? "File02Icon" : "FileAddIcon"
-                                  )}
-                                />
+                          {pendingCharterCount > 0 && (
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                                {pendingCharterCount} {pendingCharterCount === 1 ? "charter" : "charters"} pending review
                               </span>
-                              <div className="min-w-0">
-                                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block truncate">
-                                  Constitution & By-Laws
-                                </span>
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 block truncate">
-                                  {Number(org.pending_cbl_count) > 0 ? (
-                                    <span className="text-amber-600 dark:text-amber-400 font-semibold inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                      {org.pending_cbl_count} Pending Review
-                                    </span>
-                                  ) : hasCbl ? (
-                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                      Official Archival Copy
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-zinc-500 inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-                                      Pending PDF Archival
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
+                              <Button variant="outline" size="xs" onClick={() => openManageOrgSheet(org, "cbl")}>
+                                Review Charters
+                              </Button>
                             </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              {Number(org.pending_cbl_count) > 0 ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openManageOrgSheet(org, "cbl")}
-                                  className="h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-all cursor-pointer active:scale-95"
-                                >
-                                  Review
-                                </Button>
-                              ) : hasCbl ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePreviewCbl(org)}
-                                    title={PDF_ACTION_LABELS.preview}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
-                                  >
-                                    <ViewIcon size="1em" className="text-xs" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCblUploadOrg(org);
-                                      setCblFile(null);
-                                    }}
-                                    title="Replace Archival CBL"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
-                                  >
-                                    <Upload01Icon size="1em" className="text-xs" />
-                                  </button>
-                                </>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setCblUploadOrg(org);
-                                    setCblFile(null);
-                                  }}
-                                  title="Upload Constitution & By-Laws"
-                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-border dark:border-border cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800"
-                                >
-                                  Upload CBL
-                                </Button>
-                              )}
-                            </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Card Actions */}
@@ -1951,30 +1852,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </button>
                 </div>
               </div>
-
-              {/* Organization Profile Strip */}
-              <div className="flex items-center gap-3 px-6 pb-3 pt-1 border-gray-100/80 dark:border-zinc-800/60">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedOrgForOfficers?.acronym && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20">
-                        {selectedOrgForOfficers.acronym}
-                      </span>
-                    )}
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                      {selectedOrgForOfficers?.category}
-                    </span>
-                    <span
-                      className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border", getOrgStatusBadgeClass(selectedOrgForOfficers?.status), BADGE_BASE)}
-                    >
-                      {selectedOrgForOfficers?.status}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate mt-0.5">
-                    {selectedOrgForOfficers?.name}
-                  </h4>
-                </div>
-              </div>
             </SheetHeader>
 
             {/* Line-Attached Operational Notice for Status */}
@@ -2015,7 +1892,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   ) : null
                 }
               >
-                <span className="font-semibold">Inactive Accreditation:</span> Accreditation for this organization is currently inactive. Review officers and Constitution before processing proposals.
+                <span className="font-semibold">Inactive Accreditation:</span> Officers cannot submit proposals, post-event reports, or charter amendments for this organization until it is set back to Active.
               </NoticeBanner>
             ) : (
               <NoticeBanner tone="success">
@@ -2024,12 +1901,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
 
             {/* Sub-tab segmented switcher */}
-            <div className="px-6 py-2.5 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
+            <div className="px-6 py-2.5 border-b border-border dark:border-border">
               <SegmentedControl
                 value={sheetSubTab}
                 onValueChange={setSheetSubTab}
                 variant="capsule"
-                className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+                className="w-full min-w-0"
+                listClassName="flex w-full flex-wrap rounded-xl"
                 items={[
                   {
                     value: "info",
@@ -2050,17 +1928,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   },
                 ]}
               />
-
-              {sheetSubTab === "cbl" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer active:scale-95 transition-all"
-                >
-                  Archive Charter
-                </Button>
-              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -2307,7 +2174,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           type="submit"
                           size="sm"
                           disabled={addingOfficer}
-                          className="h-9 px-4 cursor-pointer disabled:opacity-50"
                         >
                           {addingOfficer ? "Authorizing Officer…" : "Authorize Officer"}
                         </Button>
@@ -2394,12 +2260,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate">
                                       {displayName}
                                     </span>
-                                    <Badge
-                                      variant="outline"
-                                      className={cn("text-[10px] font-semibold px-2.5 py-0.5 rounded-full border", roleStyle.badge, BADGE_BASE)}
-                                    >
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.violet)}>
                                       {officer.position}
-                                    </Badge>
+                                    </span>
                                   </div>
                                   <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate">
                                     <span>{officer.email}</span>
@@ -2414,10 +2277,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
 
                               <Button
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
                                 onClick={() => setOfficerToRemove(officer)}
-                                className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-border dark:border-border rounded-lg cursor-pointer active:scale-95 transition-all shrink-0"
                               >
                                 Revoke Access
                               </Button>
@@ -2431,7 +2293,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               ) : (
                 /* CBL Version History View */
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Constitution & By-Laws Versions ({bylawsHistory.length})
@@ -2440,6 +2302,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         Track ratification milestones, student amendment proposals, and official archived texts.
                       </p>
                     </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
+                    >
+                      Archive Charter
+                    </Button>
                   </div>
 
                   {bylawsHistoryLoading ? (
@@ -2452,7 +2322,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       variant="compact"
                       icon={BookOpen01Icon}
                       title="No CBL Records on File"
-                      description="Use the Archive button above to upload the first official charter, or officers may submit an amendment."
+                      description="Use Archive Charter to upload the first official charter, or officers may submit an amendment."
                     />
                   ) : (
                     <div className="space-y-3">
@@ -2464,7 +2334,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="px-2 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                <span className={cn("px-2 py-0.5 text-xs font-bold rounded-lg", BADGE_PALETTES.violet)}>
                                   {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
                                 </span>
                                 <span
@@ -2494,7 +2364,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                 })
                               }
-                              className="h-8 px-3 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg shrink-0 cursor-pointer active:scale-95 transition-all"
                             >
                               Preview Charter
                             </Button>
@@ -2541,28 +2410,26 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
+                                variant="danger"
                                 onClick={() => openCblReviewDialog(ver, "Declined")}
-                                className="h-8 px-3 text-xs font-semibold rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 cursor-pointer active:scale-95 transition-all"
                               >
                                 Decline Charter
                               </Button>
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
+                                variant="warning"
                                 onClick={() => openCblReviewDialog(ver, "Needs Revision")}
                                 title="Request Revision"
-                                className="h-8 px-3 text-xs font-semibold rounded-lg text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 cursor-pointer active:scale-95 transition-all"
                               >
                                 Request Revision
                               </Button>
                               <Button
                                 type="button"
                                 size="sm"
+                                variant="success"
                                 onClick={() => openCblReviewDialog(ver, "Approved")}
                                 title="Approve & Ratify Charter"
-                                className="h-8 px-3.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Approve Charter
                               </Button>
@@ -2585,7 +2452,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   setSelectedOrgForOfficers(null);
                   setEditingOrg(null);
                 }}
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
@@ -2594,9 +2460,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   type="submit"
                   form="org-info-form"
                   size="sm"
-                  onClick={handleSaveOrg}
                   disabled={savingOrg}
-                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   {savingOrg ? "Saving Organization Details…" : "Save Organization Details"}
                 </Button>
@@ -2944,6 +2808,17 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             </form>
           </DialogContent>
         </Dialog>
+
+        <ConfirmModal
+          open={Boolean(organizationToArchive)}
+          title="Archive Organization?"
+          description={`${organizationToArchive?.name} will move to the Archive tab. Officers will no longer be able to submit on behalf of this organization until it is reinstated.`}
+          confirmLabel="Archive Organization"
+          variant="warning"
+          isLoading={archivingOrganization}
+          onConfirm={handleArchiveOrganization}
+          onCancel={() => setOrganizationToArchive(null)}
+        />
 
         {/* Revoke Officer Confirmation Modal */}
         <ConfirmModal

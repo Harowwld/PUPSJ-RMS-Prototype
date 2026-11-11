@@ -792,12 +792,13 @@ export default function NotificationsTab({
             />
           )}
 
+          {error && items.length > 0 && <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{error}</p>}
           {/* 4. Grouped Notification List / Skeletons / Empty State */}
-          {isLoading && !isRefreshing ? (
+          {initialLoading ? (
             <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
               <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} />
             </div>
-          ) : error ? (
+          ) : error && items.length === 0 ? (
             <div className="flex-[1_0_auto] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
@@ -980,7 +981,7 @@ export default function NotificationsTab({
           )}
 
           {/* 5. Pagination Footer */}
-          {!isLoading && !error && total > 0 && items.length > 0 && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
+          {total > 0 && items.length > 0 && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
         </Card>
 
         {/* 6. Sliding Detail Sheet */}
@@ -1149,12 +1150,6 @@ export default function NotificationsTab({
                             </div>
                           </InfoRow>
 
-                          <InfoRow
-                            icon=" Calendar01Icon"
-                            label="Timestamp"
-                            value={formatPHDateTime(selectedNotif.created_at)}
-                          />
-
                           <InfoRow icon=" Mail01Icon" label="Read Status">
                             <div className="flex items-center gap-2">
                               <span
@@ -1274,7 +1269,7 @@ export default function NotificationsTab({
                     </div>
 
                     <div className="pt-2">
-                      <div className="rounded-xl border border-border overflow-hidden h-[340px] bg-white dark:bg-zinc-900 relative">
+                      <div className="rounded-xl border border-border overflow-hidden h-[clamp(480px,65dvh,640px)] bg-white dark:bg-zinc-900 relative">
                         <ResilientPDFViewer
                           src={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
                           docId={selectedNotif.entity_id || selectedNotif.metadata?.document_id}

@@ -64,7 +64,11 @@ export default function StudentDirectorySkeleton() {
 
         {/* 5. Main Data Table */}
         <div className="w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-x-auto">
-          <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
+          <Table columns={[
+            "selection", { kind: "identifier", minWidth: 160 }, { kind: "text", minWidth: 240, maxWidth: 340 },
+            { kind: "category", minWidth: 120 }, { kind: "category", minWidth: 100 }, { kind: "year", minWidth: 104 },
+            { kind: "text", minWidth: 200, maxWidth: 280 }, { kind: "number", minWidth: 100 }, { kind: "status", minWidth: 120 }, "actions",
+          ]}>
             <thead className="border-b border-border bg-white dark:bg-card">
               <tr>
                 <th className="w-12 py-2.5 px-3 text-center">
@@ -78,6 +82,9 @@ export default function StudentDirectorySkeleton() {
                 </th>
                 <th className="py-2.5 px-4 w-[190px]">
                   <Skeleton className="h-3.5 w-32 rounded" />
+                </th>
+                <th className="py-2.5 px-4">
+                  <Skeleton className="h-3.5 w-12 mx-auto rounded" />
                 </th>
                 <th className="py-2.5 px-4 w-[130px]">
                   <Skeleton className="h-3.5 w-20 rounded" />
@@ -109,7 +116,10 @@ export default function StudentDirectorySkeleton() {
                     <Skeleton className="h-4 w-36 rounded" />
                   </td>
                   <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
-                    <Skeleton className="h-5 w-28 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </td>
+                  <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
+                    <Skeleton className="h-4 w-12 mx-auto rounded" />
                   </td>
                   <td className="py-2.5 px-4 border-r border-border/70 dark:border-border/70">
                     <Skeleton className="h-4 w-16 rounded" />

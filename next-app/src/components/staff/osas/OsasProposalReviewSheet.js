@@ -3,12 +3,11 @@ import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
-import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import {
   Sheet,
@@ -22,33 +21,41 @@ import {
   getProposalStatusBadgeClass,
   getProposalStatusDotClass,
   getPostEventStatusBadgeClass,
-  FirstPagePreview,
 } from "@/components/staff/OsasMonitoringTab";
 import NarrativeText from "@/components/shared/NarrativeText";
-import { Alert02Icon, ArrowRight02Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, HourglassIcon, JusticeScale01Icon, Loading01Icon, ReloadIcon, Shield01Icon, ViewIcon } from "hugeicons-react";
+import PDFPreview from "@/components/shared/PDFPreview";
+import {
+  Alert02Icon, ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
+  Cancel01Icon, Clock01Icon, Coins01Icon, CovidInfoIcon, File02Icon, HourglassIcon,
+  Loading01Icon, Location01Icon, Mail01Icon, ReloadIcon, Tag01Icon, UserCircleIcon,
+  UserIcon, UserSearch01Icon, ViewIcon,
+} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-/**
- * Standard Information Row (label : value)
- * Clean unboxed metadata layout aligned with colons and icons.
- */
-function InfoRow({ icon, label, value, children, className }) {
+function SectionHeading({ icon: Icon, title, children }) {
   return (
-    <div
-      className={cn(
-        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
-        className
-      )}
-    >
-      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
-        {icon && (
-          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
-        )}
-        <span className="truncate">{label}</span>
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-1.5 dark:border-border">
+      <div className="flex items-center gap-2">
+        <Icon size="1em" aria-hidden="true" className="shrink-0 text-sm text-pup-maroon dark:text-red-400" />
+        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+          {title}
+        </h4>
       </div>
-      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
-      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
-        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
-      </div>
+      {children}
+    </div>
+  );
+}
+
+function InfoRow({ icon: Icon, label, value, children }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-1 py-1.5 text-xs sm:grid-cols-[10rem_minmax(0,1fr)]">
+      <dt className="flex min-w-0 items-start gap-2 font-medium text-gray-500 dark:text-zinc-400">
+        <Icon size={14} aria-hidden="true" className="mt-px shrink-0 text-gray-400 dark:text-zinc-500" />
+        <span className="min-w-0">{label}</span>
+        <span aria-hidden="true" className="ml-auto w-3 shrink-0 select-none text-gray-300 dark:text-zinc-600">:</span>
+      </dt>
+      <dd className="min-w-0 wrap-anywhere font-semibold text-gray-900 dark:text-zinc-100">
+        {children ?? (value || "N/A")}
+      </dd>
     </div>
   );
 }
@@ -213,132 +220,62 @@ export default function OsasProposalReviewSheet({
 
         {/* SCROLLABLE 1-COLUMN BODY */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Summary Strip */}
-          <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-            <div className="w-12 h-12 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-xl shrink-0 font-bold border border-pup-maroon/20 dark:border-red-900/40 mt-0.5">
-              <CalendarCheckIn01Icon size={16}  />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-xs text-gray-600 dark:text-zinc-400">
-                  {selected.verified_org_name || selected.organization_name}
-                </span>
-                {selected.is_verified_officer && (
-                  <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
-                    Verified Officer
-                  </span>
-                )}
-                <span
-                  className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}
-                >
-                  {selected.status}
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                {selected.title}
-              </h3>
-              <div className="flex items-center gap-2 mt-2">
-                <ProfileAvatar
-                  id={selected.student_no || selected.student_account_id}
-                  name={selected.student_name}
-                  initials={String(selected.student_name || "Student")
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((part) => part[0]?.toUpperCase())
-                    .join("") || "ST"}
-                  className="size-7 border border-pup-maroon/20"
-                  fallbackClassName="text-[10px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
-                />
-                <p className="text-xs text-gray-500 dark:text-zinc-400 min-w-0 truncate">
-                  Proponent: <strong className="text-gray-900 dark:text-zinc-200">{selected.student_name}</strong>
-                  {selected.officer_position && ` · ${selected.officer_position}`}
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border pb-4">
+            <h3 className="min-w-0 wrap-anywhere text-sm font-bold leading-snug text-gray-900 dark:text-zinc-100">
+              {selected.title}
+            </h3>
+            <span className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}>
+              {selected.status}
+            </span>
           </div>
 
-          {/* SECTION 1: Event Specification (Unboxed InfoRow) */}
-          <div className="space-y-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Proposal Specification
-            </h4>
-            <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-              <InfoRow icon="Contact01Icon" label="Student Number" value={selected.student_no} />
+          <section className="space-y-2">
+            <SectionHeading icon={Building01Icon} title="Organization Information" />
+            <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <InfoRow icon={Building01Icon} label="Organization" value={selected.verified_org_name || selected.organization_name} />
+              <InfoRow icon={UserIcon} label="Proponent">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>{selected.student_name || "N/A"}</span>
+                  {selected.is_verified_officer && (
+                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>Verified Officer</span>
+                  )}
+                </div>
+              </InfoRow>
+              {selected.officer_position && <InfoRow icon={UserCircleIcon} label="Officer Position" value={selected.officer_position} />}
+              <InfoRow icon={Tag01Icon} label="Student Number" value={selected.student_no} />
+              <InfoRow icon={Mail01Icon} label="Email Address" value={selected.submitted_by_email} />
+            </dl>
 
-              <InfoRow icon="Mail01Icon" label="Email Address" value={selected.submitted_by_email || "N/A"} />
-
-              <InfoRow icon="Calendar01Icon" label="Target Date" value={eventDateStr || "To Be Announced"} />
-
-              <InfoRow
-                icon="UserSearch01Icon"
-                label="Target Attendance"
-                value={selected.target_attendance ? `${Number(selected.target_attendance).toLocaleString()} attendees` : "—"}
-              />
-
-              <InfoRow
-                icon="Coins01Icon"
-                label="Proposed Budget"
-                value={
-                  selected.estimated_budget
-                    ? `₱${Number(selected.estimated_budget).toLocaleString(undefined, { minimumFractionDigits: 0 })}`
-                    : "—"
-                }
-              />
-
-              <InfoRow icon="Location01Icon" label="Venue" value={selected.venue || "None specified"} />
-
-              <InfoRow icon="Clock01Icon" label="Date Submitted" value={submittedDateStr} />
-            </div>
-          </div>
-
-          {/* SECTION 2: Objectives & Charter Compliance */}
-          <div className="space-y-3 pt-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Overview & Compliance
-            </h4>
-
-            {/* Description / Summary if available */}
-            {selected.description && (
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Event Description & Objectives
-                </span>
-                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                  {selected.description}
-                </p>
-              </div>
-            )}
-
-            {/* Proponent Org Constitution & By-Laws (CBL) Status */}
-            {selected.bylaws_filename ? (
-              <div className="flex items-center justify-between rounded-xl border border-emerald-200/80 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
-                    <JusticeScale01Icon size="1em" className="text-lg" />
+            <Card variant="flat" size="sm">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 basis-44 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>
+                      <h5 className="flex items-center gap-2">
+                        <BookOpen01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-400 dark:text-zinc-500" />
+                        Constitution &amp; By-Laws
+                      </h5>
+                    </CardTitle>
+                    {selected.bylaws_filename && (
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>Active</span>
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                        Organization Charter (CBL)
-                      </span>
-                      <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
-                        Active
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate max-w-[200px]">
+                  {selected.bylaws_filename ? (
+                    <CardDescription className="wrap-anywhere">
                       {selected.bylaws_original_filename || selected.bylaws_filename}
-                    </p>
-                  </div>
+                    </CardDescription>
+                  ) : (
+                    <CardDescription className="font-medium text-amber-800 dark:text-amber-300">No active charter on file</CardDescription>
+                  )}
                 </div>
 
-                {selected.organization_id && (
+                {selected.bylaws_filename && selected.organization_id && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     title={PDF_ACTION_LABELS.preview}
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border-emerald-300 dark:border-emerald-800 bg-white dark:bg-zinc-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 cursor-pointer shadow-2xs shrink-0"
+                    className="shrink-0"
                     onClick={() => {
                       setPdfPreviewData?.({
                         url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
@@ -353,20 +290,50 @@ export default function OsasProposalReviewSheet({
                     Inspect CBL
                   </Button>
                 )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 rounded-xl border border-amber-200/80 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/20 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-2xs">
-                  <Alert02Icon size="1em" className="text-lg" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                    No Active Charter On File
-                  </span>
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                    Organization has not ratified an official Constitution & By-Laws yet.
-                  </p>
-                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="space-y-2">
+            <SectionHeading icon={BookOpen01Icon} title="Proposal Specification" />
+            <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <InfoRow icon={Calendar01Icon} label="Target Date" value={eventDateStr || "To Be Announced"} />
+
+              <InfoRow
+                icon={UserSearch01Icon}
+                label="Target Attendance"
+                value={selected.target_attendance ? `${Number(selected.target_attendance).toLocaleString()} attendees` : "—"}
+              />
+
+              <InfoRow
+                icon={Coins01Icon}
+                label="Proposed Budget"
+                value={
+                  selected.estimated_budget
+                    ? `₱${Number(selected.estimated_budget).toLocaleString(undefined, { minimumFractionDigits: 0 })}`
+                    : "—"
+                }
+              />
+
+              <InfoRow icon={Location01Icon} label="Venue" value={selected.venue || "None specified"} />
+
+              <InfoRow icon={Clock01Icon} label="Date Submitted" value={submittedDateStr} />
+            </dl>
+          </section>
+
+          {/* SECTION 2: Objectives & Charter Compliance */}
+          <div className="space-y-3 pt-2">
+            <SectionHeading icon={CovidInfoIcon} title="Overview & Compliance" />
+
+            {/* Description / Summary if available */}
+            {selected.description && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  Event Description & Objectives
+                </span>
+                <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  {selected.description}
+                </p>
               </div>
             )}
 
@@ -419,42 +386,20 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 3: Official Proposal Document Preview */}
           <div className="space-y-2.5 pt-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Official Proposal Document
-            </h4>
+            <SectionHeading icon={File02Icon} title="Official Proposal Document">
+              {(selected.id || selected.url) && (
+                <Button variant="outline" size="sm" onClick={() => handleOpenPdfPreview?.(selected)}>
+                  {PDF_ACTION_LABELS.preview}
+                </Button>
+              )}
+            </SectionHeading>
 
             {selected.id ? (
-              <FirstPagePreview
-                proposalId={selected.id}
-                title={selected.title}
-                onOpenPreview={() => handleOpenPdfPreview?.(selected)}
-              />
-            ) : (
-              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
-                    <File02Icon size={16}  />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
-                      {selected.title}.pdf
-                    </p>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-                      Complete activity flow & budget proposal
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenPdfPreview?.(selected)}
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs shrink-0"
-                >
-                  Inspect PDF
-                </Button>
+              <div className="relative h-[clamp(480px,65dvh,640px)] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
+                <PDFPreview src={`/api/osas/event-proposals/${selected.id}?file=1`} title={selected.title || "Official submission PDF"} />
               </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No inline document preview available.</p>
             )}
           </div>
 
@@ -506,15 +451,12 @@ export default function OsasProposalReviewSheet({
           )}
 
           {/* SECTION 4: Evaluation & Stage Decision */}
-          <div className="space-y-3.5 pt-2 border-t border-border/80 dark:border-border">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Evaluation & Decision
-              </h4>
+          <div className="space-y-3.5 pt-2">
+            <SectionHeading icon={Calendar01Icon} title="Evaluation & Decision">
               <span className="text-[11px] text-gray-500 dark:text-zinc-400">
                 Stage: <strong className="text-gray-900 dark:text-zinc-100">{selected.status}</strong>
               </span>
-            </div>
+            </SectionHeading>
 
             {/* Quick Stage Selection Pills */}
             <div className="space-y-1.5">
@@ -532,7 +474,7 @@ export default function OsasProposalReviewSheet({
                       className={cn(
                         "px-2.5 py-1.5 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer",
                         isChosen
-                          ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-slate-900 dark:border-zinc-100 shadow-xs"
+                          ? "bg-[var(--brand-accent,#800000)] text-[color:var(--brand-foreground,#ffffff)] border-[var(--brand-accent,#800000)] shadow-xs"
                           : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-700"
                       )}
                     >
@@ -632,15 +574,12 @@ export default function OsasProposalReviewSheet({
           </div>
 
           {/* SECTION 5: Audit Timeline */}
-          <div className="space-y-3 pt-2 border-t border-border/80 dark:border-border">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Audit Timeline
-              </h4>
+          <div className="space-y-3 pt-2">
+            <SectionHeading icon={Clock01Icon} title="Audit Timeline">
               <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500">
                 {selected.updates?.length || 0} events
               </span>
-            </div>
+            </SectionHeading>
 
             {selected.updates?.length > 0 ? (
               <ol className="relative border-l border-border ml-2 pl-4 text-xs space-y-3 dark:border-border">

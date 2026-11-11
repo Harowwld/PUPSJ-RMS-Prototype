@@ -3,12 +3,12 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
-import { TABLE_DENSITIES, normalizeTableDensity, tableStatusTone } from "@/lib/tablePresentation";
+import { TABLE_DENSITIES, normalizeTableDensity, tableStatusTone, sizeContentColumns } from "@/lib/tablePresentation";
 import { TableActions } from "@/components/shared/TableActions";
 import { Badge } from "@/components/ui/badge";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
-const ColumnsContext = React.createContext([]);
+const ColumnsContext = React.createContext({ columns: [], spacerIndex: -1 });
 const SectionContext = React.createContext("body");
 
 // Native structural children remain supported in existing tables and dynamic matrices.
@@ -52,12 +52,19 @@ function Table({ className, columns = [], density: overrideDensity, layout = "co
   }, [layout]);
   const contentWidths = layout === "content" ? getContentColumnWidths(columns, children, availableWidth, className) : [];
   const contentWidth = contentWidths.reduce((sum, width) => sum + width, 0);
+  const controlsOnly = layout === "content" && columns.length > 0 && columns.every((column) =>
+    ["selection", "actions"].includes(typeof column === "string" ? column : column?.kind)
+  );
+  const actionIndex = columns.findIndex((column) => column === "actions" || column?.kind === "actions");
+  const spacerIndex = controlsOnly ? (actionIndex < 0 ? columns.length : actionIndex) : -1;
+  const colWidths = layout === "matrix" ? matrixWidths : [...contentWidths];
+  if (controlsOnly) colWidths.splice(spacerIndex, 0, undefined);
   return (
-    <ColumnsContext.Provider value={columns}>
+    <ColumnsContext.Provider value={{ columns, spacerIndex }}>
       <table ref={tableRef} data-slot="table" data-density={normalizeTableDensity(overrideDensity || density)} data-layout={layout}
         className={cn("app-table w-full min-w-0 caption-bottom border-separate border-spacing-0 text-left text-[13px]", className)}
-        style={{ ...style, tableLayout: layout === "matrix" || layout === "fixed" || layout === "content" ? "fixed" : "auto", ...(layout === "matrix" && columns.length ? { width: matrixWidth, minWidth: matrixWidth } : {}), ...(layout === "content" ? { width: "100%", ...(contentWidth ? { minWidth: contentWidth } : {}) } : {}), "--table-row-height": `${setting.height}px`, "--table-cell-py": `${setting.padding}px` }} {...props}>
-        {(layout === "matrix" || layout === "content") && columns.length > 0 && <colgroup>{(layout === "matrix" ? matrixWidths : contentWidths).map((width, index) => <col key={index} style={{ width }} />)}</colgroup>}
+        style={{ ...style, tableLayout: layout === "matrix" || layout === "fixed" || layout === "content" ? "fixed" : "auto", ...(layout === "matrix" && columns.length ? { width: matrixWidth, minWidth: matrixWidth } : {}), ...(layout === "content" ? { width: controlsOnly || !contentWidth ? "100%" : contentWidth, ...(contentWidth ? { minWidth: contentWidth } : {}) } : {}), "--table-row-height": `${setting.height}px`, "--table-cell-py": `${setting.padding}px` }} {...props}>
+        {(layout === "matrix" || layout === "content") && columns.length > 0 && <colgroup>{colWidths.map((width, index) => <col key={index} style={{ width }} />)}</colgroup>}
         {tableChildren(children)}
       </table>
     </ColumnsContext.Provider>
@@ -75,7 +82,7 @@ function TableFooter({ className, children, ...props }) {
 }
 
 function TableRow({ className, children, expanded = false, selected, style, ...props }) {
-  const columns = React.useContext(ColumnsContext);
+  const { columns, spacerIndex } = React.useContext(ColumnsContext);
   const section = React.useContext(SectionContext);
   let columnIndex = 0;
   const rowChildren = React.Children.toArray(children).flatMap(function flatten(child) {
@@ -92,7 +99,7 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
   });
   const ariaSelected = props["aria-selected"] === true || props["aria-selected"] === "true";
   const rowIsSelected = section === "body" && (selected === undefined ? isSelectionChecked || ariaSelected : selected);
-  const cells = rowChildren.map((child, cellIndex) => {
+  const cells = rowChildren.map((child) => {
     if (!React.isValidElement(child)) return child;
     const index = columnIndex;
     columnIndex += Number(child.props.colSpan) || 1;
@@ -100,8 +107,19 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
     const config = typeof column === "string" ? { kind: column } : (presentationColumn(column) || { kind: "text" });
     if (!["td", "th", TableCell, TableHead].includes(child.type)) return React.cloneElement(child, { tableColumn: config });
     const Cell = child.type === "th" || child.type === TableHead ? TableHead : TableCell;
-    return <Cell key={cellIndex} {...config} {...child.props} />;
+    const childProps = { ...child.props };
+    delete childProps.key;
+    return <Cell {...config} {...childProps} key={child.key} />;
   });
+  if (spacerIndex >= 0) {
+    const [firstCell] = cells;
+    if (cells.length === 1 && firstCell?.props?.colSpan === columns.length) {
+      cells[0] = React.cloneElement(firstCell, { colSpan: columns.length + 1 });
+    } else {
+      const Spacer = section === "head" ? "th" : "td";
+      cells.splice(spacerIndex, 0, <Spacer key="table-spacer" aria-hidden="true" data-slot={section === "head" ? "table-head" : "table-cell"} />);
+    }
+  }
   return <tr data-slot="table-row" data-selected={rowIsSelected ? "true" : undefined} data-expanded={expanded || undefined} className={cn(section === "body" && "group border-b hover:bg-gray-50/70 dark:hover:bg-zinc-800/40", className)} style={{ ...style, height: "auto" }} {...props}>{cells}</tr>;
 }
 
@@ -138,62 +156,31 @@ function getContentColumnWidths(columns, children, availableWidth, className = "
       if (!React.isValidElement(cell)) continue;
       const span = Number(cell.props.colSpan) || 1;
       const config = schemas[index];
-      if (span === 1 && config && !["selection", "actions"].includes(config.kind)) {
+      if (cell.props.colSpan == null && config && !["selection", "actions"].includes(config.kind)) {
         const lengths = section === "head" ? headerLengths : bodyLengths;
-        lengths[index] = Math.max(lengths[index], tableText(cell.props.children).length);
+        lengths[index] = Math.max(lengths[index], tableContentLength(cell.props.children));
       }
       index += span;
     }
   }
 
-  const minWidths = schemas.map((column) => {
-    if (["selection", "actions"].includes(column.kind)) return 48;
-    return ({ identifier: 144, text: 180, date: 140, status: 100, year: 64, category: 80, number: 64 })[column.kind] || 112;
-  });
-  const maxWidths = schemas.map((column, index) => {
-    if (["selection", "actions"].includes(column.kind)) return 48;
-    if (column.width) return Number(column.width) || minWidths[index];
-    if (column.maxWidth) return Math.max(minWidths[index], Number(column.maxWidth) - 0.5);
-    return Math.max(availableWidth || 0, 340);
-  });
-  const widths = schemas.map((column, index) => {
-    if (["selection", "actions"].includes(column.kind)) return 48;
-    if (column.width) return Number(column.width);
-    const natural = Math.ceil(Math.max(bodyLengths[index], headerLengths[index]) * 7.1 + 36);
-    return Math.min(maxWidths[index], Math.max(minWidths[index], natural));
-  });
   const declaredMinWidth = Number(className.match(/\bmin-w-\[(\d+(?:\.\d+)?)px\]/)?.[1]) || 0;
-  const desiredWidth = Math.max(availableWidth || 0, declaredMinWidth, widths.reduce((sum, width) => sum + width, 0));
-  let remaining = Math.min(desiredWidth, maxWidths.reduce((sum, width) => sum + width, 0)) - widths.reduce((sum, width) => sum + width, 0);
-  while (remaining > 0.5) {
-    const growable = widths.map((width, index) => ({
-      index,
-      capacity: maxWidths[index] - width,
-      weight: schemas[index].growthWeight == null
-        ? Math.max(1, width - minWidths[index] + 24)
-        : Math.max(0, Number(schemas[index].growthWeight) || 0),
-    })).filter((column) => column.capacity > 0.5 && column.weight > 0);
-    if (!growable.length) break;
-    const totalWeight = growable.reduce((sum, column) => sum + column.weight, 0);
-    let distributed = 0;
-    for (const column of growable) {
-      const addition = Math.min(column.capacity, remaining * column.weight / totalWeight);
-      widths[column.index] += addition;
-      distributed += addition;
-    }
-    if (distributed < 0.5) break;
-    remaining -= distributed;
+  return sizeContentColumns(schemas, bodyLengths, headerLengths, Math.max(availableWidth, declaredMinWidth), availableWidth);
+}
+
+// Stacked lines share a column. Size for the longest line, while keeping inline labels together.
+function tableContentLength(children) {
+  function lines(nodes) {
+    return React.Children.toArray(nodes).map((node) => {
+      if (typeof node === "string" || typeof node === "number") return String(node);
+      if (!React.isValidElement(node) || node.props["aria-hidden"] === true || node.props.className?.split(/\s+/).includes("sr-only")) return "";
+      const content = lines(node.props.children);
+      return node.type === "div" || node.type === "p" || node.type === TableText
+        ? `\n${content}\n`
+        : content;
+    }).join("");
   }
-  const roundedWidths = widths.map((width) => Math.round(width));
-  const roundingDifference = Math.round(desiredWidth) - roundedWidths.reduce((sum, width) => sum + width, 0);
-  if (roundingDifference) {
-    const flexibleIndex = maxWidths.findIndex((maxWidth, index) =>
-      maxWidth - widths[index] > Math.abs(roundingDifference) &&
-      (schemas[index].growthWeight == null || Number(schemas[index].growthWeight) > 0)
-    );
-    if (flexibleIndex >= 0) roundedWidths[flexibleIndex] += roundingDifference;
-  }
-  return roundedWidths;
+  return lines(children).split("\n").reduce((longest, line) => Math.max(longest, line.trim().length), 0);
 }
 
 function cellStyle({ kind, align, width, minWidth, maxWidth, style, header = false, colSpan, paddingX = 16, paddingLeft = paddingX, paddingRight = paddingX }) {

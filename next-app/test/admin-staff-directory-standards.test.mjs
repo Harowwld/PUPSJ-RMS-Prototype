@@ -221,34 +221,11 @@ test("Admin Staff Directory: Grid View with compact profile cards, interactive a
   );
 });
 
-test("Admin Staff Directory: Skeleton mirrors 2-tier tabs/toolbar hierarchy and h-9 buttons", () => {
-  const skeletonFile = path.join(ROOT_DIR, "src/components/admin/skeletons/StaffDirectorySkeleton.js");
-  assert.ok(fs.existsSync(skeletonFile), "StaffDirectorySkeleton.js must exist");
-  const content = fs.readFileSync(skeletonFile, "utf8");
-
-  // Header metric skeleton
-  assert.match(
-    content,
-    /inline-grid\s+grid-flow-col\s+auto-cols-fr/,
-    "Skeleton must mirror equal-width segmented control"
-  );
-
-  // Strict h-9 sizing on action buttons (no h-10 w-10 or h-10 w-32)
-  assert.doesNotMatch(
-    content,
-    /h-10\s+w-10/,
-    "Skeleton must not have h-10 w-10 buttons; must use h-9"
-  );
-  assert.doesNotMatch(
-    content,
-    /h-10\s+w-32/,
-    "Skeleton must not have h-10 w-32 buttons; must use h-9"
-  );
-  assert.match(
-    content,
-    /h-9/,
-    "Skeleton must use h-9 for action buttons"
-  );
+test("Admin Staff Directory: loading is data-only and cannot duplicate page chrome", () => {
+  const content = fs.readFileSync(path.join(ROOT_DIR, "src/components/admin/skeletons/StaffDirectorySkeleton.js"), "utf8");
+  assert.doesNotMatch(content, /PageHeader|TabsList|DataViewToolbar|Staff Directory/);
+  assert.match(content, /layoutView === "grid"/);
+  assert.match(content, /<Table columns=/);
 });
 
 test("Global Personnel Directory: Grid View with Apple Inset Grouped cards, [Grid] [Table] switcher, and matching skeleton", () => {

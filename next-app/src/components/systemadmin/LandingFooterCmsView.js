@@ -14,7 +14,7 @@ import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
-import LandingFooterSkeleton from "./skeletons/LandingFooterSkeleton"
+import { LandingFooterSkeletonContent } from "./skeletons/LandingFooterSkeleton"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch";
 import { ArrowDown01Icon, ArrowUp01Icon, Delete01Icon, Link01Icon, Location01Icon } from "hugeicons-react";
@@ -303,9 +303,6 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
     notify("Contact channel removed")
   }
 
-  if (loading) {
-    return <LandingFooterSkeleton />
-  }
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -339,7 +336,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !isDirty}
+                disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Footer Content"}
@@ -348,8 +345,8 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={() => { setFooterData(savedData); notify("Draft changes discarded. Reverted to saved footer content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setFooterData(savedData); notify("Draft changes discarded. Reverted to saved footer content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
             </>
           }
         />
@@ -357,6 +354,9 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
         {/* Standardized SuperAdmin Navigation Segmented Tabs */}
         <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Footer Content" />
 
+        {loading ? (
+          <LandingFooterSkeletonContent />
+        ) : (
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
           {/* TAB 1: Unified Footer Content */}
           {activeTab === "content" && (
@@ -1046,6 +1046,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* Reset Confirmation Modal */}

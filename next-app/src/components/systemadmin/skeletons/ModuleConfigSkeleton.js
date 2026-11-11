@@ -102,7 +102,7 @@ function FeatureGroupSkeleton({ label }) {
   )
 }
 
-function DepartmentViewSkeleton() {
+export function DepartmentViewSkeleton() {
   return (
     <div className="flex flex-[1_0_auto] flex-col">
       <DepartmentSelectorSkeleton />
@@ -129,7 +129,7 @@ function DepartmentViewSkeleton() {
   )
 }
 
-function MatrixViewSkeleton({ groupBy, officeCount }) {
+export function MatrixViewSkeleton({ groupBy, officeCount }) {
   const viewportRef = useRef(null)
   const [viewportWidth, setViewportWidth] = useState(0)
   useEffect(() => {

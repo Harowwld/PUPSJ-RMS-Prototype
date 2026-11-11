@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import LandingWorkflowSkeleton from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
+import { LandingWorkflowSkeletonContent } from "@/components/systemadmin/skeletons/LandingWorkflowSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -328,11 +328,6 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
     )
   }
 
-  if (loading) {
-    return <LandingWorkflowSkeleton />
-  }
-
-  const currentSteps = workflowData.steps || []
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -365,7 +360,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !isDirty}
+                disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Workflow Content"}
@@ -374,8 +369,8 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={() => { setWorkflowData(savedData); notify("Draft changes discarded. Reverted to saved workflow content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setWorkflowData(savedData); notify("Draft changes discarded. Reverted to saved workflow content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
             </>
           }
         />
@@ -383,6 +378,9 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
         {/* Standard Navigation Segmented Tabs */}
         <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Workflow Content" contentCount={workflowData.steps.length} />
 
+        {loading ? (
+          <LandingWorkflowSkeletonContent />
+        ) : (
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl">
 
           {/* TAB 1: WORKFLOW CONTENT (Editorial + Sequential Steps) */}
@@ -848,6 +846,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* Reset Confirmation Modal */}

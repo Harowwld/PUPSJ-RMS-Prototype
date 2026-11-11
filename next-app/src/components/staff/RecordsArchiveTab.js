@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton"
 import {
   Popover,
@@ -91,7 +92,6 @@ import {
   Archive01Icon as EmptyArchive01Icon,
   Building03Icon as EmptyBuilding03Icon,
   UserGroupIcon as EmptyUserGroupIcon,
-  Alert01Icon,
   ArrowRight01Icon,
   Calendar01Icon,
   File02Icon,
@@ -105,7 +105,6 @@ import {
   Tick01Icon,
   UserIcon,
   UserSearch01Icon,
-  ViewIcon,
 } from "hugeicons-react";
 
 const FOLDER_SORT_OPTIONS_REGISTRAR = [
@@ -320,7 +319,6 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
 }
 
 export default function RecordsArchiveTab({
-  loading,
   quickQuery,
   setQuickQuery,
   onLocateStudent,
@@ -364,6 +362,7 @@ export default function RecordsArchiveTab({
   const [selectedDocs, setSelectedDocs] = useState({ studentNo: null, rows: [] })
   const selectedYear = Number(breadcrumbs?.find((b) => b.level === "students")?.label.match(/\d{4}/)?.[0]) || null
   const archiveCategory = breadcrumbs?.find((b) => b.level === "organizations")?.label.replace(/ Organizations$/, "") || null
+  const browseFolder = JSON.stringify([isOsas ? archiveCategory : selectedYear, showArchived])
 
 
   useEffect(() => {
@@ -374,7 +373,7 @@ export default function RecordsArchiveTab({
       .then((json) => { if (json?.ok) setBrowseSummary(json.data); else throw new Error(json?.error || "Archive unavailable") })
       .catch((error) => {
         if (controller.signal.aborted) return
-        setBrowseSummary({ error: true })
+        setBrowseSummary((summary) => summary ?? { error: true })
         showToast?.({ title: "Archive Load Failed", description: error.message }, true)
       })
     return () => controller.abort()
@@ -407,15 +406,23 @@ export default function RecordsArchiveTab({
     const loadingTimer = setTimeout(() => setBrowseLoading(true), 0)
     fetch(url, { cache: "no-store", signal: controller.signal })
       .then((res) => res.json())
-      .then((json) => { if (json?.ok) setBrowsePage(isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data) })
-      .catch(() => {})
+      .then((json) => {
+        if (!json?.ok) throw new Error(json?.error || "Archive unavailable")
+        if (controller.signal.aborted) return
+        const result = isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data
+        setBrowsePage({ ...result, folder: browseFolder })
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        setBrowsePage((previous) => previous.folder === browseFolder ? previous : { rows: [], total: 0, folder: browseFolder, error: error.message })
+      })
       .finally(() => {
         if (controller.signal.aborted) return
         setBrowseLoading(false)
         setBrowseSortPending(false)
       })
     return () => { clearTimeout(loadingTimer); controller.abort() }
-  }, [isOsas, selectedYear, archiveCategory, showArchived, page, itemsPerPage, recordSortBy, recordSortOrder, browseVersion, refreshVersion])
+  }, [isOsas, selectedYear, archiveCategory, showArchived, browseFolder, page, itemsPerPage, recordSortBy, recordSortOrder, browseVersion, refreshVersion])
 
   useEffect(() => {
     if (!quickQuery.trim()) {
@@ -719,7 +726,8 @@ export default function RecordsArchiveTab({
     return filteredExplorerItems
   }, [filteredExplorerItems])
 
-  const totalItems = isLeafLevel ? browsePage.total : 0
+  const leafPending = isLeafLevel && browsePage.folder !== browseFolder
+  const totalItems = isLeafLevel && !leafPending ? browsePage.total : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
   const activeTabCount = (() => {
@@ -929,7 +937,7 @@ export default function RecordsArchiveTab({
                                   handleLocateStudentClick(s)
                                   setQuickQuery("")
                                 }}
-                                className="w-7 h-7 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
+                                className="w-7 h-7 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
                                 title="Locate in Storage"
                               >
                                 <Location01Icon size="1em" className="text-[14px]" />
@@ -1036,7 +1044,7 @@ export default function RecordsArchiveTab({
                     setProfileOpen(true)
                   }}
                 />
-              ) : loading || !browseSummary ? (
+              ) : !browseSummary ? (
                 <RecordsArchiveSkeleton />
               ) : browseSummary?.error ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
@@ -1113,6 +1121,13 @@ export default function RecordsArchiveTab({
                       />
                     )
                   })}
+                </div>
+              ) : leafPending ? (
+                <DataContentSkeleton viewMode="cards" />
+              ) : browsePage.error ? (
+                <div className="flex min-h-[420px] flex-col items-center justify-center gap-3">
+                  <p role="status" className="text-sm text-muted-foreground">{browsePage.error}</p>
+                  <Button size="sm" onClick={() => setBrowseVersion((version) => version + 1)}>Refresh Archive</Button>
                 </div>
               ) : filteredExplorerItems.length === 0 ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
@@ -1213,74 +1228,45 @@ export default function RecordsArchiveTab({
                               </div>
                             </div>
 
-                            <div className="mt-4 pt-3 border-t border-white/15 flex flex-col gap-2">
-                              <div className="flex items-center justify-between gap-2">
-                                {row.student.hasCbl ? (
-                                  <button
-                                    type="button"
+                            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-3">
+                              <div className="flex min-w-0 items-center gap-1.5 text-white/80">
+                                <Location01Icon size="1em" className="text-[13px]" />
+                                <span className="text-[12px] font-medium text-white/85 select-none">
+                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                                {showArchived && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onPreviewDocument(
-                                        "Constitution and By-Laws",
-                                        row.student.name,
-                                        row.student.acronym || row.student.studentNo,
-                                        row.student.rawOrg?.bylaws_storage_filename || row.student.bylawsStorageFilename || ""
-                                      );
+                                      setRestoreTarget(row.student);
+                                      setRestoreStudentOpen(true);
                                     }}
-                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
-                                    title="Click to preview Constitution and By-Laws"
+                                    className="h-7 rounded-lg border-white/30 bg-white/15 px-2 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
                                   >
-                                    <File02Icon size="1em" className="text-[13px]" />
-                                    <span>CBL On File</span>
-                                    <ViewIcon size="1em" className="text-[11px] opacity-75 ml-0.5" />
-                                  </button>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/60">
-                                    <Alert01Icon size="1em" className="text-[13px]" />
-                                    <span>No CBL Filed</span>
-                                  </span>
+                                    Restore Student
+                                  </Button>
                                 )}
-
-                                <div className="flex items-center gap-1.5 ml-auto">
-                                  {showArchived && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setRestoreTarget(row.student);
-                                        setRestoreStudentOpen(true);
+                                        handleLocateStudentClick(row.student);
                                       }}
-                                      className="h-7 rounded-lg border-white/30 bg-white/15 px-2 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
+                                      className="h-7 px-3"
+                                      title="Locate Archive Drawer"
                                     >
-                                      Restore Student
+                                      Locate Drawer
                                     </Button>
-                                  )}
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleLocateStudentClick(row.student);
-                                        }}
-                                        className="h-7 px-2.5 rounded-lg border-white/30 bg-white/15 text-[10px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
-                                        title="Locate Archive Drawer"
-                                      >
-                                        Locate Drawer
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Locate Drawer</TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 text-white/80">
-                                <Location01Icon size="1em" className="text-[13px]" />
-                                <span className="text-[12px] font-medium text-white/85 select-none truncate">
-                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
-                                </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Locate Drawer</TooltipContent>
+                                </Tooltip>
                               </div>
                             </div>
                           </div>
@@ -1333,7 +1319,7 @@ export default function RecordsArchiveTab({
                                           e.stopPropagation()
                                           handleLocateStudentClick(row.student)
                                         }}
-                                        className="h-8 rounded-xl border-white/30 bg-white/15 px-3 text-[11px] font-semibold text-white shadow-xs hover:bg-white/25 active:scale-95 transition-all cursor-pointer"
+                                        className="h-8 px-3"
                                         title="Locate in Storage Map"
                                       >
                                         Locate Drawer
@@ -1367,8 +1353,8 @@ export default function RecordsArchiveTab({
             )}
           </>
         )}
-        {browseLoading && !browseSortPending && browseSummary && !selectedStudent && !loading && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
+        {browseLoading && !browseSortPending && browseSummary && !selectedStudent && !leafPending && (
+          <div role="status" className="px-6 py-2 text-xs text-muted-foreground">
             Loading archive…
           </div>
         )}

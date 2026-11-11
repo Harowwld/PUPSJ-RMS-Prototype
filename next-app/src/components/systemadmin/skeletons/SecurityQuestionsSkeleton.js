@@ -45,15 +45,21 @@ export default function SecurityQuestionsSkeleton() {
         <DataViewToolbar label="Security question search" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="relative w-72 sm:w-80 shrink-0"><Skeleton className="h-9 w-full rounded-xl" /><Skeleton className="absolute right-2.5 top-1/2 h-3 w-6 -translate-y-1/2 rounded" /></div>
         </DataViewToolbar>
-        <div aria-busy="true" className="flex flex-[1_0_auto] flex-col space-y-4 border-t border-border p-6 dark:border-border">
-          {[1, 2].map((i) => <div key={i} className="space-y-2.5 rounded-2xl border border-border bg-gray-50/30 p-4 dark:bg-zinc-900/40">
-            <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Skeleton className="h-6 w-6 rounded-full" /><Skeleton className="h-4 w-20 rounded" /><Skeleton className="h-5 w-16 rounded-full" /></div><div className="flex gap-2"><Skeleton className="h-8 w-36 rounded-xl" /><Skeleton className="h-8 w-8 rounded-xl" /></div></div>
-            <Skeleton className="h-10.5 w-full rounded-xl" />
-            <Skeleton className="h-3.5 w-64 max-w-full rounded" />
-          </div>)}
-          <Skeleton className="h-12 w-full rounded-xl" />
-        </div>
+        <SecurityQuestionsSkeletonContent />
       </Card>
+    </div>
+  )
+}
+
+export function SecurityQuestionsSkeletonContent() {
+  return (
+    <div aria-busy="true" className="flex flex-[1_0_auto] flex-col space-y-4 border-t border-border p-6 dark:border-border">
+      {[1, 2].map((i) => <div key={i} className="space-y-2.5 rounded-2xl border border-border bg-gray-50/30 p-4 dark:bg-zinc-900/40">
+        <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Skeleton className="h-6 w-6 rounded-full" /><Skeleton className="h-4 w-20 rounded" /><Skeleton className="h-5 w-16 rounded-full" /></div><div className="flex gap-2"><Skeleton className="h-8 w-36 rounded-xl" /><Skeleton className="h-8 w-8 rounded-xl" /></div></div>
+        <Skeleton className="h-10.5 w-full rounded-xl" />
+        <Skeleton className="h-3.5 w-64 max-w-full rounded" />
+      </div>)}
+      <Skeleton className="h-12 w-full rounded-xl" />
     </div>
   )
 }

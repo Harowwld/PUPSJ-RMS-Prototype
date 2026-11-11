@@ -15,7 +15,7 @@ import { REPORT_FONT_OPTIONS } from "@/lib/reportFontOptions"
 import { DEFAULT_BRANDING, BRANDING_UPLOAD_LIMITS, resolveBranding } from "@/lib/institutionalBranding"
 import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
-import InstitutionalBrandingSkeleton from "./skeletons/InstitutionalBrandingSkeleton"
+import { InstitutionalBrandingSkeletonContent } from "./skeletons/InstitutionalBrandingSkeleton"
 import { cn } from "@/lib/utils"
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { generateSampleBrandingPdf, deriveDocumentPrefix } from "@/lib/pdfGenerator"
@@ -364,23 +364,6 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
   const hasSecondaryLogo = !!activeSecondaryLogoSrc
   const reportFontLabel = REPORT_FONT_OPTIONS.find((font) => font.value === (branding.reportFont || "jakarta"))?.label || "Report font"
 
-  if (loading) {
-    return <InstitutionalBrandingSkeleton />
-  }
-  if (loadError) {
-    return <Card className="flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-white p-6 dark:bg-card">
-      <EmptyState icon={AlertCircleIcon} title="Institutional Identity Unavailable" description={loadError} />
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => { setLoading(true); setLoadAttempt((value) => value + 1) }}
-        className="h-9 px-4 text-xs font-semibold rounded-xl"
-      >
-        Retry Loading Identity
-      </Button>
-    </Card>
-  }
-
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* Main Container Card */}
@@ -438,7 +421,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !isDirty}
+                disabled={loading || Boolean(loadError) || saving || !isDirty}
                 className="h-9 px-4"
               >
                 {saving ? "Saving Changes..." : "Save Branding"}
@@ -447,13 +430,27 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={handleDiscardDraft} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || Boolean(loadError) || saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={handleDiscardDraft} disabled={loading || Boolean(loadError) || saving} className="h-9 px-4">Discard Draft</Button>}
             </>
           }
         />
 
         {/* Content Body */}
+        {loading ? (
+          <InstitutionalBrandingSkeletonContent />
+        ) : loadError ? (
+          <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 border-t border-border p-6">
+            <EmptyState icon={AlertCircleIcon} title="Institutional Identity Unavailable" description={loadError} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setLoading(true); setLoadAttempt((value) => value + 1) }}
+            >
+              Retry Loading Identity
+            </Button>
+          </div>
+        ) : (
         <CardContent className="font-jakarta p-6 flex flex-[1_0_auto] flex-col gap-6 rounded-b-2xl border-t border-border dark:border-border">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
@@ -918,6 +915,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
           </div>
         </CardContent>
+        )}
       </Card>
 
       <PDFPreviewModal

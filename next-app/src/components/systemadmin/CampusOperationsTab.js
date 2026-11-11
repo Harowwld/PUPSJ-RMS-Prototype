@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
-import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
@@ -724,8 +724,6 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
     operationFilters.length > 0 ||
     slaFilter !== "all"
 
-  if (loading) return <CampusOperationsSkeleton />
-
   return (
     <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Table & Pagination */}
@@ -943,7 +941,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         {/* Cross-Department Activity Stream Table or List */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            <TransactionsTableSkeleton rowCount={pageSize} visibleColumns={visibleTableColumns} groupBy={groupBy} />
+            viewMode === "list" ? <DataContentSkeleton viewMode="list" /> : <TransactionsTableSkeleton rowCount={6} visibleColumns={visibleTableColumns} groupBy={groupBy} />
           ) : paginatedTransactions.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>

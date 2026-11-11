@@ -28,6 +28,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import PageHeader from "@/components/shared/PageHeader";
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
 import PDFPreview from "@/components/shared/PDFPreview";
@@ -351,9 +352,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   ], []);
 
   const groupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "review_status", label: "Review Status" },
     { value: "proposed_doc_type", label: "Document Type" },
+    { value: "none", label: "No grouping" },
   ], []);
 
   const sortedRows = useMemo(() => {
@@ -733,7 +734,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           ) : (
             <div className={cn(
               "relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 transition-opacity duration-150 motion-reduce:transition-none",
-              loading ? "pointer-events-none opacity-60 delay-200" : "opacity-100 delay-0"
+              loading && "pointer-events-none"
             )} style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
               {/* Left Column: Review Queue */}
               <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
@@ -899,9 +900,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </span>
                 )}
               </div>
-              <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-3 sm:p-5">
+              <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
                 {selected ? (
-                  <div className="grid min-h-0 min-w-0 w-full grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
+                  <div className="flex min-h-0 min-w-0 w-full flex-col">
+                    <div className="grid min-h-0 min-w-0 w-full flex-1 grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 p-3 sm:gap-5 sm:p-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
                     {/* Preview Sub-column */}
                     <div className="flex min-w-0 flex-col gap-3">
                       {selected.review_status === "Processing" && (
@@ -1006,16 +1008,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         )}
                       </div>
                       </div>
-
-                      {!Object.keys(ocrRegions).length && (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[11px] text-amber-800 max-md:hidden dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
-                          No OCR field regions were saved for this item. Click <strong>Retry</strong> to apply the current recognition template and display highlighted boxes.
-                        </div>
-                      )}
                     </div>
 
                     {/* Verification Form Sub-column */}
-                    <div className="grid min-h-0 min-w-0 grid-cols-2 content-start gap-x-3 gap-y-1 overflow-hidden md:block md:space-y-4">
+                    <div className="grid min-h-0 min-w-0 grid-cols-2 content-start gap-x-3 gap-y-1 overflow-y-auto md:block md:space-y-4">
                       {/* Student Assignment */}
                       <div className="col-span-2 min-w-0 space-y-0.5 sm:space-y-2">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -1187,9 +1183,16 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           className="w-full min-h-[72px] resize-y rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         />
                       </div>
-
-                      {/* Actions */}
-                      <div className="col-span-2 flex flex-wrap items-center gap-2 border-t border-border pt-3 dark:border-border sm:col-span-1 sm:border-0 sm:pt-2">
+                    </div>
+                    </div>
+                    {!Object.keys(ocrRegions).length && (
+                      <div className="shrink-0">
+                        <NoticeBanner tone="warning" className="border-b-0">
+                          <strong>No OCR field regions were saved.</strong> Verify the student and document type against the preview, or select Retry OCR to generate field highlights.
+                        </NoticeBanner>
+                      </div>
+                    )}
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-3 dark:border-border sm:px-5">
                         <Button
                           size="sm"
                           onClick={() =>
@@ -1230,7 +1233,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         >
                           {selected.review_status === "Failed" ? "Dismiss Scan" : "Reject Document"}
                         </Button>
-                      </div>
                     </div>
                   </div>
                 ) : (

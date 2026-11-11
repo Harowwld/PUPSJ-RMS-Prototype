@@ -417,14 +417,10 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
               <SlaKpiSkeleton />
             </div>
           </div>
-        ) : !error && data ? (
+        ) : data ? (
           <div className="px-6 pb-6 relative z-30">
             <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
-              <div className={cn(
-                "w-full", 
-                !shouldReduceMotion ? "transition-all duration-300" : "transition-none",
-                (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-              )}>
+              <div className="w-full">
                 <SlaKpiCards
                   total={total}
                   completionRate={completionRate}
@@ -475,15 +471,15 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
 
         <div className="flex flex-[1_0_auto] flex-col bg-white p-6 dark:bg-card border-t border-border dark:border-border rounded-b-2xl">
           {loading && !data ? (
-            <SlaChartsSkeleton />
-          ) : error ? (
+            <SlaChartsSkeleton viewMode={viewMode} />
+          ) : !data && error ? (
             <EmptyState
               icon={EmptyAlertCircleIcon}
               title="Data Unavailable"
               description={error || "Could not load request analytics."}
             />
           ) : data ? (
-            <div className={cn("space-y-6", !shouldReduceMotion ? "transition-all duration-slow" : "transition-none", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
+            <div className="space-y-6">
               <SlaCharts data={data} pieData={pieData} viewMode={viewMode} onSwitchView={onSwitchView} />
             </div>
           ) : null}

@@ -509,7 +509,7 @@ export default function BackupTab({
                 />
               )}
 
-              {isLoading && !isManualLoading ? (
+              {isLoading ? (
                 <div className="w-full flex flex-[1_0_auto] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <BackupTableSkeleton embedded={true} visibleColumns={visibleColumns} scrollRef={tableScrollRef} />
                 </div>
@@ -584,7 +584,6 @@ export default function BackupTab({
                 systemHealth={systemHealth}
                 lastBackupTime={lastBackupTime}
                 isLoading={isLoading}
-                isManualLoading={isManualLoading}
                 externalDrive={externalDrive}
                 onRescanDrive={handleRescanDrive}
                 onToggleSimulation={handleToggleSimulationLocal}

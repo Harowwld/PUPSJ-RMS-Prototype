@@ -10,9 +10,8 @@ export default function SLAAnalyticsSkeleton() {
       {/* Main Container Card */}
       <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-[1_0_auto] isolate">
         {/* Header Skeleton */}
-        <div className="flex items-center justify-between p-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center justify-between p-6">
           <div className="flex items-center gap-3">
-            <Skeleton className="size-10 rounded-xl dark:bg-muted" />
             <div className="space-y-2">
               <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
               <Skeleton className="h-3 w-72 rounded dark:bg-muted" />

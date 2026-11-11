@@ -9,7 +9,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { TableActions } from "@/components/shared/TableActions";
+import { TableStatus } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { downloadDocument } from "@/lib/documentDownload";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -98,7 +99,7 @@ export function DocumentCardActionsMenu({
               onClick={(event) => runAction(event, onLocate)}
               className={actionClassName}
             >
-              <Location01Icon size={14} aria-hidden="true" className="shrink-0 text-pup-maroon dark:text-red-400" />
+              <Location01Icon size={14} aria-hidden="true" className="shrink-0" />
               <span>Locate Archive Drawer</span>
             </button>
           )}
@@ -313,9 +314,9 @@ export default function GoogleDrivePdfCard({
   if (viewMode === "list") {
     return (
       <div
-        onClick={handlePreviewClick}
+        role="listitem"
         className={cn(
-          "group flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900/60 hover:bg-[#f0f4f9] dark:hover:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 transition-all shadow-2xs hover:shadow-sm cursor-pointer select-none active:scale-[0.99]",
+          "group flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors",
           densityClasses.paddingX,
           densityClasses.paddingY,
           densityClasses.gap,
@@ -323,108 +324,29 @@ export default function GoogleDrivePdfCard({
           className
         )}
       >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* Google Drive Red PDF Badge */}
-          <div className="h-6 px-1.5 rounded-[5px] bg-[#ea4335] text-white flex items-center justify-center font-bold text-[10px] tracking-wider shrink-0 shadow-2xs">
-            PDF
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                {docTitle}
-              </span>
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate hidden sm:inline">
-                ({originalFilename})
-              </span>
-            </div>
-            <div className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5 sm:hidden">
-              {fileSize} • {formattedDate}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 dark:text-zinc-400">
-            <span>{fileSize}</span>
-            <span>•</span>
-            <span>{formattedDate}</span>
-          </div>
-
-          {/* Status Badge */}
-          <span
-            className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", approvalStatus === "Approved"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                : approvalStatus === "Declined"
-                ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", BADGE_BASE)}
-          >
-            {approvalStatus}
+        <button
+          type="button"
+          onClick={handlePreviewClick}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <File02Icon size={18} aria-hidden="true" className="shrink-0 text-muted-foreground" />
+          <span className="min-w-0">
+            <span className="block truncate text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">{docTitle}</span>
+            <span className="block truncate text-[11px] text-gray-500 dark:text-zinc-400">
+              {originalFilename} • {fileSize} • {formattedDate}
+            </span>
           </span>
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {canRescan && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleRescanClick}
-                    className="table-action-button rounded-lg active:scale-95 cursor-pointer flex items-center justify-center"
-                    title="Re-scan Document"
-                    aria-label="Re-scan Document"
-                  >
-                    <ReloadIcon size={16} aria-hidden="true" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Re-scan Document</TooltipContent>
-              </Tooltip>
-            )}
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={handlePreviewClick}
-                  className="table-action-button rounded-lg active:scale-95 cursor-pointer flex items-center justify-center"
-                  title={PDF_ACTION_LABELS.preview}
-                  aria-label={PDF_ACTION_LABELS.preview}
-                >
-                  <ViewIcon size={16} aria-hidden="true" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
-            </Tooltip>
-
-            {student && onLocate && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleLocateClick}
-                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer flex items-center justify-center"
-                    title="Locate Archive Drawer"
-                    aria-label="Locate Archive Drawer"
-                  >
-                    <Location01Icon size={16} aria-hidden="true" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Locate Archive Drawer</TooltipContent>
-              </Tooltip>
-            )}
-
-            <DocumentCardActionsMenu
-              docTitle={docTitle}
-              isImage={isImage}
-              canRescan={canRescan}
-              hasLocate={Boolean(student && onLocate)}
-              onPreview={handlePreviewClick}
-              onRescan={handleRescanClick}
-              onLocate={handleLocateClick}
-              onDownload={handleDownloadClick}
-              triggerClassName="table-action-button rounded-lg active:scale-95 cursor-pointer flex items-center justify-center"
-            />
-          </div>
+        </button>
+        <div className="flex shrink-0 items-center gap-2 self-start sm:gap-3 sm:self-auto">
+          <TableStatus value={approvalStatus} />
+          <TableActions
+            actions={[
+              { label: PDF_ACTION_LABELS.preview, icon: ViewIcon, onClick: handlePreviewClick },
+              ...(canRescan ? [{ label: "Re-scan Document", icon: ReloadIcon, onClick: handleRescanClick }] : []),
+              ...(student && onLocate ? [{ label: "Locate Archive Drawer", icon: Location01Icon, onClick: handleLocateClick }] : []),
+              { label: isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download, icon: Download01Icon, onClick: handleDownloadClick },
+            ]}
+          />
         </div>
       </div>
     );

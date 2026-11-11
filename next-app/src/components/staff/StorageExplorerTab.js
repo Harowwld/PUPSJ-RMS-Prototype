@@ -8,6 +8,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ContentReveal } from "@/components/ui/motion"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
 import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
@@ -272,7 +273,7 @@ export default function StorageExplorerTab({
                 isInsideRoom ? "flex-1 min-h-0 pt-4 overflow-hidden" : "flex-[1_0_auto] pt-6"
               )}
             >
-              {loading ? (
+              {loading && !locatorModel ? (
               <StorageExplorerSkeleton embedded={true} />
             ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-[1_0_auto] flex-col w-full">
@@ -439,7 +440,7 @@ export default function StorageExplorerTab({
             ) : (
               <div className="px-6 pb-6 w-full flex-1 min-h-0 flex flex-col">
                 <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center w-full flex-1 min-h-0">
-                  <div className={cn(mapWrap, "mx-0 flex-1 min-w-0")}>
+                  <div className={cn(mapWrap, "mx-0 flex-1 min-w-0 lg:max-w-none")}>
                     <RoomMap2D
                       kind="drawers"
                       activeStudent={activeStudent}
@@ -462,7 +463,7 @@ export default function StorageExplorerTab({
                   </div>
 
                   {selectedCabinet && (
-                    <div className="w-full lg:w-[320px] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
+                    <ContentReveal className="w-full lg:w-[clamp(340px,42%,400px)] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
                       {/* Header */}
                       <div className="mb-4 flex items-center justify-between select-none">
                         <h5
@@ -570,6 +571,8 @@ export default function StorageExplorerTab({
                                     {hasOccupants && d.students && d.students.length > 0 ? (
                                       d.students.map((student) => {
                                         const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
+                                        const collapseDocuments = student.documents?.length > 3;
+                                        const DocumentList = collapseDocuments ? "details" : "div";
                                         return (
                                           <div
                                             key={student.studentNo}
@@ -625,7 +628,12 @@ export default function StorageExplorerTab({
 
                                             {/* Documents */}
                                             {student.documents && student.documents.length > 0 ? (
-                                              <div className="mt-1 space-y-2">
+                                              <DocumentList className="mt-1 space-y-2">
+                                                {collapseDocuments && (
+                                                  <summary className="cursor-pointer py-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                                    Documents ({student.documents.length})
+                                                  </summary>
+                                                )}
                                                 <div className="flex flex-col gap-2">
                                                   {student.documents.map((doc) => {
                                                     const isApproved = doc.approvalStatus === "Approved";
@@ -659,7 +667,7 @@ export default function StorageExplorerTab({
                                                     );
                                                   })}
                                                 </div>
-                                              </div>
+                                              </DocumentList>
                                             ) : (
                                               <p className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
                                                 {isOsas ? "No official documents or proposals filed yet" : "No documents uploaded"}
@@ -688,7 +696,7 @@ export default function StorageExplorerTab({
                           })}
                         </div>
                       </div>
-                    </div>
+                    </ContentReveal>
                   )}
                 </div>
               </div>

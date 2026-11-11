@@ -13,7 +13,7 @@ import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "rea
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu"
 import { Card } from "@/components/ui/card"
 import {
@@ -1179,8 +1179,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return { kind: "category", maxWidth: 220, growthWeight: 0 }
   }), "actions"]
 
-  if (loading) return <GlobalStaffSkeleton columns={staffTableColumns} layoutView={layoutView} />
-
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
       <Card className="flex min-w-0 flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
@@ -1272,7 +1270,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
         {/* Content Section: Directory Table inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
-          {filteredStaff.length === 0 ? (
+          {loading ? (
+            <DataContentSkeleton columns={staffTableColumns} viewMode={layoutView} />
+          ) : filteredStaff.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>

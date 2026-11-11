@@ -171,7 +171,7 @@ export default function OsasKanbanPipeline({
           onMouseUp={handleMouseUpCanvas}
           onMouseLeave={handleMouseUpCanvas}
           className={cn(
-            "w-full flex-1 flex flex-col min-h-[calc(100vh-20rem)] p-4 sm:p-5 overflow-x-auto scroll-smooth snap-x snap-proximity scrollbar-thin",
+            "w-full flex-1 flex flex-col min-h-[calc(100vh-20rem)] p-4 pl-6 sm:p-5 sm:pl-6 overflow-x-auto scroll-pl-6 scroll-smooth snap-x snap-proximity scrollbar-thin",
             isPanningActive ? "cursor-grabbing select-none" : "cursor-grab"
           )}
         >

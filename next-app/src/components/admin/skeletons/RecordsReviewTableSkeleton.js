@@ -16,10 +16,14 @@ export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = f
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
         <Table
-          columns={isOrganizationRecords
-            ? ["selection", "text", "category", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]
-            : ["selection", "identifier", "text", "category", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]}
-          className={isOrganizationRecords ? "min-w-[1220px]" : "min-w-[1380px]"}
+          columns={[
+            "selection",
+            ...(!isOrganizationRecords ? ["identifier"] : []),
+            { kind: "text", minWidth: 220, maxWidth: 340 },
+            { kind: "text", minWidth: 200, maxWidth: 340, align: "center" },
+            { kind: "text", minWidth: 260, maxWidth: 340 },
+            "status", "date", "actions",
+          ]}
         >
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
@@ -64,7 +68,7 @@ export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = f
 
                 {!isOrganizationRecords && (
                   <td className="py-3 px-4 w-[160px] min-w-[160px] whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
-                    <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
+                    <Skeleton className="h-6 w-28 rounded-lg dark:bg-muted" />
                   </td>
                 )}
 

@@ -172,7 +172,7 @@ export default function DigitalRecordsList({
                   const organizationName = record.organization_name || record.student_name;
                   const secondaryContext = isOsas
                     ? [record.original_filename, record.size_bytes ? `(${formatBytes(record.size_bytes)})` : "", isDeclined && record.review_note ? `Decline note: "${record.review_note}"` : ""].filter(Boolean).join(" • ")
-                    : [formatTitleCase(record.student_name), record.org_acronym ? `(${record.org_acronym})` : "", record.original_filename, record.size_bytes ? `(${formatBytes(record.size_bytes)})` : "", isDeclined && record.review_note ? `Decline note: "${record.review_note}"` : ""].filter(Boolean).join(" • ");
+                    : [formatTitleCase(record.student_name), record.original_filename].filter(Boolean).join(" • ");
                   const badgeClass = getStatusBadge
                     ? getStatusBadge(record.approval_status)
                     : "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
@@ -288,6 +288,12 @@ export default function DigitalRecordsList({
                         >
                           {record.approval_status || "Pending"}
                         </span>
+
+                        {!isOsas && isDeclined && record.review_note && (
+                          <span className={cn(BADGE_BASE, "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300")}>
+                            Decline Note
+                          </span>
+                        )}
 
                         {/* Relative / Upload Timestamp */}
                         {record.created_at && (
