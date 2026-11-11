@@ -467,7 +467,7 @@ export async function listReviewDocuments({ officeId, page = 1, pageSize = 20, s
   let total;
   if (search.trim() || sortBy === "student_name") {
     rows = (await query(queryRows, params)).map(decryptDocumentRow);
-    if (search.trim()) rows = rows.filter((row) => matchesSearchQuery([row.student_no, row.student_name, row.doc_type, row.original_filename], search));
+    if (search.trim()) rows = rows.filter((row) => matchesSearchQuery([row.student_no, row.student_name, row.organization_name, row.org_acronym, row.doc_type, row.original_filename], search));
     const field = sortColumns[sortBy] ? sortBy : "student_name";
     rows.sort((a, b) => {
       const result = String(a[field] || "").toLowerCase().localeCompare(String(b[field] || "").toLowerCase());

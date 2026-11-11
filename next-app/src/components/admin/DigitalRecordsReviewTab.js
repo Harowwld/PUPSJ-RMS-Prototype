@@ -95,6 +95,7 @@ function formatChipDate(dateStr) {
 }
 
 export default function DigitalRecordsReviewTab({
+  officeId,
   records,
   totalCount = 0,
   serverStats,
@@ -114,6 +115,7 @@ export default function DigitalRecordsReviewTab({
   showToast,
   onLogAction,
 }) {
+  const isOsas = String(officeId || "").toLowerCase() === "osas"
   const [searchQuery, setSearchQuery] = useState("")
   const [localSearch, setLocalSearch] = useState("")
   const [currentPage, setCurrentPage] = useUrlPage()
@@ -155,14 +157,14 @@ export default function DigitalRecordsReviewTab({
 
   const tableColumns = useMemo(
     () => [
-      { key: "student_no", label: "Student No." },
-      { key: "student_name", label: "Full Name" },
+      ...(!isOsas ? [{ key: "student_no", label: "Student No." }] : []),
+      { key: "student_name", label: isOsas ? "Organization" : "Full Name" },
       { key: "doc_type", label: "Document Type" },
       { key: "original_filename", label: "Filename" },
       { key: "status", label: "Status" },
       { key: "created_at", label: "Upload Date" },
     ],
-    []
+    [isOsas]
   )
 
   const groupOptions = useMemo(
@@ -177,12 +179,12 @@ export default function DigitalRecordsReviewTab({
   const sortOptions = useMemo(
     () => [
       { key: "created_at", label: "Upload Date" },
-      { key: "student_no", label: "Student ID" },
-      { key: "student_name", label: "Student Name" },
+      ...(!isOsas ? [{ key: "student_no", label: "Student ID" }] : []),
+      { key: "student_name", label: isOsas ? "Organization" : "Student Name" },
       { key: "doc_type", label: "Document Type" },
       { key: "approval_status", label: "Status" },
     ],
-    []
+    [isOsas]
   )
 
   const filterFields = useMemo(
@@ -481,8 +483,8 @@ export default function DigitalRecordsReviewTab({
       onPreviewDocument({
         docId: record.id,
         docType: record.doc_type,
-        studentName: record.student_name || "Unknown",
-        studentNo: record.student_no,
+        studentName: (isOsas ? record.organization_name || record.student_name : record.student_name) || "Unknown",
+        studentNo: isOsas ? undefined : record.student_no,
         refId: record.id,
       })
     }
@@ -615,7 +617,7 @@ export default function DigitalRecordsReviewTab({
                 </span>
               </div>
             }
-            description="Verify student record submissions."
+            description={isOsas ? "Verify organization document submissions." : "Verify student record submissions."}
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -783,8 +785,8 @@ export default function DigitalRecordsReviewTab({
                 onChange={setLocalSearch}
                 count={totalCount}
                 loading={isLoading && !isManualLoading}
-                label="Search student records"
-                placeholder="Search student, name, doc type..."
+                label={isOsas ? "Search organization records" : "Search student records"}
+                placeholder={isOsas ? "Search organization, document type..." : "Search student, name, doc type..."}
               />
               {viewMode === "table" && (
                 <TableScrollControls
@@ -865,7 +867,7 @@ export default function DigitalRecordsReviewTab({
           {/* 5. Content Area */}
           <div className="relative flex flex-[1_0_auto] flex-col" aria-busy={isLoading || undefined}>
           {isLoading && !isManualLoading && !records ? (
-            <RecordsReviewTableSkeleton rowCount={itemsPerPage} embedded={true} />
+            <RecordsReviewTableSkeleton rowCount={itemsPerPage} embedded={true} isOrganizationRecords={isOsas} />
           ) : error ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
@@ -891,7 +893,9 @@ export default function DigitalRecordsReviewTab({
                   <EmptyDescription>
                     {activeChips.length > 0
                       ? "Try adjusting your search filters to find what you're looking for."
-                      : "There are currently no digital records in the system."}
+                      : isOsas
+                        ? "There are currently no organization records in the system."
+                        : "There are currently no digital records in the system."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -921,6 +925,7 @@ export default function DigitalRecordsReviewTab({
             <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
               <DigitalRecordsList
                 records={paginatedRecords}
+                isOsas={isOsas}
                 groupBy={groupBy}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelectRow}
@@ -942,9 +947,10 @@ export default function DigitalRecordsReviewTab({
               />
             </div>
           ) : viewMode === "kanban" ? (
-            <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+            <div className="w-full flex-1 flex flex-col min-h-0 border-t border-border dark:border-border">
               <DigitalRecordsKanbanPipeline
                 records={sortedRecords}
+                isOsas={isOsas}
                 onPreview={handlePreview}
                 onApprove={handleApprove}
                 onDecline={onDecline}
@@ -981,7 +987,7 @@ export default function DigitalRecordsReviewTab({
                 onScroll={handleScroll}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={activeTableColumns} className="min-w-[1380px]">
+                <Table columns={activeTableColumns} className={isOsas ? "min-w-[1220px]" : "min-w-[1380px]"}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-white dark:bg-card">
@@ -997,7 +1003,7 @@ export default function DigitalRecordsReviewTab({
                           aria-label="Select all records on this page"
                         />
                       </th>
-                      {visibleColumns.includes("student_no") && (
+                      {!isOsas && visibleColumns.includes("student_no") && (
                         <th
                           className={cn(
                             "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
@@ -1051,7 +1057,7 @@ export default function DigitalRecordsReviewTab({
                                 : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                             )}
                           >
-                            Full Name{" "}
+                            {isOsas ? "Organization" : "Full Name"}{" "}
                             <SortIndicator
                               column="student_name"
                               sortBy={sortBy}
@@ -1171,11 +1177,11 @@ export default function DigitalRecordsReviewTab({
                               )}
                               checked={isSelected}
                               onChange={(e) => toggleSelectRow(r.id, e)}
-                              aria-label={`Select record for ${r.student_name || r.student_no}`}
+                              aria-label={`Select record for ${(isOsas ? r.organization_name || r.student_name : r.student_name) || r.student_no}`}
                             />
                           </td>
 
-                          {visibleColumns.includes("student_no") && (
+                          {!isOsas && visibleColumns.includes("student_no") && (
                             <td
                               className={cn(
                                 "p-4 w-[160px] min-w-[160px] whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
@@ -1195,9 +1201,9 @@ export default function DigitalRecordsReviewTab({
                             <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                               <div
                                 className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
-                                title={formatTitleCase(r.student_name)}
+                                title={formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
                               >
-                                {formatTitleCase(r.student_name)}
+                                {formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
                               </div>
                             </td>
                           )}

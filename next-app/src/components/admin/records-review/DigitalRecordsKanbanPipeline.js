@@ -1,54 +1,49 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
-
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  KanbanStatusIcon,
+  KanbanDotTag,
+  getTagDotColor,
+} from "@/components/shared/KanbanPrimitives";
 import { formatBytes, formatUploadedDate } from "./DigitalRecordsList";
 import {
   Cancel01Icon,
-  CheckmarkCircle01Icon,
-  Clock01Icon,
   File02Icon,
+  InboxIcon,
   Pdf01Icon,
   RotateLeft01Icon,
   Tick01Icon,
   ViewIcon,
 } from "hugeicons-react";
+import { EmptyState } from "@/components/ui/empty";
 
 export const DIGITAL_RECORDS_KANBAN_COLUMNS = [
   {
     key: "Pending",
     label: "Awaiting Review",
-    subtitle: "Pending verification",
-    accent: "bg-amber-500",
-    borderTop: "border-t-amber-500",
-    badge: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-    dropZone: "border-amber-500/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
+    dropZone:
+      "border-amber-500/50 bg-amber-50/60 dark:bg-amber-950/25 text-amber-700 dark:text-amber-300",
   },
   {
     key: "Approved",
     label: "Approved",
-    subtitle: "Locked & archival ready",
-    accent: "bg-emerald-500",
-    borderTop: "border-t-emerald-500",
-    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    dropZone: "border-emerald-500/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300",
+    dropZone:
+      "border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/25 text-emerald-700 dark:text-emerald-300",
   },
   {
     key: "Declined",
     label: "Declined",
-    subtitle: "Needs rescan / rejected",
-    accent: "bg-rose-500",
-    borderTop: "border-t-rose-500",
-    badge: "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
-    dropZone: "border-rose-500/60 bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300",
+    dropZone:
+      "border-rose-500/50 bg-rose-50/60 dark:bg-rose-950/25 text-rose-700 dark:text-rose-300",
   },
 ];
 
 export default function DigitalRecordsKanbanPipeline({
   records = [],
+  isOsas = false,
   onPreview,
   onApprove,
   onDecline,
@@ -200,11 +195,11 @@ export default function DigitalRecordsKanbanPipeline({
       ref={boardScrollRef}
       onMouseDown={handleMouseDownCanvas}
       className={cn(
-        "w-full overflow-x-auto pb-6 pt-4 px-4 sm:px-6 show-scrollbar select-none",
+        "w-full flex-1 flex flex-col min-h-[calc(100vh-20rem)] overflow-x-auto pb-4 pt-3 px-4 sm:px-6 show-scrollbar select-none",
         isPanningActive ? "cursor-grabbing" : "cursor-grab"
       )}
     >
-      <div className="flex items-start gap-4 min-w-max">
+      <div className="flex items-stretch gap-3.5 min-w-max flex-1 h-full min-h-[500px]">
         {DIGITAL_RECORDS_KANBAN_COLUMNS.map((col) => {
           const colItems = columnData[col.key] || [];
           const isOver = dragOverColumn === col.key;
@@ -217,38 +212,32 @@ export default function DigitalRecordsKanbanPipeline({
               onDragLeave={(e) => handleDragLeaveColumn(e, col.key)}
               onDrop={(e) => handleDropOnColumn(e, col.key)}
               className={cn(
-                "w-80 shrink-0 flex flex-col rounded-2xl border border-border/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-900/60 shadow-2xs transition-all duration-200 overflow-hidden",
-                col.borderTop,
-                "border-t-4",
-                isOver && !isDraggingCurrentCol && "ring-2 ring-pup-maroon dark:ring-red-400 bg-gray-100/80 dark:bg-zinc-800/80"
+                "w-80 shrink-0 flex flex-col h-full rounded-2xl border border-gray-200/60 dark:border-white/[0.06] bg-gray-100/75 dark:bg-zinc-900/60 p-2.5 transition-all duration-200",
+                isOver &&
+                  !isDraggingCurrentCol &&
+                  "ring-2 ring-gray-400/50 dark:ring-zinc-600 bg-gray-200/60 dark:bg-zinc-800/70"
               )}
             >
-              {/* Column Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/70 dark:border-white/10 bg-white/60 dark:bg-zinc-900/80 backdrop-blur-xs">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                      {col.label}
-                    </span>
-                    <span
-                      className={cn("rounded-full px-2 py-0.2 text-[10px] font-semibold tabular-nums", col.badge, BADGE_BASE)}
-                    >
-                      {colItems.length}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">
-                    {col.subtitle}
+              {/* Clean Single-Line Column Header */}
+              <div className="flex items-center justify-between px-2 pt-1.5 pb-2.5 select-none shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <KanbanStatusIcon status={col.key} />
+                  <span className="text-[13px] font-semibold tracking-tight text-gray-800 dark:text-zinc-100 truncate">
+                    {col.label}
+                  </span>
+                  <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
+                    {colItems.length}
                   </span>
                 </div>
               </div>
 
               {/* Column Dropzone / Items list */}
-              <div className="flex flex-col gap-2.5 p-3 min-h-[380px] max-h-[calc(100vh-280px)] overflow-y-auto show-scrollbar">
+              <div className="flex flex-col gap-2 h-[760px] overflow-y-auto px-0.5 pb-0.5 show-scrollbar">
                 {/* Drag-over indicator placeholder */}
                 {isOver && !isDraggingCurrentCol && (
                   <div
                     className={cn(
-                      "flex items-center justify-center rounded-xl border-2 border-dashed p-4 text-xs font-semibold animate-pulse transition-all",
+                      "flex items-center justify-center rounded-xl border border-dashed p-3.5 text-xs font-medium transition-all shrink-0",
                       col.dropZone
                     )}
                   >
@@ -257,19 +246,22 @@ export default function DigitalRecordsKanbanPipeline({
                 )}
 
                 {colItems.length === 0 && !isOver && (
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-xs text-gray-400 dark:text-zinc-500">
-                    <p className="font-medium">No records in this queue</p>
-                    <p className="text-[11px] text-gray-400/80 dark:text-zinc-600 mt-0.5">
-                      Drag records here to update
-                    </p>
+                  <div className="flex-1 flex flex-col items-center justify-center p-4">
+                    <EmptyState
+                      variant="compact"
+                      icon={InboxIcon}
+                      title="No records in queue"
+                      description="Drag records here to update"
+                    />
                   </div>
                 )}
 
                 {colItems.map((record) => {
                   const isPdf = /\.pdf$/i.test(record.original_filename || "");
-                  const isPending = record.approval_status === "Pending";
-                  const isDeclined = record.approval_status === "Declined";
-                  const isApproved = record.approval_status === "Approved";
+                  const status = record.approval_status || "Pending";
+                  const isPending = status === "Pending";
+                  const isDeclined = status === "Declined";
+                  const organizationName = record.organization_name || record.student_name;
                   const { dateStr, timeStr } = formatUploadedDate(record.created_at);
 
                   return (
@@ -281,74 +273,96 @@ export default function DigitalRecordsKanbanPipeline({
                       onClick={() => onPreview?.(record)}
                       onDoubleClick={() => onPreview?.(record)}
                       className={cn(
-                        "kanban-card group flex flex-col gap-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-white dark:bg-zinc-800/90 p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon dark:hover:border-red-400/70 transition-all cursor-grab active:cursor-grabbing relative select-none",
+                        "kanban-card group flex flex-col gap-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 cursor-grab active:cursor-grabbing relative select-none",
                         draggingItem?.id === record.id && "opacity-40 scale-98"
                       )}
                     >
-                      {/* Top row: Doc Type pill & File type */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-700 px-2 py-0.5 text-[10px] font-semibold text-gray-800 dark:text-zinc-200 truncate max-w-[190px]", BADGE_BASE)}
-                          title={record.doc_type}
-                        >
-                          {record.doc_type}
-                        </span>
-
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-400 tabular-nums">
-                          {isPdf ? (
-                            <Pdf01Icon size="1em" className="text-pup-maroon dark:text-red-400" />
-                          ) : (
-                            <File02Icon size="1em" />
-                          )}
-                          {formatBytes(record.size_bytes)}
-                        </span>
-                      </div>
-
-                      {/* Middle: Student Name and Student Number */}
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-semibold text-gray-900 group-hover:text-pup-maroon dark:text-zinc-100 dark:group-hover:text-red-400 transition-colors truncate">
-                          {formatTitleCase(record.student_name)}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-sans tabular-nums text-[11px] font-medium text-gray-600 dark:text-zinc-300">
-                            {record.student_no}
+                      {/* Row 1: Status Icon + Student Name (left) & Date (right) */}
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                          <KanbanStatusIcon status={status} className="mt-[3px]" />
+                          <span
+                            className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-1"
+                            title={isOsas ? organizationName : formatTitleCase(record.student_name)}
+                          >
+                            {isOsas ? organizationName : formatTitleCase(record.student_name)}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Filename subline */}
-                      <div
-                        className="truncate text-[11px] text-gray-500 dark:text-zinc-400"
-                        title={record.original_filename}
-                      >
-                        {record.original_filename}
-                      </div>
-
-                      {/* If declined: Show note banner */}
-                      {isDeclined && record.review_note && (
-                        <div className="rounded-lg border border-red-200/70 bg-red-50/60 dark:border-red-900/40 dark:bg-red-950/20 p-2 text-[10px] text-red-700 dark:text-red-300">
-                          <span className="font-semibold block mb-0.5">Decline Reason:</span>
-                          <span className="italic block truncate">&ldquo;{record.review_note}&rdquo;</span>
-                        </div>
-                      )}
-
-                      {/* Bottom row: Date & Action Triggers */}
-                      <div
-                        className="flex items-center justify-between pt-1 border-t border-border/50 dark:border-white/5 text-[10px] text-gray-400 dark:text-zinc-500"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="tabular-nums" title={`Uploaded ${dateStr} ${timeStr}`}>
+                        <span
+                          className={cn(
+                            "text-[11px] font-medium tabular-nums shrink-0",
+                            isDeclined
+                              ? "text-rose-600 dark:text-rose-400"
+                              : "text-gray-400 dark:text-zinc-500"
+                          )}
+                          title={`Uploaded ${dateStr} ${timeStr}`}
+                        >
                           {dateStr}
                         </span>
+                      </div>
 
-                        <div className="flex items-center gap-1">
+                      {/* Optional subline: Decline reason or filename */}
+                      {isDeclined && record.review_note ? (
+                        <p
+                          className="text-[11px] text-rose-600 dark:text-rose-400 line-clamp-1 pl-5.5"
+                          title={record.review_note}
+                        >
+                          Reason: &ldquo;{record.review_note}&rdquo;
+                        </p>
+                      ) : record.original_filename ? (
+                        <p
+                          className="text-[11px] text-gray-400 dark:text-zinc-500 truncate pl-5.5"
+                          title={record.original_filename}
+                        >
+                          {record.original_filename}
+                        </p>
+                      ) : null}
+
+                      {/* Row 2: Dot-Pill Tag(s) */}
+                      <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
+                        <KanbanDotTag
+                          label={record.doc_type}
+                          dotColor={getTagDotColor(record.doc_type)}
+                        />
+                        {record.course_code && (
+                          <KanbanDotTag
+                            label={record.course_code}
+                            dotColor="bg-sky-500"
+                          />
+                        )}
+                      </div>
+
+                      {/* Row 3: File Size / Hover Actions */}
+                      <div
+                        className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {!isOsas && (
+                          <span className="inline-flex items-center gap-1.5 font-medium tabular-nums text-gray-400 dark:text-zinc-500">
+                            {isPdf ? (
+                              <Pdf01Icon size={13} className="text-rose-500/80 dark:text-rose-400/80 shrink-0" />
+                            ) : (
+                              <File02Icon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                            )}
+                            <span>{record.student_no}</span>
+                          </span>
+                        )}
+
+                        {/* Resting state: File size */}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 tabular-nums group-hover:hidden group-focus-within:hidden">
+                          {formatBytes(record.size_bytes)}
+                        </span>
+
+                        {/* Hover state: Quick Actions */}
+                        <div className="hidden group-hover:flex group-focus-within:flex items-center gap-1 -my-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 onClick={() => onPreview?.(record)}
-                      onDoubleClick={() => onPreview?.(record)}
-                                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                                onDoubleClick={() => onPreview?.(record)}
+                                className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                               >
                                 <ViewIcon size="1em" className="text-xs" />
                               </button>
@@ -363,7 +377,7 @@ export default function DigitalRecordsKanbanPipeline({
                                   <button
                                     type="button"
                                     onClick={() => onApprove?.(record.id)}
-                                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
+                                    className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
                                   >
                                     <Tick01Icon size="1em" className="text-xs" />
                                   </button>
@@ -376,7 +390,7 @@ export default function DigitalRecordsKanbanPipeline({
                                   <button
                                     type="button"
                                     onClick={() => onDecline?.(record.id)}
-                                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
+                                    className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
                                   >
                                     <Cancel01Icon size="1em" className="text-xs" />
                                   </button>
@@ -399,12 +413,14 @@ export default function DigitalRecordsKanbanPipeline({
                                     )
                                   }
                                   aria-label="Move back to Pending Review"
-                                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors cursor-pointer active:scale-95"
+                                  className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/40 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors cursor-pointer active:scale-95"
                                 >
                                   <RotateLeft01Icon size="1em" className="text-xs" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="top">Move back to Pending Review</TooltipContent>
+                              <TooltipContent side="top">
+                                Move back to Pending Review
+                              </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
