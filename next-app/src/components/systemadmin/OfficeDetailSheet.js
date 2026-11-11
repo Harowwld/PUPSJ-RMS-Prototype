@@ -563,7 +563,7 @@ export default function OfficeDetailSheet({
                   return (
                     <div
                       key={staff.id}
-                      className="flex items-center justify-between p-2.5 rounded-xl border border-border dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 hover:bg-gray-100/60 dark:hover:bg-zinc-800/60 transition-colors"
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 hover:bg-gray-100/60 dark:hover:bg-zinc-800/60 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <ProfileAvatar
@@ -662,7 +662,7 @@ export default function OfficeDetailSheet({
                   {enabledModules.map((mod) => (
                     <div
                       key={mod.id}
-                      className="p-2.5 rounded-xl border border-border dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 flex items-center justify-between gap-2"
+                      className="p-2.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-2"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="w-6 h-6 rounded-full bg-pup-maroon/10 dark:bg-white/10 text-pup-maroon dark:text-zinc-200 flex items-center justify-center shrink-0">

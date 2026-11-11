@@ -1301,9 +1301,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   if (key === "department") return { kind: "text", maxWidth: 240 }
                   if (key === "office") return { kind: "text", maxWidth: 420 }
                   if (key === "station") return { kind: "text", maxWidth: 280 }
-                  if (key === "staff" || key === "modules") return { kind: "number", maxWidth: 104 }
-                  if (key === "status") return { kind: "status", maxWidth: 144 }
-                  if (key === "created_at" || key === "updated_at") return { kind: "date" }
+                  if (key === "staff" || key === "modules") return { kind: "number", maxWidth: 104, growthWeight: 0 }
+                  if (key === "status") return { kind: "status", maxWidth: 144, growthWeight: 0 }
+                  if (key === "created_at" || key === "updated_at") return { kind: "date", maxWidth: 205, growthWeight: 0 }
                   return { kind: "text" }
                 }), { kind: "actions" }]} className="min-w-[960px]">
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">

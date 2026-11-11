@@ -16,7 +16,7 @@ export default function AuditLogsTableSkeleton({ rowCount = 8, embedded = false,
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <Table columns={["selection", ...(has("created_at") ? ["date"] : []), ...(has("severity") ? ["status"] : []), ...(has("actor") ? ["text"] : []), ...(showScope && has("office_id") ? ["status"] : []), ...(has("action") ? ["text"] : []), ...(has("details") ? [{ kind: "text", maxWidth: 340 }] : []), ...(has("ip") ? [{ kind: "text", maxWidth: 200 }] : []), "actions"]} className={showScope ? "min-w-[900px]" : "min-w-[1240px]"}>
+        <Table columns={["selection", ...(has("created_at") ? [{ kind: "date", maxWidth: 205, growthWeight: 0 }] : []), ...(has("severity") ? [{ kind: "status", maxWidth: 120, growthWeight: 0 }] : []), ...(has("actor") ? [{ kind: "text", maxWidth: 240 }] : []), ...(showScope && has("office_id") ? [{ kind: "status", maxWidth: 180, growthWeight: 0 }] : []), ...(has("action") ? [{ kind: "text", maxWidth: 300 }] : []), ...(has("details") ? [{ kind: "text", maxWidth: 340 }] : []), ...(has("ip") ? [{ kind: "text", maxWidth: 200 }] : []), "actions"]} className={showScope ? "min-w-[900px]" : "min-w-[1240px]"}>
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 min-w-12 max-w-12 py-3 px-2.5 text-center">

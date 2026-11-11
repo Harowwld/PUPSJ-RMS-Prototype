@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
@@ -152,8 +153,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const tableColumns = [
     { kind: "selection" },
-    { kind: "date", maxWidth: 205 },
-    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth })),
+    { kind: "date", maxWidth: 205, growthWeight: 0 },
+    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth, ...(kind === "status" ? { growthWeight: 0 } : {}) })),
     { kind: "text", maxWidth: 300 },
     ...(showColumn("details") ? [{ kind: "text", maxWidth: 340 }] : []),
     ...(showColumn("ip") ? [{ kind: "text", maxWidth: 200 }] : []),
