@@ -159,7 +159,6 @@ function getContentColumnWidths(columns, children, availableWidth, className = "
   const widths = schemas.map((column, index) => {
     if (["selection", "actions"].includes(column.kind)) return 48;
     if (column.width) return Number(column.width);
-    if (!bodyLengths[index] && column.maxWidth) return Math.min(maxWidths[index], Number(column.maxWidth));
     const natural = Math.ceil(Math.max(bodyLengths[index], headerLengths[index]) * 7.1 + 36);
     return Math.min(maxWidths[index], Math.max(minWidths[index], natural));
   });

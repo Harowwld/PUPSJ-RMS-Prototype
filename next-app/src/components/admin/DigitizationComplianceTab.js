@@ -390,7 +390,7 @@ function DigitizationComplianceContent({
     });
   }, [byCourse, tableSearch, filterRules, sortBy, sortOrder]);
 
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   useEffect(() => {
     setPage(1);

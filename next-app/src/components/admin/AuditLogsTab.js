@@ -68,7 +68,7 @@ export default function AuditLogsTab({
 }) {
   const logs = displayLogs || []
   const [localSearch, setLocalSearch] = useState(logSearch || "")
-  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 50)
+  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 20)
   const [isExporting, setIsExporting] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)

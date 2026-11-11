@@ -170,7 +170,7 @@ export default function BackupTab({
     PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
   )
   const [page, setPage] = useUrlPage()
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
 

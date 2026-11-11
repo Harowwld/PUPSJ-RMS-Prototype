@@ -22,6 +22,7 @@ import TablePagination from '@/components/shared/TablePagination';
 import {TooltipProvider,Tooltip,TooltipTrigger,TooltipContent} from '@/components/ui/tooltip';
 import {DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem} from '@/components/ui/dropdown-menu';
 import StudentRequestsSkeleton from '@/components/student/skeletons/StudentRequestsTableSkeleton';
+import TransactionsTableSkeleton from '@/components/systemadmin/skeletons/TransactionsTableSkeleton';
 import {ViewIcon,PencilEdit01Icon} from 'hugeicons-react';
 window.events=[];
 function LazyScroll(){
@@ -43,7 +44,7 @@ function App(){
  <TablePagination page={page} pageSize={pageSize} totalCount={total} onPageChange={setPage} onPageSizeChange={setPageSize} label="Students"/>
  <div className="w-full overflow-x-auto"><Table id="other" columns={['text']}><thead><tr><th>Second table</th></tr></thead><tbody><tr><td>Same density</td></tr></tbody></Table></div>
  <div className="w-full overflow-x-auto"><Table id="matrix" layout="matrix" columns={[{kind:'identifier',width:180},{kind:'text',width:240},'category']}><thead><tr><th>ID</th><th>Name</th><th>Requirement</th></tr></thead><tbody><tr><td>2026-00001</td><td><TableText>{long}</TableText></td><td><button aria-label="Upload requirement" onClick={()=>window.events.push('upload')}>Upload Document</button></td></tr></tbody></Table></div>
- <LazyScroll/><StudentRequestsSkeleton rowCount={2}/>
+ <LazyScroll/><StudentRequestsSkeleton rowCount={2}/><div id="operations-loading"><TransactionsTableSkeleton rowCount={2} showPagination={false}/></div>
  </main></TablePreferencesProvider></TooltipProvider>;
 }
 createRoot(document.getElementById('root')).render(<App/>);
@@ -86,11 +87,16 @@ try {
       await setDensity(density);
       const geometry = await page.evaluate(() => {
         const table = document.querySelector("#records"), row = table.tBodies[0].rows[0];
-        return { row: row.getBoundingClientRect().height, header: table.tHead.rows[0].getBoundingClientRect().height, tableWidth: table.getBoundingClientRect().width, viewportWidth: document.querySelector("#viewport").clientWidth, actions: row.cells[6].getBoundingClientRect().width, selection: row.cells[0].getBoundingClientRect().width, align: Array.from(row.cells).map((cell) => getComputedStyle(cell).textAlign), other: document.querySelector("#other").dataset.density, overflow: document.documentElement.scrollWidth > innerWidth, identifier: getComputedStyle(row.querySelector('[data-slot="table-identifier"]')).height, constrained: row.cells[2].getBoundingClientRect().width, actionHeading: table.tHead.rows[0].cells[6].querySelector('.sr-only')?.textContent.trim(), actionHeadingBox: table.tHead.rows[0].cells[6].querySelector('.sr-only')?.getBoundingClientRect().width, columnWidths: Array.from(row.cells, (cell) => cell.getBoundingClientRect().width) };
+        return { row: row.getBoundingClientRect().height, header: table.tHead.rows[0].getBoundingClientRect().height, tableWidth: table.getBoundingClientRect().width, viewportWidth: document.querySelector("#viewport").clientWidth, actions: row.cells[6].getBoundingClientRect().width, actionHeaderBorder: getComputedStyle(table.tHead.rows[0].cells[6]).borderLeftWidth, selection: row.cells[0].getBoundingClientRect().width, align: Array.from(row.cells).map((cell) => getComputedStyle(cell).textAlign), other: document.querySelector("#other").dataset.density, overflow: document.documentElement.scrollWidth > innerWidth, identifier: getComputedStyle(row.querySelector('[data-slot="table-identifier"]')).height, constrained: row.cells[2].getBoundingClientRect().width, actionHeading: table.tHead.rows[0].cells[6].querySelector('.sr-only')?.textContent.trim(), actionHeadingBox: table.tHead.rows[0].cells[6].querySelector('.sr-only')?.getBoundingClientRect().width, columnWidths: Array.from(row.cells, (cell) => cell.getBoundingClientRect().width) };
       });
       assert.ok(Math.abs(geometry.row - height) <= 1, JSON.stringify({ density, geometry }));
       assert.ok(Math.abs(geometry.header - 40) <= 1, JSON.stringify(geometry));
       assert.ok(Math.abs(geometry.actions - 48) <= 1, JSON.stringify(geometry));
+      assert.equal(geometry.actionHeaderBorder, "0px");
+      if (width === 1440) {
+        const loadingWidth = await page.$eval('#operations-loading', (container) => ({ table: container.querySelector('table').getBoundingClientRect().width, viewport: container.querySelector('.overflow-x-auto').clientWidth }));
+        assert.ok(loadingWidth.table <= loadingWidth.viewport + 1, JSON.stringify(loadingWidth));
+      }
       assert.ok(Math.abs(geometry.selection - 48) <= 1, JSON.stringify(geometry));
       assert.ok(geometry.tableWidth >= geometry.viewportWidth - 1, JSON.stringify(geometry));
       if (geometry.viewportWidth >= 900) assert.ok(Math.abs(geometry.tableWidth - geometry.viewportWidth) <= 1, JSON.stringify(geometry));

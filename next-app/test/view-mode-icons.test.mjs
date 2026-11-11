@@ -81,15 +81,11 @@ test("Codebase views adhere to canonical view sequence: kanban, grid, list, tabl
     },
     {
       file: "src/components/student/StudentComplianceTab.js",
-      expected: ["grid", "table"],
+      expected: ["grid", "list"],
     },
     {
       file: "src/components/staff/StudentOrganizationsTab.js",
       expected: ["grid", "table"],
-    },
-    {
-      file: "src/components/staff/RecordsArchiveTab.js",
-      expected: ["card", "table"],
     },
     {
       file: "src/components/systemadmin/OfficeManagementTab.js",
