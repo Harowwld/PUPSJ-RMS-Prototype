@@ -110,7 +110,7 @@ export default function StudentFeedbackModal({
       }
 
       toast.success("Thank you for your feedback!", {
-        description: `Your ${rating}-star rating has been recorded for Request #${request.id}.`,
+        description: `Your ${rating}-star rating has been recorded for Request ${request.id}.`,
       });
 
       if (onFeedbackSubmitted) {
@@ -146,7 +146,7 @@ export default function StudentFeedbackModal({
                 </DialogTitle>
                 {request?.id && (
                   <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
-                    #{request.id}
+                    {request.id}
                   </span>
                 )}
               </div>
@@ -204,10 +204,10 @@ export default function StudentFeedbackModal({
                 </div>
                 <span
                   className={cn(
-                    "mt-2 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-all",
+                    "mt-2 transition-all",
                     activeRating > 0
-                      ? "bg-amber-100/70 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                      : "text-gray-400 dark:text-zinc-500"
+                      ? cn(BADGE_BASE, BADGE_PALETTES.amber)
+                      : "text-xs font-semibold px-2.5 py-0.5 text-gray-400 dark:text-zinc-500"
                   )}
                 >
                   {sentimentText}

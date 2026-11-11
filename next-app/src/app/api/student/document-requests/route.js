@@ -33,7 +33,8 @@ function requestAttachmentsDir() {
 }
 
 export async function GET(req) {
-  const access = await requireStudent(req);
+  try {
+    const access = await requireStudent(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
 
@@ -167,7 +168,14 @@ export async function GET(req) {
       : null;
   });
 
-  return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
+    return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
+  } catch (err) {
+    console.error("GET /api/student/document-requests error:", err);
+    return NextResponse.json(
+      { ok: false, error: err.message || "Failed to load document requests." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req) {
@@ -393,22 +401,6 @@ export async function POST(req) {
           throw error;
         }
       }
-      if (effectiveStudentNo) {
-        const existingStudent = await runOne(
-          "SELECT student_no FROM students WHERE upper(student_no) = upper($1)",
-          [effectiveStudentNo],
-        );
-        if (!existingStudent) {
-          const studentDisplayName = finalRequesterName || effectiveStudentNo;
-          await run(
-            `INSERT INTO students (student_no, name, status, course_code)
-             VALUES ($1, $2, 'Active', $3)
-             ON CONFLICT (student_no) DO NOTHING`,
-            [effectiveStudentNo, encryptPII(studentDisplayName), courseCode || null],
-          );
-        }
-      }
-
       const createdRequest = await runOne(
         `INSERT INTO document_requests (
            office_id, student_no, doc_type, status, notes, client_type, course_code, requester_name, requester_relationship, requester_contact, identity_profile_id
@@ -470,6 +462,12 @@ export async function POST(req) {
     }
     if (error?.code === "STUDENT_NOT_ACTIVE_IN_OFFICE") {
       return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
+    if (error?.code === "23503" && error?.constraint === "document_requests_student_no_fkey") {
+      return NextResponse.json(
+        { ok: false, error: "No student record matches that Student Number. Please contact the Registrar to verify the record." },
+        { status: 400 },
+      );
     }
     console.error("Student document request creation failed:", error);
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });
