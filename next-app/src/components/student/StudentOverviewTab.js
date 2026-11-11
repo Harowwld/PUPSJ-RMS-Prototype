@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
-import TablePagination from "@/components/shared/TablePagination";
 import { SegmentedControl } from "@/components/ui/tabs";
-import useUrlPage from "@/hooks/useUrlPage";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, getDepartmentBadgeClass, getStatusBadgeClass } from "@/lib/badgeStyles";
 import {
   Empty,
   EmptyHeader,
@@ -32,7 +30,8 @@ import {
 } from "@/components/ui/sheet";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
 import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
-import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
+import NarrativeText from "@/components/shared/NarrativeText";
+import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, ArrowUpRight01Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
@@ -81,10 +80,25 @@ export default function StudentOverviewTab({
   hasLoaded = false,
 }) {
   const [activityFilter, setActivityFilter] = useState("all");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [page, setPage] = useUrlPage({ enabled: true, initialPage: 1 });
   const [selectedComplianceDetail, setSelectedComplianceDetail] = useState(null);
   const [selectedPostEventDetail, setSelectedPostEventDetail] = useState(null);
+
+  const [overrideAvatar, setOverrideAvatar] = useState(null);
+  const currentAvatarFilename = overrideAvatar ? overrideAvatar.filename : (authUser?.avatar_filename || null);
+  const avatarTimestamp = overrideAvatar ? overrideAvatar.timestamp : null;
+
+  React.useEffect(() => {
+    const handleAvatarChanged = (e) => {
+      if (e?.detail && "avatar_filename" in e.detail) {
+        setOverrideAvatar({
+          filename: e.detail.avatar_filename,
+          timestamp: Date.now(),
+        });
+      }
+    };
+    window.addEventListener("avatar-changed", handleAvatarChanged);
+    return () => window.removeEventListener("avatar-changed", handleAvatarChanged);
+  }, []);
 
   // 1. Identify Urgent Attention Items
   const attentionItems = useMemo(() => {
@@ -100,8 +114,9 @@ export default function StudentOverviewTab({
         type: "ready",
         priority: 1,
         title: "Record Ready for Pick-Up",
-        description: `Your ${req.doc_type} (Ticket #${req.ticket_no || req.id}) has been printed. Visit Registrar Window 2 with your student ID to claim your physical document.`,
+        description: `Your ${req.doc_type} (Ticket ${req.ticket_no || req.id}) has been printed. Visit Registrar Window 2 with your student ID to claim your physical document.`,
         actionLabel: "View Pick-Up Info",
+        redirects: !Boolean(onSelectRequest),
         action: () => {
           if (onSelectRequest) {
             onSelectRequest(req);
@@ -125,8 +140,9 @@ export default function StudentOverviewTab({
         type: "payment",
         priority: 2,
         title: "Proof of Payment Required",
-        description: `Ticket #${req.ticket_no || req.id} for ${req.doc_type} requires your official payment receipt for processing.`,
-        actionLabel: "Upload Payment",
+        description: `Ticket ${req.ticket_no || req.id} for ${req.doc_type} requires your official payment receipt for processing.`,
+        actionLabel: "Open Payment Details",
+        redirects: !Boolean(onSelectRequest),
         action: () => {
           if (onSelectRequest) {
             onSelectRequest(req);
@@ -154,7 +170,8 @@ export default function StudentOverviewTab({
         priority: 3,
         title: "Missing Permanent Admission Records",
         description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
-        actionLabel: "View Requirements",
+        actionLabel: "Open Document Checklist",
+        redirects: true,
         action: () => onNavigate("compliance"),
         icon: " ClipboardIcon",
         badge: "Enrollment Clearance",
@@ -174,7 +191,8 @@ export default function StudentOverviewTab({
         priority: 4,
         title: "Event Proposal Returned for Revision",
         description: `OSAS requested revisions for "${prop.title || prop.event_title}". Please review the evaluation notes and resubmit.`,
-        actionLabel: "Revise Proposal",
+        actionLabel: "View Proposal Feedback",
+        redirects: !Boolean(onSelectProposal),
         action: () => {
           if (onSelectProposal) {
             onSelectProposal(prop);
@@ -196,7 +214,8 @@ export default function StudentOverviewTab({
         priority: 5,
         title: "Post-Event Report Due",
         description: `You have ${pendingPostEvents.length} completed event${pendingPostEvents.length > 1 ? "s" : ""} pending liquidation and post-activity reports.`,
-        actionLabel: "Submit Report",
+        actionLabel: "Open OSAS Submissions",
+        redirects: true,
         action: () => onNavigate("osas"),
         icon: " FileUploadIcon",
         badge: "Liquidation Due",
@@ -307,7 +326,7 @@ export default function StudentOverviewTab({
         id: `milestone-req-${req.id}-${req.updated_at || req.created_at}`,
         category: "requests",
         title: req.doc_type,
-        subtitle: `Ticket #${req.ticket_no || req.id}`,
+        subtitle: `Ticket ${req.ticket_no || req.id}`,
         description: desc,
         date: req.updated_at || req.created_at,
         office: "Office of the Registrar",
@@ -426,17 +445,12 @@ export default function StudentOverviewTab({
     return allMilestones.filter((m) => m.category === activityFilter);
   }, [allMilestones, activityFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredMilestones.length / itemsPerPage));
-  const validPage = Math.min(Math.max(1, page), totalPages);
-
-  const paginatedMilestones = useMemo(() => {
-    const start = (validPage - 1) * itemsPerPage;
-    return filteredMilestones.slice(start, start + itemsPerPage);
-  }, [filteredMilestones, validPage, itemsPerPage]);
+  const displayedMilestones = useMemo(() => {
+    return filteredMilestones.slice(0, 5);
+  }, [filteredMilestones]);
 
   const handleFilterChange = (tabId) => {
     setActivityFilter(tabId);
-    setPage(1);
   };
 
   // Clean student name and summaries
@@ -470,35 +484,38 @@ export default function StudentOverviewTab({
           leftAction={
             <ProfileAvatar
               id={authUser?.student_no || authUser?.id}
-              avatarFilename={authUser?.avatar_filename}
+              avatarFilename={currentAvatarFilename ? `${currentAvatarFilename}&t=${avatarTimestamp}` : null}
               name={studentAvatarName}
               initials={studentInitials}
-              className="h-11 w-11 border border-red-100 bg-red-50 dark:border-red-900/40 dark:bg-red-950/40"
-              fallbackClassName="bg-red-50 text-sm font-semibold text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+              className="size-11 rounded-full shadow-2xs shrink-0"
+              fallbackClassName="text-sm font-semibold"
             />
           }
           title={
-            <div className="flex items-center gap-2 flex-wrap">
-              <span>Welcome back, {studentDisplayName}</span>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                Welcome back, {studentDisplayName}
+              </span>
               {authUser?.student_no && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
                   {authUser.student_no}
                 </span>
               )}
               {isOfficer && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                  <Shield01Icon size={12} aria-hidden="true" />
                   Verified Officer
                 </span>
               )}
             </div>
           }
           description="PUPSJ Student Records & Activity Hub · Immediate status of your academic requests, checklist compliance, and event proposals."
-          showBorder={true}
+          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <RefreshButton
                 onRefresh={onRefresh}
                 isLoading={refreshing}
@@ -506,24 +523,25 @@ export default function StudentOverviewTab({
               />
               <Button
                 type="button"
+                size="sm"
                 onClick={onNewRequest}
-                className="h-9 shrink-0 px-4 cursor-pointer"
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer"
               >
-                Request Document
+                Open Request Form
               </Button>
             </div>
           }
         />
 
         {/* 2. Unified Content Body */}
-        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
+        <div className="border-t border-border dark:border-border p-6 flex flex-[1_0_auto] flex-col gap-6">
 
       {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
       {attentionItems.length > 0 && (
         <div className="flex flex-col gap-2.5 w-full">
-          <div className="flex items-center gap-2 px-1">
-            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
+          <div className="flex items-center gap-2 px-0.5">
+            <span className="flex h-2 w-2 rounded-full bg-amber-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
               Attention Required ({attentionItems.length})
             </h2>
           </div>
@@ -538,20 +556,15 @@ export default function StudentOverviewTab({
                 <div
                   key={item.id}
                   role="alert"
-                  className={cn(
-                    "flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-4 px-4 sm:px-5 rounded-2xl border transition-all",
-                    isAmber && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-amber-500/20 dark:border-amber-500/30 hover:border-amber-500/35",
-                    isEmerald && "bg-emerald-500/[0.04] dark:bg-emerald-500/[0.08] border-emerald-500/20 dark:border-emerald-500/30 hover:border-emerald-500/35",
-                    isBlue && "bg-blue-500/[0.04] dark:bg-blue-500/[0.08] border-blue-500/20 dark:border-blue-500/30 hover:border-blue-500/35"
-                  )}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 px-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs transition-all"
                 >
                   <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                     <div
                       className={cn(
-                        "flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl border shadow-2xs",
-                        isAmber && "bg-amber-100/80 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/40",
-                        isEmerald && "bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/40",
-                        isBlue && "bg-blue-100/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/40"
+                        "size-10 shrink-0 rounded-full flex items-center justify-center",
+                        isAmber && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+                        isEmerald && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+                        isBlue && "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
                       )}
                     >
                       <AppIcon className={cn(item.icon, "text-lg")} />
@@ -563,36 +576,44 @@ export default function StudentOverviewTab({
                         </span>
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-medium border shrink-0",
-                            isAmber && "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20",
-                            isEmerald && "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20",
-                            isBlue && "bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/20"
+                            BADGE_BASE,
+                            isEmerald
+                              ? BADGE_PALETTES.emerald
+                              : isBlue
+                              ? BADGE_PALETTES.blue
+                              : BADGE_PALETTES.amber
                           )}
                         >
-                          <span
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full shrink-0",
-                              isAmber && "bg-amber-500",
-                              isEmerald && "bg-emerald-500",
-                              isBlue && "bg-blue-500"
-                            )}
-                          />
+                          <AppIcon className={cn(item.icon, "text-[12px]")} aria-hidden="true" />
                           {item.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-zinc-300 mt-1 sm:mt-0.5 leading-relaxed">
-                        {item.description}
-                      </p>
+                      <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                        <NarrativeText text={item.description} mode="full" />
+                      </div>
                     </div>
                   </div>
 
-                  <Button
-                    type="button"
-                    onClick={item.action}
-                    className="h-8 px-4 cursor-pointer shrink-0 self-start sm:self-center"
-                  >
-                    {item.actionLabel}
-                  </Button>
+                  {item.redirects ? (
+                    <button
+                      type="button"
+                      onClick={item.action}
+                      className="group/btn inline-flex items-center gap-1.5 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline underline-offset-4 transition-colors cursor-pointer shrink-0 self-start sm:self-center py-1.5 px-1"
+                    >
+                      <span>{item.actionLabel}</span>
+                      <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                    </button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={item.action}
+                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all self-start sm:self-center"
+                    >
+                      {item.actionLabel}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -602,137 +623,142 @@ export default function StudentOverviewTab({
 
       {/* 3. Top Operational Row: Active Request Tracking (Full Width) */}
       <div className="flex flex-col gap-2.5 w-full">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex items-center justify-between px-0.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
               Active Request Tracking
             </h2>
             {inFlightCount > 0 && (
-              <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "tabular-nums")}>
+                <EmptyClock01Icon size={12} aria-hidden="true" />
                 {inFlightCount} in progress
               </span>
             )}
           </div>
           {activeRequest && (
-            <span className="text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400">
-              Ticket #{activeRequest.ticket_no || activeRequest.id}
+            <span className="text-xs font-normal tabular-nums text-gray-500 dark:text-zinc-400">
+              Ticket {activeRequest.ticket_no || activeRequest.id}
             </span>
           )}
         </div>
 
         {activeRequest ? (
-          <div className="p-5 sm:p-6 rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col justify-between gap-4 w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400">
-                    Registrar Academic Request
-                  </span>
-                  <span className="text-gray-300 dark:text-zinc-700">•</span>
-                  <span className="text-xs text-gray-500">
-                    Requested on {formatPHDateTime(activeRequest.created_at)}
-                  </span>
+          <div className="overflow-hidden rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs flex flex-col w-full">
+            <div className="p-6 flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border dark:border-border">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400">
+                      Registrar Academic Request
+                    </span>
+                    <span className="text-gray-300 dark:text-zinc-700">•</span>
+                    <span className="text-xs text-gray-500">
+                      Requested on {formatPHDateTime(activeRequest.created_at)}
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-50 mt-1 truncate">
+                    {activeRequest.doc_type}
+                  </h3>
+                  {activeRequest.purpose && (
+                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                      Purpose: <span className="text-gray-700 dark:text-zinc-300 font-medium">{activeRequest.purpose}</span>
+                    </p>
+                  )}
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-50 mt-1 truncate">
-                  {activeRequest.doc_type}
-                </h3>
-                {activeRequest.purpose && (
-                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
-                    Purpose: <span className="text-gray-700 dark:text-zinc-300 font-medium">{activeRequest.purpose}</span>
-                  </p>
-                )}
+
+                <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (onSelectRequest && activeRequest) {
+                        onSelectRequest(activeRequest);
+                      } else {
+                        onNavigate?.("odrs");
+                      }
+                    }}
+                    className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  >
+                    View Details
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (onSelectRequest && activeRequest) {
-                      onSelectRequest(activeRequest);
-                    } else {
-                      onNavigate?.("odrs");
-                    }
-                  }}
-                  className="h-8 px-3.5 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs"
-                >
-                  View Details
-                </Button>
+              {/* Stepper Pipeline */}
+              <div className="flex flex-col gap-2 pt-1">
+                <div className="grid grid-cols-4 gap-2.5">
+                  {stepperSteps.map((step) => (
+                    <div key={step.id} className="flex flex-col gap-2">
+                      <div
+                        className={cn(
+                          "h-2 w-full rounded-full transition-all duration-300",
+                          step.done
+                            ? "bg-pup-maroon dark:bg-red-500 shadow-2xs"
+                            : "bg-gray-100 dark:bg-zinc-800"
+                        )}
+                      />
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <AppIcon
+                          className={cn(
+                            "text-xs shrink-0",
+                            step.done ? " CheckmarkCircle01Icon text-pup-maroon dark:text-red-400" : " CircleIcon text-gray-300 dark:text-zinc-700"
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "text-[11px] truncate font-medium",
+                            step.done
+                              ? "text-gray-900 dark:text-zinc-100 font-bold"
+                              : "text-gray-400 dark:text-zinc-500"
+                          )}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Stepper Pipeline */}
-            <div className="flex flex-col gap-2 pt-1">
-              <div className="grid grid-cols-4 gap-2.5">
-                {stepperSteps.map((step) => (
-                  <div key={step.id} className="flex flex-col gap-2">
-                    <div
-                      className={cn(
-                        "h-2 w-full rounded-full transition-all duration-300",
-                        step.done
-                          ? "bg-pup-maroon dark:bg-red-500 shadow-2xs"
-                          : "bg-gray-100 dark:bg-zinc-800"
-                      )}
-                    />
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <AppIcon
-                        className={cn(
-                          "text-xs shrink-0",
-                          step.done ? " CheckmarkCircle01Icon text-pup-maroon dark:text-red-400" : " CircleIcon text-gray-300 dark:text-zinc-700"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-[11px] truncate font-medium",
-                          step.done
-                            ? "text-gray-900 dark:text-zinc-100 font-bold"
-                            : "text-gray-400 dark:text-zinc-500"
-                        )}
-                      >
-                        {step.label}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Status Note or Next Step Callout */}
-              <div className="mt-2 p-3 rounded-xl bg-white dark:bg-zinc-800/80 border border-border/80 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-gray-600 dark:text-zinc-300 min-w-0">
-                  <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
-                  <span className="truncate">
-                    {normalizeStatus(activeRequest.status) === "ready"
-                      ? "Your document is sealed and ready for release at Registrar Window 2. Bring a valid student ID."
-                      : normalizeStatus(activeRequest.status) === "pendingpayment"
-                      ? "Payment pending. Please upload the official university payment receipt to continue."
-                      : "Official turnaround standard: 3 to 5 business days from verification."}
-                  </span>
-                </div>
+            {/* Attached Edge-to-Edge Bottom Notice Strip */}
+            <div className="px-6 py-2.5 border-t border-border/80 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-zinc-300 min-w-0">
+                <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
+                <span className="truncate text-xs font-medium">
+                  {normalizeStatus(activeRequest.status) === "ready"
+                    ? "Your document is sealed and ready for release at Registrar Window 2. Bring a valid student ID."
+                    : normalizeStatus(activeRequest.status) === "pendingpayment"
+                    ? "Payment pending. Please upload the official university payment receipt to continue."
+                    : "Official turnaround standard: 3 to 5 business days from verification."}
+                </span>
               </div>
             </div>
           </div>
         ) : (
           <EmptyState
             variant="compact"
-            className="rounded-2xl border border-border bg-gray-50/50 dark:bg-zinc-900/30"
+            className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs"
             icon={InboxIcon}
             title="No In-Flight Document Requests"
             description="Need official credentials, TOR, certifications, or diploma duplicates? Submit a request anytime."
           >
             <Button
               type="button"
+              size="sm"
               onClick={onNewRequest}
-              className="h-9 px-4 cursor-pointer"
+              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
             >
-              Request Document
+              Open Request Form
             </Button>
           </EmptyState>
         )}
       </div>
 
       {/* 4. Quick Portals & Actions Hub (Full-Width 3-Column Grid) */}
-      <div className="flex flex-col gap-2.5 w-full py-6">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400 px-1">
-          Quick Portals & Actions
+      <div className="flex flex-col gap-2.5 w-full">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 px-0.5">
+          Quick Portals &amp; Actions
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
@@ -740,13 +766,14 @@ export default function StudentOverviewTab({
           <button
             type="button"
             onClick={() => onNavigate("odrs")}
-            className="group flex flex-col items-start p-5 rounded-2xl border border-border bg-gray-50/40 hover:border-pup-maroon/40 hover:bg-red-50/20 dark:bg-zinc-900/30 dark:hover:bg-red-950/20 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-[0.99]"
+            className="group flex flex-col items-start p-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all cursor-pointer text-left active:scale-[0.99]"
           >
             <div className="flex items-center justify-between w-full">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-pup-maroon border border-red-100 dark:bg-red-950/40 dark:border-red-900/40 dark:text-red-400 group-hover:scale-105 transition-transform">
-                <FileUploadIcon size="1em" className="text-xl" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 group-hover:scale-105 transition-transform">
+                <FileUploadIcon size="1em" className="text-lg" />
               </div>
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "tabular-nums")}>
+                <FileUploadIcon size={12} aria-hidden="true" />
                 {(data.requests || []).length} Records
               </span>
             </div>
@@ -756,9 +783,9 @@ export default function StudentOverviewTab({
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               Official Transcript of Records, Certifications, and clearance requests.
             </span>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-pup-maroon dark:text-red-400">
-              <span>View</span>
-              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-pup-maroon dark:text-red-400 group-hover:underline underline-offset-4">
+              <span>Open Document Requests</span>
+              <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
 
@@ -766,14 +793,15 @@ export default function StudentOverviewTab({
           <button
             type="button"
             onClick={() => onNavigate("compliance")}
-            className="group flex flex-col items-start p-5 rounded-2xl border border-border bg-gray-50/40 hover:border-emerald-500/40 hover:bg-emerald-50/20 dark:bg-zinc-900/30 dark:hover:bg-emerald-950/20 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-[0.99]"
+            className="group flex flex-col items-start p-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all cursor-pointer text-left active:scale-[0.99]"
           >
             <div className="flex items-center justify-between w-full">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-                <ClipboardIcon size="1em" className="text-xl" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                <ClipboardIcon size="1em" className="text-lg" />
               </div>
               {complianceSummary && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "tabular-nums")}>
+                  <ClipboardIcon size={12} aria-hidden="true" />
                   {complianceSummary.submittedCount}/{complianceSummary.totalRequired} ({complianceSummary.complianceRate}%)
                 </span>
               )}
@@ -784,9 +812,9 @@ export default function StudentOverviewTab({
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               Verify physical archival compliance (Form 137, PSA, Good Moral).
             </span>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-              <span>View</span>
-              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 group-hover:underline underline-offset-4">
+              <span>Open Document Checklist</span>
+              <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
 
@@ -794,17 +822,16 @@ export default function StudentOverviewTab({
           <button
             type="button"
             onClick={() => onNavigate("osas")}
-            className="group flex flex-col items-start p-5 rounded-2xl border border-border bg-gray-50/40 hover:border-blue-500/40 hover:bg-blue-50/20 dark:bg-zinc-900/30 dark:hover:bg-blue-950/20 shadow-2xs hover:shadow-xs transition-all cursor-pointer text-left active:scale-[0.99]"
+            className="group flex flex-col items-start p-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs hover:border-gray-300 dark:hover:border-zinc-700 transition-all cursor-pointer text-left active:scale-[0.99]"
           >
             <div className="flex items-center justify-between w-full">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900/40 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                <StudentIcon size="1em" className="text-xl" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                <StudentIcon size="1em" className="text-lg" />
               </div>
-              {isOfficer && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
-                  {(data.proposals || []).length} Active
-                </span>
-              )}
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "tabular-nums")}>
+                <StudentIcon size={12} aria-hidden="true" />
+                {isOfficer ? `${(data.proposals || []).length} Active` : "Student Body"}
+              </span>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
               OSAS Submissions
@@ -812,9 +839,9 @@ export default function StudentOverviewTab({
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               Student organization event proposals, CBL approvals, and liquidation.
             </span>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 dark:text-blue-400">
-              <span>View</span>
-              <ArrowRight02Icon size="1em" className="text-[10px] group-hover:translate-x-1 transition-transform" />
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 dark:text-blue-400 group-hover:underline underline-offset-4">
+              <span>Open OSAS Submissions</span>
+              <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
         </div>
@@ -822,12 +849,12 @@ export default function StudentOverviewTab({
 
       {/* 5. FULL-SIZE Recent Activity & Institutional Updates (Spanning 100% Width) */}
       <div className="flex flex-[1_0_auto] flex-col gap-2.5 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-0.5">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-zinc-400">
-              Recent Activity & Institutional Updates
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              Recent Activity &amp; Institutional Updates
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "tabular-nums")}>
               {filteredMilestones.length}
             </span>
           </div>
@@ -848,95 +875,92 @@ export default function StudentOverviewTab({
         </div>
 
         {/* Full-Width Activity Panel */}
-        <div className="p-0 flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border bg-gray-50/30 dark:bg-zinc-900/20 w-full">
-          {filteredMilestones.length > 0 ? (
-            <>
-              <div className="divide-y divide-border flex-[1_0_auto]">
-                {paginatedMilestones.map((event) => {
-                  const isEmerald = event.tone === "emerald";
-                  const isAmber = event.tone === "amber";
-                  const isBlue = event.tone === "blue";
-                  const isRose = event.tone === "rose";
+        <div className="p-0 flex flex-[1_0_auto] flex-col overflow-hidden rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs w-full">
+          {displayedMilestones.length > 0 ? (
+            <div className="divide-y divide-border flex-[1_0_auto]">
+              {displayedMilestones.map((event) => {
+                const isEmerald = event.tone === "emerald";
+                const isAmber = event.tone === "amber";
+                const isBlue = event.tone === "blue";
+                const isRose = event.tone === "rose";
 
-                  return (
-                    <div
-                      key={event.id}
-                      onClick={event.onClick}
-                      className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-gray-100/60 dark:hover:bg-zinc-900/40 transition-colors cursor-pointer group"
-                    >
-                      {/* Left: Icon, Title, and Description */}
-                      <div className="flex items-start gap-4 min-w-0 flex-1">
-                        <div
-                          className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105 mt-0.5",
-                            isEmerald && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-                            isAmber && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
-                            isBlue && "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
-                            isRose && "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
-                            !isEmerald && !isAmber && !isBlue && !isRose && "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
-                          )}
-                        >
-                          <AppIcon className={cn(event.icon, "text-lg")} />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                              {event.title}
-                            </span>
-                            <span className="text-[11px] text-gray-400 font-sans tabular-nums">
-                              {event.subtitle}
-                            </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400">
-                              {event.office}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-600 dark:text-zinc-300 mt-1 leading-relaxed">
-                            {event.description}
-                          </p>
-                        </div>
+                return (
+                  <div
+                    key={event.id}
+                    onClick={event.onClick}
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-gray-50/70 dark:hover:bg-zinc-900/40 transition-colors cursor-pointer group"
+                  >
+                    {/* Left: Icon, Title, and Description */}
+                    <div className="flex items-start gap-4 min-w-0 flex-1">
+                      <div
+                        className={cn(
+                          "size-10 shrink-0 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 mt-0.5",
+                          isEmerald && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+                          isAmber && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+                          isBlue && "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+                          isRose && "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+                          !isEmerald && !isAmber && !isBlue && !isRose && "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
+                        )}
+                      >
+                        <AppIcon className={cn(event.icon, "text-lg")} />
                       </div>
 
-                      {/* Right: Status Pill Badge, Timestamp, and Action CTA */}
-                      <div className="flex items-center gap-4 shrink-0 pl-14 md:pl-0 self-start md:self-center">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
-                            isEmerald && "bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800/40",
-                            isAmber && "bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40",
-                            isBlue && "bg-blue-50 text-blue-800 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/40",
-                            isRose && "bg-rose-50 text-rose-800 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800/40",
-                            !isEmerald && !isAmber && !isBlue && !isRose && "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
-                          )}
-                        >
-                          {event.statusLabel}
-                        </span>
-
-                        <span className="text-[11px] text-gray-400 dark:text-zinc-500 whitespace-nowrap min-w-[120px] text-right hidden sm:inline-block">
-                          {formatPHDateTime(event.date)}
-                        </span>
-
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            event.onClick();
-                          }}
-                          className="h-8 px-3 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-xs hidden md:inline-flex"
-                        >
-                          {event.actionLabel}
-                        </Button>
-
-                        <ArrowRight01Icon size="1em" className="text-xs text-gray-400 group-hover:translate-x-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-all md:hidden" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                            {event.title}
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-sans tabular-nums">
+                            {event.subtitle}
+                          </span>
+                          <span className={cn(BADGE_BASE, getDepartmentBadgeClass(String(event.office).includes("Registrar")))}>
+                            {event.office}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-zinc-300 mt-1 leading-relaxed">
+                          <NarrativeText text={event.description} mode="full" />
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              <TablePagination label="Student activity pages" page={validPage} pageSize={itemsPerPage} totalCount={filteredMilestones.length} displayedCount={paginatedMilestones.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />
-            </>
+                    {/* Right: Status Pill Badge, Timestamp, and Action CTA */}
+                    <div className="flex items-center gap-4 shrink-0 pl-14 md:pl-0 self-start md:self-center">
+                      <span
+                        className={cn(
+                          BADGE_BASE,
+                          isEmerald && BADGE_PALETTES.emerald,
+                          isAmber && BADGE_PALETTES.amber,
+                          isBlue && BADGE_PALETTES.blue,
+                          isRose && BADGE_PALETTES.rose,
+                          !isEmerald && !isAmber && !isBlue && !isRose && BADGE_PALETTES.gray
+                        )}
+                      >
+                        {event.statusLabel}
+                      </span>
+
+                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 whitespace-nowrap min-w-[120px] text-right hidden sm:inline-block">
+                        {formatPHDateTime(event.date)}
+                      </span>
+
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          event.onClick();
+                        }}
+                        className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all hidden md:inline-flex"
+                      >
+                        {event.actionLabel}
+                      </Button>
+
+                      <ArrowRight01Icon size="1em" className="text-xs text-gray-400 group-hover:translate-x-1 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-all md:hidden" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -955,9 +979,10 @@ export default function StudentOverviewTab({
                   <EmptyContent>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => handleFilterChange("all")}
                       title="View All Activity"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
                       View All Activity
                     </Button>
@@ -1069,20 +1094,25 @@ export default function StudentOverviewTab({
                   ? "Liquidation Cleared:"
                   : "Report Submitted:"}
               </strong>{" "}
-              {selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
-                ? "Financial liquidation statement and narrative report approved by OSAS."
-                : "Documentation is logged and pending OSAS financial liquidation evaluation."}
+              <NarrativeText
+                text={
+                  selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
+                    ? "Financial liquidation statement and narrative report approved by OSAS."
+                    : "Documentation is logged and pending OSAS financial liquidation evaluation."
+                }
+                mode="full"
+              />
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Unboxed Event Identity Block */}
             <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-full bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold border border-blue-500/20 dark:border-blue-900/40 mt-0.5 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-blue-500/10 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
                 <ClipboardIcon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md inline-block mb-1">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "mb-1")}>
                   {selectedPostEventDetail?.organization_name || "Student Affairs"}
                 </span>
                 <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
@@ -1102,12 +1132,17 @@ export default function StudentOverviewTab({
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
                 <InfoRow icon="PieChartIcon" label="Clearance Status">
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+                  <span className={cn(BADGE_BASE, getStatusBadgeClass(selectedPostEventDetail?.status || "Submitted"))}>
                     {selectedPostEventDetail?.status || "Submitted"}
                   </span>
                 </InfoRow>
                 <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
                 <InfoRow icon="DollarCircleIcon" label="Total Expenses" value={`₱${Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}`} />
+                {selectedPostEventDetail?.review_note && (
+                  <InfoRow icon="Message01Icon" label="OSAS Note">
+                    <NarrativeText text={selectedPostEventDetail.review_note} mode="full" />
+                  </InfoRow>
+                )}
               </div>
             </div>
 
@@ -1121,7 +1156,7 @@ export default function StudentOverviewTab({
                   {selectedPostEventDetail?.narrative_original_filename && (
                     <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
                           <File02Icon size="1em" className="text-base" />
                         </div>
                         <div className="min-w-0">
@@ -1138,7 +1173,7 @@ export default function StudentOverviewTab({
                   {selectedPostEventDetail?.liquidation_original_filename && (
                     <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                           <AppIcon className=" Invoice01Icon text-base" />
                         </div>
                         <div className="min-w-0">
