@@ -1,5 +1,6 @@
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import useUrlPage from "@/hooks/useUrlPage"
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 
 import { useState, useMemo, useEffect } from "react"
 import RoomMap2D from "@/components/staff/RoomMap2D"
@@ -7,6 +8,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ContentReveal } from "@/components/ui/motion"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
 import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
@@ -76,7 +78,7 @@ export default function StorageExplorerTab({
   const activeTheme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
 
   const [roomsPage, setRoomsPage] = useUrlPage()
-  const [roomsPerPage, setRoomsPerPage] = useState(10)
+  const [roomsPerPage, setRoomsPerPage] = useOsasViewPreference("storage_explorer", "roomsPerPage", 10)
   const [expandedDrawer, setExpandedDrawer] = useState(null)
 
   useEffect(() => {
@@ -135,15 +137,24 @@ export default function StorageExplorerTab({
 
 
 
-  const mapWrap = "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden"
+  const isInsideRoom = !loading && (locatorModel?.kind === "cabinets" || locatorModel?.kind === "drawers")
+  const mapWrap = "w-full max-w-5xl lg:max-w-[calc(100%-344px)] h-full flex-1 min-h-0 mx-auto overflow-hidden"
 
   return (
     <div
       id="view-storage"
-      className="animate-fade-up font-jakarta flex flex-[1_0_auto] h-auto w-full flex-col gap-6"
+      className={cn(
+        "animate-fade-up font-jakarta flex w-full flex-col gap-6",
+        isInsideRoom ? "flex-1 h-full min-h-0 overflow-hidden" : "flex-[1_0_auto] h-auto"
+      )}
     >
       {/* ONE Single Card Container encapsulating Header, Breadcrumbs & 2D Storage Explorer */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card
+        className={cn(
+          "flex w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta",
+          isInsideRoom ? "flex-1 h-full min-h-0" : "flex-[1_0_auto] h-auto"
+        )}
+      >
         <PageHeader
           icon="FolderOpenIcon"
           title={
@@ -256,8 +267,13 @@ export default function StorageExplorerTab({
             </div>
 
             {/* Level Inner Content */}
-            <div className="flex w-full flex-col flex-[1_0_auto] mx-auto pt-6 bg-white dark:bg-card rounded-b-2xl">
-              {loading ? (
+            <div
+              className={cn(
+                "flex w-full flex-col mx-auto bg-white dark:bg-card rounded-b-2xl",
+                isInsideRoom ? "flex-1 min-h-0 pt-4 overflow-hidden" : "flex-[1_0_auto] pt-6"
+              )}
+            >
+              {loading && !locatorModel ? (
               <StorageExplorerSkeleton embedded={true} />
             ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-[1_0_auto] flex-col w-full">
@@ -396,7 +412,7 @@ export default function StorageExplorerTab({
                 {(locatorModel?.rooms || []).length > 0 && <TablePagination label="Storage room pages" page={roomsPage} pageSize={roomsPerPage} totalCount={locatorModel.rooms.length} displayedCount={paginatedRooms.length} onPageChange={setRoomsPage} onPageSizeChange={setRoomsPerPage} />}
               </div>
             ) : locatorModel?.kind === "cabinets" ? (
-              <div className="px-8 pb-8 w-full">
+              <div className="px-6 pb-6 w-full flex-1 min-h-0 flex flex-col">
                 <div className={mapWrap}>
                   <RoomMap2D
                     kind="cabinets"
@@ -422,9 +438,9 @@ export default function StorageExplorerTab({
                 </div>
               </div>
             ) : (
-              <div className="px-8 pb-8 w-full">
-                <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center w-full max-w-7xl mx-auto">
-                  <div className={cn(mapWrap, "mx-0 flex-1")}>
+              <div className="px-6 pb-6 w-full flex-1 min-h-0 flex flex-col">
+                <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center w-full flex-1 min-h-0">
+                  <div className={cn(mapWrap, "mx-0 flex-1 min-w-0 lg:max-w-none")}>
                     <RoomMap2D
                       kind="drawers"
                       activeStudent={activeStudent}
@@ -447,7 +463,7 @@ export default function StorageExplorerTab({
                   </div>
 
                   {selectedCabinet && (
-                    <div className="w-full lg:w-[320px] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
+                    <ContentReveal className="w-full lg:w-[clamp(340px,42%,400px)] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
                       {/* Header */}
                       <div className="mb-4 flex items-center justify-between select-none">
                         <h5
@@ -479,11 +495,11 @@ export default function StorageExplorerTab({
                       </div>
 
                       {/* Drawer Slots */}
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-3 flex-1 min-h-0">
                         <span className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#8E8E93] dark:text-zinc-500 font-sans">
                           Drawer slots
                         </span>
-                        <div className="flex flex-col gap-[10px] max-h-[380px] overflow-y-auto pr-1">
+                        <div className="flex flex-col gap-[10px] flex-1 min-h-0 overflow-y-auto pr-1">
                           {locatorModel?.drawers?.map((d) => {
                             const isDrawerTarget = d.isTarget
                             const hasOccupants = d.count > 0
@@ -555,6 +571,8 @@ export default function StorageExplorerTab({
                                     {hasOccupants && d.students && d.students.length > 0 ? (
                                       d.students.map((student) => {
                                         const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
+                                        const collapseDocuments = student.documents?.length > 3;
+                                        const DocumentList = collapseDocuments ? "details" : "div";
                                         return (
                                           <div
                                             key={student.studentNo}
@@ -610,7 +628,12 @@ export default function StorageExplorerTab({
 
                                             {/* Documents */}
                                             {student.documents && student.documents.length > 0 ? (
-                                              <div className="mt-1 space-y-2">
+                                              <DocumentList className="mt-1 space-y-2">
+                                                {collapseDocuments && (
+                                                  <summary className="cursor-pointer py-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                                    Documents ({student.documents.length})
+                                                  </summary>
+                                                )}
                                                 <div className="flex flex-col gap-2">
                                                   {student.documents.map((doc) => {
                                                     const isApproved = doc.approvalStatus === "Approved";
@@ -644,7 +667,7 @@ export default function StorageExplorerTab({
                                                     );
                                                   })}
                                                 </div>
-                                              </div>
+                                              </DocumentList>
                                             ) : (
                                               <p className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
                                                 {isOsas ? "No official documents or proposals filed yet" : "No documents uploaded"}
@@ -673,7 +696,7 @@ export default function StorageExplorerTab({
                           })}
                         </div>
                       </div>
-                    </div>
+                    </ContentReveal>
                   )}
                 </div>
               </div>

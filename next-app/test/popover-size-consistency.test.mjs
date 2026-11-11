@@ -192,12 +192,12 @@ test('GoogleDrivePdfCard Document Actions Dropdowns Avoid Unnecessary Footers', 
   const code = fs.readFileSync(cardPath, 'utf8')
 
   assert.ok(
-    code.includes('w-60 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none'),
-    'GoogleDrivePdfCard must use standard w-60 rounded-2xl p-0 overflow-hidden'
+    code.includes('PopoverContent'),
+    'GoogleDrivePdfCard must use PopoverContent'
   )
   assert.ok(
-    code.includes('Document Actions'),
-    'GoogleDrivePdfCard must include Header zone'
+    !code.includes('Document Actions'),
+    'GoogleDrivePdfCard must not include legacy Header zone'
   )
   assert.ok(
     !code.includes('Target</span>'),

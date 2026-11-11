@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { getClientSession } from "@/lib/clientAuth"
+import { getPageAccessRedirect } from "@/lib/roleUtils"
 
 import {
   applyHighContrastClass,
@@ -32,7 +33,7 @@ export const useAuthUser = () => useContext(AuthUserContext)
  * @param {React.ReactNode} props.fallback - Loading skeleton matching the page layout (optional)
  * @param {string} props.redirectTo - Path to redirect to if unauthorized (default: "/login")
  */
-export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
+export function AuthGuard({ children, fallback, redirectTo = "/login", requiredPath = null }) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthorized, setIsAuthorized] = useState(null)
@@ -117,6 +118,12 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
           return
         }
 
+        const pageRedirect = requiredPath ? getPageAccessRedirect(requiredPath, user.role) : null
+        if (pageRedirect) {
+          router.replace(pageRedirect)
+          return
+        }
+
         setIsAuthorized(true)
       } catch (err) {
         console.error("[AuthGuard] Validation error:", err)
@@ -133,7 +140,7 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
       stopped = true;
       clearTimeout(retryTimer);
     };
-  }, [router, redirectTo])
+  }, [router, redirectTo, requiredPath])
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -237,25 +244,25 @@ export function AuthGuard({ children, fallback, redirectTo = "/login" }) {
  * Specific guard for systemadmin-only routes
  */
 export function SystemAdminGuard({ children, fallback }) {
-  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
+  return <AuthGuard fallback={fallback} requiredPath="/systemadmin">{children}</AuthGuard>
 }
 
 export function SuperAdminGuard({ children, fallback }) {
-  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
+  return <AuthGuard fallback={fallback} requiredPath="/systemadmin">{children}</AuthGuard>
 }
 
 /**
  * Specific guard for admin-only routes
  */
 export function AdminGuard({ children, fallback }) {
-  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
+  return <AuthGuard fallback={fallback} requiredPath="/admin">{children}</AuthGuard>
 }
 
 /**
- * Specific guard for staff routes (any authenticated user)
+ * Specific guard for staff routes (Staff and Admin)
  */
 export function StaffGuard({ children, fallback }) {
-  return <AuthGuard fallback={fallback}>{children}</AuthGuard>
+  return <AuthGuard fallback={fallback} requiredPath="/staff">{children}</AuthGuard>
 }
 
 /**

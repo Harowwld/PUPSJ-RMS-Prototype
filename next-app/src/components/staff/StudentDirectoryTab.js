@@ -5,11 +5,13 @@ import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import FloatingActionBar from "@/components/shared/FloatingActionBar";
@@ -28,9 +30,8 @@ import {
   EmptyMedia,
   EmptyContent,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import { cn, formatTitleCase } from "@/lib/utils";
-import { Reorder } from "framer-motion";
 import RegisterStudentModal from "./RegisterStudentModal";
 import BulkImportStudentsModal from "./BulkImportStudentsModal";
 import EditStudentModal from "./EditStudentModal";
@@ -53,7 +54,7 @@ import { formatErrorMessage } from "@/lib/errorUtils";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import { fetchAllPages } from "@/lib/fetchAllPages";
-import { StudentIcon as EmptyStudentIcon , Archive01Icon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CompassIcon, DragDropIcon, File02Icon, LibraryIcon, Location01Icon, PencilEdit01Icon, Search01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { StudentIcon as EmptyStudentIcon , Activity01Icon, Archive01Icon, Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CompassIcon, Database01Icon, File02Icon, LibraryIcon, Location01Icon, PencilEdit01Icon, Search01Icon, Tick01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 
 const STUDENT_SORT_OPTIONS = [
@@ -73,14 +74,14 @@ const STUDENT_GROUP_OPTIONS = [
 ];
 
 const STUDENT_TABLE_COLUMNS = [
-  { key: "studentNo", label: "Student Number" },
-  { key: "name", label: "Student Name" },
-  { key: "courseCode", label: "Program" },
-  { key: "yearLevel", label: "Year Level" },
-  { key: "section", label: "Section" },
-  { key: "location", label: "Storage Location" },
-  { key: "documentCount", label: "Documents" },
-  { key: "status", label: "Status" },
+  { key: "studentNo", label: "Student Number", size: { kind: "identifier", minWidth: 160 } },
+  { key: "name", label: "Student Name", size: { kind: "text", minWidth: 240, maxWidth: 340 } },
+  { key: "courseCode", label: "Program", size: { kind: "category", minWidth: 120 } },
+  { key: "section", label: "Section", size: { kind: "category", minWidth: 100 } },
+  { key: "yearLevel", label: "Year Level", size: { kind: "year", minWidth: 104 } },
+  { key: "location", label: "Storage Location", size: { kind: "text", minWidth: 200, maxWidth: 280 } },
+  { key: "documentCount", label: "Documents", size: { kind: "number", minWidth: 100 } },
+  { key: "status", label: "Status", size: { kind: "status", minWidth: 120 } },
 ];
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -107,12 +108,12 @@ export default function StudentDirectoryTab({
   fetchData,
   showToast,
 }) {
-  const [activeTab, setActiveTab] = useState("active"); // "active" | "archived"
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useOsasViewPreference("student_directory", "activeTab", "active");
+  const [searchQuery, setSearchQuery] = useOsasViewPreference("student_directory", "searchQuery", "");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [courseFilters, setCourseFilters] = useState([]);
-  const [yearFilters, setYearFilters] = useState([]);
-  const [sectionFilters, setSectionFilters] = useState([]);
+  const [courseFilters, setCourseFilters] = useOsasViewPreference("student_directory", "courseFilters", []);
+  const [yearFilters, setYearFilters] = useOsasViewPreference("student_directory", "yearFilters", []);
+  const [sectionFilters, setSectionFilters] = useOsasViewPreference("student_directory", "sectionFilters", []);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [browseSummary, setBrowseSummary] = useState(null);
@@ -121,38 +122,27 @@ export default function StudentDirectoryTab({
   const [hasLoadedPage, setHasLoadedPage] = useState(false);
   const [browseVersion, setBrowseVersion] = useState(0);
   const [profileDocs, setProfileDocs] = useState({ studentNo: null, rows: [] });
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const [kpiOrder, setKpiOrder] = useState(["students", "programs", "documents"]);;
-  const statCardsRef = useRef(null);
-
-  // Close expandable KPI card when clicking outside
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
-
   // Sorting & View Preferences
-  const [sortBy, setSortBy] = useState("studentNo");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [filterRules, setFilterRules] = useState([]);
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState(() => STUDENT_TABLE_COLUMNS.map((c) => c.key));
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useOsasViewPreference("student_directory", "sortBy", "studentNo");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("student_directory", "sortOrder", "ASC");
+  const [filterRules, setFilterRules] = useOsasViewPreference("student_directory", "filterRules", []);
+  const [groupBy, setGroupBy] = useOsasViewPreference("student_directory", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useOsasViewPreference(
+    "student_directory",
+    "visibleColumns",
+    STUDENT_TABLE_COLUMNS.map((c) => c.key)
+  );
+  const studentTableColumns = [
+    "selection",
+    ...STUDENT_TABLE_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ size }) => size),
+    "actions",
+  ];
+  const [startDate, setStartDate] = useOsasViewPreference("student_directory", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("student_directory", "endDate", "");
 
   // Pagination
   const [page, setPage] = useUrlPage();
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useOsasViewPreference("student_directory", "pageSize", 20);
 
   const onDataChanged = useCallback(async () => {
     await fetchData?.();
@@ -271,42 +261,15 @@ export default function StudentDirectoryTab({
   const kpiStats = useMemo(() => {
     const activeCount = browseSummary?.counts?.active || 0;
     const assignedDrawersCount = browseSummary?.counts?.assigned || 0;
-
-    // Top programs by enrollment
-    const courseCounts = {};
-    (browseSummary?.facets || []).filter((entry) => entry.status === "Active").forEach((entry) => {
-      const code = entry.course_code || "Unassigned";
-      courseCounts[code] = (courseCounts[code] || 0) + entry.count;
-    });
-    const topPrograms = Object.entries(courseCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    // Section breakdown by program
-    const programsList = courses.map((c) => {
-      const secCount = sections.filter(
-        (sec) =>
-          String(sec.course_code || sec.courseCode || "").toUpperCase() ===
-          String(c.code).toUpperCase()
-      ).length;
-      const stuCount = courseCounts[c.code] || 0;
-      return { code: c.code, name: c.name, secCount, stuCount };
-    });
-
-    // Document breakdown
     const studentsWithFilesCount = browseSummary?.documents?.students_with_files || 0;
-    const topDocTypes = (browseSummary?.docTypes || []).map((entry) => [entry.doc_type, entry.count]);
 
     return {
       activeCount,
       assignedDrawersCount,
-      topPrograms,
-      programsList,
       totalPrograms: courses.length,
       totalSections: sections.length,
       totalDocs: browseSummary?.documents?.total || 0,
       studentsWithFilesCount,
-      topDocTypes,
     };
   }, [browseSummary, courses, sections]);
 
@@ -736,22 +699,7 @@ export default function StudentDirectoryTab({
                   isLoading={loading || browseLoading || isRefreshing}
                   title="Refresh Student Directory"
                 />
-
-                
-
                 <div className="flex items-center gap-2">
-                  {canExport && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleExportCSV}
-                      disabled={filteredCount === 0}
-                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                    >
-                      Export CSV
-                    </Button>
-                  )}
-
                   <Button
                     type="button"
                     variant="outline"
@@ -771,311 +719,92 @@ export default function StudentDirectoryTab({
                 </div>
               </div>
             }
+            secondaryActions={canExport && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExportCSV}
+                disabled={filteredCount === 0}
+                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                Export CSV
+              </Button>
+            )}
           />
 
-          {/* 2. Top Summary Metrics Banner */}
-          <Reorder.Group as="div" axis="x" values={kpiOrder} onReorder={setKpiOrder} ref={statCardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6 items-start relative z-20">
-            {kpiOrder.map(key => {
-              if (key === "students") return (
-            
-            <Reorder.Item as="div" value="students" key="students" className={cn("relative group rounded-xl", selectedKpi === "students" ? "z-30" : "z-10")}>
-              <div
-                onClick={() => setSelectedKpi(selectedKpi === "students" ? null : "students")}
-                className={cn(
-                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                  selectedKpi === "students"
-                    ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                    : "border-border dark:border-border"
-                )}
-              >
-                <div className="flex justify-between items-start p-4 pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                      Active Students
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                    <UserSearch01Icon size="1em" className="text-[15px]" />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-end p-4 pt-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+          {/* 2. Summary Metrics */}
+          <div className="px-6 pb-6">
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              {!browseSummary ? (
+                <KpiStatCardsSkeleton count={3} />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <UserSearch01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Active Students</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Tick01Icon size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Enrolled</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
                       {kpiStats.activeCount.toLocaleString()}
-                    </span>
-                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                      Enrolled
-                    </span>
-                  </div>
-                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div
-                className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                  selectedKpi === "students"
-                    ? "scale-y-100 opacity-100 translate-y-0"
-                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                        Active Students
-                      </span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                        {kpiStats.activeCount}
-                      </span>
                     </div>
-                    <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                      <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                        Physical Archive
-                      </span>
-                      <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                        {kpiStats.assignedDrawersCount}
-                      </span>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.assignedDrawersCount.toLocaleString()} assigned to physical archive
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                      Top Programs by Enrollment
-                    </h4>
-                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                      {kpiStats.topPrograms.length === 0 ? (
-                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                          No active students enrolled
-                        </p>
-                      ) : (
-                        kpiStats.topPrograms.map(([code, count]) => (
-                          <div
-                            key={code}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                          >
-                            <span className="truncate max-w-[170px] font-medium" title={code}>
-                              {code}
-                            </span>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50">
-                              {count} {count === 1 ? "student" : "students"}
-                            </span>
-                          </div>
-                        ))
-                      )}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <LibraryIcon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Academic Programs</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Activity01Icon size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Degree Tracks</span>
+                      </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </Reorder.Item>
-
-                          );
-              if (key === "programs") return (
-            
-            <Reorder.Item as="div" value="programs" key="programs" className={cn("relative group rounded-xl", selectedKpi === "programs" ? "z-30" : "z-10")}>
-              <div
-                onClick={() => setSelectedKpi(selectedKpi === "programs" ? null : "programs")}
-                className={cn(
-                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                  selectedKpi === "programs"
-                    ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                    : "border-border dark:border-border"
-                )}
-              >
-                <div className="flex justify-between items-start p-4 pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                      Academic Programs
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                    <LibraryIcon size="1em" className="text-[15px]" />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-end p-4 pt-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
                       {kpiStats.totalPrograms.toLocaleString()}
-                    </span>
-                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                      Degree Tracks
-                    </span>
-                  </div>
-                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div
-                className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                  selectedKpi === "programs"
-                    ? "scale-y-100 opacity-100 translate-y-0"
-                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                        Programs
-                      </span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                        {kpiStats.totalPrograms}
-                      </span>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                      <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                        Class Sections
-                      </span>
-                      <span className="text-lg font-black text-blue-700 dark:text-blue-400">
-                        {kpiStats.totalSections}
-                      </span>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.totalSections.toLocaleString()} class sections
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                      Program Directory
-                    </h4>
-                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                      {kpiStats.programsList.length === 0 ? (
-                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                          No programs available
-                        </p>
-                      ) : (
-                        kpiStats.programsList.map((p) => (
-                          <div
-                            key={p.code}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                          >
-                            <div className="truncate max-w-[170px]" title={p.name || p.code}>
-                              <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                {p.code}
-                              </span>
-                              {p.name && (
-                                <span className="text-gray-400 dark:text-zinc-500 text-[10px] ml-1.5">
-                                  ({p.secCount} {p.secCount === 1 ? "sec" : "secs"})
-                                </span>
-                              )}
-                            </div>
-                            <span className="font-semibold text-gray-900 dark:text-zinc-50">
-                              {p.stuCount} {p.stuCount === 1 ? "student" : "students"}
-                            </span>
-                          </div>
-                        ))
-                      )}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-red-500/15 text-pup-maroon dark:text-red-400 flex items-center justify-center shrink-0">
+                          <File02Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Digitized Files</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Database01Icon size={12} className="text-pup-maroon dark:text-red-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Repository</span>
+                      </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </Reorder.Item>
-
-                          );
-              if (key === "documents") return (
-            
-            <Reorder.Item as="div" value="documents" key="documents" className={cn("relative group rounded-xl", selectedKpi === "documents" ? "z-30" : "z-10")}>
-              <div
-                onClick={() => setSelectedKpi(selectedKpi === "documents" ? null : "documents")}
-                className={cn(
-                  "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                  selectedKpi === "documents"
-                    ? "border-red-500/50 ring-1 ring-red-500/20"
-                    : "border-border dark:border-border"
-                )}
-              >
-                <div className="flex justify-between items-start p-4 pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                      Digitized Files
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                    <File02Icon size="1em" className="text-[15px]" />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-end p-4 pt-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
                       {kpiStats.totalDocs.toLocaleString()}
-                    </span>
-                    <span className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
-                      Repository
-                    </span>
-                  </div>
-                  <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5" />
-                </div>
-              </div>
-
-              {/* Absolute details container */}
-              <div
-                className={cn(
-                  "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                  selectedKpi === "documents"
-                    ? "scale-y-100 opacity-100 translate-y-0"
-                    : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                      <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                        Total Files
-                      </span>
-                      <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                        {kpiStats.totalDocs}
-                      </span>
                     </div>
-                    <div className="bg-red-50 dark:bg-red-950/30 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
-                      <span className="block text-[9px] font-bold text-pup-maroon dark:text-red-400 uppercase tracking-wider">
-                        With Records
-                      </span>
-                      <span className="text-lg font-black text-pup-maroon dark:text-red-400">
-                        {kpiStats.studentsWithFilesCount}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                      Document Type Breakdown
-                    </h4>
-                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                      {kpiStats.topDocTypes.length === 0 ? (
-                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                          No documents uploaded yet
-                        </p>
-                      ) : (
-                        kpiStats.topDocTypes.map(([type, count]) => (
-                          <div
-                            key={type}
-                            className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                          >
-                            <span className="truncate max-w-[170px]" title={type}>
-                              {type}
-                            </span>
-                            <span className="font-bold text-gray-900 dark:text-zinc-50">
-                              {count}
-                            </span>
-                          </div>
-                        ))
-                      )}
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.studentsWithFilesCount.toLocaleString()} students with files
                     </div>
                   </div>
                 </div>
-              </div>
-            </Reorder.Item>
-              );
-              return null;
-            })}
-          </Reorder.Group>
+              )}
+            </div>
+          </div>
 
           {/* Status Segmented Tabs Row */}
           <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
@@ -1198,12 +927,8 @@ export default function StudentDirectoryTab({
 
           {/* 4. Main Data Table */}
           <div className={cn("relative w-full flex-[1_0_auto] border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col", filteredCount === 0 && "rounded-b-2xl")} aria-busy={browseLoading}>
-            {loading || (browseLoading && !hasLoadedPage) ? (
-              <div className="p-6 space-y-3 rounded-b-2xl">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
-                ))}
-              </div>
+            {(loading || browseLoading) && !hasLoadedPage ? (
+              <DataContentSkeleton columns={studentTableColumns} />
             ) : paginatedStudents.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                 <Empty>
@@ -1238,7 +963,7 @@ export default function StudentDirectoryTab({
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={["selection", "identifier", "text", "category", "year", "text", "number", "status", "actions"]} className="min-w-[1320px]">
+                <Table columns={studentTableColumns}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 py-2.5 px-3 text-center sticky left-0 z-20 bg-white dark:bg-card">
@@ -1250,90 +975,108 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      <th
-                        className={cn(
-                          "py-2.5 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSort("studentNo")}
-                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                          >
-                            <span>Student No.</span>
-                            <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
-                          </button>
-                          {isScrolledX && (
+                      {visibleColumns.includes("studentNo") && (
+                        <th
+                          className={cn(
+                            "py-2.5 px-4 sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-1">
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset table scroll"
-                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              onClick={() => handleSort("studentNo")}
+                              className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
                             >
-                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              <span>Student No.</span>
+                              <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                          )}
-                        </div>
-                      </th>
+                            {isScrolledX && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetScroll();
+                                }}
+                                title="Reset table scroll"
+                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              >
+                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[240px] min-w-[240px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("name")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Full Name</span>
-                          <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("name") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("name")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Full Name</span>
+                            <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[190px] min-w-[190px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("courseCode")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Program & Section</span>
-                          <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("courseCode") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("courseCode")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Program</span>
+                            <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[130px] min-w-[130px]">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("yearLevel")}
-                          className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Year / Batch</span>
-                          <SortIndicator column="yearLevel" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("section") && (
+                        <th>Section</th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[200px] min-w-[200px]">
-                        <span>Physical Archive</span>
-                      </th>
+                      {visibleColumns.includes("yearLevel") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("yearLevel")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Year / Batch</span>
+                            <SortIndicator column="yearLevel" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[100px] min-w-[100px] text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSort("documents")}
-                          className="group inline-flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
-                        >
-                          <span>Files</span>
-                          <SortIndicator column="documents" sortBy={sortBy} sortOrder={sortOrder} />
-                        </button>
-                      </th>
+                      {visibleColumns.includes("location") && (
+                        <th className="py-2.5 px-4">
+                          <span>Physical Archive</span>
+                        </th>
+                      )}
 
-                      <th className="py-2.5 px-4 w-[120px] min-w-[120px] text-center">
-                        <span>Status</span>
-                      </th>
+                      {visibleColumns.includes("documentCount") && (
+                        <th className="py-2.5 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("documents")}
+                            className="group inline-flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Files</span>
+                            <SortIndicator column="documents" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
 
-                      <th className="w-28 min-w-[112px] py-2.5 px-4 pr-6 text-right">
+                      {visibleColumns.includes("status") && (
+                        <th className="py-2.5 px-4 text-center">
+                          <span>Status</span>
+                        </th>
+                      )}
+
+                      <th className="w-28 py-2.5 px-4 pr-6 text-right">
                         <span>Actions</span>
                       </th>
                     </tr>
@@ -1344,7 +1087,7 @@ export default function StudentDirectoryTab({
                       <React.Fragment key={group.key}>
                         {groupBy !== "none" && (
                           <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={9} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                            <td colSpan={studentTableColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                               {group.label} ({group.students.length})
                             </td>
                           </tr>
@@ -1358,7 +1101,12 @@ export default function StudentDirectoryTab({
                             <tr
                               key={s.studentNo}
                               selected={isSelected}
-                              onClick={() => {
+                              onClick={(e) => {
+                                if (e.target.closest("button, input, a")) return;
+                                toggleSelect(s.studentNo);
+                              }}
+                              onDoubleClick={(e) => {
+                                if (e.target.closest("button, input, a")) return;
                                 setActiveStudent(s);
                                 setProfileOpen(true);
                               }}
@@ -1372,10 +1120,6 @@ export default function StudentDirectoryTab({
                               "w-12 py-2.5 px-3 text-center align-middle border-r border-border/70 sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
                               isSelected && "bg-blue-50/50 dark:bg-blue-950/20"
                             )}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSelect(s.studentNo);
-                            }}
                           >
                             <input
                               type="checkbox"
@@ -1385,70 +1129,78 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          <td
-                            className={cn(
-                              "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                              isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}
-                          >
-                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
-                              {s.studentNo}
-                            </span>
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
-                              {formatTitleCase(s.name)}
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <Badge
-                                variant="outline"
-                                className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full border-border dark:border-border shrink-0", BADGE_BASE)}
-                              >
-                                {s.courseCode || "N/A"}
-                              </Badge>
-                              <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium truncate" title={`Sec ${s.section || "N/A"}`}>
-                                Sec {s.section || "N/A"}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
-                            {s.yearLevel || "N/A"}
-                          </td>
-
-                          <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
-                              <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
-                              <span>
-                                Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <span className="tabular-nums">
-                              {docCount} {docCount === 1 ? "file" : "files"}
-                            </span>
-                          </td>
-
-                          <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
-                            <span
+                          {visibleColumns.includes("studentNo") && (
+                            <td
                               className={cn(
-                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
-                                isStudentArchived
-                                  ? BADGE_PALETTES.amber
-                                  : BADGE_PALETTES.emerald,
-                                BADGE_BASE
+                                "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                isSelected && "bg-blue-50/50 dark:bg-blue-950/20",
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                               )}
                             >
-                              {s.status || "Active"}
-                            </span>
-                          </td>
+                              <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
+                                {s.studentNo}
+                              </span>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("name") && (
+                            <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
+                                {formatTitleCase(s.name)}
+                              </div>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("courseCode") && (
+                            <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <Badge variant="outline" className={BADGE_BASE}>{s.courseCode || "N/A"}</Badge>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("section") && (
+                            <td>{s.section || "N/A"}</td>
+                          )}
+
+                          {visibleColumns.includes("yearLevel") && (
+                            <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
+                              {s.yearLevel || "N/A"}
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("location") && (
+                            <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                              <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
+                                <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
+                                <span>
+                                  Room {s.room} • Cab {s.cabinet} • Drw {s.drawer}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("documentCount") && (
+                            <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                              <span className="tabular-nums">
+                                {docCount} {docCount === 1 ? "file" : "files"}
+                              </span>
+                            </td>
+                          )}
+
+                          {visibleColumns.includes("status") && (
+                            <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
+                              <span
+                                className={cn(
+                                  "text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
+                                  isStudentArchived
+                                    ? BADGE_PALETTES.amber
+                                    : BADGE_PALETTES.emerald,
+                                  BADGE_BASE
+                                )}
+                              >
+                                {s.status || "Active"}
+                              </span>
+                            </td>
+                          )}
 
                           <td className="w-28 py-2.5 px-4 pr-6 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
@@ -1546,14 +1298,12 @@ export default function StudentDirectoryTab({
               </div>
             )}
             {browseLoading && hasLoadedPage && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                Loading students…
-              </div>
+              <span role="status" className="sr-only">Loading students…</span>
             )}
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
-          {!loading && filteredStudents.length > 0 && (
+          {filteredStudents.length > 0 && (
             <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredCount} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading || browseLoading} />
           )}
         </Card>

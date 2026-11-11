@@ -35,7 +35,7 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
   const [feederScanning, setFeederScanning] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [completedPage, setCompletedPage] = useState(1);
-  const [completedPageSize, setCompletedPageSize] = useState(10);
+  const [completedPageSize, setCompletedPageSize] = useState(20);
   const [completedQuery, setCompletedQuery] = useState("");
   const [completedStatus, setCompletedStatus] = useState("");
   const loadMonitor = useCallback(async () => {

@@ -13,25 +13,25 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
         : "overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card"
     )}>
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <Table columns={["identifier", "identifier", "text", "text", "status", "text", "date", "date", "actions"]} className="min-w-[1360px]">
+        <Table columns={["identifier", "identifier", { kind: "text", minWidth: 280, maxWidth: 460, growthWeight: 2 }, { kind: "category", minWidth: 190, maxWidth: 300, growthWeight: 2 }, "status", "text", "date", "date", "actions"]} className="min-w-[1080px]">
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="py-2.5 px-4 w-[90px]">
                 <Skeleton className="h-3.5 w-8 dark:bg-muted" />
               </th>
-              <th className="py-2.5 px-4 w-[150px]">
+              <th className="py-2.5 px-4 w-[170px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-2.5 px-4 w-[280px]">
+              <th className="py-2.5 px-4 min-w-[280px] max-w-[460px]">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>
-              <th className="py-2.5 px-4 w-[200px]">
+              <th className="py-2.5 px-4 w-[200px] min-w-[190px] max-w-[300px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
               <th className="py-2.5 px-4 w-[140px]">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>
-              <th className="py-2.5 px-4 w-[200px]">
+              <th className="py-2.5 px-4 w-[240px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
               <th className="py-2.5 px-4 w-[160px]">
@@ -40,8 +40,8 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
               <th className="py-2.5 px-4 w-[160px]">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>
-              <th className="py-2.5 px-4 pr-6 text-right w-[80px]">
-                <Skeleton className="h-3.5 w-10 ml-auto dark:bg-muted" />
+              <th className="w-16 py-2.5 px-3 text-center">
+                <Skeleton className="h-3.5 w-10 mx-auto dark:bg-muted" />
               </th>
             </tr>
           </thead>
@@ -104,8 +104,8 @@ export default function DocumentRequestsTableSkeleton({ rowCount = 7, embedded =
                 </td>
 
                 {/* Actions */}
-                <td className="py-2.5 px-4 pr-6 align-middle text-right">
-                  <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted ml-auto" />
+                <td className="w-16 py-2.5 px-3 align-middle text-center">
+                  <Skeleton className="h-7 w-7 rounded-lg dark:bg-muted mx-auto" />
                 </td>
               </tr>
             ))}

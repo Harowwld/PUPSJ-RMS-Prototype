@@ -387,7 +387,7 @@ export default function ServiceStandardsSheet({
                             "flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer select-none active:scale-[0.98]",
                             isSelected
                               ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-border/80 hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/50"
+                              : "border-border/80 hover:border-gray-300 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900/40"
                           )}
                         >
                           <div className="flex items-center justify-between w-full">
@@ -440,7 +440,7 @@ export default function ServiceStandardsSheet({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-border dark:border-border bg-white dark:bg-card">
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40">
                     <div className="flex flex-col gap-0.5 max-w-[80%]">
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Business Days (Monday – Friday) Only
@@ -471,7 +471,7 @@ export default function ServiceStandardsSheet({
                       Processing Days by Request Type
                     </h3>
                   </div>
-                  <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-card divide-y divide-border/60 overflow-hidden shadow-2xs">
+                  <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 divide-y divide-border/60 overflow-hidden shadow-2xs">
                     {/* Simple */}
                     <div className="flex items-center justify-between p-3.5">
                       <div className="flex flex-col gap-0.5">
@@ -561,7 +561,7 @@ export default function ServiceStandardsSheet({
                     </h3>
                   </div>
 
-                  <div className="rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-3 shadow-2xs">
+                  <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-4 flex flex-col gap-3 shadow-2xs">
                     <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -575,7 +575,7 @@ export default function ServiceStandardsSheet({
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-card border border-border/70 text-xs">
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-zinc-900/40 border border-border/70 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Simple Requests</span>
@@ -588,7 +588,7 @@ export default function ServiceStandardsSheet({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-card border border-border/70 text-xs">
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-zinc-900/40 border border-border/70 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Complex Requests</span>
@@ -601,7 +601,7 @@ export default function ServiceStandardsSheet({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-card border border-border/70 text-xs">
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-zinc-900/40 border border-border/70 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                           <span className="font-medium text-gray-900 dark:text-zinc-100">Specialized Requests</span>

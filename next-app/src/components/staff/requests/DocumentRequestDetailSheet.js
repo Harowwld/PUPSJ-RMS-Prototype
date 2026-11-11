@@ -22,6 +22,7 @@ import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyl
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import NarrativeText from "@/components/shared/NarrativeText";
 import { EmptyState } from "@/components/ui/empty";
 import { Attachment01Icon, Clock01Icon, Alert02Icon, Calendar01Icon, Cancel01Icon, CheckmarkCircle01Icon, File02Icon, LockIcon, Time01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -265,25 +266,10 @@ export default function DocumentRequestDetailSheet({
                         {displayName}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
-                      {detail.student_no ? `Student No: ${detail.student_no}` : `Client: ${detail.client_type || "Requester"}`}
-                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {(studentForRequest || detail.room) && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleLocateCoordinates}
-                      className="h-8 px-3 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                      title="Locate filing location on archive map"
-                    >
-                      Locate Drawer
-                    </Button>
-                  )}
                   <span
                     className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
                   >
@@ -302,12 +288,6 @@ export default function DocumentRequestDetailSheet({
                 </div>
 
                 <div className="divide-y-0">
-                  <InfoRow
-                    icon=" UserIcon"
-                    label="Requester Name"
-                    value={displayName}
-                  />
-
                   <InfoRow
                     icon=" Tag01Icon"
                     label="Classification"
@@ -403,8 +383,13 @@ export default function DocumentRequestDetailSheet({
                   <InfoRow
                     icon=" Message01Icon"
                     label="Stated Purpose"
-                    value={detail.notes || "No stated purpose entered."}
-                  />
+                  >
+                    {detail.notes ? (
+                      <NarrativeText text={detail.notes} mode="full" />
+                    ) : (
+                      <span className="text-gray-400 dark:text-zinc-500">No stated purpose entered.</span>
+                    )}
+                  </InfoRow>
                 </div>
               </div>
 
@@ -468,9 +453,10 @@ export default function DocumentRequestDetailSheet({
                         </span>
                         <Button
                           type="button"
+                          variant="outline"
                           size="sm"
                           onClick={handleLocateCoordinates}
-                          className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                          className="h-7 px-2.5"
                         >
                           Locate Drawer
                         </Button>
@@ -562,7 +548,7 @@ export default function DocumentRequestDetailSheet({
                 </div>
 
                 {isTerminalStatus ? (
-                  <div className="space-y-2 p-3.5 rounded-xl border border-border/80 dark:border-border bg-gray-50/60 dark:bg-zinc-900/40">
+                  <div className="space-y-2 p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
                     <div className="flex items-center justify-between gap-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       <span className="flex items-center gap-1.5">
                         <LockIcon size="1em" className="text-gray-400 text-xs" />
@@ -675,7 +661,7 @@ export default function DocumentRequestDetailSheet({
                     {detail.updates.map((u, idx) => (
                       <div
                         key={u.id || idx}
-                        className="p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/80 dark:border-border text-xs space-y-1"
+                        className="p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60 text-xs space-y-1"
                       >
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="font-semibold text-gray-800 dark:text-zinc-200">
@@ -686,9 +672,9 @@ export default function DocumentRequestDetailSheet({
                           </span>
                         </div>
                         {u.message && (
-                          <p className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
-                            {u.message}
-                          </p>
+                          <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
+                            <NarrativeText text={u.message} mode="full" />
+                          </div>
                         )}
                         <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
                           <span>By {u.actor_name || "Staff"}</span>

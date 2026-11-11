@@ -42,12 +42,50 @@ describe("NarrativeText Tokenizer & Entity Parser", () => {
 
     const recordId = tokens.find((t) => t.type === "record_id");
     assert.ok(recordId, "Must find request #42");
-    assert.strictEqual(recordId.value, "#42");
+    assert.strictEqual(recordId.value, "42");
 
     const transition = tokens.find((t) => t.type === "transition");
     assert.ok(transition, "Must find transition token");
     assert.strictEqual(transition.from, "Pending");
     assert.strictEqual(transition.to, "Ready");
+  });
+
+  test("Record IDs never put # in front of their value", () => {
+    const tokens = parseNarrativeTokens("Updated ticket #98765 and proposal #PROP-4321 with document #123.");
+    const idTokens = tokens.filter((t) => t.type === "record_id");
+    assert.strictEqual(idTokens.length, 3);
+    assert.strictEqual(idTokens[0].value, "98765");
+    assert.strictEqual(idTokens[1].value, "PROP-4321");
+    assert.strictEqual(idTokens[2].value, "123");
+    for (const token of idTokens) {
+      assert.ok(!token.value.startsWith("#"), `Token value ${token.value} must not start with #`);
+    }
+  });
+
+  test("Resolves student@pup.local to Juan Dela Cruz in prose and parenthesized messages", () => {
+    const tokens = parseNarrativeTokens("Event proposal submitted by President (student@pup.local).");
+    const mention = tokens.find((t) => t.type === "mention");
+    assert.ok(mention, "Must find mention for student@pup.local");
+    assert.strictEqual(mention.value, "Juan Dela Cruz");
+    assert.strictEqual(mention.email, "student@pup.local");
+
+    const tokensQuoted = parseNarrativeTokens("student 'student@pup.local' authenticated");
+    const mentionQuoted = tokensQuoted.find((t) => t.type === "mention");
+    assert.ok(mentionQuoted, "Must find mention for quoted student@pup.local");
+    assert.strictEqual(mentionQuoted.value, "Juan Dela Cruz");
+
+    const tokensBare = parseNarrativeTokens("Official Post-Event Narrative Report and Liquidation package submitted by student@pup.local.");
+    const mentionBare = tokensBare.find((t) => t.type === "mention");
+    assert.ok(mentionBare, "Must find mention for bare student@pup.local");
+    assert.strictEqual(mentionBare.value, "Juan Dela Cruz");
+  });
+
+  test("Resolves other institutional accounts like test.student@pup.local and superadmin@pup.local", () => {
+    const tokens = parseNarrativeTokens("Reviewed by test.student@pup.local and approved by superadmin@pup.local.");
+    const mentions = tokens.filter((t) => t.type === "mention");
+    assert.strictEqual(mentions.length, 2);
+    assert.strictEqual(mentions[0].value, "Maria Clara Santos");
+    assert.strictEqual(mentions[1].value, "System Administrator");
   });
 
   test("Distinguishes non-person quoted entities like document types or codes", () => {

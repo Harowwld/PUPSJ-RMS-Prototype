@@ -143,9 +143,13 @@ export function formatErrorMessage(error, fallbackContext = {}) {
 
   // 6. JSON parsing or HTML error responses
   if (
+    error instanceof SyntaxError ||
     lower.includes("unexpected token") ||
     lower.includes("is not valid json") ||
-    lower.includes("syntaxerror")
+    lower.includes("syntaxerror") ||
+    lower.includes("json.parse") ||
+    lower.includes("unexpected character") ||
+    lower.includes("unexpected end of")
   ) {
     return {
       title: "Server Communication Error",

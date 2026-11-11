@@ -92,7 +92,10 @@ export default function StudentDriveFilesView({
   return (
     <div className="w-full space-y-4">
       {/* 1. Header Banner: Back button, Student identity, Physical storage pill, and Locate button */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 bg-white dark:bg-card rounded-2xl border border-border/80 dark:border-border shadow-xs">
+      <div className={cn(
+        "flex flex-col items-start justify-between gap-4 border-border/80 bg-white p-5 lg:flex-row lg:items-center dark:border-border dark:bg-card",
+        student.rawOrg ? "border-b" : "rounded-2xl border shadow-xs"
+      )}>
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           {/* Back Button */}
           <Button
@@ -119,7 +122,7 @@ export default function StudentDriveFilesView({
             fallbackClassName="rounded-2xl font-bold text-sm"
             fallbackStyle={{
               backgroundColor: authUser?.accent_color ? `${authUser.accent_color}15` : "rgba(128, 0, 0, 0.08)",
-              color: authUser?.accent_color || "#800000",
+              color: student.rawOrg ? "#ffffff" : authUser?.accent_color || "#800000",
               borderColor: authUser?.accent_color ? `${authUser.accent_color}30` : "rgba(128, 0, 0, 0.2)",
             }}
           />
@@ -155,7 +158,7 @@ export default function StudentDriveFilesView({
         <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto justify-between lg:justify-end pt-2 lg:pt-0 border-t lg:border-t-0 border-border/60">
           {/* Physical Storage Coordinates Badge */}
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-100/90 dark:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 text-xs font-semibold text-gray-800 dark:text-zinc-200 select-none">
-            <Location01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
+            <Location01Icon size="1em" className="text-sm text-gray-600 dark:text-zinc-300" />
             <span>
               Room {student.room} • Cabinet {student.cabinet} • Drawer {student.drawer}
             </span>
@@ -165,6 +168,7 @@ export default function StudentDriveFilesView({
           {onLocateStudent && (
             <Button
               type="button"
+              variant="outline"
               size="sm"
               onClick={() => onLocateStudent(student)}
               className="h-9 px-4 cursor-pointer"
@@ -227,6 +231,7 @@ export default function StudentDriveFilesView({
               <EmptyContent>
                 <Button
                   type="button"
+                  variant="outline"
                   size="sm"
                   onClick={() => onLocateStudent(student)}
                   className="h-9 px-4 cursor-pointer"
@@ -243,7 +248,7 @@ export default function StudentDriveFilesView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 px-6"
         >
           {studentDocs.map((doc, idx) => (
             <GoogleDrivePdfCard
@@ -263,7 +268,9 @@ export default function StudentDriveFilesView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="space-y-2"
+          role="list"
+          aria-label="Archived files"
+          className="w-full divide-y divide-border/70 bg-white dark:bg-card"
         >
           {studentDocs.map((doc, idx) => (
             <GoogleDrivePdfCard

@@ -13,7 +13,7 @@ import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "rea
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu"
 import { Card } from "@/components/ui/card"
 import {
@@ -54,14 +54,15 @@ import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badge
 import { Skeleton } from "@/components/ui/skeleton"
 import NarrativeText from "@/components/shared/NarrativeText"
 import PersonnelActivityStream from "./PersonnelActivityStream"
-import { formatPHDateTime, formatNotificationTimeAgo } from "@/lib/timeFormat"
+import { formatPHDateTime, formatNotificationTimeAgo, formatRelativeTime } from "@/lib/timeFormat"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import { SegmentedControl } from "@/components/ui/tabs"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Copy01Icon, Loading01Icon, Search01Icon, Archive01Icon, Tick01Icon } from "hugeicons-react";
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon, UserGroupIcon as EmptyUserGroupIcon, Add01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Clock01Icon, Contact01Icon, Copy01Icon, Loading01Icon, Search01Icon, SecurityCheckIcon, Archive01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -112,6 +113,238 @@ function InfoRow({ icon, label, value, children, className }) {
         {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
       </div>
     </div>
+  )
+}
+
+function GlobalStaffGridCard({
+  member,
+  office,
+  offices,
+  isSelf,
+  isSelected,
+  toggleSelect,
+  onInspect,
+  onEdit,
+  onArchive,
+  onRestore,
+  showToast,
+}) {
+  const [copiedId, setCopiedId] = useState(false)
+  const initials = `${member.fname?.charAt(0) || ""}${member.lname?.charAt(0) || ""}`.toUpperCase() || "ST"
+  const cleanName = getStaffCleanName(member)
+  const cleanEmail = getStaffCleanEmail(member)
+  const isArchived = member.status === "Archived" || member.status === "Inactive"
+  const roleLabel =
+    member.role === "SuperAdmin" || member.role === "SystemAdmin"
+      ? "System Admin"
+      : getOfficeRoleLabel(member.role, member, offices)
+  const activeInfo = formatRelativeTime(member.last_active)
+  const lastLoginText =
+    !activeInfo.relative && (!activeInfo.date || activeInfo.date === "N/A")
+      ? "Never signed in"
+      : activeInfo.relative || (member.last_active ? formatPHDateTime(member.last_active) : "Never signed in")
+
+  const handleCopyId = (e) => {
+    e.stopPropagation()
+    if (!member.id) return
+    navigator.clipboard?.writeText(member.id)
+    setCopiedId(true)
+    showToast?.(`Copied ${member.id} to clipboard`)
+    setTimeout(() => setCopiedId(false), 2000)
+  }
+
+  return (
+    <Card
+      onClick={() => onInspect(member)}
+      className={cn(
+        "group relative flex flex-col justify-between p-4 rounded-2xl border bg-white dark:bg-card cursor-pointer select-none",
+        "transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out motion-safe:active:scale-[0.985]",
+        isArchived
+          ? "border-dashed border-black/[0.12] dark:border-white/15 bg-gray-50/70 dark:bg-zinc-900/40 opacity-85"
+          : "border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:border-black/[0.15] dark:hover:border-white/20 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)]",
+        isSelected &&
+          "border-gray-950 dark:border-white bg-gray-100/70 dark:bg-zinc-800/80 ring-1 ring-black/10 dark:ring-white/20"
+      )}
+    >
+      {/* Zone 1: Identity Header (Checkbox, macOS Avatar, Name & Email, Overflow Menu) */}
+      <div className="flex items-start justify-between gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {!isSelf && (
+            <div
+              className="-m-1 p-1 rounded-md flex items-center justify-center shrink-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleSelect(member.id, e)
+              }}
+            >
+              <input
+                type="checkbox"
+                aria-label={`Select ${cleanName}`}
+                className={cn(
+                  "h-3.5 w-3.5 m-0 align-middle shrink-0 cursor-pointer rounded border border-border dark:border-border transition-opacity duration-150",
+                  isSelected ? "opacity-100" : "opacity-45 group-hover:opacity-85"
+                )}
+                checked={isSelected}
+                onChange={() => {}}
+              />
+            </div>
+          )}
+
+          <ProfileAvatar
+            staffId={member.id}
+            name={cleanName}
+            initials={initials}
+            className="size-9 rounded-full border border-black/[0.08] dark:border-white/10 shadow-2xs shrink-0"
+            fallbackClassName="text-xs font-bold"
+          />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3
+                className="truncate text-[13.5px] font-semibold tracking-[-0.012em] text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors duration-150 leading-snug"
+                title={cleanName}
+              >
+                {cleanName}
+              </h3>
+              {isSelf && (
+                <span
+                  className={cn(
+                    BADGE_BASE,
+                    "h-4.5 min-h-4.5 bg-blue-100/90 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0"
+                  )}
+                >
+                  You
+                </span>
+              )}
+            </div>
+            <p
+              className="truncate text-[11.5px] font-normal text-gray-500 dark:text-zinc-400 leading-tight mt-0.5"
+              title={cleanEmail}
+            >
+              {cleanEmail}
+            </p>
+          </div>
+        </div>
+
+        <div onClick={(e) => e.stopPropagation()} className="shrink-0 -mr-1 -mt-0.5">
+          <PersonnelActionsMenu
+            member={member}
+            name={cleanName}
+            isSelf={isSelf}
+            onViewProfile={onInspect}
+            onEdit={onEdit}
+            onSettings={() =>
+              window.dispatchEvent(
+                new CustomEvent("switch-view", { detail: { view: "settings" } })
+              )
+            }
+            onArchive={onArchive}
+            onRestore={onRestore}
+          />
+        </div>
+      </div>
+
+      {/* Zone 2: Apple Inset Grouped Metadata Block */}
+      <div className="mt-3.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-gray-50/80 dark:bg-zinc-900/50 divide-y divide-black/[0.05] dark:divide-white/[0.06] overflow-hidden">
+        {/* Row 1: Employee ID with Quick Copy */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <Contact01Icon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>ID</span>
+          </span>
+          <div className="flex items-center gap-1 min-w-0">
+            <span
+              className="font-sans tabular-nums text-[11.5px] font-semibold text-gray-900 dark:text-zinc-100 truncate"
+              title={member.id}
+            >
+              {member.id}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyId}
+              className="size-5 rounded-md inline-flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-black/[0.05] dark:hover:text-zinc-200 dark:hover:bg-white/[0.08] transition-colors duration-150 cursor-pointer shrink-0 motion-safe:active:scale-96"
+              title="Copy Employee ID"
+              aria-label={`Copy Employee ID ${member.id}`}
+            >
+              {copiedId ? (
+                <Tick01Icon size={11} aria-hidden="true" className="text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Copy01Icon size={11} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Office Partition & Section */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <Building01Icon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>Office</span>
+          </span>
+          <div className="flex items-center gap-1.5 min-w-0 justify-end">
+            {office ? (
+              <span
+                className={cn(BADGE_BASE, "systemadmin-office-badge h-5 min-h-5 px-2 text-[10.5px] select-none")}
+                style={{ "--office-accent": office.accent_color || "#800000" }}
+                title={`${office.name || office.short_name}${member.section ? ` · ${member.section}` : ""}`}
+              >
+                {office.short_name}
+              </span>
+            ) : (
+              <span
+                className={cn(BADGE_BASE, "h-5 min-h-5 px-2 text-[10.5px] bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}
+              >
+                Platform Level
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Row 3: Two-Factor Security Status */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px]">
+          <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-400 font-medium shrink-0">
+            <SecurityCheckIcon size={13} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span>Security</span>
+          </span>
+          {member.totp_enabled ? (
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1.5 shrink-0">
+              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              2FA Enabled
+            </span>
+          ) : (
+            <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 inline-flex items-center gap-1.5 shrink-0">
+              <span className="size-1.5 rounded-full bg-gray-300 dark:bg-zinc-600" aria-hidden="true" />
+              Off
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Zone 3: Footer (Role Pill & Last Sign-in) */}
+      <div className="mt-3 pt-0.5 flex items-center justify-between gap-2 min-w-0">
+        <span
+          className={cn(
+            BADGE_BASE,
+            "h-5.5 min-h-5.5 px-2.5 text-[10.5px] font-semibold tracking-[-0.01em] truncate",
+            member.role === "SystemAdmin" || member.role === "SuperAdmin"
+              ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
+              : member.role === "Admin"
+                ? BADGE_PALETTES.maroon
+                : BADGE_PALETTES.amber
+          )}
+        >
+          {roleLabel}
+        </span>
+
+        <span
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400 tabular-nums shrink-0 truncate max-w-[52%]"
+          title={`Last sign-in: ${lastLoginText}`}
+        >
+          <Clock01Icon size={12} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 shrink-0" />
+          <span className="truncate">{lastLoginText}</span>
+        </span>
+      </div>
+    </Card>
   )
 }
 
@@ -906,8 +1139,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     setPage(1)
   }
 
+  const [layoutView, setLayoutView] = useViewPreference("staff", "layoutView", "table")
   const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
   const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["name", "email", "office", "role", "section", "totp_enabled"])
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize))
   const optionalColumns = [
     { key: "name", label: "Staff Name" },
     { key: "email", label: "Email" },
@@ -936,15 +1171,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
   })()
 
-  const staffTableColumns = ["selection", "identifier", ...orderedVisibleColumns.map(({ key }) => {
+  const staffTableColumns = ["selection", { kind: "identifier", maxWidth: 200, growthWeight: 0 }, ...orderedVisibleColumns.map(({ key }) => {
     if (key === "name" || key === "email") return { kind: "text", maxWidth: 340 }
     if (key === "section") return { kind: "text", maxWidth: 240 }
-    if (key === "last_active" || key === "created_at" || key === "updated_at") return { kind: "date" }
-    if (key === "totp_enabled") return { kind: "status" }
-    return { kind: "category" }
+    if (key === "last_active" || key === "created_at" || key === "updated_at") return { kind: "date", maxWidth: 205, growthWeight: 0 }
+    if (key === "totp_enabled") return { kind: "status", maxWidth: 200, growthWeight: 0 }
+    return { kind: "category", maxWidth: 220, growthWeight: 0 }
   }), "actions"]
-
-  if (loading) return <GlobalStaffSkeleton columns={staffTableColumns} />
 
   return (
     <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full gap-6">
@@ -965,30 +1198,47 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           }
         />
 
-        <div role="group" aria-label="Personnel status" className="flex items-center px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
+        <div role="group" aria-label="Personnel status and view mode" className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
           <SegmentedControl
             value={statusFilter}
             onValueChange={setStatusFilter}
             variant="capsule"
-            className="inline-grid grid-flow-col auto-cols-fr"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
             items={[
               { value: "Active", label: "Active", badge: stats.active },
               { value: "Inactive", label: "Archived", badge: stats.inactive },
             ]}
           />
+
+          <div className="ml-auto">
+            <SegmentedControl
+              value={layoutView}
+              onValueChange={setLayoutView}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                { value: "grid", label: "Grid", icon: <ViewModeIcon mode="grid" className="text-sm" /> },
+                { value: "table", label: "Table", icon: <ViewModeIcon mode="table" className="text-sm" /> },
+              ]}
+            />
+          </div>
         </div>
 
         <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
             <DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
-            <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />
+            {layoutView === "table" && (
+              <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />
+            )}
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={setFilterRules} entityLabel="personnel" />
             <SortPopover options={[{ key: "name", label: "Name" }, { key: "id", label: "Employee ID" }, { key: "email", label: "Email" }, { key: "office", label: "Office" }, { key: "role", label: "Role" }, { key: "section", label: "Section" }, { key: "last_active", label: "Last Sign-in" }, { key: "totp_enabled", label: "Two-step Verification" }, { key: "created_at", label: "Date Added" }, { key: "updated_at", label: "Last Updated" }]} sortBy={sortBy} onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
             <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
-            <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+            {layoutView === "table" && (
+              <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+            )}
           </div>
         </DataViewToolbar>
 
@@ -1020,7 +1270,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
         {/* Content Section: Directory Table inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
-          {filteredStaff.length === 0 ? (
+          {loading ? (
+            <DataContentSkeleton columns={staffTableColumns} viewMode={layoutView} />
+          ) : filteredStaff.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>
@@ -1072,6 +1324,86 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </EmptyContent>
               </Empty>
             </div>
+          ) : layoutView === "grid" ? (
+            <>
+              <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20">
+                <div className="space-y-6">
+                  {groupedStaff.map(([groupLabel, members]) => (
+                    <div key={groupLabel || "all"} className="space-y-3">
+                      {groupLabel && (
+                        <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                          <span>{groupLabel}</span>
+                          <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500 text-[11px]">
+                            ({members.length})
+                          </span>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
+                        {members.map((member) => {
+                          const office = (Array.isArray(offices) ? offices : []).find(
+                            (o) => o.id === member.office_id
+                          )
+                          return (
+                            <GlobalStaffGridCard
+                              key={member.id}
+                              member={member}
+                              office={office}
+                              offices={offices}
+                              isSelf={member.id === authUser?.id}
+                              isSelected={selectedIds.has(member.id)}
+                              toggleSelect={toggleSelect}
+                              onInspect={setInspectMember}
+                              onEdit={handleOpenEdit}
+                              onArchive={setArchiveTarget}
+                              onRestore={setRestoreTarget}
+                              showToast={showToast}
+                            />
+                          )
+                        })}
+
+                        {statusFilter === "Active" && page === totalPages && groupBy === "none" && (
+                          <button
+                            type="button"
+                            onClick={handleOpenCreate}
+                            className="group flex min-h-[196px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-black/[0.14] dark:border-white/15 bg-white/60 dark:bg-zinc-900/30 p-4 text-gray-500 transition-[transform,background-color,border-color] duration-150 ease-out hover:border-black/[0.28] hover:bg-white hover:text-gray-950 dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 enabled:motion-safe:active:scale-[0.985]"
+                            aria-label="Register Personnel"
+                          >
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.06] dark:border-white/10 bg-gray-100/90 dark:bg-zinc-800 text-lg shadow-2xs transition-transform duration-150 ease-out motion-safe:group-hover:scale-105">
+                              <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors duration-150 group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                            </span>
+                            <span className="text-center">
+                              <span className="block text-[12.5px] font-semibold tracking-[-0.01em] text-gray-800 dark:text-zinc-200">Register Personnel</span>
+                              <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-zinc-400">Add a new personnel account to the directory.</span>
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {statusFilter === "Active" && page === totalPages && groupBy !== "none" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start pt-2">
+                      <button
+                        type="button"
+                        onClick={handleOpenCreate}
+                        className="group flex min-h-[196px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-black/[0.14] dark:border-white/15 bg-white/60 dark:bg-zinc-900/30 p-4 text-gray-500 transition-[transform,background-color,border-color] duration-150 ease-out hover:border-black/[0.28] hover:bg-white hover:text-gray-950 dark:hover:border-white/30 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100 enabled:motion-safe:active:scale-[0.985]"
+                        aria-label="Register Personnel"
+                      >
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.06] dark:border-white/10 bg-gray-100/90 dark:bg-zinc-800 text-lg shadow-2xs transition-transform duration-150 ease-out motion-safe:group-hover:scale-105">
+                          <Add01Icon size={16} aria-hidden="true" className="text-gray-500 transition-colors duration-150 group-hover:text-gray-950 dark:group-hover:text-zinc-100" />
+                        </span>
+                        <span className="text-center">
+                          <span className="block text-[12.5px] font-semibold tracking-[-0.01em] text-gray-800 dark:text-zinc-200">Register Personnel</span>
+                          <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-zinc-400">Add a new personnel account to the directory.</span>
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <TablePagination label="Global personnel pages" page={page} pageSize={pageSize} totalCount={filteredStaff.length} displayedCount={paginatedStaff.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+            </>
           ) : (
             <>
               <div
@@ -1773,7 +2105,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </div>
 
                 {/* Sub-Header Navigation Tabs */}
-                <div className="px-6 py-2.5 border-b border-border/80 dark:border-border shrink-0 bg-gray-50/40 dark:bg-zinc-900/20">
+                <div className="px-6 py-2.5 border-b border-border/80 dark:border-border shrink-0">
                   <SegmentedControl
                     value={sheetTab}
                     onValueChange={setSheetTab}

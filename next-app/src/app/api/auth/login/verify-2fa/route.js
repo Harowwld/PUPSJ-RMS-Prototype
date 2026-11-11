@@ -16,6 +16,12 @@ import { getSessionVersion, isSessionActive, revokeSession } from "@/lib/authSes
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 import { isDemoAccount } from "@/lib/demoAccounts";
+import {
+  verifyAccountRecoveryCode,
+  verifyAccountSerialKey,
+} from "@/lib/accountSecurityRepo";
+import { getStudentAccountFor2FA, createStudentSession, setStudentSessionCookie } from "@/lib/studentAuth";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -78,6 +84,13 @@ export async function POST(req) {
       }
     } catch {
       return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or expired session" }, { status: 401 }));
+    }
+
+    if (payload.principal_type === "student" || payload.role === "Student") {
+      if (payload.principal_type !== "student" || payload.role !== "Student") {
+        return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid 2FA session" }, { status: 401 }));
+      }
+      return verifyStudent2FA(req, payload, code, ipAddress);
     }
 
     const userId = payload.sub;
@@ -189,4 +202,59 @@ export async function POST(req) {
       { status: 500 }
     ));
   }
+}
+
+async function verifyStudent2FA(req, payload, code, ipAddress) {
+  const student = await getStudentAccountFor2FA(payload.account_id || payload.sub);
+  if (!student || !student.totp_enabled) {
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid or inactive 2FA session" }, { status: 401 }));
+  }
+
+  const accountId = String(student.id);
+  let isValid = false;
+  let methodUsed = "";
+  if (/^\d{6}$/.test(code.trim())) {
+    const decrypted = decryptSecret(student.totp_secret);
+    if (decrypted) {
+      isValid = verifyTOTP(code, decrypted);
+      methodUsed = "TOTP";
+    }
+  }
+  if (!isValid && code.trim().length === 8) {
+    isValid = await verifyAccountRecoveryCode("student", accountId, code);
+    methodUsed = "Recovery Code";
+  }
+  if (!isValid && (code.trim().length === 16 || code.trim().length === 19)) {
+    isValid = await verifyAccountSerialKey("student", accountId, code);
+    methodUsed = "Serial key";
+  }
+  if (!isValid) {
+    await writeGlobalAuditLog(req, "Student 2FA Verification Failure", {
+      actor: student.name || student.student_no || accountId,
+      actor_id: student.student_no || accountId,
+      role: "Student",
+      severity: "WARNING",
+      entity_type: "student_account",
+      entity_id: accountId,
+    });
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 }));
+  }
+
+  await revokeSession(payload.jti, { principalId: accountId, reason: "2fa-challenge-used" });
+  const token = await createStudentSession(student, { authLevel: "2fa" });
+  await resetAuth2FARateLimit(ipAddress, accountId);
+  await writeGlobalAuditLog(req, "Student Login (2FA)", {
+    actor: student.name || student.student_no || accountId,
+    actor_id: student.student_no || accountId,
+    role: "Student",
+    details: `Student successfully verified using ${methodUsed}`,
+    entity_type: "student_account",
+    entity_id: accountId,
+  });
+
+  const response = NextResponse.json({
+    ok: true,
+    data: { role: "Student", id: student.student_no || accountId, student_no: student.student_no, name: student.name },
+  });
+  return addSecurityHeaders(await setStudentSessionCookie(response, token, req));
 }

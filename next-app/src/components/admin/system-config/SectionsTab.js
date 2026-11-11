@@ -44,7 +44,8 @@ import {
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
-import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, PencilEdit01Icon, Search01Icon, Archive01Icon} from "hugeicons-react";
+import DashboardSearch from "@/components/shared/DashboardSearch"
+import { Archive01Icon as EmptyArchive01Icon, Search01Icon as EmptySearch01Icon , Archive02Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, PencilEdit01Icon, Archive01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function SortIndicator({ sortState, column }) {
   if (sortState?.key !== column) {
@@ -293,11 +294,9 @@ export default function SectionsTab({
           className="p-6"
         />
 
-        {/* Connected Segmented Tabs Row: Active vs Archived */}
-        <div
-          role="group"
-          aria-label="Course blocks status filters"
-          className="flex items-center justify-between px-6 py-2.5 border-t border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none"
+        <DataViewToolbar
+          label="Course block tabs, search, and filters"
+          className="justify-between gap-3 border-t border-border bg-white px-4 py-2.5 sm:px-6 dark:border-border dark:bg-card"
         >
           <SegmentedControl
             value={showArchived ? "archived" : "active"}
@@ -320,16 +319,11 @@ export default function SectionsTab({
               },
             ]}
           />
-        </div>
-
-        {/* Navigation Toolbar */}
-        <DataViewToolbar label="Section search and filters" className="border-t border-border dark:border-border p-5 gap-4 bg-white dark:bg-card">
-          {/* Search Input, Matches Count, Export, Add */}
-          <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
+          <div className="ml-auto flex items-center gap-3 select-none">
             {/* Program Filter Select dropdown */}
             <div className="w-[180px]">
               <Select
-                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none px-3 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
+                className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none px-3 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                 value={selectedCourseFilter}
                 onChange={(e) => {
                   setSelectedCourseFilter(e.target.value)
@@ -345,21 +339,18 @@ export default function SectionsTab({
               </Select>
             </div>
 
-            <div className="flex-1 max-w-md relative group">
-              <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
-                <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
-              </div>
-              <Input
-                type="text"
-                placeholder="Filter block name..."
-                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-9 pr-24 text-xs font-normal placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 text-gray-900 dark:text-zinc-100"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[12px] font-normal text-gray-400 dark:text-zinc-500">
-                {filteredSectionsFull.length}
-              </div>
-            </div>
+            <DashboardSearch
+              value={localSearch}
+              onChange={setLocalSearch}
+              onClear={() => {
+                setLocalSearch("")
+                setSectionSearch("")
+                setPageSection(1)
+              }}
+              count={filteredSectionsFull.length}
+              placeholder="Filter block name..."
+              label="Search course blocks"
+            />
 
             <TableScrollControls scrollContainerRef={tableContainerRef}
               canScrollLeft={canScrollLeft}

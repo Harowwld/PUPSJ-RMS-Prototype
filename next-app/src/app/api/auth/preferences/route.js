@@ -25,6 +25,7 @@ const DEFAULT_USER_PREFERENCES = {
   sound_volume: DEFAULT_SOUND_VOLUME,
   sound_categories: { ...DEFAULT_SOUND_CATEGORIES },
 };
+const DEFAULT_STUDENT_PREFERENCES = { selected_osas_org_id: "" };
 
 const PREFERENCE_VALIDATORS = {
   theme: (value) => ["light", "dark", "system"].includes(value),
@@ -40,6 +41,7 @@ const PREFERENCE_VALIDATORS = {
   sound_enabled: (value) => typeof value === "boolean",
   sound_volume: (value) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1,
   sound_categories: (value) => isValidSoundCategoriesPreference(value),
+  selected_osas_org_id: (value) => typeof value === "string" && value.length <= 100,
 };
 
 async function getStudentAccountPreferences(principal) {
@@ -59,6 +61,7 @@ async function getStudentAccountPreferences(principal) {
     accountId: row?.id || accountId,
     preferences: {
       ...DEFAULT_USER_PREFERENCES,
+      ...DEFAULT_STUDENT_PREFERENCES,
       ...parseStaffPreferences(row?.preferences),
     },
   };
@@ -145,6 +148,10 @@ export async function POST(req) {
       }
 
       return NextResponse.json({ ok: true, data: updatedPrefs });
+    }
+
+    if (Object.hasOwn(preferences, "selected_osas_org_id")) {
+      return NextResponse.json({ ok: false, error: "This preference is only available to student accounts." }, { status: 400 });
     }
 
     const userId = access.user.id;

@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -10,8 +10,9 @@ import NoticeBanner from "@/components/shared/NoticeBanner";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Reorder } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import {
@@ -38,6 +40,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { TableActions } from "@/components/shared/TableActions";
 import PageHeader from "@/components/shared/PageHeader";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
@@ -77,7 +80,7 @@ import {
 } from "@/components/systemadmin/OfficeTableControls";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
-import { Building01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
+import { Archive02Icon, Building01Icon, CheckmarkCircle01Icon } from "hugeicons-react";
 
 const ORG_SORT_OPTIONS = [
   { key: "name", label: "Organization Name" },
@@ -94,13 +97,15 @@ const ORG_GROUP_OPTIONS = [
   { key: "none", label: "No grouping" },
 ];
 
+const organizationCountFormat = new Intl.NumberFormat("en-PH");
+
 const ORG_TABLE_COLUMNS = [
-  { key: "name", label: "Organization" },
-  { key: "category", label: "Category" },
-  { key: "status", label: "Status" },
-  { key: "adviser", label: "Adviser" },
-  { key: "proposal_count", label: "Submissions" },
-  { key: "created_at", label: "Date Added" },
+  { key: "name", label: "Organization", size: { kind: "text", minWidth: 360, maxWidth: 540, growthWeight: 3 } },
+  { key: "category", label: "Category", size: { kind: "category", minWidth: 150, maxWidth: 180, growthWeight: 1 } },
+  { key: "adviser", label: "Adviser", size: { kind: "text", minWidth: 150, maxWidth: 230 } },
+  { key: "status", label: "Status", size: { kind: "status", minWidth: 100, maxWidth: 120 } },
+  { key: "proposal_count", label: "Submissions", size: { kind: "number", width: 92, paddingX: 8 }, defaultHidden: true },
+  { key: "created_at", label: "Date Added", size: { kind: "date" }, defaultHidden: true },
 ];
 
 const ORG_FILTER_FIELDS = [
@@ -120,15 +125,8 @@ const ORG_FILTER_FIELDS = [
     options: [
       { value: "Active", label: "Active" },
       { value: "Inactive", label: "Inactive" },
-      { value: "Archived", label: "Archived" },
     ],
   },
-];
-
-const CATEGORIES = [
-  "All",
-  "Academic",
-  "Non-Academic",
 ];
 
 const OFFICER_POSITIONS = [
@@ -154,12 +152,6 @@ const getOrgStatusBadgeClass = (status) => {
   return "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-border";
 };
 
-const getOrgStatusDotClass = (status) => {
-  if (status === "Active") return "bg-emerald-500";
-  if (status === "Archived") return "bg-amber-500";
-  return "bg-zinc-400";
-};
-
 const getBannerStatusClass = (status) => {
   if (status === "Active") {
     return "bg-emerald-500/25 text-emerald-200 border-emerald-400/30";
@@ -177,7 +169,7 @@ const getBannerStatusDotClass = (status) => {
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, Contact01Icon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
@@ -205,7 +197,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-[#800000] via-[#991b1b] to-[#b91c1c] text-white",
       ring: "ring-red-500/30 dark:ring-red-400/30",
-      badge: "bg-red-50 text-pup-maroon border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900/50",
       icon: " CrownIcon",
     };
   }
@@ -213,7 +204,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-indigo-800 via-indigo-600 to-blue-600 text-white",
       ring: "ring-indigo-500/30 dark:ring-indigo-400/30",
-      badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/50",
       icon: " Shield01Icon",
     };
   }
@@ -221,7 +211,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-emerald-800 via-emerald-600 to-teal-600 text-white",
       ring: "ring-emerald-500/30 dark:ring-emerald-400/30",
-      badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
       icon: " Notebook01Icon",
     };
   }
@@ -229,7 +218,6 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-amber-700 via-amber-600 to-yellow-600 text-white",
       ring: "ring-amber-500/30 dark:ring-amber-400/30",
-      badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
       icon: " Coins01Icon",
     };
   }
@@ -237,14 +225,12 @@ function getOfficerRoleStyle(position = "") {
     return {
       gradient: "from-purple-800 via-purple-600 to-violet-600 text-white",
       ring: "ring-purple-500/30 dark:ring-purple-400/30",
-      badge: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/50",
       icon: " JusticeScale01Icon",
     };
   }
   return {
     gradient: "from-slate-700 via-slate-600 to-zinc-700 text-white",
     ring: "ring-gray-300/30 dark:ring-white/10",
-    badge: "bg-gray-100 text-gray-700 border-border dark:bg-zinc-800 dark:text-zinc-300 dark:border-border",
     icon: " UserCheck01Icon",
   };
 }
@@ -256,157 +242,38 @@ function getInitials(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const STORAGE_KEY = "pupsj_student_orgs_kpi_order";
-const DEFAULT_ORDER = ["organizations", "officers", "proposals"];
-
 export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const fetchRequestRef = useRef(0);
-  const [search, setSearchState] = useState("");
-  const [categoryFilters, setCategoryFiltersState] = useState([]);
-  const [statusFilters, setStatusFiltersState] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState(() => ORG_TABLE_COLUMNS.map((c) => c.key));
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
+  const [search, setSearchState] = useOsasViewPreference("student_organizations", "search", "");
+  const [organizationScope, setOrganizationScope] = useOsasViewPreference("student_organizations", "organizationScope", "active");
+  const showArchived = organizationScope === "archive";
+  const [filterRules, setFilterRules] = useOsasViewPreference("student_organizations", "filterRules", []);
+  const [groupBy, setGroupBy] = useOsasViewPreference("student_organizations", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useOsasViewPreference(
+    "student_organizations",
+    "visibleColumns",
+    ORG_TABLE_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
+  );
+  const visibleOrgSizes = ORG_TABLE_COLUMNS.filter(({ key }) => visibleColumns.includes(key));
+  const organizationTableColumns = [
+    ...visibleOrgSizes.filter(({ key }) => ["name", "category", "adviser"].includes(key)).map(({ size }) => size),
+    { kind: "number", minWidth: 150, maxWidth: 170 },
+    { kind: "status", minWidth: 200, maxWidth: 220 },
+    ...visibleOrgSizes.filter(({ key }) => ["status", "proposal_count", "created_at"].includes(key)).map(({ size }) => size),
+    "actions",
+  ];
+  const [startDate, setStartDate] = useOsasViewPreference("student_organizations", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("student_organizations", "endDate", "");
+  const [sortBy, setSortBy] = useOsasViewPreference("student_organizations", "sortBy", "name");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("student_organizations", "sortOrder", "ASC");
+  const [viewMode, setViewMode] = useOsasViewPreference("student_organizations", "viewMode", "grid");
   const [orgPage, setOrgPage] = useState(1);
-  const [orgPageSize, setOrgPageSize] = useState(10);
-  const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, []);
-  const setCategoryFilters = useCallback((value) => { setCategoryFiltersState(value); setOrgPage(1); }, []);
-  const setStatusFilters = useCallback((value) => { setStatusFiltersState(value); setOrgPage(1); }, []);
-
-  // Category Navigation Slider (horizontal scroll & drag)
-  const categoryTabsRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [isTabsDragging, setIsTabsDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragScrollLeft, setDragScrollLeft] = useState(0);
-
-  const checkTabsScroll = useCallback(() => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 2);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    checkTabsScroll();
-    el.addEventListener("scroll", checkTabsScroll, { passive: true });
-    window.addEventListener("resize", checkTabsScroll);
-
-    let ro;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(() => checkTabsScroll());
-      ro.observe(el);
-    }
-
-    return () => {
-      el.removeEventListener("scroll", checkTabsScroll);
-      window.removeEventListener("resize", checkTabsScroll);
-      ro?.disconnect();
-    };
-  }, [checkTabsScroll, organizations.length]);
-
-  const slideCategories = (direction) => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const offset = direction === "left" ? -220 : 220;
-    el.scrollBy({ left: offset, behavior: "smooth" });
-  };
-
-  const handleTabsMouseDown = (e) => {
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    setIsTabsDragging(true);
-    setDragStartX(e.pageX - el.offsetLeft);
-    setDragScrollLeft(el.scrollLeft);
-  };
-
-  const handleTabsMouseMove = (e) => {
-    if (!isTabsDragging) return;
-    e.preventDefault();
-    const el = categoryTabsRef.current;
-    if (!el) return;
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - dragStartX) * 1.5;
-    el.scrollLeft = dragScrollLeft - walk;
-  };
-
-  const handleTabsMouseUpOrLeave = () => {
-    setIsTabsDragging(false);
-  };
-
-  const allCategories = useMemo(() => {
-    const dynamicCats = new Set(["Academic", "Non-Academic"]);
-    organizations.forEach((org) => {
-      if (org.category && typeof org.category === "string") {
-        dynamicCats.add(org.category.trim());
-      }
-    });
-    return ["All", ...Array.from(dynamicCats)];
-  }, [organizations]);
-
-  // Draggable KPI Stat Cards & Interactive Popover State
-  const [kpiOrder, setKpiOrder] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (
-            Array.isArray(parsed) &&
-            parsed.length === 3 &&
-            parsed.every((k) => DEFAULT_ORDER.includes(k))
-          ) {
-            return parsed;
-          }
-        }
-      } catch {
-        // Fallback to default
-      }
-    }
-    return DEFAULT_ORDER;
-  });
-
-  const handleReorder = (newOrder) => {
-    setKpiOrder(newOrder);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const statCardsRef = useRef(null);
-
-  // Close dropdown details when clicking outside
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
-
+  const [orgPageSize, setOrgPageSize] = useOsasViewPreference("student_organizations", "pageSize", 10);
+  const setSearch = useCallback((value) => { setSearchState(value); setOrgPage(1); }, [setSearchState]);
   // Whitelist Sheet State
   const [selectedOrgForOfficers, setSelectedOrgForOfficers] = useState(null);
   const [sheetSubTab, setSheetSubTab] = useState("officers"); // "info" | "officers"
@@ -441,6 +308,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     description: "",
   });
   const [savingOrg, setSavingOrg] = useState(false);
+  const [organizationToArchive, setOrganizationToArchive] = useState(null);
+  const [archivingOrganization, setArchivingOrganization] = useState(false);
 
   // CBL Upload / Preview State
   const [cblUploadOrg, setCblUploadOrg] = useState(null);
@@ -592,7 +461,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     [showToast]
   );
 
-  const openManageOrgSheet = (org, defaultTab = "info") => {
+  const openManageOrgSheet = useCallback((org, defaultTab = "info") => {
     setSelectedOrgForOfficers(org);
     setEditingOrg(org);
     setSheetSubTab(defaultTab);
@@ -614,7 +483,35 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     });
     loadOfficers(org.id);
     loadBylawsHistory(org.id);
-  };
+  }, [loadOfficers, loadBylawsHistory]);
+
+  const requestedOrganization = useSearchParams()?.get("organization");
+  useEffect(() => {
+    if (!requestedOrganization) return;
+
+    const controller = new AbortController();
+    fetch(`/api/osas/organizations/${encodeURIComponent(requestedOrganization)}`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (!result.ok || !result.data) throw new Error(result.error);
+        if (!controller.signal.aborted) openManageOrgSheet(result.data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) toast.error("Could not open the organization.");
+      })
+      .finally(() => {
+        if (controller.signal.aborted) return;
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("organization") !== requestedOrganization) return;
+        url.searchParams.delete("organization");
+        window.history.replaceState(null, "", url);
+      });
+
+    return () => controller.abort();
+  }, [requestedOrganization, openManageOrgSheet]);
 
   const handleAddOfficer = async (e) => {
     e.preventDefault();
@@ -892,73 +789,62 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     }
   };
 
-  // Counts for filters
-  const counts = useMemo(() => {
-    const c = {
-      Active: 0,
-      Inactive: 0,
-      Archived: 0,
-      Academic: 0,
-      "Non-Academic": 0,
-    };
-    organizations.forEach((org) => {
-      if (c[org.status] !== undefined) c[org.status] += 1;
-      if (c[org.category] !== undefined) c[org.category] += 1;
-    });
-    return c;
-  }, [organizations]);
+  const handleArchiveOrganization = async () => {
+    if (!organizationToArchive || archivingOrganization) return;
 
-  const filterGroups = useMemo(() => [
-    {
-      id: "status",
-      label: "Organization Status",
-      options: [
-        { value: "Active", label: "Active", indicatorColor: "bg-emerald-500", count: counts.Active },
-        { value: "Inactive", label: "Inactive", indicatorColor: "bg-zinc-400", count: counts.Inactive },
-        { value: "Archived", label: "Archived", indicatorColor: "bg-amber-500", count: counts.Archived },
-      ],
-    },
-    {
-      id: "category",
-      label: "Organization Category",
-      options: [
-        { value: "Academic", label: "Academic", indicatorColor: "bg-blue-500", count: counts.Academic },
-        { value: "Non-Academic", label: "Non-Academic", indicatorColor: "bg-purple-500", count: counts["Non-Academic"] },
-      ],
-    },
-  ], [counts]);
+    setArchivingOrganization(true);
+    try {
+      const response = await fetch(
+        `/api/osas/organizations/${encodeURIComponent(organizationToArchive.id)}`,
+        { method: "DELETE" }
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.ok) {
+        throw new Error(result?.error || "Could not archive the organization.");
+      }
 
-  const filterValues = useMemo(() => ({
-    status: statusFilters,
-    category: categoryFilters,
-  }), [statusFilters, categoryFilters]);
+      setOrganizations((current) => current.map((org) =>
+        org.id === organizationToArchive.id ? { ...org, status: "Archived" } : org
+      ));
+      setOrganizationToArchive(null);
+      showToast({
+        title: "Organization Archived",
+        description: `${organizationToArchive.name} moved to the Archive tab.`,
+      });
+      await fetchOrganizations();
+    } catch (error) {
+      showToast(formatErrorMessage(error, {
+        title: "Organization Archive Failed",
+        actionContext: "Archiving a student organization",
+      }), true);
+    } finally {
+      setArchivingOrganization(false);
+    }
+  };
 
-  const handleFilterChange = useCallback((groupId, values) => {
-    if (groupId === "status") setStatusFilters(values);
-    else if (groupId === "category") setCategoryFilters(values);
-  }, [setCategoryFilters, setStatusFilters]);
+  const archivedCount = organizations.filter((org) => org.status === "Archived").length;
+  const filterFields = useMemo(() => {
+    const [categoryField, statusField] = ORG_FILTER_FIELDS;
+    const categories = new Set(categoryField.options.map(({ value }) => value));
+    organizations.forEach(({ category }) => { if (category) categories.add(category); });
+    const fields = [{ ...categoryField, options: [...categories].map((value) => ({ value, label: value })) }];
+    if (!showArchived) fields.push(statusField);
+    return fields;
+  }, [organizations, showArchived]);
+  const activeFilterRules = useMemo(() => filterRules.filter((rule) =>
+    rule.fieldKey !== "status" || (!showArchived && rule.value !== "Archived")
+  ), [filterRules, showArchived]);
 
-  const handleResetFilters = useCallback(() => {
+  const handleResetFilters = () => {
     setSearch("");
-    setCategoryFilters([]);
-    setStatusFilters([]);
     setFilterRules([]);
     setStartDate("");
     setEndDate("");
-  }, [setSearch, setCategoryFilters, setStatusFilters]);
+  };
 
   const filteredOrganizations = useMemo(() => {
     const list = organizations.filter((org) => {
-      if (statusFilters.length > 0) {
-        if (!statusFilters.includes(org.status)) return false;
-      } else {
-        // By default, if no status filter is selected, exclude archived organizations
-        if (org.status === "Archived") return false;
-      }
-
-      if (categoryFilters.length > 0 && !categoryFilters.includes(org.category)) {
-        return false;
-      }
+      if ((org.status === "Archived") !== showArchived) return false;
 
       if (startDate || endDate) {
         const itemDate = org.created_at ? new Date(org.created_at) : null;
@@ -969,8 +855,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         }
       }
 
-      if (filterRules.length > 0) {
-        const matchesRules = filterRules.every((rule) => {
+      if (activeFilterRules.length > 0) {
+        const matchesRules = activeFilterRules.every((rule) => {
           let actual = org[rule.fieldKey] || "";
           const ruleVal = String(rule.value || "").toLowerCase();
           const actVal = String(actual || "").toLowerCase();
@@ -1004,8 +890,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
       return 0;
     });
-  }, [organizations, statusFilters, categoryFilters, filterRules, startDate, endDate, search, sortBy, sortOrder]);
+  }, [organizations, showArchived, activeFilterRules, startDate, endDate, search, sortBy, sortOrder]);
 
+  const maxSubmissionCount = filteredOrganizations.reduce(
+    (max, org) => Math.max(max, Number(org.proposal_count) || 0),
+    0
+  );
   const safeOrgPage = Math.min(orgPage, Math.max(1, Math.ceil(filteredOrganizations.length / orgPageSize)));
   const paginatedOrganizations = filteredOrganizations.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
 
@@ -1035,7 +925,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
   useEffect(() => {
     resetScroll();
-  }, [viewMode, search, statusFilters, categoryFilters, resetScroll]);
+  }, [viewMode, search, organizationScope, activeFilterRules, resetScroll]);
 
   const groupedOrganizations = useMemo(() => {
     if (groupBy === "none") {
@@ -1064,7 +954,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         onRemove: () => setSearch(""),
       });
     }
-    filterRules.forEach((rule) => {
+    activeFilterRules.forEach((rule) => {
       const field = ORG_FILTER_FIELDS.find((f) => f.key === rule.fieldKey);
       const fieldLabel = field?.label || rule.fieldKey;
       const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
@@ -1082,26 +972,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         onRemove: () => { setStartDate(""); setEndDate(""); },
       });
     }
-    categoryFilters.forEach((cat) => {
-      chips.push({
-        id: `cat-${cat}`,
-        label: `Category: ${cat}`,
-        onRemove: () => setCategoryFilters((prev) => prev.filter((c) => c !== cat)),
-      });
-    });
-    statusFilters.forEach((st) => {
-      chips.push({
-        id: `status-${st}`,
-        label: `Status: ${st}`,
-        onRemove: () => setStatusFilters((prev) => prev.filter((s) => s !== st)),
-      });
-    });
     return chips;
-  }, [search, filterRules, startDate, endDate, categoryFilters, statusFilters, setSearch, setCategoryFilters, setStatusFilters]);
+  }, [search, activeFilterRules, startDate, endDate, setSearch, setFilterRules, setStartDate, setEndDate]);
 
-  const hasActiveFilters = Boolean(
-    search.trim() || categoryFilters.length > 0 || statusFilters.length > 0 || filterRules.length > 0 || startDate !== "" || endDate !== ""
-  );
+  const hasActiveFilters = activeChips.length > 0;
 
   // Standard KPI Metrics & Detailed Breakdown for Popovers
   const kpiStats = useMemo(() => {
@@ -1230,511 +1104,114 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             }
           />
 
-          {/* 2. Top Summary Metrics Banner (Standard Reorderable Stat Cards Grid) */}
+          {/* 2. Top Summary Metrics Banner */}
           <div className="px-6 pb-6">
-            {loading && !hasLoaded ? (
-              <KpiStatCardsSkeleton count={3} />
-            ) : (
-              <Reorder.Group
-                as="div"
-                axis="x"
-                values={kpiOrder}
-                onReorder={handleReorder}
-                ref={statCardsRef}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start relative z-20"
-              >
-                {kpiOrder.map((key) => {
-                  if (key === "organizations") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="organizations"
-                        key="organizations"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "organizations" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "organizations" ? null : "organizations"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "organizations"
-                              ? "border-pup-maroon/50 ring-1 ring-pup-maroon/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Recognized Orgs
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                              <Building01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? <Skeleton className="h-7 w-12" /> : kpiStats.total}
-                              </span>
-                              <span className="text-xs font-medium text-pup-maroon dark:text-red-400 mb-1">
-                                Campus Active
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              {loading && !hasLoaded ? (
+                <KpiStatCardsSkeleton count={3} />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  {/* Card 1: Recognized Orgs */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <Building01Icon size="0.75em" />
                         </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "organizations"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Academic
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.academicCount}
-                                </span>
-                              </div>
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Non-Academic
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.nonAcademicCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center text-xs">
-                              <span className="font-semibold text-emerald-800 dark:text-emerald-300">
-                                CBL On File (Archived)
-                              </span>
-                              <span className="font-bold text-emerald-900 dark:text-emerald-200">
-                                {kpiStats.cblArchivedCount} of {kpiStats.total} orgs
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Active Organizations Preview
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.orgRosterPreview.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No active organizations
-                                  </p>
-                                ) : (
-                                  kpiStats.orgRosterPreview.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <div className="truncate max-w-[170px]" title={org.name}>
-                                        <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                          {org.acronym || org.name}
-                                        </span>
-                                        <span className="text-gray-400 dark:text-zinc-500 text-[10px] ml-1.5">
-                                          ({org.category})
-                                        </span>
-                                      </div>
-                                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                        {org.status}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  if (key === "officers") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="officers"
-                        key="officers"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "officers" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "officers" ? null : "officers"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "officers"
-                              ? "border-blue-500/50 ring-1 ring-blue-500/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Authorized Officers
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#3b82f6]">
-                              <Shield01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? (
-                                  <Skeleton className="h-7 w-12" />
-                                ) : (
-                                  kpiStats.totalOfficers
-                                )}
-                              </span>
-                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                Authorized Submitters
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "officers"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Configured Orgs
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.orgsWithOfficersCount}
-                                </span>
-                              </div>
-                              <div className="bg-blue-50/60 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                <span className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                  Pending Roster
-                                </span>
-                                <span className="text-lg font-black text-blue-700 dark:text-blue-400">
-                                  {kpiStats.orgsWithoutOfficersCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                              <span className="font-semibold text-gray-600 dark:text-zinc-300">
-                                Average Officers Per Org
-                              </span>
-                              <span className="font-bold text-gray-900 dark:text-zinc-100">
-                                {kpiStats.avgOfficers}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Top Officer Rosters
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.topOrgsByOfficers.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No officers configured
-                                  </p>
-                                ) : (
-                                  kpiStats.topOrgsByOfficers.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <span
-                                        className="truncate max-w-[170px] font-medium"
-                                        title={org.name}
-                                      >
-                                        {org.acronym || org.name}
-                                      </span>
-                                      <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                        {org.active_officer_count || 0}{" "}
-                                        {org.active_officer_count === 1
-                                          ? "officer"
-                                          : "officers"}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  if (key === "proposals") {
-                    return (
-                      <Reorder.Item
-                        as="div"
-                        value="proposals"
-                        key="proposals"
-                        className={cn(
-                          "relative group rounded-xl cursor-grab active:cursor-grabbing",
-                          selectedKpi === "proposals" ? "z-30" : "z-10"
-                        )}
-                      >
-                        <div
-                          onClick={() =>
-                            setSelectedKpi(
-                              selectedKpi === "proposals" ? null : "proposals"
-                            )
-                          }
-                          className={cn(
-                            "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-gray-50 dark:bg-zinc-900",
-                            selectedKpi === "proposals"
-                              ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                              : "border-border dark:border-border hover:border-border dark:hover:border-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start p-4 pb-0">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-300 capitalize">
-                                Event Proposals
-                              </span>
-                            </div>
-                            <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                              <CalendarCheckIn01Icon size="1em" className="text-[15px]" />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-end p-4 pt-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                                {loading && !hasLoaded ? (
-                                  <Skeleton className="h-7 w-12" />
-                                ) : (
-                                  kpiStats.totalProposals
-                                )}
-                              </span>
-                              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                                Activity Proposals
-                              </span>
-                            </div>
-                            <DragDropIcon size="1em"
-                              className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-900 dark:text-zinc-300 text-xl mb-0.5 shrink-0"
-                              title="Drag to rearrange"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Expandable Details Dropdown Popover */}
-                        <div
-                          className={cn(
-                            "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                            selectedKpi === "proposals"
-                              ? "scale-y-100 opacity-100 translate-y-0"
-                              : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                                <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                                  Active Proponents
-                                </span>
-                                <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                                  {kpiStats.orgsWithProposalsCount}
-                                </span>
-                              </div>
-                              <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                  No Proposals Yet
-                                </span>
-                                <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                                  {kpiStats.orgsWithoutProposalsCount}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border flex justify-between items-center text-xs">
-                              <span className="font-semibold text-gray-600 dark:text-zinc-300">
-                                Total Activity Submissions
-                              </span>
-                              <span className="font-bold text-gray-900 dark:text-zinc-100">
-                                {kpiStats.totalProposals}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                                Top Activity Proponents
-                              </h4>
-                              <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                                {kpiStats.topOrgsByProposals.length === 0 ? (
-                                  <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                    No activity proposals submitted
-                                  </p>
-                                ) : (
-                                  kpiStats.topOrgsByProposals.map((org) => (
-                                    <div
-                                      key={org.id}
-                                      className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                    >
-                                      <span
-                                        className="truncate max-w-[170px] font-medium"
-                                        title={org.name}
-                                      >
-                                        {org.acronym || org.name}
-                                      </span>
-                                      <span className="font-bold text-gray-900 dark:text-zinc-50">
-                                        {org.proposal_count || 0}{" "}
-                                        {org.proposal_count === 1
-                                          ? "proposal"
-                                          : "proposals"}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Reorder.Item>
-                    );
-                  }
-
-                  return null;
-                })}
-              </Reorder.Group>
-            )}
-          </div>
-
-          {/* Connected Tabs & View Switcher Row */}
-          <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card">
-            {/* Category Navigation Slider */}
-            <div className="relative min-w-[220px] flex-1 max-w-full overflow-hidden flex items-center">
-              {/* Left Gradient Mask & Chevron */}
-              {canScrollLeft && (
-                <div className="absolute left-0 inset-y-0 z-10 flex items-center pr-3 bg-gradient-to-r from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
-                  <button
-                    type="button"
-                    onClick={() => slideCategories("left")}
-                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
-                    title="Slide left"
-                    aria-label="Slide categories left"
-                  >
-                    <ArrowLeft01Icon size="1em" className="text-xs" />
-                  </button>
-                </div>
-              )}
-
-              {/* Scrollable / Draggable Tabs Track */}
-              <div
-                ref={categoryTabsRef}
-                onMouseDown={handleTabsMouseDown}
-                onMouseMove={handleTabsMouseMove}
-                onMouseUp={handleTabsMouseUpOrLeave}
-                onMouseLeave={handleTabsMouseUpOrLeave}
-                className={cn(
-                  "flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth select-none py-1 px-0.5 w-full",
-                  isTabsDragging ? "cursor-grabbing" : "cursor-grab"
-                )}
-              >
-                {allCategories.map((cat) => {
-                  const isActive =
-                    cat === "All"
-                      ? categoryFilters.length === 0
-                      : categoryFilters.length === 1 && categoryFilters[0] === cat;
-                  const count =
-                    cat === "All"
-                      ? organizations.length
-                      : organizations.filter((o) => o.category === cat).length;
-
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={(e) => {
-                        setCategoryFilters(cat === "All" ? [] : [cat]);
-                        e.currentTarget.scrollIntoView({
-                          behavior: "smooth",
-                          block: "nearest",
-                          inline: "center",
-                        });
-                      }}
-                      className={cn(
-                        "relative h-8 px-3 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer border whitespace-nowrap shrink-0 select-none",
-                        isActive
-                          ? "bg-white dark:bg-zinc-800 text-gray-900 dark:text-white border-border/80 dark:border-white/10 shadow-xs"
-                          : "bg-transparent text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white border-transparent hover:bg-gray-100/60 dark:hover:bg-zinc-800/40"
-                      )}
-                    >
-                      <span>{cat === "All" ? "All Organizations" : cat}</span>
-                      <span
-                        className={cn("px-1.5 py-0.2 rounded-full text-[10px] font-sans tabular-nums", isActive
-                            ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300 font-bold"
-                            : "bg-gray-200/60 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 font-medium", BADGE_BASE)}
-                      >
-                        {count}
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Recognized Orgs
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Building01Icon size={12} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Campus Active</span>
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.total.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.academicCount} Academic · {kpiStats.nonAcademicCount} Non-Academic
+                    </div>
+                  </div>
 
-              {/* Right Gradient Mask & Chevron */}
-              {canScrollRight && (
-                <div className="absolute right-0 inset-y-0 z-10 flex items-center pl-3 bg-gradient-to-l from-gray-50/95 via-gray-50/70 to-transparent dark:from-zinc-900/95 dark:via-zinc-900/70">
-                  <button
-                    type="button"
-                    onClick={() => slideCategories("right")}
-                    className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-border shadow-xs flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-pup-maroon dark:hover:text-red-400 transition-all cursor-pointer active:scale-95"
-                    title="Slide right"
-                    aria-label="Slide categories right"
-                  >
-                    <ArrowRight01Icon size="1em" className="text-xs" />
-                  </button>
+                  {/* Card 2: Authorized Officers */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Shield01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Authorized Officers
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Tick01Icon size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Authorized Submitters</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.totalOfficers.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.orgsWithOfficersCount} orgs configured · {kpiStats.orgsWithoutOfficersCount} pending roster
+                    </div>
+                  </div>
+
+                  {/* Card 3: Event Proposals */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <CalendarCheckIn01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
+                          Event Proposals
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <CalendarCheckIn01Icon size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Activity Proposals</span>
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.totalProposals.toLocaleString()}
+                    </div>
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate tabular-nums">
+                      {kpiStats.orgsWithProposalsCount} active proponents · {kpiStats.totalProposals} submissions
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Connected Row: Organization Scope & View Switcher */}
+          <div
+            role="group"
+            aria-label="Organization status tabs and view switcher"
+            className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card overflow-x-auto scrollbar-none gap-4 select-none"
+          >
+            <SegmentedControl
+              value={organizationScope}
+              onValueChange={(value) => {
+                setOrganizationScope(value);
+                setOrgPage(1);
+              }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                { value: "active", label: "Active", badge: organizations.length - archivedCount },
+                { value: "archive", label: "Archive", badge: archivedCount },
+              ]}
+            />
 
             <SegmentedControl
               value={viewMode}
               onValueChange={setViewMode}
               variant="capsule"
-              className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-4"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0 ml-auto"
               items={[
                 {
                   value: "grid",
@@ -1776,9 +1253,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             {/* Right Zone: Filter, Sort, Group, Columns, Date Range */}
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <FilterPopover
-                fields={ORG_FILTER_FIELDS}
-                filters={filterRules}
-                onFiltersChange={setFilterRules}
+                fields={filterFields}
+                filters={activeFilterRules}
+                onFiltersChange={(rules) => {
+                  setFilterRules(rules);
+                  setOrgPage(1);
+                }}
                 entityLabel="organizations"
               />
               <SortPopover
@@ -1791,11 +1271,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 sortOrder={sortOrder}
                 onSortOrderChange={setSortOrder}
               />
-              <GroupPopover
-                options={ORG_GROUP_OPTIONS}
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-              />
+              {viewMode === "table" && (
+                <GroupPopover
+                  options={ORG_GROUP_OPTIONS}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                />
+              )}
               {viewMode === "table" && (
                 <ColumnsPopover
                   columns={ORG_TABLE_COLUMNS}
@@ -1836,52 +1318,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           {/* 5. Main Content Area (Dual View Engine) */}
           <div className={cn("flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredOrganizations.length === 0 && "rounded-b-2xl")}>
             {loading && !hasLoaded ? (
-              viewMode === "table" ? (
-                <div className="p-6 space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full rounded-xl" />
-                  ))}
-                </div>
-              ) : (
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card overflow-hidden flex flex-col justify-between"
-                    >
-                      <div className="bg-gray-100 dark:bg-zinc-800 p-5 space-y-3 rounded-t-[15px]">
-                        <div className="flex items-center justify-between">
-                          <Skeleton className="h-5 w-16 rounded-md" />
-                          <Skeleton className="h-5 w-20 rounded-full" />
-                        </div>
-                        <Skeleton className="h-5 w-3/4 rounded-md" />
-                      </div>
-                      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                        <div className="space-y-3">
-                          <Skeleton className="h-4 w-1/2 rounded" />
-                          <Skeleton className="h-12 w-full rounded-xl" />
-                          <Skeleton className="h-10 w-full rounded-xl" />
-                        </div>
-                        <div className="pt-3 border-t border-border dark:border-border">
-                          <Skeleton className="h-9 w-full rounded-xl" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
+              <DataContentSkeleton columns={organizationTableColumns} viewMode={viewMode} />
             ) : filteredOrganizations.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia><EmptyBuilding03Icon size="1em" /></EmptyMedia>
                     <EmptyTitle>
-                      No Student Organizations Found
+                      {showArchived ? "No Archived Organizations Found" : "No Student Organizations Found"}
                     </EmptyTitle>
                     <EmptyDescription>
                       {hasActiveFilters
-                        ? "Try adjusting your search criteria or resetting category filters."
-                        : "Register recognized student organizations to manage their Constitution and By-Laws and authorized officers."}
+                        ? "Try adjusting your search or resetting the filters."
+                        : showArchived
+                          ? "Archived organizations will appear here."
+                          : "Register recognized student organizations to manage their Constitution and By-Laws and authorized officers."}
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
@@ -1895,7 +1346,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         Reset Filters
                       </Button>
-                    ) : (
+                    ) : !showArchived ? (
                       <Button
                         type="button"
                         size="sm"
@@ -1905,7 +1356,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         Register Organization
                       </Button>
-                    )}
+                    ) : null}
                   </EmptyContent>
                 </Empty>
               </div>
@@ -1915,245 +1366,279 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 ref={tableContainerRef}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={[{ kind: "text", maxWidth: 340 }, "category", "text", "number", "status", "status", "actions"]} className="min-w-[1240px]">
+                <Table columns={organizationTableColumns}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                      <th
-                        className={cn(
-                          "p-4 pl-6 w-[280px] min-w-[280px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span>Organization</span>
-                          {isScrolledX && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset table scroll"
-                              className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                            >
-                              <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                            </button>
+                      {visibleColumns.includes("name") && (
+                        <th
+                          className={cn(
+                            "p-4 pl-6 sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
+                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
-                        </div>
-                      </th>
-                      <th className="p-4 w-[140px] min-w-[140px]">Category</th>
-                      <th className="p-4 w-[200px] min-w-[200px]">Faculty Adviser</th>
-                      <th className="p-4 w-[130px] min-w-[130px] text-center">Officers</th>
-                      <th className="p-4 w-[180px] min-w-[180px]">Constitution & By-Laws</th>
-                      <th className="p-4 w-[120px] min-w-[120px] text-center">Status</th>
-                      <th className="p-4 pr-6 text-right w-[90px] min-w-[90px]">Actions</th>
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span>Organization</span>
+                            {isScrolledX && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetScroll();
+                                }}
+                                title="Reset table scroll"
+                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
+                              >
+                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.includes("category") && (
+                        <th className="p-4">Category</th>
+                      )}
+                      {visibleColumns.includes("adviser") && (
+                        <th className="p-4">Faculty Adviser</th>
+                      )}
+                      <th className="p-4 text-center">Officers</th>
+                      <th className="p-4">Constitution & By-Laws</th>
+                      {visibleColumns.includes("status") && (
+                        <th className="p-4 text-center">Status</th>
+                      )}
+                      {visibleColumns.includes("proposal_count") && <th>Submissions</th>}
+                      {visibleColumns.includes("created_at") && <th>Date Added</th>}
+                      <th scope="col" className="w-12 min-w-12"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {paginatedOrganizations.map((org) => {
-                      const hasCbl = Boolean(org.bylaws_storage_filename);
-                      const officerCount = parseInt(org.active_officer_count, 10) || 0;
+                    {groupedOrganizations.map((group) => (
+                      <Fragment key={group.key}>
+                        {group.label && (
+                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
+                            <td colSpan={organizationTableColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                              {group.label} ({group.orgs.length})
+                            </td>
+                          </tr>
+                        )}
+                        {group.orgs.map((org) => {
+                          const hasCbl = Boolean(org.bylaws_storage_filename);
+                          const officerCount = parseInt(org.active_officer_count, 10) || 0;
+                          const submissionCount = Math.max(0, Number(org.proposal_count) || 0);
 
-                      return (
-                        <tr
-                          key={org.id}
-                          className="hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
-                        >
-                          {/* Org Name & Acronym */}
-                          <td
-                            className={cn(
-                              "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                              isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                            )}
-                          >
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs border border-black/10 dark:border-white/20"
-                                  style={{
-                                    background: BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.previewGradient || BANNER_GRADIENT_PRESETS[0].previewGradient,
-                                  }}
-                                  title={`Theme: ${BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.label || "PUP Maroon"}`}
-                                />
-                                {org.acronym && (
-                                  <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
-                                    {org.acronym}
-                                  </span>
-                                )}
-                                <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate" title={org.name}>
-                                  {org.name}
-                                </span>
-                              </div>
-                              {org.description ? (
-                                <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
-                                  {org.description}
-                                </p>
-                              ) : (
-                                <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
-                                  No description provided
-                                </span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* Category Badge */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
-                              {org.category}
-                            </span>
-                          </td>
-
-                          {/* Faculty Adviser */}
-                          <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
-                            <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
-                              {org.adviser_name || (
-                                <span className="text-gray-400 italic">Not assigned</span>
-                              )}
-                            </div>
-                            {org.adviser_email && (
-                              <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums mt-0.5 truncate" title={org.adviser_email}>
-                                {org.adviser_email}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Authorized Officers */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <button
-                              type="button"
-                              onClick={() => openManageOrgSheet(org, "officers")}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
-                              title="Manage authorized officers"
+                          return (
+                            <tr
+                              key={org.id}
+                              onClick={(event) => {
+                                if (event.target.closest("button, a")) return;
+                                openManageOrgSheet(org, "info");
+                              }}
+                              className="cursor-pointer hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                             >
-                              <Shield01Icon size="1em" className="text-xs" />
-                              <span>
-                                {officerCount} {officerCount === 1 ? "Officer" : "Officers"}
-                              </span>
-                            </button>
-                          </td>
-
-                          {/* Constitution & By-Laws */}
-                          <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            {Number(org.pending_cbl_count) > 0 ? (
-                              <button
-                                type="button"
-                                onClick={() => openManageOrgSheet(org, "cbl")}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
-                                title="Click to review pending CBL submission"
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                <span>{org.pending_cbl_count} Pending Review</span>
-                              </button>
-                            ) : hasCbl ? (
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
-                                  <File02Icon size="1em" className="text-xs" />
-                                  <span>Archived</span>
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => handlePreviewCbl(org)}
-                                        aria-label={PDF_ACTION_LABELS.preview}
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                      >
-                                        <ViewIcon size="1em" className="text-xs" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Preview CBL (PDF)</TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setCblUploadOrg(org);
-                                          setCblFile(null);
+                              {/* Org Name & Acronym */}
+                              {visibleColumns.includes("name") && (
+                                <td
+                                  className={cn(
+                                    "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                                  )}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span
+                                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs border border-black/10 dark:border-white/20"
+                                        style={{
+                                          background: BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.previewGradient || BANNER_GRADIENT_PRESETS[0].previewGradient,
                                         }}
-                                        aria-label="Replace Archival CBL"
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                      >
-                                        <Upload01Icon size="1em" className="text-xs" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Replace CBL</TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setCblUploadOrg(org);
-                                        setCblFile(null);
-                                      }}
-                                      aria-label="Upload Archival CBL"
-                                      className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                    >
-                                      <Upload01Icon size="1em" className="text-xs" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Upload Archival CBL</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            )}
-                          </td>
+                                        title={`Theme: ${BANNER_GRADIENT_PRESETS.find((p) => p.id === org.banner_gradient)?.label || "PUP Maroon"}`}
+                                      />
+                                      {org.acronym && (
+                                        <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
+                                          {org.acronym}
+                                        </span>
+                                      )}
+                                      <span className="font-semibold text-xs text-gray-900 dark:text-zinc-50 truncate" title={org.name}>
+                                        {org.name}
+                                      </span>
+                                    </div>
+                                    {org.description ? (
+                                      <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
+                                        {org.description}
+                                      </p>
+                                    ) : (
+                                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
+                                        No description provided
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                              )}
 
-                          {/* Status */}
-                          <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                            <span
-                              className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(org.status), BADGE_BASE)}
-                            >
-                              <span
-                                className={cn(
-                                  "w-1.5 h-1.5 rounded-full",
-                                  getOrgStatusDotClass(org.status)
+                              {/* Category Badge */}
+                              {visibleColumns.includes("category") && (
+                                <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  <span className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                    {org.category}
+                                  </span>
+                                </td>
+                              )}
+
+                              {/* Faculty Adviser */}
+                              {visibleColumns.includes("adviser") && (
+                                <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
+                                    {org.adviser_name || (
+                                      <span className="text-gray-400 italic">Not assigned</span>
+                                    )}
+                                  </div>
+                                  {org.adviser_email && (
+                                    <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums mt-0.5 truncate" title={org.adviser_email}>
+                                      {org.adviser_email}
+                                    </div>
+                                  )}
+                                </td>
+                              )}
+
+                              {/* Authorized Officers */}
+                              <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                <button
+                                  type="button"
+                                  onClick={() => openManageOrgSheet(org, "officers")}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                                  title="Manage authorized officers"
+                                >
+                                  <span>
+                                    {officerCount} {officerCount === 1 ? "Officer" : "Officers"}
+                                  </span>
+                                </button>
+                              </td>
+
+                              {/* Constitution & By-Laws */}
+                              <td className="p-4 whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                {Number(org.pending_cbl_count) > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openManageOrgSheet(org, "cbl")}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
+                                    title="Click to review pending CBL submission"
+                                  >
+                                    <span>{org.pending_cbl_count} Pending Review</span>
+                                  </button>
+                                ) : hasCbl ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                      <File02Icon size="1em" className="text-xs" />
+                                      <span>Archived</span>
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => handlePreviewCbl(org)}
+                                            aria-label={PDF_ACTION_LABELS.preview}
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <ViewIcon size="1em" className="text-xs" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Preview CBL (PDF)</TooltipContent>
+                                      </Tooltip>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setCblUploadOrg(org);
+                                              setCblFile(null);
+                                            }}
+                                            aria-label="Replace Archival CBL"
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                          >
+                                            <Upload01Icon size="1em" className="text-xs" />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Replace CBL</TooltipContent>
+                                      </Tooltip>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setCblUploadOrg(org);
+                                            setCblFile(null);
+                                          }}
+                                          aria-label="Upload Archival CBL"
+                                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                                        >
+                                          <Upload01Icon size="1em" className="text-xs" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Upload Archival CBL</TooltipContent>
+                                    </Tooltip>
+                                  </div>
                                 )}
-                              />
-                              {org.status}
-                            </span>
-                          </td>
+                              </td>
 
-                          {/* Actions */}
-                          <td className="p-4 pr-6 text-right whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => openManageOrgSheet(org, "info")}
-                                    aria-label="Manage Organization Info"
-                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
+                              {/* Status */}
+                              {visibleColumns.includes("status") && (
+                                <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                                  <span
+                                    className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(org.status), BADGE_BASE)}
                                   >
-                                    <PencilEdit01Icon size="1em" className="text-[16px]" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Organization Details</TooltipContent>
-                              </Tooltip>
+                                    {org.status}
+                                  </span>
+                                </td>
+                              )}
 
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => openManageOrgSheet(org, "officers")}
-                                    aria-label="Manage authorized officers"
-                                    className="table-action-button rounded-lg text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 active:scale-95 cursor-pointer"
-                                  >
-                                    <UserSearch01Icon size="1em" className="text-[16px]" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>Manage Officers</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                              {visibleColumns.includes("proposal_count") && (
+                                <td>
+                                  <span className="flex items-center justify-end gap-1.5">
+                                    <span
+                                      aria-hidden="true"
+                                      className="h-1.5 w-9 shrink overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700"
+                                    >
+                                      <span
+                                        className="block h-full rounded-full bg-pup-maroon"
+                                        style={{ width: maxSubmissionCount ? `${100 * submissionCount / maxSubmissionCount}%` : "0%" }}
+                                      />
+                                    </span>
+                                    <span className="shrink-0">{organizationCountFormat.format(submissionCount)}</span>
+                                  </span>
+                                </td>
+                              )}
+                              {visibleColumns.includes("created_at") && (
+                                <td>{org.created_at ? new Date(org.created_at).toLocaleDateString("en-PH", {
+                                  year: "numeric", month: "short", day: "numeric", timeZone: "Asia/Manila",
+                                }) : "N/A"}</td>
+                              )}
+
+                              {/* Actions */}
+                              <td className="w-12 min-w-12 px-2 text-center">
+                                <TableActions
+                                  label={`More actions for ${org.name}`}
+                                  menuClassName="w-52"
+                                  menuAlign="end"
+                                  actions={[
+                                    { label: "Manage Organization Info", icon: PencilEdit01Icon, onClick: () => openManageOrgSheet(org, "info") },
+                                    { label: "Manage Authorized Officers", icon: UserSearch01Icon, onClick: () => openManageOrgSheet(org, "officers") },
+                                    ...(org.status !== "Archived" ? [{
+                                      label: "Archive Organization",
+                                      separatorBefore: true,
+                                      icon: Archive02Icon,
+                                      onClick: () => setOrganizationToArchive(org),
+                                    }] : []),
+                                  ]}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    ))}
                   </tbody>
                 </Table>
               </div>
@@ -2161,7 +1646,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               /* Grid View Mode */
               <div className="p-6 flex-[1_0_auto] content-start grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {paginatedOrganizations.map((org) => {
-                  const hasCbl = Boolean(org.bylaws_storage_filename);
+                  const pendingCharterCount = Number(org.pending_cbl_count) || 0;
                   const officerCount = parseInt(org.active_officer_count, 10) || 0;
                   const proposalCount = parseInt(org.proposal_count, 10) || 0;
 
@@ -2241,14 +1726,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 </span>
                               </div>
                             </div>
-                            {org.adviser_email && (
-                              <span
-                                className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate max-w-[130px] self-end mb-0.5"
-                                title={org.adviser_email}
-                              >
-                                {org.adviser_email}
-                              </span>
-                            )}
                           </div>
 
                           {/* Key Metrics - Unified Segmented Tile */}
@@ -2282,98 +1759,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             </div>
                           </div>
 
-                          {/* CBL Archival Row */}
-                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/50 dark:bg-zinc-800/30 border border-border/60 dark:border-border gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span
-                                className={cn(
-                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                  Number(org.pending_cbl_count) > 0
-                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
-                                    : hasCbl
-                                    ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
-                                    : "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
-                                )}
-                              >
-                                <AppIcon
-                                  className={cn(
-                                    " text-sm",
-                                    hasCbl ? "File02Icon" : "FileAddIcon"
-                                  )}
-                                />
+                          {pendingCharterCount > 0 && (
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                                {pendingCharterCount} {pendingCharterCount === 1 ? "charter" : "charters"} pending review
                               </span>
-                              <div className="min-w-0">
-                                <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200 block truncate">
-                                  Constitution & By-Laws
-                                </span>
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 block truncate">
-                                  {Number(org.pending_cbl_count) > 0 ? (
-                                    <span className="text-amber-600 dark:text-amber-400 font-semibold inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                      {org.pending_cbl_count} Pending Review
-                                    </span>
-                                  ) : hasCbl ? (
-                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                      Official Archival Copy
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-zinc-500 inline-flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-                                      Pending PDF Archival
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
+                              <Button variant="outline" size="xs" onClick={() => openManageOrgSheet(org, "cbl")}>
+                                Review Charters
+                              </Button>
                             </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              {Number(org.pending_cbl_count) > 0 ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openManageOrgSheet(org, "cbl")}
-                                  className="h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-all cursor-pointer active:scale-95"
-                                >
-                                  Review
-                                </Button>
-                              ) : hasCbl ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePreviewCbl(org)}
-                                    title={PDF_ACTION_LABELS.preview}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
-                                  >
-                                    <ViewIcon size="1em" className="text-xs" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCblUploadOrg(org);
-                                      setCblFile(null);
-                                    }}
-                                    title="Replace Archival CBL"
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-white dark:text-zinc-400 dark:hover:bg-zinc-700 transition-all cursor-pointer border border-transparent hover:border-border"
-                                  >
-                                    <Upload01Icon size="1em" className="text-xs" />
-                                  </button>
-                                </>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setCblUploadOrg(org);
-                                    setCblFile(null);
-                                  }}
-                                  title="Upload Constitution & By-Laws"
-                                  className="h-6 px-2 text-[10px] font-semibold rounded-lg border-border dark:border-border cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800"
-                                >
-                                  Upload CBL
-                                </Button>
-                              )}
-                            </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Card Actions */}
@@ -2457,30 +1852,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </button>
                 </div>
               </div>
-
-              {/* Organization Profile Strip */}
-              <div className="flex items-center gap-3 px-6 pb-3 pt-1 border-gray-100/80 dark:border-zinc-800/60 bg-gray-50/40 dark:bg-zinc-900/30">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedOrgForOfficers?.acronym && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-pup-maroon/20">
-                        {selectedOrgForOfficers.acronym}
-                      </span>
-                    )}
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                      {selectedOrgForOfficers?.category}
-                    </span>
-                    <span
-                      className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border", getOrgStatusBadgeClass(selectedOrgForOfficers?.status), BADGE_BASE)}
-                    >
-                      {selectedOrgForOfficers?.status}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate mt-0.5">
-                    {selectedOrgForOfficers?.name}
-                  </h4>
-                </div>
-              </div>
             </SheetHeader>
 
             {/* Line-Attached Operational Notice for Status */}
@@ -2521,7 +1892,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   ) : null
                 }
               >
-                <span className="font-semibold">Inactive Accreditation:</span> Accreditation for this organization is currently inactive. Review officers and Constitution before processing proposals.
+                <span className="font-semibold">Inactive Accreditation:</span> Officers cannot submit proposals, post-event reports, or charter amendments for this organization until it is set back to Active.
               </NoticeBanner>
             ) : (
               <NoticeBanner tone="success">
@@ -2530,83 +1901,33 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             )}
 
             {/* Sub-tab segmented switcher */}
-            <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("info")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "info"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <AppIcon className=" Contact01Icon text-xs" />
-                  <span>Organization Info</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("officers")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "officers"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <UserSearch01Icon size="1em" className="text-xs" />
-                  <span>Authorized Officers</span>
-                  <span
-                    className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
-                      sheetSubTab === "officers"
-                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
-                      BADGE_BASE
-                    )}
-                  >
-                    {officersList.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSheetSubTab("cbl")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                    sheetSubTab === "cbl"
-                      ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                >
-                  <BookBookmark01Icon size="1em" className="text-xs" />
-                  <span>Constitution & By-Laws</span>
-                  <span
-                    className={cn(
-                      "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
-                      sheetSubTab === "cbl"
-                        ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
-                      BADGE_BASE
-                    )}
-                  >
-                    {bylawsHistory.length}
-                  </span>
-                </button>
-              </div>
-
-              {sheetSubTab === "cbl" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border-border dark:border-border text-pup-maroon dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer active:scale-95 transition-all"
-                >
-                  Archive Charter
-                </Button>
-              )}
+            <div className="px-6 py-2.5 border-b border-border dark:border-border">
+              <SegmentedControl
+                value={sheetSubTab}
+                onValueChange={setSheetSubTab}
+                variant="capsule"
+                className="w-full min-w-0"
+                listClassName="flex w-full flex-wrap rounded-xl"
+                items={[
+                  {
+                    value: "info",
+                    label: "Organization Info",
+                    icon: <Contact01Icon size="1em" className="text-xs" />,
+                  },
+                  {
+                    value: "officers",
+                    label: "Authorized Officers",
+                    icon: <UserSearch01Icon size="1em" className="text-xs" />,
+                    badge: officersList.length,
+                  },
+                  {
+                    value: "cbl",
+                    label: "Constitution & By-Laws",
+                    icon: <BookBookmark01Icon size="1em" className="text-xs" />,
+                    badge: bylawsHistory.length,
+                  },
+                ]}
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -2729,7 +2050,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           {BANNER_GRADIENT_PRESETS.find((p) => p.id === (orgForm.bannerGradient || "maroon"))?.label}
                         </span>
                       </div>
-                      <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
+                      <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/70 dark:bg-zinc-800/40">
                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 place-items-center">
                           {BANNER_GRADIENT_PRESETS.map((preset) => {
                             const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
@@ -2853,7 +2174,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           type="submit"
                           size="sm"
                           disabled={addingOfficer}
-                          className="h-9 px-4 cursor-pointer disabled:opacity-50"
                         >
                           {addingOfficer ? "Authorizing Officer…" : "Authorize Officer"}
                         </Button>
@@ -2882,7 +2202,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         description="No student officers are authorized for this organization yet. Add an officer's account email above."
                       />
                     ) : (
-                      <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900 shadow-2xs">
+                      <div className="rounded-2xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border dark:divide-border bg-white dark:bg-zinc-900/40 shadow-2xs">
                         {officersList.map((officer) => {
                           const roleStyle = getOfficerRoleStyle(officer.position);
                           const displayName =
@@ -2906,7 +2226,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           return (
                             <div
                               key={officer.id}
-                              className="p-3.5 flex items-center justify-between gap-3.5 hover:bg-gray-50/60 dark:hover:bg-zinc-800/50 transition-colors group"
+                              className="p-3.5 flex items-center justify-between gap-3.5 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                             >
                               {/* Left: Modern Circular Avatar + Officer Details */}
                               <div className="flex items-center gap-3 min-w-0">
@@ -2940,12 +2260,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate">
                                       {displayName}
                                     </span>
-                                    <Badge
-                                      variant="outline"
-                                      className={cn("text-[10px] font-semibold px-2.5 py-0.5 rounded-full border", roleStyle.badge, BADGE_BASE)}
-                                    >
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.violet)}>
                                       {officer.position}
-                                    </Badge>
+                                    </span>
                                   </div>
                                   <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate">
                                     <span>{officer.email}</span>
@@ -2960,10 +2277,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               </div>
 
                               <Button
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
                                 onClick={() => setOfficerToRemove(officer)}
-                                className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-border dark:border-border rounded-lg cursor-pointer active:scale-95 transition-all shrink-0"
                               >
                                 Revoke Access
                               </Button>
@@ -2977,7 +2293,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               ) : (
                 /* CBL Version History View */
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
                         Constitution & By-Laws Versions ({bylawsHistory.length})
@@ -2986,6 +2302,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         Track ratification milestones, student amendment proposals, and official archived texts.
                       </p>
                     </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
+                    >
+                      Archive Charter
+                    </Button>
                   </div>
 
                   {bylawsHistoryLoading ? (
@@ -2998,19 +2322,19 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       variant="compact"
                       icon={BookOpen01Icon}
                       title="No CBL Records on File"
-                      description="Use the Archive button above to upload the first official charter, or officers may submit an amendment."
+                      description="Use Archive Charter to upload the first official charter, or officers may submit an amendment."
                     />
                   ) : (
                     <div className="space-y-3">
                       {bylawsHistory.map((ver) => (
                         <div
                           key={ver.id}
-                          className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
+                          className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="px-2 py-0.5 text-xs font-bold rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                <span className={cn("px-2 py-0.5 text-xs font-bold rounded-lg", BADGE_PALETTES.violet)}>
                                   {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
                                 </span>
                                 <span
@@ -3040,7 +2364,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                 })
                               }
-                              className="h-8 px-3 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg shrink-0 cursor-pointer active:scale-95 transition-all"
                             >
                               Preview Charter
                             </Button>
@@ -3069,7 +2392,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/30 text-amber-900 dark:text-amber-200"
                                 : ver.status === "Declined"
                                 ? "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-900/30 text-rose-900 dark:text-rose-200"
-                                : "bg-gray-50 dark:bg-zinc-800/50 border-border dark:border-border text-gray-600 dark:text-zinc-300"
+                                : "bg-gray-50/70 dark:bg-zinc-800/40 border-border dark:border-border text-gray-600 dark:text-zinc-300"
                             )}>
                               <strong className="font-semibold">
                                 {ver.status === "Needs Revision"
@@ -3087,28 +2410,26 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
+                                variant="danger"
                                 onClick={() => openCblReviewDialog(ver, "Declined")}
-                                className="h-8 px-3 text-xs font-semibold rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 cursor-pointer active:scale-95 transition-all"
                               >
                                 Decline Charter
                               </Button>
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
+                                variant="warning"
                                 onClick={() => openCblReviewDialog(ver, "Needs Revision")}
                                 title="Request Revision"
-                                className="h-8 px-3 text-xs font-semibold rounded-lg text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 cursor-pointer active:scale-95 transition-all"
                               >
                                 Request Revision
                               </Button>
                               <Button
                                 type="button"
                                 size="sm"
+                                variant="success"
                                 onClick={() => openCblReviewDialog(ver, "Approved")}
                                 title="Approve & Ratify Charter"
-                                className="h-8 px-3.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Approve Charter
                               </Button>
@@ -3131,7 +2452,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   setSelectedOrgForOfficers(null);
                   setEditingOrg(null);
                 }}
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 Close
               </Button>
@@ -3140,9 +2460,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   type="submit"
                   form="org-info-form"
                   size="sm"
-                  onClick={handleSaveOrg}
                   disabled={savingOrg}
-                  className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
                   {savingOrg ? "Saving Organization Details…" : "Save Organization Details"}
                 </Button>
@@ -3490,6 +2808,17 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             </form>
           </DialogContent>
         </Dialog>
+
+        <ConfirmModal
+          open={Boolean(organizationToArchive)}
+          title="Archive Organization?"
+          description={`${organizationToArchive?.name} will move to the Archive tab. Officers will no longer be able to submit on behalf of this organization until it is reinstated.`}
+          confirmLabel="Archive Organization"
+          variant="warning"
+          isLoading={archivingOrganization}
+          onConfirm={handleArchiveOrganization}
+          onCancel={() => setOrganizationToArchive(null)}
+        />
 
         {/* Revoke Officer Confirmation Modal */}
         <ConfirmModal

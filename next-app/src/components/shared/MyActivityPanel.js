@@ -256,7 +256,8 @@ export default function MyActivityPanel() {
 
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
 
@@ -285,9 +286,8 @@ export default function MyActivityPanel() {
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load activity");
       setRows(Array.isArray(json.data) ? json.data : []);
       setTotal(Number(json.total) || 0);
+      setHasLoaded(true);
     } catch (err) {
-      setRows([]);
-      setTotal(0);
       setError(err?.message || "Failed to load activity");
     } finally {
       setLoading(false);
@@ -499,9 +499,10 @@ export default function MyActivityPanel() {
         )}
 
         {/* 5. Grouped Activity Feed / Skeleton / States */}
-        {loading && !rows.length ? (
+        {error && hasLoaded && <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{error}</p>}
+        {loading && !hasLoaded ? (
           <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border rounded-b-2xl" />
-        ) : error ? (
+        ) : error && !hasLoaded ? (
           <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
             <Empty>
               <EmptyHeader>
@@ -558,7 +559,7 @@ export default function MyActivityPanel() {
           <div
             className={cn(
               "flex flex-[1_0_auto] flex-col gap-6 px-6 py-5 border-t border-border dark:border-border bg-white dark:bg-card transition-all duration-slow",
-              loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+              "opacity-100"
             )}
           >
             {groupedRows.map((group) => (

@@ -1,12 +1,13 @@
 "use client"
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
-import { Table } from "@/components/ui/table";
+import { IdentifierBadge, Table } from "@/components/ui/table";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty";
@@ -56,10 +57,11 @@ export default function OfficeDocumentsTable({
   onRescan,
   embedded = true,
   serverPaged = false,
+  borderTop = true,
 }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useUrlPage();
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [serverPage, setServerPage] = useState({ rows: [], total: 0 });
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [filterRules, setFilterRules] = useState([]);
@@ -72,11 +74,11 @@ export default function OfficeDocumentsTable({
     "doc_type",
     "year",
     "status",
-    "actions",
   ]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(serverPaged);
+  const [hasLoaded, setHasLoaded] = useState(!serverPaged);
 
   const selectedYear = getSelectedYear(breadcrumbs);
 
@@ -98,7 +100,9 @@ export default function OfficeDocumentsTable({
         if (json?.ok) setServerPage(json.data);
       })
       .catch(() => {})
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!controller.signal.aborted) { setIsLoading(false); setHasLoaded(true); }
+      });
     return () => controller.abort();
   }, [serverPaged, page, pageSize, debouncedQuery, selectedYear]);
 
@@ -134,21 +138,36 @@ export default function OfficeDocumentsTable({
 
   // Group options config
   const groupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "status", label: "Status" },
     { value: "doc_type", label: "Document Type" },
     { value: "year", label: "Year" },
+    { value: "none", label: "No grouping" },
   ], []);
 
-  // Table columns config
-  const tableColumns = useMemo(() => [
-    { key: "identifier", label: officeLabel === "OSAS" ? "Organization" : "Student No." },
-    { key: "name", label: officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name" },
-    { key: "doc_type", label: "Document" },
-    { key: "year", label: "Year" },
-    { key: "status", label: "Status" },
-    { key: "actions", label: "Actions" },
-  ], [officeLabel]);
+  const tableColumns = useMemo(() => {
+    const isOsas = officeLabel === "OSAS";
+    return [
+      {
+        key: "identifier",
+        label: isOsas ? "Organization" : "Student No.",
+        size: isOsas ? { kind: "text", minWidth: 235, maxWidth: 400, growthWeight: 2 } : "identifier",
+      },
+      {
+        key: "name",
+        label: isOsas ? "Officer / Submitter" : "Full Name",
+        size: { kind: "text", minWidth: 200, maxWidth: 340 },
+      },
+      {
+        key: "doc_type",
+        label: "Document",
+        size: isOsas
+          ? { kind: "text", minWidth: 280, maxWidth: 420, growthWeight: 3 }
+          : { kind: "text", minWidth: 280, maxWidth: 340, growthWeight: 2 },
+      },
+      { key: "year", label: "Year", size: isOsas ? { kind: "year", width: 76, paddingX: 10 } : "year" },
+      { key: "status", label: "Status", size: isOsas ? { kind: "status", width: 112, paddingX: 6 } : "status" },
+    ];
+  }, [officeLabel]);
 
   // Client filtering
   const filteredRows = useMemo(() => {
@@ -272,7 +291,10 @@ export default function OfficeDocumentsTable({
   } = useTableScroll([visibleRows.length]);
 
   const containerClasses = embedded
-    ? "border-t border-border dark:border-border w-full bg-white dark:bg-card flex flex-[1_0_auto] flex-col rounded-b-2xl overflow-hidden"
+    ? cn(
+        borderTop && "border-t border-border dark:border-border",
+        "w-full bg-white dark:bg-card flex flex-[1_0_auto] flex-col rounded-b-2xl overflow-hidden"
+      )
     : "rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none flex flex-[1_0_auto] flex-col overflow-hidden";
 
   return (
@@ -280,7 +302,10 @@ export default function OfficeDocumentsTable({
       {/* Canonical 2-Zone DataViewToolbar */}
       <DataViewToolbar
         label={`${officeLabel} document search and controls`}
-        className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+        className={cn(
+          borderTop && "border-t border-border dark:border-border",
+          "p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
+        )}
       >
         {/* Left Zone: DashboardSearch + TableScrollControls */}
         <div className="flex min-w-0 items-center gap-2">
@@ -343,7 +368,7 @@ export default function OfficeDocumentsTable({
             columns={tableColumns}
             visibleColumns={visibleColumns}
             onVisibleColumnsChange={setVisibleColumns}
-            minVisible={2}
+            minVisible={1}
           />
           <DateRangeFilterButton
             startDate={startDate}
@@ -377,7 +402,9 @@ export default function OfficeDocumentsTable({
         />
       )}
 
-      {visibleRows.length === 0 ? (
+      {isLoading && !hasLoaded ? (
+        <DataContentSkeleton columns={[...tableColumns.filter(({ key }) => visibleColumns.includes(key)).map(({ size }) => size), "actions"]} />
+      ) : visibleRows.length === 0 ? (
         <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[360px] w-full">
           <Empty>
             <EmptyHeader>
@@ -420,44 +447,34 @@ export default function OfficeDocumentsTable({
             className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
           >
             <Table
-              columns={visibleColumns.map((colKey) => {
-                if (colKey === "identifier") return officeLabel === "OSAS" ? "text" : "identifier";
-                if (colKey === "name") return "text";
-                if (colKey === "doc_type") return { kind: "text", maxWidth: 340 };
-                if (colKey === "year") return "year";
-                if (colKey === "status") return "status";
-                return "actions";
-              })}
-              className="min-w-[960px]"
+              columns={[...tableColumns.filter(({ key }) => visibleColumns.includes(key)).map(({ size }) => size), "actions"]}
             >
               <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                 <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                   {visibleColumns.includes("identifier") && (
-                    <th className="w-[16%] min-w-[150px] p-4">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
+                    <th className="p-4">{officeLabel === "OSAS" ? "Organization" : "Student No."}</th>
                   )}
                   {visibleColumns.includes("name") && (
-                    <th className="w-[26%] min-w-[200px] p-4">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
+                    <th className="p-4">{officeLabel === "OSAS" ? "Officer / Submitter" : "Full Name"}</th>
                   )}
                   {visibleColumns.includes("doc_type") && (
-                    <th className="w-[28%] min-w-[220px] p-4">Document</th>
+                    <th className="p-4">Document</th>
                   )}
                   {visibleColumns.includes("year") && (
-                    <th className="w-[10%] min-w-[100px] p-4">Year</th>
+                    <th className="p-4">Year</th>
                   )}
                   {visibleColumns.includes("status") && (
-                    <th className="w-[12%] min-w-[120px] p-4">Status</th>
+                    <th className="p-4">Status</th>
                   )}
-                  {visibleColumns.includes("actions") && (
-                    <th className="w-24 min-w-[96px] p-4 pr-6 text-right">Actions</th>
-                  )}
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                 {groupedDisplayRows.map((group) => (
-                  <tbody key={group.groupKey || "root"} className="divide-y divide-border dark:divide-border contents">
+                  <Fragment key={group.groupKey || "root"}>
                     {group.label && (
                       <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
-                        <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                        <td colSpan={visibleColumns.length + 1} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           <span className="font-bold">{group.label}</span>
                           <span className="ml-2 font-normal text-muted-foreground">({group.rows.length})</span>
                         </td>
@@ -468,12 +485,9 @@ export default function OfficeDocumentsTable({
                         {visibleColumns.includes("identifier") && (
                           <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {officeLabel === "OSAS" ? (
-                              <span
-                                className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full", BADGE_BASE)}
-                                title={document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
-                              >
+                              <IdentifierBadge className="rounded-lg">
                                 {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
-                              </span>
+                              </IdentifierBadge>
                             ) : (
                               <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                                 {document.student_no || "N/A"}
@@ -506,51 +520,49 @@ export default function OfficeDocumentsTable({
                                 : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400", BADGE_BASE)}>{document.approval_status || "Pending"}</Badge>
                           </td>
                         )}
-                        {visibleColumns.includes("actions") && (
-                          <td className="p-4 pr-6 align-middle text-right">
-                            <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                              {onRescan && !document.source_type && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        onRescan?.(
-                                          document.organization_id || document.student_no,
-                                          document.doc_type,
-                                          document.id,
-                                          document.original_filename,
-                                          document.mime_type
-                                        )
-                                      }
-                                      aria-label="Re-scan Document"
-                                      className="table-action-button rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 active:scale-95 cursor-pointer"
-                                    >
-                                      <ReloadIcon size="1em" className="text-[15px]" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Re-scan Document</TooltipContent>
-                                </Tooltip>
-                              )}
+                        <td className="p-4 pr-6 align-middle text-right">
+                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                            {onRescan && !document.source_type && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
                                     type="button"
-                                    onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
-                                    aria-label={PDF_ACTION_LABELS.preview}
-                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+                                    onClick={() =>
+                                      onRescan?.(
+                                        document.organization_id || document.student_no,
+                                        document.doc_type,
+                                        document.id,
+                                        document.original_filename,
+                                        document.mime_type
+                                      )
+                                    }
+                                    aria-label="Re-scan Document"
+                                    className="table-action-button rounded-lg text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 active:scale-95 cursor-pointer"
                                   >
-                                    <ViewIcon size="1em" className="text-[16px]" />
+                                    <ReloadIcon size="1em" className="text-[15px]" />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
+                                <TooltipContent>Re-scan Document</TooltipContent>
                               </Tooltip>
-                            </div>
-                          </td>
-                        )}
+                            )}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
+                                  aria-label={PDF_ACTION_LABELS.preview}
+                                  className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+                                >
+                                  <ViewIcon size="1em" className="text-[16px]" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                  </tbody>
+                  </Fragment>
                 ))}
               </tbody>
             </Table>

@@ -6,7 +6,7 @@ import NoticeBanner from "@/components/shared/NoticeBanner";
 
 
 import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react"
-import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
+import { DepartmentViewSkeleton, MatrixViewSkeleton } from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -673,12 +673,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     setFilterClauses([])
   }
 
-  if (loading) {
-    return <ModuleConfigSkeleton viewMode={viewMode} officeFilter={officeFilter} groupBy={matrixGroupBy} officeCount={visibleMatrixOffices.length || 4} />
-  }
-
-  // Empty State if No Offices exist in the system (Matches OfficeManagementTab design)
-  if (!matrix?.offices || matrix.offices.length === 0) {
+  if (!loading && (!matrix?.offices || matrix.offices.length === 0)) {
     return (
       <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
@@ -717,7 +712,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       </div>
     )
   }
-  const { modules } = matrix
+  const modules = matrix?.modules ?? []
   const matrixFeatureWidth = visibleMatrixOffices.length === 0
     ? Math.max(420, matrixViewportWidth)
     : Math.max(420, Math.min(matrixViewportWidth * 0.6, matrixViewportWidth - visibleMatrixOffices.length * 180))
@@ -773,7 +768,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} label="Search features" placeholder="Search features by name, description..." />
+            <DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} loading={loading} label="Search features" placeholder="Search features by name, description..." />
             {viewMode === "matrix" && visibleMatrixOffices.length > 0 && <TableScrollControls scrollContainerRef={matrixTableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetMatrixScroll} />}
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -865,7 +860,9 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           {/* VIEW 1: BY OFFICE */}
           {viewMode === "office" && (
             <div className="flex flex-col flex-[1_0_auto]">
-              {filteredOffices.length === 0 ? (
+              {loading ? (
+                <DepartmentViewSkeleton />
+              ) : filteredOffices.length === 0 ? (
                 <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                   <Empty>
                     <EmptyHeader>
@@ -1323,7 +1320,9 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       {/* VIEW 2: MATRIX OVERVIEW TABLE (Bird's-eye cross-office audit) */}
       {viewMode === "matrix" && (
         <>
-          {filteredOffices.length === 0 ? (
+          {loading ? (
+            <MatrixViewSkeleton groupBy={matrixGroupBy} officeCount={4} />
+          ) : filteredOffices.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>

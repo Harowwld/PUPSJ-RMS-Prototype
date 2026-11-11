@@ -3,8 +3,8 @@ import { Table, TableHead } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
+import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,11 @@ import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import OsasKanbanPipeline from "@/components/staff/OsasKanbanPipeline";
 import OsasProposalReviewSheet from "@/components/staff/osas/OsasProposalReviewSheet";
 import OsasPostEventReviewSheet from "@/components/staff/osas/OsasPostEventReviewSheet";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import PDFPreview from "@/components/shared/PDFPreview";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
@@ -49,7 +48,7 @@ import {
   EmptyContent,
   EmptyState,
 } from "@/components/ui/empty";
-import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
+import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -99,10 +98,13 @@ const STATUS_OPTIONS = [
   "Declined",
 ];
 
+const OSAS_GROUP_BY_STORAGE_KEY = "pup_osas_group_by_v1";
+const OSAS_VIEW_MODE_LEGACY_KEYS = ["pup_osas_view_mode_v2", "pup_osas_view_mode"];
+
 export const ALLOWED_TRANSITIONS = {
   "Submitted": ["Under Review", "Approved", "Declined"],
   "Under Review": ["Needs Revision", "Approved", "Declined"],
-  "Needs Revision": ["Under Review", "Declined"],
+  "Needs Revision": ["Declined"],
   "Approved": ["Under Review", "Declined"],
   "Declined": ["Under Review"],
 };
@@ -186,6 +188,36 @@ export function getPostEventStatusBadgeClass(status) {
   return BADGE_PALETTES.gray;
 }
 
+function groupOsasRecords(items, groupBy, stream) {
+  if (groupBy === "none") return [{ key: "all", label: "", items }];
+
+  const groups = new Map();
+  items.forEach((item) => {
+    const label = groupBy === "organization"
+      ? ((stream === "post_events" ? item.organization_name : item.verified_org_name || item.organization_name) || "Independent Submitter")
+      : (item.status || "Submitted");
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(item);
+  });
+
+  const order = groupBy === "status"
+    ? (stream === "post_events"
+        ? POST_EVENT_KANBAN_COLUMNS.map(({ label }) => label)
+        : KANBAN_COLUMNS.map(({ label }) => label))
+    : [];
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      const aIndex = order.indexOf(a);
+      const bIndex = order.indexOf(b);
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    })
+    .map(([label, groupedItems]) => ({ key: label, label, items: groupedItems }));
+}
+
 export function getPostEventStatusDotClass(status) {
   const s = String(status || "").toLowerCase().trim();
   if (s === "cleared") return "bg-emerald-500";
@@ -195,29 +227,6 @@ export function getPostEventStatusDotClass(status) {
   return "bg-slate-400 dark:bg-zinc-400";
 }
 
-export function FirstPagePreview({ proposalId, fileUrl, title, onOpenPreview, subtext = "Official submission PDF" }) {
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const previewUrl = fileUrl || (proposalId ? `/api/osas/event-proposals/${proposalId}?file=1` : null);
-  return (
-    <>
-      <div className="space-y-2">
-        <div className="relative h-[360px] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
-          {previewUrl ? <PDFPreview src={previewUrl} title={title || "Official submission PDF"} /> : (
-            <EmptyState variant="compact" icon={File02Icon} title="No Document Attached" description="This submission has no attached PDF." />
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">{subtext}</span>
-          <Button variant="outline" size="sm" disabled={!previewUrl} onClick={() => onOpenPreview ? onOpenPreview() : setPreviewOpen(true)}>
-            {PDF_ACTION_LABELS.preview}
-          </Button>
-        </div>
-      </div>
-      <PDFPreviewModal open={previewOpen} onClose={() => setPreviewOpen(false)} preview={{ url: previewUrl, title: title || "Official submission PDF", subtitle: "Review the complete submitted document." }} />
-    </>
-  );
-}
-
 function getTableSortValue(item, column, stream) {
   const isPostEvent = stream === "post_events";
 
@@ -225,7 +234,9 @@ function getTableSortValue(item, column, stream) {
     case "id":
       return Number(item.id) || 0;
     case "event":
-      return `${(isPostEvent ? item.event_title : item.title) || ""} ${item.verified_org_name || item.organization_name || ""}`;
+      return (isPostEvent ? item.event_title : item.title) || "";
+    case "organization":
+      return isPostEvent ? item.organization_name || "" : item.verified_org_name || item.organization_name || "";
     case "proponent":
       return item.student_name || item.submitted_by_name || "";
     case "status":
@@ -256,6 +267,14 @@ function sortTableRecords(items, stream, sortBy, sortOrder) {
   });
 }
 
+function matchesFilterRule(actual, rule) {
+  const actualValue = String(actual || "").toLowerCase();
+  const ruleValue = String(rule.value || "").toLowerCase();
+  if (rule.operator === "contains") return ruleValue ? actualValue.includes(ruleValue) : true;
+  if (rule.operator === "does_not_contain") return ruleValue ? !actualValue.includes(ruleValue) : true;
+  return rule.operator === "is_not" ? actualValue !== ruleValue : actualValue === ruleValue;
+}
+
 export default function OsasMonitoringTab({ showToast }) {
   const [rows, setRows] = useState([]);
   const [proposalTotal, setProposalTotal] = useState(0);
@@ -280,46 +299,36 @@ export default function OsasMonitoringTab({ showToast }) {
     setPdfPreviewOpen(true);
   }, []);
 
-  const [activeStream, setActiveStream] = useState("proposals"); // "proposals" | "post_events"
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("pup_osas_view_mode_v2");
-        if (saved === "list" || saved === "table" || saved === "kanban") return saved;
-        const legacySaved = localStorage.getItem("pup_osas_view_mode");
-        if (legacySaved === "list" || legacySaved === "kanban") {
-          const migratedMode = legacySaved === "list" ? "table" : "kanban";
-          localStorage.setItem("pup_osas_view_mode_v2", migratedMode);
-          return migratedMode;
-        }
-      } catch {}
-    }
-    return "table";
+  const [activeStream, setActiveStream] = useOsasViewPreference("osas_monitoring", "activeStream", "proposals");
+  const [viewMode, setViewMode] = useOsasViewPreference("osas_monitoring", "viewMode", "table", {
+    legacyKey: OSAS_VIEW_MODE_LEGACY_KEYS,
   });
   const [status, setStatus] = useState("Submitted");
   const [note, setNote] = useState("");
-  const [filterRules, setFilterRules] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [statusFilters, setStatusFilters] = useState([]);
-  const [orgFilters, setOrgFilters] = useState([]);
-  const [groupBy, setGroupBy] = useState("status");
-  const [visibleColumns, setVisibleColumns] = useState([
+  const [filterRules, setFilterRules] = useOsasViewPreference("osas_monitoring", `${activeStream}.filterRules`, []);
+  const [startDate, setStartDate] = useOsasViewPreference("osas_monitoring", `${activeStream}.startDate`, "");
+  const [endDate, setEndDate] = useOsasViewPreference("osas_monitoring", `${activeStream}.endDate`, "");
+  const [statusFilters, setStatusFilters] = useOsasViewPreference("osas_monitoring", `${activeStream}.statusFilters`, []);
+  const [orgFilters, setOrgFilters] = useOsasViewPreference("osas_monitoring", `${activeStream}.orgFilters`, []);
+  const [groupBy, setGroupBy] = useOsasViewPreference("osas_monitoring", `${activeStream}.groupBy`, "none", {
+    legacyKey: OSAS_GROUP_BY_STORAGE_KEY,
+  });
+  const [visibleColumns, setVisibleColumns] = useOsasViewPreference("osas_monitoring", `${activeStream}.visibleColumns`, [
     "id",
     "event",
+    "organization",
     "proponent",
     "status",
-    "actions",
   ]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tableSortBy, setTableSortBy] = useState("");
-  const [tableSortOrder, setTableSortOrder] = useState("ASC");
+  const [searchQuery, setSearchQuery] = useOsasViewPreference("osas_monitoring", `${activeStream}.searchQuery`, "");
+  const [tableSortBy, setTableSortBy] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortBy`, "");
+  const [tableSortOrder, setTableSortOrder] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortOrder`, "ASC");
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [page, setPage] = useUrlPage();
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useOsasViewPreference("osas_monitoring", `${activeStream}.itemsPerPage`, 20);
   const [draggingProposal, setDraggingProposal] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
   const isDraggingRef = useRef(false);
@@ -327,12 +336,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const handleStreamChange = useCallback((stream) => {
     setActiveStream(stream);
-    setFilterRules([]);
-    setStatusFilters([]);
-    setOrgFilters([]);
-    setSearchQuery("");
     setPage(1);
-  }, [setPage]);
+  }, [setActiveStream, setPage]);
 
   // Table and Kanban board scroll containers
   const tableContainerRef = useRef(null);
@@ -388,9 +393,6 @@ export default function OsasMonitoringTab({ showToast }) {
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
     setPage(1);
-    try {
-      localStorage.setItem("pup_osas_view_mode_v2", mode);
-    } catch {}
   };
 
   const serverPaged = viewMode !== "kanban" && !searchQuery.trim() &&
@@ -894,53 +896,57 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const proposalTableColumns = useMemo(() => [
     { key: "id", label: "Proposal ID" },
-    { key: "event", label: "Event & Organization" },
+    { key: "event", label: "Event Proposal" },
+    { key: "organization", label: "Organization" },
     { key: "proponent", label: "Proponent" },
     { key: "status", label: "Status" },
     { key: "submitted", label: "Date Submitted", defaultHidden: true },
-    { key: "actions", label: "Actions" },
   ], []);
 
   const postEventTableColumns = useMemo(() => [
     { key: "id", label: "Report ID" },
-    { key: "event", label: "Event & Organization" },
+    { key: "event", label: "Event Proposal" },
+    { key: "organization", label: "Organization" },
     { key: "proponent", label: "Proponent" },
     { key: "attendance", label: "Attendance & Spend", defaultHidden: true },
     { key: "status", label: "Clearance Status" },
     { key: "submitted", label: "Date Submitted", defaultHidden: true },
-    { key: "actions", label: "Actions" },
   ], []);
 
   const currentTableColumns = useMemo(() => {
     return activeStream === "proposals" ? proposalTableColumns : postEventTableColumns;
   }, [activeStream, proposalTableColumns, postEventTableColumns]);
+  const visibleColumnCount = currentTableColumns.filter((column) => visibleColumns.includes(column.key)).length + 1;
 
   const proposalTableColumnsConfig = useMemo(() => {
     const cols = [];
-    if (visibleColumns.includes("id")) cols.push("identifier");
-    if (visibleColumns.includes("event")) cols.push({ kind: "text", maxWidth: 340 });
-    if (visibleColumns.includes("proponent")) cols.push("text");
-    if (visibleColumns.includes("status")) cols.push("status");
-    if (visibleColumns.includes("submitted")) cols.push("date");
-    if (visibleColumns.includes("actions")) cols.push("actions");
+    if (visibleColumns.includes("id")) cols.push({ kind: "identifier", width: 110 });
+    if (visibleColumns.includes("event")) cols.push({ kind: "text", minWidth: 320, maxWidth: 420, growthWeight: 4 });
+    if (visibleColumns.includes("organization")) cols.push({ kind: "text", minWidth: 190, maxWidth: 340, growthWeight: 2 });
+    if (visibleColumns.includes("proponent")) cols.push({ kind: "text", minWidth: 220, maxWidth: 300, growthWeight: 1 });
+    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 150 });
+    if (visibleColumns.includes("submitted")) cols.push({ kind: "date", width: 160 });
+    cols.push("actions");
     return cols;
   }, [visibleColumns]);
 
   const postEventTableColumnsConfig = useMemo(() => {
     const cols = [];
-    if (visibleColumns.includes("id")) cols.push("identifier");
-    if (visibleColumns.includes("event")) cols.push({ kind: "text", maxWidth: 340 });
-    if (visibleColumns.includes("proponent")) cols.push("text");
+    if (visibleColumns.includes("id")) cols.push({ kind: "identifier", width: 110 });
+    if (visibleColumns.includes("event")) cols.push({ kind: "text", minWidth: 320, maxWidth: 480, growthWeight: 4 });
+    if (visibleColumns.includes("organization")) cols.push({ kind: "text", minWidth: 190, maxWidth: 300, growthWeight: 2 });
+    if (visibleColumns.includes("proponent")) cols.push({ kind: "text", minWidth: 220, maxWidth: 300, growthWeight: 1 });
     if (visibleColumns.includes("attendance")) cols.push("number");
-    if (visibleColumns.includes("status")) cols.push("status");
-    if (visibleColumns.includes("submitted")) cols.push("date");
-    if (visibleColumns.includes("actions")) cols.push("actions");
+    if (visibleColumns.includes("status")) cols.push({ kind: "status", width: 150 });
+    if (visibleColumns.includes("submitted")) cols.push({ kind: "date", width: 160 });
+    cols.push("actions");
     return cols;
   }, [visibleColumns]);
 
   const proposalFilterFields = useMemo(() => {
     const orgs = proposalOrganizations;
     return [
+      { key: "event", label: "Event Proposal", type: "text" },
       {
         key: "status",
         label: "Review Status",
@@ -971,6 +977,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const postEventFilterFields = useMemo(() => {
     const orgs = postEventOrganizations;
     return [
+      { key: "event", label: "Event Proposal", type: "text" },
       {
         key: "status",
         label: "Clearance Status",
@@ -996,7 +1003,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const proposalSortOptions = useMemo(() => [
     { key: "id", label: "Proposal ID" },
-    { key: "event", label: "Event Title" },
+    { key: "event", label: "Event Proposal" },
+    { key: "organization", label: "Organization" },
     { key: "proponent", label: "Proponent" },
     { key: "status", label: "Review Status" },
     { key: "submitted", label: "Date Submitted" },
@@ -1004,7 +1012,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const postEventSortOptions = useMemo(() => [
     { key: "id", label: "Report ID" },
-    { key: "event", label: "Event Title" },
+    { key: "event", label: "Event Proposal" },
+    { key: "organization", label: "Organization" },
     { key: "proponent", label: "Proponent" },
     { key: "attendance", label: "Attendance & Spend" },
     { key: "status", label: "Clearance Status" },
@@ -1051,9 +1060,10 @@ export default function OsasMonitoringTab({ showToast }) {
       const field = currentFilterFields.find((f) => f.key === rule.fieldKey);
       const fieldLabel = field?.label || rule.fieldKey;
       const optionLabel = field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
+      const operatorLabel = field?.operators?.find((operator) => operator.value === rule.operator)?.label || ({ is: "is", is_not: "is not", contains: "contains", does_not_contain: "does not contain" })[rule.operator] || rule.operator;
       chips.push({
         id: rule.id,
-        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${optionLabel}`,
+        label: `${fieldLabel} ${operatorLabel} ${optionLabel}`,
         onRemove: () => {
           setFilterRules((prev) => prev.filter((r) => r.id !== rule.id));
           setPage(1);
@@ -1113,7 +1123,9 @@ export default function OsasMonitoringTab({ showToast }) {
       if (filterRules.length > 0) {
         const matchesRules = filterRules.every((rule) => {
           let actual = "";
-          if (rule.fieldKey === "status") {
+          if (rule.fieldKey === "event") {
+            actual = item.title || "";
+          } else if (rule.fieldKey === "status") {
             actual = normalizeProposalStatus(item.status);
           } else if (rule.fieldKey === "organization") {
             actual = item.verified_org_name || item.organization_name || "";
@@ -1122,9 +1134,7 @@ export default function OsasMonitoringTab({ showToast }) {
           } else {
             actual = item[rule.fieldKey] || "";
           }
-          const ruleVal = String(rule.value || "").toLowerCase();
-          const actVal = String(actual || "").toLowerCase();
-          return rule.operator === "is_not" ? actVal !== ruleVal : actVal === ruleVal;
+          return matchesFilterRule(actual, rule);
         });
         if (!matchesRules) return false;
       }
@@ -1160,16 +1170,16 @@ export default function OsasMonitoringTab({ showToast }) {
       if (filterRules.length > 0) {
         const matchesRules = filterRules.every((rule) => {
           let actual = "";
-          if (rule.fieldKey === "status") {
+          if (rule.fieldKey === "event") {
+            actual = item.event_title || "";
+          } else if (rule.fieldKey === "status") {
             actual = item.status || "Submitted";
           } else if (rule.fieldKey === "organization") {
             actual = item.organization_name || "";
           } else {
             actual = item[rule.fieldKey] || "";
           }
-          const ruleVal = String(rule.value || "").toLowerCase();
-          const actVal = String(actual || "").toLowerCase();
-          return rule.operator === "is_not" ? actVal !== ruleVal : actVal === ruleVal;
+          return matchesFilterRule(actual, rule);
         });
         if (!matchesRules) return false;
       }
@@ -1208,6 +1218,9 @@ export default function OsasMonitoringTab({ showToast }) {
     const start = (safePage - 1) * itemsPerPage;
     return sortedPostEvents.slice(start, start + itemsPerPage);
   }, [sortedPostEvents, safePage, itemsPerPage, serverPaged]);
+
+  const proposalTableGroups = groupOsasRecords(paginatedRows, groupBy, "proposals");
+  const postEventTableGroups = groupOsasRecords(paginatedPostEvents, groupBy, "post_events");
 
   // Track horizontal scroll state on the table container
   useEffect(() => {
@@ -1329,9 +1342,6 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  if (loading && !hasLoaded) {
-    return <OsasMonitoringSkeleton />;
-  }
 
   return (
     <div className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto gap-6 focus:outline-none animate-fade-up select-none">
@@ -1377,6 +1387,7 @@ export default function OsasMonitoringTab({ showToast }) {
             onValueChange={handleStreamChange}
             variant="capsule"
             className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            badgeClassName="font-semibold"
             items={[
               {
                 value: "proposals",
@@ -1476,11 +1487,16 @@ export default function OsasMonitoringTab({ showToast }) {
               sortOrder={tableSortOrder}
               onSortOrderChange={setTableSortOrder}
             />
-            <GroupPopover
-              options={groupOptions}
-              groupBy={groupBy}
-              onGroupByChange={setGroupBy}
-            />
+            {viewMode !== "kanban" && (
+              <GroupPopover
+                options={groupOptions}
+                groupBy={groupBy}
+                onGroupByChange={(value) => {
+                  setGroupBy(value);
+                  setPage(1);
+                }}
+              />
+            )}
             {viewMode === "table" && (
               <ColumnsPopover
                 columns={currentTableColumns}
@@ -1522,6 +1538,9 @@ export default function OsasMonitoringTab({ showToast }) {
 
         {/* 5. Main Content Area */}
         <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", activeFilteredList.length === 0 && "rounded-b-2xl overflow-hidden")}>
+          {loading && !hasLoaded ? (
+            <DataContentSkeleton columns={activeStream === "proposals" ? proposalTableColumnsConfig : postEventTableColumnsConfig} viewMode={viewMode} />
+          ) : <>
           {/* STREAM 1: Pre-Event Proposals */}
           {activeStream === "proposals" && (
             <>
@@ -1560,7 +1579,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       ref={tableContainerRef}
                       className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                     >
-                      <Table columns={proposalTableColumnsConfig} className="min-w-[1100px]">
+                      <Table columns={proposalTableColumnsConfig}>
                         <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                           <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                             {visibleColumns.includes("id") && (
@@ -1595,24 +1614,35 @@ export default function OsasMonitoringTab({ showToast }) {
                               </th>
                             )}
                             {visibleColumns.includes("event") && (
-                              <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[36%] whitespace-nowrap" />
+                              <SortableTableHeader column="event" label="Event Proposal" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("organization") && (
+                              <SortableTableHeader column="organization" label="Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("proponent") && (
-                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[21%] whitespace-nowrap" />
+                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("status") && (
-                              <SortableTableHeader column="status" label="Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap" />
+                              <SortableTableHeader column="status" label="Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("submitted") && (
-                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[16%] whitespace-nowrap hidden sm:table-cell" />
+                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell" />
                             )}
-                            {visibleColumns.includes("actions") && (
-                              <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
-                            )}
+                            <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                          {paginatedRows.map((item) => (
+                          {proposalTableGroups.map((group) => (
+                            <Fragment key={`group-${group.key}`}>
+                              {groupBy !== "none" && (
+                                <tr className="bg-gray-50/80 dark:bg-zinc-900/70">
+                                  <th colSpan={visibleColumnCount} className="px-6 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    {group.label}
+                                    <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.items.length}</span>
+                                  </th>
+                                </tr>
+                              )}
+                              {group.items.map((item) => (
                             <tr
                               key={item.id}
                               onClick={() => select(item)}
@@ -1624,7 +1654,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                   isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                                 )}>
                                   <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                                    #{item.id}
+                                    {item.id}
                                   </span>
                                 </td>
                               )}
@@ -1633,28 +1663,28 @@ export default function OsasMonitoringTab({ showToast }) {
                                   <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
                                     {item.title}
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
-                                    {item.org_acronym && (
-                                      <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                        {item.org_acronym}
+                                  {item.post_event_status && item.status === "Approved" && (
+                                    <div className="mt-1">
+                                      <span className={cn("inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold rounded-lg", getPostEventStatusBadgeClass(item.post_event_status))}>
+                                        Post-Event: {item.post_event_status}
                                       </span>
-                                    )}
+                                    </div>
+                                  )}
+                                </td>
+                              )}
+                              {visibleColumns.includes("organization") && (
+                                <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                  <div className="flex items-center gap-1.5 min-w-0">
                                     <span className="truncate" title={item.verified_org_name || item.organization_name}>{item.verified_org_name || item.organization_name}</span>
+                                  </div>
+                                  <div className="mt-1 flex items-center gap-1.5">
                                     {item.has_bylaws ? (
-                                      <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30 shrink-0">
+                                      <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 shrink-0">
                                         CBL Active
                                       </span>
                                     ) : (
-                                      <span className="ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30 shrink-0">
+                                      <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 shrink-0">
                                         No CBL
-                                      </span>
-                                    )}
-                                    {item.post_event_status && item.status === "Approved" && (
-                                      <span className={cn(
-                                        "ml-1 px-1.5 py-0.2 text-[9px] font-semibold rounded border shrink-0",
-                                        getPostEventStatusBadgeClass(item.post_event_status)
-                                      )}>
-                                        Post-Event: {item.post_event_status}
                                       </span>
                                     )}
                                   </div>
@@ -1665,7 +1695,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                   <div className="font-medium text-gray-800 dark:text-zinc-200 flex items-center gap-1.5 min-w-0 overflow-hidden">
                                     <span className="truncate" title={item.student_name}>{item.student_name}</span>
                                     {item.officer_position && (
-                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-normal shrink-0">
+                                      <span className="text-[10px] px-1.5 py-0.2 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold shrink-0">
                                         {item.officer_position}
                                       </span>
                                     )}
@@ -1678,7 +1708,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {visibleColumns.includes("status") && (
                                 <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   <span
-                                    className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none", getProposalStatusBadgeClass(item.status), BADGE_BASE)}
+                                    className={cn("select-none", getProposalStatusBadgeClass(item.status), BADGE_BASE)}
                                   >
                                     {item.status}
                                   </span>
@@ -1695,8 +1725,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     : "N/A"}
                                 </td>
                               )}
-                              {visibleColumns.includes("actions") && (
-                                <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
+                              <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -1712,9 +1741,10 @@ export default function OsasMonitoringTab({ showToast }) {
                                       <TooltipContent>Review Proposal</TooltipContent>
                                     </Tooltip>
                                   </div>
-                                </td>
-                              )}
+                              </td>
                             </tr>
+                              ))}
+                            </Fragment>
                           ))}
                         </tbody>
                       </Table>
@@ -1846,7 +1876,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       ref={tableContainerRef}
                       className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                     >
-                      <Table columns={postEventTableColumnsConfig} className="min-w-[1100px]">
+                      <Table columns={postEventTableColumnsConfig}>
                         <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                           <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                             {visibleColumns.includes("id") && (
@@ -1881,27 +1911,38 @@ export default function OsasMonitoringTab({ showToast }) {
                               </th>
                             )}
                             {visibleColumns.includes("event") && (
-                              <SortableTableHeader column="event" label="Event Proposal & Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[31%] whitespace-nowrap" />
+                              <SortableTableHeader column="event" label="Event Proposal" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
+                            )}
+                            {visibleColumns.includes("organization") && (
+                              <SortableTableHeader column="organization" label="Organization" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("proponent") && (
-                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[19%] whitespace-nowrap" />
+                              <SortableTableHeader column="proponent" label="Proponent" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("attendance") && (
-                              <SortableTableHeader column="attendance" label="Attendance & Spend" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[17%] whitespace-nowrap" />
+                              <SortableTableHeader column="attendance" label="Attendance & Spend" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("status") && (
-                              <SortableTableHeader column="status" label="Clearance Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[13%] whitespace-nowrap" />
+                              <SortableTableHeader column="status" label="Clearance Status" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
                             {visibleColumns.includes("submitted") && (
-                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 w-[11%] whitespace-nowrap hidden sm:table-cell" />
+                              <SortableTableHeader column="submitted" label="Submitted" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell" />
                             )}
-                            {visibleColumns.includes("actions") && (
-                              <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
-                            )}
+                            <th className="py-3.5 px-6 pr-6 text-right w-20 whitespace-nowrap">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                          {paginatedPostEvents.map((item) => {
+                          {postEventTableGroups.map((group) => (
+                            <Fragment key={`group-${group.key}`}>
+                              {groupBy !== "none" && (
+                                <tr className="bg-gray-50/80 dark:bg-zinc-900/70">
+                                <th colSpan={visibleColumnCount} className="px-6 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    {group.label}
+                                    <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.items.length}</span>
+                                  </th>
+                                </tr>
+                              )}
+                              {group.items.map((item) => {
                             const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;
                             const expenses = Number(item.total_expenses ?? item.actual_expenses ?? 0);
                             return (
@@ -1916,7 +1957,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                                   )}>
                                     <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                                      #{item.id}
+                                      {item.id}
                                     </span>
                                   </td>
                                 )}
@@ -1925,12 +1966,11 @@ export default function OsasMonitoringTab({ showToast }) {
                                     <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.event_title}>
                                       {item.event_title}
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 min-w-0 overflow-hidden">
-                                      {item.org_acronym && (
-                                        <span className="px-1.5 py-0.2 text-[10px] font-bold rounded bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 border border-red-100 dark:border-red-900/30 shrink-0">
-                                          {item.org_acronym}
-                                        </span>
-                                      )}
+                                  </td>
+                                )}
+                                {visibleColumns.includes("organization") && (
+                                  <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
+                                    <div className="flex items-center gap-1.5 min-w-0">
                                       <span className="truncate" title={item.organization_name}>{item.organization_name}</span>
                                     </div>
                                   </td>
@@ -1958,7 +1998,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {visibleColumns.includes("status") && (
                                   <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                     <span
-                                      className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none", getPostEventStatusBadgeClass(item.status), BADGE_BASE)}
+                                      className={cn("select-none", getPostEventStatusBadgeClass(item.status), BADGE_BASE)}
                                     >
                                       {item.status}
                                     </span>
@@ -1975,8 +2015,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       : "N/A"}
                                   </td>
                                 )}
-                                {visibleColumns.includes("actions") && (
-                                  <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
+                                <td className="py-3.5 px-6 pr-6 text-right whitespace-nowrap">
                                     <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -1992,11 +2031,12 @@ export default function OsasMonitoringTab({ showToast }) {
                                         <TooltipContent>Review Clearance</TooltipContent>
                                       </Tooltip>
                                     </div>
-                                  </td>
-                                )}
+                                </td>
                               </tr>
-                            );
-                          })}
+                              );
+                              })}
+                            </Fragment>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -2093,6 +2133,7 @@ export default function OsasMonitoringTab({ showToast }) {
               )}
             </>
           )}
+          </>}
         </div>
 
         {/* 6. Apple HIG Pagination Footer (Unified for both record views) */}

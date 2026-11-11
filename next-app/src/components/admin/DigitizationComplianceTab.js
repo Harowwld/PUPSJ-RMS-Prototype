@@ -232,7 +232,6 @@ function DigitizationComplianceContent({
       if (!controller.signal.aborted) setData(json.data);
     } catch (e) {
       if (controller.signal.aborted) return;
-      setData(null);
       setError(e?.message || "Load failed");
       showToast?.(
         formatErrorMessage(e, {
@@ -390,7 +389,7 @@ function DigitizationComplianceContent({
     });
   }, [byCourse, tableSearch, filterRules, sortBy, sortOrder]);
 
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   useEffect(() => {
     setPage(1);
@@ -687,7 +686,7 @@ function DigitizationComplianceContent({
         />
 
         {/* 2. Top Summary Metrics Banner (Clean, Non-interactive Steady Stat Cards) */}
-        {loading && !manualLoading && !data ? (
+        {loading && !data ? (
           <div className="px-6 pb-6">
             <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
               <KpiStatCardsSkeleton count={3} />
@@ -826,18 +825,13 @@ function DigitizationComplianceContent({
         <div className="p-6 border-t border-border dark:border-border bg-white dark:bg-card">
           {loading && !data ? (
             <ComplianceCalcSkeleton />
-          ) : !error && data ? (() => {
+          ) : data ? (() => {
             const percent = summary?.totalExpectedDocsCount > 0
               ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100))
               : 0;
             const fullyDigitizedCount = summary?.fullyDigitizedStudents ?? summary?.digitizedStudents ?? 0;
             return (
-              <div
-                className={cn(
-                  "transition-all duration-slow",
-                  loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-                )}
-              >
+              <div>
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
                   {/* Context & Formula */}
                   <div className="flex-1">
@@ -1105,7 +1099,7 @@ function DigitizationComplianceContent({
         {/* 7. Main Program Breakdown Table */}
         {loading && !data ? (
           <ComplianceTableSkeleton rowCount={6} embedded={true} />
-        ) : error ? (
+        ) : !data && error ? (
           <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
             <Empty>
               <EmptyHeader>
@@ -1129,17 +1123,14 @@ function DigitizationComplianceContent({
           </div>
         ) : data ? (
           <div
-            className={cn(
-              "flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border",
-              loading && !manualLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-            )}
+            className="flex flex-[1_0_auto] flex-col min-h-0 overflow-hidden rounded-b-2xl border-t border-border dark:border-border"
           >
             <div
               ref={tableContainerRef}
               className="hidden w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 sm:block"
             >
               {sortedByCourse.length > 0 ? (
-                <Table columns={["text", "number", "number", "number"]} className="min-w-[850px]">
+                <Table columns={COMPLIANCE_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ kind }) => kind)}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       {visibleColumns.includes("courseCode") && (

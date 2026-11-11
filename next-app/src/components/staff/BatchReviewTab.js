@@ -4,6 +4,7 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import PageHeader from "@/components/shared/PageHeader";
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
 import PDFPreview from "@/components/shared/PDFPreview";
@@ -76,15 +78,15 @@ const REGION_LABELS = {
 export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
-  const [statusFilters, setStatusFilters] = useState(["Needs Review"]);
-  const [docTypeFilters, setDocTypeFilters] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("DESC");
-  const [groupBy, setGroupBy] = useState("none");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [query, setQuery] = useState("");
+  const [statusFilters, setStatusFilters] = useOsasViewPreference("batch_review", "statusFilters", ["Needs Review"]);
+  const [docTypeFilters, setDocTypeFilters] = useOsasViewPreference("batch_review", "docTypeFilters", []);
+  const [filterRules, setFilterRules] = useOsasViewPreference("batch_review", "filterRules", []);
+  const [sortBy, setSortBy] = useOsasViewPreference("batch_review", "sortBy", "created_at");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("batch_review", "sortOrder", "DESC");
+  const [groupBy, setGroupBy] = useOsasViewPreference("batch_review", "groupBy", "none");
+  const [startDate, setStartDate] = useOsasViewPreference("batch_review", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("batch_review", "endDate", "");
+  const [query, setQuery] = useOsasViewPreference("batch_review", "query", "");
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -350,9 +352,9 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   ], []);
 
   const groupOptions = useMemo(() => [
-    { value: "none", label: "No grouping" },
     { value: "review_status", label: "Review Status" },
     { value: "proposed_doc_type", label: "Document Type" },
+    { value: "none", label: "No grouping" },
   ], []);
 
   const sortedRows = useMemo(() => {
@@ -625,7 +627,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </span>
             }
             description="Assign a student and document type before creating formal records."
-            className="p-6 border-b border-border dark:border-border"
+            showBorder={false}
+            className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
             descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px] max-md:hidden"
             actions={
@@ -729,7 +732,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
           {loading && !hasLoaded ? (
             <BatchReviewSkeleton />
           ) : (
-            <div className="relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
+            <div className={cn(
+              "relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 transition-opacity duration-150 motion-reduce:transition-none",
+              loading && "pointer-events-none"
+            )} style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
               {/* Left Column: Review Queue */}
               <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
                 <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
@@ -894,9 +900,10 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </span>
                 )}
               </div>
-              <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-3 sm:p-5">
+              <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
                 {selected ? (
-                  <div className="grid min-h-0 min-w-0 w-full grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 overflow-y-auto sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
+                  <div className="flex min-h-0 min-w-0 w-full flex-col">
+                    <div className="grid min-h-0 min-w-0 w-full flex-1 grid-rows-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 p-3 sm:gap-5 sm:p-5" style={{ gridTemplateColumns: "minmax(0, 0.9fr) minmax(0, 1.1fr)" }}>
                     {/* Preview Sub-column */}
                     <div className="flex min-h-0 min-w-0 flex-col gap-3">
                       {selected.review_status === "Processing" && (
@@ -1010,7 +1017,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     </div>
 
                     {/* Verification Form Sub-column */}
-                    <div className="grid min-h-0 min-w-0 grid-cols-2 content-start gap-x-3 gap-y-1 overflow-hidden md:block md:space-y-4">
+                    <div className="grid min-h-0 min-w-0 grid-cols-2 content-start gap-x-3 gap-y-1 overflow-y-auto md:block md:space-y-4">
                       {/* Student Assignment */}
                       <div className="col-span-2 min-w-0 space-y-0.5 sm:space-y-2">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -1182,9 +1189,16 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           className="w-full min-h-[72px] resize-y rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         />
                       </div>
-
-                      {/* Actions */}
-                      <div className="col-span-2 flex flex-wrap items-center gap-2 border-t border-border pt-3 dark:border-border sm:col-span-1 sm:border-0 sm:pt-2">
+                    </div>
+                    </div>
+                    {!Object.keys(ocrRegions).length && (
+                      <div className="shrink-0">
+                        <NoticeBanner tone="warning" className="border-b-0">
+                          <strong>No OCR field regions were saved.</strong> Verify the student and document type against the preview, or select Retry OCR to generate field highlights.
+                        </NoticeBanner>
+                      </div>
+                    )}
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-3 dark:border-border sm:px-5">
                         <Button
                           size="sm"
                           onClick={() =>
@@ -1225,7 +1239,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         >
                           {selected.review_status === "Failed" ? "Dismiss Scan" : "Reject Document"}
                         </Button>
-                      </div>
                     </div>
                   </div>
                 ) : (
@@ -1244,11 +1257,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   </div>
                 )}
               </div>
-              {loading && hasLoaded && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                  Loading review queue…
-                </div>
-              )}
             </div>
           </div>
         )}

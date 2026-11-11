@@ -27,7 +27,7 @@ import HealthSidebar from "@/components/admin/backup/HealthSidebar"
 import PlatformBackupTable, { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
-import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
+import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { SegmentedControl } from "@/components/ui/tabs"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -738,8 +738,6 @@ export default function SystemBackupsTab({ showToast }) {
     setPage(1)
   }
 
-  if (initialLoading) return <SystemBackupsSkeleton rowCount={20} />
-
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] w-full flex-col gap-6">
@@ -892,7 +890,9 @@ export default function SystemBackupsTab({ showToast }) {
                 />
               )}
 
-              {error ? (
+              {initialLoading ? (
+                <BackupTableSkeleton embedded scope="platform" visibleColumns={visibleColumns} rowCount={6} />
+              ) : error && backups.length === 0 ? (
                 <div className="flex-1 flex min-h-[450px] flex-col border-t border-border dark:border-border rounded-b-2xl overflow-hidden">
                   <CardContent className="flex flex-1 flex-col items-center justify-center p-6 rounded-b-2xl">
                     <Empty>

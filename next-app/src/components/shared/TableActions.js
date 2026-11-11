@@ -3,7 +3,7 @@
 import * as React from "react";
 import { MoreHorizontalIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 function textContent(children) {
@@ -29,8 +29,8 @@ function controls(children, inheritedLabel) {
     return controls(child.props.children, inheritedLabel);
   });
 }
-export function TableActions({ children, actions, label = "Row actions" }) {
-  const items = actions ? actions.filter(Boolean).map(({ label: name, icon: Icon, ...props }) => ({ label: name, original: <button type="button" {...props}>{Icon && <Icon size={16} aria-hidden="true" />}</button> })) : controls(children);
+export function TableActions({ children, actions, label = "Row actions", menuClassName, menuAlign = "center" }) {
+  const items = actions ? actions.filter(Boolean).map(({ label: name, icon: Icon, separatorBefore, ...props }) => ({ label: name, separatorBefore, original: <button type="button" {...props}>{Icon && <Icon size={16} aria-hidden="true" />}</button> })) : controls(children);
   if (!items.length) return children;
   const stop = (event) => event.stopPropagation();
   if (items.length === 1) {
@@ -40,17 +40,19 @@ export function TableActions({ children, actions, label = "Row actions" }) {
   }
   return <div className="table-actions flex w-full items-center justify-center" onClick={stop}><DropdownMenu>
     <Tooltip><TooltipTrigger asChild><DropdownMenuTrigger className="table-action-button rounded-lg" aria-label={label}><MoreHorizontalIcon size={16} aria-hidden="true" /></DropdownMenuTrigger></TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>
-    <DropdownMenuContent align="center" sideOffset={6} onClick={stop}>
+    <DropdownMenuContent align={menuAlign} sideOffset={6} className={menuClassName} onClick={stop}>
       {items.map((item, index) => {
         if (item.menuItem) return React.cloneElement(item.original, { key: index });
         const icons = React.Children.toArray(item.original.props.children).filter((child) => React.isValidElement(child) && !textContent(child.props.children));
-        return <DropdownMenuItem
-          key={index}
-          nativeButton={item.original.type !== "a"}
-          disabled={item.original.props.disabled}
-          variant={/archive|delete|remove|decline/i.test(item.label) ? "destructive" : "default"}
-          render={React.cloneElement(item.original, { className: undefined, title: undefined, "aria-label": item.label }, <>{icons}<span>{item.label}</span></>)}
-        />;
+        return <React.Fragment key={index}>
+          {index > 0 && item.separatorBefore && <DropdownMenuSeparator />}
+          <DropdownMenuItem
+            nativeButton={item.original.type !== "a"}
+            disabled={item.original.props.disabled}
+            variant={/^\s*(?:permanently\s+)?(?:archive|delete|remove|decline)\b/i.test(item.label) ? "destructive" : "default"}
+            render={React.cloneElement(item.original, { className: undefined, title: undefined, "aria-label": item.label }, <>{icons}<span className="min-w-0 whitespace-normal wrap-anywhere text-start">{item.label}</span></>)}
+          />
+        </React.Fragment>;
       })}
     </DropdownMenuContent>
   </DropdownMenu></div>;

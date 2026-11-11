@@ -847,7 +847,7 @@ export function DateRangeFilterButton({
       onClick={() => setIsOpen((prev) => !prev)}
       title={title}
       className={cn(
-        "h-9 shrink-0 gap-2 rounded-xl px-3 text-xs font-normal shadow-xs transition-all cursor-pointer whitespace-nowrap",
+        "h-9 shrink-0 gap-2 rounded-xl px-3 text-xs font-medium shadow-xs transition-all cursor-pointer whitespace-nowrap",
         hasActiveRange
           ? "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 font-medium hover:bg-gray-50 dark:hover:bg-zinc-700"
           : "border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700",

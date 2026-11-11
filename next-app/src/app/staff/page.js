@@ -2,7 +2,6 @@
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
 
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
@@ -28,35 +27,10 @@ import {
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
-import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
-import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
-import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
-import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton";
-import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
-import StudentDirectorySkeleton from "@/components/staff/skeletons/StudentDirectorySkeleton";
-import StudentOrganizationsSkeleton from "@/components/staff/skeletons/StudentOrganizationsSkeleton";
-import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton";
-import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton";
-import DocumentsTabSkeleton from "@/components/staff/skeletons/DocumentsTabSkeleton";
-import NotificationsTabSkeleton from "@/components/staff/skeletons/NotificationsTabSkeleton";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
+import WorkspaceLoading from "@/components/shared/WorkspaceLoading";
 
 import AppIcon from "@/components/ui/app-icon";
-const STAFF_NAV_ITEMS = [
-  { key: "requests", label: "Document Requests" },
-  { key: "osas_monitoring", label: "OSAS Monitoring" },
-  { type: "header", label: "Scanning & Document Upload" },
-  { key: "upload", label: "Scan & Upload" },
-  { key: "batch_review", label: "Batch Review" },
-  { type: "header", label: "Student & Organization Roster" },
-  { key: "students", label: "Student Directory" },
-  { key: "organizations", label: "Student Organizations" },
-  { type: "header", label: "Archive & Storage" },
-  { key: "search", label: "Records & Archive" },
-  { key: "storage", label: "Storage Explorer" },
-  { type: "header", label: "Records & Communications" },
-  { key: "documents", label: "Student Documents" },
-  { key: "notifications", label: "Notifications" },
-];
 
 const STAFF_VIEWS = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"];
 const STAFF_VIEW_MODULES = {
@@ -77,6 +51,7 @@ function resolveRequestedStaffView(rawView) {
 }
 
 function isStaffViewEnabled(view, user) {
+  if (view === "documents" && String(user?.office_id || "").toLowerCase() === "osas") return false;
   const enabledModules = user?.enabled_modules;
   const requiredModule = STAFF_VIEW_MODULES[view];
   return !requiredModule || !Array.isArray(enabledModules) || enabledModules.length === 0 || enabledModules.includes(requiredModule);
@@ -92,40 +67,17 @@ function resolveStaffView(rawView, user) {
   return STAFF_VIEWS.find((view) => isStaffViewEnabled(view, user)) || officeDefault;
 }
 
-function StaffContentSkeleton({ view }) {
-  switch (view) {
-    case "requests": return <DocumentRequestsSkeleton />;
-    case "osas_monitoring": return <OsasMonitoringSkeleton />;
-    case "organizations": return <StudentOrganizationsSkeleton />;
-    case "students": return <StudentDirectorySkeleton />;
-    case "upload": return <ScanUploadSkeleton />;
-    case "batch_review": return <BatchReviewSkeleton />;
-    case "documents": return <DocumentsTabSkeleton />;
-    case "notifications": return <NotificationsTabSkeleton />;
-    case "search": return <RecordsArchiveSkeleton />;
-    case "storage": return <StorageExplorerSkeleton />;
-    default: return null;
-  }
-}
 
-function StaffDashboardLoadingSkeleton({ view }) {
-  return (
-    <DashboardShellSkeleton items={STAFF_NAV_ITEMS}>
-      <StaffContentSkeleton view={view} />
-    </DashboardShellSkeleton>
-  );
-}
-
-const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: () => <StaffContentSkeleton view="search" /> });
-const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: () => <StaffContentSkeleton view="storage" /> });
-const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: () => <StaffContentSkeleton view="upload" /> });
-const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: () => <StaffContentSkeleton view="batch_review" /> });
-const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: () => <StaffContentSkeleton view="documents" /> });
-const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: () => <StaffContentSkeleton view="notifications" /> });
-const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: () => <StaffContentSkeleton view="requests" /> });
-const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: () => <StaffContentSkeleton view="osas_monitoring" /> });
-const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: () => <StaffContentSkeleton view="organizations" /> });
-const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: () => <StaffContentSkeleton view="students" /> });
+import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
+import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
+import ScanUploadTab from "@/components/staff/ScanUploadTab";
+import BatchReviewTab from "@/components/staff/BatchReviewTab";
+import DocumentsTab from "@/components/staff/DocumentsTab";
+import NotificationsTab from "@/components/staff/NotificationsTab";
+import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
+import OsasMonitoringTab from "@/components/staff/OsasMonitoringTab";
+import StudentOrganizationsTab from "@/components/staff/StudentOrganizationsTab";
+import StudentDirectoryTab from "@/components/staff/StudentDirectoryTab";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -279,6 +231,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const result = []
     for (const group of groups) {
       const activeChildren = group.children.filter(child => {
+        if (child.key === "documents" && isOsas) return false;
         const requiredModule = MODULE_KEY_MAP[child.key]
         if (!requiredModule) return true
         return enabled.has(requiredModule)
@@ -289,13 +242,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
     }
     return result
-  }, [authUser?.enabled_modules, notificationsUnread])
+  }, [authUser?.enabled_modules, isOsas, notificationsUnread])
 
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [archivedOrganizations, setArchivedOrganizations] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useOsasViewPreference("records_archive", "selectedCategory", null);
   const [docTypes, setDocTypes] = useState([]);
   const [requestableDocTypes, setRequestableDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -303,10 +256,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [storageLayout, setStorageLayout] = useState(null);
   const [allDocs, setAllDocs] = useState([]);
 
-  const [currentLevel, setCurrentLevel] = useState("years");
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [currentLevel, setCurrentLevel] = useOsasViewPreference("records_archive", "currentLevel", "years");
+  const [selectedYear, setSelectedYear] = useOsasViewPreference("records_archive", "selectedYear", null);
 
-  const [quickQuery, setQuickQuery] = useState("");
+  const [quickQuery, setQuickQuery] = useOsasViewPreference("records_archive", "quickQuery", "");
   const [archiveRefreshVersion, setArchiveRefreshVersion] = useState(0);
 
   const [activeStudent, setActiveStudent] = useState(null);
@@ -341,9 +294,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     });
   }, [students, archivedStudents, organizations, archivedOrganizations, authUser?.office_id]);
 
-  const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [selectedCabinet, setSelectedCabinet] = useState(null);
+  const [currentLocatorLevel, setCurrentLocatorLevel] = useOsasViewPreference("storage_explorer", "currentLocatorLevel", "rooms");
+  const [selectedRoom, setSelectedRoom] = useOsasViewPreference("storage_explorer", "selectedRoom", null);
+  const [selectedCabinet, setSelectedCabinet] = useOsasViewPreference("storage_explorer", "selectedCabinet", null);
 
   /** When true, submit attaches the PDF to an existing student (no new student row). */
   const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
@@ -1020,7 +973,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         docId: id,
         originalFilename: matchedDoc?.original_filename || null,
         mimeType: matchedDoc?.mime_type || null,
-        sourceType: matchedDoc?.source_type || null,
+        sourceType: matchedDoc?.source_type || (strId.startsWith("cbl-") ? "organization_bylaws" : null),
         fileUrl,
         url: fileUrl,
         refId: `DOC-${Date.now()}`,
@@ -1914,7 +1867,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
 
   if (loading) {
-    return <StaffDashboardLoadingSkeleton view={view} />;
+    return <WorkspaceLoading />;
   }
 
   return (
@@ -1989,15 +1942,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", view === "batch_review" ? "overflow-hidden" : "overflow-y-auto")}>
+        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
             className={cn(
               "p-2 flex flex-col w-full",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1",
-              view === "batch_review" ? "flex-1 h-full min-h-0 [&>*]:flex-1" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
+              (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "flex-1 h-full min-h-0 [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
             )}
           >
-            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", view === "batch_review" ? "h-full flex-1" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
+            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "h-full flex-1 min-h-0 [&>*]:h-full [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
             {view === "students" && (
             <StudentDirectoryTab
               authUser={authUser}
@@ -2015,7 +1968,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
           {view === "search" && (
             <RecordsArchiveTab
-              loading={!storageLayout}
               refreshVersion={archiveRefreshVersion}
               onSelectYear={(year) => { setSelectedYear(year); setCurrentLevel("students"); }}
               quickQuery={quickQuery}
@@ -2313,9 +2265,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 }
 
 function StaffPageWithView() {
-  const searchParams = useSearchParams();
-  const requestedView = resolveRequestedStaffView(searchParams?.get("view") || searchParams?.get("tab"));
-  const fallback = <StaffDashboardLoadingSkeleton view={requestedView} />;
+  const fallback = <WorkspaceLoading />;
 
   return (
     <StaffGuard fallback={fallback}>
@@ -2328,7 +2278,7 @@ function StaffPageWithView() {
 
 export default function StaffPage() {
   return (
-    <Suspense fallback={<StaffDashboardLoadingSkeleton />}>
+    <Suspense fallback={<WorkspaceLoading />}>
       <StaffPageWithView />
     </Suspense>
   );

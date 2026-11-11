@@ -29,6 +29,10 @@ import { AlertCircleIcon as EmptyAlertCircleIcon , FileUploadIcon, Files01Icon, 
 
 const SYSTEM_CONFIG_SUB_TABS = ["document-types", "degree-programs", "course-blocks", "bulk-import", "recognition-templates"]
 
+function isAvailableSystemConfigSubTab(tab, isOsas) {
+  return SYSTEM_CONFIG_SUB_TABS.includes(tab) && !(isOsas && ["degree-programs", "course-blocks"].includes(tab))
+}
+
 export default function SystemConfigTab({
   showToast,
   logAdminAction,
@@ -40,12 +44,12 @@ export default function SystemConfigTab({
   const searchParams = useSearchParams()
   const [activeSubTab, setActiveSubTabState] = useState(() => {
     const requested = searchParams?.get("subtab")
-    return SYSTEM_CONFIG_SUB_TABS.includes(requested) && !(isOsas && requested === "course-blocks")
+    return isAvailableSystemConfigSubTab(requested, isOsas)
       ? requested
       : "document-types"
   })
   const setActiveSubTab = (nextTab) => {
-    const tab = SYSTEM_CONFIG_SUB_TABS.includes(nextTab) && !(isOsas && nextTab === "course-blocks")
+    const tab = isAvailableSystemConfigSubTab(nextTab, isOsas)
       ? nextTab
       : "document-types"
     setActiveSubTabState(tab)
@@ -57,11 +61,16 @@ export default function SystemConfigTab({
   }
   useEffect(() => {
     const requested = searchParams?.get("subtab")
-    if (SYSTEM_CONFIG_SUB_TABS.includes(requested) && !(isOsas && requested === "course-blocks")) {
-      const timer = setTimeout(() => setActiveSubTabState(requested), 0)
+    const nextTab = isAvailableSystemConfigSubTab(requested, isOsas)
+      ? requested
+      : isAvailableSystemConfigSubTab(activeSubTab, isOsas)
+        ? activeSubTab
+        : "document-types"
+    if (nextTab !== activeSubTab) {
+      const timer = setTimeout(() => setActiveSubTabState(nextTab), 0)
       return () => clearTimeout(timer)
     }
-  }, [searchParams, isOsas])
+  }, [searchParams, isOsas, activeSubTab])
   const [showArchived, setShowArchived] = useState(false)
 
   // Search States
@@ -118,7 +127,7 @@ export default function SystemConfigTab({
   const [selectedDocTypes, setSelectedDocTypes] = useState({})
   const [selectedCourses, setSelectedCourses] = useState({})
   const [selectedSections, setSelectedSections] = useState({})
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
 
   // Last Selected Trackers for Shift+Click
   const [lastSelectedDocId, setLastSelectedDocId] = useState(null)
@@ -758,6 +767,7 @@ export default function SystemConfigTab({
         let error = ""
         if (!category) error = "Missing Category"
         else if (!name) error = "Missing Name"
+        else if (isOsas && ["course", "section"].includes(category.toLowerCase())) error = "Category Not Available for OSAS"
         else if (
           !["documenttype", "course", "section"].includes(
             category.toLowerCase()
@@ -835,6 +845,7 @@ export default function SystemConfigTab({
           let error = ""
           if (!category) error = "Missing Category"
           else if (!name) error = "Missing Name"
+          else if (isOsas && ["course", "section"].includes(category.toLowerCase())) error = "Category Not Available for OSAS"
           else if (
             !["documenttype", "course", "section"].includes(
               category.toLowerCase()
@@ -881,6 +892,7 @@ export default function SystemConfigTab({
     let error = ""
     if (!category) error = "Missing Category"
     else if (!name) error = "Missing Name"
+    else if (isOsas && ["course", "section"].includes(category.toLowerCase())) error = "Category Not Available for OSAS"
     else if (
       !["documenttype", "course", "section"].includes(
         category.toLowerCase()
@@ -969,7 +981,7 @@ export default function SystemConfigTab({
 
   function handleCopySample() {
     const sample = isOsas
-      ? "Category,Name,Code,IsCompliance,IsRequestable\nDocumentType,Event Proposal,,true,false\nDocumentType,Constitution & By-Laws (CBL),,true,false\nDocumentType,Activity Request,,true,false\nDocumentType,Financial Liquidation Report,,true,false\nDocumentType,Clearance Form,,true,false\nCourse,Bachelor of Science in Information Technology,BSIT,\nCourse,Bachelor of Science in Accountancy,BSA,"
+      ? "Category,Name,Code,IsCompliance,IsRequestable\nDocumentType,Event Proposal,,true,false\nDocumentType,Constitution & By-Laws (CBL),,true,false\nDocumentType,Activity Request,,true,false\nDocumentType,Financial Liquidation Report,,true,false\nDocumentType,Clearance Form,,true,false"
       : "Category,Name,Code,IsCompliance,IsRequestable\nDocumentType,Transcript of Records,,false,true\nDocumentType,Diploma,,false,true\nDocumentType,PSA Birth Certificate,,true,false\nDocumentType,Form 137,,true,false\nCourse,Bachelor of Science in Information Technology,BSIT,\nCourse,Bachelor of Science in Accountancy,BSA,\nSection,Block 1,BSIT,\nSection,Section 1,BSA,";
     navigator.clipboard.writeText(sample);
     showToast({
@@ -1019,11 +1031,12 @@ export default function SystemConfigTab({
                   <span>Document Types</span>
                 </TabsTrigger>
 
-                <TabsTrigger value="degree-programs">
-                  <GraduationScrollIcon size="1em" className="text-sm" />
-                  <span>Degree Programs</span>
-                </TabsTrigger>
-
+                {!isOsas && (
+                  <TabsTrigger value="degree-programs">
+                    <GraduationScrollIcon size="1em" className="text-sm" />
+                    <span>Degree Programs</span>
+                  </TabsTrigger>
+                )}
                 {!isOsas && (
                   <TabsTrigger value="course-blocks">
                     <UserSearch01Icon size="1em" className="text-sm" />
@@ -1082,71 +1095,75 @@ export default function SystemConfigTab({
                 <RecognitionTemplatesTab showToast={showToast} />
               </TabsContent>
 
-              <TabsContent
-                value="degree-programs"
-                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
-              >
-                <CoursesTab
-                  loading={loading}
-                  courses={courses}
-                  sections={sections}
-                  courseSearch={courseSearch}
-                  setCourseSearch={setCourseSearch}
-                  showArchived={showArchived}
-                  setShowArchived={setShowArchived}
-                  pageCourse={pageCourse}
-                  setPageCourse={setPageCourse}
-                  itemsPerPage={itemsPerPage}
-                  setItemsPerPage={setItemsPerPage}
-                  filteredCourses={filteredCourses}
-                  filteredCoursesFull={filteredCoursesFull}
-                  selectedCourses={selectedCourses}
-                  setSelectedCourses={setSelectedCourses}
-                  toggleCourseSelected={toggleCourseSelected}
-                  toggleAllCourses={toggleAllCourses}
-                  executeBulkTaxonomyAction={executeBulkTaxonomyAction}
-                  setConfirmPayload={setConfirmPayload}
-                  setConfirmOpen={setConfirmOpen}
-                  onSort={(key, dir) => handleSort("course", key, dir)}
-                  sortCourse={sortCourse}
-                  showToast={showToast}
-                  loadAll={loadAll}
-                />
-              </TabsContent>
+              {!isOsas && (
+                <>
+                  <TabsContent
+                    value="degree-programs"
+                    className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
+                  >
+                    <CoursesTab
+                      loading={loading}
+                      courses={courses}
+                      sections={sections}
+                      courseSearch={courseSearch}
+                      setCourseSearch={setCourseSearch}
+                      showArchived={showArchived}
+                      setShowArchived={setShowArchived}
+                      pageCourse={pageCourse}
+                      setPageCourse={setPageCourse}
+                      itemsPerPage={itemsPerPage}
+                      setItemsPerPage={setItemsPerPage}
+                      filteredCourses={filteredCourses}
+                      filteredCoursesFull={filteredCoursesFull}
+                      selectedCourses={selectedCourses}
+                      setSelectedCourses={setSelectedCourses}
+                      toggleCourseSelected={toggleCourseSelected}
+                      toggleAllCourses={toggleAllCourses}
+                      executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                      setConfirmPayload={setConfirmPayload}
+                      setConfirmOpen={setConfirmOpen}
+                      onSort={(key, dir) => handleSort("course", key, dir)}
+                      sortCourse={sortCourse}
+                      showToast={showToast}
+                      loadAll={loadAll}
+                    />
+                  </TabsContent>
 
-              <TabsContent
-                value="course-blocks"
-                className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
-              >
-                <SectionsTab
-                  loading={loading}
-                  courses={courses}
-                  sections={sections}
-                  sectionSearch={sectionSearch}
-                  setSectionSearch={setSectionSearch}
-                  selectedCourseFilter={selectedCourseFilter}
-                  setSelectedCourseFilter={setSelectedCourseFilter}
-                  showArchived={showArchived}
-                  setShowArchived={setShowArchived}
-                  pageSection={pageSection}
-                  setPageSection={setPageSection}
-                  itemsPerPage={itemsPerPage}
-                  setItemsPerPage={setItemsPerPage}
-                  filteredSections={filteredSections}
-                  filteredSectionsFull={filteredSectionsFull}
-                  selectedSections={selectedSections}
-                  toggleSectionSelected={toggleSectionSelected}
-                  toggleAllSections={toggleAllSections}
-                  executeBulkTaxonomyAction={executeBulkTaxonomyAction}
-                  setSelectedSections={setSelectedSections}
-                  setConfirmPayload={setConfirmPayload}
-                  setConfirmOpen={setConfirmOpen}
-                  onSort={(key, dir) => handleSort("section", key, dir)}
-                  sortSection={sortSection}
-                  showToast={showToast}
-                  loadAll={loadAll}
-                />
-              </TabsContent>
+                  <TabsContent
+                    value="course-blocks"
+                    className="m-0 flex flex-[1_0_auto] flex-col border-0 focus-visible:ring-0"
+                  >
+                    <SectionsTab
+                      loading={loading}
+                      courses={courses}
+                      sections={sections}
+                      sectionSearch={sectionSearch}
+                      setSectionSearch={setSectionSearch}
+                      selectedCourseFilter={selectedCourseFilter}
+                      setSelectedCourseFilter={setSelectedCourseFilter}
+                      showArchived={showArchived}
+                      setShowArchived={setShowArchived}
+                      pageSection={pageSection}
+                      setPageSection={setPageSection}
+                      itemsPerPage={itemsPerPage}
+                      setItemsPerPage={setItemsPerPage}
+                      filteredSections={filteredSections}
+                      filteredSectionsFull={filteredSectionsFull}
+                      selectedSections={selectedSections}
+                      toggleSectionSelected={toggleSectionSelected}
+                      toggleAllSections={toggleAllSections}
+                      executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                      setSelectedSections={setSelectedSections}
+                      setConfirmPayload={setConfirmPayload}
+                      setConfirmOpen={setConfirmOpen}
+                      onSort={(key, dir) => handleSort("section", key, dir)}
+                      sortSection={sortSection}
+                      showToast={showToast}
+                      loadAll={loadAll}
+                    />
+                  </TabsContent>
+                </>
+              )}
 
 
 

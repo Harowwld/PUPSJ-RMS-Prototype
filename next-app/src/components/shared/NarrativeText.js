@@ -8,9 +8,10 @@ import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import {
   parseNarrativeTokens,
   getDeterministicColor,
+  resolveUserDisplayName,
 } from "@/lib/narrativeParser";
 
-export { parseNarrativeTokens };
+export { parseNarrativeTokens, resolveUserDisplayName };
 
 /**
  * NarrativeText Component
@@ -41,6 +42,9 @@ export default function NarrativeText({
 
         switch (token.type) {
           case "mention": {
+            const displayName = resolveUserDisplayName(token.value);
+            const isRawMention = token.raw?.startsWith("@") && !token.email;
+
             if (mode === "compact") {
               return (
                 <span
@@ -49,7 +53,7 @@ export default function NarrativeText({
                     onMentionClick
                       ? (e) => {
                           e.stopPropagation();
-                          onMentionClick(token.value);
+                          onMentionClick(displayName);
                         }
                       : undefined
                   }
@@ -57,15 +61,15 @@ export default function NarrativeText({
                     "font-semibold text-pup-maroon dark:text-red-400 select-text",
                     onMentionClick && "hover:underline cursor-pointer"
                   )}
-                  title={`User: ${token.value}`}
+                  title={`User: ${displayName}`}
                 >
-                  @{token.value}
+                  {isRawMention ? `@${displayName}` : displayName}
                 </span>
               );
             }
 
             // Full mode: Apple Inset capsule with queried avatar
-            const initial = (token.value || "U")[0].toUpperCase();
+            const initial = (displayName || "U")[0].toUpperCase();
             return (
               <span
                 key={key}
@@ -73,7 +77,7 @@ export default function NarrativeText({
                   onMentionClick
                     ? (e) => {
                         e.stopPropagation();
-                        onMentionClick(token.value);
+                        onMentionClick(displayName);
                       }
                     : undefined
                 }
@@ -81,28 +85,29 @@ export default function NarrativeText({
                   "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text mx-0.5 border-0",
                   onMentionClick && "hover:bg-black/[0.08] dark:hover:bg-white/[0.1] cursor-pointer active:scale-95"
                 )}
-                title={`User: ${token.value}`}
+                title={`User: ${displayName}`}
               >
                 <ProfileAvatar
-                  id={token.value}
-                  name={token.value}
+                  id={token.email || displayName}
+                  name={displayName}
                   initials={initial}
                   className="size-3.5 shrink-0 rounded-full border-0"
-                  fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(token.value))}
+                  fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(displayName))}
                 />
-                <span className="truncate max-w-[200px]">{token.value}</span>
+                <span className="truncate max-w-[200px]">{displayName}</span>
               </span>
             );
           }
 
           case "record_id": {
+            const cleanId = String(token.value || "").replace(/^#/, "");
             if (mode === "compact") {
               return (
                 <span
                   key={key}
                   className="font-mono text-[11px] font-semibold text-gray-800 dark:text-zinc-200 tabular-nums select-text"
                 >
-                  {token.value}
+                  {cleanId}
                 </span>
               );
             }
@@ -111,7 +116,7 @@ export default function NarrativeText({
                 key={key}
                 className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200 tabular-nums select-text mx-0.5 border-0", BADGE_BASE)}
               >
-                {token.value}
+                {cleanId}
               </span>
             );
           }

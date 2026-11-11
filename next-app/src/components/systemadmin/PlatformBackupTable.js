@@ -39,7 +39,11 @@ export function platformBackupSchema(visibleColumns) {
     { kind: "text", growthWeight: visibleColumns.length ? 3 : 2 },
     ...PLATFORM_BACKUP_COLUMNS
       .filter(({ key }) => visibleColumns.includes(key))
-      .map(({ key, kind }) => (key === "type" ? { kind, width: 160 } : { kind, growthWeight: 1 })),
+      .map(({ key, kind }) => {
+        if (key === "type") return { kind, maxWidth: 180, growthWeight: 0 }
+        if (kind === "text") return { kind, maxWidth: 340 }
+        return { kind, maxWidth: kind === "date" ? 205 : kind === "number" ? 110 : 160, growthWeight: 0 }
+      }),
     "actions",
   ]
 }

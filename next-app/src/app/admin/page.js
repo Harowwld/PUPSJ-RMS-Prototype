@@ -45,29 +45,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ContentSwap } from "@/components/ui/motion"
 
-import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
-import DigitalRecordsReviewSkeleton from "@/components/admin/skeletons/DigitalRecordsReviewSkeleton"
-import DigitizationComplianceSkeleton from "@/components/admin/skeletons/DigitizationComplianceSkeleton"
-import SLAAnalyticsSkeleton from "@/components/admin/skeletons/SLAAnalyticsSkeleton"
-import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
-import StaffDirectorySkeleton from "@/components/admin/skeletons/StaffDirectorySkeleton"
-import AuditLogsSkeleton from "@/components/admin/skeletons/AuditLogsSkeleton"
-import SystemConfigSkeleton from "@/components/admin/skeletons/SystemConfigSkeleton"
-import SystemBackupsSkeleton from "@/components/systemadmin/skeletons/SystemBackupsSkeleton"
+import WorkspaceLoading from "@/components/shared/WorkspaceLoading"
 
-const ADMIN_NAV_ITEMS = [
-  { key: "review", label: "Records Review" },
-  { key: "digitization", label: "Compliance Analytics" },
-  { type: "header", label: "Operations & Fulfillment" },
-  { key: "request_analytics", label: "SLA Analytics" },
-  { key: "storage_layout", label: "Storage Room Layout" },
-  { type: "header", label: "Personnel & Governance" },
-  { key: "directory", label: "Staff Directory" },
-  { key: "logs", label: "Activity History" },
-  { type: "header", label: "System & Maintenance" },
-  { key: "system_data", label: "System Configuration" },
-  { key: "system", label: "Backup & Recovery" },
-]
 
 const ADMIN_VIEWS = ["directory", "create", "logs", "system_data", "review", "digitization", "request_analytics", "system", "backup", "storage_layout", "activity", "settings"]
 
@@ -79,39 +58,17 @@ function resolveAdminView(rawView, preferredView) {
   return resolveRequestedAdminView(rawView) || resolveRequestedAdminView(preferredView) || "review"
 }
 
-function AdminContentSkeleton({ view }) {
-  switch (view) {
-    case "directory": return <StaffDirectorySkeleton />
-    case "review": return <DigitalRecordsReviewSkeleton />
-    case "digitization": return <DigitizationComplianceSkeleton />
-    case "request_analytics": return <SLAAnalyticsSkeleton />
-    case "storage_layout": return <StorageLayoutSkeleton />
-    case "system_data": return <SystemConfigSkeleton />
-    case "system":
-    case "backup": return <SystemBackupsSkeleton />
-    case "logs": return <AuditLogsSkeleton />
-    default: return null
-  }
-}
-
-function AdminDashboardLoadingSkeleton({ view }) {
-  return (
-    <DashboardShellSkeleton items={ADMIN_NAV_ITEMS}>
-      <AdminContentSkeleton view={view} />
-    </DashboardShellSkeleton>
-  )
-}
 import { registerOffices } from "@/lib/roleUtils"
 
 import AppIcon from "@/components/ui/app-icon";
-const StaffDirectoryTab = dynamic(() => import("@/components/admin/StaffDirectoryTab"), { loading: () => <AdminContentSkeleton view="directory" /> })
-const AuditLogsTab = dynamic(() => import("@/components/admin/AuditLogsTab"), { loading: () => <AdminContentSkeleton view="logs" /> })
-const SystemConfigTab = dynamic(() => import("@/components/admin/SystemConfigTab"), { loading: () => <AdminContentSkeleton view="system_data" /> })
-const StorageLayoutEditorTab = dynamic(() => import("@/components/admin/StorageLayoutEditorTab"), { loading: () => <AdminContentSkeleton view="storage_layout" /> })
-const DigitalRecordsReviewTab = dynamic(() => import("@/components/admin/DigitalRecordsReviewTab"), { loading: () => <AdminContentSkeleton view="review" /> })
-const DigitizationComplianceTab = dynamic(() => import("@/components/admin/DigitizationComplianceTab"), { loading: () => <AdminContentSkeleton view="digitization" /> })
-const SLAAnalyticsTab = dynamic(() => import("@/components/admin/SLAAnalyticsTab"), { loading: () => <AdminContentSkeleton view="request_analytics" /> })
-const BackupTab = dynamic(() => import("@/components/admin/BackupTab"), { loading: () => <AdminContentSkeleton view="system" /> })
+import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
+import AuditLogsTab from "@/components/admin/AuditLogsTab";
+import SystemConfigTab from "@/components/admin/SystemConfigTab";
+import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
+import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
+import DigitizationComplianceTab from "@/components/admin/DigitizationComplianceTab";
+import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
+import BackupTab from "@/components/admin/BackupTab";
 const RegisterAccountTab = dynamic(() => import("@/components/admin/RegisterAccountTab"), { loading: () => null })
 const EditUserModal = dynamic(() => import("@/components/admin/EditUserModal"), { loading: () => null })
 
@@ -122,14 +79,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(!initialAuthUser)
-  const loadedViewsRef = useRef({
-    directory: false,
-    logs: false,
-    system: false,
-    backup: false,
-    request_analytics: false,
-    system_data: true,
-  })
+
 
   const initialView = resolveAdminView(
     searchParams?.get("view") || searchParams?.get("tab"),
@@ -171,6 +121,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const [staffData, setStaffData] = useState([])
   const [staffLoaded, setStaffLoaded] = useState(false)
+  const [staffInitialLoading, setStaffInitialLoading] = useState(true)
   const [offices, setOffices] = useState([])
 
   useEffect(() => {
@@ -195,10 +146,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [auditLogs, setAuditLogs] = useState(null)
   const logRequestRef = useRef(0)
   const [logStats, setLogStats] = useState(null)
-  const [logsLoading, setLogsLoading] = useState(false)
+  const [logsLoading, setLogsLoading] = useState(true)
   const [logPage, setLogPage] = useUrlPage({ enabled: view === "logs" })
   const [logTotal, setLogTotal] = useState(0)
-  const [logsPerPage, setLogsPerPage] = useState(50)
+  const [logsPerPage, setLogsPerPage] = useState(20)
   const [logSearch, setLogSearch] = useState("")
   const [logRoleFilter, setLogRoleFilter] = useState("All")
   const [logExcludeRoleFilter, setLogExcludeRoleFilter] = useState("")
@@ -210,7 +161,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [logSortOrder, setLogSortOrder] = useState("DESC")
   const [logsMineOnly, setLogsMineOnly] = useState(false)
 
-  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviewLoading, setReviewLoading] = useState(true)
 
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
@@ -220,6 +171,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     dbStatus: "Healthy",
   })
   const [backups, setBackups] = useState([])
+  const [backupsInitialLoading, setBackupsInitialLoading] = useState(true)
   const backupRequestRef = useRef(0)
   const [backupSearch, setBackupSearch] = useState("")
   const [backupStartDate, setBackupStartDate] = useState("")
@@ -562,10 +514,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         throw new Error(json?.error || "Failed to load staff")
       setStaffData(Array.isArray(json.data) ? json.data : [])
       setStaffLoaded(true)
-      loadedViewsRef.current.directory = true
     } catch (err) {
       showToast(formatErrorMessage(err, "Personnel Directory Load Failed"), true)
     } finally {
+      setStaffInitialLoading(false)
       setViewLoading((prev) => ({ ...prev, directory: false }))
     }
   }, [authUser?.office_id, showToast])
@@ -633,7 +585,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           ip: r.ip || "N/A",
         }))
       )
-      loadedViewsRef.current.logs = true
     } catch {
       // silent
     } finally {
@@ -708,8 +659,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (request !== backupRequestRef.current) return
       if (res.ok && json?.ok) {
         setBackups(Array.isArray(json.data) ? json.data : [])
-        loadedViewsRef.current.system = true
-        loadedViewsRef.current.backup = true
       }
       if (driveRes && driveRes.ok) {
         const driveJson = await driveRes.json().catch(() => null)
@@ -721,6 +670,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       console.error("Failed to refresh backups:", err)
     } finally {
       if (request === backupRequestRef.current) {
+        setBackupsInitialLoading(false)
         setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
       }
     }
@@ -850,26 +800,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         scroll: false,
       })
 
-      if (nextView === "directory" && !loadedViewsRef.current.directory) {
-        setTimeout(() => {
-          refreshStaff()
-        }, 0)
-      }
-      if (nextView === "logs" && !loadedViewsRef.current.logs) {
-        setTimeout(() => {
-          refreshAuditLogs()
-        }, 0)
-      }
-      if (
-        (nextView === "system" || nextView === "backup") &&
-        !loadedViewsRef.current.system
-      ) {
-        setTimeout(() => {
-          refreshBackups()
-        }, 0)
-      }
     },
-    [refreshAuditLogs, refreshBackups, refreshStaff, router]
+    [router]
   )
 
   const switchView = useCallback(
@@ -1889,7 +1821,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
-    return <AdminDashboardLoadingSkeleton view={view} />
+    return <WorkspaceLoading />
   }
 
   return (
@@ -1985,7 +1917,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               officeId={authUser?.office_id || "registrar"}
               officeShortName={authUser?.office_short_name}
               offices={offices}
-              isLoading={viewLoading.directory}
+              isLoading={staffInitialLoading || viewLoading.directory}
               currentUserId={authUser?.id}
               search={search}
               setSearch={setSearch}
@@ -2089,6 +2021,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
           {view === "review" && (
             <DigitalRecordsReviewTab
+              officeId={authUser?.office_id}
               records={reviewRecords}
               totalCount={reviewTotal}
               serverStats={reviewStats}
@@ -2136,7 +2069,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               systemHealth={systemHealth}
               backups={backups}
               externalDrive={externalDrive}
-              isLoading={viewLoading.system || viewLoading.backup}
+              isLoading={backupsInitialLoading}
               isManualLoading={viewLoading.system || viewLoading.backup}
               backupSearch={backupSearch}
               setBackupSearch={setBackupSearch}
@@ -2177,7 +2110,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   e.target.value = ""
                 }
               }}
-              onRefresh={refreshBackups}
+              onRefresh={() => refreshBackups(true)}
               showToast={showToast}
             />
           )}
@@ -2405,6 +2338,12 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         preview={previewData}
+        headerActions={previewData?.reviewNote && (
+          <div className="max-h-32 overflow-y-auto rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
+            <p className="font-semibold">Decline Note</p>
+            <p className="mt-1 whitespace-pre-wrap wrap-anywhere text-muted-foreground">{previewData.reviewNote}</p>
+          </div>
+        )}
       />
 
       <TOTPChallengeModal
@@ -2515,9 +2454,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 }
 
 function AdminPageWithView() {
-  const searchParams = useSearchParams()
-  const requestedView = resolveRequestedAdminView(searchParams?.get("view") || searchParams?.get("tab"))
-  const fallback = <AdminDashboardLoadingSkeleton view={requestedView} />
+  const fallback = <WorkspaceLoading />
 
   return (
     <AdminGuard fallback={fallback}>
@@ -2530,7 +2467,7 @@ function AdminPageWithView() {
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<AdminDashboardLoadingSkeleton />}>
+    <Suspense fallback={<WorkspaceLoading />}>
       <AdminPageWithView />
     </Suspense>
   )

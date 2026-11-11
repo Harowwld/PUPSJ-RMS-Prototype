@@ -73,7 +73,7 @@ export async function getAuthenticatedPrincipal(req) {
 
     if (isStudentRole(tokenRole)) {
       const account = await queryOne(
-        `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
+        `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.client_type, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
                 sa.status AS account_status, s.status AS student_status,
                 EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
                 EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office,
@@ -106,6 +106,7 @@ export async function getAuthenticatedPrincipal(req) {
         studentNo: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
         student_no: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
         email: decryptedAccount.email || null,
+        clientType: decryptedAccount.client_type,
         status: "Active",
         sessionId: payload.jti,
         jti: payload.jti,

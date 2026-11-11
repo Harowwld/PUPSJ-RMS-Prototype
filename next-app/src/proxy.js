@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSessionCookieName, getRefreshCookieName } from "./src/lib/jwt";
-import { isPublicSessionPath, resolveMiddlewareSession } from "./src/lib/middlewarePolicy.js";
-import { canAccessPage, normalizeRole } from "./src/lib/roleUtils.js";
-import { clearAuthCookies } from "./src/lib/cookieSecurity.js";
+import { getSessionCookieName, getRefreshCookieName } from "./lib/jwt.js";
+import { isPublicSessionPath, resolveMiddlewareSession } from "./lib/middlewarePolicy.js";
+import { getPageAccessRedirect } from "./lib/roleUtils.js";
+import { clearAuthCookies } from "./lib/cookieSecurity.js";
 
 function constantTimeEqual(a, b) {
   const sa = String(a || "");
@@ -33,16 +33,16 @@ function continueWithNonce(req, nonce) {
 
 function addSecurityHeaders(response, nonce) {
   response.headers.set("Cache-Control", "no-store");
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Content-Security-Policy', contentSecurityPolicy(nonce));
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   return response;
 }
 
-export async function middleware(req) {
+export async function proxy(req) {
   const { pathname } = req.nextUrl;
   const method = String(req.method || "GET").toUpperCase();
   const nonce = createRequestNonce();
@@ -98,25 +98,17 @@ export async function middleware(req) {
     return addSecurityHeaders(redirectRes, nonce);
   }
 
-  if (!pathname.startsWith("/api/") && !canAccessPage(pathname, payload?.role)) {
+  const pageRedirect = pathname.startsWith("/api/")
+    ? null
+    : getPageAccessRedirect(pathname, payload?.role);
+  if (pageRedirect) {
     const url = req.nextUrl.clone();
-    const role = normalizeRole(payload?.role);
-    if (role === "SystemAdmin" || role === "SuperAdmin") {
-      url.pathname = "/systemadmin";
-    } else if (role === "Admin") {
-      url.pathname = "/admin";
-    } else if (role === "Staff") {
-      url.pathname = "/staff";
-    } else if (role === "Student") {
-      url.pathname = "/student";
-    } else {
-      url.pathname = "/login";
-    }
+    url.pathname = pageRedirect;
     return addSecurityHeaders(NextResponse.redirect(url), nonce);
   }
 
   // Route handlers resolve the current principal and office from the request
-  // cookie. Middleware payload claims are only used for coarse redirects.
+  // cookie. Proxy payload claims are only used for coarse redirects.
   if (pathname.startsWith("/api/")) {
     return addSecurityHeaders(NextResponse.next(), nonce);
   }
@@ -127,11 +119,11 @@ export const config = {
   matcher: [
     "/systemadmin/:path*",
     "/superadmin/:path*",
-    "/admin/:path*", 
-    "/staff/:path*", 
+    "/admin/:path*",
+    "/staff/:path*",
     "/student/:path*",
-    "/api/:path*", 
+    "/api/:path*",
     "/account",
-    "/account/:path*"
+    "/account/:path*",
   ],
 };

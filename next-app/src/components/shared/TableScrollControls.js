@@ -41,6 +41,7 @@ export default function TableScrollControls({
       return;
     }
     let observedElement = null;
+    let observedContent = null;
     let resizeObserver = null;
     const checkOverflow = () => {
       const element = observedElement;
@@ -52,13 +53,15 @@ export default function TableScrollControls({
     };
     const attachCurrentElement = () => {
       const nextElement = scrollContainerRef.current;
-      if (nextElement === observedElement) {
+      const nextContent = nextElement?.querySelector("table") ?? null;
+      if (nextElement === observedElement && nextContent === observedContent) {
         checkOverflow();
         return;
       }
       observedElement?.removeEventListener("scroll", checkOverflow);
       resizeObserver?.disconnect();
       observedElement = nextElement;
+      observedContent = nextContent;
       if (!observedElement) {
         setHasOverflow(false);
         setCanScrollBackward(false);
@@ -68,6 +71,7 @@ export default function TableScrollControls({
       observedElement.addEventListener("scroll", checkOverflow, { passive: true });
       resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => checkOverflow()) : null;
       resizeObserver?.observe(observedElement);
+      if (observedContent) resizeObserver?.observe(observedContent);
       checkOverflow();
     };
     attachCurrentElement();

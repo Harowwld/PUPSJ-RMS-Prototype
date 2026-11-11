@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { SegmentedControl } from "@/components/ui/tabs"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
-import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
+import { SecurityQuestionsSkeletonContent } from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import BulkImportQuestionsModal from "@/components/systemadmin/BulkImportQuestionsModal"
@@ -271,8 +271,6 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
     }
   }
 
-  if (loading) return <SecurityQuestionsSkeleton />
-
   const counts = {
     all: questions.length,
     required: questions.filter((question) => question.is_required).length,
@@ -326,8 +324,8 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2">
-              <Button type="button" variant="outline" onClick={() => setBulkModalOpen(true)} disabled={saving} className="h-9 px-4">Import Questions</Button>
-              <Button onClick={() => handleSave()} disabled={saving || !isDirty} className="h-9 px-4 cursor-pointer">
+              <Button type="button" variant="outline" onClick={() => setBulkModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Import Questions</Button>
+              <Button onClick={() => handleSave()} disabled={loading || saving || !isDirty} className="h-9 px-4 cursor-pointer">
                 {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
               </Button>
             </div>
@@ -338,7 +336,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                 type="button"
                 variant="outline"
                 onClick={handleDiscardDraft}
-                disabled={saving}
+                disabled={loading || saving}
                 className="h-9 px-4"
               >
                 Discard Draft
@@ -362,11 +360,12 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
         </div>
 
         <DataViewToolbar label="Security question search" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
-          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} label="Search security questions" placeholder="Search questions..." />
+          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} loading={loading} label="Search security questions" placeholder="Search questions..." />
         </DataViewToolbar>
         <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="border-t border-border dark:border-border px-5 py-2.5" />
 
         {/* Questions Form Area */}
+        {loading ? <SecurityQuestionsSkeletonContent /> : (
         <div className="p-6 flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
           <div className="w-full space-y-4">
               {visibleQuestions.length === 0 && <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-xs text-gray-500 dark:text-zinc-400">No questions match this view. Change the scope or search to find a question.</div>}
@@ -520,6 +519,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
               </div>
           </div>
         </div>
+        )}
       </Card>
 
       {/* Bulk Import Questions Modal */}

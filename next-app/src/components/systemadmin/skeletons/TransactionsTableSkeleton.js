@@ -9,28 +9,34 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-            <Table columns={[{ kind: "identifier", width: 120 }, ...visibleColumns.map((key) => ({ kind: key === "status" ? "status" : key === "department" ? "category" : (key === "submitted" || key === "updatedAt") ? "date" : "text", width: key === "title" ? 300 : key === "details" ? 250 : key === "requester" ? 220 : key === "status" ? 150 : 160 })), { kind: "actions" }]} className="min-w-0">
+            <Table columns={[{ kind: "identifier", maxWidth: 180, growthWeight: 0 }, ...visibleColumns.map((key) => {
+              if (key === "department") return { kind: "category", maxWidth: 150, growthWeight: 0 }
+              if (key === "status" || key === "slaStatus") return { kind: "status", maxWidth: 160, growthWeight: 0 }
+              if (key === "submitted" || key === "updatedAt") return { kind: "date", maxWidth: 180, growthWeight: 0 }
+              return { kind: "text", maxWidth: key === "details" ? 300 : 340 }
+            }), { kind: "actions" }]} className="min-w-0">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="py-3 px-4 pl-6 w-[100px] min-w-[100px]">
+              <th className="py-3 px-4 pl-6">
                 <Skeleton className="h-3.5 w-10 dark:bg-muted" />
               </th>
-              {visibleColumns.includes("department") && <th className="py-3 px-4 w-[130px] min-w-[130px]">
+              {visibleColumns.includes("department") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>}
-              {visibleColumns.includes("requester") && <th className="py-3 px-4 w-[200px] min-w-[180px] max-w-[240px]">
+              {visibleColumns.includes("requester") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-24 dark:bg-muted" />
               </th>}
-              {visibleColumns.includes("title") && <th className="py-3 px-4 w-[270px] min-w-[200px] max-w-[340px]">
+              {visibleColumns.includes("title") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-32 dark:bg-muted" />
               </th>}
-              {visibleColumns.includes("details") && <th className="py-3 px-4 w-[220px] min-w-[180px] max-w-[340px]">
+              {visibleColumns.includes("details") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-20 dark:bg-muted" />
               </th>}
-              {visibleColumns.includes("status") && <th className="py-3 px-4 w-[140px] min-w-[140px]">
+              {visibleColumns.includes("status") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>}
-              {visibleColumns.includes("submitted") && <th className="py-3 px-4 w-[130px] min-w-[130px]">
+              {visibleColumns.includes("slaStatus") && <th className="py-3 px-4"><Skeleton className="h-3.5 w-16 dark:bg-muted" /></th>}
+              {visibleColumns.includes("submitted") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-14 dark:bg-muted" />
               </th>}
               {visibleColumns.includes("updatedAt") && <th><Skeleton className="h-3.5 w-24" /></th>}
@@ -52,7 +58,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
                 {visibleColumns.includes("department") && <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>}
-                {visibleColumns.includes("requester") && <td className="py-3 px-4 align-middle overflow-hidden max-w-[240px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                {visibleColumns.includes("requester") && <td className="py-3 px-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <div className="w-full min-w-0 flex flex-col gap-1">
                     <Skeleton
                       className={cn(
@@ -63,7 +69,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
                     <Skeleton className="h-2.5 w-20 font-sans tabular-nums rounded dark:bg-muted" />
                   </div>
                 </td>}
-                {visibleColumns.includes("title") && <td className="py-3 px-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                {visibleColumns.includes("title") && <td className="py-3 px-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <div className="w-full min-w-0">
                     <Skeleton
                       className={cn(
@@ -73,7 +79,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
                     />
                   </div>
                 </td>}
-                {visibleColumns.includes("details") && <td className="py-3 px-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                {visibleColumns.includes("details") && <td className="py-3 px-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <div className="w-full min-w-0">
                     <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
                   </div>
@@ -81,6 +87,7 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
                 {visibleColumns.includes("status") && <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>}
+                {visibleColumns.includes("slaStatus") && <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70"><Skeleton className="h-6 w-20 rounded-full dark:bg-muted" /></td>}
                 {visibleColumns.includes("submitted") && <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3 w-16 font-sans tabular-nums rounded dark:bg-muted" />
                 </td>}

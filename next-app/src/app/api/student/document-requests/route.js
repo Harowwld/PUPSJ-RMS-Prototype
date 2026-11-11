@@ -10,6 +10,8 @@ import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validationSchemas";
 import { ATTACHMENT_MAX_SIZE_BYTES, ATTACHMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
+import { getRequestAffiliation, hasLinkedStudentRecord, isStudentAffiliation } from "@/lib/studentAffiliation";
+
 export const runtime = "nodejs";
 
 const MAX_ATTACHMENT_SIZE = ATTACHMENT_MAX_SIZE_BYTES;
@@ -33,28 +35,9 @@ function requestAttachmentsDir() {
 }
 
 export async function GET(req) {
-  const access = await requireStudent(req);
+  try {
+    const access = await requireStudent(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
-  const session = { accountId: access.user.accountId, studentNo: access.user.studentNo, email: access.user.email };
-
-  let accountId = session.accountId;
-  let studentNo = session.studentNo;
-  const email = session.email;
-
-  if (!accountId && email) {
-    const acc = await queryOne(
-      `SELECT sa.id, sa.student_no
-         FROM student_accounts sa
-         JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
-        WHERE sip.email = $1 OR lower(coalesce(sip.email, '')) = lower($2)`,
-      [encryptPII(email.toLowerCase()), email]
-    );
-    if (acc) {
-      accountId = acc.id;
-      studentNo = studentNo || acc.student_no;
-    }
-  }
-
   const requests = await query(
     `SELECT dr.*, d.approval_status AS linked_document_status,
             COALESCE(dr.course_code, s.course_code) AS course_code,
@@ -76,14 +59,10 @@ export async function GET(req) {
   );
   const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
 
-  const studentNos = Array.from(
-    new Set([studentNo, ...authorizedRequests.map((r) => r.student_no)].filter(Boolean))
-  );
-
-  const documents = studentNos.length
+  const documents = hasLinkedStudentRecord(access.user)
     ? (await query(
-        "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = ANY($1::text[]) ORDER BY created_at DESC",
-        [studentNos]
+        "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = $1 ORDER BY created_at DESC",
+        [access.user.studentNo]
       )).filter((item) => canAccessResource(access.user, "document", item))
     : [];
 
@@ -167,7 +146,14 @@ export async function GET(req) {
       : null;
   });
 
-  return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
+    return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
+  } catch (err) {
+    console.error("GET /api/student/document-requests error:", err);
+    return NextResponse.json(
+      { ok: false, error: err.message || "Failed to load document requests." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req) {
@@ -248,14 +234,16 @@ export async function POST(req) {
     if (acc) accountId = acc.id;
   }
 
-  const clientType = requestedClientType || acc?.client_type || (session.studentNo && session.studentNo.startsWith("ALUM-") ? "Alumni" : "Student");
+  const affiliation = access.user.clientType || acc?.client_type
+    || (session.studentNo?.startsWith("ALUM-") ? "Alumni" : "Student");
+  const clientType = getRequestAffiliation(affiliation, requestedClientType);
 
-  if (!clientType) {
-    return NextResponse.json({ ok: false, error: "Client type is required." }, { status: 400 });
+  if (!isStudentAffiliation(clientType)) {
+    return NextResponse.json({ ok: false, error: "Select a valid request affiliation." }, { status: 400 });
   }
 
   // Determine effective student number based on client type
-  const effectiveStudentNo = (clientType === "Parent" && requestedStudentNo) ? requestedStudentNo : (session.studentNo || requestedStudentNo);
+  const effectiveStudentNo = clientType === "Parent" ? requestedStudentNo : (session.studentNo || requestedStudentNo);
 
   if (clientType !== "Parent" && requestedStudentNo && session.studentNo && requestedStudentNo !== session.studentNo) {
     return NextResponse.json({ ok: false, error: "Student identity is taken from the authenticated account." }, { status: 403 });
@@ -287,7 +275,7 @@ export async function POST(req) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Under RA 10173 (Data Privacy Act) and University Policy, third-party requests submitted by parents or guardians strictly require an attached Special Power of Attorney (SPA) / Authorization Letter and valid government ID.",
+          error: "Attach an authorization letter or Special Power of Attorney (SPA) and a valid government ID.",
         },
         { status: 400 }
       );
@@ -299,6 +287,10 @@ export async function POST(req) {
       { ok: false, error: "Degree / academic program is required for alumni without a student number." },
       { status: 400 }
     );
+  }
+
+  if (clientType === "Student" && !effectiveStudentNo) {
+    return NextResponse.json({ ok: false, error: "Enter your student number so the Registrar can locate your record." }, { status: 400 });
   }
 
   if (effectiveStudentNo) {
@@ -393,22 +385,6 @@ export async function POST(req) {
           throw error;
         }
       }
-      if (effectiveStudentNo) {
-        const existingStudent = await runOne(
-          "SELECT student_no FROM students WHERE upper(student_no) = upper($1)",
-          [effectiveStudentNo],
-        );
-        if (!existingStudent) {
-          const studentDisplayName = finalRequesterName || effectiveStudentNo;
-          await run(
-            `INSERT INTO students (student_no, name, status, course_code)
-             VALUES ($1, $2, 'Active', $3)
-             ON CONFLICT (student_no) DO NOTHING`,
-            [effectiveStudentNo, encryptPII(studentDisplayName), courseCode || null],
-          );
-        }
-      }
-
       const createdRequest = await runOne(
         `INSERT INTO document_requests (
            office_id, student_no, doc_type, status, notes, client_type, course_code, requester_name, requester_relationship, requester_contact, identity_profile_id
@@ -470,6 +446,12 @@ export async function POST(req) {
     }
     if (error?.code === "STUDENT_NOT_ACTIVE_IN_OFFICE") {
       return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
+    if (error?.code === "23503" && error?.constraint === "document_requests_student_no_fkey") {
+      return NextResponse.json(
+        { ok: false, error: "No student record matches that Student Number. Please contact the Registrar to verify the record." },
+        { status: 400 },
+      );
     }
     console.error("Student document request creation failed:", error);
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });

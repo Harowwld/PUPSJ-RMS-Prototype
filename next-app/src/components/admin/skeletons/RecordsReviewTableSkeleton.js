@@ -4,7 +4,7 @@ import { Table } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = false }) {
+export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = false, isOrganizationRecords = false }) {
   return (
     <div
       className={cn(
@@ -15,15 +15,26 @@ export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = f
       )}
     >
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-        <Table columns={["selection", "identifier", "text", "category", { kind: "text", maxWidth: 340 }, "status", "date", "actions"]} className="min-w-[1380px]">
+        <Table
+          columns={[
+            "selection",
+            ...(!isOrganizationRecords ? ["identifier"] : []),
+            { kind: "text", minWidth: 220, maxWidth: 340 },
+            { kind: "text", minWidth: 200, maxWidth: 340, align: "center" },
+            { kind: "text", minWidth: 260, maxWidth: 340 },
+            "status", "date", "actions",
+          ]}
+        >
           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
               <th className="w-12 py-3 px-4 text-center sticky left-0 z-20 bg-white dark:bg-card">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card">
-                <Skeleton className="h-3.5 w-24 dark:bg-muted" />
-              </th>
+              {!isOrganizationRecords && (
+                <th className="py-3 px-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card">
+                  <Skeleton className="h-3.5 w-24 dark:bg-muted" />
+                </th>
+              )}
               <th className="py-3 px-4 w-[220px] min-w-[220px]">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
               </th>
@@ -55,10 +66,11 @@ export default function RecordsReviewTableSkeleton({ rowCount = 20, embedded = f
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
 
-                {/* Student No */}
-                <td className="py-3 px-4 w-[160px] min-w-[160px] whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
-                  <Skeleton className="h-6 w-28 rounded-full dark:bg-muted" />
-                </td>
+                {!isOrganizationRecords && (
+                  <td className="py-3 px-4 w-[160px] min-w-[160px] whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
+                    <Skeleton className="h-6 w-28 rounded-lg dark:bg-muted" />
+                  </td>
+                )}
 
                 {/* Student Name */}
                 <td className="py-3 px-4 w-[220px] min-w-[220px] border-r border-border/70 dark:border-border/70">

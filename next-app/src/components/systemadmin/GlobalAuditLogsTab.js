@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import { getCachedData, setCachedData } from "@/lib/dataCache"
 import {
   Empty,
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
+import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
@@ -152,8 +153,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const tableColumns = [
     { kind: "selection" },
-    { kind: "date", maxWidth: 205 },
-    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth })),
+    { kind: "date", maxWidth: 205, growthWeight: 0 },
+    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth, ...(kind === "status" ? { growthWeight: 0 } : {}) })),
     { kind: "text", maxWidth: 300 },
     ...(showColumn("details") ? [{ kind: "text", maxWidth: 340 }] : []),
     ...(showColumn("ip") ? [{ kind: "text", maxWidth: 200 }] : []),
@@ -714,8 +715,6 @@ export default function GlobalAuditLogsTab({ showToast }) {
     startDate !== "" ||
     endDate !== ""
 
-  if (initialLoading) return <GlobalAuditLogsSkeleton />
-
   return (
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-jakarta flex flex-[1_0_auto] flex-col w-full min-w-0 gap-6">
@@ -909,7 +908,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
           )}
 
           {/* Content Area inside Single Card */}
-          {error ? (
+          {initialLoading ? (
+            <DataContentSkeleton columns={tableColumns} />
+          ) : error && logs.length === 0 ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
@@ -1182,21 +1183,10 @@ export default function GlobalAuditLogsTab({ showToast }) {
                               <span className="block w-full min-w-0 truncate" title={formatActionLabel(log.action)}>{formatActionLabel(log.action)}</span>
                             </td>
 
-                            {/* Description Tooltip */}
                             {showColumn("details") && <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300" title={formatLogDetails(log.details) || "N/A"}>
-                                    <NarrativeText text={log.details} mode="compact" />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  className="max-w-[400px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
-                                >
-                                  <NarrativeText text={log.details} mode="full" />
-                                </TooltipContent>
-                              </Tooltip>
+                              <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300">
+                                <NarrativeText text={log.details} mode="compact" />
+                              </span>
                             </td>}
 
                             {/* Actions: View Details in Sheet */}

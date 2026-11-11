@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canAccessPage } from "../src/lib/roleUtils.js";
+import { canAccessPage, getPageAccessRedirect } from "../src/lib/roleUtils.js";
 
 const cases = [
   ["logged-out student portal", "/student", null, { authenticated: false }, true],
@@ -20,5 +20,21 @@ const cases = [
 for (const [name, pathname, role, options, expected] of cases) {
   test(name, () => {
     assert.equal(canAccessPage(pathname, role, options), expected);
+  });
+}
+
+const redirectCases = [
+  ["Staff sent away from admin", "/admin", "Staff", "/staff"],
+  ["Admin sent away from system admin", "/systemadmin", "Admin", "/admin"],
+  ["Student sent away from staff", "/staff", "Student", "/student"],
+  ["SystemAdmin sent away from staff", "/staff", "SystemAdmin", "/systemadmin"],
+  ["normalized Student role sent away from staff", "/staff", " student ", "/student"],
+  ["allowed Admin staff view has no redirect", "/staff", "Admin", null],
+  ["unknown role returns to login", "/admin", "Visitor", "/login"],
+];
+
+for (const [name, pathname, role, expected] of redirectCases) {
+  test(name, () => {
+    assert.equal(getPageAccessRedirect(pathname, role), expected);
   });
 }

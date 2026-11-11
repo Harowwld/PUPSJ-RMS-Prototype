@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
 import { Cancel01Icon, StarIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -63,8 +64,8 @@ export default function StudentSidebarFeedbackCard({
         <button
           type="button"
           onClick={() => onRateRequest?.(targetRequest, 0)}
-          title={`Rate Request #${targetRequest.id} (${targetRequest.doc_type || "Document"})`}
-          aria-label={`Rate Request #${targetRequest.id}`}
+          title={`Rate Request ${targetRequest.id} (${targetRequest.doc_type || "Document"})`}
+          aria-label={`Rate Request ${targetRequest.id}`}
           className="relative flex h-[38px] w-[38px] mx-auto items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all cursor-pointer shadow-2xs group"
         >
           <StarIcon size="1em" className="text-[19px] text-amber-500 transition-transform group-hover:scale-110" />
@@ -88,7 +89,7 @@ export default function StudentSidebarFeedbackCard({
 
       {/* Top Header Row: Category Badge + Dismiss Button */}
       <div className="flex items-center justify-between gap-1 mb-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-100/80 px-2.5 py-0.5 text-[10px] font-semibold text-pup-maroon dark:bg-red-950/60 dark:text-red-300">
+        <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
           <AppIcon className=" BubbleChatIcon text-[11px]" />
           Feedback
         </span>
@@ -109,8 +110,8 @@ export default function StudentSidebarFeedbackCard({
           How was your request?
         </h4>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="inline-block text-[11px] font-medium text-pup-maroon dark:text-red-300 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.2 rounded border border-red-100 dark:border-red-900/30">
-            #{targetRequest.id}
+          <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
+            {targetRequest.id}
           </span>
           <span className="text-[11px] text-gray-600 dark:text-zinc-400 font-medium truncate max-w-[155px]" title={targetRequest.doc_type}>
             {targetRequest.doc_type}

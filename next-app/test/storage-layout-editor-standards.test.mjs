@@ -106,18 +106,13 @@ describe("Storage Room Layout Editor Standards", () => {
     )
   })
 
-  it("7. StorageLayoutSkeleton mirrors the 3-tier structure and 2-pane split", () => {
+  it("7. Storage Layout keeps the header and room controls mounted while the two panes load", () => {
+    const editorContent = fs.readFileSync(editorPath, "utf-8")
     const skeletonContent = fs.readFileSync(skeletonPath, "utf-8")
-    assert.match(
-      skeletonContent,
-      /Room Switcher Row/,
-      "StorageLayoutSkeleton should include Room Switcher Row skeleton"
-    )
-    assert.match(
-      skeletonContent,
-      /Canvas Toolbar/,
-      "StorageLayoutSkeleton should include Canvas Toolbar skeleton"
-    )
+    assert.match(editorContent, /<PageHeader[\s\S]*?\{renderRoomSwitcher\(\)\}[\s\S]*?loading && !layout[\s\S]*?<StorageLayoutSkeleton/)
+    assert.doesNotMatch(skeletonContent, /PageHeader|Room Switcher Row|Canvas Toolbar/)
+    assert.match(skeletonContent, /lg:flex-row/)
+    assert.match(skeletonContent, /lg:w-\[380px\]/)
   })
 
   it("8. Explicit Delete Room Action & Decommissioning: Visible button and unblocked empty cabinet deletion", () => {
@@ -266,7 +261,7 @@ describe("Storage Room Layout Editor Standards", () => {
     )
     assert.match(
       editorContent,
-      /disabled=\{saving \|\| !isDirty \|\| hasAnyCollisions\}/,
+      /disabled=\{!layout \|\| saving \|\| !isDirty \|\| hasAnyCollisions\}/,
       "Save button should be disabled when not dirty"
     )
     assert.match(

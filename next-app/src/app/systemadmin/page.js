@@ -13,7 +13,6 @@ import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/InstitutionalBrandingSkeleton"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
-import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
@@ -25,7 +24,8 @@ import { formatErrorMessage } from "@/lib/errorUtils"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { ContentSwap } from "@/components/ui/motion"
 
-import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
+import OdrsPortalAccountsTab from "@/components/systemadmin/OdrsPortalAccountsTab"
+import WorkspaceLoading from "@/components/shared/WorkspaceLoading"
 
 const SYSTEMADMIN_NAV_ITEMS = [
   { type: "header", label: "Campus Operations" },
@@ -41,6 +41,7 @@ const SYSTEMADMIN_NAV_ITEMS = [
 
   { type: "header", label: "Personnel & Access" },
   { key: "staff", label: "Global Directory", iconClass: " UserSearch01Icon" },
+  { key: "portal_accounts", label: "ODRS Portal Accounts", iconClass: " UserSettings01Icon" },
   { key: "security", label: "Security Questions", iconClass: " Shield01Icon" },
 
   { type: "header", label: "System & Security" },
@@ -78,7 +79,7 @@ const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/Secu
   loading: () => <SystemAdminContentSkeleton view="security" />,
 })
 
-const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "security", "logs", "health", "backups", "landing", "activity", "settings"]
+const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "portal_accounts", "security", "logs", "health", "backups", "landing", "activity", "settings"]
 
 const SUPERADMIN_VIEW_ALIASES = {
   campus_operations: "health",
@@ -105,7 +106,6 @@ function SystemAdminContentSkeleton({ view, section }) {
   switch (view) {
     case "offices": return <OfficeManagementPageSkeleton />
     case "branding": return <InstitutionalBrandingSkeleton />
-    case "modules": return <ModuleConfigSkeleton />
     case "staff": return <GlobalStaffSkeleton />
     case "security": return <SecurityQuestionsSkeleton />
     case "logs": return <GlobalAuditLogsSkeleton />
@@ -115,14 +115,6 @@ function SystemAdminContentSkeleton({ view, section }) {
     case "landing": return <LandingCmsLoadingSkeleton section={section} />
     default: return null
   }
-}
-
-function SystemAdminLoadingSkeleton({ view, section }) {
-  return (
-    <DashboardShellSkeleton items={SYSTEMADMIN_NAV_ITEMS}>
-      <SystemAdminContentSkeleton view={view} section={section} />
-    </DashboardShellSkeleton>
-  )
 }
 
 function SystemAdminPageContent() {
@@ -351,6 +343,7 @@ function SystemAdminPageContent() {
               {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
               {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
               {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
+              {view === "portal_accounts" && <OdrsPortalAccountsTab />}
               {view === "security" && <SecurityQuestionsTab showToast={showToast} onDirtyChange={setSecurityDirty} />}
               {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
               {(view === "health" || view === "standards") && (
@@ -373,16 +366,7 @@ function SystemAdminPageContent() {
 }
 
 function SystemAdminPageWithView() {
-  const searchParams = useSearchParams()
-  const requestedView = resolveRequestedView(searchParams?.get("view"))
-  // These layouts depend on saved preferences that become available with the authenticated user.
-  const loadingView = requestedView === "offices" || requestedView === "modules" ? null : requestedView
-  const fallback = (
-    <SystemAdminLoadingSkeleton
-      view={loadingView}
-      section={searchParams?.get("section")}
-    />
-  )
+  const fallback = <WorkspaceLoading />
 
   return (
     <SystemAdminGuard fallback={fallback}>
@@ -395,7 +379,7 @@ function SystemAdminPageWithView() {
 
 export default function SystemAdminPage() {
   return (
-    <Suspense fallback={<SystemAdminLoadingSkeleton />}>
+    <Suspense fallback={<WorkspaceLoading />}>
       <SystemAdminPageWithView />
     </Suspense>
   )

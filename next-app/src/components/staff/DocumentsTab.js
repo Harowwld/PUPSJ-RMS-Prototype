@@ -15,9 +15,9 @@ import {
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 
 import useUrlPage from "@/hooks/useUrlPage";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { Reorder } from "framer-motion";
+import { useState, useMemo, useCallback, useRef, useEffect, Fragment } from "react";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton";
 import DocumentsMatrixSkeleton from "@/components/staff/skeletons/DocumentsMatrixSkeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import {
@@ -53,23 +54,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon , Alert01Icon, ArrowDown01Icon, ArrowLeft01Icon, ArrowLeftRightIcon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, DragDropIcon, File01Icon, FingerPrintScanIcon, PieChartIcon, ReloadIcon, Search01Icon} from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, File01Icon, FingerPrintScanIcon, PieChartIcon, ReloadIcon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
-const DEFAULT_KPI_ORDER = ["compliant", "incomplete", "rate"];
-const STORAGE_KEY = "pupsj_staff_docs_matrix_kpi_order";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
-    return <ArrowUpDownIcon size="1em" className="ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60" />;
+    return <ArrowUpDownIcon size="1em" className="text-[12px] text-gray-400" />;
   return sortOrder === "ASC" ? (
-    <ArrowUp01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
+    <ArrowUp01Icon size="1em" className="text-[12px] text-gray-400" />
   ) : (
-    <ArrowDown01Icon size="1em" className="ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary" />
+    <ArrowDown01Icon size="1em" className="text-[12px] text-gray-400" />
   );
 }
-
-
 
 export default function DocumentsTab({
   courses = [],
@@ -84,69 +81,20 @@ export default function DocumentsTab({
   const [pdfPreview, setPdfPreview] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Standardized Draggable KPI Stat Cards & Popover State
-  const [kpiOrder, setKpiOrder] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            const filtered = parsed.filter((k) => DEFAULT_KPI_ORDER.includes(k));
-            if (filtered.length === DEFAULT_KPI_ORDER.length) {
-              return filtered;
-            }
-          }
-        }
-      } catch {
-        // Fallback
-      }
-    }
-    return DEFAULT_KPI_ORDER;
-  });
-
-  const handleReorder = (newOrder) => {
-    setKpiOrder(newOrder);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
-    } catch {
-      // Ignore storage error
-    }
-  };
-
-  const [selectedKpi, setSelectedKpi] = useState(null);
-  const statCardsRef = useRef(null);
-
-  // Close dropdown details when clicking outside
-  useEffect(() => {
-    if (!selectedKpi) return;
-    const handleClickOutside = (e) => {
-      if (statCardsRef.current && !statCardsRef.current.contains(e.target)) {
-        setSelectedKpi(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [selectedKpi]);
-
   // Matrix mode filter states
-  const [matrixStatusFilter, setMatrixStatusFilter] = useState("all"); // "all" | "incomplete" | "compliant"
-  const [matrixSearch, setMatrixSearch] = useState("");
-  const [matrixCourseFilters, setMatrixCourseFilters] = useState([]);
-  const [matrixMissingDocFilters, setMatrixMissingDocFilters] = useState([]);
-  const [matrixFilterRules, setMatrixFilterRules] = useState([]);
-  const [matrixGroupBy, setMatrixGroupBy] = useState("none");
-  const [matrixStartDate, setMatrixStartDate] = useState("");
-  const [matrixEndDate, setMatrixEndDate] = useState("");
-  const [matrixSortBy, setMatrixSortBy] = useState("student_no");
-  const [matrixSortOrder, setMatrixSortOrder] = useState("ASC");
+  const [matrixStatusFilter, setMatrixStatusFilter] = useOsasViewPreference("documents", "statusFilter", "all");
+  const [matrixSearch, setMatrixSearch] = useOsasViewPreference("documents", "search", "");
+  const [matrixCourseFilters, setMatrixCourseFilters] = useOsasViewPreference("documents", "courseFilters", []);
+  const [matrixMissingDocFilters, setMatrixMissingDocFilters] = useOsasViewPreference("documents", "missingDocFilters", []);
+  const [matrixFilterRules, setMatrixFilterRules] = useOsasViewPreference("documents", "filterRules", []);
+  const [matrixGroupBy, setMatrixGroupBy] = useOsasViewPreference("documents", "groupBy", "none");
+  const [matrixStartDate, setMatrixStartDate] = useOsasViewPreference("documents", "startDate", "");
+  const [matrixEndDate, setMatrixEndDate] = useOsasViewPreference("documents", "endDate", "");
+  const [matrixSortBy, setMatrixSortBy] = useOsasViewPreference("documents", "sortBy", "student_no");
+  const [matrixSortOrder, setMatrixSortOrder] = useOsasViewPreference("documents", "sortOrder", "ASC");
   const [matrixPage, setMatrixPage] = useUrlPage();
-  const [matrixItemsPerPage, setMatrixItemsPerPage] = useState(10);
-  const [matrixVisibleColumns, setMatrixVisibleColumns] = useState([
+  const [matrixItemsPerPage, setMatrixItemsPerPage] = useOsasViewPreference("documents", "pageSize", 20);
+  const [matrixVisibleColumns, setMatrixVisibleColumns] = useOsasViewPreference("documents", "visibleColumns", [
     "student_no",
     "name",
     "course",
@@ -262,9 +210,20 @@ export default function DocumentsTab({
       });
       const json = await response.json();
       if (!response.ok || !json.ok) throw new Error(json.error || "Unable to load the compliance matrix");
-      if (!controller.signal.aborted) setMatrixReport(json.data);
+      if (!controller.signal.aborted) {
+        setMatrixReport(json.data);
+        const configuredTypes = json.data?.meta?.definitions?.configuredDocTypes || [];
+        if (configuredTypes.length > 0) {
+          setMatrixVisibleColumns((prev) => {
+            const docKeys = configuredTypes.map((dt) => `doc_${dt}`);
+            const existing = new Set(prev);
+            const missingDocKeys = docKeys.filter((k) => !existing.has(k));
+            return missingDocKeys.length > 0 ? [...prev, ...missingDocKeys] : prev;
+          });
+        }
+      }
     } catch (failure) {
-      if (!controller.signal.aborted) { setMatrixReport(null); setMatrixError(failure.message); }
+      if (!controller.signal.aborted) setMatrixError(failure.message);
     } finally { if (!controller.signal.aborted) setMatrixLoading(false); }
   }, [matrixQuery]);
 
@@ -273,22 +232,10 @@ export default function DocumentsTab({
     return () => { clearTimeout(timer); matrixController.current?.abort(); };
   }, [loadMatrix, staffDocs]);
 
-  const complianceDocTypes = matrixReport?.meta.definitions.configuredDocTypes || [];
-
-  // Sync columns with configured document types
-  useEffect(() => {
-    if (complianceDocTypes.length > 0) {
-      setMatrixVisibleColumns((prev) => {
-        const docKeys = complianceDocTypes.map((dt) => `doc_${dt}`);
-        const existing = new Set(prev);
-        const missingDocKeys = docKeys.filter((k) => !existing.has(k));
-        if (missingDocKeys.length > 0) {
-          return [...prev, ...missingDocKeys];
-        }
-        return prev;
-      });
-    }
-  }, [complianceDocTypes]);
+  const complianceDocTypes = useMemo(
+    () => matrixReport?.meta?.definitions?.configuredDocTypes || [],
+    [matrixReport]
+  );
 
   const matrixFilterFields = useMemo(() => [
     {
@@ -304,7 +251,7 @@ export default function DocumentsTab({
       key: "missingDoc",
       label: "Outstanding Requirement",
       type: "select",
-      options: (complianceDocTypes || []).map((dt) => ({
+      options: complianceDocTypes.map((dt) => ({
         value: dt,
         label: dt,
       })),
@@ -329,7 +276,7 @@ export default function DocumentsTab({
     { key: "name", label: "Full Name" },
     { key: "course", label: "Program" },
     { key: "progress", label: "Compliance Progress" },
-    ...(complianceDocTypes || []).map((dt) => ({
+    ...complianceDocTypes.map((dt) => ({
       key: `doc_${dt}`,
       label: dt,
     })),
@@ -353,7 +300,10 @@ export default function DocumentsTab({
   const matrixTotal = matrixReport?.total || 0;
   const totalMatrixPages = Math.max(1, Math.ceil(matrixTotal / matrixItemsPerPage));
   const currentMatrixPage = Math.min(Math.max(1, matrixPage), totalMatrixPages);
-  const paginatedMatrixRecords = matrixReport?.records || [];
+  const paginatedMatrixRecords = useMemo(
+    () => matrixReport?.records || [],
+    [matrixReport]
+  );
 
   const groupedMatrixRecords = useMemo(() => {
     if (matrixGroupBy === "none") return [{ key: "all", label: null, rows: paginatedMatrixRecords }];
@@ -551,15 +501,6 @@ export default function DocumentsTab({
             descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                  disabled={!matrixReport?.meta.configured || !kpiStats.incomplete || docsLoading}
-                  onClick={() => setRosterOpen(true)}
-                >
-                  View Incomplete Students
-                </Button>
                 <RefreshButton
                   onRefresh={async () => {
                     setIsManualRefreshing(true);
@@ -577,377 +518,133 @@ export default function DocumentsTab({
                   isLoading={docsLoading || isManualRefreshing}
                   title="Refresh Records"
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  disabled={!matrixReport?.meta.configured || !kpiStats.incomplete || docsLoading}
+                  onClick={() => setRosterOpen(true)}
+                >
+                  View Incomplete Students
+                </Button>
               </div>
             }
           />
 
-          {/* 2. Top Summary KPI Metrics Banner (Draggable & Clickable) */}
-          <Reorder.Group
-            as="div"
-            axis="x"
-            values={kpiOrder}
-            onReorder={handleReorder}
-            ref={statCardsRef}
-            className="border-t border-border dark:border-border grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-white dark:bg-card relative z-20 items-start select-none"
-          >
-            {kpiOrder.map((key) => {
-              if (key === "compliant") {
-                return (
-                  <Reorder.Item
-                    as="div"
-                    value="compliant"
-                    key="compliant"
-                    className={cn(
-                      "relative group rounded-xl",
-                      selectedKpi === "compliant" ? "z-30" : "z-10"
-                    )}
-                  >
-                    <div
-                      onClick={() =>
-                        setSelectedKpi(selectedKpi === "compliant" ? null : "compliant")
-                      }
-                      className={cn(
-                        "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-white dark:bg-zinc-900",
-                        selectedKpi === "compliant"
-                          ? "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                          : "border-border dark:border-border hover:border-gray-300 dark:hover:border-zinc-700"
-                      )}
-                    >
-                      <div className="flex justify-between items-start p-4 pb-0">
-                        <span className="text-[13px] font-medium text-emerald-600 dark:text-emerald-400 capitalize">
+          {/* 2. Summary Metrics */}
+          <div className="px-6 pb-6">
+            <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+              {docsLoading && !matrixReport ? (
+                <KpiStatCardsSkeleton count={3} />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                  {/* Card 1: Fully Compliant */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <CheckmarkCircle01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
                           Fully Compliant
                         </span>
-                        <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#10b981]">
-                          <CheckmarkCircle01Icon size="1em" className="text-[15px]" />
-                        </div>
                       </div>
-
-                      <div className="flex justify-between items-end p-4 pt-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                            {kpiStats.fullyCompliant.toLocaleString()}
-                          </span>
-                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                            100% Verified
-                          </span>
-                        </div>
-                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
-                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                          <Tick01Icon size={8} className="stroke-[3]" />
+                        </span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">100% Verified</span>
+                      </span>
                     </div>
-
-                    {/* Popover container */}
-                    <div
-                      className={cn(
-                        "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                        selectedKpi === "compliant"
-                          ? "scale-y-100 opacity-100 translate-y-0"
-                          : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                            <span className="block text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                              Compliant Folders
-                            </span>
-                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                              {kpiStats.fullyCompliant}
-                            </span>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                              Compliance Rate
-                            </span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                              {kpiStats.compliantRate}%
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">
-                          Students with all required documents uploaded and verified in the archive.
-                        </p>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setMatrixStatusFilter("compliant");
-                            setMatrixPage(1);
-                            setSelectedKpi(null);
-                          }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
-                        >
-                          Filter Compliant Records
-                        </Button>
-                      </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.fullyCompliant.toLocaleString()}
                     </div>
-                  </Reorder.Item>
-                );
-              }
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.compliantRate}% of {kpiStats.totalStudents.toLocaleString()} evaluated students
+                    </div>
+                  </div>
 
-              if (key === "incomplete") {
-                return (
-                  <Reorder.Item
-                    as="div"
-                    value="incomplete"
-                    key="incomplete"
-                    className={cn(
-                      "relative group rounded-xl",
-                      selectedKpi === "incomplete" ? "z-30" : "z-10"
-                    )}
-                  >
-                    <div
-                      onClick={() =>
-                        setSelectedKpi(selectedKpi === "incomplete" ? null : "incomplete")
-                      }
-                      className={cn(
-                        "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-white dark:bg-zinc-900",
-                        selectedKpi === "incomplete"
-                          ? "border-rose-500/50 ring-1 ring-rose-500/20"
-                          : "border-border dark:border-border hover:border-gray-300 dark:hover:border-zinc-700"
-                      )}
-                    >
-                      <div className="flex justify-between items-start p-4 pb-0">
-                        <span className="text-[13px] font-medium text-rose-600 dark:text-rose-400 capitalize">
+                  {/* Card 2: Incomplete Folders */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                          <Alert01Icon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
                           Incomplete Folders
                         </span>
-                        <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-[#ef4444]">
-                          <Alert01Icon size="1em" className="text-[15px]" />
-                        </div>
                       </div>
-
-                      <div className="flex justify-between items-end p-4 pt-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                            {kpiStats.incomplete.toLocaleString()}
-                          </span>
-                          <span className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-1">
-                            Missing Files
-                          </span>
-                        </div>
-                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
-                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <Alert01Icon size={12} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Missing Files</span>
+                      </span>
                     </div>
-
-                    {/* Popover container */}
-                    <div
-                      className={cn(
-                        "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                        selectedKpi === "incomplete"
-                          ? "scale-y-100 opacity-100 translate-y-0"
-                          : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30">
-                            <span className="block text-[9px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-                              Incomplete Folders
-                            </span>
-                            <span className="text-lg font-black text-rose-700 dark:text-rose-400">
-                              {kpiStats.incomplete}
-                            </span>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-border dark:border-border">
-                            <span className="block text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
-                              Missing Slots
-                            </span>
-                            <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
-                              {kpiStats.totalMissing}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 mb-1.5 uppercase tracking-wide">
-                            Top Outstanding Requirements
-                          </h4>
-                          <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                            {kpiStats.topMissing.filter((m) => m.count > 0).length === 0 ? (
-                              <p className="text-[11px] text-gray-400 dark:text-zinc-500 text-center py-2">
-                                No outstanding requirements
-                              </p>
-                            ) : (
-                              kpiStats.topMissing
-                                .filter((m) => m.count > 0)
-                                .map(({ docType, count }) => (
-                                  <div
-                                    key={docType}
-                                    className="flex justify-between items-center text-[11px] py-1 border-b border-border dark:border-border text-gray-700 dark:text-zinc-300"
-                                  >
-                                    <span className="truncate max-w-[170px] font-medium" title={docType}>
-                                      {docType}
-                                    </span>
-                                    <span className="font-bold text-rose-600 dark:text-rose-400">
-                                      {count} outstanding
-                                    </span>
-                                  </div>
-                                ))
-                            )}
-                          </div>
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setMatrixStatusFilter("incomplete");
-                            setMatrixPage(1);
-                            setSelectedKpi(null);
-                          }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
-                        >
-                          Filter Incomplete Records
-                        </Button>
-                      </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.incomplete.toLocaleString()}
                     </div>
-                  </Reorder.Item>
-                );
-              }
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.totalMissing.toLocaleString()} missing slots • {kpiStats.totalPending.toLocaleString()} pending review
+                    </div>
+                  </div>
 
-              if (key === "rate") {
-                return (
-                  <Reorder.Item
-                    as="div"
-                    value="rate"
-                    key="rate"
-                    className={cn(
-                      "relative group rounded-xl",
-                      selectedKpi === "rate" ? "z-30" : "z-10"
-                    )}
-                  >
-                    <div
-                      onClick={() => setSelectedKpi(selectedKpi === "rate" ? null : "rate")}
-                      className={cn(
-                        "relative overflow-hidden rounded-[18px] border cursor-pointer select-none transition-all shadow-none flex flex-col justify-between min-h-[110px] bg-white dark:bg-zinc-900",
-                        selectedKpi === "rate"
-                          ? "border-pup-maroon/50 ring-1 ring-pup-maroon/20"
-                          : "border-border dark:border-border hover:border-gray-300 dark:hover:border-zinc-700"
-                      )}
-                    >
-                      <div className="flex justify-between items-start p-4 pb-0">
-                        <span className="text-[13px] font-medium text-pup-maroon dark:text-red-400 capitalize">
+                  {/* Card 3: Digitization Rate */}
+                  <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] flex flex-col justify-between select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-5 rounded-full bg-red-500/15 text-pup-maroon dark:text-red-400 flex items-center justify-center shrink-0">
+                          <PieChartIcon size="0.75em" />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
                           Digitization Rate
                         </span>
-                        <div className="w-8 h-8 rounded-[10px] flex items-center justify-center text-white shadow-sm shrink-0 bg-pup-maroon">
-                          <PieChartIcon size="1em" className="text-[15px]" />
-                        </div>
                       </div>
-
-                      <div className="flex justify-between items-end p-4 pt-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-[28px] font-bold text-gray-900 dark:text-white leading-none tracking-tight">
-                            {kpiStats.overallRate}%
-                          </span>
-                          <span className="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">
-                            Overall Rate
-                          </span>
-                        </div>
-                        <DragDropIcon size="1em" className="cursor-grab active:cursor-grabbing hover:text-black dark:hover:text-white text-gray-400 dark:text-zinc-500 text-xl mb-0.5" />
-                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                        <PieChartIcon size={12} className="text-pup-maroon dark:text-red-400 shrink-0" />
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Overall Rate</span>
+                      </span>
                     </div>
-
-                    {/* Popover container */}
-                    <div
-                      className={cn(
-                        "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl border border-border bg-white p-4 shadow-xl dark:border-border dark:bg-zinc-900 transition-all duration-300 ease-in-out origin-top",
-                        selectedKpi === "rate"
-                          ? "scale-y-100 opacity-100 translate-y-0"
-                          : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-pup-maroon/10 dark:bg-red-950/30 p-2.5 rounded-lg border border-pup-maroon/20 dark:border-red-900/30">
-                            <span className="block text-[9px] font-bold text-pup-maroon dark:text-red-400 uppercase tracking-wider">
-                              Verified Slots
-                            </span>
-                            <span className="text-lg font-black text-pup-maroon dark:text-red-400">
-                              {kpiStats.totalVerified}
-                            </span>
-                          </div>
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/30">
-                            <span className="block text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                              Pending Review
-                            </span>
-                            <span className="text-lg font-black text-amber-700 dark:text-amber-400">
-                              {kpiStats.totalPending}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between items-center text-[10px] text-gray-500 dark:text-zinc-400 mb-1 font-semibold">
-                            <span>Compliance Progress</span>
-                            <span>{kpiStats.overallRate}%</span>
-                          </div>
-                          <div className="w-full h-2 bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-pup-maroon dark:bg-red-500 transition-all duration-500"
-                              style={{ width: `${Math.min(100, Math.max(0, kpiStats.overallRate))}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 leading-relaxed">
-                          {kpiStats.totalVerified} verified and {kpiStats.totalPending} pending out of{" "}
-                          {kpiStats.totalSlots} total required document slots.
-                        </p>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            handleClearMatrixFilters();
-                            setSelectedKpi(null);
-                          }}
-                          className="w-full h-8 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95 transition-all shadow-2xs"
-                        >
-                          Reset Matrix Filters
-                        </Button>
-                      </div>
+                    <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 tabular-nums">
+                      {kpiStats.overallRate}%
                     </div>
-                  </Reorder.Item>
-                );
-              }
+                    <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium truncate">
+                      {kpiStats.totalVerified.toLocaleString()} / {kpiStats.totalSlots.toLocaleString()} verified slots
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
-              return null;
-            })}
-          </Reorder.Group>
-
-              {/* Connected Row: Status Filter Segmented Tabs */}
-              <div className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 bg-white dark:bg-card">
-                <SegmentedControl
-                  value={matrixStatusFilter}
-                  onValueChange={(val) => {
-                    setMatrixStatusFilter(val);
-                    setMatrixPage(1);
-                  }}
-                  variant="capsule"
-                  className="inline-grid grid-flow-col auto-cols-fr shrink-0"
-                  items={[
-                    {
-                      value: "all",
-                      label: "All Students",
-                      badge: kpiStats.totalStudents,
-                    },
-                    {
-                      value: "incomplete",
-                      label: "Incomplete / Missing",
-                      badge: kpiStats.incomplete,
-                    },
-                    {
-                      value: "compliant",
-                      label: "Fully Compliant",
-                      badge: kpiStats.fullyCompliant,
-                    },
-                  ]}
-                />
-              </div>
+          {/* Connected Row: Status Filter Segmented Tabs */}
+          <div className="flex items-center justify-between border-t border-border bg-white px-6 py-2.5 dark:border-border dark:bg-card overflow-x-auto scrollbar-none gap-4">
+            <SegmentedControl
+              value={matrixStatusFilter}
+              onValueChange={(val) => {
+                setMatrixStatusFilter(val);
+                setMatrixPage(1);
+              }}
+              variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+              items={[
+                {
+                  value: "all",
+                  label: "All Students",
+                  badge: kpiStats.totalStudents,
+                },
+                {
+                  value: "incomplete",
+                  label: "Incomplete / Missing",
+                  badge: kpiStats.incomplete,
+                },
+                {
+                  value: "compliant",
+                  label: "Fully Compliant",
+                  badge: kpiStats.fullyCompliant,
+                },
+              ]}
+            />
+          </div>
 
               {/* Canonical 2-Zone DataViewToolbar */}
               <DataViewToolbar
@@ -1045,9 +742,12 @@ export default function DocumentsTab({
 
               {/* 5. Matrix Table Content */}
               <div className="relative flex flex-col flex-[1_0_auto] w-full border-t border-border dark:border-border" aria-busy={docsLoading}>
+                {docsError && matrixReport && (
+                  <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{docsError}</p>
+                )}
                 {docsLoading && !matrixReport ? (
                   <DocumentsMatrixSkeleton rowCount={7} embedded={true} docTypes={complianceDocTypes} />
-                ) : docsError ? (
+                ) : docsError && !matrixReport ? (
                   <div className="p-8 rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                     <Empty>
                       <EmptyHeader>
@@ -1205,7 +905,7 @@ export default function DocumentsTab({
 
                       <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                         {groupedMatrixRecords.map((group) => (
-                          <tbody key={group.key || "root"} className="divide-y divide-border dark:divide-border contents">
+                          <Fragment key={group.key || "root"}>
                             {group.label && (
                               <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
                                 <td colSpan={matrixVisibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -1295,7 +995,7 @@ export default function DocumentsTab({
                                             <button
                                               type="button"
                                               onClick={() => handleMatrixCellClick(item.student, req)}
-                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/80 dark:hover:bg-emerald-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                              className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1.5 px-3 py-1 hover:bg-emerald-100/80 dark:hover:bg-emerald-500/20 transition-all active:scale-95 cursor-pointer")}
                                             >
                                               <CheckmarkCircle01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                                               <span>Verified</span>
@@ -1317,7 +1017,7 @@ export default function DocumentsTab({
                                             <button
                                               type="button"
                                               onClick={() => handleMatrixCellClick(item.student, req)}
-                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/80 dark:hover:bg-amber-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                              className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1.5 px-3 py-1 hover:bg-amber-100/80 dark:hover:bg-amber-500/20 transition-all active:scale-95 cursor-pointer")}
                                             >
                                               <Clock01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
                                               <span>Pending</span>
@@ -1339,7 +1039,7 @@ export default function DocumentsTab({
                                             <button
                                               type="button"
                                               onClick={() => onRescan?.(item.student.studentNo, req.docType, req.doc?.id, req.doc?.original_filename, req.doc?.mime_type)}
-                                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50/80 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/80 dark:hover:bg-rose-950/60 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                                              className={cn(BADGE_BASE, BADGE_PALETTES.red, "gap-1.5 px-3 py-1 hover:bg-red-100/80 dark:hover:bg-red-500/20 transition-all active:scale-95 cursor-pointer")}
                                             >
                                               <FingerPrintScanIcon size="1em" className="text-xs text-rose-600 dark:text-rose-400" />
                                               <span>{req.status === "declined" ? "Needs correction" : "Missing"}</span>
@@ -1360,7 +1060,7 @@ export default function DocumentsTab({
                                   ))}
                               </tr>
                             ))}
-                          </tbody>
+                          </Fragment>
                         ))}
                       </tbody>
                     </Table>
@@ -1372,9 +1072,7 @@ export default function DocumentsTab({
                   <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
                 )}
                 {docsLoading && matrixReport && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/55 text-xs font-medium text-gray-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                    Loading documents…
-                  </div>
+                  <span role="status" className="sr-only">Loading documents…</span>
                 )}
               </div>
         </Card>
@@ -1508,21 +1206,21 @@ export default function DocumentsTab({
                       <div className="mt-1.5">
                         {selectedDoc?.status === "uploaded" ? (
                           selectedDoc.verificationStatus === "unverified" ? (
-                            <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50", BADGE_BASE)}>
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1.5")}>
                               <Alert01Icon size="1em" className="text-[11px]" />
                               Unverified
-                            </div>
+                            </span>
                           ) : (
-                            <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50", BADGE_BASE)}>
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1.5")}>
                               <CheckmarkCircle01Icon size="1em" className="text-[11px]" />
                               Uploaded
-                            </div>
+                            </span>
                           )
                         ) : (
-                          <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50", BADGE_BASE)}>
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.red, "gap-1.5")}>
                             <CancelCircleIcon size="1em" className="text-[11px]" />
                             Missing
-                          </div>
+                          </span>
                         )}
                       </div>
                     </div>

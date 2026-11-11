@@ -166,3 +166,98 @@ test("Student Portal Page standardizes Document Request Details Sheet and OSAS E
     "OSAS Event Proposal sheet must NOT use bulky outer card wrappers for attached proposal document"
   );
 });
+
+test("Student Dashboard enforces standardized borderless badges and neutral secondary outline buttons", () => {
+  const pageCode = fs.readFileSync(path.join(ROOT_DIR, "src/app/student/page.js"), "utf8");
+  const overviewCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/StudentOverviewTab.js"), "utf8");
+  const sheetCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/PermanentAdmissionRecordSheet.js"), "utf8");
+  const complianceCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/StudentComplianceTab.js"), "utf8");
+  const kpiCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/StudentComplianceKpiCards.js"), "utf8");
+  const sidebarFeedbackCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/StudentSidebarFeedbackCard.js"), "utf8");
+  const feedbackModalCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/student/StudentFeedbackModal.js"), "utf8");
+  const dropzoneCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/shared/FileAttachmentDropzone.jsx"), "utf8");
+  const settingsCode = fs.readFileSync(path.join(ROOT_DIR, "src/components/shared/AccountSettingsPanel.js"), "utf8");
+
+  // 1. Student page.js Sheets and Lists use BADGE_BASE + BADGE_PALETTES / StatusBadge without borders
+  assert.ok(
+    !pageCode.includes("rounded-md bg-gray-100 dark:bg-zinc-800 border border-border/70"),
+    "Feedback aspect tags in Request Details Sheet must not have borders"
+  );
+  assert.ok(
+    !pageCode.includes("px-1.5 py-0.5 rounded border border-border/60"),
+    "Timeline follow-up status badge in Request Details Sheet must not have a border"
+  );
+  assert.ok(
+    !pageCode.includes("px-2 py-0.5 rounded-full border border-border/60"),
+    "Timeline follow-up status badge in Proposal Details Sheet must not have a border"
+  );
+  assert.ok(
+    !pageCode.includes("border border-pup-maroon/20 dark:border-red-900/40"),
+    "File icon boxes in Student Sheets must not have colored borders"
+  );
+
+  // 2. StudentOverviewTab uses BADGE_BASE + BADGE_PALETTES instead of monochrome SETTINGS_BADGE
+  assert.ok(
+    !overviewCode.includes("SETTINGS_BADGE"),
+    "StudentOverviewTab must use standardized BADGE_BASE + BADGE_PALETTES instead of SETTINGS_BADGE"
+  );
+  assert.ok(
+    !overviewCode.includes("border border-blue-500/20") &&
+      !overviewCode.includes("border border-blue-200/60") &&
+      !overviewCode.includes("border border-emerald-200/60"),
+    "Post-Event Liquidation Details Sheet must not use bordered icon containers"
+  );
+
+  // 3. PermanentAdmissionRecordSheet & StudentComplianceTab & KPI Cards use standard BADGE_BASE
+  assert.ok(
+    !sheetCode.includes("border border-emerald-200/60"),
+    "PermanentAdmissionRecordSheet file icon box must be borderless"
+  );
+  assert.ok(
+    kpiCode.includes("BADGE_BASE") && kpiCode.includes("BADGE_PALETTES"),
+    "StudentComplianceKpiCards must use BADGE_BASE and BADGE_PALETTES"
+  );
+
+  // 4. StudentSidebarFeedbackCard & StudentFeedbackModal & FileAttachmentDropzone
+  assert.ok(
+    sidebarFeedbackCode.includes("BADGE_BASE") && !sidebarFeedbackCode.includes("border-red-100"),
+    "StudentSidebarFeedbackCard badges must use borderless BADGE_BASE"
+  );
+  assert.ok(
+    feedbackModalCode.includes("BADGE_BASE") && feedbackModalCode.includes("BADGE_PALETTES.amber"),
+    "StudentFeedbackModal sentiment pill must use borderless BADGE_BASE"
+  );
+  assert.ok(
+    !dropzoneCode.includes("border border-gray-200 dark:border-zinc-700/60"),
+    "AttachedFileCard category badge must use borderless BADGE_BASE"
+  );
+
+  // 5. Secondary (variant="outline") buttons across Student Dashboard & AccountSettingsPanel must be neutral (no colored borders/text)
+  const studentFiles = [
+    ["src/app/student/page.js", pageCode],
+    ["src/components/student/StudentOverviewTab.js", overviewCode],
+    ["src/components/student/PermanentAdmissionRecordSheet.js", sheetCode],
+    ["src/components/student/StudentComplianceTab.js", complianceCode],
+    ["src/components/student/StudentSidebarFeedbackCard.js", sidebarFeedbackCode],
+    ["src/components/student/StudentFeedbackModal.js", feedbackModalCode],
+    ["src/components/shared/AccountSettingsPanel.js", settingsCode],
+  ];
+
+  for (const [name, code] of studentFiles) {
+    const buttonMatches = code.match(/<Button[\s\S]*?>/g) || [];
+    for (const btn of buttonMatches) {
+      if (btn.includes('variant="outline"')) {
+        assert.ok(
+          !btn.includes("border-pup-maroon") &&
+            !btn.includes("text-pup-maroon") &&
+            !btn.includes("border-red-") &&
+            !btn.includes("text-red-") &&
+            !btn.includes("border-blue-") &&
+            !btn.includes("border-emerald-") &&
+            !btn.includes("border-amber-"),
+          `${name} outline secondary button must not have colored borders or text: ${btn}`
+        );
+      }
+    }
+  }
+});

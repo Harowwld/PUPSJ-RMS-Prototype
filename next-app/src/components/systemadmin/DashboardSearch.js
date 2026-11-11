@@ -37,7 +37,7 @@ export default function DashboardSearch({
         aria-label={resolvedLabel}
         placeholder={placeholder}
         className={cn(
-          "h-9 w-full max-w-none border-border bg-white pl-8 text-xs shadow-none dark:border-border dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
+          "h-9 w-full max-w-none rounded-xl border-border bg-white pl-8 text-xs shadow-none dark:border-border dark:bg-zinc-800 [@media(pointer:coarse)]:h-11 [&::-webkit-search-cancel-button]:hidden focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
           value ? "pr-20" : "pr-12"
         )}
       />

@@ -62,6 +62,17 @@ export function assertAccountEmailConfigured() {
   getTransporter();
 }
 
+export async function sendStudentSignupCode({ to, code }) {
+  const mailer = getTransporter();
+  const result = await mailer.transporter.sendMail({
+    from: mailer.from,
+    to: { name: "", address: to },
+    subject: "Verify your eManage email address",
+    text: `Your eManage verification code is ${code}. It expires in 10 minutes. If you did not start registration, ignore this email.`,
+  });
+  if (!result.accepted?.length) throw new Error("Signup verification email was not accepted.");
+}
+
 export async function sendSmtpTestEmail({ to }) {
   const recipient = String(to || "").trim();
   if (recipient.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(recipient)) {

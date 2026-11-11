@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import TransactionsTableSkeleton from "@/components/systemadmin/skeletons/TransactionsTableSkeleton"
-import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
@@ -724,8 +724,6 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
     operationFilters.length > 0 ||
     slaFilter !== "all"
 
-  if (loading) return <CampusOperationsSkeleton />
-
   return (
     <div className="animate-fade-up flex flex-[1_0_auto] flex-col w-full gap-6">
       {/* ONE Single Card Container encapsulating Header, Toolbar, Table & Pagination */}
@@ -943,7 +941,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         {/* Cross-Department Activity Stream Table or List */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            <TransactionsTableSkeleton rowCount={pageSize} visibleColumns={visibleTableColumns} groupBy={groupBy} />
+            viewMode === "list" ? <DataContentSkeleton viewMode="list" /> : <TransactionsTableSkeleton rowCount={6} visibleColumns={visibleTableColumns} groupBy={groupBy} />
           ) : paginatedTransactions.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -987,13 +985,18 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-                <Table columns={[{ kind: "text", width: 120 }, ...visibleTableColumns.map((key) => ({ kind: key === "status" ? "status" : key === "department" ? "category" : (key === "submitted" || key === "updatedAt") ? "date" : "text", width: key === "title" ? 300 : key === "details" ? 250 : key === "requester" ? 220 : key === "status" ? 150 : 160, maxWidth: key === "title" ? 340 : key === "details" ? 300 : undefined })), { kind: "actions" }]} className="min-w-0">
+                <Table columns={[{ kind: "identifier", maxWidth: 180, growthWeight: 0 }, ...visibleTableColumns.map((key) => {
+                  if (key === "department") return { kind: "category", maxWidth: 150, growthWeight: 0 }
+                  if (key === "status" || key === "slaStatus") return { kind: "status", maxWidth: 160, growthWeight: 0 }
+                  if (key === "submitted" || key === "updatedAt") return { kind: "date", maxWidth: 180, growthWeight: 0 }
+                  return { kind: "text", maxWidth: key === "details" ? 300 : 340 }
+                }), { kind: "actions" }]} className="min-w-0">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
                     <th
                       className={cn(
-                        "p-4 pl-6 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow",
+                        "p-4 pl-6 whitespace-nowrap sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow",
                         isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                       )}
                     >
@@ -1010,7 +1013,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("department") && <>
                     {/* Department */}
-                    <th className="p-4 w-[130px] min-w-[130px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("officeId")}
                         className={cn(
@@ -1025,7 +1028,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("requester") && <>
                     {/* Student Requester */}
-                    <th className="p-4 w-[200px] min-w-[180px] max-w-[240px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("studentName")}
                         className={cn(
@@ -1040,7 +1043,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("title") && <>
                     {/* Document or Proposal Title */}
-                    <th className="p-4 w-[270px] min-w-[200px] max-w-[340px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("title")}
                         className={cn(
@@ -1055,7 +1058,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("details") && <>
                     {/* Student Org / Details */}
-                    <th className="p-4 w-[220px] min-w-[180px] max-w-[340px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("organizationName")}
                         className={cn(
@@ -1070,7 +1073,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("status") && <>
                     {/* Stage Status */}
-                    <th className="p-4 w-[140px] min-w-[140px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("status")}
                         className={cn(
@@ -1085,7 +1088,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("slaStatus") && <>
                     {/* Citizen's Charter SLA */}
-                    <th className="p-4 w-[160px] min-w-[150px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("slaStatus")}
                         className={cn(
@@ -1100,7 +1103,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {visibleColumns.includes("submitted") && <>
                     {/* Submitted */}
-                    <th className="p-4 w-[130px] min-w-[130px]">
+                    <th className="p-4">
                       <button
                         onClick={() => handleSort("createdAt")}
                         className={cn(
@@ -1115,7 +1118,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                     {/* Actions */}
                     {visibleColumns.includes("updatedAt") && (
-                      <th className="p-4 w-[160px] min-w-[160px]" aria-sort={sortBy === "updatedAt" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>
+                      <th className="p-4" aria-sort={sortBy === "updatedAt" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>
                         <button
                           type="button"
                           onClick={() => handleSort("updatedAt")}
@@ -1182,7 +1185,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                         {visibleColumns.includes("requester") && <>
                         {/* Student Requester */}
-                        <td className="p-4 align-middle overflow-hidden max-w-[240px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
                             <div
                               className="font-semibold text-[13px] text-gray-900 dark:text-zinc-100 truncate block"
@@ -1199,7 +1202,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                         {visibleColumns.includes("title") && <>
                         {/* Document or Proposal Title */}
-                        <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
                             <div className="font-medium text-[13px] text-gray-900 dark:text-zinc-100 truncate block" title={tx.title}>
                               {tx.title}
@@ -1216,7 +1219,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
                         {visibleColumns.includes("details") && <>
                         {/* Student Org / Details */}
-                        <td className="p-4 align-middle overflow-hidden max-w-[340px] border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                        <td className="p-4 align-middle overflow-hidden border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <div className="w-full min-w-0">
                             {tx.organizationName ? (
                               <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 truncate block" title={tx.organizationName}>
@@ -1606,7 +1609,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     Attached Document
                   </h3>
                 </div>
-                <div className="p-3.5 rounded-xl border border-border dark:border-border bg-gray-50/60 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
+                <div className="p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
                       <File02Icon size="1em" className="text-base" />

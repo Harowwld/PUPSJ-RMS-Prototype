@@ -2,9 +2,12 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 
-export default function SlaChartsSkeleton() {
+export default function SlaChartsSkeleton({ viewMode = "all" }) {
+  const showSlaSection = viewMode === "all" || viewMode === "sla"
+  const showCsmSection = viewMode === "all" || viewMode === "csm"
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 select-none">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 select-none" aria-busy="true" aria-label="Loading request analytics">
+      {showSlaSection && <>
       {/* Left Column (2 Cols): Horizontal graphs (Request Trends & Document Demand) */}
       <div className="lg:col-span-2 flex flex-col gap-6">
         {/* Card 1: Request Trends Chart Skeleton */}
@@ -105,7 +108,9 @@ export default function SlaChartsSkeleton() {
         </div>
       </div>
 
-      {/* Card 5: Client Satisfaction Measurement (CSM) Skeleton */}
+      </>}
+
+      {showCsmSection && (
       <div className="rounded-xl border border-border/80 dark:border-border bg-gray-50/50 dark:bg-zinc-900/40 p-6 shadow-none flex flex-col gap-6 lg:col-span-3">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="space-y-2">
@@ -135,6 +140,7 @@ export default function SlaChartsSkeleton() {
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }

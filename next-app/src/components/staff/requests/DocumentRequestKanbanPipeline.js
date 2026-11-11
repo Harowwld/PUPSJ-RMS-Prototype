@@ -1,10 +1,14 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
-
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  KanbanStatusIcon,
+  KanbanDotTag,
+  KanbanMiniAvatar,
+  getTagDotColor,
+} from "@/components/shared/KanbanPrimitives";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import {
@@ -13,74 +17,65 @@ import {
 } from "@/lib/constants";
 import {
   Attachment01Icon,
-  Clock01Icon,
+  InboxIcon,
   LockIcon,
-  ViewIcon,
 } from "hugeicons-react";
+import { EmptyState } from "@/components/ui/empty";
 
 export const ODRS_KANBAN_COLUMNS = [
   {
     key: "Pending",
     label: "Pending",
-    subtitle: "Initial Intake",
-    accent: "bg-amber-500",
-    borderTop: "border-t-amber-500",
-    badge: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-    dropZone: "border-amber-500/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
+    dropZone:
+      "border-amber-500/50 bg-amber-50/60 dark:bg-amber-950/25 text-amber-700 dark:text-amber-300",
   },
   {
     key: "PendingPayment",
     label: "Pending Payment",
-    subtitle: "Assessment & Proof",
-    accent: "bg-indigo-500",
-    borderTop: "border-t-indigo-500",
-    badge: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300",
-    dropZone: "border-indigo-500/60 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300",
+    dropZone:
+      "border-sky-500/50 bg-sky-50/60 dark:bg-sky-950/25 text-sky-700 dark:text-sky-300",
   },
   {
     key: "InProgress",
     label: "In Progress",
-    subtitle: "Records Processing",
-    accent: "bg-sky-500",
-    borderTop: "border-t-sky-500",
-    badge: "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
-    dropZone: "border-sky-500/60 bg-sky-50/60 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300",
+    dropZone:
+      "border-sky-500/50 bg-sky-50/60 dark:bg-sky-950/25 text-sky-700 dark:text-sky-300",
   },
   {
     key: "Ready",
     label: "Ready",
-    subtitle: "Ready for Pickup",
-    accent: "bg-emerald-500",
-    borderTop: "border-t-emerald-500",
-    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    dropZone: "border-emerald-500/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300",
+    dropZone:
+      "border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/25 text-emerald-700 dark:text-emerald-300",
   },
   {
     key: "Completed",
     label: "Completed",
-    subtitle: "Claimed & Released",
-    accent: "bg-teal-600",
-    borderTop: "border-t-teal-600",
-    badge: "bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300",
-    dropZone: "border-teal-500/60 bg-teal-50/60 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300",
+    dropZone:
+      "border-teal-500/50 bg-teal-50/60 dark:bg-teal-950/25 text-teal-700 dark:text-teal-300",
   },
   {
     key: "Cancelled",
     label: "Cancelled",
-    subtitle: "Cancelled / Terminated",
-    accent: "bg-rose-500",
-    borderTop: "border-t-rose-500",
-    badge: "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
-    dropZone: "border-rose-500/60 bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300",
+    dropZone:
+      "border-rose-500/50 bg-rose-50/60 dark:bg-rose-950/25 text-rose-700 dark:text-rose-300",
   },
 ];
+
+function formatShortRequestDate(dateInput) {
+  if (!dateInput) return "";
+  const d = new Date(dateInput);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
 
 export default function DocumentRequestKanbanPipeline({
   items = [],
   onSelectItem,
   onDropItem,
   slaStandards = null,
-  statusBadgeClass,
   scrollRef,
 }) {
   const internalBoardScrollRef = useRef(null);
@@ -108,7 +103,6 @@ export default function DocumentRequestKanbanPipeline({
       if (map[status]) {
         map[status].push(item);
       } else if (status === "Deficient") {
-        // Map Deficient into Pending or Cancelled column based on workflow
         if (map.Pending) map.Pending.push(item);
       } else if (status === "Shredded") {
         if (map.Cancelled) map.Cancelled.push(item);
@@ -123,7 +117,12 @@ export default function DocumentRequestKanbanPipeline({
   // Canvas Mouse Pan (Drag-to-Scroll)
   const handleMouseDownCanvas = (e) => {
     if (isDraggingCardRef.current) return;
-    if (e.target.closest("button") || e.target.closest("[role='button']") || e.target.closest(".kanban-card")) return;
+    if (
+      e.target.closest("button") ||
+      e.target.closest("[role='button']") ||
+      e.target.closest(".kanban-card")
+    )
+      return;
     if (e.button !== 0) return;
 
     isPanningRef.current = true;
@@ -132,13 +131,16 @@ export default function DocumentRequestKanbanPipeline({
     setIsPanningActive(true);
   };
 
-  const handleMouseMoveCanvas = useCallback((e) => {
-    if (!isPanningRef.current || !boardScrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - (boardScrollRef.current.offsetLeft || 0);
-    const walk = (x - panStartXRef.current) * 1.5;
-    boardScrollRef.current.scrollLeft = panScrollLeftRef.current - walk;
-  }, [boardScrollRef]);
+  const handleMouseMoveCanvas = useCallback(
+    (e) => {
+      if (!isPanningRef.current || !boardScrollRef.current) return;
+      e.preventDefault();
+      const x = e.pageX - (boardScrollRef.current.offsetLeft || 0);
+      const walk = (x - panStartXRef.current) * 1.5;
+      boardScrollRef.current.scrollLeft = panScrollLeftRef.current - walk;
+    },
+    [boardScrollRef]
+  );
 
   const handleMouseUpCanvas = useCallback(() => {
     isPanningRef.current = false;
@@ -206,75 +208,104 @@ export default function DocumentRequestKanbanPipeline({
       ref={boardScrollRef}
       onMouseDown={handleMouseDownCanvas}
       className={cn(
-        "flex w-full min-h-[520px] flex-1 gap-4 overflow-x-auto p-4 sm:p-5 select-none scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-700 bg-gray-50/50 dark:bg-zinc-950/20",
-        isPanningActive ? "cursor-grabbing" : "cursor-default"
+        "w-full flex-1 flex flex-col min-h-[calc(100vh-19rem)] overflow-x-auto p-4 sm:p-5 select-none scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-700",
+        isPanningActive ? "cursor-grabbing" : "cursor-grab"
       )}
     >
-      {ODRS_KANBAN_COLUMNS.map((col) => {
-        const colItems = columnData[col.key] || [];
-        const isTarget = dragOverColumn === col.key;
-        const isSource = draggingItem?.status === col.key;
-        const isValidTransition = draggingItem
-          ? canTransitionRequestStatus(draggingItem.status, col.key)
-          : false;
+      <div className="flex items-stretch gap-3.5 min-w-max flex-1 h-full min-h-[500px]">
+        {ODRS_KANBAN_COLUMNS.map((col) => {
+          const colItems = columnData[col.key] || [];
+          const isTarget = dragOverColumn === col.key;
+          const isSource = draggingItem?.status === col.key;
+          const isValidTransition = draggingItem
+            ? canTransitionRequestStatus(draggingItem.status, col.key)
+            : false;
 
-        return (
-          <div
-            key={col.key}
-            onDragOver={(e) => handleDragOver(e, col.key)}
-            onDragLeave={(e) => handleDragLeave(e, col.key)}
-            onDrop={(e) => handleDrop(e, col.key)}
-            className={cn(
-              "flex flex-col w-[300px] shrink-0 rounded-2xl border bg-white dark:bg-card border-border dark:border-white/10 shadow-xs overflow-hidden transition-all duration-200",
-              col.borderTop,
-              "border-t-3",
-              isTarget && isValidTransition && "ring-2 ring-emerald-500/80 bg-emerald-50/20 dark:bg-emerald-950/10",
-              isTarget && !isValidTransition && draggingItem && "ring-2 ring-rose-500/80 bg-rose-50/20 dark:bg-rose-950/10"
-            )}
-          >
-            {/* Column Header */}
-            <div className="flex items-center justify-between p-3.5 border-b border-border/80 dark:border-white/10 bg-white dark:bg-card">
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
+          return (
+            <div
+              key={col.key}
+              onDragOver={(e) => handleDragOver(e, col.key)}
+              onDragLeave={(e) => handleDragLeave(e, col.key)}
+              onDrop={(e) => handleDrop(e, col.key)}
+              className={cn(
+                "flex flex-col w-[300px] shrink-0 h-full rounded-2xl border border-gray-200/60 dark:border-white/[0.06] bg-gray-100/75 dark:bg-zinc-900/60 p-2.5 transition-all duration-200",
+                isTarget &&
+                  isValidTransition &&
+                  "ring-2 ring-emerald-500/70 bg-emerald-50/30 dark:bg-emerald-950/15",
+                isTarget &&
+                  !isValidTransition &&
+                  draggingItem &&
+                  !isSource &&
+                  "ring-2 ring-rose-500/70 bg-rose-50/30 dark:bg-rose-950/15"
+              )}
+            >
+              {/* Clean Single-Line Column Header */}
+              <div className="flex items-center justify-between px-2 pt-1.5 pb-2.5 select-none shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <KanbanStatusIcon status={col.key} />
+                  <span className="text-[13px] font-semibold tracking-tight text-gray-800 dark:text-zinc-100 truncate">
                     {col.label}
                   </span>
-                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.2 text-[10px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
+                  <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
                     {colItems.length}
                   </span>
                 </div>
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
-                  {col.subtitle}
-                </span>
               </div>
-            </div>
 
-            {/* Drop Zone Visual Indicator */}
-            {isTarget && draggingItem && !isSource && (
-              <div
-                className={cn(
-                  "m-2.5 p-3 rounded-xl border-2 border-dashed flex items-center justify-center text-xs font-semibold transition-all animate-pulse",
-                  isValidTransition ? col.dropZone : "border-rose-400 bg-rose-50/50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
-                )}
-              >
-                {isValidTransition ? `Drop to move to ${col.label}` : "Transition not allowed"}
-              </div>
-            )}
-
-            {/* Column Body / Cards */}
-            <div className="flex-1 p-2.5 space-y-2.5 overflow-y-auto max-h-[calc(100vh-22rem)]">
-              {colItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center text-xs text-gray-400 dark:text-zinc-500 border border-dashed border-border/60 dark:border-white/10 rounded-xl my-4">
-                  <span>No requests in this stage</span>
+              {/* Drop Zone Visual Indicator */}
+              {isTarget && draggingItem && !isSource && (
+                <div
+                  className={cn(
+                    "mb-2 p-3 rounded-xl border border-dashed flex items-center justify-center text-xs font-medium transition-all shrink-0",
+                    isValidTransition
+                      ? col.dropZone
+                      : "border-rose-400 bg-rose-50/50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                  )}
+                >
+                  {isValidTransition
+                    ? `Drop to move to ${col.label}`
+                    : "Transition not allowed"}
                 </div>
-              ) : (
-                colItems.map((item) => {
-                  const isLocked = isTerminalRequestStatus(item.status);
+              )}
+
+              {/* Column Body / Cards */}
+              <div className="flex flex-col gap-2 h-[760px] overflow-y-auto px-0.5 pb-0.5 scrollbar-thin">
+                {colItems.length === 0 && !isTarget ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-4">
+                    <EmptyState
+                      variant="compact"
+                      icon={InboxIcon}
+                      title="No requests in stage"
+                      description="Drag eligible requests here to advance status"
+                    />
+                  </div>
+                ) : (
+                  colItems.map((item) => {
+                  const status = item.status || "Pending";
+                  const isLocked = isTerminalRequestStatus(status);
                   const isDraggingThis = draggingItem?.id === item.id;
                   const charter = getRequestCharterStatus(item, slaStandards);
-                  const dateFormatted = item.created_at ? formatPHDateTime(item.created_at) : "Date unavailable";
+                  const dateFormatted = item.created_at
+                    ? formatPHDateTime(item.created_at)
+                    : "Date unavailable";
+                  const shortDate = formatShortRequestDate(item.created_at);
                   const studentName = item.student_name || "Unknown Student";
-                  const badgeStyle = statusBadgeClass ? statusBadgeClass(item.status) : "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
+                  const clientLabel =
+                    item.client_type === "Parent"
+                      ? "Parent"
+                      : item.client_type === "Alumni" || item.is_alumni
+                      ? "Alumni"
+                      : "Student";
+                  const clientDotColor =
+                    clientLabel === "Parent"
+                      ? "bg-amber-500"
+                      : clientLabel === "Alumni"
+                      ? "bg-teal-500"
+                      : "bg-sky-500";
+
+                  const topRightText = isLocked
+                    ? shortDate || charter.label
+                    : charter.label || shortDate;
 
                   return (
                     <div
@@ -284,34 +315,62 @@ export default function DocumentRequestKanbanPipeline({
                       onDragEnd={handleDragEnd}
                       onClick={() => onSelectItem?.(item.id)}
                       className={cn(
-                        "kanban-card group relative p-3 rounded-xl border border-border/70 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xs hover:shadow-sm hover:border-gray-300 dark:hover:border-zinc-700 transition-all cursor-pointer",
+                        "kanban-card group flex flex-col gap-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 cursor-pointer relative select-none",
                         isDraggingThis && "opacity-40 scale-98 border-dashed border-gray-400",
-                        isLocked && "cursor-default opacity-85"
+                        isLocked && "cursor-pointer opacity-90"
                       )}
                     >
-                      {/* Top Bar: Identifier, Client Type, Lock/Action */}
-                      <div className="flex items-center justify-between gap-1.5 mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center rounded-lg bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold tabular-nums text-gray-700 dark:text-zinc-300">
-                            #{item.id}
-                          </span>
-                          <span
-                            className={cn("inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-medium shrink-0", item.client_type === "Parent"
-                                ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
-                                : item.client_type === "Alumni" || item.is_alumni
-                                ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30", BADGE_BASE)}
-                          >
-                            {item.client_type === "Parent" ? "Parent" : item.client_type === "Alumni" || item.is_alumni ? "Alumni" : "Student"}
-                          </span>
+                      {/* Row 1: Status Icon + Student Name (left) & SLA / Date (right) */}
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                          <KanbanStatusIcon status={status} className="mt-[3px]" />
+                          <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-1">
+                            {studentName}
+                          </h4>
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <span
+                          className={cn(
+                            "text-[11px] font-medium tabular-nums shrink-0",
+                            charter.isOverdue
+                              ? "text-rose-600 dark:text-rose-400"
+                              : charter.isDueSoon
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-gray-400 dark:text-zinc-500"
+                          )}
+                          title={`${charter.detail || charter.label} · Created ${dateFormatted}`}
+                        >
+                          {topRightText}
+                        </span>
+                      </div>
+
+                      {/* Row 2: Dot-Pill Tags (Doc Type + Client Type) */}
+                      <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
+                        <KanbanDotTag
+                          label={item.doc_type}
+                          dotColor={getTagDotColor(item.doc_type)}
+                        />
+                        <KanbanDotTag
+                          label={clientLabel}
+                          dotColor={clientDotColor}
+                        />
+                      </div>
+
+                      {/* Row 3: Footer — Request ID & Student No (bottom-left) + Course / Avatar (bottom-right) */}
+                      <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                        <div className="flex items-center gap-1.5 min-w-0 tabular-nums font-medium">
+                          <span>#{item.id}</span>
+                          {item.student_no && (
+                            <>
+                              <span>·</span>
+                              <span className="truncate">{item.student_no}</span>
+                            </>
+                          )}
                           {isLocked && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="text-gray-400 dark:text-zinc-500">
-                                  <LockIcon size={13} aria-hidden="true" />
+                                <span className="text-gray-400 dark:text-zinc-500 inline-flex items-center">
+                                  <LockIcon size={12} aria-hidden="true" />
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>Terminal record (locked)</TooltipContent>
@@ -319,7 +378,7 @@ export default function DocumentRequestKanbanPipeline({
                           )}
                           {Number(item.attachment_count) > 0 && (
                             <span
-                              className="inline-flex items-center gap-0.5 text-[10px] text-gray-500 dark:text-zinc-400"
+                              className="inline-flex items-center gap-0.5 text-[11px] text-gray-400 dark:text-zinc-500"
                               title={`${item.attachment_count} attachment(s)`}
                             >
                               <Attachment01Icon size={12} />
@@ -327,46 +386,16 @@ export default function DocumentRequestKanbanPipeline({
                             </span>
                           )}
                         </div>
-                      </div>
 
-                      {/* Middle: Requester Name & Student Info */}
-                      <div className="mb-2.5">
-                        <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-1">
-                          {studentName}
-                        </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                          {item.student_no ? (
-                            <span className="tabular-nums font-medium text-gray-600 dark:text-zinc-300">
-                              {item.student_no}
-                            </span>
-                          ) : (
-                            <span className="italic text-amber-600 dark:text-amber-400 text-[11px]">No ID</span>
-                          )}
-                          {item.course_code && (
-                            <>
-                              <span>·</span>
-                              <span className="truncate">{item.course_code}</span>
-                            </>
-                          )}
+                        <div className="flex items-center gap-1.5 shrink-0 max-w-[130px]">
+                          <KanbanMiniAvatar
+                            code={item.course_code}
+                            name={studentName}
+                          />
+                          <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate">
+                            {item.course_code || clientLabel}
+                          </span>
                         </div>
-                      </div>
-
-                      {/* Doc Type Badge */}
-                      <div className="mb-2.5">
-                        <span className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 line-clamp-1 max-w-full", BADGE_BASE)}>
-                          {item.doc_type}
-                        </span>
-                      </div>
-
-                      {/* SLA Chip & Date */}
-                      <div className="pt-2 border-t border-border/60 dark:border-white/[0.06] flex items-center justify-between text-[11px]">
-                        <span className={cn("inline-flex items-center px-2 py-0.2 rounded-full text-[10px] font-semibold shrink-0", charter.badgeClass, BADGE_BASE)}>
-                          <Clock01Icon size={10} className="mr-1" />
-                          {charter.label}
-                        </span>
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums">
-                          {dateFormatted}
-                        </span>
                       </div>
                     </div>
                   );
@@ -376,6 +405,7 @@ export default function DocumentRequestKanbanPipeline({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

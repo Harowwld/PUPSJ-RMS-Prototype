@@ -5,13 +5,12 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 import React, { useState, useEffect } from "react";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { TableActions } from "@/components/shared/TableActions";
+import { TableStatus } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { downloadDocument } from "@/lib/documentDownload";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -31,6 +30,95 @@ function formatFileSize(bytes) {
 
 // In-memory cache for rendered thumbnails so switching views or re-rendering is instant
 const thumbnailCache = new Map();
+
+const actionClassName =
+  "flex min-h-8 w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:text-zinc-300 dark:hover:bg-zinc-800/70 dark:focus-visible:ring-red-400 cursor-pointer border-0 bg-transparent select-none active:scale-[0.98]";
+
+export function DocumentCardActionsMenu({
+  docTitle,
+  isImage,
+  canRescan,
+  hasLocate,
+  onPreview,
+  onRescan,
+  onLocate,
+  onDownload,
+  triggerClassName = "table-action-button rounded-lg active:scale-95 cursor-pointer flex items-center justify-center",
+}) {
+  const [open, setOpen] = useState(false);
+
+  const runAction = (event, callback) => {
+    event?.stopPropagation?.();
+    setOpen(false);
+    callback?.(event);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`More actions for ${docTitle}`}
+          aria-expanded={open}
+          className={triggerClassName}
+          title="More actions"
+        >
+          <MoreVerticalIcon size={16} aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={6}
+        className="max-h-[calc(100dvh-2rem)] w-[min(13.5rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl"
+      >
+        <div className="max-h-[min(55vh,18rem)] space-y-0.5 overflow-y-auto p-1 font-jakarta">
+          <button
+            type="button"
+            onClick={(event) => runAction(event, onPreview)}
+            className={actionClassName}
+          >
+            <ViewIcon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />
+            <span>{PDF_ACTION_LABELS.preview}</span>
+          </button>
+
+          {canRescan && (
+            <button
+              type="button"
+              onClick={(event) => runAction(event, onRescan)}
+              className={actionClassName}
+            >
+              <ReloadIcon size={14} aria-hidden="true" className="shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>Re-scan Document</span>
+            </button>
+          )}
+
+          {hasLocate && (
+            <button
+              type="button"
+              onClick={(event) => runAction(event, onLocate)}
+              className={actionClassName}
+            >
+              <Location01Icon size={14} aria-hidden="true" className="shrink-0" />
+              <span>Locate Archive Drawer</span>
+            </button>
+          )}
+
+          <div aria-hidden="true" className="-mx-1 my-1.5 h-px bg-gray-200 dark:bg-white/10" />
+
+          <button
+            type="button"
+            onClick={(event) => runAction(event, onDownload)}
+            className={actionClassName}
+          >
+            <Download01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />
+            <span>{isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}</span>
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function GoogleDrivePdfCard({
   doc,
@@ -226,9 +314,9 @@ export default function GoogleDrivePdfCard({
   if (viewMode === "list") {
     return (
       <div
-        onClick={handlePreviewClick}
+        role="listitem"
         className={cn(
-          "group flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900/60 hover:bg-[#f0f4f9] dark:hover:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 transition-all shadow-2xs hover:shadow-sm cursor-pointer select-none active:scale-[0.99]",
+          "group flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors",
           densityClasses.paddingX,
           densityClasses.paddingY,
           densityClasses.gap,
@@ -236,158 +324,29 @@ export default function GoogleDrivePdfCard({
           className
         )}
       >
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* Google Drive Red PDF Badge */}
-          <div className="h-6 px-1.5 rounded-[5px] bg-[#ea4335] text-white flex items-center justify-center font-bold text-[10px] tracking-wider shrink-0 shadow-2xs">
-            PDF
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 truncate group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
-                {docTitle}
-              </span>
-              <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate hidden sm:inline">
-                ({originalFilename})
-              </span>
-            </div>
-            <div className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5 sm:hidden">
-              {fileSize} • {formattedDate}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500 dark:text-zinc-400">
-            <span>{fileSize}</span>
-            <span>•</span>
-            <span>{formattedDate}</span>
-          </div>
-
-          {/* Status Badge */}
-          <span
-            className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", approvalStatus === "Approved"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                : approvalStatus === "Declined"
-                ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", BADGE_BASE)}
-          >
-            {approvalStatus}
+        <button
+          type="button"
+          onClick={handlePreviewClick}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <File02Icon size={18} aria-hidden="true" className="shrink-0 text-muted-foreground" />
+          <span className="min-w-0">
+            <span className="block truncate text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">{docTitle}</span>
+            <span className="block truncate text-[11px] text-gray-500 dark:text-zinc-400">
+              {originalFilename} • {fileSize} • {formattedDate}
+            </span>
           </span>
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {canRescan && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleRescanClick}
-                    className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Re-scan Document"
-                    aria-label="Re-scan Document"
-                  >
-                    <ReloadIcon size="1em" className="text-sm" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Re-scan Document</TooltipContent>
-              </Tooltip>
-            )}
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={handlePreviewClick}
-                  className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                  title={PDF_ACTION_LABELS.preview}
-                >
-                  <ViewIcon size="1em" className="text-sm" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
-            </Tooltip>
-
-            {student && onLocate && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleLocateClick}
-                    className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Locate Archive Drawer"
-                  >
-                    <Location01Icon size="1em" className="text-sm" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Locate Archive Drawer</TooltipContent>
-              </Tooltip>
-            )}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="w-7 h-7 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                  title="More actions"
-                >
-                  <MoreVerticalIcon size="1em" className="text-sm" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                sideOffset={6}
-                className="w-52 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
-              >
-                {/* Zone 1: Header */}
-                <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                    Document Actions
-                  </span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
-                    PDF
-                  </span>
-                </div>
-
-                {/* Zone 2: Body */}
-                <div className="p-1.5 space-y-0.5">
-                  <DropdownMenuItem
-                    onClick={handlePreviewClick}
-                    className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <ViewIcon size="1em" className="text-sm text-gray-500" />
-                    <span>{PDF_ACTION_LABELS.preview}</span>
-                  </DropdownMenuItem>
-                  {canRescan && (
-                    <DropdownMenuItem
-                      onClick={handleRescanClick}
-                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    >
-                      <ReloadIcon size="1em" className="text-sm text-amber-600 dark:text-amber-400" />
-                      <span>Re-scan Document</span>
-                    </DropdownMenuItem>
-                  )}
-                  {student && onLocate && (
-                    <DropdownMenuItem
-                      onClick={handleLocateClick}
-                      className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                    >
-                      <Location01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                      <span>Locate Archive Drawer</span>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                  <DropdownMenuItem
-                    onClick={handleDownloadClick}
-                    className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <Download01Icon size="1em" className="text-sm text-gray-500" />
-                    <span>{isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}</span>
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        </button>
+        <div className="flex shrink-0 items-center gap-2 self-start sm:gap-3 sm:self-auto">
+          <TableStatus value={approvalStatus} />
+          <TableActions
+            actions={[
+              { label: PDF_ACTION_LABELS.preview, icon: ViewIcon, onClick: handlePreviewClick },
+              ...(canRescan ? [{ label: "Re-scan Document", icon: ReloadIcon, onClick: handleRescanClick }] : []),
+              ...(student && onLocate ? [{ label: "Locate Archive Drawer", icon: Location01Icon, onClick: handleLocateClick }] : []),
+              { label: isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download, icon: Download01Icon, onClick: handleDownloadClick },
+            ]}
+          />
         </div>
       </div>
     );
@@ -421,69 +380,17 @@ export default function GoogleDrivePdfCard({
 
         {/* 3-dots menu */}
         <div onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
-                aria-label="Document options"
-              >
-                <MoreVerticalIcon size="1em" className="text-sm" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={6}
-              className="w-52 rounded-2xl border-[0.5px] border-border dark:border-white/10 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 select-none font-jakarta"
-            >
-              {/* Zone 1: Header */}
-              <div className="px-3.5 py-2 border-b-[0.5px] border-border dark:border-white/10 bg-gray-50/60 dark:bg-zinc-800/40 flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                  Document Actions
-                </span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 shrink-0">
-                  PDF
-                </span>
-              </div>
-
-              {/* Zone 2: Body */}
-              <div className="p-1.5 space-y-0.5">
-                <DropdownMenuItem
-                  onClick={handlePreviewClick}
-                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <ViewIcon size="1em" className="text-sm text-gray-500" />
-                  <span>{PDF_ACTION_LABELS.preview}</span>
-                </DropdownMenuItem>
-                {canRescan && (
-                  <DropdownMenuItem
-                    onClick={handleRescanClick}
-                    className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <ReloadIcon size="1em" className="text-sm text-amber-600 dark:text-amber-400" />
-                    <span>Re-scan Document</span>
-                  </DropdownMenuItem>
-                )}
-                {student && onLocate && (
-                  <DropdownMenuItem
-                    onClick={handleLocateClick}
-                    className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  >
-                    <Location01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                    <span>Locate Archive Drawer</span>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator className="my-1 border-t-[0.5px] border-border dark:border-white/10" />
-                <DropdownMenuItem
-                  onClick={handleDownloadClick}
-                  className="cursor-pointer text-xs font-medium py-1.5 px-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  <Download01Icon size="1em" className="text-sm text-gray-500" />
-                  <span>{isImage ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}</span>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DocumentCardActionsMenu
+            docTitle={docTitle}
+            isImage={isImage}
+            canRescan={canRescan}
+            hasLocate={Boolean(student && onLocate)}
+            onPreview={handlePreviewClick}
+            onRescan={handleRescanClick}
+            onLocate={handleLocateClick}
+            onDownload={handleDownloadClick}
+            triggerClassName="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all shrink-0 cursor-pointer"
+          />
         </div>
       </div>
 

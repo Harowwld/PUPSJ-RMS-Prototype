@@ -49,7 +49,7 @@ export default function BulkImportStudentsModal({
   const [csvDropActive, setCsvDropActive] = useState(false);
 
   const [csvPage, setCsvPage] = useState(1);
-  const [csvRowsPerPage, setCsvRowsPerPage] = useState(10);
+  const [csvRowsPerPage, setCsvRowsPerPage] = useState(20);
   const [localCsvSearch, setLocalCsvSearch] = useState("");
   const [csvSearch, setCsvSearch] = useState("");
 

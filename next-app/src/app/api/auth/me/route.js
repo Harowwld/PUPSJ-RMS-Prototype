@@ -135,6 +135,7 @@ export async function GET(req) {
           outcomes: true,
           notifications: true,
         },
+        selected_osas_org_id: "",
       };
 
       const studentPreferences = {

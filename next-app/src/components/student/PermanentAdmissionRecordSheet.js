@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
+import NarrativeText from "@/components/shared/NarrativeText";
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -65,7 +66,8 @@ function getCategoryIcon(category = "") {
 export default function PermanentAdmissionRecordSheet({
   open,
   onOpenChange,
-  item,
+  item: itemProp,
+  requirement,
   items = [],
   currentIndex = -1,
   onNavigatePrev,
@@ -73,6 +75,7 @@ export default function PermanentAdmissionRecordSheet({
   student = null,
   onPreviewDocument,
 }) {
+  const item = itemProp || requirement;
   const isSubmitted = useMemo(() => {
     if (!item) return false;
     const st = String(item.status || item.approval_status || item.statusLabel || "").toLowerCase();
@@ -191,16 +194,16 @@ export default function PermanentAdmissionRecordSheet({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-[10px] mb-1")}>
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums mb-1")}>
                 {docCategory}
               </span>
               <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                 {docTitle}
               </h3>
               {docDescription && (
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                  {docDescription}
-                </p>
+                <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                  <NarrativeText text={docDescription} mode="full" />
+                </div>
               )}
             </div>
           </div>
@@ -265,9 +268,9 @@ export default function PermanentAdmissionRecordSheet({
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Submission Guidelines
               </h4>
-              <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                {docInstructions}
-              </p>
+              <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
+                <NarrativeText text={docInstructions} mode="full" />
+              </div>
               <div className="flex items-center gap-2 text-[11.5px] text-gray-500 dark:text-zinc-400 pt-0.5">
                 <Mail01Icon size="1em" className="text-xs text-gray-400 shrink-0" />
                 <span>Place in a long brown envelope labeled with your full name and student number.</span>
@@ -283,7 +286,7 @@ export default function PermanentAdmissionRecordSheet({
               </h4>
               <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                     <File02Icon size="1em" className="text-base" />
                   </div>
                   <div className="min-w-0">

@@ -1,5 +1,6 @@
 "use client";
 
+import { hasLinkedStudentRecord, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
@@ -45,7 +46,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import {
   Empty,
@@ -749,8 +749,10 @@ export default function AccountSettingsPanel() {
   const availableHomeViews = useMemo(() => {
     if (authUser?.role === "Student") {
       return [
-        { id: "default", label: "Overview & Compliance", desc: "Default dashboard with admission requirements" },
-        { id: "compliance", label: "Requirements & Compliance", desc: "Track admission document statuses" },
+        { id: "default", label: "Overview", desc: "View request status and recent activity" },
+        ...(hasLinkedStudentRecord(authUser) ? [
+          { id: "compliance", label: "Requirements & Compliance", desc: "Track admission document statuses" },
+        ] : []),
         { id: "requests", label: "Document Requests", desc: "View and request official academic records" },
       ];
     }
@@ -800,7 +802,7 @@ export default function AccountSettingsPanel() {
       { id: "documents", label: "Student Documents", desc: "Browse documents repository" },
       { id: "notifications", label: "Notifications", desc: "Recent alerts, updates, and reminders" },
     ];
-  }, [authUser?.role, authUser?.office_id, authUser?.section]);
+  }, [authUser]);
 
   const cleanFirstPref = fname || authUser?.fname || "";
   const cleanLastPref = lname || authUser?.lname || "";
@@ -1682,44 +1684,6 @@ export default function AccountSettingsPanel() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
-    return (
-      <Card className="flex flex-[1_0_auto] flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none min-h-[600px] isolate font-jakarta">
-        <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="w-48 h-6" />
-            <Skeleton className="w-72 h-4" />
-          </div>
-          <Skeleton className="w-28 h-10 rounded-xl" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] flex-1">
-          <div className="p-3 sm:p-4 border-b lg:border-b-0 lg:border-r border-border dark:border-border/60 space-y-3 bg-gray-50/50 dark:bg-zinc-900/40">
-            <div className="px-3 pt-1">
-              <Skeleton className="w-16 h-3 rounded" />
-            </div>
-            <div className="space-y-1">
-              <Skeleton className="w-full h-10 rounded-xl" />
-              <Skeleton className="w-full h-10 rounded-xl" />
-              <Skeleton className="w-full h-10 rounded-xl" />
-              <Skeleton className="w-full h-10 rounded-xl" />
-              <Skeleton className="w-full h-10 rounded-xl" />
-              <Skeleton className="w-full h-10 rounded-xl" />
-            </div>
-          </div>
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
-              <Skeleton className="w-40 h-6 rounded" />
-              <Skeleton className="w-72 h-4 rounded" />
-            </div>
-            <Skeleton className="w-full h-28 rounded-2xl" />
-            <Skeleton className="w-full h-32 rounded-xl" />
-            <Skeleton className="w-full h-32 rounded-xl" />
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   const initials =
     authUser?.fname && authUser?.lname
       ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
@@ -1823,6 +1787,17 @@ export default function AccountSettingsPanel() {
 
         {/* Content Area */}
         <div className="min-w-0 flex-1">
+          {loading ? (
+            <div className="space-y-6 p-8" aria-busy="true" aria-label="Loading account settings">
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-72 max-w-full" />
+              </div>
+              <Skeleton className="h-28 w-full rounded-2xl" />
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-32 w-full rounded-xl" />
+            </div>
+          ) : <>
           <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
                   <div className="p-8">
                     <div>
@@ -2201,7 +2176,7 @@ export default function AccountSettingsPanel() {
                                   htmlFor="profileClientType"
                                   className="w-32 sm:w-40 shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none cursor-pointer"
                                 >
-                                  Client Type
+                                  Affiliation
                                 </label>
                                 <Select
                                   id="profileClientType"
@@ -2209,8 +2184,11 @@ export default function AccountSettingsPanel() {
                                   onChange={(e) => setClientType(e.target.value)}
                                   className="h-10 border-0 shadow-none bg-transparent hover:bg-transparent focus-visible:border-transparent focus-visible:ring-0 dark:border-0 dark:bg-transparent text-[13.5px] font-medium text-gray-900 dark:text-zinc-100 px-1 cursor-pointer"
                                 >
-                                  <option value="Student">Student (Currently Enrolled)</option>
-                                  <option value="Alumni">Alumni (Graduate / Former Student)</option>
+                                  {STUDENT_AFFILIATIONS.filter(({ value }) =>
+                                    value !== "Parent" || !studentNo || initialProfileValues.clientType === "Parent"
+                                  ).map(({ value, label }) => (
+                                    <option key={value} value={value}>{label}</option>
+                                  ))}
                                 </Select>
                               </div>
 
@@ -2220,14 +2198,14 @@ export default function AccountSettingsPanel() {
                                   htmlFor="profileStudentNumber"
                                   className="w-32 sm:w-40 shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none cursor-pointer"
                                 >
-                                  Student Number <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+                                  Linked Student Number
                                 </label>
                                 <Input
                                   type="text"
                                   id="profileStudentNumber"
                                   value={studentNo}
-                                  onChange={(e) => setStudentNo(e.target.value)}
-                                  placeholder="YYYY-XXXXX"
+                                  readOnly
+                                  placeholder="No linked record"
                                   className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 px-1"
                                 />
                               </div>
@@ -2256,7 +2234,7 @@ export default function AccountSettingsPanel() {
                                 type="button"
                                 variant="outline"
                                 onClick={handleDiscardProfileChanges}
-                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                               >
                                 Discard
                               </Button>
@@ -2772,7 +2750,7 @@ export default function AccountSettingsPanel() {
                               type="button"
                               onClick={() => setTotpStep("disable-flow")}
                               variant="outline"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable 2FA
                             </Button>
@@ -2919,7 +2897,7 @@ export default function AccountSettingsPanel() {
                               }}
                               disabled={recoveryCodesLoading}
                               variant="outline"
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-pup-maroon/70 dark:border-red-500/80 bg-white text-pup-maroon dark:bg-zinc-800 dark:text-red-400 hover:bg-pup-maroon/5 dark:hover:bg-red-500/10 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white text-gray-700 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Disable Codes
                             </Button>
@@ -3268,7 +3246,7 @@ export default function AccountSettingsPanel() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowAvatarModal(true)}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                     >
                       Choose Avatar...
                     </Button>
@@ -3487,7 +3465,7 @@ export default function AccountSettingsPanel() {
                                   { force: true, volumeOverride: soundVolume || DEFAULT_SOUND_VOLUME, userId: authUser?.id }
                                 )
                               }
-                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
                               Preview Sound
                             </Button>
@@ -3784,6 +3762,7 @@ export default function AccountSettingsPanel() {
                 </div>
               </div>
             </TabsContent>
+          </>}
           </div>
         </Tabs>
 
@@ -4161,14 +4140,14 @@ export default function AccountSettingsPanel() {
                           size="sm"
                           disabled={avatarSaving}
                           onClick={handleShuffle}
-                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <motion.span
                             animate={{ rotate: characterShuffleCount * 180 }}
                             transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
                             className="inline-flex items-center justify-center"
                           >
-                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                            <DiceFaces03Icon size="1em" className="text-gray-500 dark:text-zinc-400" />
                           </motion.span>
                           <span>
                             {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
@@ -4259,14 +4238,14 @@ export default function AccountSettingsPanel() {
                           size="sm"
                           disabled={avatarSaving}
                           onClick={handleShuffle}
-                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <motion.span
                             animate={{ rotate: characterShuffleCount * 180 }}
                             transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
                             className="inline-flex items-center justify-center"
                           >
-                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                            <DiceFaces03Icon size="1em" className="text-gray-500 dark:text-zinc-400" />
                           </motion.span>
                           <span>
                             {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
@@ -4282,7 +4261,7 @@ export default function AccountSettingsPanel() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowAvatarModal(false)}
-                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
                       Cancel
                     </Button>

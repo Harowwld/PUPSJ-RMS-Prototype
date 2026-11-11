@@ -2,6 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
+import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
 import DocumentsMatrixSkeleton from "@/components/staff/skeletons/DocumentsMatrixSkeleton"
 
 export default function DocumentsTabSkeleton() {
@@ -18,23 +19,16 @@ export default function DocumentsTabSkeleton() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-44 rounded-xl" />
             <Skeleton className="h-9 w-9 rounded-xl" />
+            <Skeleton className="h-9 w-44 rounded-xl" />
           </div>
         </div>
 
         {/* 2. KPI Metric Cards */}
-        <div className="border-t border-border dark:border-border grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-white dark:bg-card">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 rounded-xl border border-border bg-white dark:bg-card space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-28 rounded" />
-                <Skeleton className="h-7 w-7 rounded-lg" />
-              </div>
-              <Skeleton className="h-8 w-16 rounded" />
-              <Skeleton className="h-3 w-36 rounded" />
-            </div>
-          ))}
+        <div className="px-6 pb-6">
+          <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
+            <KpiStatCardsSkeleton count={3} />
+          </div>
         </div>
 
         {/* 3. Navigation Toolbar */}

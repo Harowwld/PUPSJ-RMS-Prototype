@@ -44,6 +44,10 @@ const NUMBER_OPERATOR_OPTIONS = [
   { value: "greater_than", label: "greater than" },
   { value: "less_than", label: "less than" },
 ]
+const TEXT_OPERATOR_OPTIONS = [
+  { value: "contains", label: "contains" },
+  { value: "does_not_contain", label: "does not contain" },
+]
 
 function ControlButton({ icon: Icon, children, badge, className, ...props }) {
   return (
@@ -77,7 +81,7 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
     onFiltersChange([...filters, {
       id: `office-filter-${idRef.current}`,
       fieldKey,
-      operator: field.operators?.[0]?.value || "is",
+      operator: field.operators?.[0]?.value || (field.type === "text" ? TEXT_OPERATOR_OPTIONS[0].value : "is"),
       value: field.type === "number" ? "0" : field.type === "multi" ? (field.options?.[0]?.value !== undefined ? [String(field.options[0].value)] : []) : String(field.options?.[0]?.value ?? ""),
     }])
   }
@@ -87,7 +91,7 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
     if (!field) return
     updateFilter(filterId, {
       fieldKey,
-      operator: field.operators?.[0]?.value || "is",
+      operator: field.operators?.[0]?.value || (field.type === "text" ? TEXT_OPERATOR_OPTIONS[0].value : "is"),
       value: field.type === "number" ? "0" : field.type === "multi" ? (field.options?.[0]?.value !== undefined ? [String(field.options[0].value)] : []) : String(field.options?.[0]?.value ?? ""),
     })
   }
@@ -109,7 +113,7 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
           ) : filters.map((filter, index) => {
             const field = fields.find((candidate) => candidate.key === filter.fieldKey) || fields[0]
             if (!field) return null
-            const operators = field.operators || (field.type === "number" ? NUMBER_OPERATOR_OPTIONS : OPERATOR_OPTIONS)
+            const operators = field.operators || (field.type === "number" ? NUMBER_OPERATOR_OPTIONS : field.type === "text" ? TEXT_OPERATOR_OPTIONS : OPERATOR_OPTIONS)
             const valueOptions = field.options || []
             return (
               <div key={filter.id} className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-xl border border-border/80 bg-white p-1.5 dark:border-white/10 dark:bg-zinc-900">
@@ -124,7 +128,9 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
                     {operators.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </Select>
                 </div>
-                {field.type === "number" ? (
+                {field.type === "text" ? (
+                  <Input type="text" value={filter.value || ""} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} placeholder={`Enter ${field.label.toLowerCase()}`} className="h-8 min-w-[110px] flex-1 rounded-lg px-2 text-xs" />
+                ) : field.type === "number" ? (
                   <Input type="number" value={filter.value} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} className="h-8 min-w-[110px] flex-1 rounded-lg px-2 text-xs" />
                 ) : field.type === "multi" ? (
                   <div role="group" aria-label={`${field.label} values`} className="max-h-28 min-w-[110px] flex-1 space-y-0.5 overflow-y-auto rounded-lg border border-border/80 p-1 dark:border-white/10">
@@ -170,15 +176,15 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
   )
 }
 
-export function SortPopover({ options = [], sortBy, onSortByChange, sortOrder, onSortOrderChange }) {
+export function SortPopover({ options = [], sortBy, onSortByChange, sortOrder, onSortOrderChange, align = "start", className }) {
   const [open, setOpen] = useState(false)
   const selectedOption = (options || []).find((option) => (option.key ?? option.value) === sortBy) || options[0]
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <ControlButton icon={ArrowUpDownIcon} className="max-w-[210px]">{`Sort: ${selectedOption?.label || "Department"}`}</ControlButton>
+        <ControlButton icon={ArrowUpDownIcon} className={cn("max-w-[210px]", className)}>{`Sort: ${selectedOption?.label || options[0]?.label || "Default"}`}</ControlButton>
       </PopoverTrigger>
-      <PopoverContent align="start" className="max-h-[calc(100dvh-2rem)] w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl">
+      <PopoverContent align={align} className="max-h-[calc(100dvh-2rem)] w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl">
         <PopoverHeader className="px-4.5 py-2.5"><PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">Sort by</PopoverTitle></PopoverHeader>
         <div className="max-h-[min(55vh,18rem)] space-y-0.5 overflow-y-auto p-1">
           {(options || []).map((option) => {

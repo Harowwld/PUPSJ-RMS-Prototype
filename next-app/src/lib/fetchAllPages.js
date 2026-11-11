@@ -7,9 +7,14 @@ export async function fetchAllPages(path, pageSize) {
     params.set("limit", String(pageSize));
     params.set("offset", String(offset));
     const res = await fetch(`${path.split("?")[0]}?${params}`, { cache: "no-store" });
-    const json = await res.json();
+    let json = null;
+    try {
+      json = await res.json();
+    } catch {
+      // Response was empty or not valid JSON (e.g. 500 error page or HTML redirect)
+    }
     if (!res.ok || !json?.ok || !Array.isArray(json.data)) {
-      throw new Error(json?.error || "Unable to load records");
+      throw new Error(json?.error || (res.statusText ? `Server returned ${res.status} (${res.statusText})` : "Unable to load records"));
     }
     rows.push(...json.data);
     if (json.data.length < pageSize) return rows;

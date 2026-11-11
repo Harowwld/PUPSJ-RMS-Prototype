@@ -37,6 +37,8 @@ export function useTableScroll(dependencies = []) {
     if (typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver(checkScroll);
       ro.observe(el);
+      const table = el.querySelector("table");
+      if (table) ro.observe(table);
     }
 
     return () => {

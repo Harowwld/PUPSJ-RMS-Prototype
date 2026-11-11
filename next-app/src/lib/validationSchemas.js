@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export function formatRegistrarStudentName({ firstName, middleName, lastName }) {
+  const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
+  const last = String(lastName || "").trim().replace(/\s+/g, " ").toUpperCase();
+  const middleLetters = String(middleName || "").replace(/[^a-z]/gi, "");
+  const middleInitial = middleLetters ? ` ${middleLetters[0].toUpperCase()}.` : "";
+  return first && last ? `${last}, ${first}${middleInitial}` : "";
+}
+
 // ============================================================================
 // 1. Regular Expression Patterns
 // ============================================================================

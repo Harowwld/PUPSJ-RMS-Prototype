@@ -498,6 +498,13 @@ async function officeBackupTablesAndRules(officeId) {
     }
   }
   const proposalRows = await dbAll("SELECT id FROM event_proposals WHERE office_id = ?", [officeId]);
+  if (officeId === "osas") {
+    tables.push("event_proposal_versions");
+    const proposalIds = new Set(proposalRows.map((row) => String(row.id)));
+    rules.event_proposal_versions = {
+      predicate: (row) => proposalIds.has(String(row.event_proposal_id)),
+    };
+  }
   const requestRows = await dbAll("SELECT id FROM document_requests WHERE office_id = ?", [officeId]);
   tables.push("transaction_updates");
   const proposalIds = new Set(proposalRows.map((row) => String(row.id)));
@@ -706,16 +713,36 @@ async function packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType
     const references = await dbAll(
       `SELECT 'event proposal' AS kind, id, storage_filename AS filename FROM event_proposals
         WHERE office_id = ? AND storage_filename IS NOT NULL
+       UNION ALL SELECT 'event proposal revision ' || revision_number, epv.id, epv.storage_filename
+         FROM event_proposal_versions epv
+         JOIN event_proposals ep ON ep.id = epv.event_proposal_id
+        WHERE ep.office_id = ? AND epv.storage_filename IS NOT NULL AND epv.file_pruned_at IS NULL
        UNION ALL SELECT 'post-event narrative', id, narrative_storage_filename FROM osas_post_event_reports
        UNION ALL SELECT 'post-event liquidation', id, liquidation_storage_filename FROM osas_post_event_reports
         WHERE liquidation_storage_filename IS NOT NULL`,
-      [normOffice],
+      [normOffice, normOffice],
     );
     for (const reference of references) {
       const filename = reference.filename;
       if (!filename || path.basename(filename) !== filename || !fs.existsSync(path.join(officeUploadsDir, filename))) {
         throw new Error(`Backup cannot continue: ${reference.kind} #${reference.id} is missing from ${officeUploadsDir}`);
       }
+    }
+
+    const prunedFiles = await dbAll(
+      `SELECT DISTINCT epv.storage_filename
+         FROM event_proposal_versions epv
+         JOIN event_proposals ep ON ep.id = epv.event_proposal_id
+        WHERE ep.office_id = ?
+          AND epv.file_pruned_at IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM event_proposals current_ep WHERE current_ep.storage_filename = epv.storage_filename)
+          AND NOT EXISTS (SELECT 1 FROM event_proposal_versions current_epv WHERE current_epv.storage_filename = epv.storage_filename AND current_epv.file_pruned_at IS NULL)
+          AND NOT EXISTS (SELECT 1 FROM documents d WHERE d.storage_filename = epv.storage_filename)
+          AND NOT EXISTS (SELECT 1 FROM osas_post_event_reports o WHERE o.narrative_storage_filename = epv.storage_filename OR o.liquidation_storage_filename = epv.storage_filename)`,
+      [normOffice],
+    );
+    for (const prunedFile of prunedFiles) {
+      if (prunedFile.storage_filename) handledStorageFilenames.add(prunedFile.storage_filename);
     }
 
     const bylawsDir = path.join(localDir, "storage", "osas", "bylaws");
@@ -1254,7 +1281,7 @@ export async function executeRestoreBackup(
     ])));
     if (scopedSql !== dataSql) throw new Error("Backup database dump contains records from another office.");
     if (officeBackupId !== "osas" && targetTables.some((table) =>
-      ["student_organizations", "organization_bylaws_versions", "organization_officers", "osas_post_event_reports"].includes(table)
+      ["student_organizations", "organization_bylaws_versions", "organization_officers", "osas_post_event_reports", "event_proposal_versions"].includes(table)
     )) {
       throw new Error("Backup contains OSAS records for another office.");
     }
@@ -1271,7 +1298,7 @@ export async function executeRestoreBackup(
         throw new Error("Unauthorized: You cannot restore Registrar records to OSAS.");
       }
     } else if (!officeBackupId && normUserOffice === "registrar") {
-      const hasOsasOnlyTables = targetTables.some((t) => ["event_proposals"].includes(t));
+      const hasOsasOnlyTables = targetTables.some((t) => ["event_proposals", "event_proposal_versions"].includes(t));
       if (hasOsasOnlyTables) {
         throw new Error("Unauthorized: You cannot restore OSAS records to the Registrar office.");
       }
@@ -1445,6 +1472,9 @@ export async function executeRestoreBackup(
 
     const mergeInserts = targetTables
       .map((tbl) => {
+        if (mode === "overwrite" && officeBackupId && tbl === "event_proposals") {
+          return `DELETE FROM public.event_proposal_versions WHERE event_proposal_id IN (SELECT id FROM public.event_proposals WHERE office_id = '${officeBackupId}');\nDELETE FROM public.event_proposals WHERE office_id = '${officeBackupId}';\nINSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`;
+        }
         if (mode === "overwrite" && officeBackupId && OFFICE_SCOPED_BACKUP_TABLES.has(tbl)) {
           return `DELETE FROM public.${tbl} WHERE office_id = '${officeBackupId}';\nINSERT INTO public.${tbl} SELECT * FROM staging_${tbl} ON CONFLICT DO NOTHING;`;
         }

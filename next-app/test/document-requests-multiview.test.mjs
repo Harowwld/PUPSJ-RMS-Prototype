@@ -61,7 +61,7 @@ test("Document Requests multi-view architecture and toolbar design standard", ()
   );
   assert.match(
     tabContent,
-    /import\s+DocumentRequestKanbanPipeline\s+from\s+["']@\/components\/staff\/requests\/DocumentRequestKanbanPipeline["']/,
+    /import\s+DocumentRequestKanbanPipeline(?:,\s*\{[^}]+\})?\s+from\s+["']@\/components\/staff\/requests\/DocumentRequestKanbanPipeline["']/,
     "DocumentRequestsTab must import DocumentRequestKanbanPipeline"
   );
 

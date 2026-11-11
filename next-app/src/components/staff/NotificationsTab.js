@@ -5,6 +5,7 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import useUrlPage from "@/hooks/useUrlPage";
+import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -188,23 +189,23 @@ export default function NotificationsTab({
   const [readCount, setReadCount] = useState(0);
 
   // Tabs: ONLY "unread" and "read"
-  const [activeTab, setActiveTab] = useState("unread");
+  const [activeTab, setActiveTab] = useOsasViewPreference("notifications", "activeTab", "unread");
 
   // Search & Filters
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useOsasViewPreference("notifications", "searchQuery", "");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [typeFilters, setTypeFilters] = useState([]);
-  const [decisionFilters, setDecisionFilters] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("DESC");
-  const [groupBy, setGroupBy] = useState("date");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [typeFilters, setTypeFilters] = useOsasViewPreference("notifications", "typeFilters", []);
+  const [decisionFilters, setDecisionFilters] = useOsasViewPreference("notifications", "decisionFilters", []);
+  const [filterRules, setFilterRules] = useOsasViewPreference("notifications", "filterRules", []);
+  const [sortBy, setSortBy] = useOsasViewPreference("notifications", "sortBy", "created_at");
+  const [sortOrder, setSortOrder] = useOsasViewPreference("notifications", "sortOrder", "DESC");
+  const [groupBy, setGroupBy] = useOsasViewPreference("notifications", "groupBy", "date");
+  const [startDate, setStartDate] = useOsasViewPreference("notifications", "startDate", "");
+  const [endDate, setEndDate] = useOsasViewPreference("notifications", "endDate", "");
 
   // Pagination
   const [page, setPage] = useUrlPage();
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useOsasViewPreference("notifications", "pageSize", 20);
 
   // Side Sheet Details state
   const [selectedNotif, setSelectedNotif] = useState(null);
@@ -708,7 +709,7 @@ export default function NotificationsTab({
           />
 
           {/* Connected Row: Read / Unread Tabs */}
-          <div className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 bg-white dark:bg-card">
+          <div className="p-4 sm:px-5 sm:py-3 bg-white dark:bg-card">
             <SegmentedControl
               value={activeTab}
               onValueChange={setActiveTab}
@@ -791,12 +792,13 @@ export default function NotificationsTab({
             />
           )}
 
+          {error && items.length > 0 && <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{error}</p>}
           {/* 4. Grouped Notification List / Skeletons / Empty State */}
-          {isLoading && !isRefreshing ? (
+          {initialLoading ? (
             <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
               <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} />
             </div>
-          ) : error ? (
+          ) : error && items.length === 0 ? (
             <div className="flex-[1_0_auto] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
@@ -979,7 +981,7 @@ export default function NotificationsTab({
           )}
 
           {/* 5. Pagination Footer */}
-          {!isLoading && !error && total > 0 && items.length > 0 && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
+          {total > 0 && items.length > 0 && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
         </Card>
 
         {/* 6. Sliding Detail Sheet */}
@@ -996,7 +998,7 @@ export default function NotificationsTab({
             showCloseButton={false}
             className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full p-0 overflow-hidden focus:outline-none focus-visible:outline-none"
           >
-            <SheetHeader className="shrink-0 p-0 border-b border-border bg-white dark:bg-card">
+            <SheetHeader className="shrink-0 p-0">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100">
@@ -1148,12 +1150,6 @@ export default function NotificationsTab({
                             </div>
                           </InfoRow>
 
-                          <InfoRow
-                            icon=" Calendar01Icon"
-                            label="Timestamp"
-                            value={formatPHDateTime(selectedNotif.created_at)}
-                          />
-
                           <InfoRow icon=" Mail01Icon" label="Read Status">
                             <div className="flex items-center gap-2">
                               <span
@@ -1273,7 +1269,7 @@ export default function NotificationsTab({
                     </div>
 
                     <div className="pt-2">
-                      <div className="rounded-xl border border-border overflow-hidden h-[340px] bg-white dark:bg-zinc-900 relative">
+                      <div className="rounded-xl border border-border overflow-hidden h-[clamp(480px,65dvh,640px)] bg-white dark:bg-zinc-900 relative">
                         <ResilientPDFViewer
                           src={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
                           docId={selectedNotif.entity_id || selectedNotif.metadata?.document_id}
@@ -1293,7 +1289,7 @@ export default function NotificationsTab({
             ) : null}
 
             {/* Executive Action Bar Footer */}
-            <SheetFooter className="shrink-0 p-4 px-6 border-t border-border flex flex-row items-center justify-between bg-white dark:bg-card">
+            <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
               <Button
                 type="button"
                 variant="outline"

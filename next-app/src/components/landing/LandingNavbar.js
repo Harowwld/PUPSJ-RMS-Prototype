@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -196,13 +197,12 @@ export default function LandingNavbar() {
                     Dashboard ↗
                   </Button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => router.push("/login")}
+                  <Link
+                    href="/login"
                     className="h-8 px-3 rounded-full text-[13px] font-medium cursor-pointer bg-transparent text-black"
                   >
                     Sign In
-                  </button>
+                  </Link>
                 )}
 
                 {/* Mobile Sidebar Trigger */}

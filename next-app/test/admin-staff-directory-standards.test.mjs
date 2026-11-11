@@ -156,6 +156,28 @@ test("Admin Staff Directory: Grid View with compact profile cards, interactive a
     "Grid cards must use compact size-9 avatar"
   );
 
+  // Apple HIG Grouped Inset card tokens & concentric metadata block
+  assert.ok(
+    content.includes("border-black/[0.08] dark:border-white/10"),
+    "StaffGridCard outer surface must use Apple hairline border tokens"
+  );
+
+  assert.ok(
+    content.includes("border-black/[0.06] dark:border-white/[0.08]") &&
+      content.includes("divide-y divide-black/[0.05] dark:divide-white/[0.06]"),
+    "StaffGridCard must feature a concentric Apple Inset Grouped metadata block with hairline row dividers"
+  );
+
+  assert.ok(
+    content.includes("Copy Employee ID"),
+    "StaffGridCard inset metadata block must include an inline Employee ID quick-copy control"
+  );
+
+  assert.ok(
+    content.includes("motion-safe:active:scale-[0.985]"),
+    "StaffGridCard must gate press scale feedback behind motion-safe:"
+  );
+
   // Interactive Add Card in grid view
   assert.match(
     content,
@@ -199,32 +221,41 @@ test("Admin Staff Directory: Grid View with compact profile cards, interactive a
   );
 });
 
-test("Admin Staff Directory: Skeleton mirrors 2-tier tabs/toolbar hierarchy and h-9 buttons", () => {
-  const skeletonFile = path.join(ROOT_DIR, "src/components/admin/skeletons/StaffDirectorySkeleton.js");
-  assert.ok(fs.existsSync(skeletonFile), "StaffDirectorySkeleton.js must exist");
-  const content = fs.readFileSync(skeletonFile, "utf8");
+test("Admin Staff Directory: loading is data-only and cannot duplicate page chrome", () => {
+  const content = fs.readFileSync(path.join(ROOT_DIR, "src/components/admin/skeletons/StaffDirectorySkeleton.js"), "utf8");
+  assert.doesNotMatch(content, /PageHeader|TabsList|DataViewToolbar|Staff Directory/);
+  assert.match(content, /layoutView === "grid"/);
+  assert.match(content, /<Table columns=/);
+});
 
-  // Header metric skeleton
+test("Global Personnel Directory: Grid View with Apple Inset Grouped cards, [Grid] [Table] switcher, and matching skeleton", () => {
+  const globalStaffFile = path.join(ROOT_DIR, "src/components/systemadmin/GlobalStaffTab.js");
+  assert.ok(fs.existsSync(globalStaffFile), "GlobalStaffTab.js must exist");
+  const content = fs.readFileSync(globalStaffFile, "utf8");
+
   assert.match(
     content,
-    /inline-grid\s+grid-flow-col\s+auto-cols-fr/,
-    "Skeleton must mirror equal-width segmented control"
+    /value:\s*["']grid["'][\s\S]*label:\s*["']Grid["'][\s\S]*value:\s*["']table["'][\s\S]*label:\s*["']Table["']/,
+    "GlobalStaffTab must have [Grid] [Table] view switcher with canonical sequence"
   );
 
-  // Strict h-9 sizing on action buttons (no h-10 w-10 or h-10 w-32)
-  assert.doesNotMatch(
-    content,
-    /h-10\s+w-10/,
-    "Skeleton must not have h-10 w-10 buttons; must use h-9"
+  assert.ok(
+    content.includes("function GlobalStaffGridCard(") &&
+      content.includes("border-black/[0.08] dark:border-white/10") &&
+      content.includes("border-black/[0.06] dark:border-white/[0.08]") &&
+      content.includes("divide-y divide-black/[0.05] dark:divide-white/[0.06]") &&
+      content.includes("motion-safe:active:scale-[0.985]"),
+    "GlobalStaffTab must render GlobalStaffGridCard with Apple HIG Grouped Inset anatomy and motion-safe press feedback"
   );
-  assert.doesNotMatch(
-    content,
-    /h-10\s+w-32/,
-    "Skeleton must not have h-10 w-32 buttons; must use h-9"
+
+  const globalSkeletonFile = path.join(
+    ROOT_DIR,
+    "src/components/systemadmin/skeletons/GlobalStaffSkeleton.js"
   );
-  assert.match(
-    content,
-    /h-9/,
-    "Skeleton must use h-9 for action buttons"
+  const skeletonContent = fs.readFileSync(globalSkeletonFile, "utf8");
+  assert.ok(
+    skeletonContent.includes('layoutView = "table"') &&
+      skeletonContent.includes("border-black/[0.06] dark:border-white/[0.08]"),
+    "GlobalStaffSkeleton must support layoutView='grid' with matching Apple Inset Grouped skeleton cards"
   );
 });

@@ -59,7 +59,7 @@ export default function BulkImportTab({
   const [localCurrentPage, setLocalCurrentPage] = useState(1)
   const currentPage = currentPageProp ?? localCurrentPage
   const setCurrentPage = setCurrentPageProp ?? setLocalCurrentPage
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredImportRows = useMemo(() => {
@@ -157,39 +157,39 @@ export default function BulkImportTab({
             description="Upload CSV files to batch-import and populate system taxonomies."
             className="p-6"
             actions={
-              <button
-                type="button"
-                onClick={() => setShowInstructions(true)}
-                className="text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
-                title="Import Instructions"
-              >
-                <HelpCircleIcon size="1em" className="text-[18px]" />
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href={
+                    isOsas
+                      ? "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Event Proposal,,true,false%0ADOCUMENT TYPE,Constitution & By-Laws (CBL),,true,false%0ADOCUMENT TYPE,Activity Request,,true,false%0ADOCUMENT TYPE,Financial Liquidation Report,,true,false%0ADOCUMENT TYPE,Clearance Form,,true,false"
+                      : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Transcript of Records,,false,true%0ADOCUMENT TYPE,Diploma,,false,true%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false%0ADOCUMENT TYPE,Form 137,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,%0ASection,Block 1,BSIT,%0ASection,Section 1,BSA,"
+                  }
+                  download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
+                >
+                  Download Template
+                </a>
+                <CopyButton
+                  onClick={handleCopySample}
+                  entityName="Sample CSV"
+                  idleLabel="Copy Sample CSV"
+                  copiedLabel="Sample CSV Copied!"
+                  showToast={false}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowInstructions(true)}
+                  aria-label="Import Instructions"
+                  className="text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
+                  title="Import Instructions"
+                >
+                  <HelpCircleIcon size="1em" className="text-[18px]" />
+                </button>
+              </div>
             }
           />
           
           <div className="p-6 flex flex-col flex-1 gap-6 w-full min-h-0">
-            <div className="flex items-center gap-2">
-              <a
-                href={
-                  isOsas
-                    ? "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Event Proposal,,true,false%0ADOCUMENT TYPE,Constitution & By-Laws (CBL),,true,false%0ADOCUMENT TYPE,Activity Request,,true,false%0ADOCUMENT TYPE,Financial Liquidation Report,,true,false%0ADOCUMENT TYPE,Clearance Form,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,"
-                    : "data:text/csv;charset=utf-8,Category,Name,Code,IsCompliance,IsRequestable%0ADOCUMENT TYPE,Transcript of Records,,false,true%0ADOCUMENT TYPE,Diploma,,false,true%0ADOCUMENT TYPE,PSA Birth Certificate,,true,false%0ADOCUMENT TYPE,Form 137,,true,false%0ACourse,Bachelor of Science in Information Technology,BSIT,%0ACourse,Bachelor of Science in Accountancy,BSA,%0ASection,Block 1,BSIT,%0ASection,Section 1,BSA,"
-                }
-                download={isOsas ? "OSAS-IMPORT-TEMPLATE.csv" : "PUP-IMPORT-TEMPLATE.csv"}
-                className="inline-flex h-9 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer active:scale-95"
-              >
-                Download Template
-              </a>
-              <CopyButton
-                onClick={handleCopySample}
-                entityName="Sample CSV"
-                idleLabel="Copy Sample CSV"
-                copiedLabel="Sample CSV Copied!"
-                showToast={false}
-              />
-            </div>
-
             {/* Consolidated Dropzone */}
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
@@ -314,7 +314,7 @@ export default function BulkImportTab({
                         ref={tableContainerRef}
                         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                       >
-              <Table columns={["selection", "number", "category", { kind: "text", minWidth: 260, maxWidth: 1000, growthWeight: 6 }, { kind: "identifier", minWidth: 100, maxWidth: 160, growthWeight: 0 }, "status"]} className="min-w-[850px]">
+              <Table columns={["selection", "number", "category", { kind: "text", minWidth: 260, maxWidth: 1000, growthWeight: 6 }, { kind: "text", minWidth: 100, maxWidth: 160, growthWeight: 0 }, "status"]} className="min-w-[850px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                               <th className="w-12 min-w-[48px] p-4 text-center">
@@ -361,7 +361,7 @@ export default function BulkImportTab({
                         }}
                       >
                         <option value="DOCUMENT TYPE">Document Type</option>
-                        <option value="Course">{isOsas ? "Academic Program" : "Course"}</option>
+                        {!isOsas && <option value="Course">Course</option>}
                         {!isOsas && <option value="Section">Section</option>}
                       </Select>
                     </td>
@@ -487,8 +487,12 @@ export default function BulkImportTab({
                               }
                             >
                               <option value="DOCUMENT TYPE">Document Type</option>
-                              <option value="Course">{isOsas ? "Academic Program" : "Course"}</option>
-                              {!isOsas && <option value="Section">Section</option>}
+                              {(!isOsas || editData.category === "Course") && (
+                                <option value="Course" disabled={isOsas}>{isOsas ? "Course (unavailable)" : "Course"}</option>
+                              )}
+                              {(!isOsas || editData.category === "Section") && (
+                                <option value="Section" disabled={isOsas}>Section</option>
+                              )}
                             </Select>
                           ) : (
                             <div
@@ -843,18 +847,22 @@ export default function BulkImportTab({
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">PSA Birth Certificate,</span>
                     <span className="text-gray-900 dark:text-zinc-300">,true,false</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-900 dark:text-zinc-300">Course,</span>
-                    <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
-                    <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
-                    <span className="text-gray-400 dark:text-zinc-500">,,</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-900 dark:text-zinc-300">Section,</span>
-                    <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
-                    <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
-                    <span className="text-gray-400 dark:text-zinc-500">,,</span>
-                  </div>
+                  {!isOsas && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-900 dark:text-zinc-300">Course,</span>
+                        <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
+                        <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
+                        <span className="text-gray-400 dark:text-zinc-500">,,</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-900 dark:text-zinc-300">Section,</span>
+                        <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
+                        <span className="text-pup-maroon dark:text-red-400 font-semibold">BSIT</span>
+                        <span className="text-gray-400 dark:text-zinc-500">,,</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -872,16 +880,18 @@ export default function BulkImportTab({
                     desc: "Supports IsCompliance (true/false) and IsRequestable (true/false).",
                     icon: "Files01Icon",
                   },
-                  {
-                    label: "Course",
-                    desc: "Short code required (e.g. BSIT, BSA).",
-                    icon: "LibraryIcon",
-                  },
-                  {
-                    label: "Section",
-                    desc: "'Code' must match a degree program.",
-                    icon: "ListViewIcon",
-                  },
+                  ...(!isOsas ? [
+                    {
+                      label: "Course",
+                      desc: "Short code required (e.g. BSIT, BSA).",
+                      icon: "LibraryIcon",
+                    },
+                    {
+                      label: "Section",
+                      desc: "'Code' must match a degree program.",
+                      icon: "ListViewIcon",
+                    },
+                  ] : []),
                 ].map((rule) => (
                   <div
                     key={rule.label}

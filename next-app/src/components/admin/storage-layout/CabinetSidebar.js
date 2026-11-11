@@ -1,6 +1,6 @@
 "use client"
 
-import React, { memo, useMemo } from "react"
+import React, { memo, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SegmentedControl } from "@/components/ui/tabs"
@@ -13,7 +13,6 @@ import {
   Clock01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
-  PencilEdit01Icon,
   Add01Icon,
   MinusSignIcon,
 } from "hugeicons-react"
@@ -34,8 +33,13 @@ const CabinetSidebar = memo(({
   historyIndex = 0,
   revertToHistoryState,
   studentDrawerUsage,
+  canvasControls,
 }) => {
-  const [activeTab, setActiveTab] = React.useState("properties")
+  const [activeTab, setActiveTab] = React.useState("canvas")
+
+  useEffect(() => {
+    setActiveTab(selectedCabinetIds.size > 0 ? "selection" : "canvas")
+  }, [selectedCabinetIds])
 
   // Calculate total student records stored in this cabinet
   const totalCabinetRecords = useMemo(() => {
@@ -49,58 +53,59 @@ const CabinetSidebar = memo(({
   }, [selectedCabinet, activeRoom, studentDrawerUsage])
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-card">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white dark:bg-card">
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-border dark:border-border">
+      <div className="shrink-0 p-5 border-b border-border dark:border-border">
         <div>
           <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-            {selectedCabinetIds.size === 0
-              ? "Selection Details"
-              : selectedCabinetIds.size > 1
-                ? "Group Selection"
-                : selectedCabinet?.isDoor
-                  ? "Entrance Details"
-                  : "Cabinet Details"}
+            {activeTab === "canvas"
+              ? "Canvas Settings"
+              : activeTab === "history"
+                ? "Layout History"
+                : selectedCabinetIds.size === 0
+                  ? "Selection"
+                  : selectedCabinetIds.size > 1
+                    ? `${selectedCabinetIds.size} cabinets selected`
+                    : selectedCabinet?.isDoor
+                      ? "Entrance"
+                      : selectedCabinet
+                        ? `Cabinet ${selectedCabinet.id}`
+                        : "Selection"}
           </h3>
-          <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-xs font-normal text-gray-500 dark:text-zinc-400">
-              {selectedCabinetIds.size > 1
-                ? `${selectedCabinetIds.size} cabinets selected`
-                : selectedCabinet
-                  ? `Cabinet ${selectedCabinet.id}`
+          {(activeTab !== "selection" || selectedCabinetIds.size === 0) && (
+            <p className="mt-0.5 text-xs font-normal text-gray-500 dark:text-zinc-400">
+              {activeTab === "canvas"
+                ? "Add cabinets and adjust this room's view."
+                : activeTab === "history"
+                  ? "Choose a previous step to restore the layout."
                   : "Select a cabinet on the map"}
             </p>
-            {selectedCabinet && !selectedCabinet.isDoor && selectedCabinetIds.size === 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => onOpenRenameCabinet?.(selectedCabinet)}
-                className="h-6 w-6 rounded-md border border-border dark:border-border bg-gray-50/80 hover:bg-white dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white shadow-xs cursor-pointer active:scale-95 transition-all"
-                title="Rename Cabinet"
-              >
-                <PencilEdit01Icon size="1em" className="text-[12px]" />
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="p-5 flex-1 overflow-y-auto space-y-5 scrollbar-thin">
-        {/* Apple Segmented Control */}
-        <SegmentedControl
-          value={activeTab}
-          onValueChange={setActiveTab}
-          variant="capsule"
-          className="w-full inline-grid grid-flow-col auto-cols-fr"
-          items={[
-            { value: "properties", label: "Properties" },
-            { value: "history", label: history.length > 0 ? `History (${history.length})` : "History" },
-          ]}
-        />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="shrink-0 px-5 pt-5">
+          <SegmentedControl
+            value={activeTab}
+            onValueChange={setActiveTab}
+            variant="capsule"
+            className="w-full"
+            listClassName="w-full"
+            aria-label="Storage editor panel sections"
+            items={[
+              { value: "canvas", label: "Canvas" },
+              { value: "selection", label: "Selection" },
+              { value: "history", label: history.length > 0 ? `History (${history.length})` : "History" },
+            ]}
+          />
+        </div>
 
-        {activeTab === "properties" && (
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 scrollbar-thin">
+        {activeTab === "canvas" && canvasControls}
+
+        {activeTab === "selection" && (
           !selectedCabinet ? (
             <div className="flex flex-1 flex-col items-center justify-center min-h-[300px] py-12 text-center">
               <EmptyState
@@ -366,6 +371,7 @@ const CabinetSidebar = memo(({
             </p>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

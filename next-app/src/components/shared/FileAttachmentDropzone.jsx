@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty";
-import { Attachment01Icon , Add01Icon, Cancel01Icon, CloudUploadIcon, Download01Icon, Image01Icon, ViewIcon} from "hugeicons-react";
+import { Attachment01Icon, Add01Icon, Cancel01Icon, CloudUploadIcon, Delete02Icon, Download01Icon, Image01Icon, ViewIcon } from "hugeicons-react";
 
 /**
  * Formats bytes into clean human-readable strings (e.g. 111 KB, 12 MB)
@@ -20,7 +20,57 @@ export function formatFileSize(bytes) {
   if (!bytes || isNaN(bytes) || bytes <= 0) return "0 KB";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const mb = bytes / (1024 * 1024);
+  return mb % 1 === 0 ? `${mb.toFixed(0)} MB` : `${mb.toFixed(1)} MB`;
+}
+
+/**
+ * Validates a file against an accept string (e.g. ".pdf,.png,image/*,application/pdf")
+ */
+export function isFileAccepted(file, acceptString) {
+  if (!acceptString || acceptString === "*" || acceptString.trim() === "") return true;
+  if (!file) return false;
+
+  const fileName = String(file.name || "").toLowerCase();
+  const fileType = String(file.type || "").toLowerCase();
+  const tokens = acceptString
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (tokens.length === 0) return true;
+
+  return tokens.some((rawToken) => {
+    // 1. Extension match (e.g. .pdf, .png, .jpg)
+    if (rawToken.startsWith(".")) {
+      return fileName.endsWith(rawToken);
+    }
+
+    // 2. Wildcard MIME type match (e.g. image/*, audio/*)
+    if (rawToken.endsWith("/*")) {
+      const prefix = rawToken.slice(0, -1);
+      if (fileType.startsWith(prefix)) return true;
+      if (prefix === "image/") {
+        return /\.(png|jpe?g|webp|gif|svg|bmp|ico)$/i.test(fileName);
+      }
+      return false;
+    }
+
+    // 3. Exact MIME type match (e.g. application/pdf, image/png)
+    if (fileType && fileType === rawToken) return true;
+
+    // Fallback known extension checks for common MIME types if browser leaves file.type empty
+    if (rawToken === "application/pdf" && fileName.endsWith(".pdf")) return true;
+    if (rawToken === "image/png" && fileName.endsWith(".png")) return true;
+    if ((rawToken === "image/jpeg" || rawToken === "image/jpg") && (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg"))) return true;
+    if (rawToken === "image/webp" && fileName.endsWith(".webp")) return true;
+    if (rawToken === "image/svg+xml" && fileName.endsWith(".svg")) return true;
+    if (rawToken === "application/msword" && fileName.endsWith(".doc")) return true;
+    if (rawToken === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" && fileName.endsWith(".docx")) return true;
+    if (rawToken === "application/zip" && fileName.endsWith(".zip")) return true;
+
+    return false;
+  });
 }
 
 /**
@@ -111,6 +161,7 @@ export function AttachedFileCard({
   categories = null,
   onCategoryChange = null,
   className = "",
+  animateLayout = true,
 }) {
   const file = item?.file || item;
   const filename = item?.original_filename || file?.name || "Attached File";
@@ -138,7 +189,84 @@ export function AttachedFileCard({
     };
   }, [previewBlobUrl]);
 
+  const isPdf = formatConfig.extLabel === "PDF";
+  const pdfSourceKey = item?.url || file;
+  const [pdfThumbnail, setPdfThumbnail] = useState({ source: null, url: null });
+  const pdfThumbnailUrl = pdfThumbnail.source === pdfSourceKey ? pdfThumbnail.url : null;
+  useEffect(() => {
+    if (!isPdf || (!item?.url && !(file instanceof Blob))) return;
+
+    let active = true;
+    let loadingTask = null;
+    const controller = new AbortController();
+
+    async function renderPdfThumbnail() {
+      try {
+        let data;
+        if (file instanceof Blob) {
+          data = await file.arrayBuffer();
+        } else if (item?.url) {
+          const response = await fetch(item.url, {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: controller.signal,
+          });
+          if (!response.ok) throw new Error("Unable to load the PDF attachment.");
+          data = await response.arrayBuffer();
+        } else {
+          return;
+        }
+        if (!active) return;
+
+        const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
+        loadingTask = pdfjs.getDocument({ data });
+        const pdf = await loadingTask.promise;
+        if (!active) return;
+
+        const page = await pdf.getPage(1);
+        if (!active) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(1.5, 320 / (baseViewport.width || 612));
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        const context = canvas.getContext("2d", { alpha: false });
+        if (!context) return;
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: context, viewport }).promise;
+        if (active) setPdfThumbnail({ source: pdfSourceKey, url: canvas.toDataURL("image/jpeg", 0.88) });
+      } catch {
+        if (active) setPdfThumbnail({ source: pdfSourceKey, url: null });
+      } finally {
+        try {
+          loadingTask?.destroy?.();
+        } catch {}
+      }
+    }
+
+    renderPdfThumbnail();
+    return () => {
+      active = false;
+      controller.abort();
+      try {
+        loadingTask?.destroy?.();
+      } catch {}
+    };
+  }, [file, isPdf, item?.url, pdfSourceKey]);
+
   const imageUrl = item?.url || previewBlobUrl;
+  const documentPlaceholder = (
+    <div className="flex flex-col gap-1.5 w-full pointer-events-none opacity-90">
+      <div className="h-2 w-7/12 rounded-xs bg-gray-300/80 dark:bg-zinc-700/60" />
+      <div className="h-1.5 w-11/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
+      <div className="h-1.5 w-10/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
+      <div className="h-1.5 w-8/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
+    </div>
+  );
 
   const downloadUrl = item?.url || item?.downloadUrl || null;
 
@@ -157,11 +285,11 @@ export function AttachedFileCard({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95, y: 4 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+      layout={animateLayout}
+      initial={animateLayout ? { opacity: 0, scale: 0.95, y: 4 } : false}
+      animate={animateLayout ? { opacity: 1, scale: 1, y: 0 } : undefined}
+      exit={animateLayout ? { opacity: 0, scale: 0.9, transition: { duration: 0.15 } } : undefined}
+      transition={animateLayout ? { type: "spring", stiffness: 100, damping: 20 } : undefined}
       className={cn(
         "group relative flex flex-col w-44 sm:w-48 shrink-0 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)] hover:border-black/15 dark:hover:border-white/20 hover:shadow-md p-2 transition-all select-none",
         className
@@ -175,7 +303,12 @@ export function AttachedFileCard({
           onPreview ? "cursor-pointer" : "cursor-default"
         )}
       >
-        {imageUrl ? (
+        {isPdf ? (
+          pdfThumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={pdfThumbnailUrl} alt={`${filename} first-page preview`} className="w-full h-full object-contain rounded-lg" />
+          ) : documentPlaceholder
+        ) : imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
@@ -184,12 +317,7 @@ export function AttachedFileCard({
           />
         ) : (
           /* Document skeleton lines */
-          <div className="flex flex-col gap-1.5 w-full pointer-events-none opacity-90">
-            <div className="h-2 w-7/12 rounded-xs bg-gray-300/80 dark:bg-zinc-700/60" />
-            <div className="h-1.5 w-11/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
-            <div className="h-1.5 w-10/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
-            <div className="h-1.5 w-8/12 rounded-xs bg-gray-200/90 dark:bg-zinc-800/80" />
-          </div>
+          documentPlaceholder
         )}
 
         {/* Extension Pill Badge at Bottom-Right */}
@@ -278,7 +406,7 @@ export function AttachedFileCard({
           </div>
         ) : categoryLabel ? (
           <div className="mt-1.5 flex items-center">
-            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700/60 truncate">
+            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "truncate")}>
               {categoryLabel}
             </span>
           </div>
@@ -317,7 +445,7 @@ export function UploadProgressCard({
       )}
     >
       {/* Squircle Icon Badge */}
-      <div className="size-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
+      <div className="size-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
         <Image01Icon size="1em"
           className={cn(
             "text-base",
@@ -377,15 +505,32 @@ export default function FileAttachmentDropzone({
   categories = null,
   onPreview = null,
   readOnly = false,
+  animateCards = true,
   simulateProgress = true,
   isUploading = false,
   uploadProgress = null,
   className = "",
+  onError = null,
+  showToast = null,
 }) {
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState([]);
+
+  // Toast / notification helper
+  const notify = useCallback(
+    (title, description, isError = false) => {
+      if (typeof showToast === "function") {
+        showToast({ title, description }, isError);
+      } else if (isError) {
+        toast.error(title, { description });
+      } else {
+        toast.warning(title, { description });
+      }
+    },
+    [showToast]
+  );
 
   // Normalize items array
   const items = useMemo(() => {
@@ -403,8 +548,89 @@ export default function FileAttachmentDropzone({
       if (!incoming.length) return;
 
       const remainingSlots = mode === "single" ? 1 : Math.max(0, maxFiles - items.length);
-      const acceptedFiles = incoming.slice(0, remainingSlots);
+      if (remainingSlots <= 0) {
+        notify(
+          "Attachment Limit Reached",
+          `You have reached the maximum limit of ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`,
+          false
+        );
+        return;
+      }
 
+      const oversizedFiles = [];
+      const invalidTypeFiles = [];
+      const validFiles = [];
+
+      incoming.forEach((file) => {
+        if (!file) return;
+        // Validate file size
+        if (maxSizeBytes && file.size > maxSizeBytes) {
+          oversizedFiles.push(file);
+          return;
+        }
+        // Validate file format
+        if (accept && !isFileAccepted(file, accept)) {
+          invalidTypeFiles.push(file);
+          return;
+        }
+        validFiles.push(file);
+      });
+
+      if (oversizedFiles.length > 0) {
+        const limitStr = formatFileSize(maxSizeBytes);
+        if (oversizedFiles.length === 1) {
+          notify(
+            "File Too Large",
+            `"${oversizedFiles[0].name}" (${formatFileSize(oversizedFiles[0].size)}) exceeds the ${limitStr} limit.`,
+            true
+          );
+        } else {
+          notify(
+            "Files Too Large",
+            `${oversizedFiles.length} files exceed the ${limitStr} limit.`,
+            true
+          );
+        }
+        onError?.({
+          type: "FILE_TOO_LARGE",
+          files: oversizedFiles,
+          maxSizeBytes,
+        });
+      }
+
+      if (invalidTypeFiles.length > 0) {
+        const cleanAccept = accept.split(",").map((s) => s.trim()).join(", ");
+        if (invalidTypeFiles.length === 1) {
+          notify(
+            "Unsupported File Format",
+            `"${invalidTypeFiles[0].name}" is not supported. Supported: ${cleanAccept}`,
+            true
+          );
+        } else {
+          notify(
+            "Unsupported File Formats",
+            `${invalidTypeFiles.length} files are not supported. Supported: ${cleanAccept}`,
+            true
+          );
+        }
+        onError?.({
+          type: "INVALID_FILE_TYPE",
+          files: invalidTypeFiles,
+          accept,
+        });
+      }
+
+      if (validFiles.length === 0) return;
+
+      if (validFiles.length > remainingSlots) {
+        notify(
+          "Attachment Limit Exceeded",
+          `Only ${remainingSlots} of the ${validFiles.length} valid file${validFiles.length === 1 ? "" : "s"} could be attached (maximum ${maxFiles} allowed).`,
+          false
+        );
+      }
+
+      const acceptedFiles = validFiles.slice(0, remainingSlots);
       if (!acceptedFiles.length) return;
 
       const detectCategory = (filename) => {
@@ -497,7 +723,7 @@ export default function FileAttachmentDropzone({
         }, 80);
       });
     },
-    [categories, items, maxFiles, mode, onChange, simulateProgress]
+    [accept, categories, items, maxFiles, maxSizeBytes, mode, notify, onChange, onError, simulateProgress]
   );
 
   // Drag and drop events
@@ -531,14 +757,22 @@ export default function FileAttachmentDropzone({
       e.stopPropagation();
       dragCounter.current = 0;
       setIsDragging(false);
-      if (readOnly || isFull) return;
+      if (readOnly) return;
+      if (isFull) {
+        notify(
+          "Attachment Limit Reached",
+          `You have reached the maximum limit of ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`,
+          false
+        );
+        return;
+      }
 
       const files = e.dataTransfer?.files;
       if (files && files.length > 0) {
         processFiles(files);
       }
     },
-    [isFull, processFiles, readOnly]
+    [isFull, maxFiles, notify, processFiles, readOnly]
   );
 
   const handleFileInputChange = useCallback(
@@ -564,6 +798,15 @@ export default function FileAttachmentDropzone({
     },
     [items, mode, onChange, readOnly]
   );
+
+  const handleRemoveAll = useCallback(() => {
+    if (readOnly) return;
+    setUploadingFiles([]);
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    onChange?.(mode === "single" ? null : []);
+  }, [mode, onChange, readOnly]);
 
   const handleCategoryChange = useCallback(
     (target, newCat) => {
@@ -686,6 +929,7 @@ export default function FileAttachmentDropzone({
                   onRemove={handleRemoveItem}
                   onPreview={onPreview}
                   readOnly={readOnly}
+                  animateLayout={animateCards}
                   categories={categories}
                   onCategoryChange={handleCategoryChange}
                 />
@@ -693,35 +937,50 @@ export default function FileAttachmentDropzone({
             </AnimatePresence>
           </div>
 
-          {/* Mini-dropzone / Add file trigger if not full in multiple mode */}
-          {mode === "multiple" && !isFull && !readOnly && (
-            <div
-              onClick={() => inputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  inputRef.current?.click();
-                }
-              }}
-              className={cn(
-                "flex items-center justify-center gap-2 rounded-xl border border-dashed py-2.5 px-4 text-center transition-all cursor-pointer select-none",
-                isDragging
-                  ? "border-pup-maroon/70 bg-pup-maroon/[0.04] ring-2 ring-pup-maroon/10 dark:border-red-400 dark:bg-red-950/20"
-                  : "border-black/15 hover:border-black/25 bg-black/[0.015] hover:bg-black/[0.03] dark:border-white/15 dark:hover:border-white/25 dark:bg-white/[0.015] dark:hover:bg-white/[0.03]"
+          {/* Bottom action bar in multiple mode: Add more files trigger + Remove All Files action */}
+          {mode === "multiple" && !readOnly && (!isFull || items.length > 1) && (
+            <div className={cn("flex items-center gap-2.5", isFull && "justify-end")}>
+              {!isFull && (
+                <div
+                  onClick={() => inputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      inputRef.current?.click();
+                    }
+                  }}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-xl border border-dashed py-2.5 px-4 text-center transition-all cursor-pointer select-none",
+                    isDragging
+                      ? "border-pup-maroon/70 bg-pup-maroon/[0.04] ring-2 ring-pup-maroon/10 dark:border-red-400 dark:bg-red-950/20"
+                      : "border-black/15 hover:border-black/25 bg-black/[0.015] hover:bg-black/[0.03] dark:border-white/15 dark:hover:border-white/25 dark:bg-white/[0.015] dark:hover:bg-white/[0.03]"
+                  )}
+                >
+                  <Add01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
+                  <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300 tabular-nums">
+                    {isDragging
+                      ? "Drop files to attach"
+                      : `Add more files (${maxFiles - items.length} remaining)`}
+                  </span>
+                </div>
               )}
-            >
-              <Add01Icon size="1em" className="text-xs text-pup-maroon dark:text-red-400" />
-              <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                {isDragging
-                  ? "Drop files to attach"
-                  : `Add more files (${maxFiles - items.length} remaining)`}
-              </span>
+
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAll}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200/80 dark:border-red-900/50 bg-red-50/60 hover:bg-red-100/80 dark:bg-red-950/25 dark:hover:bg-red-950/45 py-2.5 px-3.5 text-xs font-semibold text-red-700 dark:text-red-300 transition-all cursor-pointer active:scale-95 shrink-0 select-none"
+                >
+                  <Delete02Icon size="1em" className="text-xs" />
+                  <span>Remove All Files</span>
+                </button>
+              )}
             </div>
           )}
         </div>

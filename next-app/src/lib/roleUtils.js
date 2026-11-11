@@ -8,6 +8,8 @@
  *         └── Staff (office-scoped)
  */
 
+import { hasLinkedStudentRecord } from "./studentAffiliation.js";
+
 /**
  * Convert all supported role spellings to the documented canonical labels.
  * SystemAdmin and SuperAdmin remain distinct labels for compatibility, but
@@ -288,7 +290,7 @@ export function getAvailableRoles(includeSystemAdmin = false) {
 export function getDefaultDashboardPath(role) {
   if (isSystemAdminRole(role)) return "/systemadmin";
   if (isAdminRole(role)) return "/admin";
-  if (String(role || "").toLowerCase() === "student") return "/student";
+  if (normalizeRole(role) === "Student") return "/student";
   return "/staff";
 }
 
@@ -327,6 +329,12 @@ export function canAccessPage(pathname, role, { authenticated = true } = {}) {
   return true;
 }
 
+export function getPageAccessRedirect(pathname, role) {
+  if (canAccessPage(pathname, role)) return null;
+  if (!normalizeRole(role)) return "/login";
+  return getDefaultDashboardPath(role);
+}
+
 /**
  * Resolves the default home view (key, label, basePath, path) for a given user.
  * Aligns with userPreferences.default_home_view and role-specific workspace navigation.
@@ -342,13 +350,13 @@ export function getDefaultHomeView(authUser, activeViewRole = null) {
   const pref = authUser?.preferences?.default_home_view;
 
   if (isStudent) {
-    if (pref === "compliance") {
+    if (pref === "compliance" && hasLinkedStudentRecord(authUser)) {
       return { view: "compliance", label: "Requirements & Compliance", basePath: "/student", path: "/student?view=compliance" };
     }
     if (pref === "requests" || pref === "odrs") {
       return { view: "odrs", label: "Document Requests", basePath: "/student", path: "/student?view=odrs" };
     }
-    return { view: "overview", label: "Overview & Compliance", basePath: "/student", path: "/student?view=overview" };
+    return { view: "overview", label: "Overview", basePath: "/student", path: "/student?view=overview" };
   }
 
   if (isSysAdmin) {

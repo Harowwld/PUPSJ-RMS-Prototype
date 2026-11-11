@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import LandingCatalogSkeleton from "@/components/systemadmin/skeletons/LandingCatalogSkeleton"
+import { LandingCatalogSkeletonContent } from "@/components/systemadmin/skeletons/LandingCatalogSkeleton"
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -341,9 +341,6 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
     notify("Document credential removed")
   }
 
-  if (loading) {
-    return <LandingCatalogSkeleton />
-  }
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -376,7 +373,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || !isDirty}
+                disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving Changes..." : "Save Catalog Content"}
@@ -385,8 +382,8 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={() => { setCatalogData(savedData); notify("Draft changes discarded. Reverted to saved catalog content.") }} disabled={saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setCatalogData(savedData); notify("Draft changes discarded. Reverted to saved catalog content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
             </>
           }
         />
@@ -394,6 +391,9 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
         {/* Navigation Tabs */}
         <LandingCmsViewTabs activeTab={activeTab} onChange={setActiveTab} contentLabel="Catalog Content" contentCount={catalogData.items.length} />
 
+        {loading ? (
+          <LandingCatalogSkeletonContent />
+        ) : (
         <CardContent className="p-6 flex flex-[1_0_auto] flex-col rounded-b-2xl">
           {/* TAB 1: Catalog Content (Section Header + Document Cards) */}
           {activeTab === "content" && (
@@ -904,6 +904,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* Reset Confirmation Modal */}

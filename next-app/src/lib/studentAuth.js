@@ -6,7 +6,10 @@ import { getSessionVersion, isSessionActive, registerSessionToken } from "./auth
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
 import { validatePasswordPolicy } from "./passwordPolicy.js";
 
-export async function registerStudent({ studentNo, name, firstName, lastName, middleName, password, email, clientType }) {
+export async function registerStudent(
+  { studentNo, name, firstName, lastName, middleName, password, email, clientType },
+  { tx, securityAnswers = [] } = {},
+) {
   const cleanEmail = String(email || "").trim().toLowerCase();
   const cleanPass = String(password || "");
   const cleanFirst = String(firstName || "").trim();
@@ -30,7 +33,7 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
   }
 
   // 1. Check whether an identity profile already owns this email
-  const existingEmail = await queryOne(
+  const existingEmail = await (tx?.queryOne || queryOne)(
     `SELECT id, email
        FROM student_identity_profiles
       WHERE email = $1 OR lower(coalesce(email, '')) = $2
@@ -51,22 +54,29 @@ export async function registerStudent({ studentNo, name, firstName, lastName, mi
   }
 
   // 3. Create the student_account (student_no can be NULL if left empty)
-  const newAccount = await transaction(async (tx) => {
-    const profile = await tx.queryOne(
+  const createAccount = async (db) => {
+    const profile = await db.queryOne(
       `INSERT INTO student_identity_profiles (
          first_name, middle_name, last_name, display_name, email, client_type
        ) VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, first_name, middle_name, last_name, email, client_type`,
       [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(fullName), encryptPII(cleanEmail), resolvedClientType]
     );
-    const newAccount = await tx.queryOne(
+    const newAccount = await db.queryOne(
       `INSERT INTO student_accounts (student_no, identity_profile_id, password_hash, status)
        VALUES ($1, $2, $3, 'Active')
        RETURNING id, student_no`,
       [student ? student.student_no : null, profile.id, hashPassword(cleanPass)]
     );
+    for (const { questionId, answerHash } of securityAnswers) {
+      await db.query(
+        "INSERT INTO student_security_answers (student_account_id, question_id, answer_hash) VALUES ($1, $2, $3)",
+        [newAccount.id, questionId, answerHash],
+      );
+    }
     return newAccount;
-  });
+  };
+  const newAccount = tx ? await createAccount(tx) : await transaction(createAccount);
 
   return {
     id: newAccount.id,
@@ -82,6 +92,7 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   const cleanNo = String(rawId).trim().toUpperCase();
   const cleanEmail = String(rawId).trim().toLowerCase();
   const select = `SELECT sa.id, sa.student_no, sa.password_hash, sa.status,
+                         sa.totp_secret, sa.totp_enabled, sa.serial_key_hash,
                          sip.email, sip.first_name, sip.middle_name, sip.last_name,
                          sip.client_type, COALESCE(sip.display_name, s.name) AS name,
                          s.status AS student_status,
@@ -134,7 +145,7 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   return row;
 }
 
-export async function createStudentSession(student) {
+export async function createStudentSession(student, { authLevel = "password" } = {}) {
   const accountId = student.id ? String(student.id) : null;
   const studentNo = student.student_no || null;
   const sessionVersion = await getSessionVersion(accountId || studentNo || student.email);
@@ -154,9 +165,57 @@ export async function createStudentSession(student) {
     principalType: "student",
     role: "Student",
     username: student.email || studentNo,
-    authLevel: "password",
+    authLevel,
   });
   return token;
+}
+
+export async function createStudent2FAChallenge(student) {
+  const accountId = Number(student?.id);
+  if (!Number.isSafeInteger(accountId) || accountId <= 0) throw new Error("Invalid student account");
+  const username = student.email || student.student_no || String(accountId);
+  const token = await signSessionToken({
+    sub: String(accountId),
+    role: "Student",
+    principal_type: "student",
+    account_id: accountId,
+    student_no: student.student_no || null,
+    email: student.email || null,
+    username,
+    purpose: "2fa",
+    session_version: await getSessionVersion(String(accountId)),
+  }, "5m");
+  await registerSessionToken(token, {
+    principalId: accountId,
+    principalType: "student",
+    role: "Student",
+    username,
+    authLevel: "2fa-challenge",
+  });
+  return token;
+}
+
+export async function getStudentAccountFor2FA(accountId) {
+  const id = Number(accountId);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const row = await queryOne(
+    `SELECT sa.id, sa.student_no, sa.status, sa.totp_secret, sa.totp_enabled, sa.serial_key_hash,
+            sip.email, sip.first_name, sip.middle_name, sip.last_name,
+            sip.client_type, COALESCE(sip.display_name, s.name) AS name,
+            s.status AS student_status,
+            EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
+            EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office
+       FROM student_accounts sa
+       JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
+       LEFT JOIN students s ON s.student_no = sa.student_no
+      WHERE sa.id = $1`,
+    [id],
+  );
+  const student = decryptStudentRow(row);
+  if (!student || String(student.status).toLowerCase() !== "active" ||
+      (student.student_status && String(student.student_status).toLowerCase() !== "active") ||
+      (student.has_archived_office && !student.has_active_office)) return null;
+  return student;
 }
 
 export async function getStudentSession(req) {

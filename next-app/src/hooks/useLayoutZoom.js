@@ -24,36 +24,8 @@ export function useLayoutZoom(authUser = null) {
   const userId = authUser?.id || null;
   const storageKey = getZoomStorageKey(userId);
 
-  // Initialize zoom node from preferences, localStorage, or default (3 / 100%)
-  const [zoomNode, setZoomNodeState] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_ZOOM_NODE;
-    
-    // Check authUser preferences first
-    if (authUser?.preferences?.zoom_node !== undefined && authUser.preferences.zoom_node !== null) {
-      const prefNode = Number(authUser.preferences.zoom_node);
-      if (Number.isInteger(prefNode) && prefNode >= 0 && prefNode <= 6) {
-        return prefNode;
-      }
-    }
-
-    // Check user-scoped localStorage
-    if (userId) {
-      const userStored = localStorage.getItem(`pup_zoom_node_${userId}`);
-      if (userStored !== null) {
-        const parsed = parseInt(userStored, 10);
-        if (Number.isInteger(parsed) && parsed >= 0 && parsed <= 6) return parsed;
-      }
-    }
-
-    // Check global localStorage fallback
-    const globalStored = localStorage.getItem("pup_zoom_node");
-    if (globalStored !== null) {
-      const parsed = parseInt(globalStored, 10);
-      if (Number.isInteger(parsed) && parsed >= 0 && parsed <= 6) return parsed;
-    }
-
-    return DEFAULT_ZOOM_NODE;
-  });
+  // The server and the first browser render must use the same zoom style.
+  const [zoomNode, setZoomNodeState] = useState(DEFAULT_ZOOM_NODE);
 
   const zoomNodeRef = useRef(zoomNode);
   useEffect(() => {
@@ -62,18 +34,35 @@ export function useLayoutZoom(authUser = null) {
 
   const saveTimerRef = useRef(null);
 
-  // Sync state if authUser preferences load after initial render
+  // Apply saved preferences only after hydration. Account preferences take
+  // precedence over the user-scoped and global browser settings.
   useEffect(() => {
-    if (authUser?.preferences?.zoom_node !== undefined && authUser.preferences.zoom_node !== null) {
-      const prefNode = Number(authUser.preferences.zoom_node);
-      if (Number.isInteger(prefNode) && prefNode >= 0 && prefNode <= 6 && prefNode !== zoomNodeRef.current) {
-        setZoomNodeState(prefNode);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(storageKey, String(prefNode));
-          localStorage.setItem("pup_zoom_node", String(prefNode));
+    const timer = setTimeout(() => {
+      if (authUser?.preferences?.zoom_node !== undefined && authUser.preferences.zoom_node !== null) {
+        const prefNode = Number(authUser.preferences.zoom_node);
+        if (Number.isInteger(prefNode) && prefNode >= 0 && prefNode <= 6) {
+          if (prefNode !== zoomNodeRef.current) {
+            setZoomNodeState(prefNode);
+            try {
+              localStorage.setItem(storageKey, String(prefNode));
+              localStorage.setItem("pup_zoom_node", String(prefNode));
+            } catch { /* Browser storage may be unavailable. */ }
+          }
+          return;
         }
       }
-    }
+
+      try {
+        const stored = localStorage.getItem(storageKey) ?? localStorage.getItem("pup_zoom_node");
+        if (stored !== null) {
+          const node = Number(stored);
+          if (Number.isInteger(node) && node >= 0 && node <= 6 && node !== zoomNodeRef.current) {
+            setZoomNodeState(node);
+          }
+        }
+      } catch { /* Keep the default zoom when storage is unavailable. */ }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [authUser?.preferences?.zoom_node, storageKey]);
 
   // Persist zoom changes to backend and localStorage

@@ -104,12 +104,30 @@ export default function ProfileAvatar({
     staff_id,
   ].find((value) => value !== null && value !== undefined && String(value).trim() !== "");
 
-  const avatarSrc = lookupId || avatarFilename
-    ? `/api/account/avatar?${new URLSearchParams({
-        ...(lookupId ? { id: String(lookupId) } : {}),
-        ...(avatarFilename ? { t: String(avatarFilename) } : {}),
-        ...(avatarFilename ? { filename: String(avatarFilename) } : {}),
-      })}`
+  // Parse clean filename and timestamp if passed
+  let cleanFilename = null;
+  let timestampParam = null;
+  if (typeof avatarFilename === "string" && avatarFilename.trim()) {
+    const raw = avatarFilename.trim();
+    const tMatch = raw.match(/[?&]t=([^&]+)/);
+    if (tMatch) {
+      timestampParam = tMatch[1];
+      cleanFilename = raw.split(/[?&]t=/)[0];
+    } else {
+      cleanFilename = raw;
+    }
+  }
+
+  // If avatarFilename is explicitly null or false, the caller explicitly indicates no custom avatar
+  const hasExplicitNoAvatar = avatarFilename === null || avatarFilename === false;
+
+  const queryParams = {};
+  if (lookupId) queryParams.id = String(lookupId);
+  if (cleanFilename) queryParams.filename = cleanFilename;
+  if (timestampParam) queryParams.t = timestampParam;
+
+  const avatarSrc = !hasExplicitNoAvatar && (cleanFilename || lookupId)
+    ? `/api/account/avatar?${new URLSearchParams(queryParams)}`
     : null;
 
   const resolvedInitials = initials || extractInitials(name);

@@ -55,6 +55,7 @@ export function formatUploadedDate(dateString) {
 
 export default function DigitalRecordsList({
   records = [],
+  isOsas = false,
   groupBy = "status",
   selectedIds = new Set(),
   onToggleSelect,
@@ -168,6 +169,10 @@ export default function DigitalRecordsList({
                   const isDeclined = record.approval_status === "Declined";
                   const { dateStr, timeStr } = formatUploadedDate(record.created_at);
                   const isPdf = /\.pdf$/i.test(record.original_filename || "");
+                  const organizationName = record.organization_name || record.student_name;
+                  const secondaryContext = isOsas
+                    ? [record.original_filename, record.size_bytes ? `(${formatBytes(record.size_bytes)})` : "", isDeclined && record.review_note ? `Decline note: "${record.review_note}"` : ""].filter(Boolean).join(" • ")
+                    : [formatTitleCase(record.student_name), record.original_filename].filter(Boolean).join(" • ");
                   const badgeClass = getStatusBadge
                     ? getStatusBadge(record.approval_status)
                     : "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
@@ -209,7 +214,7 @@ export default function DigitalRecordsList({
                               checked={isSelected}
                               onChange={(e) => onToggleSelect?.(record.id, e)}
                               className="h-4 w-4 m-0 align-middle shrink-0 cursor-pointer rounded border border-border text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:border-border"
-                              aria-label={`Select ${record.original_filename}`}
+                              aria-label={isOsas ? `Select ${organizationName} organization record` : `Select ${record.original_filename}`}
                             />
                           ) : (
                             <div className="w-4" />
@@ -244,9 +249,15 @@ export default function DigitalRecordsList({
                         {/* Main Identity & Context Stream */}
                         <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 min-w-0 flex-1">
                           <div className="flex items-center gap-2 min-w-0 shrink-0">
-                            {/* Identifier (Student No.) */}
-                            <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[70px] select-none">
-                              {record.student_no}
+                            {/* Record identity */}
+                            <span
+                              className={cn(
+                                "font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[70px] select-none",
+                                isOsas && "max-w-[200px] truncate"
+                              )}
+                              title={isOsas ? organizationName : record.student_no}
+                            >
+                              {isOsas ? organizationName : record.student_no}
                             </span>
 
                             {/* Title (Document Type as Title) */}
@@ -257,17 +268,14 @@ export default function DigitalRecordsList({
 
                           {/* Desktop Secondary Context (Em-dash stream: Student Name • Filename • Size) */}
                           <span className="text-xs text-gray-400 dark:text-zinc-500 truncate hidden md:inline font-normal select-none">
-                            — {formatTitleCase(record.student_name)}
-                            {record.org_acronym ? ` (${record.org_acronym})` : ""}
-                            {record.original_filename ? ` • ${record.original_filename}` : ""}
-                            {record.size_bytes ? ` (${formatBytes(record.size_bytes)})` : ""}
-                            {isDeclined && record.review_note ? ` • Decline note: "${record.review_note}"` : ""}
+                            {secondaryContext && `— ${secondaryContext}`}
                           </span>
 
                           {/* Mobile Secondary Context */}
                           <span className="text-[11px] text-gray-400 dark:text-zinc-500 truncate md:hidden font-normal select-none">
-                            {formatTitleCase(record.student_name)}
-                            {record.original_filename ? ` · ${record.original_filename}` : ""}
+                            {isOsas
+                              ? [record.original_filename, record.size_bytes ? formatBytes(record.size_bytes) : ""].filter(Boolean).join(" · ")
+                              : [formatTitleCase(record.student_name), record.original_filename].filter(Boolean).join(" · ")}
                           </span>
                         </div>
                       </div>
@@ -280,6 +288,12 @@ export default function DigitalRecordsList({
                         >
                           {record.approval_status || "Pending"}
                         </span>
+
+                        {!isOsas && isDeclined && record.review_note && (
+                          <span className={cn(BADGE_BASE, "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300")}>
+                            Decline Note
+                          </span>
+                        )}
 
                         {/* Relative / Upload Timestamp */}
                         {record.created_at && (

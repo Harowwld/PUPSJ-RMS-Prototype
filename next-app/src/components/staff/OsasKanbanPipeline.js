@@ -1,72 +1,46 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
-
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { EmptyState } from "@/components/ui/empty";
-import { InboxIcon , ArrowDown01Icon, ArrowRight02Icon, Calendar01Icon, Clock01Icon, Coins01Icon, DragDropIcon, File02Icon, LockIcon, UserCheck01Icon, UserSearch01Icon} from "hugeicons-react";
+import {
+  KanbanStatusIcon,
+  KanbanDotTag,
+  KanbanMiniAvatar,
+} from "@/components/shared/KanbanPrimitives";
+import {
+  InboxIcon,
+  ArrowDown01Icon,
+  File02Icon,
+  LockIcon,
+} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-const STAGE_SUBTITLES = {
-  proposals: {
-    "Submitted": "Initial Intake",
-    "Under Review": "Compliance Check",
-    "Needs Revision": "Action Required",
-    "Approved": "Officially Endorsed",
-    "Declined": "Rejected / Appealed",
-  },
-  post_events: {
-    "Submitted": "Pending Intake",
-    "Under Review": "Clearance Check",
-    "Needs Revision": "Revision Required",
-    "Cleared": "Clearance Granted",
-    "Declined": "Deficient / Rejected",
-  },
-};
 
 const STAGE_THEMES = {
-  "Submitted": {
-    accent: "bg-slate-400 dark:bg-zinc-500",
-    borderTop: "border-t-slate-400 dark:border-t-zinc-500",
-    dot: "bg-slate-400 dark:bg-zinc-400",
-    badge: "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300",
-    dropZone: "border-slate-400/60 bg-slate-50/60 dark:bg-zinc-800/40 text-slate-700 dark:text-zinc-300",
+  Submitted: {
+    dropZone:
+      "border-gray-400/60 bg-gray-50/60 dark:bg-zinc-800/40 text-gray-700 dark:text-zinc-300",
   },
   "Under Review": {
-    accent: "bg-sky-500",
-    borderTop: "border-t-sky-500",
-    dot: "bg-sky-500",
-    badge: "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
-    dropZone: "border-sky-500/60 bg-sky-50/60 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300",
+    dropZone:
+      "border-sky-500/50 bg-sky-50/60 dark:bg-sky-950/25 text-sky-700 dark:text-sky-300",
   },
   "Needs Revision": {
-    accent: "bg-amber-500",
-    borderTop: "border-t-amber-500",
-    dot: "bg-amber-500",
-    badge: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-    dropZone: "border-amber-500/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
+    dropZone:
+      "border-amber-500/50 bg-amber-50/60 dark:bg-amber-950/25 text-amber-700 dark:text-amber-300",
   },
-  "Approved": {
-    accent: "bg-emerald-500",
-    borderTop: "border-t-emerald-500",
-    dot: "bg-emerald-500",
-    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    dropZone: "border-emerald-500/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300",
+  Approved: {
+    dropZone:
+      "border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/25 text-emerald-700 dark:text-emerald-300",
   },
-  "Cleared": {
-    accent: "bg-emerald-500",
-    borderTop: "border-t-emerald-500",
-    dot: "bg-emerald-500",
-    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    dropZone: "border-emerald-500/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300",
+  Cleared: {
+    dropZone:
+      "border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/25 text-emerald-700 dark:text-emerald-300",
   },
-  "Declined": {
-    accent: "bg-rose-500",
-    borderTop: "border-t-rose-500",
-    dot: "bg-rose-500",
-    badge: "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
-    dropZone: "border-rose-500/60 bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300",
+  Declined: {
+    dropZone:
+      "border-rose-500/50 bg-rose-50/60 dark:bg-rose-950/25 text-rose-700 dark:text-rose-300",
   },
 };
 
@@ -112,7 +86,6 @@ export default function OsasKanbanPipeline({
       if (map[normalized]) {
         map[normalized].push(item);
       } else {
-        // Fallback for untracked status
         const firstCol = columns[0]?.key;
         if (firstCol && map[firstCol]) map[firstCol].push(item);
       }
@@ -121,14 +94,17 @@ export default function OsasKanbanPipeline({
   }, [columns, items, normalizeStatus]);
 
   // Update scroll bounds from the board element so the handler stays stable.
-  const reportScrollBounds = useCallback((el) => {
-    if (!el) return;
-    const hasLeft = el.scrollLeft > 12;
-    const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 12;
-    setCanScrollLeft(hasLeft);
-    setCanScrollRight(hasRight);
-    onScrollBoundsChange?.({ canScrollLeft: hasLeft, canScrollRight: hasRight });
-  }, [onScrollBoundsChange]);
+  const reportScrollBounds = useCallback(
+    (el) => {
+      if (!el) return;
+      const hasLeft = el.scrollLeft > 12;
+      const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 12;
+      setCanScrollLeft(hasLeft);
+      setCanScrollRight(hasRight);
+      onScrollBoundsChange?.({ canScrollLeft: hasLeft, canScrollRight: hasRight });
+    },
+    [onScrollBoundsChange]
+  );
 
   useEffect(() => {
     const updateScrollBounds = () => reportScrollBounds(boardScrollRef.current);
@@ -139,9 +115,9 @@ export default function OsasKanbanPipeline({
 
   // Canvas Mouse Pan (Drag-to-Scroll)
   const handleMouseDownCanvas = (e) => {
-    // Only pan if not clicking a draggable card or interactive element
     if (
       e.target.closest('[draggable="true"]') ||
+      e.target.closest(".kanban-card") ||
       e.target.closest("button") ||
       e.target.closest("a") ||
       e.target.closest("input")
@@ -168,13 +144,13 @@ export default function OsasKanbanPipeline({
   };
 
   return (
-    <div className="w-full flex flex-[1_0_auto] flex-col min-h-0 bg-transparent select-none border-t border-border dark:border-border">
+    <div className="w-full flex-1 flex flex-col min-h-0 bg-transparent select-none border-t border-border dark:border-border">
       {/* Kanban board with smooth snap and grab scrolling */}
-      <div className="relative w-full flex flex-[1_0_auto] flex-col min-h-0">
+      <div className="relative w-full flex-1 flex flex-col min-h-0">
         {/* Left Overflow Edge Fade Indicator */}
         <div
           className={cn(
-            "absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-gray-100/90 via-gray-100/40 dark:from-zinc-950/90 dark:via-zinc-950/40 to-transparent pointer-events-none z-10 transition-opacity duration-300",
+            "absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white/80 dark:from-zinc-950/80 to-transparent pointer-events-none z-10 transition-opacity duration-300",
             canScrollLeft ? "opacity-100" : "opacity-0"
           )}
         />
@@ -182,7 +158,7 @@ export default function OsasKanbanPipeline({
         {/* Right Overflow Edge Fade Indicator */}
         <div
           className={cn(
-            "absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-gray-100/90 via-gray-100/40 dark:from-zinc-950/90 dark:via-zinc-950/40 to-transparent pointer-events-none z-10 transition-opacity duration-300",
+            "absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white/80 dark:from-zinc-950/80 to-transparent pointer-events-none z-10 transition-opacity duration-300",
             canScrollRight ? "opacity-100" : "opacity-0"
           )}
         />
@@ -195,17 +171,18 @@ export default function OsasKanbanPipeline({
           onMouseUp={handleMouseUpCanvas}
           onMouseLeave={handleMouseUpCanvas}
           className={cn(
-            "w-full flex-1 min-h-[540px] p-6 overflow-x-auto scroll-smooth snap-x snap-proximity bg-slate-50/30 dark:bg-zinc-900/20 scrollbar-thin",
+            "w-full flex-1 flex flex-col min-h-[calc(100vh-20rem)] p-4 pl-6 sm:p-5 sm:pl-6 overflow-x-auto scroll-pl-6 scroll-smooth snap-x snap-proximity scrollbar-thin",
             isPanningActive ? "cursor-grabbing select-none" : "cursor-grab"
           )}
         >
-          <div className="flex gap-4.5 min-w-max items-start">
+          <div className="flex gap-3.5 min-w-max items-stretch flex-1 h-full min-h-[500px]">
             {columns.map((col) => {
               const columnItems = columnData[col.key] || [];
-              const theme = STAGE_THEMES[col.key] || STAGE_THEMES["Submitted"];
-              const subtitle = STAGE_SUBTITLES[stream]?.[col.key] || "Pipeline Stage";
+              const theme = STAGE_THEMES[col.key] || STAGE_THEMES.Submitted;
               const isOver = dragOverColumn === col.key;
-              const draggingItemStatus = draggingItem ? normalizeStatus(draggingItem.status) : null;
+              const draggingItemStatus = draggingItem
+                ? normalizeStatus(draggingItem.status)
+                : null;
               const isAllowedDrop =
                 draggingItem &&
                 draggingItemStatus !== col.key &&
@@ -232,63 +209,73 @@ export default function OsasKanbanPipeline({
                   }}
                   onDrop={(e) => onDropItem?.(e, col.key)}
                   className={cn(
-                    "w-[315px] sm:w-[335px] lg:w-[350px] shrink-0 snap-start flex flex-col rounded-2xl bg-white/90 dark:bg-zinc-900/80 border border-slate-200/90 dark:border-zinc-800 p-4 shadow-xs transition-all duration-200 relative overflow-hidden",
-                    theme.borderTop,
-                    "border-t-3",
-                    isOver && isAllowedDrop && "ring-2 ring-pup-maroon/60 border-pup-maroon bg-red-50/20 dark:bg-red-950/20 shadow-md"
+                    "w-[310px] sm:w-[325px] shrink-0 snap-start flex flex-col h-full rounded-2xl border border-gray-200/60 dark:border-white/[0.06] bg-gray-100/75 dark:bg-zinc-900/60 p-2.5 transition-all duration-200 relative",
+                    isOver &&
+                      isAllowedDrop &&
+                      "ring-2 ring-gray-400/60 dark:ring-zinc-600 bg-gray-200/60 dark:bg-zinc-800/70"
                   )}
                 >
-                  {/* Column Header */}
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/80 dark:border-border select-none">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-zinc-900 shadow-2xs", theme.dot)} />
-                      <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 tracking-tight leading-tight">
-                          {col.label}
-                        </h3>
-                        <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500">
-                          {subtitle}
-                        </p>
-                      </div>
+                  {/* Clean Single-Line Column Header */}
+                  <div className="flex items-center justify-between px-2 pt-1.5 pb-2.5 select-none shrink-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <KanbanStatusIcon status={col.key} />
+                      <h3 className="text-[13px] font-semibold tracking-tight text-gray-800 dark:text-zinc-100 truncate">
+                        {col.label}
+                      </h3>
+                      <span className="text-xs font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
+                        {columnItems.length}
+                      </span>
                     </div>
-
-                    <span className={cn(theme.badge, BADGE_BASE)}>
-                      {columnItems.length}
-                    </span>
                   </div>
 
-                  {/* Drop Invitation Target (Magnetic Visualizer) */}
+                  {/* Drop Invitation Target */}
                   {isOver && isAllowedDrop && (
-                    <div className="mb-3 rounded-xl border-2 border-dashed border-pup-maroon/60 dark:border-red-500/60 p-3 bg-red-50/50 dark:bg-red-950/30 text-center text-xs font-semibold text-pup-maroon dark:text-red-400 animate-pulse select-none flex items-center justify-center gap-2 shadow-inner">
+                    <div
+                      className={cn(
+                        "mb-2 rounded-xl border border-dashed p-3 text-center text-xs font-medium select-none flex items-center justify-center gap-1.5 transition-all shrink-0",
+                        theme.dropZone
+                      )}
+                    >
                       <ArrowDown01Icon size="1em" className="text-sm" />
                       <span>Release to move to {col.label}</span>
                     </div>
                   )}
 
                   {/* Cards Container */}
-                  <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] p-0.5 scrollbar-thin">
+                  <div className="flex flex-col gap-2 h-[760px] overflow-y-auto px-0.5 pb-0.5 scrollbar-thin">
                     {columnItems.map((item) => {
                       const itemStatus = normalizeStatus(item.status);
                       const locked = isItemLocked(item);
                       const isDragging = draggingItem?.id === item.id;
 
-                      // Proposal specific attributes
                       const isProposal = stream === "proposals";
-                      const title = isProposal ? item.title : item.event_title || item.title;
-                      const orgName = item.verified_org_name || item.organization_name;
+                      const title = isProposal
+                        ? item.title
+                        : item.event_title || item.title;
+                      const orgName =
+                        item.verified_org_name || item.organization_name;
                       const acronym = item.org_acronym;
-                      const proponent = item.student_name || item.submitted_by_email || "Student Officer";
+                      const proponent =
+                        item.student_name ||
+                        item.submitted_by_email ||
+                        "Student Officer";
                       const dateStr = item.created_at
-                        ? new Date(item.created_at).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
+                        ? new Date(item.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )
                         : "N/A";
 
-                      // Post-event specific attributes
-                      const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? null;
-                      const expenses = item.total_expenses ?? item.actual_expenses ?? null;
+                      const attendees =
+                        item.actual_attendance ??
+                        item.total_attendance ??
+                        item.actual_attendees ??
+                        null;
+                      const expenses =
+                        item.total_expenses ?? item.actual_expenses ?? null;
 
                       return (
                         <div
@@ -316,176 +303,214 @@ export default function OsasKanbanPipeline({
                             onSelectItem?.(item);
                           }}
                           className={cn(
-                            "group relative rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-800/90 p-3.5 shadow-2xs hover:shadow-md hover:border-pup-maroon/40 dark:hover:border-red-900/50 transition-all duration-200 flex flex-col gap-2.5 active:scale-[0.985] select-none",
-                            locked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
-                            isDragging && "opacity-30 scale-[0.97] border-dashed border-pup-maroon"
+                            "kanban-card group relative rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 flex flex-col gap-2.5 select-none",
+                            locked
+                              ? "cursor-pointer"
+                              : "cursor-grab active:cursor-grabbing",
+                            isDragging &&
+                              "opacity-35 scale-[0.98] border-dashed border-gray-400"
                           )}
                         >
-                          {/* Card Top Row: Org Acronym + Org Name + Reference & Grip/Lock */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 truncate max-w-[210px]">
-                              {acronym && (
-                                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md bg-red-50 text-pup-maroon dark:bg-red-950/50 dark:text-red-400 border border-red-200/70 dark:border-red-900/40 shrink-0">
-                                  {acronym}
-                                </span>
-                              )}
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 truncate">
-                                {orgName}
-                              </span>
+                          {/* Row 1: Status Icon + Proposal/Event Title (left) & Date (right) */}
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex items-start gap-2 min-w-0 flex-1">
+                              <KanbanStatusIcon
+                                status={itemStatus}
+                                className="mt-[3px]"
+                              />
+                              <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-2">
+                                {title}
+                              </h4>
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              <span className="font-sans tabular-nums text-[9px] text-slate-400 dark:text-zinc-500">
-                                #{isProposal ? "EP" : "PER"}-{item.id}
-                              </span>
-
-                              {locked ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="flex items-center text-amber-600/90 dark:text-amber-400/90 p-0.5 cursor-pointer ml-1">
-                                      <LockIcon size="1em" className="text-xs" />
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {item.status} items are locked from direct drag-and-drop. Click to review.
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <DragDropIcon size="1em"
-                                  className="text-slate-400 group-hover:text-slate-800 dark:group-hover:text-zinc-200 text-base transition-colors shrink-0 ml-1"
-                                  title="Drag to change pipeline stage"
-                                />
+                            <span
+                              className={cn(
+                                "text-[11px] font-medium tabular-nums shrink-0",
+                                itemStatus === "Declined"
+                                  ? "text-rose-600 dark:text-rose-400"
+                                  : itemStatus === "Needs Revision"
+                                  ? "text-amber-600 dark:text-amber-400"
+                                  : "text-gray-400 dark:text-zinc-500"
                               )}
-                            </div>
-                          </div>
-
-                          {/* Card Headline / Title */}
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
-                            {title}
-                          </h4>
-
-                          {/* Proponent Officer */}
-                          <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-zinc-400">
-                            <UserCheck01Icon size="1em" className="text-emerald-600 dark:text-emerald-400 text-xs shrink-0" />
-                            <span className="truncate font-medium text-slate-700 dark:text-zinc-300">
-                              {proponent}
+                            >
+                              {dateStr}
                             </span>
                           </div>
 
-                          {/* Proposal Details: Event Date, Target Attendance, Estimated Budget */}
-                          {isProposal && (item.event_date || item.target_attendance || item.estimated_budget) && (
-                            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                              {item.event_date && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-700 dark:text-zinc-300 border border-slate-200/70 dark:border-zinc-700">
-                                  <Calendar01Icon size="1em" className="text-[10px] text-slate-400" />
-                                  {new Date(item.event_date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                                </span>
-                              )}
-                              {item.target_attendance && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-700 dark:text-zinc-300 border border-slate-200/70 dark:border-zinc-700">
-                                  <UserSearch01Icon size="1em" className="text-[10px] text-slate-400" />
-                                  {Number(item.target_attendance).toLocaleString()} target
-                                </span>
-                              )}
-                              {item.estimated_budget && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-700 dark:text-zinc-300 border border-slate-200/70 dark:border-zinc-700">
-                                  <Coins01Icon size="1em" className="text-[10px] text-amber-500" />
-                                  ₱{Number(item.estimated_budget).toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                          {/* Row 2: Organization and event metadata */}
+                          <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
+                            {(acronym || orgName) && (
+                              <span title={orgName || acronym} className="max-w-full truncate text-[11px] text-gray-600 dark:text-zinc-300">
+                                {orgName || acronym}
+                              </span>
+                            )}
 
-                          {/* Post-Event Details: Attendance & Spend Pills */}
-                          {!isProposal && (attendees !== null || expenses !== null) && (
-                            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                              {attendees !== null && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-700 dark:text-zinc-300 border border-slate-200/70 dark:border-zinc-700">
-                                  <UserSearch01Icon size="1em" className="text-[10px] text-slate-400" />
-                                  {Number(attendees).toLocaleString()} attendees
-                                </span>
-                              )}
-                              {expenses !== null && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/40">
-                                  <AppIcon className=" Invoice01Icon text-[10px] text-emerald-500" />
-                                  ₱{Number(expenses).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                            {isProposal && item.event_date && (
+                              <KanbanDotTag
+                                label={new Date(
+                                  item.event_date
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                                dotColor="bg-sky-500"
+                                className="font-semibold"
+                              />
+                            )}
 
-                          {/* Post-Event Documents Links */}
-                          {!isProposal && (item.narrative_storage_filename || item.liquidation_storage_filename) && (
-                            <div
-                              className="flex items-center gap-2 pt-1 border-t border-border/80 dark:border-border"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {item.narrative_storage_filename && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onOpenPdfPreview?.({
-                                      url: `/api/osas/post-event-reports/${item.id}?file=narrative`,
-                                      title: `${item.event_title}: Narrative Report`,
-                                      subtitle: "Official post-event narrative & accomplishment report.",
-                                      docType: "Post-Event Narrative",
-                                      originalFilename: item.narrative_original_filename || "Narrative.pdf",
-                                    });
-                                  }}
-                                  className="inline-flex items-center gap-1 text-[10px] font-medium text-pup-maroon dark:text-red-400 hover:underline cursor-pointer border-0 bg-transparent p-0"
-                                >
-                                  <File02Icon size="1em" className="text-xs" />
-                                  <span>Narrative</span>
-                                </button>
+                            {isProposal && item.estimated_budget && (
+                              <KanbanDotTag
+                                label={`₱${Number(
+                                  item.estimated_budget
+                                ).toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                })}`}
+                                dotColor="bg-amber-500"
+                                className="font-semibold"
+                              />
+                            )}
+
+                            {isProposal &&
+                              !item.estimated_budget &&
+                              item.target_attendance && (
+                                <KanbanDotTag
+                                  label={`${Number(
+                                    item.target_attendance
+                                  ).toLocaleString()} target`}
+                                  dotColor="bg-teal-500"
+                                  className="font-semibold"
+                                />
                               )}
-                              {item.liquidation_storage_filename && (
-                                <>
-                                  <span className="text-slate-300 dark:text-zinc-600 text-[10px]">·</span>
+
+                            {!isProposal && attendees !== null && (
+                              <KanbanDotTag
+                                label={`${Number(
+                                  attendees
+                                ).toLocaleString()} attendees`}
+                                dotColor="bg-sky-500"
+                                className="font-semibold"
+                              />
+                            )}
+
+                            {!isProposal && expenses !== null && (
+                              <KanbanDotTag
+                                label={`₱${Number(expenses).toLocaleString(
+                                  undefined,
+                                  { minimumFractionDigits: 2 }
+                                )}`}
+                                dotColor="bg-emerald-500"
+                                className="font-semibold"
+                              />
+                            )}
+                          </div>
+
+                          {/* Post-Event Quick Document Preview Links */}
+                          {!isProposal &&
+                            (item.narrative_storage_filename ||
+                              item.liquidation_storage_filename) && (
+                              <div
+                                className="flex items-center gap-2 pl-5.5 text-[11px]"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {item.narrative_storage_filename && (
                                   <button
                                     type="button"
                                     onClick={() => {
                                       onOpenPdfPreview?.({
-                                        url: `/api/osas/post-event-reports/${item.id}?file=liquidation`,
-                                        title: `${item.event_title}: Financial Liquidation`,
-                                        subtitle: "Official receipts, disbursement summary, and vouchers.",
-                                        docType: "Financial Liquidation",
-                                        originalFilename: item.liquidation_original_filename || "Liquidation.pdf",
+                                        url: `/api/osas/post-event-reports/${item.id}?file=narrative`,
+                                        title: `${item.event_title}: Narrative Report`,
+                                        subtitle:
+                                          "Official post-event narrative & accomplishment report.",
+                                        docType: "Post-Event Narrative",
+                                        originalFilename:
+                                          item.narrative_original_filename ||
+                                          "Narrative.pdf",
                                       });
                                     }}
-                                    className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer border-0 bg-transparent p-0"
+                                    className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white hover:underline cursor-pointer border-0 bg-transparent p-0"
                                   >
-                                    <AppIcon className=" Invoice01Icon text-xs" />
-                                    <span>Liquidation</span>
+                                    <File02Icon size={12} />
+                                    <span>Narrative</span>
                                   </button>
-                                </>
+                                )}
+                                {item.liquidation_storage_filename && (
+                                  <>
+                                    {item.narrative_storage_filename && (
+                                      <span className="text-gray-300 dark:text-zinc-600">
+                                        ·
+                                      </span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        onOpenPdfPreview?.({
+                                          url: `/api/osas/post-event-reports/${item.id}?file=liquidation`,
+                                          title: `${item.event_title}: Financial Liquidation`,
+                                          subtitle:
+                                            "Official receipts, disbursement summary, and vouchers.",
+                                          docType: "Financial Liquidation",
+                                          originalFilename:
+                                            item.liquidation_original_filename ||
+                                            "Liquidation.pdf",
+                                        });
+                                      }}
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer border-0 bg-transparent p-0"
+                                    >
+                                      <AppIcon className="Invoice01Icon text-xs" />
+                                      <span>Liquidation</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+
+                          {/* Row 3: Footer — Reference ID (bottom-left) + Proponent Avatar & Name (bottom-right) */}
+                          <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                            <div className="flex items-center gap-1.5 font-medium tabular-nums">
+                              <span>
+                                #{isProposal ? "EP" : "PER"}-{item.id}
+                              </span>
+                              {locked && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center text-gray-400 dark:text-zinc-500">
+                                      <LockIcon size={12} aria-hidden="true" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {item.status} items are locked from direct
+                                    drag-and-drop. Click to review.
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
                             </div>
-                          )}
 
-                          {/* Card Footer: Timestamp + Review Action Button */}
-                          <div className="pt-2 border-t border-border/80 dark:border-border flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
-                            <span className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-zinc-500 font-normal">
-                              <Clock01Icon size="1em" className="ph text-xs text-slate-400 dark:text-zinc-500" />
-                              {dateStr}
-                            </span>
-                            <span className="text-xs font-semibold text-pup-maroon dark:text-red-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                              <span>Review Proposal</span>
-                              <ArrowRight02Icon size="1em" className="text-[10px]" />
-                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0 max-w-[165px]">
+                              <KanbanMiniAvatar
+                                name={proponent}
+                                className="font-semibold"
+                              />
+                              <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate">
+                                {proponent}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
                     })}
 
                     {/* Empty Column Placeholder */}
-                    {!columnItems.length && (
-                      <EmptyState
-                        variant="compact"
-                        className="rounded-2xl border border-dashed border-border bg-gray-50/50 dark:bg-zinc-900/30"
-                        icon={InboxIcon}
-                        title={`No ${stream === "proposals" ? "proposals" : "reports"} in this stage`}
-                        description="Drag eligible items here to advance pipeline status"
-                      />
+                    {!columnItems.length && !isOver && (
+                      <div className="flex-1 flex flex-col items-center justify-center p-4">
+                        <EmptyState
+                          variant="compact"
+                          icon={InboxIcon}
+                          title={`No ${
+                            stream === "proposals" ? "proposals" : "reports"
+                          } in stage`}
+                          description="Drag eligible items here to advance status"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>

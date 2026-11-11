@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { normalizeTableDensity, tablePreferenceKey, paginationRange, tableStatusTone } from "../src/lib/tablePresentation.js";
+import { normalizeTableDensity, tablePreferenceKey, paginationRange, tableStatusTone, sizeContentColumns } from "../src/lib/tablePresentation.js";
 
 test("density keys isolate people and principal types and reject invalid values", () => {
   assert.equal(tablePreferenceKey(null), null);
@@ -26,4 +26,25 @@ test("status tones preserve domain meanings and safely default unfamiliar states
   assert.equal(tableStatusTone("InProgress"), "info");
   assert.equal(tableStatusTone("Archived"), "neutral");
   assert.equal(tableStatusTone("Future status"), "neutral");
+});
+
+test("visible columns retain minimums and share available width after hiding and restoring fields", () => {
+  const columns = [
+    { kind: "selection" },
+    { kind: "text", minWidth: 320, maxWidth: 420 },
+    { kind: "text", minWidth: 190, maxWidth: 340 },
+    { kind: "status", width: 120 },
+    { kind: "actions" },
+  ];
+  const widths = (visible, viewport) => sizeContentColumns(visible, visible.map(() => 0), visible.map(() => 10), viewport);
+  assert.deepEqual(widths(columns, 600), [48, 320, 190, 120, 48]);
+  const withoutTitle = columns.filter((_, index) => index !== 1);
+  assert.deepEqual(widths(withoutTitle, 450), [48, 234, 120, 48]);
+  assert.deepEqual(widths(withoutTitle, 1200), [48, 984, 120, 48]);
+  assert.deepEqual(widths(columns, 600), [48, 320, 190, 120, 48]);
+});
+
+test("a very long value does not take width away from the other text fields", () => {
+  const columns = [{ kind: "text" }, { kind: "text" }, { kind: "year" }, { kind: "actions" }];
+  assert.deepEqual(sizeContentColumns(columns, [200, 18, 4, 0], [4, 4, 4, 0], 760), [403.5, 243.5, 65, 48]);
 });

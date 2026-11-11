@@ -46,3 +46,52 @@ export function tableStatusTone(value) {
   if (["inprogress", "processing", "underreview", "ready", "info", "low", "submitted"].includes(status)) return "info";
   return "neutral";
 }
+
+const COLUMN_MIN_WIDTHS = {
+  identifier: 144, text: 180, date: 140, status: 100, year: 64, category: 80, number: 64,
+};
+
+export function sizeContentColumns(columns, bodyLengths, headerLengths, targetWidth, viewportWidth = targetWidth) {
+  const sizes = columns.map(({ kind, width, minWidth, maxWidth, growthWeight }, index) => {
+    const control = kind === "selection" || kind === "actions";
+    const fixed = control ? 48 : width;
+    if (fixed) return { width: fixed, limit: fixed, weight: 0, fallbackWeight: 0, control };
+
+    const minimum = minWidth ?? COLUMN_MIN_WIDTHS[kind] ?? 112;
+    const limit = Math.max(minimum, maxWidth ?? (kind === "text" ? Math.max(340, targetWidth) : 340));
+    const textWidth = Math.ceil(Math.max(bodyLengths[index], headerLengths[index]) * 7.1 + 36);
+    return {
+      width: Math.min(limit, Math.max(minimum, Math.min(textWidth, maxWidth ?? 340))),
+      limit,
+      weight: growthWeight ?? (kind === "text" ? 1 : 0),
+      fallbackWeight: growthWeight == null && maxWidth == null && kind !== "text" ? 1 : 0,
+    };
+  });
+
+  let remaining = targetWidth - sizes.reduce((sum, column) => sum + column.width, 0);
+  // Give long text first use of spare room. Uncapped metadata can absorb any remainder.
+  for (const weightKey of ["weight", "fallbackWeight"]) {
+    while (remaining > 0.01) {
+      const flexible = sizes.filter((column) => column.width < column.limit && column[weightKey] > 0);
+      if (!flexible.length) break;
+      const totalWeight = flexible.reduce((sum, column) => sum + column[weightKey], 0);
+      const space = remaining;
+      for (const column of flexible) {
+        const addition = Math.min(column.limit - column.width, space * column[weightKey] / totalWeight);
+        column.width += addition;
+        remaining -= addition;
+      }
+    }
+  }
+
+  // Once preferred widths are exhausted, fill the viewport with the visible data columns.
+  const unfilledViewportWidth = viewportWidth - sizes.reduce((sum, column) => sum + column.width, 0);
+  if (unfilledViewportWidth > 0) {
+    const textColumns = sizes.filter((_, index) => columns[index].kind === "text");
+    const fillColumns = textColumns.length ? textColumns : sizes.filter((column) => !column.control);
+    const share = unfilledViewportWidth / (fillColumns.length || 1);
+    for (const column of fillColumns) column.width += share;
+  }
+
+  return sizes.map(({ width }) => width);
+}

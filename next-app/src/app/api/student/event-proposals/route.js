@@ -18,80 +18,106 @@ function uploadsDir() {
 }
 
 export async function GET(req) {
-  const access = await requireStudent(req);
-  if (access.error || !access.user) {
-    return createAuthErrorResponse(
-      access.error || "Student authentication required",
-      access.error?.startsWith("Access denied") ? 403 : 401
+  try {
+    const access = await requireStudent(req);
+    if (access.error || !access.user) {
+      return createAuthErrorResponse(
+        access.error || "Student authentication required",
+        access.error?.startsWith("Access denied") ? 403 : 401
+      );
+    }
+
+    const proposals = (
+      await query(
+        `SELECT ep.*, so.acronym AS org_acronym, so.category AS org_category
+         FROM event_proposals ep
+         LEFT JOIN student_organizations so ON so.id = ep.organization_id
+         WHERE ep.office_id = 'osas'
+           AND ep.identity_profile_id = $1
+         ORDER BY ep.created_at DESC`,
+        [access.user.identityProfileId]
+      )
+    ).filter((item) => canAccessResource(access.user, "proposal", item));
+
+    const ids = proposals.map((item) => item.id);
+    const rawUpdates = ids.length
+      ? await query(
+          `SELECT tu.*,
+                  s.fname AS staff_fname, s.lname AS staff_lname, s.preferences AS staff_preferences, s.role AS staff_role,
+                  st.name AS student_name
+           FROM transaction_updates tu
+           LEFT JOIN staff s ON tu.created_by = s.id
+           LEFT JOIN students st ON tu.created_by = st.student_no
+           WHERE tu.event_proposal_id = ANY($1::bigint[])
+           ORDER BY tu.created_at ASC`,
+          [ids]
+        )
+      : [];
+    const { getStaffFullName } = await import("@/lib/staffRepo");
+    const { decryptPII } = await import("@/lib/piiEncryption");
+    const updates = rawUpdates.map((u) => {
+      let actorName = "Staff";
+      if (u.staff_fname || u.staff_lname) {
+        actorName = getStaffFullName({
+          fname: decryptPII(u.staff_fname),
+          lname: decryptPII(u.staff_lname),
+          preferences: u.staff_preferences,
+          role: u.staff_role,
+          id: u.created_by,
+        });
+      } else if (u.student_name) {
+        actorName = decryptPII(u.student_name);
+      } else if (u.created_by) {
+        actorName = u.created_by;
+      }
+      return {
+        id: u.id,
+        event_proposal_id: u.event_proposal_id,
+        status: u.status,
+        message: u.message,
+        created_by: u.created_by,
+        actor_id: u.created_by || null,
+        actor_name: actorName,
+        created_at: u.created_at,
+      };
+    });
+
+    const updatesByProposal = updates.reduce((grouped, item) => {
+      const key = String(item.event_proposal_id);
+      (grouped[key] ||= []).push(item);
+      return grouped;
+    }, {});
+
+    const rawVersions = ids.length
+      ? await query(
+          `SELECT id, event_proposal_id, revision_number, title, event_date,
+                  original_filename, size_bytes, submitted_by_email,
+                  submitted_by_student_no, created_at, file_pruned_at
+           FROM event_proposal_versions
+           WHERE event_proposal_id = ANY($1::bigint[])
+           ORDER BY event_proposal_id, revision_number ASC`,
+          [ids]
+        )
+      : [];
+    const versionsByProposal = rawVersions.reduce((grouped, item) => {
+      const key = String(item.event_proposal_id);
+      (grouped[key] ||= []).push(item);
+      return grouped;
+    }, {});
+
+    proposals.forEach((item) => {
+      item.updates = updatesByProposal[String(item.id)] || [];
+      item.versions = versionsByProposal[String(item.id)] || [];
+    });
+
+    return NextResponse.json({ ok: true, data: proposals });
+  } catch (err) {
+    console.error("GET /api/student/event-proposals error:", err);
+    return NextResponse.json(
+      { ok: false, error: err.message || "Failed to load event proposals." },
+      { status: 500 }
     );
   }
-
-  const proposals = (
-    await query(
-      `SELECT ep.*, so.acronym AS org_acronym, so.category AS org_category
-       FROM event_proposals ep
-       LEFT JOIN student_organizations so ON so.id = ep.organization_id
-       WHERE ep.office_id = 'osas'
-         AND ep.identity_profile_id = $1
-       ORDER BY ep.created_at DESC`,
-      [access.user.identityProfileId]
-    )
-  ).filter((item) => canAccessResource(access.user, "proposal", item));
-
-  const ids = proposals.map((item) => item.id);
-  const rawUpdates = ids.length
-    ? await query(
-        `SELECT tu.*,
-                s.fname AS staff_fname, s.lname AS staff_lname, s.preferences AS staff_preferences, s.role AS staff_role,
-                st.name AS student_name
-         FROM transaction_updates tu
-         LEFT JOIN staff s ON tu.created_by = s.id
-         LEFT JOIN students st ON tu.created_by = st.student_no
-         WHERE tu.event_proposal_id = ANY($1::bigint[])
-         ORDER BY tu.created_at ASC`,
-        [ids]
-      )
-    : [];
-  const { getStaffFullName } = await import("@/lib/staffRepo");
-  const { decryptPII } = await import("@/lib/piiEncryption");
-  const updates = rawUpdates.map((u) => {
-    let actorName = "Staff";
-    if (u.staff_fname || u.staff_lname) {
-      actorName = getStaffFullName({
-        fname: decryptPII(u.staff_fname),
-        lname: decryptPII(u.staff_lname),
-        preferences: u.staff_preferences,
-        role: u.staff_role,
-        id: u.created_by,
-      });
-    } else if (u.student_name) {
-      actorName = decryptPII(u.student_name);
-    } else if (u.created_by) {
-      actorName = u.created_by;
-    }
-    return {
-      id: u.id,
-      event_proposal_id: u.event_proposal_id,
-      status: u.status,
-      message: u.message,
-      created_by: u.created_by,
-      actor_id: u.created_by || null,
-      actor_name: actorName,
-      created_at: u.created_at,
-    };
-  });
-
-  const updatesByProposal = updates.reduce((grouped, item) => {
-    const key = String(item.event_proposal_id);
-    (grouped[key] ||= []).push(item);
-    return grouped;
-  }, {});
-
-  proposals.forEach((item) => {
-    item.updates = updatesByProposal[String(item.id)] || [];
-  });
-
-  return NextResponse.json({ ok: true, data: proposals });
 }
 
 export async function POST(req) {
@@ -198,6 +224,25 @@ export async function POST(req) {
         error.code = "PROPOSAL_ACCESS_CHECK_FAILED";
         throw error;
       }
+      await tx.query(
+        `INSERT INTO event_proposal_versions (
+          event_proposal_id, revision_number, title, event_date,
+          original_filename, storage_filename, mime_type, size_bytes,
+          submitted_by_email, submitted_by_student_no, created_at
+        ) VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          saved.id,
+          saved.title,
+          saved.event_date,
+          saved.original_filename,
+          saved.storage_filename,
+          saved.mime_type,
+          saved.size_bytes,
+          studentEmail.toLowerCase(),
+          access.user.studentNo || officerRecord.student_no || null,
+          saved.created_at,
+        ],
+      );
       await tx.query(
         `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
          VALUES ($1, 'Submitted', $2, $3)`,

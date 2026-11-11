@@ -21,10 +21,10 @@ import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import DigitalRecordsList, {
   formatUploadedDate,
 } from "@/components/admin/records-review/DigitalRecordsList"
-import DigitalRecordsKanbanPipeline from "@/components/admin/records-review/DigitalRecordsKanbanPipeline"
+import DigitalRecordsKanbanPipeline, { DIGITAL_RECORDS_KANBAN_COLUMNS } from "@/components/admin/records-review/DigitalRecordsKanbanPipeline"
 import DigitalRecordActionsMenu from "@/components/admin/records-review/DigitalRecordActionsMenu"
-import KpiStatCardsSkeleton from "@/components/systemadmin/skeletons/KpiStatCardsSkeleton"
-import RecordsReviewTableSkeleton from "@/components/admin/skeletons/RecordsReviewTableSkeleton"
+import { Skeleton } from "@/components/ui/skeleton"
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import { format } from "date-fns"
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
 import { cn, formatTitleCase } from "@/lib/utils"
@@ -95,6 +95,7 @@ function formatChipDate(dateStr) {
 }
 
 export default function DigitalRecordsReviewTab({
+  officeId,
   records,
   totalCount = 0,
   serverStats,
@@ -114,6 +115,7 @@ export default function DigitalRecordsReviewTab({
   showToast,
   onLogAction,
 }) {
+  const isOsas = String(officeId || "").toLowerCase() === "osas"
   const [searchQuery, setSearchQuery] = useState("")
   const [localSearch, setLocalSearch] = useState("")
   const [currentPage, setCurrentPage] = useUrlPage()
@@ -155,14 +157,14 @@ export default function DigitalRecordsReviewTab({
 
   const tableColumns = useMemo(
     () => [
-      { key: "student_no", label: "Student No." },
-      { key: "student_name", label: "Full Name" },
+      ...(!isOsas ? [{ key: "student_no", label: "Student No." }] : []),
+      { key: "student_name", label: isOsas ? "Organization" : "Full Name" },
       { key: "doc_type", label: "Document Type" },
       { key: "original_filename", label: "Filename" },
       { key: "status", label: "Status" },
       { key: "created_at", label: "Upload Date" },
     ],
-    []
+    [isOsas]
   )
 
   const groupOptions = useMemo(
@@ -177,12 +179,12 @@ export default function DigitalRecordsReviewTab({
   const sortOptions = useMemo(
     () => [
       { key: "created_at", label: "Upload Date" },
-      { key: "student_no", label: "Student ID" },
-      { key: "student_name", label: "Student Name" },
+      ...(!isOsas ? [{ key: "student_no", label: "Student ID" }] : []),
+      { key: "student_name", label: isOsas ? "Organization" : "Student Name" },
       { key: "doc_type", label: "Document Type" },
       { key: "approval_status", label: "Status" },
     ],
-    []
+    [isOsas]
   )
 
   const filterFields = useMemo(
@@ -481,9 +483,10 @@ export default function DigitalRecordsReviewTab({
       onPreviewDocument({
         docId: record.id,
         docType: record.doc_type,
-        studentName: record.student_name || "Unknown",
-        studentNo: record.student_no,
+        studentName: (isOsas ? record.organization_name || record.student_name : record.student_name) || "Unknown",
+        studentNo: isOsas ? undefined : record.student_no,
         refId: record.id,
+        reviewNote: !isOsas && record.approval_status === "Declined" ? record.review_note : undefined,
       })
     }
   }
@@ -579,6 +582,8 @@ export default function DigitalRecordsReviewTab({
     setCurrentPage(1)
   }
 
+  const initialLoading = isLoading && !records
+
   const orderedVisibleColumns = useMemo(() => {
     return tableColumns.filter((col) => visibleColumns.includes(col.key))
   }, [tableColumns, visibleColumns])
@@ -586,9 +591,9 @@ export default function DigitalRecordsReviewTab({
   const activeTableColumns = useMemo(() => {
     const columnMap = {
       student_no: "identifier",
-      student_name: "text",
-      doc_type: "category",
-      original_filename: { kind: "text", maxWidth: 340 },
+      student_name: { kind: "text", minWidth: 220, maxWidth: 340 },
+      doc_type: { kind: "text", minWidth: 200, maxWidth: 340, align: "center" },
+      original_filename: { kind: "text", minWidth: 260, maxWidth: 340 },
       status: "status",
       created_at: "date",
     }
@@ -611,11 +616,11 @@ export default function DigitalRecordsReviewTab({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span>Records Review</span>
                 <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
-                  {stats.total.toLocaleString()} records · {stats.pending.toLocaleString()} pending review
+                  {stats.total.toLocaleString()} records · {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.pending.toLocaleString()} pending review
                 </span>
               </div>
             }
-            description="Verify student record submissions."
+            description={isOsas ? "Verify organization document submissions." : "Verify student record submissions."}
             showBorder={false}
             className="p-6"
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -633,13 +638,7 @@ export default function DigitalRecordsReviewTab({
           />
 
           {/* Color Stat Cards / Skeletons at the Top */}
-          {isLoading && !isManualLoading && !records ? (
-            <div className="px-6 pb-6">
-              <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
-                <KpiStatCardsSkeleton count={3} />
-              </div>
-            </div>
-          ) : !error ? (
+          {!error ? (
             <div className="px-6 pb-6">
               <div className="p-3 sm:p-3.5 rounded-[22px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
@@ -660,10 +659,10 @@ export default function DigitalRecordsReviewTab({
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                      {stats.pending.toLocaleString()}
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.pending.toLocaleString()}
                     </div>
                     <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
-                      {stats.pendingToday.toLocaleString()} received today
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.pendingToday.toLocaleString()} received today
                     </div>
                   </div>
 
@@ -686,10 +685,10 @@ export default function DigitalRecordsReviewTab({
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
-                      {stats.totalApproved.toLocaleString()}
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.totalApproved.toLocaleString()}
                     </div>
                     <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
-                      {stats.approvedToday.toLocaleString()} approved today
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.approvedToday.toLocaleString()} approved today
                     </div>
                   </div>
 
@@ -710,10 +709,10 @@ export default function DigitalRecordsReviewTab({
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 font-jakarta mt-2">
-                      {stats.totalDeclined.toLocaleString()}
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.totalDeclined.toLocaleString()}
                     </div>
                     <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 font-medium">
-                      {stats.declinedToday.toLocaleString()} returned today
+                      {initialLoading ? <span aria-hidden="true" className="inline-block h-[1em] w-10 align-middle rounded-md animate-shimmer" /> : stats.declinedToday.toLocaleString()} returned today
                     </div>
                   </div>
                 </div>
@@ -783,8 +782,8 @@ export default function DigitalRecordsReviewTab({
                 onChange={setLocalSearch}
                 count={totalCount}
                 loading={isLoading && !isManualLoading}
-                label="Search student records"
-                placeholder="Search student, name, doc type..."
+                label={isOsas ? "Search organization records" : "Search student records"}
+                placeholder={isOsas ? "Search organization, document type..." : "Search student, name, doc type..."}
               />
               {viewMode === "table" && (
                 <TableScrollControls
@@ -864,9 +863,9 @@ export default function DigitalRecordsReviewTab({
 
           {/* 5. Content Area */}
           <div className="relative flex flex-[1_0_auto] flex-col" aria-busy={isLoading || undefined}>
-          {isLoading && !isManualLoading && !records ? (
-            <RecordsReviewTableSkeleton rowCount={itemsPerPage} embedded={true} />
-          ) : error ? (
+          {initialLoading && viewMode !== "table" ? (
+            <DataContentSkeleton columns={activeTableColumns} viewMode={viewMode} kanbanColumnCount={DIGITAL_RECORDS_KANBAN_COLUMNS.length} />
+          ) : error && !records ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
@@ -878,7 +877,7 @@ export default function DigitalRecordsReviewTab({
                 </EmptyHeader>
               </Empty>
             </div>
-          ) : sortedRecords.length === 0 ? (
+          ) : !initialLoading && sortedRecords.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
                 <EmptyHeader>
@@ -891,7 +890,9 @@ export default function DigitalRecordsReviewTab({
                   <EmptyDescription>
                     {activeChips.length > 0
                       ? "Try adjusting your search filters to find what you're looking for."
-                      : "There are currently no digital records in the system."}
+                      : isOsas
+                        ? "There are currently no organization records in the system."
+                        : "There are currently no digital records in the system."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -921,6 +922,7 @@ export default function DigitalRecordsReviewTab({
             <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
               <DigitalRecordsList
                 records={paginatedRecords}
+                isOsas={isOsas}
                 groupBy={groupBy}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelectRow}
@@ -942,9 +944,10 @@ export default function DigitalRecordsReviewTab({
               />
             </div>
           ) : viewMode === "kanban" ? (
-            <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
+            <div className="w-full flex-1 flex flex-col min-h-0 border-t border-border dark:border-border">
               <DigitalRecordsKanbanPipeline
                 records={sortedRecords}
+                isOsas={isOsas}
                 onPreview={handlePreview}
                 onApprove={handleApprove}
                 onDecline={onDecline}
@@ -981,7 +984,7 @@ export default function DigitalRecordsReviewTab({
                 onScroll={handleScroll}
                 className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
               >
-                <Table columns={activeTableColumns} className="min-w-[1380px]">
+                <Table columns={activeTableColumns}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       <th className="w-12 p-4 text-center align-middle sticky left-0 z-20 bg-white dark:bg-card">
@@ -997,7 +1000,7 @@ export default function DigitalRecordsReviewTab({
                           aria-label="Select all records on this page"
                         />
                       </th>
-                      {visibleColumns.includes("student_no") && (
+                      {!isOsas && visibleColumns.includes("student_no") && (
                         <th
                           className={cn(
                             "p-4 w-[160px] min-w-[160px] sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
@@ -1051,7 +1054,7 @@ export default function DigitalRecordsReviewTab({
                                 : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                             )}
                           >
-                            Full Name{" "}
+                            {isOsas ? "Organization" : "Full Name"}{" "}
                             <SortIndicator
                               column="student_name"
                               sortBy={sortBy}
@@ -1134,6 +1137,23 @@ export default function DigitalRecordsReviewTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
+                    {initialLoading && Array.from({ length: 6 }, (_, row) => (
+                      <tr key={`loading-${row}`} aria-hidden="true">
+                        {activeTableColumns.map((column, index) => {
+                          const kind = typeof column === "string" ? column : column.kind
+                          const key = index === 0 ? "selection" : index === activeTableColumns.length - 1 ? "actions" : orderedVisibleColumns[index - 1].key
+                          const centered = kind === "selection" || kind === "actions" || kind === "status" || column.align === "center"
+                          return (
+                            <td key={key} className={cn("p-4 align-middle border-r border-border/70 last:border-r-0", key === "selection" && "sticky left-0 z-10 bg-white dark:bg-card", key === "student_no" && "sticky left-12 z-10 bg-white dark:bg-card")}>
+                              <div className={cn("flex flex-col gap-1", centered && "items-center")}>
+                                <Skeleton className={cn("max-w-full", kind === "selection" ? "size-4" : kind === "actions" ? "size-7 rounded-lg" : kind === "status" ? "h-6 w-20 rounded-full" : kind === "identifier" ? "h-6 w-28 rounded-lg" : "h-4 w-32")} />
+                                {key === "created_at" && <Skeleton className="h-3 w-20" />}
+                              </div>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))}
                     {paginatedRecords.map((r) => {
                       const isSelected = selectedIds.has(r.id)
 
@@ -1171,11 +1191,11 @@ export default function DigitalRecordsReviewTab({
                               )}
                               checked={isSelected}
                               onChange={(e) => toggleSelectRow(r.id, e)}
-                              aria-label={`Select record for ${r.student_name || r.student_no}`}
+                              aria-label={`Select record for ${(isOsas ? r.organization_name || r.student_name : r.student_name) || r.student_no}`}
                             />
                           </td>
 
-                          {visibleColumns.includes("student_no") && (
+                          {!isOsas && visibleColumns.includes("student_no") && (
                             <td
                               className={cn(
                                 "p-4 w-[160px] min-w-[160px] whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow",
@@ -1195,9 +1215,9 @@ export default function DigitalRecordsReviewTab({
                             <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                               <div
                                 className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
-                                title={formatTitleCase(r.student_name)}
+                                title={formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
                               >
-                                {formatTitleCase(r.student_name)}
+                                {formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
                               </div>
                             </td>
                           )}
@@ -1287,11 +1307,7 @@ export default function DigitalRecordsReviewTab({
             </div>
           )}
           {isLoading && !isManualLoading && records && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 dark:bg-card/70">
-              <span role="status" className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
-                Loading records…
-              </span>
-            </div>
+            <span role="status" className="sr-only">Loading records…</span>
           )}
           </div>
         </Card>

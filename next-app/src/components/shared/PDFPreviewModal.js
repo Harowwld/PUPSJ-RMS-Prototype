@@ -16,12 +16,13 @@ function PDFPreviewContent({
   onClose,
   preview,
   pdfUrl,
+  pdfGenerator,
   title,
   description,
   filename,
   onFileReplaced,
   isPreparing = false,
-  error,
+  error: errorProp,
   onRetry,
   onDownload,
   downloadFilename,
@@ -38,6 +39,9 @@ function PDFPreviewContent({
   const [fileState, setFileState] = useState("loading")
   const [preparedFile, setPreparedFile] = useState(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [generatedUrl, setGeneratedUrl] = useState(null)
+  const [generatorLoading, setGeneratorLoading] = useState(() => Boolean(pdfGenerator && !pdfUrl && !preview))
+  const [generatorError, setGeneratorError] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(() => {
     if (typeof window === "undefined") return 100
     try {
@@ -56,16 +60,62 @@ function PDFPreviewContent({
     } catch {}
   }, [zoomLevel])
 
+  useEffect(() => {
+    if (!pdfGenerator || pdfUrl || preview) return
+
+    let active = true
+
+    Promise.resolve()
+      .then(() => {
+        if (active) {
+          setGeneratorLoading(true)
+          setGeneratorError(null)
+        }
+        return pdfGenerator()
+      })
+      .then((blobOrUrl) => {
+        if (!active) return
+        if (typeof blobOrUrl === "string") {
+          setGeneratedUrl(blobOrUrl)
+        } else if (blobOrUrl instanceof Blob) {
+          const url = URL.createObjectURL(blobOrUrl)
+          setGeneratedUrl(url)
+        }
+      })
+      .catch((err) => {
+        if (!active) return
+        console.error("PDF generation failed:", err)
+        setGeneratorError(err?.message || "Failed to generate PDF preview.")
+      })
+      .finally(() => {
+        if (active) setGeneratorLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [pdfGenerator, pdfUrl, preview])
+
+  useEffect(() => {
+    return () => {
+      if (generatedUrl && generatedUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(generatedUrl)
+      }
+    }
+  }, [generatedUrl])
+
   const docId = preview?.docId || preview?.id
-  const source = pdfUrl || preview?.url || preview?.fileUrl || (docId ? "/api/documents/" + docId : null)
+  const source = pdfUrl || preview?.url || preview?.fileUrl || generatedUrl || (docId ? "/api/documents/" + docId : null)
+  const effectiveIsPreparing = isPreparing || generatorLoading
+  const effectiveError = errorProp || generatorError
   const activeFile = preparedFile?.source === source ? preparedFile : null
-  const ready = !!activeFile && frameReady && fileState === "ready" && !isPreparing && !error
+  const ready = !!activeFile && frameReady && fileState === "ready" && !effectiveIsPreparing && !effectiveError
   const originalName = preview?.originalFilename || preview?.filename || filename || "document"
   const pdfName = downloadFilename || (/\.pdf$/i.test(originalName) ? originalName : originalName.replace(/\.[^./\\]+$/, "") + ".pdf")
   const heading = title || preview?.title || preview?.docType || preview?.originalFilename || "PDF Preview"
   const context = description || preview?.subtitle || [preview?.studentName, preview?.studentNo].filter(Boolean).join(" · ")
   const FullscreenIcon = isFullscreen ? ArrowShrink01Icon : ArrowExpand01Icon
-  const originalAvailable = source && fileState === "ready" && (!activeFile || activeFile.isConverted) && !isPreparing && !error
+  const originalAvailable = source && fileState === "ready" && (!activeFile || activeFile.isConverted) && !effectiveIsPreparing && !effectiveError
   const handleUpdate = onUpdate || preview?.onUpdate
 
   useEffect(() => {
@@ -129,9 +179,9 @@ function PDFPreviewContent({
               </Button>
             </div>
           )}
-          {error ? (
+          {effectiveError ? (
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
-              <EmptyState icon={AlertCircleIcon} title="PDF Preview Unavailable" description={error}>
+              <EmptyState icon={AlertCircleIcon} title="PDF Preview Unavailable" description={effectiveError}>
                 {onRetry && (
                   <Button variant="outline" size="sm" onClick={onRetry} className="h-9 px-4 text-xs font-semibold rounded-xl">
                     Retry Preview
@@ -139,7 +189,7 @@ function PDFPreviewContent({
                 )}
               </EmptyState>
             </div>
-          ) : isPreparing ? (
+          ) : effectiveIsPreparing ? (
             <div className="flex-1 space-y-4 bg-white p-6 dark:bg-card" role="status" aria-label="Preparing PDF preview">
               <Skeleton className="h-6 w-2/5" />
               <Skeleton className="h-4 w-3/5" />

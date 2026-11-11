@@ -99,6 +99,7 @@ const tabsTriggerVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     "data-[orientation=vertical]:w-full data-[orientation=vertical]:justify-start",
     "text-gray-900 dark:text-zinc-100",
+    "data-[state=inactive]:hover:bg-black/[0.04] dark:data-[state=inactive]:hover:bg-white/[0.06] data-[state=inactive]:hover:text-gray-900 dark:data-[state=inactive]:hover:text-zinc-100",
   ],
   {
     variants: {
@@ -159,7 +160,7 @@ function TabsTrigger({
             data-state={isActive ? "active" : "inactive"}
             className={cn(
               sharedClassName,
-              "relative z-0",
+              "group relative z-0",
               tabProps.className
             )}
           >
@@ -180,7 +181,7 @@ function TabsTrigger({
             <span
               className={cn(
                 "relative z-10 flex items-center justify-center gap-1.5 transition-opacity duration-200 ease-out w-full",
-                isActive ? "opacity-100" : "opacity-50 hover:opacity-80"
+                isActive ? "opacity-100" : "opacity-60 group-hover:opacity-100"
               )}
             >
               {children}
@@ -217,6 +218,7 @@ function SegmentedControl({
   size: sizeProp,
   orientation = "horizontal",
   className,
+  listClassName,
   pillClassName,
   badgeClassName,
   id,
@@ -231,7 +233,13 @@ function SegmentedControl({
       className={cn("w-auto", className)}
       {...props}
     >
-      <TabsList variant={variant} size={resolvedSize} orientation={orientation} id={id}>
+      <TabsList
+        variant={variant}
+        size={resolvedSize}
+        orientation={orientation}
+        id={id}
+        className={listClassName}
+      >
         {items.map((item) => (
           <TabsTrigger
             key={item.value}
@@ -239,9 +247,12 @@ function SegmentedControl({
             disabled={item.disabled}
             size={resolvedSize}
             pillClassName={pillClassName}
+            aria-label={item.ariaLabel || (!item.label ? item.title || item.value : undefined)}
+            title={item.title}
+            className={!item.label ? "px-2.5" : undefined}
           >
             {item.icon && <span className="shrink-0">{item.icon}</span>}
-            <span>{item.label}</span>
+            {item.label ? <span>{item.label}</span> : null}
             {item.badge !== undefined && (
               <span
                 className={cn(
