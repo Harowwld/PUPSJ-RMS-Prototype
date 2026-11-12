@@ -693,9 +693,8 @@ export async function seed({ force: forceOverride } = {}) {
         );
       }
       await run(
-        `UPDATE event_proposals ep SET organization_name=$2, submitted_by_email=$3, officer_position=$4,
-           is_verified_officer=true, student_account_id=sa.id, reviewed_by=$5
-         FROM student_accounts sa WHERE ep.id=$1 AND sa.identity_profile_id=ep.identity_profile_id`,
+        `UPDATE event_proposals SET organization_name=$2, submitted_by_email=$3, officer_position=$4,
+           is_verified_officer=true, reviewed_by=$5 WHERE id=$1`,
         [propId, orgName, email, officer.position, reviewNote ? "PUPOSAS-001" : null],
       );
       if (propId && Array.isArray(updates)) {
