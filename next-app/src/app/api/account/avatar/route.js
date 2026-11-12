@@ -4,13 +4,35 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { updateStaff } from "@/lib/staffRepo";
-import { writeAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
-import { isDefaultAvatarId, getDefaultAvatarSvg, getDefaultAvatar } from "@/lib/defaultAvatars";
+import { isDefaultAvatarId, getDefaultAvatarSvg } from "@/lib/defaultAvatars";
+import { isNotionistAvatarId, getNotionistAvatarSvg } from "@/lib/notionistsAvatars";
 import { AVATAR_MAX_SIZE_BYTES, AVATAR_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
+import { decryptPII } from "@/lib/piiEncryption";
 
 export const runtime = "nodejs";
+
+function sanitizeSvg(rawSvg) {
+  if (typeof rawSvg !== "string") return null;
+  const trimmed = rawSvg.trim();
+  if (!trimmed.startsWith("<svg") || !trimmed.endsWith("</svg>")) {
+    return null;
+  }
+  if (
+    /<script/i.test(trimmed) ||
+    /onload\s*=/i.test(trimmed) ||
+    /onerror\s*=/i.test(trimmed) ||
+    /onclick\s*=/i.test(trimmed) ||
+    /onmouseover\s*=/i.test(trimmed) ||
+    /javascript:/i.test(trimmed) ||
+    /<!ENTITY/i.test(trimmed) ||
+    /<!DOCTYPE/i.test(trimmed)
+  ) {
+    return null;
+  }
+  return trimmed;
+}
 
 function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
@@ -125,6 +147,23 @@ export async function GET(req) {
           );
           if (studentRow?.avatar_filename) {
             avatarFilename = studentRow.avatar_filename;
+          } else {
+            // Check if lookupId matches any staff member by decrypted name
+            try {
+              const allStaff = await query(
+                "SELECT id, fname, lname, avatar_filename FROM staff WHERE avatar_filename IS NOT NULL"
+              );
+              const norm = String(lookupId).trim().toLowerCase();
+              const matched = (allStaff || []).find((s) => {
+                const full = `${decryptPII(s.fname) || ""} ${decryptPII(s.lname) || ""}`.trim().toLowerCase();
+                return full === norm || String(s.id).toLowerCase() === norm;
+              });
+              if (matched?.avatar_filename) {
+                avatarFilename = matched.avatar_filename;
+              }
+            } catch {
+              // ignore lookup errors
+            }
           }
         }
       }
@@ -177,26 +216,41 @@ export async function POST(req) {
     }
 
     let defaultAvatarId = null;
+    let avatarType = "beam";
+    let svgString = null;
     let file = null;
 
     const contentTypeHeader = req.headers.get("content-type") || "";
     if (contentTypeHeader.includes("application/json")) {
       const jsonBody = await req.json().catch(() => null);
-      if (jsonBody?.defaultAvatarId !== undefined) {
-        defaultAvatarId = jsonBody.defaultAvatarId;
+      if (jsonBody) {
+        if (jsonBody.defaultAvatarId !== undefined) {
+          defaultAvatarId = jsonBody.defaultAvatarId;
+        }
+        if (jsonBody.avatarType !== undefined) {
+          avatarType = String(jsonBody.avatarType).toLowerCase();
+        }
+        if (jsonBody.svgString !== undefined) {
+          svgString = jsonBody.svgString;
+        }
       }
     } else {
       const form = await req.formData().catch(() => null);
       if (form) {
         if (form.get("defaultAvatarId") !== null) {
           defaultAvatarId = form.get("defaultAvatarId");
-        } else {
-          file = form.get("avatar");
         }
+        if (form.get("avatarType") !== null) {
+          avatarType = String(form.get("avatarType")).toLowerCase();
+        }
+        if (form.get("svgString") !== null) {
+          svgString = form.get("svgString");
+        }
+        file = form.get("avatar");
       }
     }
 
-    if (defaultAvatarId === null && (!file || typeof file === "string")) {
+    if (defaultAvatarId === null && !svgString && (!file || typeof file === "string")) {
       return NextResponse.json({ ok: false, error: "No avatar selection or file provided" }, { status: 400 });
     }
 
@@ -226,7 +280,27 @@ export async function POST(req) {
     let filename;
     let absPath;
 
-    if (defaultAvatarId) {
+    if (avatarType === "custom" || (svgString && !defaultAvatarId)) {
+      const sanitized = sanitizeSvg(svgString);
+      if (!sanitized) {
+        return NextResponse.json({ ok: false, error: "Invalid or unsafe SVG markup." }, { status: 400 });
+      }
+      const hash = crypto.createHash("sha256").update(sanitized).digest("hex").substring(0, 10);
+      filename = `avatar_${safeId}_custom_${hash}.svg`;
+      absPath = path.join(getAvatarsDir(), filename);
+      fs.writeFileSync(absPath, sanitized, "utf8");
+    } else if (avatarType === "notionists" && defaultAvatarId) {
+      if (!isNotionistAvatarId(defaultAvatarId)) {
+        return NextResponse.json({ ok: false, error: "Invalid Notionists avatar ID." }, { status: 400 });
+      }
+      const svgMarkup = getNotionistAvatarSvg(defaultAvatarId);
+      if (!svgMarkup) {
+        return NextResponse.json({ ok: false, error: "Notionists avatar not found" }, { status: 404 });
+      }
+      filename = `avatar_${safeId}_notionist${defaultAvatarId}.svg`;
+      absPath = path.join(getAvatarsDir(), filename);
+      fs.writeFileSync(absPath, svgMarkup, "utf8");
+    } else if (defaultAvatarId) {
       if (!isDefaultAvatarId(defaultAvatarId)) {
         return NextResponse.json({ ok: false, error: "Invalid default avatar ID." }, { status: 400 });
       }
@@ -281,25 +355,6 @@ export async function POST(req) {
       removeAvatarFile(oldFilename);
     }
 
-    const avatarMeta = defaultAvatarId ? getDefaultAvatar(defaultAvatarId) : null;
-    const actionDetails = defaultAvatarId
-      ? `selected default profile avatar (${avatarMeta?.name || `Avatar ${defaultAvatarId}`})`
-      : `uploaded custom profile avatar icon for account`;
-
-    if (sessionUser.type === "student") {
-      await writeAuditLog(req, "Upload Avatar", {
-        details: actionDetails,
-        entity_type: "Student",
-        entity_id: String(sessionUser.account_id),
-      });
-    } else {
-      await writeAuditLog(req, "Upload Avatar", {
-        details: actionDetails,
-        entity_type: "Staff",
-        entity_id: sessionUser.id,
-      });
-    }
-
     return NextResponse.json({ ok: true, avatar_filename: filename });
   } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
@@ -337,20 +392,6 @@ export async function DELETE(req) {
     }
 
     removeAvatarFile(oldFilename);
-
-    if (sessionUser.type === "student") {
-      await writeAuditLog(req, "Delete Avatar", {
-        details: `removed custom profile avatar for student account`,
-        entity_type: "Student",
-        entity_id: String(sessionUser.account_id),
-      });
-    } else {
-      await writeAuditLog(req, "Delete Avatar", {
-        details: `removed custom profile avatar, reverting to system default`,
-        entity_type: "Staff",
-        entity_id: sessionUser.id,
-      });
-    }
 
     return NextResponse.json({ ok: true });
   } catch {

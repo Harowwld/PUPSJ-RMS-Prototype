@@ -41,13 +41,16 @@
     "test:security-questions": "node --env-file=.env --test test/security-questions-import.test.mjs",
     "test:totp": "node --env-file=.env --test test/totp-verification.test.mjs",
     "test:red": "node --env-file=.env --test test/red/*.test.mjs",
-    "test": "node --env-file=.env --test test/totp-verification.test.mjs test/security-questions-import.test.mjs test/demo-account-password.test.mjs test/org-banner-gradient.test.mjs test/backup-authorization-code.test.mjs test/audit-log-formatting.test.mjs test/sound-classify.test.mjs test/narrative-text.test.mjs test/view-mode-icons.test.mjs test/page-header-secondary-actions.test.mjs test/avatar-preview-unzoomed.test.mjs test/toast-width-adaptive.test.mjs test/sheet-detail-buttons.test.mjs test/document-requests-multiview.test.mjs test/osas-monitoring-multiview.test.mjs test/settings-layout.test.mjs test/account-settings-functionalities.test.mjs test/modal-title-asterisks.test.mjs test/digital-records-review-multiview.test.mjs test/file-upload-size-limits.test.mjs test/security-question-strength.test.mjs test/campus-operations-multiview-and-sla.test.mjs",
+    "test": "node --env-file=.env --test test/totp-verification.test.mjs test/security-questions-import.test.mjs test/demo-account-password.test.mjs test/org-banner-gradient.test.mjs test/backup-authorization-code.test.mjs test/audit-log-formatting.test.mjs test/sound-classify.test.mjs test/narrative-text.test.mjs test/view-mode-icons.test.mjs test/page-header-secondary-actions.test.mjs test/avatar-preview-unzoomed.test.mjs test/toast-width-adaptive.test.mjs test/sheet-detail-buttons.test.mjs test/document-requests-multiview.test.mjs test/osas-monitoring-multiview.test.mjs test/settings-layout.test.mjs test/account-settings-functionalities.test.mjs test/modal-title-asterisks.test.mjs test/digital-records-review-multiview.test.mjs test/file-upload-size-limits.test.mjs test/security-question-strength.test.mjs test/campus-operations-multiview-and-sla.test.mjs test/actor-avatar-querying-and-borderless-badges.test.mjs test/notionists-avatar-integration.test.mjs test/beam-avatar-customization.test.mjs test/dynamic-cover-generator.test.mjs test/color-selector.test.mjs",
+    "test:unit": "node --test test/system-unit-tests/*.test.mjs",
     "test:all": "node --env-file=.env --experimental-test-module-mocks --test --test-concurrency=1 test/*.test.mjs test/security/*.test.mjs e2e/*.test.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs",
     "test:ocr-baseline": "node --test test/ocr-baseline-accuracy.test.mjs && vitest run --project components --project unit test/vitest/components/scan-upload-mismatch.test.js test/vitest/unit/ocr-request-guard.test.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@dicebear/core": "^10.7.0",
+    "@dicebear/styles": "^10.6.0",
     "@hugeicons/core-free-icons": "^4.3.3",
     "@hugeicons/react": "^1.1.10",
     "@marcosdemik/liquidglass": "^2.0.5",

@@ -8,6 +8,24 @@ import { formatErrorMessage } from "@/lib/errorUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getClientSession } from "@/lib/clientAuth";
 import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars";
+import {
+  NOTIONISTS_AVATARS,
+  NOTIONISTS_BOLD_COLORS,
+  NOTIONISTS_PASTEL_COLORS,
+  NOTIONISTS_BOLD_PALETTE,
+  NOTIONISTS_PASTEL_PALETTE,
+  generateShuffledNotionist,
+  replaceSvgBg,
+} from "@/lib/notionistsAvatars";
+import {
+  BEAM_PALETTES,
+  BEAM_CLASSIC_PALETTES,
+  BEAM_VIBRANT_PALETTES,
+  getBeamPresetInfo,
+  generateBeamSvgString,
+  generateShuffledBeam,
+  getBeamPalette,
+} from "@/lib/beamAvatars";
 import { validateSecurityAnswer } from "@/lib/authSchemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +35,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAppReducedMotion, SPRING_LAYOUT } from "@/lib/motion";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +58,21 @@ import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+
+const SETTINGS_GRAY_BADGE =
+  "text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200";
+
+const SETTINGS_STATUS_PILL =
+  "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none";
+
+const SETTINGS_STATUS_PILL_SM =
+  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none";
+
+const SETTINGS_PILL_DIVIDER =
+  "h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0";
+
+const SETTINGS_DOT_CHECK =
+  "size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0";
 import {
   getOfficeRoleLabel,
   isSystemAdminRole,
@@ -66,23 +101,54 @@ import {
 import { playSoundCue } from "@/lib/soundPatch";
 
 const FONT_SIZE_OPTIONS = [
-  { id: "smaller", label: "Smaller", scale: "88%", glyphClass: "text-xs font-semibold", desc: "Compact density" },
-  { id: "small", label: "Small", scale: "94%", glyphClass: "text-sm font-semibold", desc: "Slight text reduction" },
-  { id: "default", label: "Default", scale: "100%", glyphClass: "text-base font-bold", desc: "Standard institutional" },
-  { id: "large", label: "Large", scale: "106%", glyphClass: "text-lg font-bold", desc: "Enhanced legibility" },
-  { id: "larger", label: "Larger", scale: "114%", glyphClass: "text-xl font-extrabold", desc: "Maximum readability" },
+  { id: "smaller", label: "Smaller", scale: "88%", glyphClass: "text-xs font-semibold", desc: "Compact density", tag: "Dense" },
+  { id: "small", label: "Small", scale: "94%", glyphClass: "text-sm font-semibold", desc: "Slight text reduction", tag: "Compact" },
+  { id: "default", label: "Default", scale: "100%", glyphClass: "text-base font-bold", desc: "Standard institutional", tag: "Standard" },
+  { id: "large", label: "Large", scale: "106%", glyphClass: "text-lg font-bold", desc: "Enhanced legibility", tag: "Large" },
+  { id: "larger", label: "Larger", scale: "114%", glyphClass: "text-xl font-extrabold", desc: "Maximum readability", tag: "Spacious" },
 ];
 
 const TABLE_DENSITY_OPTIONS = [
-  { id: "compact", label: "Compact", height: "40px row", desc: "Dense data scan" },
-  { id: "normal", label: "Normal", height: "52px row", desc: "Balanced standard" },
-  { id: "comfortable", label: "Comfortable", height: "64px row", desc: "Spacious & relaxed" },
+  {
+    id: "compact",
+    label: "Compact",
+    height: "40px row",
+    desc: "Dense data scan",
+    rowHeight: 40,
+    padding: 4,
+    badge: "40px",
+    tagline: "High density • Rapid scanning",
+    recommendedFor: "Archival auditing & high-volume record browsing",
+  },
+  {
+    id: "normal",
+    label: "Normal",
+    height: "52px row",
+    desc: "Balanced standard",
+    rowHeight: 52,
+    padding: 8,
+    badge: "52px",
+    tagline: "Balanced • Institutional default",
+    recommendedFor: "Standard registrar & day-to-day administrative workflow",
+  },
+  {
+    id: "comfortable",
+    label: "Comfortable",
+    height: "64px row",
+    desc: "Spacious & relaxed",
+    rowHeight: 64,
+    padding: 12,
+    badge: "64px",
+    tagline: "Roomy • Enhanced readability",
+    recommendedFor: "Touchscreen interaction, relaxed reading & multi-line details",
+  },
 ];
 import {
   HelpCircleIcon as EmptyHelpCircleIcon,
   ArrowRight01Icon,
   Building04Icon,
   Camera01Icon,
+  CancelCircleIcon,
   CheckmarkBadge01Icon,
   CheckmarkCircle01Icon,
   Copy01Icon,
@@ -99,13 +165,15 @@ import {
   Shield01Icon,
   SmartPhone01Icon,
   SquareLock01Icon,
-  TextFontIcon,
   Tick01Icon,
   UserCircleIcon,
   UserIcon,
   ViewIcon,
   ViewOffIcon,
   ReloadIcon,
+  DiceFaces03Icon,
+  ShuffleIcon,
+  ColorsIcon,
 } from "hugeicons-react";
 import AppleProfileCover from "@/components/shared/AppleProfileCover";
 import AuthenticatorAppBadges from "@/components/shared/AuthenticatorAppBadges";
@@ -157,6 +225,89 @@ export default function AccountSettingsPanel() {
   const avatarsExpanded = showAllAvatars;
   const visibleAvatars = avatarsExpanded ? DEFAULT_AVATARS : DEFAULT_AVATARS.slice(0, DEFAULT_AVATAR_VISIBLE_COUNT);
 
+  const [avatarTab, setAvatarTab] = useState("notionists");
+  const [customShuffled, setCustomShuffled] = useState(null);
+  const [avatarColorMode, setAvatarColorMode] = useState("bold");
+  const [avatarSelectedColor, setAvatarSelectedColor] = useState(null);
+  const [stagedAvatar, setStagedAvatar] = useState(null);
+  const shouldReduceMotion = useAppReducedMotion();
+  const [paletteShuffleCount, setPaletteShuffleCount] = useState(0);
+  const [characterShuffleCount, setCharacterShuffleCount] = useState(0);
+  const [shufflePaletteWithCharacter, setShufflePaletteWithCharacter] = useState(false);
+  const [beamPaletteMode, setBeamPaletteMode] = useState("classic"); // "classic" | "vibrant"
+  const [selectedBeamPaletteId, setSelectedBeamPaletteId] = useState("maroon-gold");
+
+  // Custom avatar saved states from localStorage
+  const [savedCustomAvatar, setSavedCustomAvatar] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("pupsj_custom_avatar");
+        if (raw) return JSON.parse(raw);
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return null;
+  });
+
+  const [savedCustomBeam, setSavedCustomBeam] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("pupsj_custom_beam_avatar");
+        if (raw) return JSON.parse(raw);
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return null;
+  });
+
+  const [savedCustomNotionist, setSavedCustomNotionist] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("pupsj_custom_notionist_avatar");
+        if (raw) return JSON.parse(raw);
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return null;
+  });
+
+  // Derived current applied avatar info for the active user
+  const appliedAvatarInfo = useMemo(() => {
+    if (!authUser?.avatar_filename) {
+      return { type: "default", id: 0 };
+    }
+    const matchNotionist = authUser.avatar_filename.match(/notionist(\d+)/);
+    if (matchNotionist) {
+      return { type: "notionists", id: parseInt(matchNotionist[1], 10) };
+    }
+    const matchDefault = authUser.avatar_filename.match(/default(\d+)/);
+    if (matchDefault) {
+      return { type: "beam", id: parseInt(matchDefault[1], 10) };
+    }
+    return { type: "custom", id: "custom" };
+  }, [authUser?.avatar_filename]);
+
+  const notionistChoices = useMemo(() => {
+    return [
+      {
+        id: 0,
+        name: "Default",
+        alt: "Default Profile",
+        isDefaultProfile: true,
+      },
+      {
+        id: "custom",
+        name: "Custom",
+        alt: "Custom Notionist Avatar",
+        isCustomTile: true,
+      },
+      ...NOTIONISTS_AVATARS.slice(0, 18),
+    ];
+  }, []);
+
   const avatarChoices = useMemo(() => {
     return [
       {
@@ -165,7 +316,13 @@ export default function AccountSettingsPanel() {
         alt: "Default Profile",
         isDefaultProfile: true,
       },
-      ...DEFAULT_AVATARS.slice(0, 47),
+      {
+        id: "custom",
+        name: "Custom",
+        alt: "Custom Beam Gradient",
+        isCustomTile: true,
+      },
+      ...DEFAULT_AVATARS.slice(0, 46),
     ];
   }, []);
 
@@ -264,11 +421,15 @@ export default function AccountSettingsPanel() {
         setAuthUser(user);
         if (user.avatar_filename) {
           setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);
-          const match = user.avatar_filename.match(/default(\d+)/);
-          if (match) {
-            const savedAvatarId = parseInt(match[1], 10);
+          const matchDefault = user.avatar_filename.match(/default(\d+)/);
+          const matchNotionist = user.avatar_filename.match(/notionist(\d+)/);
+          if (matchDefault) {
+            const savedAvatarId = parseInt(matchDefault[1], 10);
             setSelectedDefaultAvatarId(savedAvatarId);
             if (savedAvatarId > DEFAULT_AVATAR_VISIBLE_COUNT) setShowAllAvatars(true);
+          } else if (matchNotionist) {
+            const savedAvatarId = parseInt(matchNotionist[1], 10);
+            setSelectedDefaultAvatarId(savedAvatarId);
           } else {
             setSelectedDefaultAvatarId(null);
           }
@@ -693,14 +854,13 @@ export default function AccountSettingsPanel() {
     return [cleanFirst, cleanLast].filter(Boolean).join(" ").trim() || (cleanFirst || cleanLast || "User");
   }, [fname, lname, authUser?.fname, authUser?.lname, userPreferences?.display_name_format]);
 
-  const handleSelectDefaultAvatar = async (avatarId) => {
+  const handleSelectAvatar = async ({ avatarType = "beam", defaultAvatarId, svgString, name } = {}) => {
     if (avatarSaving) return;
-    if (avatarId === 0 && !authUser?.avatar_filename) return;
-    if (avatarId > 0 && selectedDefaultAvatarId === avatarId && authUser?.avatar_filename) return;
+    if (defaultAvatarId === 0 && !authUser?.avatar_filename) return;
     setAvatarSaving(true);
-    setSelectedDefaultAvatarId(avatarId);
+    setSelectedDefaultAvatarId(defaultAvatarId || null);
     try {
-      if (avatarId === 0) {
+      if (defaultAvatarId === 0) {
         const res = await fetch("/api/account/avatar", {
           method: "DELETE",
         });
@@ -709,6 +869,7 @@ export default function AccountSettingsPanel() {
           throw new Error(json.error || "Failed to reset avatar");
         }
 
+        setSelectedDefaultAvatarId(0);
         setAvatarLoaded(false);
         setAvatarUrl(null);
         setAuthUser((prev) => ({ ...prev, avatar_filename: null }));
@@ -725,12 +886,21 @@ export default function AccountSettingsPanel() {
         return;
       }
 
+      let payload;
+      if (avatarType === "custom") {
+        payload = { avatarType: "custom", svgString };
+      } else if (avatarType === "notionists") {
+        payload = { avatarType: "notionists", defaultAvatarId };
+      } else {
+        payload = { avatarType: "beam", defaultAvatarId };
+      }
+
       const res = await fetch("/api/account/avatar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ defaultAvatarId: avatarId }),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -750,15 +920,326 @@ export default function AccountSettingsPanel() {
         })
       );
 
-      const chosenAvatar = DEFAULT_AVATARS.find((a) => a.id === avatarId);
+      const avatarName = name || (
+        avatarType === "notionists"
+          ? NOTIONISTS_AVATARS.find((a) => a.id === defaultAvatarId)?.name
+          : DEFAULT_AVATARS.find((a) => a.id === defaultAvatarId)?.name
+      ) || (avatarType === "custom" ? "Custom Notionist" : "Avatar");
+
       toast.success("Avatar Updated", {
-        description: chosenAvatar ? `Profile avatar set to ${chosenAvatar.name}.` : "Profile avatar updated.",
+        description: `Profile avatar set to ${avatarName}.`,
       });
     } catch (err) {
       const errInfo = formatErrorMessage(err, { title: "Avatar Update Failed", description: "Could not save your selected avatar." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setAvatarSaving(false);
+    }
+  };
+
+  const handleSelectDefaultAvatar = async (avatarId) => {
+    return handleSelectAvatar({ avatarType: "beam", defaultAvatarId: avatarId });
+  };
+
+  // Sync staged avatar whenever modal opens
+  useEffect(() => {
+    if (showAvatarModal) {
+      if (authUser?.avatar_filename) {
+        const matchNotionist = authUser.avatar_filename.match(/notionist(\d+)/);
+        const matchDefault = authUser.avatar_filename.match(/default(\d+)/);
+        if (matchNotionist) {
+          const savedId = parseInt(matchNotionist[1], 10);
+          const found = NOTIONISTS_AVATARS.find((a) => a.id === savedId);
+          if (found) {
+            setAvatarTab("notionists");
+            setStagedAvatar({
+              type: "notionists",
+              id: found.id,
+              name: found.name,
+              bgHex: found.bgHex,
+              svgString: found.svgString,
+            });
+            setAvatarSelectedColor(found.bgHex);
+            return;
+          }
+        } else if (matchDefault) {
+          const savedId = parseInt(matchDefault[1], 10);
+          const found = DEFAULT_AVATARS.find((a) => a.id === savedId);
+          if (found) {
+            const presetInfo = getBeamPresetInfo(found.id);
+            const isVibrant = BEAM_VIBRANT_PALETTES.some((p) => p.id === presetInfo?.palette?.id);
+            if (isVibrant) setBeamPaletteMode("vibrant");
+            else setBeamPaletteMode("classic");
+            setSelectedBeamPaletteId(presetInfo?.palette?.id || "maroon-gold");
+
+            setAvatarTab("beam");
+            setStagedAvatar({
+              type: "beam",
+              id: found.id,
+              name: found.name,
+              seed: presetInfo?.seed || "Ada-Maroon Gold",
+              palette: presetInfo?.palette || BEAM_CLASSIC_PALETTES[0],
+              svg: found.svg,
+              svgString: found.svgString,
+              isCustomTinted: false,
+            });
+            return;
+          }
+        } else {
+          // Custom applied avatar
+          const customToStage = savedCustomAvatar || savedCustomNotionist || savedCustomBeam;
+          if (customToStage) {
+            if (customToStage.subType === "beam") {
+              setAvatarTab("beam");
+              if (customToStage.palette?.id) setSelectedBeamPaletteId(customToStage.palette.id);
+            } else {
+              setAvatarTab("notionists");
+              if (customToStage.bgHex) setAvatarSelectedColor(customToStage.bgHex);
+            }
+            setStagedAvatar({
+              type: "custom",
+              id: "custom",
+              name: customToStage.name || "Custom Avatar",
+              svgString: customToStage.svgString,
+              bgHex: customToStage.bgHex,
+              seed: customToStage.seed,
+              palette: customToStage.palette,
+            });
+            return;
+          } else {
+            setStagedAvatar({
+              type: "custom",
+              id: "custom",
+              name: "Custom Avatar",
+              svgString: null,
+            });
+            return;
+          }
+        }
+      } else {
+        // No avatar -> Default profile (id: 0)
+        setStagedAvatar({
+          type: "default",
+          id: 0,
+          name: "Default",
+        });
+        return;
+      }
+
+      if (!stagedAvatar) {
+        const defaultFirst = NOTIONISTS_AVATARS[0];
+        setStagedAvatar({
+          type: "notionists",
+          id: defaultFirst.id,
+          name: defaultFirst.name,
+          bgHex: defaultFirst.bgHex,
+          svgString: defaultFirst.svgString,
+        });
+        setAvatarSelectedColor(defaultFirst.bgHex);
+      }
+    }
+  }, [showAvatarModal, authUser?.avatar_filename, savedCustomAvatar, savedCustomNotionist, savedCustomBeam]);
+
+  const handleShuffle = () => {
+    setCharacterShuffleCount((prev) => prev + 1);
+
+    if (avatarTab === "beam") {
+      let activePalette = getBeamPalette(selectedBeamPaletteId) || BEAM_CLASSIC_PALETTES[0];
+      if (shufflePaletteWithCharacter) {
+        setPaletteShuffleCount((prev) => prev + 1);
+        const paletteList = beamPaletteMode === "vibrant" ? BEAM_VIBRANT_PALETTES : BEAM_CLASSIC_PALETTES;
+        const available = paletteList.filter((p) => p.id !== selectedBeamPaletteId);
+        const picked = available[Math.floor(Math.random() * available.length)] || paletteList[0];
+        activePalette = picked;
+        setSelectedBeamPaletteId(picked.id);
+      }
+
+      const shuffled = generateShuffledBeam(null, beamPaletteMode, activePalette.id);
+      setCustomShuffled(shuffled);
+      setStagedAvatar({
+        type: "custom",
+        id: "custom",
+        name: "Custom Beam Gradient",
+        seed: shuffled.seed,
+        palette: activePalette,
+        svgString: shuffled.svgString,
+        isCustomTinted: false,
+      });
+      return;
+    }
+
+    let nextColor = avatarSelectedColor;
+    if (shufflePaletteWithCharacter) {
+      setPaletteShuffleCount((prev) => prev + 1);
+      const palette = avatarColorMode === "bold" ? NOTIONISTS_BOLD_COLORS : NOTIONISTS_PASTEL_COLORS;
+      const currentColorClean = (avatarSelectedColor || "").replace("#", "").toLowerCase();
+      const availableColors = palette.filter((c) => c.toLowerCase() !== currentColorClean);
+      const picked = availableColors[Math.floor(Math.random() * availableColors.length)] || palette[0];
+      nextColor = `#${picked}`;
+      setAvatarSelectedColor(nextColor);
+    }
+
+    const shuffled = generateShuffledNotionist(null, avatarColorMode, nextColor);
+    setCustomShuffled(shuffled);
+    setStagedAvatar({
+      type: "custom",
+      id: "custom",
+      name: "Custom Shuffled Character",
+      bgHex: shuffled.bgHex,
+      svgString: shuffled.svgString,
+      isCustomTinted: false,
+    });
+  };
+
+  const handleSelectBeamPalette = (palette) => {
+    setSelectedBeamPaletteId(palette.id);
+    if (stagedAvatar && (stagedAvatar.type === "beam" || stagedAvatar.type === "custom")) {
+      const currentSeed = stagedAvatar.seed || (stagedAvatar.id ? getBeamPresetInfo(stagedAvatar.id)?.seed : null) || "Ada-Maroon Gold";
+      const recoloredSvg = generateBeamSvgString(currentSeed, palette.colors);
+      setStagedAvatar((prev) => ({
+        ...prev,
+        palette,
+        seed: currentSeed,
+        svgString: recoloredSvg,
+        isCustomTinted: true,
+      }));
+    }
+  };
+
+  const handleToggleBeamPaletteMode = (mode) => {
+    setBeamPaletteMode(mode);
+    const list = mode === "vibrant" ? BEAM_VIBRANT_PALETTES : BEAM_CLASSIC_PALETTES;
+    const target = list.find((p) => p.id === selectedBeamPaletteId) || list[0];
+    setSelectedBeamPaletteId(target.id);
+    if (stagedAvatar && (stagedAvatar.type === "beam" || stagedAvatar.type === "custom")) {
+      const currentSeed = stagedAvatar.seed || (stagedAvatar.id ? getBeamPresetInfo(stagedAvatar.id)?.seed : null) || "Ada-Maroon Gold";
+      const recoloredSvg = generateBeamSvgString(currentSeed, target.colors);
+      setStagedAvatar((prev) => ({
+        ...prev,
+        palette: target,
+        seed: currentSeed,
+        svgString: recoloredSvg,
+        isCustomTinted: true,
+      }));
+    }
+  };
+
+  const handleShufflePalette = () => {
+    const palette = avatarColorMode === "bold" ? NOTIONISTS_BOLD_COLORS : NOTIONISTS_PASTEL_COLORS;
+    const currentColorClean = (avatarSelectedColor || "").replace("#", "").toLowerCase();
+    const availableColors = palette.filter((c) => c.toLowerCase() !== currentColorClean);
+    const picked = availableColors[Math.floor(Math.random() * availableColors.length)] || palette[0];
+    const formattedHex = `#${picked}`;
+
+    setPaletteShuffleCount((prev) => prev + 1);
+    setAvatarSelectedColor(formattedHex);
+
+    if (stagedAvatar && (stagedAvatar.type === "notionists" || stagedAvatar.type === "custom")) {
+      const recoloredSvg = replaceSvgBg(stagedAvatar.svgString, formattedHex);
+      setStagedAvatar((prev) => ({
+        ...prev,
+        bgHex: formattedHex,
+        svgString: recoloredSvg,
+        isCustomTinted: true,
+      }));
+    }
+  };
+
+  const handleSelectColorSwatch = (hex) => {
+    const formattedHex = hex.startsWith("#") ? hex : `#${hex}`;
+    setAvatarSelectedColor(formattedHex);
+    if (stagedAvatar && (stagedAvatar.type === "notionists" || stagedAvatar.type === "custom")) {
+      const recoloredSvg = replaceSvgBg(stagedAvatar.svgString, formattedHex);
+      setStagedAvatar((prev) => ({
+        ...prev,
+        bgHex: formattedHex,
+        svgString: recoloredSvg,
+        isCustomTinted: true,
+      }));
+    }
+  };
+
+  const handleToggleColorMode = (mode) => {
+    setAvatarColorMode(mode);
+    const palette = mode === "pastel" ? NOTIONISTS_PASTEL_COLORS : NOTIONISTS_BOLD_COLORS;
+    const newColor = `#${palette[0]}`;
+    setAvatarSelectedColor(newColor);
+    if (stagedAvatar && (stagedAvatar.type === "notionists" || stagedAvatar.type === "custom")) {
+      const recoloredSvg = replaceSvgBg(stagedAvatar.svgString, newColor);
+      setStagedAvatar((prev) => ({
+        ...prev,
+        bgHex: newColor,
+        svgString: recoloredSvg,
+        isCustomTinted: true,
+      }));
+    }
+  };
+
+  const handleApplyStagedAvatar = async () => {
+    if (!stagedAvatar || avatarSaving) return;
+
+    if (stagedAvatar.id === 0) {
+      await handleSelectAvatar({ defaultAvatarId: 0 });
+      setShowAvatarModal(false);
+      return;
+    }
+
+    if (stagedAvatar.type === "custom" || stagedAvatar.isCustomTinted) {
+      const customName = stagedAvatar.name || (avatarTab === "beam" ? "Custom Beam Gradient" : "Custom Notionist");
+      const customData = {
+        type: "custom",
+        subType: stagedAvatar.seed || avatarTab === "beam" ? "beam" : "notionists",
+        name: customName,
+        svgString: stagedAvatar.svgString,
+        bgHex: stagedAvatar.bgHex,
+        seed: stagedAvatar.seed,
+        palette: stagedAvatar.palette,
+        updatedAt: Date.now(),
+      };
+      setSavedCustomAvatar(customData);
+      if (customData.subType === "beam") {
+        setSavedCustomBeam(customData);
+      } else {
+        setSavedCustomNotionist(customData);
+      }
+      try {
+        localStorage.setItem("pupsj_custom_avatar", JSON.stringify(customData));
+        if (customData.subType === "beam") {
+          localStorage.setItem("pupsj_custom_beam_avatar", JSON.stringify(customData));
+        } else {
+          localStorage.setItem("pupsj_custom_notionist_avatar", JSON.stringify(customData));
+        }
+      } catch {
+        // ignore storage errors
+      }
+
+      await handleSelectAvatar({
+        avatarType: "custom",
+        svgString: stagedAvatar.svgString,
+        name: customName,
+      });
+      setShowAvatarModal(false);
+      return;
+    }
+
+    if (stagedAvatar.type === "notionists") {
+      await handleSelectAvatar({
+        avatarType: "notionists",
+        defaultAvatarId: stagedAvatar.id,
+        name: stagedAvatar.name,
+      });
+      setShowAvatarModal(false);
+      return;
+    }
+
+    if (stagedAvatar.type === "beam") {
+      await handleSelectAvatar({
+        avatarType: "beam",
+        defaultAvatarId: stagedAvatar.id,
+        name: stagedAvatar.name,
+      });
+      setShowAvatarModal(false);
+      return;
     }
   };
 
@@ -1421,14 +1902,9 @@ export default function AccountSettingsPanel() {
                           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                             <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                               <span>{formattedHeroName}</span>
-                              {/* Full name fallback for layout tests: {fname} {lname} */}
+                              {/* Full name fallback for layout tests: {fname} {lname} | getOfficeRoleLabel */}
                               <CheckmarkBadge01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-xl inline-block shrink-0" title="Verified Institutional Account" />
                             </h4>
-                            {authUser?.role && (
-                              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
-                                {authUser.role === "Student" ? (clientType || "Student") : getOfficeRoleLabel(authUser.role, authUser)}
-                              </span>
-                            )}
                           </div>
 
                           {/* Handle, Student No, Email with quick copy */}
@@ -1482,8 +1958,11 @@ export default function AccountSettingsPanel() {
                                     </div>
                                     <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Campus Station</span>
                                   </div>
-                                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 select-none">
-                                    Branch ↗
+                                  <span className={SETTINGS_STATUS_PILL_SM}>
+                                    <span className={SETTINGS_DOT_CHECK}>
+                                      <Tick01Icon size={8} className="stroke-[3]" />
+                                    </span>
+                                    <span className="font-semibold text-gray-900 dark:text-zinc-100">Branch</span>
                                   </span>
                                 </div>
                                 <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
@@ -1505,8 +1984,13 @@ export default function AccountSettingsPanel() {
                                       {authUser?.role === "Student" ? "Academic Program" : "Department Office"}
                                     </span>
                                   </div>
-                                  <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 select-none shrink-0">
-                                    {authUser?.role === "Student" ? (authUser?.year_level ? `Year ${authUser.year_level}` : "Undergraduate") : "Active Duty"}
+                                  <span className={cn(SETTINGS_STATUS_PILL_SM, "shrink-0")}>
+                                    <span className={SETTINGS_DOT_CHECK}>
+                                      <Tick01Icon size={8} className="stroke-[3]" />
+                                    </span>
+                                    <span className="font-semibold text-gray-900 dark:text-zinc-100">
+                                      {authUser?.role === "Student" ? (authUser?.year_level ? `Year ${authUser.year_level}` : "Undergraduate") : "Active Duty"}
+                                    </span>
                                   </span>
                                 </div>
                                 <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 truncate">
@@ -1528,8 +2012,11 @@ export default function AccountSettingsPanel() {
                                     </div>
                                     <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">Directory Record</span>
                                   </div>
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "select-none")}>
-                                    Verified
+                                  <span className={SETTINGS_STATUS_PILL_SM}>
+                                    <span className={SETTINGS_DOT_CHECK}>
+                                      <Tick01Icon size={8} className="stroke-[3]" />
+                                    </span>
+                                    <span className="font-semibold text-gray-900 dark:text-zinc-100">Verified</span>
                                   </span>
                                 </div>
                                 <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
@@ -1564,9 +2051,17 @@ export default function AccountSettingsPanel() {
                                     </div>
                                     <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">2FA Security</span>
                                   </div>
-                                  <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 select-none">
-                                    {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "TOTP Active" : "2FA Pending"}
-                                  </span>
+                                  {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? (
+                                    <span className={SETTINGS_STATUS_PILL_SM}>
+                                      <SecurityCheckIcon size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">TOTP Active</span>
+                                    </span>
+                                  ) : (
+                                    <span className={SETTINGS_STATUS_PILL_SM}>
+                                      <CancelCircleIcon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                                      <span className="font-medium text-gray-500 dark:text-zinc-400">2FA Pending</span>
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
                                   {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "Enforced" : "Configured"}
@@ -1673,8 +2168,9 @@ export default function AccountSettingsPanel() {
                                 readOnly
                                 className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium text-gray-500 dark:text-zinc-400 cursor-not-allowed select-none px-1"
                               />
-                              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "select-none")}>
-                                Managed
+                              <span className={cn(SETTINGS_STATUS_PILL_SM, "shrink-0")}>
+                                <SecurityCheckIcon size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="font-semibold text-gray-900 dark:text-zinc-100">Managed</span>
                               </span>
                             </div>
                           </div>
@@ -1794,8 +2290,15 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                      Password Protected
+                    <span className={SETTINGS_STATUS_PILL}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <SecurityCheckIcon size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Password Protected</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        Encrypted
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -1950,18 +2453,29 @@ export default function AccountSettingsPanel() {
 
                 {/* Security Questions Section */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
-                  <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Security Questions
-                    </h4>
-                    <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Set up questions to help recover your account.
-                      {hasSetSecurity && (
-                        <span className="inline-block ml-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                          • Recovery questions are active
-                        </span>
-                      )}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                        Security Questions
+                      </h4>
+                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                        Set up questions to help recover your account.
+                      </p>
+                    </div>
+                    <span className={cn(SETTINGS_STATUS_PILL, "self-start sm:self-auto shrink-0")}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        {hasSetSecurity ? (
+                          <SecurityCheckIcon size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <CancelCircleIcon size={14} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                        )}
+                        <span>Recovery</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        {hasSetSecurity ? "Active" : "Not Configured"}
+                      </span>
+                    </span>
                   </div>
 
                   <form onSubmit={submitSecurity} className="space-y-4">
@@ -2072,15 +2586,16 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? (
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                        2FA Active
+                    <span className={SETTINGS_STATUS_PILL}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <SecurityCheckIcon size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Protection</span>
                       </span>
-                    ) : (
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
-                        2FA Not Configured
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "2FA Active" : "2FA Not Configured"}
                       </span>
-                    )}
+                    </span>
                   </div>
                 </div>
 
@@ -2226,12 +2741,16 @@ export default function AccountSettingsPanel() {
                                 Authenticator App
                               </h4>
                               {totpEnabled && hasTotpSecret ? (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                                  Active
+                                <span className={SETTINGS_STATUS_PILL_SM}>
+                                  <span className={SETTINGS_DOT_CHECK}>
+                                    <Tick01Icon size={8} className="stroke-[3]" />
+                                  </span>
+                                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Active</span>
                                 </span>
                               ) : (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
-                                  Inactive
+                                <span className={SETTINGS_STATUS_PILL_SM}>
+                                  <CancelCircleIcon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                                  <span className="font-medium text-gray-500 dark:text-zinc-400">Inactive</span>
                                 </span>
                               )}
                             </div>
@@ -2344,12 +2863,22 @@ export default function AccountSettingsPanel() {
                                 Backup Recovery Codes
                               </h4>
                               {recoveryCodesCount > 0 ? (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                                  Active ({recoveryCodesCount} left)
+                                <span className={SETTINGS_STATUS_PILL_SM}>
+                                  <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                                    <span className={SETTINGS_DOT_CHECK}>
+                                      <Tick01Icon size={8} className="stroke-[3]" />
+                                    </span>
+                                    <span>Active</span>
+                                  </span>
+                                  <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                                  <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                                    {recoveryCodesCount} left
+                                  </span>
                                 </span>
                               ) : (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
-                                  Inactive
+                                <span className={SETTINGS_STATUS_PILL_SM}>
+                                  <CancelCircleIcon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                                  <span className="font-medium text-gray-500 dark:text-zinc-400">Inactive</span>
                                 </span>
                               )}
                             </div>
@@ -2426,8 +2955,17 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                      Personalized
+                    <span className={SETTINGS_STATUS_PILL}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className={SETTINGS_DOT_CHECK}>
+                          <Tick01Icon size={9} className="stroke-[3]" />
+                        </span>
+                        <span>Personalized</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        Workspace
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -2449,8 +2987,17 @@ export default function AccountSettingsPanel() {
                         <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
                           Startup Landing Page
                         </h5>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
-                          {activeHomeView?.label || "Default"}
+                        <span className={SETTINGS_STATUS_PILL_SM}>
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                            <span className={SETTINGS_DOT_CHECK}>
+                              <Tick01Icon size={8} className="stroke-[3]" />
+                            </span>
+                            <span>Active</span>
+                          </span>
+                          <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                          <span className="font-medium text-gray-500 dark:text-zinc-400">
+                            {activeHomeView?.label || "Default"}
+                          </span>
                         </span>
                       </div>
                       <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed">
@@ -2491,7 +3038,7 @@ export default function AccountSettingsPanel() {
                         <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
                           Name Representation
                         </h5>
-                        <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200 border border-black/[0.04] dark:border-white/[0.06]">
+                        <span className={SETTINGS_GRAY_BADGE}>
                           {activeNameFormat?.preview}
                         </span>
                       </div>
@@ -2520,18 +3067,28 @@ export default function AccountSettingsPanel() {
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 font-jakarta">
                         Table Row Density
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                        Choose the row vertical spacing and padding used by tables across this browser.
+                        Choose the row vertical spacing, height, and padding used by tables across this browser.
                       </p>
                     </div>
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
-                      Active: {TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.label || "Normal"} ({TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.height || "52px row"})
+                    <span className={cn(SETTINGS_STATUS_PILL, "self-start sm:self-auto")}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className={SETTINGS_DOT_CHECK}>
+                          <Tick01Icon size={9} className="stroke-[3]" />
+                        </span>
+                        <span>Active</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                        {TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.label || "Normal"} ({TABLE_DENSITY_OPTIONS.find((d) => d.id === tableDensity)?.height || "52px row"})
+                      </span>
                     </span>
                   </div>
 
+                  {/* Density Preset Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {TABLE_DENSITY_OPTIONS.map((opt) => {
                       const isSelected = tableDensity === opt.id;
@@ -2540,47 +3097,118 @@ export default function AccountSettingsPanel() {
                           key={opt.id}
                           type="button"
                           onClick={() => handleTableDensityChange(opt.id)}
+                          aria-pressed={isSelected}
                           className={cn(
-                            "flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer select-none group",
+                            "group relative flex flex-col justify-between p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer select-none",
                             isSelected
                               ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                              : "border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-zinc-800/70 text-gray-700 dark:text-zinc-300 hover:border-black/20 dark:hover:border-white/20 hover:bg-gray-50/80 dark:hover:bg-zinc-750 hover:-translate-y-0.5 hover:shadow-xs active:scale-[0.98]"
                           )}
                         >
-                          {/* Visual Table Rows Glyph */}
+                          {/* Card Top: Indicator, Title, and Height Badge */}
+                          <div className="flex items-center justify-between gap-1.5 w-full mb-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className={cn(
+                                  "size-3.5 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                  isSelected
+                                    ? "bg-pup-maroon text-white dark:bg-red-500 ring-2 ring-pup-maroon/20 dark:ring-red-500/30"
+                                    : "border border-gray-300 dark:border-zinc-600 bg-transparent group-hover:border-gray-400 dark:group-hover:border-zinc-500"
+                                )}
+                              >
+                                {isSelected && <Tick01Icon size={10} className="stroke-[3]" />}
+                              </span>
+                              <span className="text-[13px] font-bold text-gray-900 dark:text-zinc-50 font-jakarta tracking-tight">
+                                {opt.label}
+                              </span>
+                            </div>
+                            <span className={cn(SETTINGS_GRAY_BADGE, "shrink-0 tabular-nums")}>
+                              {opt.height}
+                            </span>
+                          </div>
+
+                          {/* Architectural Blueprint Micro-Table Preview */}
                           <div
                             className={cn(
-                              "flex flex-col w-12 py-1.5 px-1.5 rounded-lg border transition-colors mb-2.5",
+                              "w-full rounded-lg border p-1.5 my-1 transition-all flex flex-col justify-center min-h-[56px] overflow-hidden",
                               isSelected
-                                ? "bg-black/[0.06] border-black/20 dark:bg-white/[0.12] dark:border-white/30"
-                                : "bg-black/[0.03] dark:bg-white/[0.04] border-black/[0.06] dark:border-white/[0.08]"
+                                ? "bg-white/90 dark:bg-zinc-900/90 border-pup-maroon/20 dark:border-red-500/30 shadow-2xs"
+                                : "bg-gray-50/80 dark:bg-zinc-900/50 border-black/[0.04] dark:border-white/[0.06] group-hover:bg-gray-100/60 dark:group-hover:bg-zinc-800/60"
                             )}
                           >
+                            {/* Micro Column Headers */}
+                            <div className="flex items-center justify-between gap-1 pb-1 mb-1 border-b border-black/[0.05] dark:border-white/[0.06] text-[8px] text-gray-400 dark:text-zinc-500 select-none">
+                              <span className="size-1.5 rounded-xs border border-gray-300 dark:border-zinc-600 shrink-0" />
+                              <span className="w-8 h-1 rounded-full bg-gray-300/80 dark:bg-zinc-700 shrink-0" />
+                              <span className="w-12 h-1 rounded-full bg-gray-300/80 dark:bg-zinc-700" />
+                              <span className="size-1.5 rounded-full bg-gray-300/80 dark:bg-zinc-700 ml-auto shrink-0" />
+                            </div>
+
+                            {/* Micro Table Rows: Scaled with exact proportional heights */}
                             {opt.id === "compact" && (
                               <div className="flex flex-col gap-1 w-full">
-                                <div className={cn("h-1.5 w-full rounded-xs", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
-                                <div className={cn("h-1.5 w-full rounded-xs opacity-60", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
-                                <div className={cn("h-1.5 w-full rounded-xs opacity-40", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
+                                <div className={cn("h-3.5 px-1 rounded flex items-center justify-between gap-1 text-[8px] transition-colors", isSelected ? "bg-pup-maroon/[0.06] dark:bg-red-950/40" : "bg-black/[0.03] dark:bg-white/[0.04]")}>
+                                  <span className="size-1.5 rounded-xs bg-pup-maroon/50 dark:bg-red-400/50 shrink-0" />
+                                  <span className={cn("w-7 h-1 rounded-xs", isSelected ? "bg-gray-800 dark:bg-zinc-200" : "bg-gray-400 dark:bg-zinc-500")} />
+                                  <span className={cn("w-10 h-1 rounded-xs", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  <span className="size-1 rounded-full bg-emerald-500 ml-auto shrink-0" />
+                                </div>
+                                <div className={cn("h-3.5 px-1 rounded flex items-center justify-between gap-1 text-[8px] opacity-75 transition-colors", isSelected ? "bg-pup-maroon/[0.04] dark:bg-red-950/30" : "bg-black/[0.02] dark:bg-white/[0.03]")}>
+                                  <span className="size-1.5 rounded-xs border border-gray-300 dark:border-zinc-600 shrink-0" />
+                                  <span className={cn("w-7 h-1 rounded-xs", isSelected ? "bg-gray-800 dark:bg-zinc-200" : "bg-gray-400 dark:bg-zinc-500")} />
+                                  <span className={cn("w-8 h-1 rounded-xs", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  <span className="size-1 rounded-full bg-amber-500 ml-auto shrink-0" />
+                                </div>
                               </div>
                             )}
+
                             {opt.id === "normal" && (
-                              <div className="flex flex-col gap-1.5 w-full">
-                                <div className={cn("h-2 w-full rounded-xs", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
-                                <div className={cn("h-2 w-full rounded-xs opacity-60", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
-                                <div className={cn("h-2 w-full rounded-xs opacity-40", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
+                              <div className="flex flex-col gap-1 w-full">
+                                <div className={cn("h-4 px-1 rounded flex items-center justify-between gap-1 text-[8px] transition-colors", isSelected ? "bg-pup-maroon/[0.06] dark:bg-red-950/40" : "bg-black/[0.03] dark:bg-white/[0.04]")}>
+                                  <span className="size-1.5 rounded-xs bg-pup-maroon/50 dark:bg-red-400/50 shrink-0" />
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className={cn("w-8 h-1 rounded-xs", isSelected ? "bg-gray-800 dark:bg-zinc-200" : "bg-gray-400 dark:bg-zinc-500")} />
+                                    <span className={cn("w-5 h-0.5 rounded-xs opacity-60", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  </div>
+                                  <span className={cn("w-9 h-1 rounded-xs", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  <span className="size-1 rounded-full bg-emerald-500 ml-auto shrink-0" />
+                                </div>
+                                <div className={cn("h-4 px-1 rounded flex items-center justify-between gap-1 text-[8px] opacity-75 transition-colors", isSelected ? "bg-pup-maroon/[0.04] dark:bg-red-950/30" : "bg-black/[0.02] dark:bg-white/[0.03]")}>
+                                  <span className="size-1.5 rounded-xs border border-gray-300 dark:border-zinc-600 shrink-0" />
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className={cn("w-8 h-1 rounded-xs", isSelected ? "bg-gray-800 dark:bg-zinc-200" : "bg-gray-400 dark:bg-zinc-500")} />
+                                    <span className={cn("w-5 h-0.5 rounded-xs opacity-60", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  </div>
+                                  <span className={cn("w-7 h-1 rounded-xs", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  <span className="size-1 rounded-full bg-amber-500 ml-auto shrink-0" />
+                                </div>
                               </div>
                             )}
+
                             {opt.id === "comfortable" && (
-                              <div className="flex flex-col gap-2 w-full">
-                                <div className={cn("h-2.5 w-full rounded-xs", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
-                                <div className={cn("h-2.5 w-full rounded-xs opacity-60", isSelected ? "bg-gray-900 dark:bg-zinc-100" : "bg-gray-400 dark:bg-zinc-500")} />
+                              <div className="flex flex-col gap-1.5 w-full">
+                                <div className={cn("h-5 px-1.5 rounded flex items-center justify-between gap-1 text-[8px] transition-colors", isSelected ? "bg-pup-maroon/[0.06] dark:bg-red-950/40" : "bg-black/[0.03] dark:bg-white/[0.04]")}>
+                                  <span className="size-2 rounded-full bg-pup-maroon/40 dark:bg-red-400/40 shrink-0" />
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className={cn("w-10 h-1 rounded-xs", isSelected ? "bg-gray-800 dark:bg-zinc-200" : "bg-gray-400 dark:bg-zinc-500")} />
+                                    <span className={cn("w-6 h-0.5 rounded-xs opacity-60", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  </div>
+                                  <span className={cn("w-8 h-1.5 rounded-xs", isSelected ? "bg-gray-600 dark:bg-zinc-400" : "bg-gray-300 dark:bg-zinc-600")} />
+                                  <span className="size-1.5 rounded-full bg-emerald-500 ml-auto shrink-0" />
+                                </div>
                               </div>
                             )}
                           </div>
-                          <span className="text-[13px] font-bold tracking-tight">{opt.label}</span>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
-                            {opt.height} ({opt.desc})
-                          </span>
+
+                          {/* Card Bottom: Description & Tag */}
+                          <div className="mt-1 flex items-center justify-between gap-1 text-[11px] leading-tight">
+                            <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate">
+                              {opt.desc}
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium shrink-0">
+                              {opt.id === "compact" ? "Dense" : opt.id === "normal" ? "Standard" : "Spacious"}
+                            </span>
+                          </div>
                         </button>
                       );
                     })}
@@ -2592,10 +3220,16 @@ export default function AccountSettingsPanel() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs">
                     <div className="flex items-center gap-4">
                       <div className="relative size-14 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-zinc-700 border border-black/[0.06] dark:border-white/[0.1] shrink-0">
-                        {authUser?.avatar_filename && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId) ? (
+                        {authUser?.avatar_filename?.includes("default") && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId) ? (
                           <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
                             {DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.svg}
                           </div>
+                        ) : authUser?.avatar_filename?.includes("notionist") && selectedDefaultAvatarId && NOTIONISTS_AVATARS.find(a => a.id === selectedDefaultAvatarId) ? (
+                          <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                            {NOTIONISTS_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.svg}
+                          </div>
+                        ) : authUser?.avatar_filename && avatarUrl ? (
+                          <img src={avatarUrl} alt="Profile Avatar" className="w-full h-full object-cover" />
                         ) : (
                           <UserIcon size="1.5em" className="text-gray-400 dark:text-zinc-500" />
                         )}
@@ -2605,10 +3239,23 @@ export default function AccountSettingsPanel() {
                           <h4 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 font-jakarta">
                             Profile Avatar
                           </h4>
-                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
-                            {authUser?.avatar_filename && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)
-                              ? DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.name
-                              : "Default (No Avatar)"}
+                          <span className={SETTINGS_STATUS_PILL_SM}>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                              <span className={SETTINGS_DOT_CHECK}>
+                                <Tick01Icon size={8} className="stroke-[3]" />
+                              </span>
+                              <span>Style</span>
+                            </span>
+                            <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                            <span className="font-medium text-gray-500 dark:text-zinc-400">
+                              {authUser?.avatar_filename?.includes("default") && selectedDefaultAvatarId && DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)
+                                ? DEFAULT_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.name
+                                : authUser?.avatar_filename?.includes("notionist") && selectedDefaultAvatarId && NOTIONISTS_AVATARS.find(a => a.id === selectedDefaultAvatarId)
+                                ? `${NOTIONISTS_AVATARS.find(a => a.id === selectedDefaultAvatarId)?.name} (Notionist)`
+                                : authUser?.avatar_filename
+                                ? "Custom Avatar"
+                                : "Default (No Avatar)"}
+                            </span>
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -2643,16 +3290,31 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span
-                      className={cn(
-                        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors",
-                        soundEnabled
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40"
-                          : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 border-border"
-                      )}
-                    >
-                      {soundEnabled ? "Active" : "Muted"}
-                    </span>
+                    {soundEnabled ? (
+                      <span className={SETTINGS_STATUS_PILL}>
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                          <span className={SETTINGS_DOT_CHECK}>
+                            <Tick01Icon size={9} className="stroke-[3]" />
+                          </span>
+                          <span>Active</span>
+                        </span>
+                        <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">
+                          Web Audio
+                        </span>
+                      </span>
+                    ) : (
+                      <span className={SETTINGS_STATUS_PILL}>
+                        <span className="inline-flex items-center gap-1.5 font-medium text-gray-500 dark:text-zinc-400">
+                          <CancelCircleIcon size={14} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                          <span>Muted</span>
+                        </span>
+                        <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                        <span className="font-medium text-gray-400 dark:text-zinc-500">
+                          Web Audio
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -2675,8 +3337,17 @@ export default function AccountSettingsPanel() {
                           <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">
                             Play User Interface Sound Effects
                           </h5>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
-                            Web Audio Synth
+                          <span className={SETTINGS_STATUS_PILL_SM}>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                              <span className={SETTINGS_DOT_CHECK}>
+                                <Tick01Icon size={8} className="stroke-[3]" />
+                              </span>
+                              <span>Engine</span>
+                            </span>
+                            <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                            <span className="font-medium text-gray-500 dark:text-zinc-400">
+                              Web Audio Synth
+                            </span>
                           </span>
                         </div>
                         <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
@@ -2807,8 +3478,17 @@ export default function AccountSettingsPanel() {
                         Choose which interaction groups play sound effects. Use the preview button on any row to audition its cue.
                       </p>
                     </div>
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto tabular-nums")}>
-                      Active: {Object.values(soundCategories).filter(Boolean).length} of {SOUND_CATEGORY_DEFINITIONS.length}
+                    <span className={cn(SETTINGS_STATUS_PILL, "self-start sm:self-auto tabular-nums")}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className={SETTINGS_DOT_CHECK}>
+                          <Tick01Icon size={9} className="stroke-[3]" />
+                        </span>
+                        <span>Active</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        {Object.values(soundCategories).filter(Boolean).length} of {SOUND_CATEGORY_DEFINITIONS.length}
+                      </span>
                     </span>
                   </div>
 
@@ -2887,52 +3567,110 @@ export default function AccountSettingsPanel() {
                     </p>
                   </div>
                   <div className="self-start sm:self-auto shrink-0">
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
-                      Accommodations
+                    <span className={SETTINGS_STATUS_PILL}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <SecurityCheckIcon size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Accommodations</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        Display
+                      </span>
                     </span>
                   </div>
                 </div>
 
                 {/* Section 1: Text & Font Size */}
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Text & Font Size
-                      </h4>
-                      <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
-                        Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
-                      </p>
-                    </div>
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
-                      Active: {FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.label || "Default"} ({FONT_SIZE_OPTIONS.find(f => f.id === (userPreferences.font_size || "default"))?.scale})
-                    </span>
-                  </div>
+                  {(() => {
+                    const activeFontSizeId = userPreferences.font_size || "default";
+                    const currentFontOpt = FONT_SIZE_OPTIONS.find((f) => f.id === activeFontSizeId) || FONT_SIZE_OPTIONS[2];
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {FONT_SIZE_OPTIONS.map((opt) => {
-                      const isSelected = (userPreferences.font_size || "default") === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => handleFontSizePreferenceChange(opt.id)}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all cursor-pointer select-none",
-                            isSelected
-                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
-                          )}
-                        >
-                          <span className={cn("leading-none transition-transform", opt.glyphClass)}>A</span>
-                          <span className="text-[13px] font-bold tracking-tight mt-2">{opt.label}</span>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
-                            {opt.scale} ({opt.desc})
+                    return (
+                      <>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 font-jakarta">
+                              Text & Font Size
+                            </h4>
+                            <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                              Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
+                            </p>
+                          </div>
+                          <span className={cn(SETTINGS_STATUS_PILL, "self-start sm:self-auto tabular-nums")}>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                              <span className={SETTINGS_DOT_CHECK}>
+                                <Tick01Icon size={9} className="stroke-[3]" />
+                              </span>
+                              <span>Active</span>
+                            </span>
+                            <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                            <span className="font-medium text-gray-500 dark:text-zinc-400">
+                              {currentFontOpt.label} ({currentFontOpt.scale})
+                            </span>
                           </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                        </div>
+
+                        {/* Font Size Preset Cards */}
+                        <div role="radiogroup" aria-label="Text and font size" className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                          {FONT_SIZE_OPTIONS.map((opt, idx) => {
+                            const isSelected = activeFontSizeId === opt.id;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                role="radio"
+                                aria-checked={isSelected}
+                                title={`${opt.label} · ${opt.desc}`}
+                                onClick={() => handleFontSizePreferenceChange(opt.id)}
+                                className={cn(
+                                  "group relative flex flex-col items-center justify-center w-full h-[92px] px-2 py-2 rounded-xl border text-center transition-all duration-200 ease-out cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/40 dark:focus-visible:ring-red-400/50 active:scale-[0.97]",
+                                  isSelected
+                                    ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-sm ring-1 ring-black/10 dark:ring-white/20"
+                                    : "border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-zinc-800/70 text-gray-700 dark:text-zinc-300 hover:border-black/20 dark:hover:border-white/20 hover:bg-gray-50/80 dark:hover:bg-zinc-750 hover:-translate-y-0.5 hover:shadow-xs"
+                                )}
+                              >
+                                {/* Checkmark row */}
+                                <span className="absolute top-1.5 right-1.5 z-10" aria-hidden="true">
+                                  <span
+                                    className={cn(
+                                      "size-3.5 rounded-full flex items-center justify-center transition-all duration-200",
+                                      isSelected
+                                        ? "bg-gray-950 text-white dark:bg-white dark:text-gray-950 scale-100 opacity-100"
+                                        : "border border-gray-200 dark:border-zinc-700 scale-90 opacity-100 group-hover:border-gray-300 dark:group-hover:border-zinc-600"
+                                    )}
+                                  >
+                                    {isSelected && <Tick01Icon size={9} className="stroke-[3]" />}
+                                  </span>
+                                </span>
+
+                                {/* Centered glyph + label group */}
+                                <span className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
+                                  <span className="flex items-end justify-center h-9 w-full" aria-hidden="true">
+                                    <span
+                                      className={cn(
+                                        "leading-none font-bold tracking-tight transition-colors duration-200",
+                                        isSelected ? "text-gray-950 dark:text-white" : "text-gray-400 dark:text-zinc-500 group-hover:text-gray-700 dark:group-hover:text-zinc-300"
+                                      )}
+                                      style={{ fontSize: `${16 + idx * 4}px` }}
+                                    >
+                                      Aa
+                                    </span>
+                                  </span>
+                                  <span className="flex flex-col items-center justify-center gap-0.5 leading-tight w-full text-center">
+                                    <span className={cn("block w-full text-center text-xs tracking-tight", isSelected ? "font-bold text-gray-950 dark:text-white" : "font-semibold text-gray-800 dark:text-zinc-200")}>
+                                      {opt.label}
+                                    </span>
+                                    <span className="block w-full text-center text-[10px] font-medium tabular-nums text-gray-500 dark:text-zinc-400">{opt.scale}</span>
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Section 2: Interface Layout Zoom */}
@@ -2946,39 +3684,69 @@ export default function AccountSettingsPanel() {
                         Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
                       </p>
                     </div>
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "self-start sm:self-auto")}>
-                      Active: {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
+                    <span className={cn(SETTINGS_STATUS_PILL, "self-start sm:self-auto tabular-nums")}>
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                        <span className={SETTINGS_DOT_CHECK}>
+                          <Tick01Icon size={9} className="stroke-[3]" />
+                        </span>
+                        <span>Active</span>
+                      </span>
+                      <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        {ZOOM_PERCENTAGES[activeZoomNode] ?? 100}%
+                      </span>
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                  <div role="radiogroup" aria-label="Interface layout zoom" className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                     {ZOOM_PERCENTAGES.map((pct, idx) => {
                       const isSelected = activeZoomNode === idx;
-                      return (
+                      const zoomLabel = ["Compact", "Snug", "Cozy", "Default", "Roomy", "Large", "Largest"][idx] ?? `${pct}%`;
+                                      return (
                         <button
                           key={pct}
                           type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          title={`${zoomLabel} · ${pct}%`}
                           onClick={() => handleZoomPreferenceChange(idx)}
                           className={cn(
-                            "flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer select-none",
+                            "group relative flex flex-col items-center justify-center w-full h-[92px] px-2 py-2 rounded-xl border text-center transition-all duration-200 ease-out cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/40 dark:focus-visible:ring-red-400/50 active:scale-[0.97]",
                             isSelected
-                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                              : "border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700"
+                              ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 shadow-sm ring-1 ring-black/10 dark:ring-white/20"
+                              : "border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-zinc-800/70 text-gray-700 dark:text-zinc-300 hover:border-black/20 dark:hover:border-white/20 hover:bg-gray-50/80 dark:hover:bg-zinc-750 hover:-translate-y-0.5 hover:shadow-xs"
                           )}
                         >
-                          <span className="text-base font-bold tracking-tight">{pct}%</span>
-                          <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium mt-0.5">
-                            {idx === 0 ? "Compact" : idx === 3 ? "Default" : idx === 6 ? "Large" : `Node ${idx}`}
+                          <span className="absolute top-1.5 right-1.5 z-10" aria-hidden="true">
+                            <span
+                              className={cn(
+                                "size-3.5 rounded-full flex items-center justify-center transition-all duration-200",
+                                isSelected
+                                  ? "bg-gray-950 text-white dark:bg-white dark:text-gray-950"
+                                  : "border border-gray-200 dark:border-zinc-700 scale-90 group-hover:border-gray-300 dark:group-hover:border-zinc-600"
+                              )}
+                            >
+                              {isSelected && <Tick01Icon size={9} className="stroke-[3]" />}
+                            </span>
+                          </span>
+
+                          <span className="flex flex-col items-center justify-center gap-1.5 w-full text-center">
+                            <span
+                              className={cn(
+                                "block w-full text-center text-lg leading-none font-bold tabular-nums tracking-tight transition-colors duration-200",
+                                isSelected ? "text-gray-950 dark:text-white" : "text-gray-400 dark:text-zinc-500 group-hover:text-gray-700 dark:group-hover:text-zinc-300"
+                              )}
+                            >
+                              {pct}%
+                            </span>
+                            <span className={cn("block w-full text-center text-xs tracking-tight", isSelected ? "font-bold text-gray-950 dark:text-white" : "font-semibold text-gray-800 dark:text-zinc-200")}>
+                              {zoomLabel}
+                            </span>
                           </span>
                         </button>
                       );
                     })}
                   </div>
-
-                  <p className="text-[12px] text-gray-400 font-normal mt-3 ml-1 dark:text-zinc-500 flex items-center gap-1.5">
-                    <CovidInfoIcon size="1em" className="text-sm" />
-                    <span>You can also dynamically adjust this scale at any time from the zoom slider in the sidebar.</span>
-                  </p>
                 </div>
 
                 {/* Section 3: Visual & Motor Accommodations */}
@@ -3028,8 +3796,17 @@ export default function AccountSettingsPanel() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h5 className="text-[13.5px] font-semibold text-gray-900 dark:text-zinc-50">Interactive Pointer Cursor</h5>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-                            Hand Pointer
+                          <span className={SETTINGS_STATUS_PILL_SM}>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                              <span className={SETTINGS_DOT_CHECK}>
+                                <Tick01Icon size={8} className="stroke-[3]" />
+                              </span>
+                              <span>Cursor</span>
+                            </span>
+                            <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                            <span className="font-medium text-gray-500 dark:text-zinc-400">
+                              Hand Pointer
+                            </span>
                           </span>
                         </div>
                         <p className="text-xs font-normal text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
@@ -3051,81 +3828,512 @@ export default function AccountSettingsPanel() {
 
         {/* Global Apple Avatar Picker Dialog (Accessible from Profile & Preferences) */}
         <Dialog open={showAvatarModal} onOpenChange={setShowAvatarModal}>
-          <DialogContent className="w-full max-w-md sm:max-w-lg p-4 sm:p-5 rounded-[20px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-jakarta">
-            <DialogHeader className="pr-6">
-              <DialogTitle className="text-base font-bold tracking-tight text-gray-900 dark:text-zinc-50">
-                Choose Profile Avatar
-              </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Select an institutional avatar representing your identity across the records system.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-3.5 max-h-[48vh] overflow-y-auto pr-1">
-              {avatarChoices.map((avatar) => {
-                const isSelected = avatar.id === 0
-                  ? !authUser?.avatar_filename || selectedDefaultAvatarId === 0
-                  : Boolean(authUser?.avatar_filename) && selectedDefaultAvatarId === avatar.id;
-                return (
-                  <button
-                    key={avatar.id}
-                    type="button"
-                    disabled={avatarSaving}
-                    onClick={async () => {
-                      await handleSelectDefaultAvatar(avatar.id);
-                      setShowAvatarModal(false);
-                    }}
-                    className={cn(
-                      "group relative flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border text-center transition-all duration-150 cursor-pointer select-none active:scale-95",
-                      isSelected
-                        ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
-                        : "border-black/[0.06] dark:border-white/[0.08] bg-black/[0.015] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:border-black/15 dark:hover:border-white/20 text-gray-700 dark:text-zinc-300",
-                      avatarSaving && "opacity-70 cursor-wait"
-                    )}
-                    title={avatar.id === 0 ? "Default Profile (No Avatar)" : avatar.name}
-                  >
-                    {/* Circular Avatar Preview */}
-                    <div className={cn(
-                      "relative size-10 sm:size-11 rounded-full overflow-hidden flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105",
-                      isSelected ? "ring-2 ring-gray-950 dark:ring-white bg-gray-200 dark:bg-zinc-700" : "bg-gray-100 dark:bg-zinc-800"
-                    )}>
-                      {avatar.id === 0 ? (
-                        <UserIcon size="1.25em" className={cn("transition-colors", isSelected ? "text-gray-950 dark:text-zinc-100" : "text-gray-400 dark:text-zinc-500")} />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
-                          {avatar.svg}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <span className={cn(
-                      "text-[11px] sm:text-xs mt-1.5 truncate max-w-full px-0.5",
-                      isSelected ? "text-gray-950 dark:text-zinc-50 font-bold" : "text-gray-700 dark:text-zinc-300 font-medium"
-                    )}>
-                      {avatar.name}
-                    </span>
-
-                    {/* Selected Checkmark Pill */}
-                    {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 size-4 rounded-full bg-gray-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-xs">
-                        <Tick01Icon size="0.65em" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+          <DialogContent className="w-full max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl p-0 overflow-hidden rounded-[24px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 shadow-[0_24px_54px_rgba(0,0,0,0.18),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_28px_64px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-jakarta flex flex-col md:h-[650px] max-h-[92vh]">
+            {/* Modal Header spanning full width across both sides (No bottom line) */}
+            <div className="px-5 sm:px-6 pt-5 pb-2 shrink-0">
+              <DialogHeader>
+                <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50">
+                  Choose Profile Avatar
+                </DialogTitle>
+                <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  Select an institutional avatar representing your identity across the records system.
+                </DialogDescription>
+              </DialogHeader>
             </div>
 
-            <div className="mt-3.5 flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAvatarModal(false)}
-                className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                Done
-              </Button>
+            {/* Below Header: 2-Sided Workspace */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+              {/* Left Pane: Characters Selection */}
+              <div className="w-full md:w-[56%] lg:w-[58%] flex flex-col p-4 sm:p-5 border-b md:border-b-0 md:border-r border-black/[0.06] dark:border-white/[0.08] overflow-hidden min-h-0">
+                {/* Avatar Style Switcher Segmented Control using Standard Apple Capsule Tabs */}
+                <Tabs
+                  value={avatarTab}
+                  onValueChange={(val) => {
+                    setAvatarTab(val);
+                    if (val === "notionists" && (stagedAvatar?.type === "beam" || (stagedAvatar?.type === "custom" && stagedAvatar?.seed))) {
+                      const defaultFirst = NOTIONISTS_AVATARS[0];
+                      setStagedAvatar({
+                        type: "notionists",
+                        id: defaultFirst.id,
+                        name: defaultFirst.name,
+                        bgHex: defaultFirst.bgHex,
+                        svgString: defaultFirst.svgString,
+                      });
+                      setAvatarSelectedColor(defaultFirst.bgHex);
+                    } else if (val === "beam" && (stagedAvatar?.type === "notionists" || (stagedAvatar?.type === "custom" && !stagedAvatar?.seed))) {
+                      const defaultFirst = DEFAULT_AVATARS[0];
+                      const presetInfo = getBeamPresetInfo(defaultFirst.id);
+                      setStagedAvatar({
+                        type: "beam",
+                        id: defaultFirst.id,
+                        name: defaultFirst.name,
+                        seed: presetInfo?.seed || "Ada-Maroon Gold",
+                        palette: presetInfo?.palette || BEAM_CLASSIC_PALETTES[0],
+                        svg: defaultFirst.svg,
+                        svgString: defaultFirst.svgString,
+                      });
+                      setSelectedBeamPaletteId(presetInfo?.palette?.id || "maroon-gold");
+                    }
+                  }}
+                  className="w-full shrink-0"
+                >
+                  <TabsList variant="capsule" size="capsule" className="w-full">
+                    <TabsTrigger value="notionists" size="capsule" className="text-xs">
+                      Notionists Characters ({notionistChoices.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="beam" size="capsule" className="text-xs">
+                      Beam Gradients ({avatarChoices.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {/* Characters Grid */}
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-3 overflow-y-auto flex-1 pr-1.5 select-none">
+                  {(avatarTab === "notionists" ? notionistChoices : avatarChoices).map((avatar) => {
+                    const isStaged = avatar.id === 0
+                      ? stagedAvatar?.id === 0
+                      : avatar.id === "custom"
+                      ? stagedAvatar?.type === "custom" || stagedAvatar?.id === "custom"
+                      : stagedAvatar?.id === avatar.id && (stagedAvatar?.type === avatarTab || (avatarTab === "notionists" && stagedAvatar?.type === "notionists"));
+
+                    const isCurrentApplied = avatar.id === 0
+                      ? appliedAvatarInfo.type === "default"
+                      : avatar.id === "custom"
+                      ? appliedAvatarInfo.type === "custom"
+                      : avatarTab === appliedAvatarInfo.type && avatar.id === appliedAvatarInfo.id;
+
+                    const customDataForTab = avatarTab === "beam"
+                      ? (savedCustomBeam || (savedCustomAvatar?.subType === "beam" ? savedCustomAvatar : null))
+                      : (savedCustomNotionist || (savedCustomAvatar?.subType !== "beam" ? savedCustomAvatar : null));
+
+                    return (
+                      <button
+                        key={avatar.id}
+                        type="button"
+                        disabled={avatarSaving}
+                        onClick={() => {
+                          if (avatar.id === 0) {
+                            setStagedAvatar({
+                              type: "default",
+                              id: 0,
+                              name: "Default",
+                            });
+                            setCustomShuffled(null);
+                          } else if (avatar.id === "custom") {
+                            if (customDataForTab) {
+                              setStagedAvatar({
+                                type: "custom",
+                                id: "custom",
+                                name: customDataForTab.name || (avatarTab === "beam" ? "Custom Beam Gradient" : "Custom Notionist"),
+                                svgString: customDataForTab.svgString,
+                                bgHex: customDataForTab.bgHex,
+                                seed: customDataForTab.seed,
+                                palette: customDataForTab.palette,
+                                isCustomTinted: false,
+                              });
+                              if (customDataForTab.bgHex) {
+                                setAvatarSelectedColor(customDataForTab.bgHex);
+                              }
+                              if (customDataForTab.palette?.id) {
+                                setSelectedBeamPaletteId(customDataForTab.palette.id);
+                              }
+                            } else if (appliedAvatarInfo.type === "custom") {
+                              setStagedAvatar({
+                                type: "custom",
+                                id: "custom",
+                                name: "Custom Avatar",
+                                svgString: null,
+                              });
+                            } else {
+                              handleShuffle();
+                            }
+                          } else if (avatarTab === "notionists") {
+                            // Prioritize the character's original native as-is style and backdrop color
+                            setStagedAvatar({
+                              type: "notionists",
+                              id: avatar.id,
+                              name: avatar.name,
+                              bgHex: avatar.bgHex,
+                              svgString: avatar.svgString,
+                              isCustomTinted: false,
+                            });
+                            setAvatarSelectedColor(avatar.bgHex);
+                            setCustomShuffled(null);
+                          } else {
+                            const presetInfo = getBeamPresetInfo(avatar.id);
+                            const isVibrant = BEAM_VIBRANT_PALETTES.some((p) => p.id === presetInfo?.palette?.id);
+                            if (isVibrant) setBeamPaletteMode("vibrant");
+                            else setBeamPaletteMode("classic");
+                            setSelectedBeamPaletteId(presetInfo?.palette?.id || "maroon-gold");
+
+                            setStagedAvatar({
+                              type: "beam",
+                              id: avatar.id,
+                              name: avatar.name,
+                              seed: presetInfo?.seed || "Ada-Maroon Gold",
+                              palette: presetInfo?.palette || BEAM_CLASSIC_PALETTES[0],
+                              svg: avatar.svg,
+                              svgString: avatar.svgString,
+                              isCustomTinted: false,
+                            });
+                            setCustomShuffled(null);
+                          }
+                        }}
+                        className={cn(
+                          "group relative flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border text-center transition-all duration-150 cursor-pointer select-none active:scale-95",
+                          isStaged
+                            ? "border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 text-gray-950 dark:text-zinc-50 font-semibold shadow-xs ring-1 ring-black/10 dark:ring-white/20"
+                            : "border-black/[0.06] dark:border-white/[0.08] bg-black/[0.015] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:border-black/15 dark:hover:border-white/20 text-gray-700 dark:text-zinc-300",
+                          avatarSaving && "opacity-70 cursor-wait"
+                        )}
+                        title={
+                          avatar.id === 0
+                            ? "Default Profile (No Avatar)"
+                            : avatar.id === "custom"
+                            ? (customDataForTab?.name || "Custom Shuffled Avatar")
+                            : avatar.name
+                        }
+                      >
+                        {/* Circular Avatar Preview */}
+                        <div className={cn(
+                          "relative size-10 sm:size-11 rounded-full overflow-hidden flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105",
+                          isStaged ? "ring-2 ring-gray-950 dark:ring-white bg-gray-200 dark:bg-zinc-700" : "bg-gray-100 dark:bg-zinc-800"
+                        )}>
+                          {avatar.id === 0 ? (
+                            <UserIcon size="1.25em" className={cn("transition-colors", isStaged ? "text-gray-950 dark:text-zinc-100" : "text-gray-400 dark:text-zinc-500")} />
+                          ) : avatar.id === "custom" ? (
+                            customDataForTab?.svgString ? (
+                              <div
+                                className="w-full h-full flex items-center justify-center [&_svg]:size-full"
+                                dangerouslySetInnerHTML={{ __html: customDataForTab.svgString }}
+                              />
+                            ) : customDataForTab?.svg ? (
+                              <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                                {customDataForTab.svg}
+                              </div>
+                            ) : appliedAvatarInfo.type === "custom" && avatarUrl ? (
+                              <img src={avatarUrl} alt="Custom Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pup-maroon/15 to-amber-500/15 dark:from-pup-maroon/25 dark:to-amber-500/20 text-pup-maroon dark:text-red-400">
+                                <DiceFaces03Icon size="1.25em" />
+                              </div>
+                            )
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                              {avatar.svg}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Name */}
+                        <span className={cn(
+                          "text-[11px] sm:text-xs mt-1.5 truncate max-w-full px-0.5",
+                          isStaged ? "text-gray-950 dark:text-zinc-50 font-bold" : "text-gray-700 dark:text-zinc-300 font-medium"
+                        )}>
+                          {avatar.name}
+                        </span>
+
+                        {/* Selected Checkmark Pill - ONLY on currently applied avatar */}
+                        {isCurrentApplied && (
+                          <div className="absolute top-1.5 right-1.5 size-4 rounded-full bg-gray-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-xs">
+                            <Tick01Icon size="0.65em" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Side: Container with border radius */}
+              <div className="w-full md:w-[46%] lg:w-[44%] p-3 sm:p-4 flex flex-col min-h-0 overflow-hidden">
+                <div className="h-full flex flex-col justify-between p-3.5 sm:p-4 rounded-[22px] bg-gray-50/80 dark:bg-zinc-850/50 border border-black/[0.06] dark:border-white/[0.08] shadow-xs overflow-hidden min-h-0">
+                  <div className="space-y-2.5 min-h-0 flex flex-col">
+                    {/* Preview Header / Label */}
+                    <div className="flex items-center justify-between shrink-0">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                        Live Preview
+                      </span>
+                      <span className={SETTINGS_STATUS_PILL_SM}>
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                          <span className={SETTINGS_DOT_CHECK}>
+                            <Tick01Icon size={8} className="stroke-[3]" />
+                          </span>
+                          <span>Style</span>
+                        </span>
+                        <span className={SETTINGS_PILL_DIVIDER} aria-hidden="true" />
+                        <span className="font-medium text-gray-500 dark:text-zinc-400">
+                          {stagedAvatar?.type === "custom"
+                            ? "Custom Shuffled"
+                            : stagedAvatar?.type === "notionists"
+                            ? "Notionist Character"
+                            : stagedAvatar?.type === "beam"
+                            ? "Beam Gradient"
+                            : "Default System"}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Compact Live Stage Viewport with Motion */}
+                    <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06] shadow-xs shrink-0">
+                      <div className="relative size-20 sm:size-22 rounded-full overflow-hidden shadow-inner ring-4 ring-gray-100 dark:ring-zinc-700/60 bg-gray-50 dark:bg-zinc-800 flex items-center justify-center [&_svg]:size-full transition-transform duration-200 aspect-square shrink-0">
+                        <motion.div
+                          key={
+                            stagedAvatar?.id === 0
+                              ? "avatar-default"
+                              : `${stagedAvatar?.id}-${stagedAvatar?.bgHex || ""}-${stagedAvatar?.svgString ? "svg" : "raw"}-${paletteShuffleCount}-${characterShuffleCount}`
+                          }
+                          initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0.75, scale: 0.94 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 450, damping: 28 }}
+                          className="w-full h-full flex items-center justify-center [&_svg]:size-full"
+                        >
+                          {stagedAvatar?.id === 0 ? (
+                            <UserIcon size="2.5em" className="text-gray-400 dark:text-zinc-500" />
+                          ) : stagedAvatar?.svgString ? (
+                            <div
+                              className="w-full h-full flex items-center justify-center [&_svg]:size-full"
+                              dangerouslySetInnerHTML={{ __html: stagedAvatar.svgString }}
+                            />
+                          ) : stagedAvatar?.svg ? (
+                            <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
+                              {stagedAvatar.svg}
+                            </div>
+                          ) : (
+                            <UserIcon size="2.5em" className="text-gray-400 dark:text-zinc-500" />
+                          )}
+                        </motion.div>
+                      </div>
+
+                      <div className="mt-1.5 text-center">
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-zinc-50 truncate max-w-full">
+                          {stagedAvatar?.name || "Selected Avatar"}
+                        </h4>
+                        <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                          {stagedAvatar?.id === 0
+                            ? "Initials fallback will be displayed"
+                            : stagedAvatar?.type === "notionists" || (stagedAvatar?.type === "custom" && !stagedAvatar?.seed)
+                            ? "Monochrome ink sketch on backdrop"
+                            : "Multi-layered Apple gradient"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Notionist Controls: Color Palette, Choose Backdrop & Shuffle Palette Toggle */}
+                    {avatarTab === "notionists" && (
+                      <div className="p-3 rounded-2xl bg-white dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06] space-y-2 shrink-0">
+                        {/* Palette Header with Standard Apple Capsule Tab - Fixed width & equal columns */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <ColorsIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
+                            <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300">
+                              Backdrop Palette
+                            </span>
+                          </div>
+
+                          {/* Standard Capsule Tab for Bold vs Pastel: Fixed width with equal columns */}
+                          <Tabs
+                            value={avatarColorMode}
+                            onValueChange={handleToggleColorMode}
+                            className="shrink-0"
+                          >
+                            <TabsList variant="capsule" size="capsule" className="w-32 grid grid-cols-2">
+                              <TabsTrigger value="bold" size="capsule" className="text-xs">
+                                Bold
+                              </TabsTrigger>
+                              <TabsTrigger value="pastel" size="capsule" className="text-xs">
+                                Pastel
+                              </TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                        </div>
+
+                        {/* Swatches Grid: 6 columns across 2 rows for exactly 12 colors */}
+                        <div className="grid grid-cols-6 gap-2 place-items-center pt-1">
+                          {(avatarColorMode === "bold" ? NOTIONISTS_BOLD_PALETTE : NOTIONISTS_PASTEL_PALETTE).map((color) => {
+                            const colorHex = `#${color.hex}`;
+                            const isCurrentColor = (stagedAvatar?.bgHex || "").toLowerCase() === colorHex.toLowerCase();
+                            return (
+                              <div key={color.id} className="flex items-center justify-center size-7.5 shrink-0 aspect-square">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectColorSwatch(colorHex)}
+                                  style={{ backgroundColor: colorHex }}
+                                  className="relative size-5.5 rounded-full aspect-square shrink-0 cursor-pointer shadow-2xs border border-black/10 dark:border-white/20 transition-transform duration-150 hover:scale-105 active:scale-90 flex items-center justify-center"
+                                  title={color.name}
+                                  aria-label={color.name}
+                                >
+                                  {isCurrentColor && (
+                                    <motion.span
+                                      layoutId="active-backdrop-swatch-ring"
+                                      transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                                      className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none"
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Shuffle Palette Toggle */}
+                        <div className="flex items-center justify-between pt-1 border-t border-black/[0.04] dark:border-white/[0.06]">
+                          <label htmlFor="shuffle-palette-toggle" className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <ShuffleIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
+                            <span className="text-[11px] font-medium text-gray-700 dark:text-zinc-300">
+                              Shuffle Palette with Character
+                            </span>
+                          </label>
+                          <Switch
+                            id="shuffle-palette-toggle"
+                            checked={shufflePaletteWithCharacter}
+                            onCheckedChange={setShufflePaletteWithCharacter}
+                            aria-label="Shuffle Palette with Character"
+                          />
+                        </div>
+
+                        {/* Shuffle Character Features Button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={avatarSaving}
+                          onClick={handleShuffle}
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <motion.span
+                            animate={{ rotate: characterShuffleCount * 180 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
+                            className="inline-flex items-center justify-center"
+                          >
+                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                          </motion.span>
+                          <span>
+                            {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
+                          </span>
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Beam Controls: Gradient Palette, Choose Palette & Shuffle Palette Toggle */}
+                    {avatarTab === "beam" && stagedAvatar?.id !== 0 && (
+                      <div className="p-3 rounded-2xl bg-white dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06] space-y-2 shrink-0">
+                        {/* Palette Header with Standard Apple Capsule Tab - Fixed width & equal columns */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <ColorsIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
+                            <span className="text-[11px] font-semibold text-gray-700 dark:text-zinc-300">
+                              Gradient Palette
+                            </span>
+                          </div>
+
+                          {/* Standard Capsule Tab for Classic vs Vibrant */}
+                          <Tabs
+                            value={beamPaletteMode}
+                            onValueChange={handleToggleBeamPaletteMode}
+                            className="shrink-0"
+                          >
+                            <TabsList variant="capsule" size="capsule" className="w-32 grid grid-cols-2">
+                              <TabsTrigger value="classic" size="capsule" className="text-xs">
+                                Classic
+                              </TabsTrigger>
+                              <TabsTrigger value="vibrant" size="capsule" className="text-xs">
+                                Vibrant
+                              </TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                        </div>
+
+                        {/* Swatches Grid: 6 columns across 1 row for 6 palettes */}
+                        <div className="grid grid-cols-6 gap-2 place-items-center pt-1">
+                          {(beamPaletteMode === "classic" ? BEAM_CLASSIC_PALETTES : BEAM_VIBRANT_PALETTES).map((p) => {
+                            const isCurrentPalette = selectedBeamPaletteId === p.id;
+                            return (
+                              <div key={p.id} className="flex items-center justify-center size-7.5 shrink-0 aspect-square">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectBeamPalette(p)}
+                                  style={{
+                                    background: `linear-gradient(135deg, ${p.colors[0]} 0%, ${p.colors[1]} 33%, ${p.colors[2]} 66%, ${p.colors[4]} 100%)`,
+                                  }}
+                                  className="relative size-5.5 rounded-full aspect-square shrink-0 cursor-pointer shadow-2xs border border-black/10 dark:border-white/20 transition-transform duration-150 hover:scale-105 active:scale-90 flex items-center justify-center"
+                                  title={p.name}
+                                  aria-label={p.name}
+                                >
+                                  {isCurrentPalette && (
+                                    <motion.span
+                                      layoutId="active-beam-palette-ring"
+                                      transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                                      className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none"
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Shuffle Palette Toggle */}
+                        <div className="flex items-center justify-between pt-1 border-t border-black/[0.04] dark:border-white/[0.06]">
+                          <label htmlFor="shuffle-beam-palette-toggle" className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <ShuffleIcon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
+                            <span className="text-[11px] font-medium text-gray-700 dark:text-zinc-300">
+                              Shuffle Palette with Character
+                            </span>
+                          </label>
+                          <Switch
+                            id="shuffle-beam-palette-toggle"
+                            checked={shufflePaletteWithCharacter}
+                            onCheckedChange={setShufflePaletteWithCharacter}
+                            aria-label="Shuffle Palette with Character"
+                          />
+                        </div>
+
+                        {/* Shuffle Character Features Button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={avatarSaving}
+                          onClick={handleShuffle}
+                          className="w-full h-8 mt-0.5 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <motion.span
+                            animate={{ rotate: characterShuffleCount * 180 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 20 }}
+                            className="inline-flex items-center justify-center"
+                          >
+                            <DiceFaces03Icon size="1em" className="text-pup-maroon dark:text-red-400" />
+                          </motion.span>
+                          <span>
+                            {shufflePaletteWithCharacter ? "Shuffle Character & Palette" : "Shuffle Character Features"}
+                          </span>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom Apply & Cancel Actions (No Divider Line) */}
+                  <div className="flex items-center justify-end gap-2 pt-2.5 mt-auto shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAvatarModal(false)}
+                      className="h-9 px-4 text-xs font-semibold rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={avatarSaving || !stagedAvatar}
+                      onClick={handleApplyStagedAvatar}
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      {avatarSaving ? "Saving..." : "Apply Avatar"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

@@ -1,11 +1,14 @@
 import React from "react";
-import { GENERATED_AVATARS } from "./defaultAvatarsGenerated";
+import { GENERATED_AVATARS } from "./defaultAvatarsGenerated.js";
 
 // Default avatars are precomputed Boring Avatars (beam variant).
 // Regenerate with: node scripts/generate-default-avatars.mjs
 export const DEFAULT_AVATARS = GENERATED_AVATARS.map((avatar) => ({
   ...avatar,
-  svg: <span style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: avatar.svgString }} />,
+  svg: React.createElement("span", {
+    style: { display: "contents" },
+    dangerouslySetInnerHTML: { __html: avatar.svgString },
+  }),
 }));
 
 export const DEFAULT_AVATAR_COUNT = DEFAULT_AVATARS.length;

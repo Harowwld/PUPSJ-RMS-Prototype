@@ -150,7 +150,8 @@ test("AppleProfileCover dynamically updates WebGL background and hides button un
 
   // Compact themes to reduce modal height
   assert.ok(
-    coverCode.includes("size-11") && coverCode.includes("p-2.5"),
+    (coverCode.includes("size-8.5") || coverCode.includes("size-9") || coverCode.includes("size-11")) &&
+    (coverCode.includes("py-1.5") || coverCode.includes("py-2") || coverCode.includes("p-2.5")),
     "Modal theme cards must use compact padding and swatches to reduce height"
   );
 
