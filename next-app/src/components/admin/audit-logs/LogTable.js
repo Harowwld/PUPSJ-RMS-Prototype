@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table, TableRow } from "@/components/ui/table";
@@ -550,11 +551,7 @@ export default function LogTable({
                   {groupedLogs.map((group) => (
                     <React.Fragment key={group.key}>
                       {groupBy !== "none" && (
-                        <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                          <td colSpan={visibleColumnCount} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                            {group.label} ({group.logs.length})
-                          </td>
-                        </tr>
+                        <DataGroupHeader label={group.label} count={group.logs.length} colSpan={visibleColumnCount} />
                       )}
                       {group.logs.map((log) => (
                         <LogRow

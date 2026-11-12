@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
@@ -9,7 +10,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
-  ArrowDown01Icon,
   CalendarCheckIn01Icon,
   ViewIcon,
 } from "hugeicons-react";
@@ -111,33 +111,8 @@ export default function OsasRecordList({
         return (
           <section key={group.key} aria-labelledby={`${groupId}-header`} className="w-full flex flex-col">
             {groupBy !== "none" && (
-              <h3 id={`${groupId}-header`}>
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.key)}
-                  aria-expanded={!isCollapsed}
-                  className="w-full flex items-center justify-between px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors text-left cursor-pointer border-b border-border dark:border-border"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <ArrowDown01Icon
-                      size="1em"
-                      className={cn(
-                        "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
-                        isCollapsed && "-rotate-90"
-                      )}
-                    />
-                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                      {group.label}
-                    </span>
-                    <span className={cn("px-1.5 py-0.2 rounded-full text-[10px] bg-black/[0.06] dark:bg-white/10 text-gray-600 dark:text-zinc-300 tabular-nums", BADGE_BASE)}>
-                      {group.items.length}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                    {isCollapsed ? "Expand" : "Collapse"}
-                  </span>
-                </button>
-              </h3>
+              <DataGroupHeader id={`${groupId}-header`} label={group.label} count={group.items.length}
+                collapsed={isCollapsed} onToggle={() => toggleGroup(group.key)} />
             )}
 
             {!isCollapsed && (

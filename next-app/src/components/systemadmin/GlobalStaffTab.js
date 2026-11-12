@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
@@ -1320,12 +1321,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {groupedStaff.map(([groupLabel, members]) => (
                     <div key={groupLabel || "all"} className="space-y-3">
                       {groupLabel && (
-                        <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                          <span>{groupLabel}</span>
-                          <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500 text-[11px]">
-                            ({members.length})
-                          </span>
-                        </div>
+                        <DataGroupHeader label={groupLabel} count={members.length} />
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
                         {members.map((member) => {
@@ -1512,7 +1508,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {groupedStaff.map(([groupLabel, members]) => <Fragment key={groupLabel || "all"}>
-                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 2} className="bg-gray-50/90 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">{groupLabel} <span className="ml-2 font-sans tabular-nums font-normal text-gray-400 dark:text-zinc-500">{members.length}</span></td></tr>}
+                      {groupLabel && <DataGroupHeader label={groupLabel} count={members.length} colSpan={orderedVisibleColumns.length + 2} />}
                       {members.map((member) => {
                         const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                         const isSelf = member.id === authUser?.id

@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useMemo, useState } from "react";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { BADGE_BASE } from "@/lib/badgeStyles";
@@ -7,7 +8,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
-  ArrowDown01Icon,
   Cancel01Icon,
   File02Icon,
   Pdf01Icon,
@@ -53,6 +53,48 @@ export function formatUploadedDate(dateString) {
   }
 }
 
+export function groupDigitalRecords(records, groupBy) {
+  if (groupBy === "none") {
+    return [{ key: "all", label: "All Records", items: records }];
+  }
+
+  if (groupBy === "docType") {
+    const map = new Map();
+    records.forEach((record) => {
+      const type = record.doc_type || "Uncategorized";
+      if (!map.has(type)) map.set(type, []);
+      map.get(type).push(record);
+    });
+    return [...map.entries()].map(([docType, items]) => ({
+      key: docType,
+      label: docType,
+      items,
+    }));
+  }
+
+  // Default: Group by approval_status
+  const groups = [
+    { key: "Pending", label: "Awaiting Review", items: [] },
+    { key: "Approved", label: "Approved & Archived", items: [] },
+    { key: "Declined", label: "Declined / Needs Rescan", items: [] },
+  ];
+  const otherGroup = { key: "Other", label: "Other Status", items: [] };
+
+  records.forEach((record) => {
+    const status = record.approval_status || "Pending";
+    const found = groups.find((g) => g.key.toLowerCase() === status.toLowerCase());
+    if (found) {
+      found.items.push(record);
+    } else {
+      otherGroup.items.push(record);
+    }
+  });
+
+  const result = groups.filter((g) => g.items.length > 0);
+  if (otherGroup.items.length > 0) result.push(otherGroup);
+  return result;
+}
+
 export default function DigitalRecordsList({
   records = [],
   isOsas = false,
@@ -76,47 +118,7 @@ export default function DigitalRecordsList({
     }));
   };
 
-  const groupedData = useMemo(() => {
-    if (groupBy === "none") {
-      return [{ key: "all", label: "All Records", items: records }];
-    }
-
-    if (groupBy === "docType") {
-      const map = new Map();
-      records.forEach((record) => {
-        const type = record.doc_type || "Uncategorized";
-        if (!map.has(type)) map.set(type, []);
-        map.get(type).push(record);
-      });
-      return [...map.entries()].map(([docType, items]) => ({
-        key: docType,
-        label: docType,
-        items,
-      }));
-    }
-
-    // Default: Group by approval_status
-    const groups = [
-      { key: "Pending", label: "Awaiting Review", items: [] },
-      { key: "Approved", label: "Approved & Archived", items: [] },
-      { key: "Declined", label: "Declined / Needs Rescan", items: [] },
-    ];
-    const otherGroup = { key: "Other", label: "Other Status", items: [] };
-
-    records.forEach((record) => {
-      const status = record.approval_status || "Pending";
-      const found = groups.find((g) => g.key.toLowerCase() === status.toLowerCase());
-      if (found) {
-        found.items.push(record);
-      } else {
-        otherGroup.items.push(record);
-      }
-    });
-
-    const result = groups.filter((g) => g.items.length > 0);
-    if (otherGroup.items.length > 0) result.push(otherGroup);
-    return result;
-  }, [records, groupBy]);
+  const groupedData = useMemo(() => groupDigitalRecords(records, groupBy), [records, groupBy]);
 
   return (
     <div className="w-full divide-y divide-border/70 dark:divide-white/10 font-jakarta">
@@ -127,33 +129,8 @@ export default function DigitalRecordsList({
         return (
           <section key={group.key} aria-labelledby={`${groupId}-heading`} className="w-full">
             {groupBy !== "none" && (
-              <h3
-                id={`${groupId}-heading`}
-                className="border-b border-border/70 bg-gray-50/80 dark:border-white/10 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs"
-              >
-                <button
-                  type="button"
-                  aria-expanded={!isCollapsed}
-                  aria-controls={`${groupId}-items`}
-                  onClick={() => toggleGroup(group.key)}
-                  className="flex min-h-11 w-full items-center gap-2.5 px-5 text-left transition-colors hover:bg-gray-100/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:hover:bg-zinc-800/80 sm:px-6 cursor-pointer"
-                >
-                  <ArrowDown01Icon
-                    size="1em"
-                    className={cn(
-                      "shrink-0 text-sm text-gray-500 transition-transform duration-150 dark:text-zinc-400",
-                      isCollapsed && "-rotate-90"
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    {group.label}
-                  </span>
-                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
-                    {group.items.length}
-                  </span>
-                </button>
-              </h3>
+              <DataGroupHeader id={`${groupId}-heading`} controls={`${groupId}-items`} sticky label={group.label} count={group.items.length}
+                collapsed={isCollapsed} onToggle={() => toggleGroup(group.key)} />
             )}
 
             {!isCollapsed && (

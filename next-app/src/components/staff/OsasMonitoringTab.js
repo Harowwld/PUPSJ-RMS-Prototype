@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { isInManilaDateRange } from "@/lib/timeFormat";
 import { Table, TableHead } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -1605,12 +1606,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           {proposalTableGroups.map((group) => (
                             <Fragment key={`group-${group.key}`}>
                               {groupBy !== "none" && (
-                                <tr className="bg-gray-50/80 dark:bg-zinc-900/70">
-                                  <th colSpan={visibleColumnCount} className="px-6 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                    {group.label}
-                                    <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.items.length}</span>
-                                  </th>
-                                </tr>
+                                <DataGroupHeader label={group.label} count={group.items.length} colSpan={visibleColumnCount} />
                               )}
                               {group.items.map((item) => (
                             <tr
@@ -1891,12 +1887,7 @@ export default function OsasMonitoringTab({ showToast }) {
                           {postEventTableGroups.map((group) => (
                             <Fragment key={`group-${group.key}`}>
                               {groupBy !== "none" && (
-                                <tr className="bg-gray-50/80 dark:bg-zinc-900/70">
-                                <th colSpan={visibleColumnCount} className="px-6 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                    {group.label}
-                                    <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.items.length}</span>
-                                  </th>
-                                </tr>
+                                <DataGroupHeader label={group.label} count={group.items.length} colSpan={visibleColumnCount} />
                               )}
                               {group.items.map((item) => {
                             const attendees = item.actual_attendance ?? item.total_attendance ?? item.actual_attendees ?? 0;

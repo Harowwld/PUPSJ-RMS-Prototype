@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useState } from "react";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
@@ -152,14 +153,7 @@ export default function ComplianceStudentsList({
               <div className="mt-3.5 pt-3.5 border-t border-black/[0.04] dark:border-white/[0.06] space-y-4 pl-12">
                 {groups.map((group) => (
                   <section key={group.status}>
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                        {group.label}
-                      </span>
-                      <span className="text-[10px] font-bold tabular-nums text-gray-400 dark:text-zinc-500">
-                        ({group.requirements.length})
-                      </span>
-                    </div>
+                    <DataGroupHeader label={group.label} count={group.requirements.length} />
 
                     <ul className="space-y-1.5">
                       {group.requirements.map((requirement) => (

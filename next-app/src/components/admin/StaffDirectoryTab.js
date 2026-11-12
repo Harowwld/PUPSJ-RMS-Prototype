@@ -1,5 +1,6 @@
 "use client"
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
 import { Table, TableRow } from "@/components/ui/table";
@@ -1344,12 +1345,7 @@ export default function StaffDirectoryTab({
                 {groupedStaff.map((group) => (
                   <div key={group.key} className="space-y-3">
                     {group.label && (
-                      <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                        <span>{group.label}</span>
-                        <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500 text-[11px]">
-                          ({group.members.length})
-                        </span>
-                      </div>
+                      <DataGroupHeader label={group.label} count={group.members.length} />
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
                       {group.members.map((s) => (
@@ -1609,17 +1605,7 @@ export default function StaffDirectoryTab({
                   {groupedStaff.map((group) => (
                     <React.Fragment key={group.key}>
                       {group.label && (
-                        <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
-                          <td
-                            colSpan={staffTableColumns.length}
-                            className="px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200"
-                          >
-                            {group.label}
-                            <span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">
-                              {group.members.length}
-                            </span>
-                          </td>
-                        </tr>
+                        <DataGroupHeader label={group.label} count={group.members.length} colSpan={staffTableColumns.length} />
                       )}
                       {group.members.map((s) => (
                         <StaffTableRow

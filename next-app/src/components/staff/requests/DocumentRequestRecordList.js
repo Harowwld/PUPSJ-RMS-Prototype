@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -9,7 +10,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
-  ArrowDown01Icon,
   Attachment01Icon,
   Clock01Icon,
   ViewIcon,
@@ -25,6 +25,67 @@ const STATUS_GROUPS = [
   { key: "Cancelled", label: "Cancelled" },
   { key: "Shredded", label: "Retention Expired / Shredded" },
 ];
+
+export function groupDocumentRequests(items, groupBy) {
+  if (groupBy === "none") {
+    return [{ key: "all", label: "All Requests", items }];
+  }
+
+  if (groupBy === "doc_type") {
+    const map = new Map();
+    items.forEach((item) => {
+      const docType = item.doc_type || "Unknown Document";
+      if (!map.has(docType)) map.set(docType, []);
+      map.get(docType).push(item);
+    });
+    return [...map.entries()].map(([docType, list]) => ({
+      key: docType,
+      label: docType,
+      items: list,
+    }));
+  }
+
+  if (groupBy === "client_type") {
+    const groups = [
+      { key: "Student", label: "Students", items: [] },
+      { key: "Alumni", label: "Alumni", items: [] },
+      { key: "Parent", label: "Parents / Guardians", items: [] },
+    ];
+    const other = { key: "Other", label: "Other", items: [] };
+
+    items.forEach((item) => {
+      const ct = item.client_type || (item.is_alumni ? "Alumni" : "Student");
+      const found = groups.find((g) => g.key.toLowerCase() === String(ct).toLowerCase());
+      if (found) {
+        found.items.push(item);
+      } else {
+        other.items.push(item);
+      }
+    });
+
+    const res = groups.filter((g) => g.items.length > 0);
+    if (other.items.length > 0) res.push(other);
+    return res;
+  }
+
+  // Default: group by status
+  const groupMap = new Map(STATUS_GROUPS.map((g) => [g.key, { ...g, items: [] }]));
+  const otherGroup = { key: "Other", label: "Other Status", items: [] };
+
+  items.forEach((item) => {
+    const statusKey = item.status || "Pending";
+    const target = groupMap.get(statusKey);
+    if (target) {
+      target.items.push(item);
+    } else {
+      otherGroup.items.push(item);
+    }
+  });
+
+  const list = [...groupMap.values()].filter((g) => g.items.length > 0);
+  if (otherGroup.items.length > 0) list.push(otherGroup);
+  return list;
+}
 
 export default function DocumentRequestRecordList({
   items = [],
@@ -44,66 +105,7 @@ export default function DocumentRequestRecordList({
     }));
   };
 
-  const groupedData = useMemo(() => {
-    if (groupBy === "none") {
-      return [{ key: "all", label: "All Requests", items }];
-    }
-
-    if (groupBy === "doc_type") {
-      const map = new Map();
-      items.forEach((item) => {
-        const docType = item.doc_type || "Unknown Document";
-        if (!map.has(docType)) map.set(docType, []);
-        map.get(docType).push(item);
-      });
-      return [...map.entries()].map(([docType, list]) => ({
-        key: docType,
-        label: docType,
-        items: list,
-      }));
-    }
-
-    if (groupBy === "client_type") {
-      const groups = [
-        { key: "Student", label: "Students", items: [] },
-        { key: "Alumni", label: "Alumni", items: [] },
-        { key: "Parent", label: "Parents / Guardians", items: [] },
-      ];
-      const other = { key: "Other", label: "Other", items: [] };
-
-      items.forEach((item) => {
-        const ct = item.client_type || (item.is_alumni ? "Alumni" : "Student");
-        const found = groups.find((g) => g.key.toLowerCase() === String(ct).toLowerCase());
-        if (found) {
-          found.items.push(item);
-        } else {
-          other.items.push(item);
-        }
-      });
-
-      const res = groups.filter((g) => g.items.length > 0);
-      if (other.items.length > 0) res.push(other);
-      return res;
-    }
-
-    // Default: group by status
-    const groupMap = new Map(STATUS_GROUPS.map((g) => [g.key, { ...g, items: [] }]));
-    const otherGroup = { key: "Other", label: "Other Status", items: [] };
-
-    items.forEach((item) => {
-      const statusKey = item.status || "Pending";
-      const target = groupMap.get(statusKey);
-      if (target) {
-        target.items.push(item);
-      } else {
-        otherGroup.items.push(item);
-      }
-    });
-
-    const list = [...groupMap.values()].filter((g) => g.items.length > 0);
-    if (otherGroup.items.length > 0) list.push(otherGroup);
-    return list;
-  }, [items, groupBy]);
+  const groupedData = useMemo(() => groupDocumentRequests(items, groupBy), [items, groupBy]);
 
   return (
     <div className="w-full divide-y divide-border/70 dark:divide-white/10">
@@ -114,30 +116,8 @@ export default function DocumentRequestRecordList({
         return (
           <section key={group.key} aria-labelledby={`${groupId}-heading`} className="w-full">
             {groupBy !== "none" && (
-              <h3 id={`${groupId}-heading`} className="border-b border-border/70 bg-gray-50/80 dark:border-white/10 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs">
-                <button
-                  type="button"
-                  aria-expanded={!isCollapsed}
-                  aria-controls={`${groupId}-items`}
-                  onClick={() => toggleGroup(group.key)}
-                  className="flex min-h-11 w-full items-center gap-2.5 px-5 text-left transition-colors hover:bg-gray-100/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-pup-maroon dark:hover:bg-zinc-800/80 sm:px-6 cursor-pointer"
-                >
-                  <ArrowDown01Icon
-                    size="1em"
-                    className={cn(
-                      "shrink-0 text-sm text-gray-500 transition-transform duration-150 dark:text-zinc-400",
-                      isCollapsed && "-rotate-90"
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    {group.label}
-                  </span>
-                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
-                    {group.items.length}
-                  </span>
-                </button>
-              </h3>
+              <DataGroupHeader id={`${groupId}-heading`} controls={`${groupId}-items`} sticky label={group.label} count={group.items.length}
+                collapsed={isCollapsed} onToggle={() => toggleGroup(group.key)} />
             )}
 
             {!isCollapsed && (

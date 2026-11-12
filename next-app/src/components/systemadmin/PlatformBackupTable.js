@@ -1,5 +1,6 @@
 "use client"
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useState } from "react"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableText, TableStatus } from "@/components/ui/table"
 import TablePagination from "@/components/shared/TablePagination"
@@ -130,7 +131,7 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
           <TableHead kind="actions"><span className="sr-only">Actions</span></TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {groups.length ? groups.flatMap(({ label, items }) => [<TableRow key={`group-${label}`}><TableCell colSpan={visibleColumns.length + 2} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">{label} <span className="ml-1.5 font-normal text-gray-400 dark:text-zinc-500 tabular-nums">{items.length}</span></TableCell></TableRow>, ...items.map(renderRow)]) : rows.map(renderRow)}
+          {groups.length ? groups.flatMap(({ label, items }) => [<DataGroupHeader key={`group-${label}`} label={label} count={items.length} colSpan={visibleColumns.length + 2} />, ...items.map(renderRow)]) : rows.map(renderRow)}
         </TableBody>
       </Table>}
       {!rows.length && <EmptyState

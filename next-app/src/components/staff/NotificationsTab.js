@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -852,14 +853,7 @@ export default function NotificationsTab({
               {groupedItems.map((group) => (
                 <div key={group.key} className="space-y-2.5">
                   {/* Group Header matching user screenshot */}
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                      {group.key}
-                    </span>
-                    <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
-                      {group.items.length} {group.items.length === 1 ? "notification" : "notifications"}
-                    </span>
-                  </div>
+                  <DataGroupHeader label={group.key} count={group.items.length} />
 
                   {/* Rounded Card Container containing notification rows */}
                   <div className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-xs divide-y divide-border/60 dark:divide-border/60">

@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { isInManilaDateRange } from "@/lib/timeFormat";
 import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
@@ -1399,11 +1400,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     {groupedOrganizations.map((group) => (
                       <Fragment key={group.key}>
                         {group.label && (
-                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={organizationTableColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                              {group.label} ({group.orgs.length})
-                            </td>
-                          </tr>
+                          <DataGroupHeader label={group.label} count={group.orgs.length} colSpan={organizationTableColumns.length} />
                         )}
                         {group.orgs.map((org) => {
                           const hasCbl = Boolean(org.bylaws_storage_filename);
