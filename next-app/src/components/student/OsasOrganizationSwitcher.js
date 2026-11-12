@@ -67,7 +67,7 @@ export default function OsasOrganizationSwitcher({ organizations, selectedOrgani
         aria-label="Authorized organizations"
         className="w-72 max-w-[calc(100vw-2rem)] border-gray-200 bg-white text-gray-900 dark:border-gray-200 dark:bg-white dark:shadow-[0_16px_36px_rgba(0,0,0,0.2)]"
       >
-        <DropdownMenuLabel className="px-2.5 py-2 text-gray-600">Authorized Organizations</DropdownMenuLabel>
+        <DropdownMenuLabel className="px-2.5 py-2 uppercase text-gray-600">Authorized Organizations</DropdownMenuLabel>
         <DropdownMenuRadioGroup
           value={selectedId}
           onValueChange={(value) => {
