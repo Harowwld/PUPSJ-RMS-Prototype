@@ -1,12 +1,12 @@
 "use client"
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import React, { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat"
 import { getRequestCharterStatus, buildSlaTiers } from "@/lib/citizenCharter"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { ArrowDown01Icon } from "hugeicons-react"
 import { useTablePreferences } from "@/components/shared/TablePreferences"
 import { getListDensityClasses } from "@/lib/tablePresentation"
 import {
@@ -38,6 +38,69 @@ export function formatTransactionId(tx) {
   return `TX-${padded}`
 }
 
+export function groupCampusOperations(items, groupBy) {
+  if (groupBy === "none") {
+    return [{ key: "all", label: "All Operations", items }]
+  }
+
+  if (groupBy === "department") {
+    const groups = [
+      { key: "registrar", label: "Office of the Registrar", items: [] },
+      { key: "osas", label: "Office of Student Affairs and Services (OSAS)", items: [] },
+    ]
+    const other = { key: "other", label: "Other Departments", items: [] }
+
+    items.forEach((item) => {
+      const office = String(item.officeId || "").toLowerCase()
+      if (office === "registrar") {
+        groups[0].items.push(item)
+      } else if (office === "osas") {
+        groups[1].items.push(item)
+      } else {
+        other.items.push(item)
+      }
+    })
+
+    const res = groups.filter((g) => g.items.length > 0)
+    if (other.items.length > 0) res.push(other)
+    return res
+  }
+
+  if (groupBy === "status") {
+    const groups = [
+      { key: "action_needed", label: "Action Needed / Intake", items: [] },
+      { key: "in_progress", label: "In Progress / Review", items: [] },
+      { key: "ready", label: "Ready / Completed", items: [] },
+      { key: "needs_revision", label: "Needs Revision", items: [] },
+      { key: "declined", label: "Cancelled / Declined", items: [] },
+    ]
+    const other = { key: "other", label: "Other Status", items: [] }
+
+    items.forEach((item) => {
+      const s = String(item.status || "").trim().toLowerCase()
+      if (s === "pending" || s === "submitted") {
+        groups[0].items.push(item)
+      } else if (s === "inprogress" || s === "in progress" || s === "under review" || s === "processing") {
+        groups[1].items.push(item)
+      } else if (s === "ready" || s === "approved" || s === "done" || s === "completed") {
+        groups[2].items.push(item)
+      } else if (s === "needs revision" || s === "revision") {
+        groups[3].items.push(item)
+      } else if (s === "cancelled" || s === "declined" || s === "shredded") {
+        groups[4].items.push(item)
+      } else {
+        other.items.push(item)
+      }
+    })
+
+    const res = groups.filter((g) => g.items.length > 0)
+    if (other.items.length > 0) res.push(other)
+    return res
+  }
+
+  return [{ key: "all", label: "All Operations", items }]
+}
+
 export default function CampusOperationsList({
   items = [],
   groupBy = "none",
@@ -60,68 +123,7 @@ export default function CampusOperationsList({
   const slaTiers = useMemo(() => buildSlaTiers(slaStandards), [slaStandards])
 
   // Group items by chosen dimension
-  const groupedData = useMemo(() => {
-    if (groupBy === "none") {
-      return [{ key: "all", label: "All Operations", items }]
-    }
-
-    if (groupBy === "department") {
-      const groups = [
-        { key: "registrar", label: "Office of the Registrar", items: [] },
-        { key: "osas", label: "Office of Student Affairs and Services (OSAS)", items: [] },
-      ]
-      const other = { key: "other", label: "Other Departments", items: [] }
-
-      items.forEach((item) => {
-        const office = String(item.officeId || "").toLowerCase()
-        if (office === "registrar") {
-          groups[0].items.push(item)
-        } else if (office === "osas") {
-          groups[1].items.push(item)
-        } else {
-          other.items.push(item)
-        }
-      })
-
-      const res = groups.filter((g) => g.items.length > 0)
-      if (other.items.length > 0) res.push(other)
-      return res
-    }
-
-    if (groupBy === "status") {
-      const groups = [
-        { key: "action_needed", label: "Action Needed / Intake", items: [] },
-        { key: "in_progress", label: "In Progress / Review", items: [] },
-        { key: "ready", label: "Ready / Completed", items: [] },
-        { key: "needs_revision", label: "Needs Revision", items: [] },
-        { key: "declined", label: "Cancelled / Declined", items: [] },
-      ]
-      const other = { key: "other", label: "Other Status", items: [] }
-
-      items.forEach((item) => {
-        const s = String(item.status || "").trim().toLowerCase()
-        if (s === "pending" || s === "submitted") {
-          groups[0].items.push(item)
-        } else if (s === "inprogress" || s === "in progress" || s === "under review" || s === "processing") {
-          groups[1].items.push(item)
-        } else if (s === "ready" || s === "approved" || s === "done" || s === "completed") {
-          groups[2].items.push(item)
-        } else if (s === "needs revision" || s === "revision") {
-          groups[3].items.push(item)
-        } else if (s === "cancelled" || s === "declined" || s === "shredded") {
-          groups[4].items.push(item)
-        } else {
-          other.items.push(item)
-        }
-      })
-
-      const res = groups.filter((g) => g.items.length > 0)
-      if (other.items.length > 0) res.push(other)
-      return res
-    }
-
-    return [{ key: "all", label: "All Operations", items }]
-  }, [groupBy, items])
+  const groupedData = useMemo(() => groupCampusOperations(items, groupBy), [items, groupBy]);
 
   return (
     <div className="flex flex-col flex-1 divide-y divide-border dark:divide-border bg-white dark:bg-card">
@@ -133,31 +135,8 @@ export default function CampusOperationsList({
           <div key={group.key} className="flex flex-col">
             {/* Group Header (if grouped) */}
             {isGrouped && (
-              <button
-                type="button"
-                onClick={() => toggleGroup(group.key)}
-                className="w-full flex items-center justify-between border-b border-border text-left hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60"
-                aria-expanded={!isCollapsed}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <ArrowDown01Icon
-                    size="1em"
-                    className={cn(
-                      "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
-                      isCollapsed && "-rotate-90"
-                    )}
-                  />
-                  <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                    {group.label}
-                  </span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
-                    {group.items.length}
-                  </span>
-                </div>
-                <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                  {isCollapsed ? "Expand" : "Collapse"}
-                </span>
-              </button>
+              <DataGroupHeader label={group.label} count={group.items.length}
+                collapsed={isCollapsed} onToggle={() => toggleGroup(group.key)} />
             )}
 
             {/* Group Items (Linear-inspired sleek horizontal row) */}

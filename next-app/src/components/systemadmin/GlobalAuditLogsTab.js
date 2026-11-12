@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
@@ -1054,11 +1055,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                     {groupedLogs.map((group) => (
                       <React.Fragment key={group.key}>
                         {groupBy !== "none" && (
-                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={tableColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                              {group.label} ({group.logs.length})
-                            </td>
-                          </tr>
+                          <DataGroupHeader label={group.label} count={group.logs.length} colSpan={tableColumns.length} />
                         )}
                         {group.logs.map((log) => {
                           const severityInfo = getSeverityInfo(log.severity)

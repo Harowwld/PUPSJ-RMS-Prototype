@@ -1,5 +1,6 @@
 "use client"
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 
 import { Table } from "@/components/ui/table"
@@ -21,6 +22,7 @@ import {
 } from "@/components/systemadmin/OfficeTableControls"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import DigitalRecordsList, {
+  groupDigitalRecords,
   formatUploadedDate,
 } from "@/components/admin/records-review/DigitalRecordsList"
 import DigitalRecordsKanbanPipeline, { DIGITAL_RECORDS_KANBAN_COLUMNS } from "@/components/admin/records-review/DigitalRecordsKanbanPipeline"
@@ -806,11 +808,13 @@ export default function DigitalRecordsReviewTab({
                 sortOrder={sortOrder}
                 onSortOrderChange={setSortOrder}
               />
-              <GroupPopover
-                options={groupOptions}
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-              />
+              {viewMode !== "kanban" && (
+                <GroupPopover
+                  options={groupOptions}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                />
+              )}
               {viewMode === "table" && (
                 <ColumnsPopover
                   columns={tableColumns}
@@ -1137,7 +1141,9 @@ export default function DigitalRecordsReviewTab({
                         })}
                       </tr>
                     ))}
-                    {paginatedRecords.map((r) => {
+                    {groupDigitalRecords(paginatedRecords, groupBy).flatMap((group) => [
+                      ...(groupBy !== "none" ? [<DataGroupHeader key={`group-${group.key}`} label={group.label} count={group.items.length} colSpan={activeTableColumns.length} />] : []),
+                      ...group.items.map((r) => {
                       const isSelected = selectedIds.has(r.id)
 
                       return (
@@ -1271,7 +1277,8 @@ export default function DigitalRecordsReviewTab({
                           </td>
                         </tr>
                       )
-                    })}
+                    }),
+                    ])}
                   </tbody>
                 </Table>
               </div>

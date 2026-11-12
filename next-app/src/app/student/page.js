@@ -24,7 +24,6 @@ import OsasOrganizationSwitcher, { OrganizationAvatar, organizationName } from "
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import Sidebar from "@/components/shared/Sidebar";
-import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
@@ -41,7 +40,7 @@ import {
 import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getClientSession, invalidateClientSession } from "@/lib/clientAuth";
 import { canAccessPage } from "@/lib/roleUtils";
 import { PhoneSchema, StudentNoSchema } from "@/lib/validationSchemas";
@@ -74,18 +73,18 @@ import MissingDocumentsInquiryDialog from "@/components/student/MissingDocuments
 import PortalAccountSetupDialog from "@/components/student/PortalAccountSetupDialog";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import StudentOverviewTab from "@/components/student/StudentOverviewTab";
-import RequestFeedbackCard, { RequestFeedbackBackdrop } from "@/components/student/RequestFeedbackCard";
-import feedbackStyles from "@/components/student/RequestFeedbackCard.module.css";
+import RequestFeedbackCard from "@/components/student/RequestFeedbackCard";
+import CampusStatusNotice from "@/components/student/CampusStatusNotice";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
-import NarrativeText from "@/components/shared/NarrativeText";
+import NarrativeText, { NarrativePersonBadge, resolveUserDisplayName } from "@/components/shared/NarrativeText";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
   FilterPopover,
   SortPopover,
   GroupPopover,
-  ActiveFilterChips as TableActiveFilterChips,
 } from "@/components/systemadmin/OfficeTableControls";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import { formatDateIso, parseDateLocal } from "@/lib/dateRangeUtils";
@@ -220,6 +219,10 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
+function formatRequestReference(id) {
+  return id == null ? "" : `REQ-${id}`;
+}
+
 function SheetReferenceRow({ label, reference, icon = "IdIcon" }) {
   return (
     <InfoRow icon={icon} label={label}>
@@ -242,34 +245,44 @@ function SheetUpdateCount({ count }) {
   );
 }
 
+const REQUEST_STATUS_NOTICES = {
+  pending: { title: "Under Review", message: "Your request is queued for verification by the Office of the Campus Registrar." },
+  underreview: { title: "Under Review", message: "The Office of the Campus Registrar is reviewing your request." },
+  pendingpayment: { title: "Payment Slip Required", message: "Upload your official receipt or payment slip below so the Registrar can prepare your document." },
+  deficient: { title: "Action Required", message: "Review the Registrar’s feedback for the missing or incomplete requirements." },
+  inprogress: { title: "Processing In Progress", message: "Registrar staff are preparing and authenticating your document." },
+  ready: { title: "Ready for Claiming", message: "Pick up at Registrar Window 1." },
+  completed: { title: "Request Completed", message: "Your document was claimed and recorded in the University Archives." },
+  cancelled: { title: "Request Cancelled", message: "This request is closed. Check the processing timeline for details." },
+  declined: { title: "Request Declined", message: "Check the processing timeline for the Registrar’s decision." },
+  rejected: { title: "Request Rejected", message: "Check the processing timeline for the Registrar’s decision." },
+  shredded: { title: "Document Disposed", message: "The unclaimed document is no longer available for pickup." },
+};
+
+const PROPOSAL_SUBMISSION_UPDATE = /^((?:Event proposal|Revised proposal \(Revision \d+\)) submitted by) (.+?) \(([^()]+)\)\.?$/i;
+
+function ProposalSubmissionNarrative({ submission, name, user }) {
+  const [, introduction, position, submitter] = submission;
+  const isCurrentUser = submitter.toLowerCase() === user?.email?.toLowerCase();
+  const displayName = resolveUserDisplayName(name || (isCurrentUser ? user?.name : "") || submitter);
+
+  return (
+    <>
+      {introduction} <strong className="font-bold">{position}</strong>{" "}
+      <NarrativePersonBadge
+        name={displayName}
+        avatarId={isCurrentUser ? user.student_no || user.id : submitter}
+        avatarFilename={isCurrentUser ? user.avatar_filename : undefined}
+      />.
+    </>
+  );
+}
+
 const PROPOSAL_STATUS_NOTICES = {
   Approved: { title: "Proposal Approved", message: "OSAS has cleared your event proposal." },
   "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and upload a revised proposal." },
   Declined: { title: "Proposal Declined", message: "OSAS did not approve this event proposal." },
 };
-
-function CampusStatusNotice({ title, children, onDismiss, imageSizes = "(max-width: 640px) 100vw, 576px" }) {
-  return (
-    <div className={cn(feedbackStyles.card, "relative isolate flex shrink-0 items-center justify-between gap-3 overflow-hidden px-6 py-1.5 text-xs leading-relaxed text-white")}>
-      <RequestFeedbackBackdrop sizes={imageSizes} />
-      <div className="min-w-0">
-        <strong className="font-semibold">{title}</strong>
-        <span className="text-white/85"> · {children}</span>
-      </div>
-      {onDismiss && (
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-white/85 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
-          aria-label="Dismiss notice"
-          title="Dismiss notice"
-        >
-          <Cancel01Icon size={14} aria-hidden="true" />
-        </button>
-      )}
-    </div>
-  );
-}
 
 function ExpandablePanel({ children, reduceMotion, contentClassName = "border-b border-border" }) {
   const isPresent = useIsPresent();
@@ -452,8 +465,7 @@ function StudentDashboard() {
   const [feedbackRequest, setFeedbackRequest] = useState(null);
   const [feedbackInitialRating, setFeedbackInitialRating] = useState(0);
   const [feedbackMinimized, setFeedbackMinimized] = useWorkspaceViewPreference("student_requests", "feedbackMinimized", false, { user: me });
-  const canRateSelectedRequest = !selectedRequestForDetail?.feedback
-    && ["Ready", "Completed"].includes(selectedRequestForDetail?.status);
+  const canRateSelectedRequest = Boolean(selectedRequestForDetail && !selectedRequestForDetail.feedback);
 
   function rateSelectedRequest() {
     setFeedbackRequest(selectedRequestForDetail);
@@ -495,6 +507,11 @@ function StudentDashboard() {
       ? (data.proposals || []).filter((proposal) => String(proposal.organization_id) === String(selectedOsasOrgId))
       : [],
     [data.proposals, selectedOsasOrgId]
+  );
+  const approvedPostEventProposals = organizationProposals.filter((proposal) => proposal.status === "Approved");
+  const hasApprovedPostEventProposals = approvedPostEventProposals.length > 0;
+  const hasSelectedApprovedProposal = approvedPostEventProposals.some(
+    ({ id }) => String(id) === String(postEventForm.eventProposalId)
   );
   const organizationPostEventReports = useMemo(
     () => selectedOsasOrgId
@@ -872,7 +889,7 @@ function StudentDashboard() {
     return (data.requests || []).filter((item) => {
       const matchesSearch =
         !q ||
-        String(item.id).toLowerCase().includes(q) ||
+        formatRequestReference(item.id).toLowerCase().includes(q) ||
         (item.doc_type || "").toLowerCase().includes(q) ||
         (item.notes || "").toLowerCase().includes(q) ||
         (item.status || "").toLowerCase().includes(q) ||
@@ -1266,8 +1283,13 @@ function StudentDashboard() {
     [totalPages, setCurrentPage]
   );
 
-  const selectedRequestReference = selectedRequestForDetail?.id != null
-    ? `REQ-${selectedRequestForDetail.id}`
+  const selectedRequestReference = formatRequestReference(selectedRequestForDetail?.id);
+  const requestStatus = selectedRequestForDetail?.status;
+  const requestNotice = requestStatus
+    ? REQUEST_STATUS_NOTICES[requestStatus.toLowerCase().replace(/\s+/g, "")] ?? {
+        title: requestStatus,
+        message: "Check the processing timeline for the latest update.",
+      }
     : null;
   const currentRequestDetailIndex = selectedRequestForDetail
     ? sortedRequests.findIndex((r) => r.id === selectedRequestForDetail.id)
@@ -1853,7 +1875,7 @@ function StudentDashboard() {
       if (!selectedOrg) {
         throw new Error("Select an authorized organization before submitting a post-event report.");
       }
-      if (!postEventForm.eventProposalId) {
+      if (!hasSelectedApprovedProposal) {
         throw new Error("Please select an approved event proposal.");
       }
       if (!postEventForm.narrativeFile) {
@@ -2572,13 +2594,13 @@ function StudentDashboard() {
                     </DataViewToolbar>
 
                     {/* 4. Active Filter Chips Bar */}
-                    {requestActiveChips.length > 0 && (
-                      <TableActiveFilterChips
-                        chips={requestActiveChips}
-                        onClearAll={clearRequestFilters}
-                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                      />
-                    )}
+                    <ActiveFilterChips
+                      chips={requestActiveChips}
+                      searchQuery={requestSearch}
+                      onClearSearch={() => { setRequestSearch(""); setCurrentPage(1); }}
+                      onClearAll={clearRequestFilters}
+                      className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                    />
 
                     {/* 5. Request History List / Empty State */}
                     {loading && !hasLoaded ? (
@@ -2624,19 +2646,8 @@ function StudentDashboard() {
                           return (
                             <section key={group.key || "root"} className="flex flex-col">
                               {isGrouped && (
-                                <button
-                                  type="button"
-                                  onClick={() => toggleRequestGroup(group.key)}
-                                  aria-expanded={!isCollapsed}
-                                  className="flex w-full items-center justify-between border-b border-border bg-gray-50/80 px-5 py-2.5 text-left transition-colors hover:bg-gray-100/60 dark:border-border dark:bg-zinc-900/60 dark:hover:bg-zinc-800/40"
-                                >
-                                  <span className="flex min-w-0 items-center gap-2.5">
-                                    <ArrowDown01Icon size="1em" className={cn("shrink-0 text-sm text-gray-400 transition-transform dark:text-zinc-500", isCollapsed && "-rotate-90")} />
-                                    <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100">{group.label}</span>
-                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>{group.items.length}</span>
-                                  </span>
-                                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">{isCollapsed ? "Expand" : "Collapse"}</span>
-                                </button>
+                                <DataGroupHeader label={group.label} count={group.items.length}
+                                  collapsed={isCollapsed} onToggle={() => toggleRequestGroup(group.key)} />
                               )}
 
                               {!isCollapsed && (
@@ -2648,7 +2659,7 @@ function StudentDashboard() {
                                       tabIndex={0}
                                       onClick={() => setSelectedRequestForDetail(item)}
                                       onKeyDown={(event) => {
-                                        if (event.key === "Enter" || event.key === " ") {
+                                        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
                                           event.preventDefault();
                                           setSelectedRequestForDetail(item);
                                         }
@@ -2663,7 +2674,7 @@ function StudentDashboard() {
                                       )}
                                     >
                                       <div className="mr-2 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-                                        <span className="min-w-[70px] shrink-0 select-none font-sans text-xs font-medium tabular-nums text-gray-500 dark:text-zinc-400">{item.id}</span>
+                                        <span className="min-w-[70px] shrink-0 select-none font-sans text-xs font-medium tabular-nums text-gray-500 dark:text-zinc-400">{formatRequestReference(item.id)}</span>
                                         <span className="max-w-[200px] shrink-0 truncate text-xs font-medium text-gray-900 transition-colors group-hover:text-[#800000] dark:text-zinc-100 dark:group-hover:text-red-400 sm:max-w-[320px] sm:text-sm lg:max-w-md">
                                           {item.doc_type || "Document Request"}
                                         </span>
@@ -2710,9 +2721,9 @@ function StudentDashboard() {
                                                   setFeedbackModalOpen(true);
                                                 }}
                                                 aria-label={item.feedback ? `Rated ${item.feedback.rating}/5 stars. Click to edit feedback.` : "Rate Service"}
-                                                className={cn("table-action-button rounded-lg active:scale-95 cursor-pointer", item.feedback ? "text-amber-500 hover:text-amber-600 dark:text-amber-400" : "text-gray-400 hover:text-amber-500")}
+                                                className={cn("table-action-button rounded-lg active:scale-95 cursor-pointer", item.feedback && "opacity-100!")}
                                               >
-                                                <StarIcon size="1em" className="text-[15px]" />
+                                                <StarIcon size={16} aria-hidden="true" className={item.feedback ? "fill-current text-amber-600 dark:text-amber-400" : undefined} />
                                               </button>
                                             </TooltipTrigger>
                                             <TooltipContent>{item.feedback ? `Rated ${item.feedback.rating}/5 stars. Click to edit.` : "Rate Service"}</TooltipContent>
@@ -3074,18 +3085,18 @@ function StudentDashboard() {
                       </DataViewToolbar>
 
                       {/* Active Filter Chips Bar */}
-                      {proposalActiveChips.length > 0 && (
-                        <TableActiveFilterChips
-                          chips={proposalActiveChips}
-                          onClearAll={() => {
-                            setProposalSearch("");
-                            setProposalFilterRules([]);
-                            setProposalStartDate("");
-                            setProposalEndDate("");
-                          }}
-                          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                        />
-                      )}
+                      <ActiveFilterChips
+                        chips={proposalActiveChips}
+                        searchQuery={proposalSearch}
+                        onClearSearch={() => setProposalSearch("")}
+                        onClearAll={() => {
+                          setProposalSearch("");
+                          setProposalFilterRules([]);
+                          setProposalStartDate("");
+                          setProposalEndDate("");
+                        }}
+                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                      />
 
                       {/* Proposals List */}
                       <div className="border-t border-border dark:border-border flex-1">
@@ -3162,21 +3173,16 @@ function StudentDashboard() {
                             </Empty>
                           </div>
                         ) : (
-                          <div className="p-5 space-y-4">
+                          <div>
                             {groupedProposals.map((group) => (
-                              <div key={group.key || "all"} className="space-y-3">
+                              <div key={group.key || "all"}>
                                 {group.label && (
-                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                    <span className="font-bold">{group.label}</span>
-                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
-                                  </div>
+                                  <DataGroupHeader label={group.label} count={group.items.length} />
                                 )}
+                                <div className="space-y-3 p-5">
                                 {group.items.map((item) => {
                                   const latestUpdate = item.updates?.[item.updates.length - 1];
-                                  const submissionUpdate = latestUpdate?.message?.match(
-                                    /^((?:Event proposal|Revised proposal \(Revision \d+\)) submitted by) (.+?) \(([^()]+)\)\.?$/i
-                                  );
-                                  const submitterName = item.student_name || me?.name || submissionUpdate?.[3] || "Student Officer";
+                                  const submissionUpdate = latestUpdate?.message?.match(PROPOSAL_SUBMISSION_UPDATE);
                                   return (
                                   <article
                                     key={item.id}
@@ -3263,20 +3269,7 @@ function StudentDashboard() {
                                           </div>
                                           <div className={cn("text-xs leading-relaxed text-gray-600 dark:text-zinc-400", !submissionUpdate && "line-clamp-2")}>
                                             {submissionUpdate ? (
-                                              <>
-                                                {submissionUpdate[1]} <strong className="font-bold">{submissionUpdate[2]}</strong>{" "}
-                                                  <span className={cn(SETTINGS_STATUS_PILL_SM, "min-w-0 max-w-full pl-0.5 align-middle font-semibold text-gray-900 dark:text-zinc-100")}>
-                                                    <ProfileAvatar
-                                                      id={me?.student_no || me?.id}
-                                                      avatarFilename={me?.avatar_filename}
-                                                      name={submitterName}
-                                                      className="size-5 shrink-0 rounded-full"
-                                                      fallbackClassName="text-[9px] font-semibold"
-                                                    />
-                                                    <span className="truncate" title={submitterName}>{submitterName}</span>
-                                                  </span>
-                                                .
-                                              </>
+                                              <ProposalSubmissionNarrative submission={submissionUpdate} name={item.student_name} user={me} />
                                             ) : (
                                               <NarrativeText text={latestUpdate.message || "Status updated by OSAS"} mode="compact" />
                                             )}
@@ -3302,6 +3295,7 @@ function StudentDashboard() {
                                   </article>
                                   );
                                 })}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -3348,24 +3342,32 @@ function StudentDashboard() {
                           <form onSubmit={submitPostEventReport} className="flex flex-col gap-4 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="min-w-0">
-                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                <label htmlFor="post-event-proposal" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                   Approved Event Proposal
                                 </label>
                                 <Select
-                                  value={postEventForm.eventProposalId}
+                                  id="post-event-proposal"
+                                  aria-describedby={!hasApprovedPostEventProposals ? "post-event-proposal-help" : undefined}
+                                  disabled={!hasApprovedPostEventProposals}
+                                  placeholder="Select an approved event…"
+                                  value={hasSelectedApprovedProposal ? postEventForm.eventProposalId : ""}
                                   onChange={(e) => {
                                     const pId = e.target.value;
                                     setPostEventForm((prev) => ({ ...prev, eventProposalId: pId }));
                                   }}
                                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
-                                  <option value="">Select an approved event...</option>
-                                  {organizationProposals.filter((p) => p.status === "Approved").map((p) => (
+                                  {approvedPostEventProposals.map((p) => (
                                     <option key={p.id} value={p.id}>
                                       {p.title} ({formatProposalEventDate(p.event_date)}) : {p.organization_name}
                                     </option>
                                   ))}
                                 </Select>
+                                {!hasApprovedPostEventProposals && (
+                                  <p id="post-event-proposal-help" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                                    No approved event proposals are available for this organization.
+                                  </p>
+                                )}
                               </div>
 
                               <div className="min-w-0">
@@ -3375,6 +3377,8 @@ function StudentDashboard() {
                                 <Input
                                   type="number"
                                   min="0"
+                                  step="1"
+                                  max="2147483647"
                                   placeholder="e.g. 150"
                                   value={postEventForm.actualAttendance}
                                   onChange={(e) => setPostEventForm({ ...postEventForm, actualAttendance: e.target.value })}
@@ -3390,6 +3394,7 @@ function StudentDashboard() {
                                   type="number"
                                   step="0.01"
                                   min="0"
+                                  max="9999999999.99"
                                   placeholder="e.g. 5200.00"
                                   value={postEventForm.totalExpenses}
                                   onChange={(e) => setPostEventForm({ ...postEventForm, totalExpenses: e.target.value })}
@@ -3449,7 +3454,7 @@ function StudentDashboard() {
                                 <Button
                                   type="submit"
                                   size="sm"
-                                  disabled={postEventSubmitting}
+                                  disabled={postEventSubmitting || !hasApprovedPostEventProposals}
                                   title="Submit Post-Event Report"
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
@@ -3517,18 +3522,18 @@ function StudentDashboard() {
                         </div>
                       </DataViewToolbar>
 
-                      {postEventActiveChips.length > 0 && (
-                        <TableActiveFilterChips
-                          chips={postEventActiveChips}
-                          onClearAll={() => {
-                            setPostEventSearch("");
-                            setPostEventFilterRules([]);
-                            setPostEventStartDate("");
-                            setPostEventEndDate("");
-                          }}
-                          className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-                        />
-                      )}
+                      <ActiveFilterChips
+                        chips={postEventActiveChips}
+                        searchQuery={postEventSearch}
+                        onClearSearch={() => setPostEventSearch("")}
+                        onClearAll={() => {
+                          setPostEventSearch("");
+                          setPostEventFilterRules([]);
+                          setPostEventStartDate("");
+                          setPostEventEndDate("");
+                        }}
+                        className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
+                      />
 
                       <div className="border-t border-border dark:border-border flex-1">
                         {loading && !hasLoaded ? (
@@ -3603,15 +3608,13 @@ function StudentDashboard() {
                             </Empty>
                           </div>
                         ) : (
-                          <div className="p-5 space-y-4">
+                          <div>
                             {groupedPostEventReports.map((group) => (
-                              <div key={group.key || "all"} className="space-y-3">
+                              <div key={group.key || "all"}>
                                 {group.label && (
-                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                    <span className="font-bold">{group.label}</span>
-                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
-                                  </div>
+                                  <DataGroupHeader label={group.label} count={group.items.length} />
                                 )}
+                                <div className="space-y-3 p-5">
                                 {group.items.map((report) => (
                                   <article
                                     key={report.id}
@@ -3724,6 +3727,7 @@ function StudentDashboard() {
                                     </div>
                                   </article>
                                 ))}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -3999,9 +4003,11 @@ function StudentDashboard() {
                         </div>
                       </DataViewToolbar>
 
-                      {cblActiveChips.length > 0 && selectedOsasOrganization && (
-                        <TableActiveFilterChips
+                      {selectedOsasOrganization && (
+                        <ActiveFilterChips
                           chips={cblActiveChips}
+                          searchQuery={cblSearch}
+                          onClearSearch={() => setCblSearch("")}
                           onClearAll={() => {
                             setCblSearch("");
                             setCblFilterRules([]);
@@ -4082,15 +4088,13 @@ function StudentDashboard() {
                             </Empty>
                           </div>
                         ) : (
-                          <div className="p-5 space-y-4">
+                          <div>
                             {groupedCblVersions.map((group) => (
-                              <div key={group.key || "all"} className="space-y-3">
+                              <div key={group.key || "all"}>
                                 {group.label && (
-                                  <div className="flex items-center gap-2 px-1 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                    <span className="font-bold">{group.label}</span>
-                                    <span className="text-muted-foreground font-normal">({group.items.length})</span>
-                                  </div>
+                                  <DataGroupHeader label={group.label} count={group.items.length} />
                                 )}
+                                <div className="space-y-3 p-5">
                                 {group.items.map((ver) => (
                                   <article
                                     key={ver.id}
@@ -4168,6 +4172,7 @@ function StudentDashboard() {
                                     </div>
                                   </article>
                                 ))}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -4238,56 +4243,8 @@ function StudentDashboard() {
             </div>
           </SheetHeader>
 
-          {selectedRequestForDetail?.status === "Ready" ? (
-            <CampusStatusNotice title="Ready for Claiming">Pick up at Registrar Window 1.</CampusStatusNotice>
-          ) : (
-            <div
-              className={cn(
-                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
-                  ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                  : selectedRequestForDetail?.status === "Completed"
-                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                  : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
-                  ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                  : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-              )}
-            >
-              <AppIcon
-                className={cn(
-                  " text-[15px] shrink-0",
-                  selectedRequestForDetail?.status === "Completed"
-                    ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                    : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
-                    ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                    : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
-                    ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                    : "Clock01Icon text-blue-600 dark:text-blue-400"
-                )}
-              />
-              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                <strong className="font-semibold">
-                  {selectedRequestForDetail?.status === "PendingPayment"
-                    ? "Payment Slip Required:"
-                    : selectedRequestForDetail?.status === "Deficient"
-                    ? "Action Required:"
-                    : selectedRequestForDetail?.status === "Completed"
-                    ? "Request Completed:"
-                    : selectedRequestForDetail?.status === "InProgress"
-                    ? "Processing In Progress:"
-                    : "Under Review:"}
-                </strong>{" "}
-                {selectedRequestForDetail?.status === "PendingPayment"
-                  ? "Please upload your official receipt or payment slip below to initiate document preparation."
-                  : selectedRequestForDetail?.status === "Deficient"
-                  ? "Please review feedback from the Registrar to resolve requirement deficiencies."
-                  : selectedRequestForDetail?.status === "Completed"
-                  ? "Document was successfully claimed and recorded in University Archives."
-                  : selectedRequestForDetail?.status === "InProgress"
-                  ? "Registrar staff is currently preparing and authenticating your document."
-                  : "Your request is queued for verification by the Office of the Campus Registrar."}
-              </span>
-            </div>
+          {requestNotice && (
+            <CampusStatusNotice title={requestNotice.title}>{requestNotice.message}</CampusStatusNotice>
           )}
 
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6 scrollbar-thin [&>section]:shrink-0">
@@ -4395,6 +4352,74 @@ function StudentDashboard() {
               </section>
             )}
 
+            {selectedRequestForDetail?.feedback && (
+              <section className="space-y-2">
+                <SheetSectionHeading icon="StarIcon" title="Experience Feedback">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => {
+                      setFeedbackRequest(selectedRequestForDetail);
+                      setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
+                      setFeedbackModalOpen(true);
+                    }}
+                  >
+                    Edit Feedback
+                  </Button>
+                </SheetSectionHeading>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg
+                        key={star}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className={cn(
+                          "h-4 w-4",
+                          star <= selectedRequestForDetail.feedback.rating
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-transparent text-gray-300 dark:text-zinc-600"
+                        )}
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    {selectedRequestForDetail.feedback.rating}/5 · {RATING_LABELS[selectedRequestForDetail.feedback.rating] || ""}
+                  </span>
+                  {selectedRequestForDetail.feedback.created_at && (
+                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 sm:ml-auto">
+                      Submitted on {formatPHDateTime(selectedRequestForDetail.feedback.created_at)}
+                    </span>
+                  )}
+                </div>
+
+                {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.slate)}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {selectedRequestForDetail.feedback.comments && (
+                  <div className="text-xs text-gray-600 dark:text-zinc-400 italic">
+                    &ldquo;<NarrativeText text={selectedRequestForDetail.feedback.comments} mode="full" />&rdquo;
+                  </div>
+                )}
+              </section>
+            )}
+
             <section className="space-y-3">
               <SheetSectionHeading icon="Clock01Icon" title="Processing Timeline & Updates">
                 <SheetUpdateCount count={selectedRequestForDetail?.updates?.length ?? 0} />
@@ -4497,81 +4522,14 @@ function StudentDashboard() {
               )}
             </section>
 
-            {/* Experience Rating & Feedback (Unboxed) */}
-            {selectedRequestForDetail?.feedback ? (
-              <section className="space-y-2">
-                <SheetSectionHeading icon="StarIcon" title="Experience Feedback">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFeedbackRequest(selectedRequestForDetail);
-                      setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
-                      setFeedbackModalOpen(true);
-                    }}
-                  >
-                    Edit Feedback
-                  </Button>
-                </SheetSectionHeading>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className={cn(
-                          "h-4 w-4",
-                          star <= selectedRequestForDetail.feedback.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-transparent text-gray-300 dark:text-zinc-600"
-                        )}
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                    {selectedRequestForDetail.feedback.rating}/5 · {RATING_LABELS[selectedRequestForDetail.feedback.rating] || ""}
-                  </span>
-                  {selectedRequestForDetail.feedback.created_at && (
-                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 sm:ml-auto">
-                      Submitted on {formatPHDateTime(selectedRequestForDetail.feedback.created_at)}
-                    </span>
-                  )}
-                </div>
-
-                {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.slate)}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {selectedRequestForDetail.feedback.comments && (
-                  <div className="text-xs text-gray-600 dark:text-zinc-400 italic">
-                    &ldquo;<NarrativeText text={selectedRequestForDetail.feedback.comments} mode="full" />&rdquo;
-                  </div>
-                )}
-              </section>
-            ) : canRateSelectedRequest ? (
+            {canRateSelectedRequest && (
               <RequestFeedbackCard
                 key={selectedRequestForDetail.id}
                 minimized={feedbackMinimized}
                 onToggle={() => setFeedbackMinimized((current) => !current)}
                 onRate={rateSelectedRequest}
               />
-            ) : null}
+            )}
           </div>
 
           <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
@@ -4675,7 +4633,7 @@ function StudentDashboard() {
                   type="button"
                   onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
                   aria-label={`Preview ${selectedProposalForDetail.original_filename}`}
-                  className="group/preview flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:border-border/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
+                  className="table-action-row flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:border-border/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -4694,7 +4652,7 @@ function StudentDashboard() {
                   </div>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-gray-600 opacity-60 shadow-xs transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:bg-zinc-800 dark:text-zinc-300">
+                      <span className="table-action-button shrink-0">
                         <ViewIcon size={16} aria-hidden="true" />
                       </span>
                     </TooltipTrigger>
@@ -4744,8 +4702,8 @@ function StudentDashboard() {
                         key={version.id}
                         {...previewProps}
                         className={cn(
-                          "group/preview flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 text-left dark:bg-zinc-900/40",
-                          available && "cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
+                          "flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 text-left dark:bg-zinc-900/40",
+                          available && "table-action-row cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
                         )}
                       >
                         <span className="min-w-0">
@@ -4759,7 +4717,7 @@ function StudentDashboard() {
                         {available ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-gray-600 opacity-60 transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:text-zinc-300">
+                              <span className="table-action-button shrink-0">
                                 <ViewIcon size={16} aria-hidden="true" />
                               </span>
                             </TooltipTrigger>
@@ -4788,6 +4746,8 @@ function StudentDashboard() {
                   {selectedProposalForDetail.updates.map((upd, idx) => {
                     const isConsecutiveSameStatus =
                       idx > 0 && upd.status === selectedProposalForDetail.updates[idx - 1].status;
+
+                    const submissionUpdate = upd.message?.match(PROPOSAL_SUBMISSION_UPDATE);
 
                     return (
                       <div key={upd.id || idx} className="relative pl-7">
@@ -4822,7 +4782,11 @@ function StudentDashboard() {
                           )}
                         </div>
                         <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          <NarrativeText text={upd.message || "Status updated by OSAS"} mode="full" />
+                          {submissionUpdate ? (
+                            <ProposalSubmissionNarrative submission={submissionUpdate} name={selectedProposalForDetail.student_name} user={me} />
+                          ) : (
+                            <NarrativeText text={upd.message || "Status updated by OSAS"} mode="full" />
+                          )}
                         </div>
                       </div>
                     );

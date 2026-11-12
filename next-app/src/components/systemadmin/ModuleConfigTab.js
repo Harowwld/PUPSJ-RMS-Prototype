@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table, TableRow } from "@/components/ui/table";
@@ -1459,15 +1460,17 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                   <tbody className="divide-y divide-border dark:divide-border">
                     {matrixGroups.map((group) => (
                       <Fragment key={group.key}>
-                        {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
-                          <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-50/90 px-4 py-2 pl-6 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">
-                            <div className="flex items-center gap-2">
-                              {group.key === "staff" ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" /> : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
-                              <span>{group.label}</span>
-                              <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.modules.length}</span>
-                            </div>
-                          </td>
-                        </tr>}
+                        {group.label && (
+                          <DataGroupHeader
+                            sticky
+                            label={group.label}
+                            count={group.modules.length}
+                            colSpan={visibleMatrixOffices.length + 1}
+                            leading={group.key === "staff"
+                              ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" />
+                              : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
+                          />
+                        )}
                         {group.modules.map((feature) => <MatrixTableRow
                           key={feature.id}
                           m={feature}

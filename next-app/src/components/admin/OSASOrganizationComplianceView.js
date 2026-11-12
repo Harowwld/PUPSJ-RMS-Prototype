@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { isInManilaDateRange } from "@/lib/timeFormat";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { Table } from "@/components/ui/table";
@@ -1170,12 +1171,7 @@ export default function OSASOrganizationComplianceView({
                     {groupedPaginatedOrganizations.map((group) => (
                       <Fragment key={group.groupKey || "root"}>
                         {group.label && (
-                          <tr className="bg-gray-50/70 dark:bg-zinc-800/60 border-y border-border">
-                            <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                              <span className="font-bold">{group.label}</span>
-                              <span className="ml-2 font-normal text-muted-foreground">({group.items.length})</span>
-                            </td>
-                          </tr>
+                          <DataGroupHeader label={group.label} count={group.items.length} colSpan={visibleColumns.length} />
                         )}
                         {group.items.map((org) => {
                           const isFullyCompliant = org.complianceScore === 100;

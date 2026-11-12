@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircleIcon, ArrowDown01Icon, ArrowRight02Icon, CheckListIcon, Search01Icon, ViewIcon } from "hugeicons-react";
+import { AlertCircleIcon, ArrowRight02Icon, CheckListIcon, Search01Icon, ViewIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty";
@@ -10,6 +10,8 @@ import { SegmentedControl } from "@/components/ui/tabs";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
+import CampusStatusNotice from "./CampusStatusNotice";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -74,6 +76,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
   const [sortBy, setSortBy] = useWorkspaceViewPreference("student_compliance", "sortBy", "docType", { user: authUser });
   const [sortOrder, setSortOrder] = useWorkspaceViewPreference("student_compliance", "sortOrder", "asc", { user: authUser });
   const [groupBy, setGroupBy] = useWorkspaceViewPreference("student_compliance", "groupBy", "none", { user: authUser });
+  const [publicGroupBy, setPublicGroupBy] = useWorkspaceViewPreference("student_compliance", "publicGroupBy", "category", { user: authUser });
   const { density } = useTablePreferences();
   const densityClasses = getListDensityClasses(density);
 
@@ -110,10 +113,14 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
   const requirements = data?.requirements || [];
   const categories = [...new Set(requirements.map(({ category }) => category))];
   const fields = [
-    { key: "status", label: "Status", options: [{ label: "Submitted", value: "submitted" }, { label: "Missing", value: "missing" }] },
+    ...(verified ? [{ key: "status", label: "Status", options: [{ label: "Submitted", value: "submitted" }, { label: "Missing", value: "missing" }] }] : []),
     { key: "category", label: "Category", options: categories.map((value) => ({ label: value, value })) },
   ];
-  const applicableFilters = verified ? filters : [];
+  const applicableFilters = filters.filter(({ fieldKey }) => fields.some(({ key }) => key === fieldKey));
+  const availableSortOptions = sortOptions.filter(({ value }) => verified || value !== "status");
+  const availableGroupOptions = groupOptions.filter(({ value }) => verified || value !== "status");
+  const activeSort = availableSortOptions.some(({ value }) => value === sortBy) ? sortBy : "docType";
+  const activeGroup = verified ? groupBy : publicGroupBy;
   const term = search.trim().toLowerCase();
   const filtered = requirements.filter((item) => {
     if (![item.name, item.category].some((value) => value.toLowerCase().includes(term))) return false;
@@ -123,13 +130,12 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
     });
   });
   filtered.sort((a, b) => {
-    const key = verified ? sortBy : "docType";
-    const order = verified && sortOrder.toLowerCase() === "desc" ? -1 : 1;
-    return order * (a[key] || a.name).localeCompare(b[key] || b.name);
+    const order = sortOrder.toLowerCase() === "desc" ? -1 : 1;
+    return order * (a[activeSort] || a.name).localeCompare(b[activeSort] || b.name);
   });
   const groups = new Map();
   for (const item of filtered) {
-    const label = verified ? (groupBy === "none" ? "" : item[groupBy]) : item.category;
+    const label = activeGroup === "none" ? "" : item[activeGroup];
     if (!groups.has(label)) groups.set(label, []);
     groups.get(label).push(item);
   }
@@ -165,45 +171,38 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
         actions={<RefreshButton onRefresh={refresh} isLoading={loading} title="Refresh Checklist" />}
       />
       {data && !canVerify && (
-        <div className="w-full border-b border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/35 dark:text-blue-100">
-          <p className="font-semibold">For current students</p>
-          <p className="mt-1 text-blue-800 dark:text-blue-200">
-            This checklist covers documents students submit for enrollment. Personal submission status is available after verification.
-          </p>
-        </div>
+        <CampusStatusNotice title="For Current Students" imageSizes="100vw">
+          This checklist covers enrollment documents. Personal submission status is available after verification.
+        </CampusStatusNotice>
       )}
       {error && filtered.length > 0 && (
         <p role="alert" className="border-b border-border px-6 py-3 text-sm text-destructive">{error}</p>
       )}
-      {canVerify && !verified && (data || initialLoading) && (
-        <div className={cn(
-          "flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-3",
-          initialLoading
-            ? "bg-muted/30"
-            : data.needsEnrollmentMatch || data.unavailable
-              ? "bg-amber-50 text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"
-              : "bg-blue-50 text-blue-950 dark:bg-blue-950/30 dark:text-blue-100"
-        )}>
-          {initialLoading ? (
-            <StudentChecklistVerificationSkeleton />
-          ) : data.verificationUnavailable ? (
-            <p role="status" className="text-sm">Personal checklist status is temporarily unavailable while the records system is being updated.</p>
-          ) : data.unavailable ? (
-            <p className="text-sm">Your Registrar record is unavailable. Contact the Registrar to check its status.</p>
-          ) : (
-            <>
-              <p className="min-w-0 grow basis-64 text-sm">
-                {data.needsEnrollmentMatch
-                  ? "Your student number and verified email didn’t match a Registrar record. Check your number or ask the Registrar to confirm your enrollment email."
-                  : "Add your student number to see your personal checklist status."}
-              </p>
-              <Button type="button" size="sm" className="h-11 sm:h-9" onClick={() => setStudentNumberDialogOpen(true)}>
-                {data.needsEnrollmentMatch ? "Edit Student Number" : "Add Student Number"}
-              </Button>
-            </>
-          )}
+      {canVerify && !verified && (initialLoading ? (
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-muted/30 px-6 py-3">
+          <StudentChecklistVerificationSkeleton />
         </div>
-      )}
+      ) : data?.verificationUnavailable ? (
+        <CampusStatusNotice title="Verification Temporarily Unavailable" imageSizes="100vw">
+          Personal checklist status will be available after the records system update.
+        </CampusStatusNotice>
+      ) : data?.unavailable ? (
+        <CampusStatusNotice title="Registrar Record Unavailable" imageSizes="100vw">
+          Contact the Registrar to check your record’s status.
+        </CampusStatusNotice>
+      ) : data && (
+        <CampusStatusNotice
+          title={data.needsEnrollmentMatch ? "Registrar Record Could Not Be Matched" : "Verify Your Student Record"}
+          imageSizes="100vw"
+          action={<Button type="button" variant="outline" size="sm" onClick={() => setStudentNumberDialogOpen(true)}>
+            {data.needsEnrollmentMatch ? "Edit Student Number" : "Add Student Number"}
+          </Button>}
+        >
+          {data.needsEnrollmentMatch
+            ? "Check your student number or ask the Registrar to confirm your enrollment email."
+            : "Add your student number to see your personal checklist status."}
+        </CampusStatusNotice>
+      ))}
       {verified && (
         <div className="px-6 pt-4 pb-6">
           <StudentComplianceKpiCards summary={data.summary} />
@@ -219,15 +218,11 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
               <DashboardSearch label="Search requirements" placeholder="Search requirements..." value={search}
                 onChange={setSearch} count={filtered.length} loading={loading} />
             </div>
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              {verified && (
-                <>
-                  <FilterPopover fields={fields} filters={filters} onFiltersChange={setFilters} entityLabel="requirements" />
-                  <SortPopover options={sortOptions} sortBy={sortBy} sortOrder={sortOrder}
-                    onSortByChange={(value) => { setSortBy(value); setSortOrder("asc"); }} onSortOrderChange={setSortOrder} />
-                  <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={setGroupBy} />
-                </>
-              )}
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+              <FilterPopover fields={fields} filters={applicableFilters} onFiltersChange={setFilters} entityLabel="requirements" />
+              <SortPopover options={availableSortOptions} sortBy={activeSort} sortOrder={sortOrder}
+                onSortByChange={(value) => { setSortBy(value); setSortOrder("asc"); }} onSortOrderChange={setSortOrder} />
+              <GroupPopover options={availableGroupOptions} groupBy={activeGroup} onGroupByChange={verified ? setGroupBy : setPublicGroupBy} />
               <SegmentedControl value={viewMode} onValueChange={setViewMode} variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0" items={[
                   { value: "grid", title: "Grid View", ariaLabel: "Grid View", disabled: initialLoading, icon: <ViewModeIcon mode="grid" className="text-sm" /> },
@@ -240,11 +235,8 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
             groupLabel: fields.find(({ key }) => key === rule.fieldKey)?.label,
             label: `${rule.operator === "is_not" ? "Not " : ""}${fields.find(({ key }) => key === rule.fieldKey)?.options.find(({ value }) => value === rule.value)?.label || rule.value}`,
             onRemove: () => setFilters((current) => current.filter(({ id }) => id !== rule.id)),
-          }))} onClearAll={clearFilters} className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5" />
-          <div className={cn(
-            "flex min-w-0 flex-[1_0_auto] flex-col border-t border-border dark:border-border",
-            !initialLoading && filtered.length > 0 && viewMode === "grid" && "p-6"
-          )}>
+          }))} searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={clearFilters} className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5" />
+          <div className="flex min-w-0 flex-[1_0_auto] flex-col border-t border-border dark:border-border">
             {initialLoading ? (
               viewMode === "grid" ? (
                 <DataContentSkeleton viewMode="grid" />
@@ -279,33 +271,9 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
 
                   return (
                     <div key={group.key} className="flex flex-col">
-                      {/* Collapsible Group Header (if grouped) */}
                       {isGrouped && (
-                        <button
-                          type="button"
-                          onClick={() => toggleGroup(group.key)}
-                          className="w-full flex items-center justify-between border-b border-border text-left hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs"
-                          aria-expanded={!isCollapsed}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <ArrowDown01Icon
-                              size="1em"
-                              className={cn(
-                                "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
-                                isCollapsed && "-rotate-90"
-                              )}
-                            />
-                            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                              {group.label}
-                            </span>
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
-                              {group.items.length}
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                            {isCollapsed ? "Expand" : "Collapse"}
-                          </span>
-                        </button>
+                        <DataGroupHeader label={group.label} count={group.items.length}
+                          collapsed={isCollapsed} onToggle={() => toggleGroup(group.key)} sticky />
                       )}
 
                       {/* Group Items */}
@@ -385,20 +353,15 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
                 })}
               </div>
             ) : (
-              <div className="space-y-6">
+              <div>
                 {groupedRequirements.map((group) => (
-                  <div key={group.key} className="space-y-4">
+                  <div key={group.key}>
                     {group.label && (
-                      <div className="flex items-center justify-between px-1">
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                          {group.label}
-                        </span>
-                        <span className="text-xs text-gray-400 dark:text-zinc-500">
-                          {group.items.length} {group.items.length === 1 ? "requirement" : "requirements"}
-                        </span>
-                      </div>
+                      <DataGroupHeader label={group.label} count={group.items.length}
+                        collapsed={Boolean(collapsedGroups[group.key])} onToggle={() => toggleGroup(group.key)} />
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+                    {!collapsedGroups[group.key] && (
+                    <div className="grid grid-cols-1 items-stretch gap-5 p-6 sm:grid-cols-2 lg:grid-cols-3">
                       {group.items.map((item) => {
                         const isSubmitted = item.status === "Submitted";
 
@@ -461,6 +424,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 ))}
               </div>

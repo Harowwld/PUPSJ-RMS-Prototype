@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import useViewPreference from "@/hooks/useViewPreference";
 import useUrlPage from "@/hooks/useUrlPage";
@@ -564,14 +565,7 @@ export default function MyActivityPanel() {
           >
             {groupedRows.map((group) => (
               <div key={group.key} className="space-y-2.5">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                    {group.key}
-                  </span>
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 tabular-nums">
-                    {group.items.length} {group.items.length === 1 ? "event" : "events"}
-                  </span>
-                </div>
+                <DataGroupHeader label={group.key} count={group.items.length} />
 
                 <div className="rounded-2xl border border-border bg-white dark:bg-card overflow-hidden shadow-2xs divide-y divide-black/[0.04] dark:divide-white/[0.06]">
                   {group.items.map((log) => {

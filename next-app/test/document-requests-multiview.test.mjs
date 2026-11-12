@@ -56,9 +56,11 @@ test("Document Requests multi-view architecture and toolbar design standard", ()
   // 4. Must import the new List and Kanban components
   assert.match(
     tabContent,
-    /import\s+DocumentRequestRecordList\s+from\s+["']@\/components\/staff\/requests\/DocumentRequestRecordList["']/,
+    /import\s+DocumentRequestRecordList(?:,\s*\{[^}]+\})?\s+from\s+["']@\/components\/staff\/requests\/DocumentRequestRecordList["']/,
     "DocumentRequestsTab must import DocumentRequestRecordList"
   );
+  assert.match(tabContent, /viewMode !== "kanban" && \(\s*<GroupPopover/);
+  assert.match(tabContent, /groupDocumentRequests\(displayedRows, groupBy\)/);
   assert.match(
     tabContent,
     /import\s+DocumentRequestKanbanPipeline(?:,\s*\{[^}]+\})?\s+from\s+["']@\/components\/staff\/requests\/DocumentRequestKanbanPipeline["']/,

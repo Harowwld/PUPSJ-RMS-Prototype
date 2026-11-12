@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
@@ -1104,11 +1105,7 @@ export default function StudentDirectoryTab({
                     {groupedStudents.map((group) => (
                       <React.Fragment key={group.key}>
                         {groupBy !== "none" && (
-                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={studentTableColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                              {group.label} ({group.students.length})
-                            </td>
-                          </tr>
+                          <DataGroupHeader label={group.label} count={group.students.length} colSpan={studentTableColumns.length} />
                         )}
                         {group.students.map((s) => {
                           const isSelected = selectedIds.has(s.studentNo);

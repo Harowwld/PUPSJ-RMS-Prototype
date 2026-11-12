@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 
 import { Table } from "@/components/ui/table";
@@ -1212,11 +1213,7 @@ function DigitizationComplianceContent({
                     {groupedCourses.map((group) => (
                       <Fragment key={group.key}>
                         {groupBy !== "none" && (
-                          <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={visibleColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                              {group.label} ({group.courses.length})
-                            </td>
-                          </tr>
+                          <DataGroupHeader label={group.label} count={group.courses.length} colSpan={visibleColumns.length} />
                         )}
                         {group.courses.map((row) => {
                           const isSelected = Array.isArray(courseFilter) && courseFilter.includes(row.courseCode);

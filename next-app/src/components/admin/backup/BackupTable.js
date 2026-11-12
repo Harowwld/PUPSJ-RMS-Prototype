@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { Table } from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button"
@@ -338,11 +339,9 @@ export default function BackupTable({
                   return (
                     <Fragment key={b.id}>
                     {showGroup && (
-                      <tr>
-                        <td colSpan={columnCount} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">
-                          {b[groupBy] || "Unspecified"}
-                        </td>
-                      </tr>
+                      <DataGroupHeader label={b[groupBy] || "Unspecified"}
+                        count={sortedAndPaginatedBackups.filter((backup) => backup?.[groupBy] === b[groupBy]).length}
+                        colSpan={columnCount} />
                     )}
                     <tr
                       className={cn(

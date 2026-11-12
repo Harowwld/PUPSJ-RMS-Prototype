@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { Table } from "@/components/ui/table";
@@ -1086,8 +1087,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             </div>
           ) : layoutView === "grid" ? (
             <div className="p-6 flex-[1_0_auto] bg-gray-50/30 dark:bg-zinc-900/20 rounded-b-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content-start">
-                {paginatedOffices.map((office) => {
+              <div className="space-y-5">
+                {groupedOffices.map((group) => (
+                  <section key={group.key} className="space-y-3">
+                    {group.label && <DataGroupHeader label={group.label} count={group.offices.length} />}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content-start">
+                {group.offices.map((office) => {
                   const accent = office.accent_color || "#800000"
                   const isActive = String(office.status || "").trim().toLowerCase() === "active"
                   const storagePath = office.storage_path || `.local/storage/${office.id}`
@@ -1284,7 +1289,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     </Card>
                   )
                 })}
-                {statusFilter === "Active" && page === totalPages && (
+                {group === groupedOffices.at(-1) && statusFilter === "Active" && page === totalPages && (
                   <button
                     type="button"
                     onClick={handleOpenCreate}
@@ -1300,6 +1305,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     </span>
                   </button>
                 )}
+                    </div>
+                  </section>
+                ))}
               </div>
             </div>
           ) : (
@@ -1426,7 +1434,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border">
                     {groupedOffices.map((group) => <Fragment key={group.key}>
-                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><th colSpan={orderedVisibleColumnKeys.length + 2} className="px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200">{group.label}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.offices.length}</span></th></tr>}
+                      {group.label && <DataGroupHeader label={group.label} count={group.offices.length} colSpan={orderedVisibleColumnKeys.length + 2} />}
                       {group.offices.map((office) => {
                         const accent = office.accent_color || "#800000"
                         const isActive = String(office.status || "").trim().toLowerCase() === "active"

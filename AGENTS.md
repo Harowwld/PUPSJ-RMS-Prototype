@@ -588,6 +588,8 @@ Buttons follow clean Apple Human Interface Guidelines (HIG) with standardized di
 
 For complete copy-paste patterns and blueprints, refer to [`COMPONENT_STANDARDS.md`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/COMPONENT_STANDARDS.md).
 
+When a UI request references `REFACTOR_FRONTEND.md`, read it and apply its relevant standards consistently across analogous pages, roles, and components. Treat it as the shared refactor standard, not only as a page-specific backlog.
+
 - **CRITICAL RULE ON MODAL HEADERS**: Dialog headers (`DialogHeader`) **MUST NOT** have decorative icon boxes or leading icons. Keep them strictly typographic (`DialogTitle` at `text-[16px] font-semibold tracking-[-0.01em]` and `DialogDescription` at `text-[13px] font-normal text-gray-500 mt-1`).
 - **NO MODAL SECTION DIVIDERS**: Dialog and sheet headers/footers must not use separator lines or tinted bands to divide them from the body. Use spacing instead. Keep functional field, table, notice, and preview borders inside the body. `DialogFooter` must not introduce negative margins.
 - **CLEAR ACTION LABELS**: Primary actions use a verb plus specific noun (`Save Changes`, `Submit Request`, `Restore Backup`); dismissal and navigation use concise labels (`Cancel`, `Close`, `Back`, `Done`).

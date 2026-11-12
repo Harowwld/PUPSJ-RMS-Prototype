@@ -162,13 +162,11 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
                         id="portal-affiliation"
                         aria-labelledby="portal-affiliation-label"
                         value={affiliation}
+                        placeholder="Choose an affiliation"
                         onChange={(event) => setAffiliation(event.target.value)}
                         disabled={saving}
                         className="h-10 rounded-xl border border-gray-200 bg-white text-xs font-normal text-gray-700 shadow-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                        menuClassName="rounded-xl border border-gray-200 bg-white p-1.5 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
-                        optionClassName="rounded-lg px-2.5 py-1.5 text-xs font-normal hover:bg-gray-100 dark:hover:bg-zinc-800"
                       >
-                        <option value="" disabled>Choose an affiliation</option>
                         {STUDENT_AFFILIATIONS.map(({ value, label }) => (
                           <option key={value} value={value}>{label}</option>
                         ))}

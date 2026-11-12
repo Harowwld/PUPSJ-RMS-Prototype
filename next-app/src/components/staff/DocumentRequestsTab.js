@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { Table, IdentifierBadge } from "@/components/ui/table";
@@ -26,7 +27,7 @@ import {
   ColumnsPopover,
 } from "@/components/systemadmin/OfficeTableControls";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
-import DocumentRequestRecordList from "@/components/staff/requests/DocumentRequestRecordList";
+import DocumentRequestRecordList, { groupDocumentRequests } from "@/components/staff/requests/DocumentRequestRecordList";
 import DocumentRequestKanbanPipeline, { ODRS_KANBAN_COLUMNS } from "@/components/staff/requests/DocumentRequestKanbanPipeline";
 import {
   Dialog,
@@ -1259,11 +1260,13 @@ export default function DocumentRequestsTab({
                   sortOrder={sortOrder}
                   onSortOrderChange={setSortOrder}
                 />
-                <GroupPopover
-                  options={groupOptions}
-                  groupBy={groupBy}
-                  onGroupByChange={setGroupBy}
-                />
+                {viewMode !== "kanban" && (
+                  <GroupPopover
+                    options={groupOptions}
+                    groupBy={groupBy}
+                    onGroupByChange={setGroupBy}
+                  />
+                )}
                 {viewMode === "table" && (
                   <ColumnsPopover
                     columns={tableColumns}
@@ -1502,7 +1505,9 @@ export default function DocumentRequestsTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {displayedRows.map((r) => {
+                    {groupDocumentRequests(displayedRows, groupBy).flatMap((group) => [
+                      ...(groupBy !== "none" ? [<DataGroupHeader key={`group-${group.key}`} label={group.label} count={group.items.length} colSpan={dynamicTableColumns.length} />] : []),
+                      ...group.items.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
                         const charter = getRequestCharterStatus(r, slaStandards);
@@ -1630,7 +1635,8 @@ export default function DocumentRequestsTab({
                             </td>
                           </tr>
                         );
-                      })}
+                      }),
+                    ])}
                   </tbody>
                 </Table>
               </div>

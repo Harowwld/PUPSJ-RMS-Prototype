@@ -52,12 +52,41 @@ it("uses the page empty state in both views and resets an unmatched search", asy
   expect(await screen.findByText("Birth Certificate")).toBeVisible();
 
   await user.type(screen.getByLabelText("Search requirements"), "transcript");
+  expect(screen.getByRole("button", { name: 'Remove filter: Search "transcript"' })).toBeVisible();
   const empty = await screen.findByText("No Matches Found");
   expect(empty.closest('[data-slot="empty"]')).toHaveAttribute("data-variant", "page");
 
   await user.click(screen.getByRole("tab", { name: "Grid View" }));
   expect(screen.getByText("No Matches Found")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Reset Filters" }));
+  expect(await screen.findByRole("heading", { name: "Birth Certificate" })).toBeVisible();
+});
+
+it("offers public checklist filters and keeps the same group header across list and grid", async () => {
+  localStorage.clear();
+  vi.stubGlobal("fetch", async () => ({
+    ok: true,
+    json: async () => ({
+      ok: true,
+      data: {
+        requirements: [{ id: 1, name: "Birth Certificate", docType: "Birth Certificate", category: "Personal Records" }],
+      },
+    }),
+  }));
+  const user = userEvent.setup();
+  render(<StudentComplianceTab authUser={{ account_id: 43, role: "Student", client_type: "Student" }} />);
+
+  const group = await screen.findByRole("button", { name: "Personal Records, 1" });
+  expect(screen.getByRole("button", { name: "Filter" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Sort: Requirement Name" })).toBeVisible();
+  await user.click(group);
+  await user.click(screen.getByRole("tab", { name: "Grid View" }));
+  expect(screen.getByRole("button", { name: "Personal Records, 1" })).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByText("Birth Certificate")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Group: Category" }));
+  expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "No grouping" }));
   expect(await screen.findByRole("heading", { name: "Birth Certificate" })).toBeVisible();
 });
 

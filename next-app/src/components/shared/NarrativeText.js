@@ -13,6 +13,29 @@ import {
 
 export { parseNarrativeTokens, resolveUserDisplayName };
 
+export function NarrativePersonBadge({ name, avatarId, avatarFilename, onClick }) {
+  return (
+    <span
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border-0 bg-black/[0.04] px-2.5 py-0.5 align-baseline text-[11px] font-semibold text-gray-900 transition-transform select-text mx-0.5 dark:bg-white/[0.06] dark:text-zinc-100",
+        onClick && "cursor-pointer hover:bg-black/[0.08] active:scale-95 dark:hover:bg-white/[0.1]"
+      )}
+      title={`User: ${name}`}
+    >
+      <ProfileAvatar
+        id={avatarId}
+        avatarFilename={avatarFilename}
+        name={name}
+        initials={(name || "U")[0].toUpperCase()}
+        className="size-3.5 shrink-0 rounded-full border-0"
+        fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(name))}
+      />
+      <span className="max-w-[200px] truncate">{name}</span>
+    </span>
+  );
+}
+
 /**
  * NarrativeText Component
  * Renders rich Apple-style entity tokens for audit descriptions, notification narratives,
@@ -70,34 +93,16 @@ export default function NarrativeText({
               );
             }
 
-            // Full mode: Apple Inset capsule with queried avatar
-            const initial = (displayName || "U")[0].toUpperCase();
             return (
-              <span
+              <NarrativePersonBadge
                 key={key}
-                onClick={
-                  onMentionClick
-                    ? (e) => {
-                        e.stopPropagation();
-                        onMentionClick(displayName);
-                      }
-                    : undefined
-                }
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text mx-0.5 border-0",
-                  onMentionClick && "hover:bg-black/[0.08] dark:hover:bg-white/[0.1] cursor-pointer active:scale-95"
-                )}
-                title={`User: ${displayName}`}
-              >
-                <ProfileAvatar
-                  id={token.email || displayName}
-                  name={displayName}
-                  initials={initial}
-                  className="size-3.5 shrink-0 rounded-full border-0"
-                  fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(displayName))}
-                />
-                <span className="truncate max-w-[200px]">{displayName}</span>
-              </span>
+                name={displayName}
+                avatarId={token.email || displayName}
+                onClick={onMentionClick ? (event) => {
+                  event.stopPropagation();
+                  onMentionClick(displayName);
+                } : undefined}
+              />
             );
           }
 

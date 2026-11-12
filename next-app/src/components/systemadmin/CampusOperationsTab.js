@@ -1,4 +1,5 @@
 "use client"
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
@@ -49,7 +50,7 @@ import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import { SegmentedControl } from "@/components/ui/tabs"
 import ServiceStandardsSheet from "./ServiceStandardsSheet"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
-import CampusOperationsList from "./CampusOperationsList"
+import CampusOperationsList, { groupCampusOperations } from "./CampusOperationsList"
 import {
   COMPACT_BADGE_BASE,
   SUPERADMIN_BADGE_BASE as BADGE_BASE,
@@ -1154,7 +1155,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 </thead>
 
                 <tbody className="divide-y divide-border dark:divide-border font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-card">
-                  {paginatedTransactions.map((tx, index) => {
+                  {groupCampusOperations(paginatedTransactions, groupBy).flatMap((group) => [
+                      ...(groupBy !== "none" ? [<DataGroupHeader key={`group-${group.key}`} label={group.label} count={group.items.length} colSpan={visibleTableColumns.length + 1} />] : []),
+                      ...group.items.map((tx) => {
                     const isRegistrar = tx.officeId === "registrar" || tx.type === "document_request"
                     const rel = formatRelativeTime(tx.createdAt)
                     const charter = getRequestCharterStatus(
@@ -1168,13 +1171,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       slaStandards
                     )
 
-                    const groupValue = groupBy === "department" ? (isRegistrar ? "Registrar" : "OSAS") : tx.status
-                    const previous = paginatedTransactions[index - 1]
-                    const previousGroup = previous && (groupBy === "department" ? (previous.officeId === "registrar" || previous.type === "document_request" ? "Registrar" : "OSAS") : previous.status)
                     return (
-                      <React.Fragment key={tx.id}>
-                      {groupBy !== "none" && groupValue !== previousGroup && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><td colSpan={visibleTableColumns.length + 1} className="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200">{groupValue || "Unspecified"}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{paginatedTransactions.filter((item) => (groupBy === "department" ? (item.officeId === "registrar" ? "Registrar" : "OSAS") : item.status) === groupValue).length}</span></td></tr>}
                       <tr
+                        key={tx.id}
                         onClick={() => handleOpenDetails(tx)}
                         className="group h-[52px] border-b border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none"
                       >
@@ -1288,9 +1287,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                           <TableActions actions={[{ label: "View Details", icon: ViewIcon, onClick: () => handleOpenDetails(tx) }]} />
                         </td>
                       </tr>
-                      </React.Fragment>
                     )
-                  })}
+                  }),
+                    ])}
                 </tbody>
                 </Table>
             </div>

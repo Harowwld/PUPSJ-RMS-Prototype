@@ -63,43 +63,32 @@ export function assertAccountEmailConfigured() {
   getTransporter();
 }
 
-export async function sendEmailVerificationCode({ to, code, staff = false }) {
-  const instructions = staff
-    ? "Enter this code after signing in with your staff email and password."
-    : "Enter this code in eManage to continue setting up your account.";
-  const ignore = staff
-    ? "If you weren’t expecting a staff account, contact your administrator."
-    : "If you didn’t start signing up, you can ignore this email.";
-  const mailer = getTransporter();
+const ACCOUNT_EMAIL_BRAND = "PUP eManage";
+
+function brandedAccountSender(from) {
+  const address = from.match(/<([^<>]+)>$/)?.[1] ?? from;
+  return { name: ACCOUNT_EMAIL_BRAND, address };
+}
+
+function renderAccountEmail({ title, preview, headline, content, footer }) {
   const logoCid = "emanage-signup-logo@pupsj-rms";
-  const result = await mailer.transporter.sendMail({
-    from: mailer.from,
-    to: { name: "", address: to },
-    subject: "Verify your eManage email address",
-    text: [
-      "Verify your email address",
-      "",
-      instructions,
-      "",
-      String(code),
-      "",
-      `This code expires in 10 minutes. ${ignore}`,
-    ].join("\n"),
-    html: `<!doctype html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Verify your eManage email address</title>
+  <title>${escapeHtml(title)}</title>
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     @media (prefers-color-scheme: dark) {
       .bg-page  { background-color: #000000 !important; }
       .bg-panel { background-color: #1c1c1e !important; }
       .bg-tile  { background-color: #2c2c2e !important; }
-      .bg-note  { background-color: #2c2c2e !important; }
+      .bg-note, .bg-inset { background-color: #2c2c2e !important; }
+      .divider  { border-top-color: #3a3a3c !important; }
+      .warn     { background-color: #2a1d1d !important; border-color: #4a2a2a !important; color: #ffb4b4 !important; }
       .text-pri { color: #f5f5f7 !important; }
       .text-sec { color: #98989d !important; }
       .digit    { color: #ff8a8a !important; }
@@ -116,7 +105,7 @@ export async function sendEmailVerificationCode({ to, code, staff = false }) {
   </style>
 </head>
 <body class="bg-page" style="margin:0;padding:0;background-color:#f5f5f7;-webkit-text-size-adjust:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;color:#1d1d1f">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:#f5f5f7">Your eManage verification code. It expires in 10 minutes.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:#f5f5f7">${escapeHtml(preview)}</div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-page" bgcolor="#f5f5f7">
     <tr>
@@ -130,7 +119,7 @@ export async function sendEmailVerificationCode({ to, code, staff = false }) {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="padding-right:10px"><img src="cid:${logoCid}" alt="" width="32" height="32" style="display:block;width:32px;height:32px;border:0;border-radius:8px;background-color:#ffffff"></td>
-                  <td class="text-pri" style="color:#1d1d1f;font-size:17px;font-weight:600;letter-spacing:-0.2px">eManage</td>
+                  <td class="text-pri" style="color:#1d1d1f;font-size:17px;font-weight:600;letter-spacing:-0.2px">${ACCOUNT_EMAIL_BRAND}</td>
                 </tr>
               </table>
             </td>
@@ -139,30 +128,15 @@ export async function sendEmailVerificationCode({ to, code, staff = false }) {
           <!-- Main panel -->
           <tr>
             <td class="bg-panel panel-pad" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:24px;padding:40px" align="left">
-              <h1 class="headline text-pri" style="margin:0;color:#1d1d1f;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.8px;text-align:left">Verify your<br>email address</h1>
-              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">${instructions}</p>
-
-              <!-- Code tiles -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="margin:32px 0 0;border-collapse:separate;border-spacing:8px 0;margin-left:-8px">
-                <tr>
-                  ${[...String(code)].map((digit) => `<td class="tile bg-tile digit" align="center" bgcolor="#faf0f0" width="48" height="60" style="width:48px;height:60px;background-color:#faf0f0;border-radius:14px;color:#800000;font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;font-weight:600;line-height:60px;text-align:center">${escapeHtml(digit)}</td>`).join("")}
-                </tr>
-              </table>
-              <div style="clear:both;font-size:0;line-height:0;height:0">&nbsp;</div>
-
-              <!-- Expiry note -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px">
-                <tr>
-                  <td class="bg-note text-sec" bgcolor="#f5f5f7" style="background-color:#f5f5f7;border-radius:12px;padding:12px 16px;color:#6e6e73;font-size:14px;line-height:1.4;text-align:left">This code expires in <strong class="text-pri" style="color:#1d1d1f;font-weight:600">10 minutes</strong>.</td>
-                </tr>
-              </table>
+              <h1 class="headline text-pri" style="margin:0;color:#1d1d1f;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.8px;text-align:left">${headline}</h1>
+              ${content}
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
             <td class="text-sec" style="padding:20px 8px 0;color:#6e6e73;font-size:13px;line-height:1.5;text-align:left">
-              ${ignore}
+              ${escapeHtml(footer)}
             </td>
           </tr>
 
@@ -172,13 +146,67 @@ export async function sendEmailVerificationCode({ to, code, staff = false }) {
     </tr>
   </table>
 </body>
-</html>`,
+</html>`;
+  return {
+    html,
     attachments: [{
       filename: "emanage-logo.png",
       path: join(process.cwd(), "public", "assets", "branding", "black-icon.png"),
       contentType: "image/png",
       cid: logoCid,
     }],
+  };
+}
+
+function renderVerificationDigits(code) {
+  return [...String(code)].map((digit) => `<td class="tile bg-tile digit" align="center" bgcolor="#faf0f0" width="48" height="60" style="width:48px;height:60px;background-color:#faf0f0;border-radius:14px;color:#800000;font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;font-weight:600;line-height:60px;text-align:center">${escapeHtml(digit)}</td>`).join("");
+}
+
+export async function sendEmailVerificationCode({ to, code, staff = false }) {
+  const instructions = staff
+    ? "Enter this code after signing in with your staff email and password."
+    : "Enter this code in eManage to continue setting up your account.";
+  const ignore = staff
+    ? "If you weren’t expecting a staff account, contact your administrator."
+    : "If you didn’t start signing up, you can ignore this email.";
+  const mailer = getTransporter();
+  const subject = "Verify your eManage email address";
+  const result = await mailer.transporter.sendMail({
+    from: brandedAccountSender(mailer.from),
+    to: { name: "", address: to },
+    subject,
+    text: [
+      "Verify your email address",
+      "",
+      instructions,
+      "",
+      String(code),
+      "",
+      `This code expires in 10 minutes. ${ignore}`,
+    ].join("\n"),
+    ...renderAccountEmail({
+      title: subject,
+      preview: "Your PUP eManage verification code. It expires in 10 minutes.",
+      headline: "Verify your<br>email address",
+      content: `
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">${instructions}</p>
+
+              <!-- Code tiles -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="margin:32px 0 0;border-collapse:separate;border-spacing:8px 0;margin-left:-8px">
+                <tr>
+                  ${renderVerificationDigits(code)}
+                </tr>
+              </table>
+              <div style="clear:both;font-size:0;line-height:0;height:0">&nbsp;</div>
+
+              <!-- Expiry note -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px">
+                <tr>
+                  <td class="bg-note text-sec" bgcolor="#f5f5f7" style="background-color:#f5f5f7;border-radius:12px;padding:12px 16px;color:#6e6e73;font-size:14px;line-height:1.4;text-align:left">This code expires in <strong class="text-pri" style="color:#1d1d1f;font-weight:600">10 minutes</strong>.</td>
+                </tr>
+              </table>`,
+      footer: ignore,
+    }),
   });
   if (!result.accepted?.length) throw new Error("Signup verification email was not accepted.");
 }
@@ -269,16 +297,17 @@ export async function sendAccountCredentialsEmail({
     ? `Open the eManage sign-in page: ${loginUrl}`
     : "Open the eManage sign-in page provided by your institution.";
   const passwordText = password
-    ? `Password: ${password}`
+    ? `Temporary password: ${password}`
     : "Use the password you chose during registration.";
   const securityText = password
     ? "For your security, change this password after signing in and do not share it."
     : "For your security, do not share your password.";
   const subject = "Your eManage account sign-in details";
+  const footer = "You’re receiving this because an administrator created an eManage account for this email address. If you weren’t expecting it, you can ignore this email.";
   const text = [
     `Hello ${name},`,
     "",
-    `An ${type} was created for you. Keep these sign-in details private:`,
+    `Your ${type} has been created. Keep these sign-in details private.`,
     ...(requiresActivation ? ["An administrator must activate this account before you can sign in."] : []),
     ...(accountId ? [`Account ID: ${accountId}`] : []),
     `Username: ${username}`,
@@ -287,25 +316,66 @@ export async function sendAccountCredentialsEmail({
     signInText,
     "",
     securityText,
+    "",
+    footer,
   ].join("\n");
-  const html = `<!doctype html><html><body style="font-family:'Plus Jakarta Sans',sans-serif;color:#1f2937;line-height:1.5">
-    <p>Hello ${escapeHtml(name)},</p>
-    <p>Your ${escapeHtml(type)} has been created. Use this account information to sign in:</p>
-    ${requiresActivation ? "<p>An administrator must activate this account before you can sign in.</p>" : ""}
-    ${accountId ? `<p><strong>Account ID:</strong> ${escapeHtml(accountId)}</p>` : ""}
-    <p><strong>Username:</strong> ${escapeHtml(username)}${password ? `<br><strong>Password:</strong> ${escapeHtml(password)}` : ""}</p>
-    ${password ? "" : "<p>Use the password you chose during registration.</p>"}
-    ${loginUrl ? `<p><a href="${escapeHtml(loginUrl)}">Open the eManage sign-in page</a></p>` : "<p>Open the eManage sign-in page provided by your institution.</p>"}
-    ${verificationCode ? `<p><strong>Email verification code:</strong> ${escapeHtml(verificationCode)}. Enter it at first sign-in. The code expires in 10 minutes.</p>` : ""}
-    <p>${securityText}</p>
-  </body></html>`;
-
+  const details = [
+    ...(accountId ? [["Account ID", accountId]] : []),
+    ["Username", username],
+    ...(password ? [["Temporary password", password]] : []),
+  ];
   const result = await mailer.transporter.sendMail({
-    from: mailer.from,
+    from: brandedAccountSender(mailer.from),
     to: recipient,
     subject,
     text,
-    html,
+    ...renderAccountEmail({
+      title: "Your eManage account is ready",
+      preview: verificationCode
+        ? "Your eManage account has been created. Your sign-in details and verification code are inside."
+        : "Your eManage account has been created. Your sign-in details are inside.",
+      headline: "Your account<br>is ready",
+      content: `
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">Hello ${escapeHtml(name)}, your ${escapeHtml(type)} has been created. Use the details below to sign in.</p>
+              ${requiresActivation ? '<p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:14px;line-height:1.5;text-align:left">An administrator must activate this account before you can sign in.</p>' : ""}
+
+              <!-- Credentials -->
+              <p class="text-sec" style="margin:32px 0 10px;color:#6e6e73;font-size:13px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;text-align:left">Sign-in details</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-inset" bgcolor="#f5f5f7" style="background-color:#f5f5f7;border-radius:16px">
+                ${details.map(([label, value], index) => `
+                  ${index ? `<tr>
+                    <td style="padding:0 18px"><div class="divider" style="border-top:1px solid #e0e0e5;font-size:0;line-height:0;height:0">&nbsp;</div></td>
+                  </tr>` : ""}
+                  <tr>
+                    <td style="padding:${index ? 14 : 16}px 18px ${index === details.length - 1 ? 16 : 14}px;text-align:left">
+                      <div class="text-sec" style="color:#6e6e73;font-size:12px;line-height:1.3">${label}</div>
+                      <div class="text-pri" style="margin-top:3px;color:#1d1d1f;${label === "Temporary password" ? "font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;line-height:1.4" : "font-size:16px;line-height:1.35"};font-weight:600;word-break:break-all">${escapeHtml(value)}</div>
+                    </td>
+                  </tr>`).join("")}
+              </table>
+
+              ${password ? "" : `<p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:14px;line-height:1.5;text-align:left">${passwordText}</p>`}
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:14px;line-height:1.5;text-align:left">${loginUrl ? `Open the <a href="${escapeHtml(loginUrl)}" class="text-pri" style="color:#1d1d1f;font-weight:600">eManage sign-in page</a>.` : signInText}</p>
+
+              ${verificationCode ? `
+                <!-- Verification code -->
+                <p class="text-sec" style="margin:32px 0 10px;color:#6e6e73;font-size:13px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;text-align:left">Email verification code</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="border-collapse:separate;border-spacing:8px 0;margin-left:-8px">
+                  <tr>${renderVerificationDigits(verificationCode)}</tr>
+                </table>
+                <div style="clear:both;font-size:0;line-height:0;height:0">&nbsp;</div>
+                <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:14px;line-height:1.5;text-align:left">Enter this code at first sign-in. It expires in <strong class="text-pri" style="color:#1d1d1f;font-weight:600">10 minutes</strong>.</p>` : ""}
+
+              <!-- Security notice -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px">
+                <tr>
+                  <td class="warn" bgcolor="#faf0f0" style="background-color:#faf0f0;border:1px solid #f0dcdc;border-radius:14px;padding:14px 16px;color:#800000;font-size:14px;line-height:1.45;text-align:left">
+                    <strong style="font-weight:600">Keep this private.</strong> ${password ? "Change your password after signing in and don’t share it with anyone." : "Don’t share your password with anyone."}
+                  </td>
+                </tr>
+              </table>`,
+      footer,
+    }),
   });
   if (!result.accepted?.length) throw new Error("Account credentials email was not accepted.");
   return { messageId: result.messageId };

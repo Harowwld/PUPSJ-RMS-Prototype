@@ -1,4 +1,5 @@
 "use client";
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -817,10 +818,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       {groupedRows.map((group) => (
                         <div key={group.key || "all"} className="space-y-1.5">
                           {group.label && (
-                            <div className="px-2 py-1 text-xs font-semibold text-gray-700 dark:text-zinc-300 flex items-center justify-between">
-                              <span className="font-bold">{group.label}</span>
-                              <span className="text-muted-foreground font-normal">({group.items.length})</span>
-                            </div>
+                            <DataGroupHeader label={group.label} count={group.items.length} />
                           )}
                           {group.items.map((row) => {
                             const isCurrent = Number(selectedId) === Number(row.id);

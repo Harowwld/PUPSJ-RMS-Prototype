@@ -55,6 +55,11 @@ it("clears the date range when resetting a request filter with no matches", asyn
   render(<StudentPage />);
   expect(await screen.findByText("Transcript of Records")).toBeVisible();
 
+  const search = screen.getByLabelText("Search requests");
+  fireEvent.change(search, { target: { value: "transcript" } });
+  fireEvent.click(screen.getByRole("button", { name: 'Remove filter: Search "transcript"' }));
+  expect(search).toHaveValue("");
+
   fireEvent.click(screen.getByRole("button", { name: "Apply date filter" }));
   expect(await screen.findByText("No Matches Found")).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Reset Filters" }));

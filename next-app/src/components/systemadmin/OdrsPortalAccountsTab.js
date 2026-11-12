@@ -1,5 +1,6 @@
 "use client";
 
+import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { Fragment, useEffect, useState } from "react";
 import { Search01Icon, UserGroupIcon } from "hugeicons-react";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
@@ -185,9 +186,7 @@ export default function OdrsPortalAccountsTab() {
               {visibleAccounts.map(({ account, label }, index) => (
                 <Fragment key={account.id}>
                   {label && label !== visibleAccounts[index - 1]?.label && (
-                    <TableRow>
-                      <TableCell colSpan={displayedColumns.length} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">{label}</TableCell>
-                    </TableRow>
+                    <DataGroupHeader label={label} count={visibleAccounts.filter((item) => item.label === label).length} colSpan={displayedColumns.length} />
                   )}
                   <TableRow>
                     {displayedColumns.map(({ key, render }) => <TableCell key={key}>{render(account)}</TableCell>)}
