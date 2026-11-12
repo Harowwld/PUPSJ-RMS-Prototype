@@ -2,7 +2,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
 export function moveTableScroll(viewport, amount) {
-  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+  const prefersReducedMotion =
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false;
+  const behavior = prefersReducedMotion ? "instant" : "smooth";
   if (amount === undefined) viewport?.scrollTo({ left: 0, behavior });
   else viewport?.scrollBy({ left: amount, behavior });
 }
@@ -84,6 +88,21 @@ export function useTableScroll(dependencies = []) {
     }
   }, []);
 
+  const scrollTable = useCallback((direction = "right", amount = 400) => {
+    if (typeof direction === "number") {
+      if (containerRef.current) {
+        moveTableScroll(containerRef.current, direction);
+      }
+      return;
+    }
+    const px = typeof amount === "number" && !isNaN(amount) ? amount : 400;
+    if (direction === "left") {
+      scrollLeft(px);
+    } else {
+      scrollRight(px);
+    }
+  }, [scrollLeft, scrollRight]);
+
   return {
     containerRef,
     tableContainerRef: containerRef,
@@ -94,6 +113,7 @@ export function useTableScroll(dependencies = []) {
     canScrollRight: canScroll,
     scrollLeft,
     scrollRight,
+    scrollTable,
     resetScroll,
   };
 }
