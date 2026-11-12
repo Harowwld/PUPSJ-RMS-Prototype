@@ -89,6 +89,8 @@ export default function BulkImportTab({
     canScrollLeft,
     canScrollRight,
     isScrolledX,
+    scrollLeft,
+    scrollRight,
     scrollTable,
     resetScroll,
   } = useTableScroll([filteredImportRows?.length, currentPage]);
@@ -276,8 +278,9 @@ export default function BulkImportTab({
                 scrollContainerRef={tableContainerRef}
                 canScrollLeft={canScrollLeft}
                 canScrollRight={canScrollRight}
-                onScrollLeft={() => scrollTable("left")}
-                onScrollRight={() => scrollTable("right")}
+                onResetScroll={resetScroll}
+                onScrollLeft={() => (scrollTable ? scrollTable("left") : scrollLeft?.(400))}
+                onScrollRight={() => (scrollTable ? scrollTable("right") : scrollRight?.(400))}
                 isScrolled={isScrolledX}
               />
             </div>

@@ -274,6 +274,8 @@ export default function BulkImportOrganizationsModal({
     canScrollLeft,
     canScrollRight,
     isScrolledX,
+    scrollLeft,
+    scrollRight,
     scrollTable,
     resetScroll,
   } = useTableScroll([filteredCsvRows?.length, csvPage]);
@@ -588,10 +590,12 @@ export default function BulkImportOrganizationsModal({
                 </Button>
 
                 <TableScrollControls scrollContainerRef={tableContainerRef}
+                  isScrolledX={isScrolledX}
+                  onResetScroll={resetScroll}
                   canScrollLeft={canScrollLeft}
                   canScrollRight={canScrollRight}
-                  onScrollLeft={() => scrollTable("left")}
-                  onScrollRight={() => scrollTable("right")}
+                  onScrollLeft={() => (scrollTable ? scrollTable("left") : scrollLeft?.(400))}
+                  onScrollRight={() => (scrollTable ? scrollTable("right") : scrollRight?.(400))}
                 />
               </DataViewToolbar>
             </div>
