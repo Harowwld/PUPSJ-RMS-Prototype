@@ -1,3 +1,4 @@
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { NextResponse } from "next/server";
 
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
@@ -87,6 +88,11 @@ export async function PATCH(req, ctx) {
   const reopenReason = String(body.reopenReason || body.message || "").trim();
   let isReopen = false;
 
+  if (existing.doc_type === MISSING_DOCUMENTS_INQUIRY && ["Ready", "Completed"].includes(body.status)
+      && !(body.spaVerified ?? existing.spa_verified)) {
+    return NextResponse.json({ ok: false, error: "Verify the requester before completing a missing-documents inquiry." }, { status: 400 });
+  }
+
   const patch = { updatedBy: staff.id, officeId };
 
   if (body.status !== undefined) {
@@ -174,7 +180,9 @@ export async function PATCH(req, ctx) {
     patch.spaVerified = body.spaVerified;
     patch.spaVerifiedBy = staff.id;
     if (!patch.message) {
-      patch.message = patch.spaVerified
+      patch.message = existing.doc_type === MISSING_DOCUMENTS_INQUIRY
+        ? (patch.spaVerified ? "Requester identity and authorization verified by the Registrar." : "Requester verification revoked.")
+        : patch.spaVerified
         ? "Special Power of Attorney (SPA) and authorization documents verified by Registrar Staff."
         : "Special Power of Attorney (SPA) verification status revoked.";
     }

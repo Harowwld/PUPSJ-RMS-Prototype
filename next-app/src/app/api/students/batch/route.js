@@ -41,6 +41,7 @@ function validateStudentPayload(body, layout) {
     .trim()
     .replace(/\s+/g, " ")
     .toUpperCase();
+  const odrsEmail = String(body?.odrsEmail || "").trim().toLowerCase();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase();
   let yearLevel = Number(body?.yearLevel);
   const section = String(body?.section || "").trim();
@@ -53,6 +54,10 @@ function validateStudentPayload(body, layout) {
 
   if (!studentNo || !name || !courseCode || !section) {
     return { ok: false, error: "Missing required fields" };
+  }
+
+  if (odrsEmail && (odrsEmail.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(odrsEmail))) {
+    return { ok: false, error: "Enter a valid ODRS email." };
   }
 
   if (!studentNoPattern.test(studentNo.toUpperCase())) {
@@ -105,6 +110,7 @@ function validateStudentPayload(body, layout) {
     value: {
       studentNo,
       name,
+      odrsEmail,
       courseCode,
       yearLevel,
       section,
@@ -137,6 +143,9 @@ export async function POST(req) {
 
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
+  if (officeId !== "registrar" && rows.some((row) => String(row?.odrsEmail || "").trim())) {
+    return createAuthErrorResponse("Registrar access required", 403);
+  }
 
   let layout;
   try {
@@ -164,7 +173,9 @@ export async function POST(req) {
     } catch (e) {
       const msg = String(e?.message || "");
       if (isUniqueViolation(e)) {
-        results.push({ index: i, ok: false, error: "Student already exists" });
+        results.push({ index: i, ok: false, error: e.constraint === "registrar_odrs_contacts_email_unique"
+          ? "This ODRS email is already recorded for another student."
+          : "Student already exists" });
       } else if (
         msg.includes("Invalid courseCode") ||
         msg.includes("Invalid section") ||

@@ -9,7 +9,7 @@ export default function StudentOverviewSkeleton() {
       {/* ONE Single Card Container */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         {/* 1. Header / Greeting Skeleton (matches PageHeader with leftAction ProfileAvatar) */}
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
           <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
             <Skeleton className="size-11 rounded-full dark:bg-muted shrink-0" />
             <div className="min-w-0 flex-1">
@@ -30,7 +30,7 @@ export default function StudentOverviewSkeleton() {
         </div>
 
         {/* 2. Unified Content Body Skeleton */}
-        <div className="border-t border-border dark:border-border p-6 flex flex-[1_0_auto] flex-col gap-6">
+        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
           {/* Urgent Attention Inline Alerts Skeleton */}
           <div className="flex flex-col gap-2.5 w-full">
             <div className="flex items-center gap-2 px-1">
@@ -164,10 +164,7 @@ export default function StudentOverviewSkeleton() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border">
-                      <div className="flex items-center gap-2.5">
-                        <Skeleton className="h-5 w-24 rounded-full dark:bg-muted" />
-                        <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
-                      </div>
+                      <Skeleton className="hidden h-3.5 w-28 rounded dark:bg-muted sm:block" />
                       <Skeleton className="h-8 w-24 rounded-xl dark:bg-muted shrink-0" />
                     </div>
                   </div>

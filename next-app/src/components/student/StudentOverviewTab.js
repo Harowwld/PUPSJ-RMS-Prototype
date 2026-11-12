@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -11,7 +11,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { SegmentedControl } from "@/components/ui/tabs";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES, getDepartmentBadgeClass, getStatusBadgeClass } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, SETTINGS_STATUS_PILL_SM, getStatusBadgeClass } from "@/lib/badgeStyles";
 import {
   Empty,
   EmptyHeader,
@@ -30,7 +30,6 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
-import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, ArrowUpRight01Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -60,6 +59,18 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
+function OverviewBadge({ children, className }) {
+  return (
+    <span className={cn(
+      SETTINGS_STATUS_PILL_SM,
+      "max-w-full font-semibold text-gray-900 dark:text-zinc-100",
+      className
+    )}>
+      {children}
+    </span>
+  );
+}
+
 function normalizeStatus(status) {
   return String(status || "").toLowerCase().trim();
 }
@@ -81,7 +92,6 @@ export default function StudentOverviewTab({
   hasLoaded = false,
 }) {
   const [activityFilter, setActivityFilter] = useState("all");
-  const [selectedComplianceDetail, setSelectedComplianceDetail] = useState(null);
   const [selectedPostEventDetail, setSelectedPostEventDetail] = useState(null);
 
   const [overrideAvatar, setOverrideAvatar] = useState(null);
@@ -116,6 +126,7 @@ export default function StudentOverviewTab({
         priority: 1,
         title: "Record Ready for Pick-Up",
         description: `Your ${req.doc_type} (Ticket ${req.ticket_no || req.id}) has been printed. Visit Registrar Window 2 with your student ID to claim your physical document.`,
+        highlightedPhrases: [req.doc_type],
         actionLabel: "View Pick-Up Info",
         redirects: !Boolean(onSelectRequest),
         action: () => {
@@ -142,6 +153,7 @@ export default function StudentOverviewTab({
         priority: 2,
         title: "Proof of Payment Required",
         description: `Ticket ${req.ticket_no || req.id} for ${req.doc_type} requires your official payment receipt for processing.`,
+        highlightedPhrases: [req.doc_type],
         actionLabel: "Open Payment Details",
         redirects: !Boolean(onSelectRequest),
         action: () => {
@@ -159,10 +171,10 @@ export default function StudentOverviewTab({
 
     // C. Missing Compliance Requirements
     const missingDocs = (complianceData?.requirements || []).filter(
-      (r) => r.status === "Not Submitted"
+      (r) => r.status === "Missing"
     );
     if (missingDocs.length > 0) {
-      const topMissing = missingDocs.slice(0, 2).map((d) => d.docType || d.documentType || d.name).filter(Boolean).join(", ");
+      const topMissing = missingDocs.slice(0, 2).map((d) => d.docType || d.documentType || d.name).filter(Boolean);
       const extraCount = missingDocs.length - 2;
       const extraText = extraCount > 0 ? ` and ${extraCount} more` : "";
       items.push({
@@ -170,7 +182,8 @@ export default function StudentOverviewTab({
         type: "compliance",
         priority: 3,
         title: "Missing Permanent Admission Records",
-        description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
+        description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing.join(", ")}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
+        highlightedPhrases: topMissing,
         actionLabel: "Open Document Checklist",
         redirects: true,
         action: () => onNavigate("compliance"),
@@ -289,38 +302,31 @@ export default function StudentOverviewTab({
       let desc = `Document request for ${req.doc_type} was received.`;
       let icon = " InboxIcon";
       let tone = "default";
-      let statusLabel = req.status || "Submitted";
 
       if (s === "ready") {
         desc = `Your ${req.doc_type} is approved and ready for claiming at Registrar Window 2. Bring a valid student ID.`;
         icon = " CheckmarkCircle01Icon";
         tone = "emerald";
-        statusLabel = "Ready for Pick-Up";
       } else if (s === "processing") {
         desc = `Registrar staff is currently printing and processing ${req.doc_type}.`;
         icon = " Settings01Icon";
         tone = "blue";
-        statusLabel = "Processing";
       } else if (s === "pendingpayment") {
         desc = `Payment verification pending. Please upload your official receipt.`;
         icon = " Invoice01Icon";
         tone = "amber";
-        statusLabel = "Payment Required";
       } else if (s === "under review" || s === "inprogress") {
         desc = `Registrar staff is evaluating your request credentials.`;
         icon = " ViewIcon";
         tone = "blue";
-        statusLabel = "Under Review";
       } else if (s === "declined" || s === "rejected") {
         desc = `Request was declined${req.rejection_reason ? `: ${req.rejection_reason}` : "."}`;
         icon = " CancelCircleIcon";
         tone = "rose";
-        statusLabel = "Declined";
       } else if (s === "completed") {
         desc = `Official record ${req.doc_type} has been claimed and archived.`;
         icon = " Archive01Icon";
         tone = "emerald";
-        statusLabel = "Completed";
       }
 
       events.push({
@@ -333,7 +339,6 @@ export default function StudentOverviewTab({
         office: "Office of the Registrar",
         icon,
         tone,
-        statusLabel,
         actionLabel: "View Details",
         request: req,
         onClick: () => {
@@ -352,23 +357,19 @@ export default function StudentOverviewTab({
       let desc = `Event proposal "${prop.title || prop.event_title}" was submitted for OSAS clearance.`;
       let icon = " Calendar01Icon";
       let tone = "blue";
-      let statusLabel = prop.status || "Submitted";
 
       if (s === "approved" || s === "completed") {
         desc = `Event proposal "${prop.title || prop.event_title}" has been approved by Student Affairs.`;
         icon = " CheckmarkCircle01Icon";
         tone = "emerald";
-        statusLabel = "Approved";
       } else if (s === "needs revision" || s === "revisionsrequested") {
         desc = `Revisions requested: ${prop.evaluation_notes || "Please check evaluation feedback and resubmit."}`;
         icon = " ReloadIcon";
         tone = "amber";
-        statusLabel = "Needs Revision";
       } else if (s === "declined" || s === "rejected") {
         desc = `Event proposal was declined by OSAS${prop.rejection_reason ? `: ${prop.rejection_reason}` : "."}`;
         icon = " CancelCircleIcon";
         tone = "rose";
-        statusLabel = "Declined";
       }
 
       events.push({
@@ -381,7 +382,6 @@ export default function StudentOverviewTab({
         office: "Student Affairs (OSAS)",
         icon,
         tone,
-        statusLabel,
         actionLabel: "View Details",
         proposal: prop,
         onClick: () => {
@@ -393,27 +393,6 @@ export default function StudentOverviewTab({
         },
       });
     });
-
-    // From Compliance requirements that are submitted
-    (complianceData?.requirements || [])
-      .filter((r) => r.status === "Submitted" && r.document?.createdAt)
-      .forEach((r) => {
-        events.push({
-          id: `milestone-comp-${r.id}`,
-          category: "compliance",
-          title: r.documentType,
-          subtitle: "Permanent Admission Requirement",
-          description: `Document has been physically verified, digitized, and archived in the institutional registry.`,
-          date: r.document?.createdAt,
-          office: "Office of the Registrar",
-          icon: " TaskDone01Icon",
-          tone: "emerald",
-          statusLabel: "Archived",
-          actionLabel: "View Details",
-          requirement: r,
-          onClick: () => setSelectedComplianceDetail(r),
-        });
-      });
 
     // From Post-Event Reports
     (postEventReports || []).forEach((report) => {
@@ -427,7 +406,6 @@ export default function StudentOverviewTab({
         office: "Student Affairs (OSAS)",
         icon: " ClipboardIcon",
         tone: "blue",
-        statusLabel: report.status || "Submitted",
         actionLabel: "View Details",
         report,
         onClick: () => setSelectedPostEventDetail(report),
@@ -438,7 +416,7 @@ export default function StudentOverviewTab({
     return events
       .filter((e) => Boolean(e.date))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [data.requests, data.proposals, complianceData, postEventReports, onNavigate, onSelectRequest, onSelectProposal]);
+  }, [data.requests, data.proposals, postEventReports, onNavigate, onSelectRequest, onSelectProposal]);
 
   // Filtered milestones based on category tab
   const filteredMilestones = useMemo(() => {
@@ -464,7 +442,6 @@ export default function StudentOverviewTab({
     .map((part) => part[0]?.toUpperCase())
     .join("") || "S";
   const complianceSummary = complianceData?.summary;
-  const canViewStudentRecords = hasLinkedStudentRecord(authUser);
   const isParent = authUser?.client_type === "Parent";
   const isAlumni = authUser?.client_type === "Alumni";
   const requestActionLabel = isParent ? "Request on Behalf of a Student" : "Open Request Form";
@@ -472,9 +449,7 @@ export default function StudentOverviewTab({
     ? "Request a student’s academic documents and track the Registrar’s review."
     : isAlumni
       ? "Request transcripts, diplomas, and other academic documents. Track your requests here."
-      : canViewStudentRecords
-        ? "Track academic requests, enrollment records, and OSAS submissions."
-        : "Request academic documents and track their status. Contact the Registrar to link your student record.";
+      : "Track academic requests, review enrollment requirements, and open OSAS submissions.";
   const isOfficer = myOrganizations.length > 0;
   const inFlightCount = (data.requests || []).filter((r) =>
     ["submitted", "pending", "under review", "underreview", "inprogress", "processing", "ready", "pendingpayment"].includes(
@@ -514,15 +489,14 @@ export default function StudentOverviewTab({
                 </span>
               )}
               {isOfficer && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                  <Shield01Icon size={12} aria-hidden="true" />
+                <OverviewBadge>
+                  <Shield01Icon size={12} className="shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   Verified Officer
-                </span>
+                </OverviewBadge>
               )}
             </div>
           }
           description={overviewDescription}
-          showBorder={false}
           className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
@@ -546,7 +520,7 @@ export default function StudentOverviewTab({
         />
 
         {/* 2. Unified Content Body */}
-        <div className="border-t border-border dark:border-border p-6 flex flex-[1_0_auto] flex-col gap-6">
+        <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
 
       {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
       {attentionItems.length > 0 && (
@@ -568,7 +542,7 @@ export default function StudentOverviewTab({
                 <div
                   key={item.id}
                   role="alert"
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 px-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs transition-all"
+                  className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 px-5 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs transition-all"
                 >
                   <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                     <div
@@ -586,22 +560,22 @@ export default function StudentOverviewTab({
                         <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-zinc-100 leading-tight truncate">
                           {item.title}
                         </span>
-                        <span
-                          className={cn(
-                            BADGE_BASE,
-                            isEmerald
-                              ? BADGE_PALETTES.emerald
-                              : isBlue
-                              ? BADGE_PALETTES.blue
-                              : BADGE_PALETTES.amber
-                          )}
-                        >
-                          <AppIcon className={cn(item.icon, "text-[12px]")} aria-hidden="true" />
+                        <OverviewBadge>
+                          <AppIcon
+                            className={cn(
+                              item.icon,
+                              "shrink-0 text-[12px]",
+                              isEmerald ? "text-emerald-600 dark:text-emerald-400"
+                                : isBlue ? "text-blue-600 dark:text-blue-400"
+                                : "text-amber-600 dark:text-amber-400"
+                            )}
+                            aria-hidden="true"
+                          />
                           {item.badge}
-                        </span>
+                        </OverviewBadge>
                       </div>
                       <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                        <NarrativeText text={item.description} mode="full" />
+                        <NarrativeText text={item.description} mode="full" highlightedPhrases={item.highlightedPhrases} />
                       </div>
                     </div>
                   </div>
@@ -610,7 +584,7 @@ export default function StudentOverviewTab({
                     <button
                       type="button"
                       onClick={item.action}
-                      className="group/btn inline-flex items-center gap-1.5 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline underline-offset-4 transition-colors cursor-pointer shrink-0 self-start sm:self-center py-1.5 px-1"
+                      className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-1 focus-visible:after:ring-pup-maroon group/btn inline-flex items-center gap-1.5 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline underline-offset-4 transition-colors cursor-pointer shrink-0 self-start sm:self-center py-1.5 px-1"
                     >
                       <span>{item.actionLabel}</span>
                       <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
@@ -621,7 +595,7 @@ export default function StudentOverviewTab({
                       variant="outline"
                       size="sm"
                       onClick={item.action}
-                      className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all self-start sm:self-center"
+                      className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-1 focus-visible:after:ring-pup-maroon h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-none transition-colors self-start sm:self-center"
                     >
                       {item.actionLabel}
                     </Button>
@@ -635,21 +609,21 @@ export default function StudentOverviewTab({
 
       {/* 3. Top Operational Row: Active Request Tracking (Full Width) */}
       <div className="flex flex-col gap-2.5 w-full">
-        <div className="flex items-center justify-between px-0.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-0.5">
           <div className="flex items-center gap-2">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
               Active Request Tracking
             </h2>
             {inFlightCount > 0 && (
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "tabular-nums")}>
-                <EmptyClock01Icon size={12} aria-hidden="true" />
+              <OverviewBadge className="tabular-nums">
+                <EmptyClock01Icon size={12} className="shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
                 {inFlightCount} in progress
-              </span>
+              </OverviewBadge>
             )}
           </div>
           {activeRequest && (
-            <span className="text-xs font-normal tabular-nums text-gray-500 dark:text-zinc-400">
-              Ticket {activeRequest.ticket_no || activeRequest.id}
+            <span className="text-xs font-medium tabular-nums text-gray-500 dark:text-zinc-400">
+              Request #{activeRequest.ticket_no || activeRequest.id}
             </span>
           )}
         </div>
@@ -773,7 +747,7 @@ export default function StudentOverviewTab({
           Quick Portals &amp; Actions
         </h2>
 
-        <div className={cn("grid grid-cols-1 gap-3.5 w-full", canViewStudentRecords && "sm:grid-cols-3")}>
+        <div className="grid w-full grid-cols-1 gap-3.5 sm:grid-cols-3">
           {/* Action 1: Document Requests */}
           <button
             type="button"
@@ -784,10 +758,10 @@ export default function StudentOverviewTab({
               <div className="flex size-10 items-center justify-center rounded-full bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 group-hover:scale-105 transition-transform">
                 <FileUploadIcon size="1em" className="text-lg" />
               </div>
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "tabular-nums")}>
-                <FileUploadIcon size={12} aria-hidden="true" />
+              <OverviewBadge className="tabular-nums">
+                <FileUploadIcon size={12} className="shrink-0 text-pup-maroon dark:text-red-400" aria-hidden="true" />
                 {(data.requests || []).length} Records
-              </span>
+              </OverviewBadge>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
               Document Requests
@@ -801,7 +775,8 @@ export default function StudentOverviewTab({
             </div>
           </button>
 
-          {canViewStudentRecords && <>
+          {!isParent && !isAlumni && authUser?.portal_setup_complete !== false && (
+            <>
           {/* Action 2: Document Checklist */}
           <button
             type="button"
@@ -813,17 +788,17 @@ export default function StudentOverviewTab({
                 <ClipboardIcon size="1em" className="text-lg" />
               </div>
               {complianceSummary && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "tabular-nums")}>
-                  <ClipboardIcon size={12} aria-hidden="true" />
+                <OverviewBadge className="tabular-nums">
+                  <ClipboardIcon size={12} className="shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   {complianceSummary.submittedCount}/{complianceSummary.totalRequired} ({complianceSummary.complianceRate}%)
-                </span>
+                </OverviewBadge>
               )}
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
               Document Checklist
             </span>
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
-              Verify physical archival compliance (Form 137, PSA, Good Moral).
+              Review the documents students need to submit for enrollment.
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 group-hover:underline underline-offset-4">
               <span>Open Document Checklist</span>
@@ -841,10 +816,10 @@ export default function StudentOverviewTab({
               <div className="flex size-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 group-hover:scale-105 transition-transform">
                 <StudentIcon size="1em" className="text-lg" />
               </div>
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "tabular-nums")}>
-                <StudentIcon size={12} aria-hidden="true" />
-                {isOfficer ? `${(data.proposals || []).length} Active` : "Student Body"}
-              </span>
+              <OverviewBadge className="tabular-nums">
+                <StudentIcon size={12} className="shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                {isOfficer ? `${(data.proposals || []).length} Active` : "Officer access required"}
+              </OverviewBadge>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
               OSAS Submissions
@@ -857,7 +832,8 @@ export default function StudentOverviewTab({
               <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
-          </>}
+            </>
+          )}
         </div>
       </div>
 
@@ -868,9 +844,9 @@ export default function StudentOverviewTab({
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
               Recent Activity &amp; Institutional Updates
             </h2>
-            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "tabular-nums")}>
+            <OverviewBadge className="tabular-nums">
               {filteredMilestones.length}
-            </span>
+            </OverviewBadge>
           </div>
 
           {/* Category Filter Pills */}
@@ -882,10 +858,8 @@ export default function StudentOverviewTab({
             items={[
               { value: "all", label: "All Activity" },
               { value: "requests", label: "Registrar Requests" },
-              ...(canViewStudentRecords ? [
-                { value: "compliance", label: "Permanent Records" },
-                { value: "osas", label: "OSAS Affairs" },
-              ] : []),
+              { value: "compliance", label: "Permanent Records" },
+              { value: "osas", label: "OSAS Affairs" },
             ]}
           />
         </div>
@@ -929,9 +903,7 @@ export default function StudentOverviewTab({
                           <span className="text-[11px] text-gray-400 font-sans tabular-nums">
                             {event.subtitle}
                           </span>
-                          <span className={cn(BADGE_BASE, getDepartmentBadgeClass(String(event.office).includes("Registrar")))}>
-                            {event.office}
-                          </span>
+                          <OverviewBadge>{event.office}</OverviewBadge>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-zinc-300 mt-1 leading-relaxed">
                           <NarrativeText text={event.description} mode="full" />
@@ -939,21 +911,7 @@ export default function StudentOverviewTab({
                       </div>
                     </div>
 
-                    {/* Right: Status Pill Badge, Timestamp, and Action CTA */}
                     <div className="flex items-center gap-4 shrink-0 pl-14 md:pl-0 self-start md:self-center">
-                      <span
-                        className={cn(
-                          BADGE_BASE,
-                          isEmerald && BADGE_PALETTES.emerald,
-                          isAmber && BADGE_PALETTES.amber,
-                          isBlue && BADGE_PALETTES.blue,
-                          isRose && BADGE_PALETTES.rose,
-                          !isEmerald && !isAmber && !isBlue && !isRose && BADGE_PALETTES.gray
-                        )}
-                      >
-                        {event.statusLabel}
-                      </span>
-
                       <span className="text-[11px] text-gray-400 dark:text-zinc-500 whitespace-nowrap min-w-[120px] text-right hidden sm:inline-block">
                         {formatPHDateTime(event.date)}
                       </span>
@@ -987,7 +945,7 @@ export default function StudentOverviewTab({
                   </EmptyTitle>
                   <EmptyDescription>
                     {activityFilter === "all"
-                      ? (canViewStudentRecords ? "Updates for document requests, enrollment records, and OSAS submissions will appear here." : "Updates for your document requests will appear here.")
+                      ? "Updates for document requests, enrollment records, and OSAS submissions will appear here."
                       : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar Requests" : activityFilter === "compliance" ? "Permanent Records" : "OSAS Affairs"}.`}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -1012,61 +970,6 @@ export default function StudentOverviewTab({
         </div>
       </Card>
 
-      {/* 1. Standardized Permanent Admission Record Details Sheet */}
-      <PermanentAdmissionRecordSheet
-        open={Boolean(selectedComplianceDetail)}
-        onOpenChange={(open) => !open && setSelectedComplianceDetail(null)}
-        item={selectedComplianceDetail}
-        items={complianceData?.requirements || []}
-        currentIndex={
-          complianceData?.requirements && selectedComplianceDetail
-            ? complianceData.requirements.findIndex(
-                (r) =>
-                  r.id === selectedComplianceDetail.id ||
-                  r.name === selectedComplianceDetail.name ||
-                  r.docType === selectedComplianceDetail.docType ||
-                  r.documentType === selectedComplianceDetail.documentType
-              )
-            : -1
-        }
-        onNavigatePrev={() => {
-          if (!complianceData?.requirements) return;
-          const idx = complianceData.requirements.findIndex(
-            (r) =>
-              r.id === selectedComplianceDetail?.id ||
-              r.name === selectedComplianceDetail?.name ||
-              r.docType === selectedComplianceDetail?.docType ||
-              r.documentType === selectedComplianceDetail?.documentType
-          );
-          if (idx > 0) {
-            setSelectedComplianceDetail(complianceData.requirements[idx - 1]);
-          }
-        }}
-        onNavigateNext={() => {
-          if (!complianceData?.requirements) return;
-          const idx = complianceData.requirements.findIndex(
-            (r) =>
-              r.id === selectedComplianceDetail?.id ||
-              r.name === selectedComplianceDetail?.name ||
-              r.docType === selectedComplianceDetail?.docType ||
-              r.documentType === selectedComplianceDetail?.documentType
-          );
-          if (idx >= 0 && idx < complianceData.requirements.length - 1) {
-            setSelectedComplianceDetail(complianceData.requirements[idx + 1]);
-          }
-        }}
-        student={
-          complianceData?.student || {
-            studentNo: authUser?.student_no,
-            name: authUser?.name,
-            courseCode: authUser?.course_code,
-            courseName: authUser?.course_name,
-            section: authUser?.section,
-            yearLevel: authUser?.year_level,
-          }
-        }
-      />
-
       {/* 2. Standardized Post-Event Report Details Sheet */}
       <Sheet
         open={Boolean(selectedPostEventDetail)}
@@ -1081,23 +984,30 @@ export default function StudentOverviewTab({
           <SheetHeader className="shrink-0 p-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
-                <SheetTitle>
-                  Post-Event Liquidation Details
-                </SheetTitle>
+                <div className="flex flex-wrap items-center gap-2">
+                  <SheetTitle>Post-Event Liquidation Details</SheetTitle>
+                  <span className={cn(COMPACT_BADGE_BASE, getStatusBadgeClass(selectedPostEventDetail?.status || "Submitted"))}>
+                    {selectedPostEventDetail?.status || "Submitted"}
+                  </span>
+                </div>
                 <SheetDescription className="sr-only">
                   Event report and liquidation statement info
                 </SheetDescription>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedPostEventDetail(null)}
-                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                aria-label="Close"
-                title="Close"
-              >
-                <Cancel01Icon size="1em" className="text-sm" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPostEventDetail(null)}
+                    className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                    aria-label="Close"
+                  >
+                    <Cancel01Icon size="1em" className="text-sm" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Close</TooltipContent>
+              </Tooltip>
             </div>
           </SheetHeader>
 
@@ -1128,9 +1038,9 @@ export default function StudentOverviewTab({
                 <ClipboardIcon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "mb-1")}>
+                <OverviewBadge className="mb-1">
                   {selectedPostEventDetail?.organization_name || "Student Affairs"}
-                </span>
+                </OverviewBadge>
                 <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
                   {selectedPostEventDetail?.event_title}
                 </h3>
@@ -1147,11 +1057,6 @@ export default function StudentOverviewTab({
               </h4>
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
-                <InfoRow icon="PieChartIcon" label="Clearance Status">
-                  <span className={cn(BADGE_BASE, getStatusBadgeClass(selectedPostEventDetail?.status || "Submitted"))}>
-                    {selectedPostEventDetail?.status || "Submitted"}
-                  </span>
-                </InfoRow>
                 <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
                 <InfoRow icon="DollarCircleIcon" label="Total Expenses" value={`₱${Number(selectedPostEventDetail?.total_expenses || 0).toLocaleString()}`} />
                 {selectedPostEventDetail?.review_note && (

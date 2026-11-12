@@ -152,7 +152,7 @@ ln -sfn "$APP_ROOT/Stop PUPSJ RMS.command" "$HOME/Desktop/Stop PUPSJ RMS.command
 open http://localhost:3000
 echo
 echo "PUPSJ RMS is installed and running at http://localhost:3000"
-echo "Initial SuperAdmin login: superadmin@pup.local"
+echo "Initial SuperAdmin login: superadmin@pup.com"
 echo "Use the staff password you chose during setup. Keep it private."
 echo "Start and Stop launchers were added to your Desktop."
 read -r -p "Installation complete. Press Return to close..." _ || true

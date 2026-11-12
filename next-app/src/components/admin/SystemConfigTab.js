@@ -1,5 +1,7 @@
 "use client"
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+
 
 import useUrlPage from "@/hooks/useUrlPage"
 import { useState, useEffect } from "react"
@@ -135,12 +137,12 @@ export default function SystemConfigTab({
   const [lastSelectedSectionId, setLastSelectedSectionId] = useState(null)
 
   // Sorting States
-  const [sortDoc, setSortDoc] = useState({ key: "name", direction: "asc" })
-  const [sortCourse, setSortCourse] = useState({
+  const [sortDoc, setSortDoc] = useWorkspaceViewPreference("system_configuration", "sortDoc", { key: "name", direction: "asc" })
+  const [sortCourse, setSortCourse] = useWorkspaceViewPreference("system_configuration", "sortCourse", {
     key: "code",
     direction: "asc",
   })
-  const [sortSection, setSortSection] = useState({
+  const [sortSection, setSortSection] = useWorkspaceViewPreference("system_configuration", "sortSection", {
     key: "name",
     direction: "asc",
   })

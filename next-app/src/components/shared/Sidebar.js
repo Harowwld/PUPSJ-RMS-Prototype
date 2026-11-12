@@ -8,7 +8,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import {
   isAdminRole,
@@ -399,7 +399,7 @@ export default function Sidebar({
             : preferredView || (isAdmin ? "admin" : "staff");
 
   const currentViewRole = (() => {
-    if (isStudent) return "Student";
+    if (isStudent) return authUser?.client_type || "Student";
     if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System Administrator";
     }
@@ -1060,12 +1060,12 @@ export default function Sidebar({
                 "document requests odrs transcript diploma certificate grades official records tracking new request status",
             },
             {
-              label: "Document Checklist & Compliance",
+              label: "Document Checklist",
               view: "compliance",
               icon: " ClipboardIcon",
               breadcrumb: "Academic Records • View",
               keywords:
-                "document checklist compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
+                "document checklist check my records compliance requirements missing documents submitted documents compliance status form 137 psa birth certificate unsubmitted pending",
             },
           ],
         },
@@ -1084,7 +1084,12 @@ export default function Sidebar({
             },
           ],
         },
-      ];
+      ].map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          (authUser?.client_type === "Student" && authUser?.portal_setup_complete !== false) ||
+          !["compliance", "osas"].includes(item.view)),
+      })).filter((group) => group.items.length > 0);
     }
 
     // Universal Controls
@@ -1313,7 +1318,7 @@ export default function Sidebar({
   const renderProfileMenuContent = () => (
     <>
       {/* 1. Header Zone */}
-      <div className="bg-black/[0.02] dark:bg-white/[0.02] px-3.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 flex items-center text-left">
+      <div className="bg-black/[0.02] dark:bg-white/[0.02] px-3.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 flex items-center justify-between gap-2 text-left">
         <div className="flex items-center gap-2.5 min-w-0">
           <ProfileAvatar
             id={authUser?.id}
@@ -1332,6 +1337,11 @@ export default function Sidebar({
             </span>
           </div>
         </div>
+        {isStudent && (
+          <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "shrink-0")}>
+            {displayRole}
+          </span>
+        )}
       </div>
 
       {/* 2. Body Zone */}
@@ -2370,7 +2380,7 @@ export default function Sidebar({
                           <span className="truncate">{item.label}</span>
                         </div>
                         {isActive && (
-                          <span className={cn(BADGE_PALETTES.emerald, "text-[9px] px-2 py-0.5", BADGE_BASE)}>
+                          <span className={cn(BADGE_PALETTES.emerald, COMPACT_BADGE_BASE)}>
                             Active
                           </span>
                         )}

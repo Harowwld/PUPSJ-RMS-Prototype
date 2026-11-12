@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
@@ -26,6 +27,12 @@ async function main() {
     || databaseUrl.searchParams.has("hostaddr")) {
     throw new Error("Database reset requires a local PostgreSQL host (localhost, 127.0.0.1, or ::1).");
   }
+
+  console.log("[reset-db] Applying pending PostgreSQL migrations.");
+  execFileSync(process.execPath, [fileURLToPath(new URL("./run-migrations.mjs", import.meta.url))], {
+    cwd: fileURLToPath(new URL("../", import.meta.url)),
+    stdio: "inherit",
+  });
 
   const { resetDatabase } = await import("../src/lib/resetDatabase.js");
   const { pool } = await import("../src/lib/postgres.js");

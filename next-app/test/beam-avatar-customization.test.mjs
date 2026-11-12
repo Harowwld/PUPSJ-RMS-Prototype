@@ -88,7 +88,7 @@ test("5. AccountSettingsPanel integrates Beam Gradient customization and shuffle
 });
 
 test("6. AccountSetupModal supports Beam shuffle generator in Step 3", () => {
-  const code = fs.readFileSync(path.resolve("src/components/shared/AccountSetupModal.js"), "utf8");
+  const code = fs.readFileSync(path.resolve("src/components/shared/AccountSetupPreferences.js"), "utf8");
 
   assert.ok(code.includes('generateShuffledBeam'), "Must import generateShuffledBeam");
   assert.ok(code.includes('beamColorMode'), "Must track beamColorMode");

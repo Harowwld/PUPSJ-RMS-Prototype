@@ -1,6 +1,6 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
-import { encryptPII } from "./piiEncryption.js";
+import { decryptPII, encryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 import { matchesSearchQuery } from "./searchUtils.js";
@@ -80,6 +80,7 @@ export async function createStudent({
   cabinet,
   drawer,
   status,
+  odrsEmail,
   officeId,
 }) {
   const normalizedOfficeId = normalizeOfficeId(officeId);
@@ -140,6 +141,11 @@ export async function createStudent({
       await run("UPDATE students SET first_name = $1, middle_name = $2, last_name = $3 WHERE student_no = $4", [
         encryptPII(nameParts.firstName), encryptPII(nameParts.middleName), encryptPII(nameParts.lastName), studentNo,
       ]);
+    }
+    if (odrsEmail && normalizedOfficeId === "registrar") {
+      await run("INSERT INTO registrar_odrs_contacts (student_no, email) VALUES ($1, $2)",
+        [studentNo, encryptPII(odrsEmail.trim().toLowerCase())]);
+    }
     }
     await run(
       `INSERT INTO student_office_memberships (student_no, office_id, status)
@@ -277,7 +283,7 @@ export async function listStudents({
   return decryptedRows;
 }
 
-export async function getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership = false } = {}) {
+export async function getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership = false, includeOdrsEmail = false } = {}) {
   const officeScope = buildOfficeScope(officeId, "students", { includeArchived: includeArchivedMembership });
   const filters = ["student_no = ?"];
   const params = [studentNo];
@@ -289,16 +295,24 @@ export async function getStudentByStudentNo(studentNo, { officeId, includeArchiv
   const officeSelect = normalizedOfficeId
     ? ", (SELECT som.status FROM student_office_memberships som WHERE som.student_no = students.student_no AND som.office_id = ?) AS office_membership_status"
     : "";
+  const showOdrsEmail = includeOdrsEmail && normalizedOfficeId === "registrar";
+  const emailSelect = showOdrsEmail
+    ? ", (SELECT contact.email FROM registrar_odrs_contacts contact WHERE contact.student_no = students.student_no) AS odrs_email"
+    : "";
   const row = await dbGet(
-    `SELECT ${STUDENT_SELECT}${officeSelect} FROM students WHERE ${filters.join(" AND ")}`,
+    `SELECT ${STUDENT_SELECT}${officeSelect}${emailSelect} FROM students WHERE ${filters.join(" AND ")}`,
     [...(normalizedOfficeId ? [normalizedOfficeId] : []), ...params]
   );
-  return withOfficeStudentStatus(row);
+  if (!row || !showOdrsEmail) return withOfficeStudentStatus(row);
+  const { odrs_email, ...student } = row;
+  const email = decryptPII(odrs_email) || "";
+  return { ...withOfficeStudentStatus(student), odrsEmail: email.startsWith("enc:v1:") ? "" : email };
 }
 
 export async function updateStudent(studentNo, patch) {
   const officeId = normalizeOfficeId(patch?.officeId);
   if (!officeId) throw new Error("Office scope is required");
+  const updateOdrsEmail = officeId === "registrar" && patch.odrsEmail !== undefined;
   const hasStorage = await hasPhysicalStorage();
   const updated = await transaction(async ({ query: run, queryOne: runOne }) => {
     const currentRaw = await runOne(
@@ -376,11 +390,22 @@ export async function updateStudent(studentNo, patch) {
         studentNo,
       ]);
     }
+    if (updateOdrsEmail) {
+      if (patch.odrsEmail) {
+        await run(
+          `INSERT INTO registrar_odrs_contacts (student_no, email) VALUES ($1, $2)
+           ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email`,
+          [studentNo, encryptPII(patch.odrsEmail)]
+        );
+      } else {
+        await run("DELETE FROM registrar_odrs_contacts WHERE student_no = $1", [studentNo]);
+      }
+    }
     return true;
   });
   if (!updated) return null;
   invalidateOcrStudentRoster(officeId);
-  return await getStudentByStudentNo(studentNo, { officeId });
+  return await getStudentByStudentNo(studentNo, { officeId, includeOdrsEmail: updateOdrsEmail });
 }
 
 export async function archiveStudent(studentNo, { officeId } = {}) {

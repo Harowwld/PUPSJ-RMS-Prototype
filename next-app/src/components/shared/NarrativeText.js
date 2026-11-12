@@ -20,16 +20,18 @@ export { parseNarrativeTokens, resolveUserDisplayName };
  *
  * @param {string} text - Raw or formatted audit details
  * @param {"compact" | "full"} [mode="full"] - "compact" for table rows; "full" for cards/sheets
+ * @param {string[]} [highlightedPhrases] - Literal phrases to render as emphasized entities
  * @param {function} [onMentionClick] - Callback when a mention/avatar pill is clicked
  * @param {string} [className] - Optional custom CSS classes
  */
 export default function NarrativeText({
   text,
   mode = "full",
+  highlightedPhrases,
   onMentionClick,
   className,
 }) {
-  const tokens = useMemo(() => parseNarrativeTokens(text), [text]);
+  const tokens = useMemo(() => parseNarrativeTokens(text, highlightedPhrases), [text, highlightedPhrases]);
 
   if (!tokens || tokens.length === 0) {
     return <span className={cn("text-muted-foreground", className)}>No activity description recorded.</span>;
@@ -164,15 +166,9 @@ export default function NarrativeText({
 
           case "quoted_entity": {
             return (
-              <span
-                key={key}
-                className={cn(
-                  "font-semibold text-gray-950 dark:text-zinc-50 select-text",
-                  mode === "full" && "border-b border-black/15 dark:border-white/15 pb-[0.5px]"
-                )}
-              >
+              <strong key={key} className="select-text font-bold text-gray-950 dark:text-zinc-50">
                 {token.value}
-              </span>
+              </strong>
             );
           }
 

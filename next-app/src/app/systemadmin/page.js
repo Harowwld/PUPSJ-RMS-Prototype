@@ -1,5 +1,6 @@
 "use client"
 
+import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import { useEffect, useState, useCallback, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -14,6 +15,7 @@ import InstitutionalBrandingSkeleton from "@/components/systemadmin/skeletons/In
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import ModuleConfigTab from "@/components/systemadmin/ModuleConfigTab"
 import CampusOperationsSkeleton from "@/components/systemadmin/skeletons/CampusOperationsSkeleton"
+import ModuleConfigSkeleton from "@/components/systemadmin/skeletons/ModuleConfigSkeleton"
 import GlobalStaffSkeleton from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import SecurityQuestionsSkeleton from "@/components/systemadmin/skeletons/SecurityQuestionsSkeleton"
 import GlobalAuditLogsSkeleton from "@/components/systemadmin/skeletons/GlobalAuditLogsSkeleton"
@@ -25,7 +27,7 @@ import { getRoleBranding } from "@/lib/roleBranding"
 import { ContentSwap } from "@/components/ui/motion"
 
 import OdrsPortalAccountsTab from "@/components/systemadmin/OdrsPortalAccountsTab"
-import WorkspaceLoading from "@/components/shared/WorkspaceLoading"
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 
 const SYSTEMADMIN_NAV_ITEMS = [
   { type: "header", label: "Campus Operations" },
@@ -50,22 +52,22 @@ const SYSTEMADMIN_NAV_ITEMS = [
 ]
 
 const OfficeManagementTab = dynamic(() => import("@/components/systemadmin/OfficeManagementTab"), {
-  loading: () => <SystemAdminContentSkeleton view="offices" />,
+  loading: () => renderSystemAdminSkeleton("offices"),
 })
 const InstitutionalBrandingTab = dynamic(() => import("@/components/systemadmin/InstitutionalBrandingTab"), {
-  loading: () => <SystemAdminContentSkeleton view="branding" />,
+  loading: () => renderSystemAdminSkeleton("branding"),
 })
 const GlobalStaffTab = dynamic(() => import("@/components/systemadmin/GlobalStaffTab"), {
-  loading: () => <SystemAdminContentSkeleton view="staff" />,
+  loading: () => renderSystemAdminSkeleton("staff"),
 })
 const GlobalAuditLogsTab = dynamic(() => import("@/components/systemadmin/GlobalAuditLogsTab"), {
-  loading: () => <SystemAdminContentSkeleton view="logs" />,
+  loading: () => renderSystemAdminSkeleton("logs"),
 })
 const CampusOperationsTab = dynamic(() => import("@/components/systemadmin/CampusOperationsTab"), {
-  loading: () => <SystemAdminContentSkeleton view="health" />,
+  loading: () => renderSystemAdminSkeleton("health"),
 })
 const SystemBackupsTab = dynamic(() => import("@/components/systemadmin/SystemBackupsTab"), {
-  loading: () => <SystemAdminContentSkeleton view="backups" />,
+  loading: () => renderSystemAdminSkeleton("backups"),
 })
 const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/LandingPageCmsTab"), {
   loading: () => <LandingCmsDynamicFallback />,
@@ -73,10 +75,10 @@ const LandingPageCmsTab = dynamic(() => import("@/components/systemadmin/Landing
 
 function LandingCmsDynamicFallback() {
   const searchParams = useSearchParams()
-  return <SystemAdminContentSkeleton view="landing" section={searchParams?.get("section")} />
+  return renderSystemAdminSkeleton("landing", searchParams?.get("section"))
 }
 const SecurityQuestionsTab = dynamic(() => import("@/components/systemadmin/SecurityQuestionsTab"), {
-  loading: () => <SystemAdminContentSkeleton view="security" />,
+  loading: () => renderSystemAdminSkeleton("security"),
 })
 
 const VALID_VIEWS = ["offices", "branding", "modules", "standards", "staff", "portal_accounts", "security", "logs", "health", "backups", "landing", "activity", "settings"]
@@ -102,11 +104,12 @@ function hasUnsavedChanges(activeView, brandingDirty, securityDirty, landingDirt
   return (activeView === "branding" && brandingDirty) || (activeView === "security" && securityDirty) || (activeView === "landing" && landingDirty)
 }
 
-function SystemAdminContentSkeleton({ view, section }) {
+function renderSystemAdminSkeleton(view, section) {
   switch (view) {
     case "offices": return <OfficeManagementPageSkeleton />
     case "branding": return <InstitutionalBrandingSkeleton />
     case "staff": return <GlobalStaffSkeleton />
+    case "modules": return <ModuleConfigSkeleton />
     case "security": return <SecurityQuestionsSkeleton />
     case "logs": return <GlobalAuditLogsSkeleton />
     case "health":
@@ -334,7 +337,7 @@ function SystemAdminPageContent() {
           authUser={authUser}
         />
 
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-slate-50/50 dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
           <div
             className="p-2 md:pl-1 flex flex-[1_0_auto] min-h-full flex-col w-full [&>*]:flex-[1_0_auto]"
           >
@@ -366,20 +369,26 @@ function SystemAdminPageContent() {
 }
 
 function SystemAdminPageWithView() {
-  const fallback = <WorkspaceLoading />
+  const searchParams = useSearchParams()
+  const view = resolveRequestedView(searchParams?.get("view"))
+  const fallback = (
+    <InitialDashboardLoader>
+      <DashboardShellSkeleton>
+        {renderSystemAdminSkeleton(view, searchParams?.get("section"))}
+      </DashboardShellSkeleton>
+    </InitialDashboardLoader>
+  )
 
   return (
     <SystemAdminGuard fallback={fallback}>
-      <Suspense fallback={fallback}>
-        <SystemAdminPageContent />
-      </Suspense>
+      <SystemAdminPageContent />
     </SystemAdminGuard>
   )
 }
 
 export default function SystemAdminPage() {
   return (
-    <Suspense fallback={<WorkspaceLoading />}>
+    <Suspense fallback={<InitialDashboardLoader />}>
       <SystemAdminPageWithView />
     </Suspense>
   )

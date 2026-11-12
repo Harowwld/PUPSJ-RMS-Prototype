@@ -1,4 +1,5 @@
 "use client";
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { Textarea } from "@/components/ui/textarea";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { downloadDocument } from "@/lib/documentDownload";
@@ -361,22 +362,22 @@ export default function RegistrarODRSTab({ showToast }) {
                 </div>
 
                 {/* Parent / Guardian Information and SPA Verification */}
-                {selected.client_type === "Parent" && (
+                {(selected.client_type === "Parent" || selected.doc_type === MISSING_DOCUMENTS_INQUIRY) && (
                   <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-3.5 border border-amber-200/70 dark:border-amber-900/40 space-y-2 mb-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                         <Shield01Icon size="1em" className="text-xs text-amber-600 dark:text-amber-400" />
-                        Parent / Legal Guardian
+                        {selected.doc_type === MISSING_DOCUMENTS_INQUIRY ? "Requester Verification" : "Parent / Legal Guardian"}
                       </span>
                       {selected.spa_verified ? (
                         <span className={cn(BADGE_PALETTES.emerald, "gap-1", BADGE_BASE)}>
                           <CheckmarkCircle01Icon size="1em" className="text-[10px]" />
-                          SPA Verified
+                          {selected.doc_type === MISSING_DOCUMENTS_INQUIRY ? "Requester Verified" : "SPA Verified"}
                         </span>
                       ) : (
                         <span className={cn(BADGE_PALETTES.amber, "gap-1", BADGE_BASE)}>
                           <Clock01Icon size="1em" className="text-[10px]" />
-                          SPA Pending
+                          Verification Pending
                         </span>
                       )}
                     </div>
@@ -390,14 +391,14 @@ export default function RegistrarODRSTab({ showToast }) {
                         size="sm"
                         disabled={spaSaving}
                         onClick={toggleSpaVerified}
-                        title={selected.spa_verified ? "Revoke SPA Verification" : "Verify SPA Authority"}
+                        title={selected.spa_verified ? "Revoke Verification" : "Verify Requester"}
                         className={`h-7 px-3 text-xs font-semibold rounded-lg ${
                           selected.spa_verified
                             ? "border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50"
                             : "bg-emerald-600 hover:bg-emerald-700 text-white"
                         }`}
                       >
-                        {selected.spa_verified ? "Revoke SPA" : "Verify SPA"}
+                        {selected.spa_verified ? "Revoke Verification" : selected.doc_type === MISSING_DOCUMENTS_INQUIRY ? "Verify Requester" : "Verify SPA"}
                       </Button>
                     </div>
                   </div>

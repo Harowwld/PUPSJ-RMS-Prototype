@@ -114,6 +114,7 @@ export async function createStaff({
   email,
   lastActive,
   password,
+  requireEmailVerification = false,
 }) {
   const hashedPassword = password ? hashPassword(password) : null;
   const isAutoId = !id || String(id).trim().toLowerCase() === "auto";
@@ -143,8 +144,8 @@ export async function createStaff({
         await txQuery(
           `INSERT INTO staff (
             id, office_id, fname, lname, role, section, status, email,
-            last_active, password_hash, password_last_changed, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+            last_active, password_hash, password_last_changed, updated_at, email_verification_required
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW(), $11)`,
           [
             staffId,
             officeId || null,
@@ -156,6 +157,7 @@ export async function createStaff({
             encryptPII(email ? String(email).toLowerCase() : ""),
             lastActive || null,
             hashedPassword,
+            requireEmailVerification,
           ]
         );
 

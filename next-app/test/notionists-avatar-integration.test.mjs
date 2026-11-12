@@ -60,7 +60,7 @@ test("3. generateShuffledNotionist generates unique, sanitized custom avatars", 
 });
 
 test("4. AccountSetupModal supports dual avatar types and shuffle generator", () => {
-  const code = fs.readFileSync(path.resolve("src/components/shared/AccountSetupModal.js"), "utf8");
+  const code = fs.readFileSync(path.resolve("src/components/shared/AccountSetupPreferences.js"), "utf8");
 
   // Must include Notionists and Beam options
   assert.ok(code.includes("Notionists"), "Must include Notionists option");

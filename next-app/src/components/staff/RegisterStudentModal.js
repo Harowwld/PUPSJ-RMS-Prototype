@@ -31,6 +31,7 @@ export default function RegisterStudentModal({
   storageLayout = null,
   onSuccess,
   showToast,
+  collectOdrsEmail = false,
 }) {
   const currentYear = new Date().getFullYear();
   const { attachForm, ...repeat } = useCreateAnother(open);
@@ -38,6 +39,7 @@ export default function RegisterStudentModal({
   const [studentNo, setStudentNo] = useState("");
   const [nameParts, setNameParts] = useState({ firstName: "", middleName: "", lastName: "" });
   const name = formatRegistrarStudentName(nameParts);
+  const [odrsEmail, setOdrsEmail] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [yearLevel, setYearLevel] = useState(String(currentYear));
   const [section, setSection] = useState("");
@@ -141,6 +143,7 @@ export default function RegisterStudentModal({
 
     const payload = {
       studentNo: cleanNo,
+      odrsEmail: collectOdrsEmail ? odrsEmail.trim() || undefined : undefined,
       name: cleanName,
       courseCode: cleanCourse,
       yearLevel: parsedYear,
@@ -169,6 +172,7 @@ export default function RegisterStudentModal({
         body: JSON.stringify({
           ...normalizedParts,
           studentNo: cleanNo,
+          odrsEmail: payload.odrsEmail,
           name: cleanName,
           courseCode: cleanCourse,
           yearLevel: parsedYear,
@@ -193,7 +197,9 @@ export default function RegisterStudentModal({
 
       repeat.complete(() => {
         setStudentNo("");
+        setStudentNo("");
         setNameParts({ firstName: "", middleName: "", lastName: "" });
+        setOdrsEmail("");
         setYearLevel(String(currentYear));
         if (!repeat.createAnother) setSection("");
       }, () => onOpenChange(false));
@@ -254,6 +260,13 @@ export default function RegisterStudentModal({
               </div>
             </div>
           </div>
+
+          {collectOdrsEmail && (
+            <label className="grid gap-1.5 text-xs font-medium">
+              Email for ODRS (optional)
+              <Input type="email" placeholder="name@example.com" autoComplete="off" maxLength={100} value={odrsEmail} onChange={(event) => setOdrsEmail(event.target.value)} />
+            </label>
+          )}
 
           {/* Academic Profile */}
           <div className="space-y-4 pt-1 border-t border-border dark:border-border">

@@ -1,5 +1,7 @@
 "use client"
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+
 import useUrlPage from "@/hooks/useUrlPage"
 import { useMemo, useRef, useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
@@ -35,7 +37,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
-import { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
+import { SYSTEM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { AlertCircleIcon as EmptyAlertCircleIcon, CheckmarkCircle01Icon, Database01Icon, Loading01Icon, PieChartIcon } from "hugeicons-react"
 
@@ -161,13 +163,13 @@ export default function BackupTab({
   }
 
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
-  const [sortBy, setSortBy] = useState("created_at")
-  const [sortOrder, setSortOrder] = useState("DESC")
-  const [filterRules, setFilterRules] = useState([])
-  const [groupBy, setGroupBy] = useState("none")
-  const [backupTypeFilter, setBackupTypeFilter] = useState("all")
-  const [visibleColumns, setVisibleColumns] = useState(() =>
-    PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("office_backups", "sortBy", "created_at")
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("office_backups", "sortOrder", "DESC")
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("office_backups", "filterRules", [])
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("office_backups", "groupBy", "none")
+  const [backupTypeFilter, setBackupTypeFilter] = useWorkspaceViewPreference("office_backups", "backupTypeFilter", "all")
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("office_backups", "visibleColumns",
+    SYSTEM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
   )
   const [page, setPage] = useUrlPage()
   const [itemsPerPage, setItemsPerPage] = useState(20)
@@ -242,6 +244,10 @@ export default function BackupTab({
   const sortedAndPaginatedBackups = useMemo(() => {
     const result = [...filteredBackups]
     result.sort((a, b) => {
+      if (groupBy !== "none") {
+        const groupComparison = String(a[groupBy] || "").localeCompare(String(b[groupBy] || ""))
+        if (groupComparison) return groupComparison
+      }
       let valA, valB
       if (sortBy === "size_bytes") {
         valA = a.size_bytes
@@ -258,7 +264,7 @@ export default function BackupTab({
     })
     const start = (page - 1) * itemsPerPage
     return result.slice(start, start + itemsPerPage)
-  }, [filteredBackups, sortBy, sortOrder, page, itemsPerPage])
+  }, [filteredBackups, groupBy, sortBy, sortOrder, page, itemsPerPage])
 
   const totalPages = Math.max(1, Math.ceil(filteredBackups.length / itemsPerPage))
 
@@ -467,8 +473,8 @@ export default function BackupTab({
                 tableControls={<>
                   <FilterPopover fields={BACKUP_FILTER_FIELDS} filters={filterRules} onFiltersChange={(rules) => { setFilterRules(rules); setPage(1) }} entityLabel="backups" />
                   <SortPopover options={BACKUP_SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1) }} />
-                  <GroupPopover options={BACKUP_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={setGroupBy} />
-                  <ColumnsPopover columns={PLATFORM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+                  <GroupPopover options={BACKUP_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={(value) => { setGroupBy(value); setPage(1) }} />
+                  <ColumnsPopover columns={SYSTEM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
                 </>}
                 scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}
               />
@@ -546,6 +552,7 @@ export default function BackupTab({
                     handleSort={handleSort}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
+                    groupBy={groupBy}
                     localLoading={localLoading}
                     handleSyncExternal={handleSyncExternal}
                     onDownloadBackup={handleDownloadBackup}

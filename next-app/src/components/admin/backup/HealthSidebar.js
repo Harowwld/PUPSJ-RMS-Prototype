@@ -1,5 +1,5 @@
 "use client"
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 
 
@@ -130,7 +130,7 @@ export default function HealthSidebar({
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               {/* Total capacity badge */}
-              <div className="bg-[#1D1D1F] dark:bg-zinc-800 px-3 py-1.5 rounded-xl text-[14px] font-bold text-white shrink-0">
+              <div className={cn("bg-[#1D1D1F] dark:bg-zinc-800 text-white", embedded ? COMPACT_BADGE_BASE : "shrink-0 rounded-xl px-3 py-1.5 text-[14px] font-bold")}>
                 {diskTotal} GB
               </div>
               <div className="text-[13px] font-normal text-[#8E8E93] leading-none">
@@ -167,12 +167,12 @@ export default function HealthSidebar({
                   <span
                     className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", externalDrive?.connected
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300", BADGE_BASE)}
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300", embedded ? COMPACT_BADGE_BASE : BADGE_BASE)}
                   >
                     {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
                   </span>
                   {externalDrive?.isEmulated && (
-                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300", BADGE_BASE)}>
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300", embedded ? COMPACT_BADGE_BASE : BADGE_BASE)}>
                       Demo Mode
                     </span>
                   )}

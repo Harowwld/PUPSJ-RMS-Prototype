@@ -3,10 +3,11 @@
 import { useState, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
 import { Cancel01Icon, StarIcon } from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import { RequestFeedbackBackdrop } from "./RequestFeedbackCard";
+import styles from "./RequestFeedbackCard.module.css";
+
 const RATING_LABELS = {
   1: "Poor",
   2: "Fair",
@@ -80,50 +81,33 @@ export default function StudentSidebarFeedbackCard({
 
   // Expanded Sidebar State
   return (
-    <div className="relative mx-1 overflow-hidden rounded-2xl border border-red-200/60 bg-gradient-to-br from-red-50/70 via-white/80 to-amber-50/40 p-3 shadow-xs backdrop-blur-xs transition-all dark:border-border dark:from-zinc-900/90 dark:via-zinc-900/60 dark:to-zinc-950/90">
-      {/* Decorative background watermark */}
-      <StarIcon size={16}
-        className="pointer-events-none absolute -bottom-4 -right-3 text-7xl text-amber-500/10 dark:text-amber-400/5 select-none"
-        aria-hidden="true"
-      />
+    <section
+      aria-label="Experience Feedback"
+      className={`${styles.card} relative isolate mx-1 overflow-hidden rounded-2xl p-3 text-white`}
+    >
+      <RequestFeedbackBackdrop sizes="240px" />
 
-      {/* Top Header Row: Category Badge + Dismiss Button */}
-      <div className="flex items-center justify-between gap-1 mb-2">
-        <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
-          <AppIcon className=" BubbleChatIcon text-[11px]" />
-          Feedback
-        </span>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          aria-label="Dismiss feedback reminder"
-          title="Dismiss reminder"
-          className="size-6 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-90 border border-black/[0.04] dark:border-white/[0.08]"
-        >
-          <Cancel01Icon size="1em" className="text-[13px]" />
-        </button>
-      </div>
-
-      {/* Content Section */}
-      <div className="space-y-1 mb-2.5">
-        <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] leading-tight">
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss feedback reminder"
+        title="Dismiss reminder"
+        className="absolute right-2 top-2 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white/85 transition-colors hover:bg-white/20 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+      >
+        <Cancel01Icon size={13} aria-hidden="true" />
+      </button>
+      <div className="px-5 text-center">
+        <h4 className="text-balance text-[15px] font-semibold leading-snug tracking-tight text-white">
           How was your request?
         </h4>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
-            {targetRequest.id}
-          </span>
-          <span className="text-[11px] text-gray-600 dark:text-zinc-400 font-medium truncate max-w-[155px]" title={targetRequest.doc_type}>
-            {targetRequest.doc_type}
-          </span>
-        </div>
-        <p className="text-[11px] text-gray-900 dark:text-zinc-300 leading-normal pt-0.5">
-          Your rating helps the Registrar improve processing speed and service quality.
+        <p className="mt-1 truncate text-xs font-medium leading-relaxed text-white/90" title={targetRequest.doc_type}>
+          {targetRequest.doc_type || "Document request"}
+          <span className="font-normal tabular-nums text-white/75"> · {targetRequest.id}</span>
         </p>
       </div>
 
       {/* Interactive Quick Star Rating */}
-      <div className="flex flex-col items-center gap-1 pt-1 pb-2">
+      <div className="flex flex-col items-center gap-1 pt-1.5 pb-1">
         <div
           className="flex items-center justify-center gap-1"
           role="radiogroup"
@@ -140,7 +124,7 @@ export default function StudentSidebarFeedbackCard({
                 onMouseLeave={() => setHoverRating(0)}
                 aria-label={`Rate ${star} star${star > 1 ? "s" : ""}: ${RATING_LABELS[star]}`}
                 title={`Rate ${star} star${star > 1 ? "s" : ""}: ${RATING_LABELS[star]}`}
-                className="group relative flex h-7 w-7 items-center justify-center rounded-lg p-0.5 transition-transform active:scale-85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer"
+                className="group relative flex h-7 w-7 items-center justify-center rounded-lg p-0.5 transition-transform active:scale-85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/80 cursor-pointer"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -149,7 +133,7 @@ export default function StudentSidebarFeedbackCard({
                     "h-5 w-5 transition-colors duration-150",
                     isHovered
                       ? "fill-amber-400 text-amber-400 drop-shadow-xs scale-110"
-                      : "fill-transparent text-gray-300 dark:text-zinc-600 group-hover:text-amber-300"
+                      : "fill-transparent text-white/75 group-hover:text-amber-300"
                   )}
                   stroke="currentColor"
                   strokeWidth="1.5"
@@ -168,7 +152,7 @@ export default function StudentSidebarFeedbackCard({
           className={cn(
             "text-[10px] font-semibold transition-all h-3.5",
             hoverRating > 0
-              ? "text-amber-700 dark:text-amber-300"
+              ? "text-amber-300"
               : "text-transparent select-none"
           )}
         >
@@ -180,11 +164,10 @@ export default function StudentSidebarFeedbackCard({
         size="sm"
         type="button"
         onClick={() => onRateRequest?.(targetRequest, hoverRating || 0)}
-        title="Rate Request"
-        className="w-full"
+        className="w-full border-0 focus-visible:ring-white/80 focus-visible:ring-offset-0"
       >
-        Rate
+        Rate Service
       </Button>
-    </div>
+    </section>
   );
 }

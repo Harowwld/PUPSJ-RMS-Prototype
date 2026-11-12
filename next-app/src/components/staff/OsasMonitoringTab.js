@@ -1,4 +1,5 @@
 "use client";
+import { isInManilaDateRange } from "@/lib/timeFormat";
 import { Table, TableHead } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -48,7 +49,7 @@ import {
   EmptyContent,
   EmptyState,
 } from "@/components/ui/empty";
-import { ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, Loading01Icon, ReloadIcon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
+import { AlertCircleIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CalendarCheckIn01Icon as EmptyCalendarCheckIn01Icon, ClipboardIcon as EmptyClipboardIcon, Loading01Icon, Search01Icon, CalendarCheckIn01Icon, ClipboardIcon} from "hugeicons-react";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -325,6 +326,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [tableSortOrder, setTableSortOrder] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortOrder`, "ASC");
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [streamErrors, setStreamErrors] = useState({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [page, setPage] = useUrlPage();
@@ -396,7 +398,8 @@ export default function OsasMonitoringTab({ showToast }) {
   };
 
   const serverPaged = viewMode !== "kanban" && !searchQuery.trim() &&
-    filterRules.length === 0 && statusFilters.length === 0 && orgFilters.length === 0 && !tableSortBy;
+    !startDate && !endDate && filterRules.length === 0 && statusFilters.length === 0 &&
+    orgFilters.length === 0 && !tableSortBy;
 
   const load = useCallback(async (isManual = false) => {
     const request = ++loadRequestRef.current;
@@ -412,57 +415,41 @@ export default function OsasMonitoringTab({ showToast }) {
       const postEventQuery = serverPaged
         ? `?limit=${activeStream === "post_events" ? itemsPerPage : 1}&offset=${activeStream === "post_events" ? (page - 1) * itemsPerPage : 0}`
         : "";
-      const [proposalsRes, postEventsRes] = await Promise.allSettled([
-        serverPaged
-          ? fetch(`/api/osas/event-proposals${proposalQuery}`, { cache: "no-store" })
-          : fetchAllPages("/api/osas/event-proposals", 100),
-        serverPaged
-          ? fetch(`/api/osas/post-event-reports${postEventQuery}`, { cache: "no-store" })
-          : fetchAllPages("/api/osas/post-event-reports", 100),
+      const fetchStream = async (path, query, getOrganization) => {
+        if (serverPaged) {
+          const response = await fetch(`${path}${query}`, { cache: "no-store" });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !payload?.ok || !Array.isArray(payload.data)) {
+            throw new Error(payload?.error || "Unable to load submissions.");
+          }
+          return payload;
+        }
+
+        const data = await fetchAllPages(path, 100);
+        const organizations = [...new Set(data.map(getOrganization).filter(Boolean))].sort();
+        return { data, total: data.length, organizations };
+      };
+
+      const [proposals, postEvents] = await Promise.allSettled([
+        fetchStream("/api/osas/event-proposals", proposalQuery, (row) => row.verified_org_name || row.organization_name),
+        fetchStream("/api/osas/post-event-reports", postEventQuery, (row) => row.organization_name),
       ]);
       if (request !== loadRequestRef.current) return;
 
-      if (proposalsRes.status === "fulfilled") {
-        if (serverPaged) {
-          const json = await proposalsRes.value.json().catch(() => null);
-          if (request !== loadRequestRef.current) return;
-          if (proposalsRes.value.ok && json?.ok) {
-            setRows(json.data || []);
-            setProposalTotal(Number(json.total) || 0);
-            setProposalOrganizations(json.organizations || []);
-          }
-        } else {
-          const list = proposalsRes.value;
-          setRows(list);
-          setProposalTotal(list.length);
-          setProposalOrganizations([...new Set(list.map((row) => row.verified_org_name || row.organization_name).filter(Boolean))].sort());
-        }
+      setStreamErrors({
+        proposals: proposals.status === "rejected",
+        post_events: postEvents.status === "rejected",
+      });
+      if (proposals.status === "fulfilled") {
+        setRows(proposals.value.data);
+        setProposalTotal(Number(proposals.value.total) || 0);
+        setProposalOrganizations(proposals.value.organizations || []);
       }
-      if (postEventsRes.status === "fulfilled") {
-        if (serverPaged) {
-          const json = await postEventsRes.value.json().catch(() => null);
-          if (request !== loadRequestRef.current) return;
-          if (postEventsRes.value.ok && json?.ok) {
-            setPostEventReports(json.data || []);
-            setPostEventTotal(Number(json.total) || 0);
-            setPostEventOrganizations(json.organizations || []);
-          }
-        } else {
-          const list = postEventsRes.value;
-          setPostEventReports(list);
-          setPostEventTotal(list.length);
-          setPostEventOrganizations([...new Set(list.map((row) => row.organization_name).filter(Boolean))].sort());
-        }
+      if (postEvents.status === "fulfilled") {
+        setPostEventReports(postEvents.value.data);
+        setPostEventTotal(Number(postEvents.value.total) || 0);
+        setPostEventOrganizations(postEvents.value.organizations || []);
       }
-    } catch (err) {
-      if (request !== loadRequestRef.current) return;
-      showToast?.(
-        formatErrorMessage(err, {
-          title: "Submissions Load Failed",
-          actionContext: "Loading OSAS proposals and reports",
-        }),
-        true
-      );
     } finally {
       if (request === loadRequestRef.current) {
         setHasLoaded(true);
@@ -470,7 +457,7 @@ export default function OsasMonitoringTab({ showToast }) {
         setIsRefreshing(false);
       }
     }
-  }, [showToast, serverPaged, activeStream, page, itemsPerPage]);
+  }, [serverPaged, activeStream, page, itemsPerPage]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(), 0);
@@ -1093,14 +1080,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const filteredRows = useMemo(() => {
     return rows.filter((item) => {
-      if (startDate || endDate) {
-        const itemDate = item.event_date || item.created_at ? new Date(item.event_date || item.created_at) : null;
-        if (itemDate && !isNaN(itemDate.getTime())) {
-          const dateStr = itemDate.toISOString().slice(0, 10);
-          if (startDate && dateStr < startDate) return false;
-          if (endDate && dateStr > endDate) return false;
-        }
-      }
+      if (!isInManilaDateRange(item.created_at, startDate, endDate)) return false;
       if (statusFilters.length > 0) {
         const itemStatusNorm = normalizeProposalStatus(item.status);
         const matchesStatus = statusFilters.some(
@@ -1144,14 +1124,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
   const filteredPostEvents = useMemo(() => {
     return postEventReports.filter((item) => {
-      if (startDate || endDate) {
-        const itemDate = item.created_at || item.event_date ? new Date(item.created_at || item.event_date) : null;
-        if (itemDate && !isNaN(itemDate.getTime())) {
-          const dateStr = itemDate.toISOString().slice(0, 10);
-          if (startDate && dateStr < startDate) return false;
-          if (endDate && dateStr > endDate) return false;
-        }
-      }
+      if (!isInManilaDateRange(item.created_at, startDate, endDate)) return false;
       if (statusFilters.length > 0) {
         const matches = statusFilters.some((sf) => String(sf).toLowerCase() === String(item.status || "Submitted").toLowerCase());
         if (!matches) return false;
@@ -1506,6 +1479,8 @@ export default function OsasMonitoringTab({ showToast }) {
               />
             )}
             <DateRangeFilterButton
+              placeholder="Submitted Date"
+              title="Filter by submission date (Manila)"
               startDate={startDate}
               endDate={endDate}
               onApply={({ startDate: s, endDate: e }) => {
@@ -1538,8 +1513,18 @@ export default function OsasMonitoringTab({ showToast }) {
 
         {/* 5. Main Content Area */}
         <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", activeFilteredList.length === 0 && "rounded-b-2xl overflow-hidden")}>
-          {loading && !hasLoaded ? (
+          {loading && (!hasLoaded || activeFilteredList.length === 0) ? (
             <DataContentSkeleton columns={activeStream === "proposals" ? proposalTableColumnsConfig : postEventTableColumnsConfig} viewMode={viewMode} />
+          ) : streamErrors[activeStream] && activeFilteredList.length === 0 ? (
+            <EmptyState
+              icon={AlertCircleIcon}
+              title={activeStream === "proposals" ? "Could Not Load Event Proposals" : "Could Not Load Post-Event Reports"}
+              description="Try loading the submissions again."
+            >
+              <Button variant="outline" size="sm" onClick={() => load(true)} disabled={loading || isRefreshing}>
+                Try Again
+              </Button>
+            </EmptyState>
           ) : <>
           {/* STREAM 1: Pre-Event Proposals */}
           {activeStream === "proposals" && (
@@ -1595,21 +1580,6 @@ export default function OsasMonitoringTab({ showToast }) {
                                     <span>Proposal ID</span>
                                     <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
                                   </button>
-                                  {isScrolledX && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={resetTableScroll}
-                                          className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                          aria-label="Reset scroll to start"
-                                        >
-                                          <ReloadIcon size="1em" className="text-xs" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                                    </Tooltip>
-                                  )}
                                 </div>
                               </th>
                             )}
@@ -1717,7 +1687,8 @@ export default function OsasMonitoringTab({ showToast }) {
                               {visibleColumns.includes("submitted") && (
                                 <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                                   {item.created_at
-                                    ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                    ? new Date(item.created_at).toLocaleDateString("en-PH", {
+                                        timeZone: "Asia/Manila",
                                         month: "short",
                                         day: "numeric",
                                         year: "numeric",
@@ -1892,21 +1863,6 @@ export default function OsasMonitoringTab({ showToast }) {
                                     <span>Report ID</span>
                                     <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
                                   </button>
-                                  {isScrolledX && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={resetTableScroll}
-                                          className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                          aria-label="Reset scroll to start"
-                                        >
-                                          <ReloadIcon size="1em" className="text-xs" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                                    </Tooltip>
-                                  )}
                                 </div>
                               </th>
                             )}
@@ -2007,7 +1963,8 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {visibleColumns.includes("submitted") && (
                                   <td className="py-3.5 px-6 whitespace-nowrap hidden sm:table-cell text-gray-900 dark:text-zinc-300 text-[11px] border-r border-border/70 dark:border-border/70">
                                     {item.created_at
-                                      ? new Date(item.created_at).toLocaleDateString(undefined, {
+                                      ? new Date(item.created_at).toLocaleDateString("en-PH", {
+                                          timeZone: "Asia/Manila",
                                           month: "short",
                                           day: "numeric",
                                           year: "numeric",

@@ -117,6 +117,7 @@ export const ForgotPasswordIdentifySchema = z.object({
 });
 
 export const StudentRegistrationSchema = z.object({
+  odrsEmail: z.string().trim().max(100).email("Enter a valid ODRS email.").optional(),
   studentNo: StudentNoSchema.transform((value) => value.toUpperCase()),
   name: PersonNameSchema("Student Name", 200),
   courseCode: z

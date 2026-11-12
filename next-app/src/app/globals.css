@@ -1000,15 +1000,21 @@ html, body {
   to { transform: scale(0.95); opacity: 0; }
 }
 
-@keyframes wayfinder-wave {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.8); opacity: 1; }
-}
-
 /* Selection */
 ::selection {
     background-color: oklch(0.55 0.15 25 / 30%);
     color: oklch(0.98 0 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .storage-route-pulse {
+        animation: storage-route-pulse 1.15s var(--ease-fluid) infinite;
+    }
+}
+
+@keyframes storage-route-pulse {
+    0%, 32%, 100% { transform: scale(1); }
+    12% { transform: scale(1.65); opacity: 1; }
 }
 
 /* Storage Layout & Locator Styles */
@@ -2920,3 +2926,12 @@ html {
   background: rgba(212, 212, 216, 0.7) !important;
 }
 
+
+.initial-loader-skeleton,
+[data-initial-loader="skeleton"] .initial-loader-workspace {
+  display: none;
+}
+
+[data-initial-loader="skeleton"] .initial-loader-skeleton {
+  display: block;
+}

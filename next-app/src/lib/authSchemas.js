@@ -24,6 +24,8 @@ export const LoginIdentifierSchema = z
 export const LoginSchema = z.object({
   username: LoginIdentifierSchema,
   password: z.string().min(1, "Password is required"),
+  staffEmailCode: z.string().regex(/^\d{6}$/, "Enter the six-digit verification code.").optional(),
+  resendStaffEmailCode: z.boolean().optional(),
 });
 
 export const ForgotPasswordIdentifySchema = z.object({

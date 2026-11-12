@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
 import HealthSidebar from "@/components/admin/backup/HealthSidebar"
-import PlatformBackupTable, { PLATFORM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
+import PlatformBackupTable, { SYSTEM_BACKUP_COLUMNS } from "@/components/systemadmin/PlatformBackupTable"
 import AutoBackupSchedule from "@/components/admin/backup/AutoBackupSchedule"
 import BackupFilters from "@/components/admin/backup/BackupFilters"
 import BackupTableSkeleton from "@/components/admin/backup/BackupTableSkeleton"
@@ -90,7 +90,7 @@ export default function SystemBackupsTab({ showToast }) {
   const [filterRules, setFilterRules] = useViewPreference("backups", "filterRules", [])
   const [backupTypeFilter, setBackupTypeFilter] = useViewPreference("backups", "backupTypeFilter", "all")
   const [groupBy, setGroupBy] = useViewPreference("backups", "groupBy", "none")
-  const [visibleColumns, setVisibleColumns] = useViewPreference("backups", "visibleColumns", PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key))
+  const [visibleColumns, setVisibleColumns] = useViewPreference("backups", "visibleColumns", SYSTEM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key))
   const { containerRef: tableScrollRef, scrollLeft, scrollRight, resetScroll } = useTableScroll([visibleColumns.join(","), backups.length, isLoading])
 
   // Delete modal state
@@ -860,7 +860,7 @@ export default function SystemBackupsTab({ showToast }) {
                   <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={(rules) => { setFilterRules(rules); setPage(1) }} entityLabel="backups" />
                   <SortPopover options={[{ key: "created_at", label: "Created" }, { key: "filename", label: "Archive name" }, { key: "size_bytes", label: "Size" }, { key: "backup_type", label: "Backup type" }, { key: "status_local", label: "Storage status" }]} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1) }} />
                   <GroupPopover options={[{ key: "backup_type", label: "Backup type", icon: Database01Icon }, { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
-                  <ColumnsPopover columns={PLATFORM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+                  <ColumnsPopover columns={SYSTEM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
                 </>}
                 scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}
               />

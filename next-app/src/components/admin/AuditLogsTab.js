@@ -1,5 +1,7 @@
 "use client"
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+
 
 import { useState, useEffect, useCallback } from "react"
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
@@ -22,7 +24,6 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { useAppReducedMotion } from "@/lib/motion"
 import useTableScroll from "@/hooks/useTableScroll"
-import useViewPreference from "@/hooks/useViewPreference"
 import { SegmentedControl } from "@/components/ui/tabs"
 import { Loading01Icon } from "hugeicons-react";
 
@@ -48,9 +49,9 @@ export default function AuditLogsTab({
   logSearch,
   setLogSearch,
   logRoleFilter,
-  setLogRoleFilter,
+  filterRules,
+  setFilterRules,
   logExcludeRoleFilter = "",
-  setLogExcludeRoleFilter,
   logSeverityFilter,
   setLogSeverityFilter,
   logExcludeSeverityFilter = "",
@@ -74,8 +75,8 @@ export default function AuditLogsTab({
   const [selectedLog, setSelectedLog] = useState(null)
   const shouldReduceMotion = useAppReducedMotion()
 
-  const [visibleColumns, setVisibleColumns] = useViewPreference(
-    "logs",
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference(
+    "audit_logs",
     "visibleColumns",
     DEFAULT_VISIBLE_COLUMNS
   )
@@ -94,53 +95,16 @@ export default function AuditLogsTab({
     resetTableScroll();
   }, [logPage, logsPerPage, logSearch, logRoleFilter, logExcludeRoleFilter, logSeverityFilter, logExcludeSeverityFilter, logStartDate, logEndDate, resetTableScroll]);
 
-  // Two-way sync filter rules
-  const [filterRules, setFilterRules] = useState(() => {
-    const rules = [];
-    if (logRoleFilter && logRoleFilter !== "All") {
-      logRoleFilter.split(",").map((s) => s.trim()).filter(Boolean).forEach((role, i) => {
-        rules.push({
-          id: `initial-role-${i}`,
-          fieldKey: "role",
-          operator: "is",
-          value: role,
-        });
-      });
-    }
-    if (logExcludeRoleFilter) {
-      logExcludeRoleFilter.split(",").map((s) => s.trim()).filter(Boolean).forEach((role, i) => {
-        rules.push({
-          id: `initial-ex-role-${i}`,
-          fieldKey: "role",
-          operator: "is_not",
-          value: role,
-        });
-      });
-    }
-    return rules;
-  });
-
   const handleFiltersChange = useCallback((newRules) => {
     setFilterRules(newRules);
-
-    const activeRoles = newRules
-      .filter((r) => r.fieldKey === "role" && r.operator !== "is_not" && r.value)
-      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]);
-    const excludeRoles = newRules
-      .filter((r) => r.fieldKey === "role" && r.operator === "is_not" && r.value)
-      .flatMap((r) => Array.isArray(r.value) ? r.value : [String(r.value)]);
-
-    setLogRoleFilter?.(activeRoles.length > 0 ? activeRoles.join(",") : "All");
-    setLogExcludeRoleFilter?.(excludeRoles.length > 0 ? excludeRoles.join(",") : "");
-
     setLogPage(1);
-  }, [setLogRoleFilter, setLogExcludeRoleFilter, setLogPage]);
+  }, [setFilterRules, setLogPage]);
 
   // PDF Preview State
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const previewSession = usePdfPreviewSession();
-  const [groupBy, setGroupBy] = useState("none")
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("audit_logs", "groupBy", "none")
 
   // Debounced Search
   useEffect(() => {
@@ -476,7 +440,6 @@ export default function AuditLogsTab({
             logEndDate={logEndDate}
             setLocalSearch={setLocalSearch}
             setLogSearch={setLogSearch}
-            setLogRoleFilter={setLogRoleFilter}
             setLogSeverityFilter={setLogSeverityFilter}
             setLogStartDate={setLogStartDate}
             setLogEndDate={setLogEndDate}

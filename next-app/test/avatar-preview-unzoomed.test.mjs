@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ACCOUNT_SETTINGS_PATH = path.resolve("src/components/shared/AccountSettingsPanel.js");
-const ACCOUNT_SETUP_PATH = path.resolve("src/components/shared/AccountSetupModal.js");
+const ACCOUNT_SETUP_PATH = path.resolve("src/components/shared/AccountSetupPreferences.js");
 
 test("Choose Profile Avatar modal previews in AccountSettingsPanel are not zoomed in or clipped", () => {
   const code = fs.readFileSync(ACCOUNT_SETTINGS_PATH, "utf8");

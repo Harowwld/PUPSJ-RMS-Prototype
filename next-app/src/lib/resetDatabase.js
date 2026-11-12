@@ -21,6 +21,13 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
   clearDynamicOffices();
 
   await transaction(async ({ query: txQuery }) => {
+    try {
+      await txQuery("SELECT email_verification_required FROM staff LIMIT 0");
+    } catch (error) {
+      if (error.code !== "42703") throw error;
+      throw new Error("Staff email verification migration is missing. Run pnpm db:migrate before resetting.", { cause: error });
+    }
+
     const result = await txQuery(`
       SELECT string_agg(format('%I.%I', schemaname, tablename), ', ' ORDER BY tablename) AS tables
       FROM pg_tables
@@ -103,12 +110,12 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
   await createStaff({
     id: "PUPSUPERADMIN-001",
     officeId: null,
-    fname: "System",
-    lname: "Administrator",
+    fname: "Ramon",
+    lname: "Villanueva",
     role: "SuperAdmin",
     section: "System Administration",
     status: "Active",
-    email: "superadmin@pup.local",
+    email: "superadmin@pup.com",
     password: defaultPassword,
   });
 
@@ -121,7 +128,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
     role: "Admin",
     section: "Administrative",
     status: "Active",
-    email: "admin.registrar@pup.local",
+    email: "admin.registrar@pup.com",
     password: defaultPassword,
   });
 
@@ -134,7 +141,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
     role: "Staff",
     section: "Records",
     status: "Active",
-    email: "staff.registrar@pup.local",
+    email: "staff.registrar@pup.com",
     password: defaultPassword,
   });
 
@@ -147,7 +154,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
     role: "Admin",
     section: "OSAS Admin",
     status: "Active",
-    email: "admin.osas@pup.local",
+    email: "admin.osas@pup.com",
     password: defaultPassword,
   });
 
@@ -160,7 +167,7 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
     role: "Staff",
     section: "Student Affairs",
     status: "Active",
-    email: "staff.osas@pup.local",
+    email: "staff.osas@pup.com",
     password: defaultPassword,
   });
 
@@ -200,8 +207,8 @@ export async function resetDatabase({ demoAccountsOnly = false } = {}) {
   // 6 & 7. Seed 2 students & student accounts for demo
   const studentHash = hashPassword("student123");
   const demoStudents = [
-    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
-    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
+    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.com"],
+    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.com"],
   ];
 
   for (const [sNo, sName, cCode, yLevel, sSec, sEmail] of demoStudents) {

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import {
   getOrganizationById,
   isStudentOfficerForOrg,
@@ -37,7 +37,7 @@ function resolveBylawsFilePath(storageFilename) {
 }
 
 export async function GET(req, ctx) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(
       access.error || "Student authentication required",
@@ -118,7 +118,7 @@ export async function GET(req, ctx) {
 }
 
 export async function POST(req, ctx) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(
       access.error || "Student authentication required",

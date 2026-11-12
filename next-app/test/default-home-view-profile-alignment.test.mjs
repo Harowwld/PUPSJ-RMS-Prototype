@@ -187,14 +187,14 @@ test("Campus Operations is placed as the very first section in systemadmin navig
   );
 });
 
-test("only linked current students can use the checklist as their home view", () => {
+test("portal users can open the checklist as their home view regardless of record linkage", () => {
   const preferences = { default_home_view: "compliance" };
   for (const account of [
     { client_type: "Student", student_no: "" },
     { client_type: "Alumni", student_no: "2024-00123-SJ-0" },
     { client_type: "Parent", student_no: "2024-00123-SJ-0" },
   ]) {
-    assert.equal(getDefaultHomeView({ role: "Student", preferences, ...account }).view, "overview");
+    assert.equal(getDefaultHomeView({ role: "Student", preferences, ...account }).view, "compliance");
   }
 });
 

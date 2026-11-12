@@ -11,11 +11,11 @@ const studentHash = hashPassword("student123");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const staff = [
-  ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
-  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
-  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
-  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
-  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
+  ["PUPSUPERADMIN-001", null, "Ramon", "Villanueva", "SuperAdmin", "System Administration", "superadmin@pup.com"],
+  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.com"],
+  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.com"],
+  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.com"],
+  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.com"],
 ];
 
 try {
@@ -76,8 +76,8 @@ try {
 
   // 4. Seed demo student accounts (including Juan Dela Cruz with existing ODRS/Proposals)
   const students = [
-    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.local"],
-    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.local"],
+    ["2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "BSIT", 2024, "BSIT-4A", "student@pup.com"],
+    ["2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "BSIT", 4, "BSIT-4A", "test.student@pup.com"],
     ["2021-00123-SJ-0", "MARIANO, CEDRICK", "BSIT", 4, "BSIT-4A", "marianocedrick412@gmail.com"],
   ];
 

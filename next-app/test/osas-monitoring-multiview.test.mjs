@@ -64,11 +64,14 @@ test("OSAS Monitoring multi-view architecture and toolbar design standard", () =
     "ActiveFilterChips row must be conditionally rendered only when activeChips exist"
   );
 
-  // 6. Anti-Flicker: Lazy useState initialization
+  // 6. Restore view mode and keep table settings separate for each submissions stream.
   assert.ok(
-    osasCode.includes('const [viewMode, setViewMode] = useState(() =>'),
-    "viewMode must be lazily initialized in useState to prevent first-paint flickering"
+    osasCode.includes('useOsasViewPreference("osas_monitoring", "viewMode"'),
+    "viewMode must use the account-scoped view preference hook"
   );
+  for (const field of ["filterRules", "groupBy", "visibleColumns", "tableSortBy", "tableSortOrder"]) {
+    assert.ok(osasCode.includes('`${activeStream}.' + field + '`'), `Store ${field} separately for each stream`);
+  }
 
   // 7. Strictly Text-Only Status Badges in Table Rows (No indicator dots)
   // Check that inside table body rows, there are no <span className="...w-1.5 h-1.5 rounded-full..." />

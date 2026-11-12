@@ -1,5 +1,7 @@
 "use client"
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+
 import { Table } from "@/components/ui/table"
 import TablePagination from "@/components/shared/TablePagination"
 import useUrlPage from "@/hooks/useUrlPage"
@@ -126,27 +128,20 @@ export default function DigitalRecordsReviewTab({
     return statusFilter.split(",").map((s) => s.trim()).filter(Boolean)
   })
   const [activeDocTypes, setActiveDocTypes] = useState([])
-  const [sortBy, setSortBy] = useState("created_at")
-  const [sortOrder, setSortOrder] = useState("DESC")
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("digital_records_review", "sortBy", "created_at")
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("digital_records_review", "sortOrder", "DESC")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
-  // Multi-View state (Lazy initialization to prevent layout shift & flicker)
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("pup_records_review_view_mode")
-        if (saved && ["list", "table", "kanban"].includes(saved)) return saved
-      } catch {}
-    }
-    return "table"
+  const [viewMode, setViewMode] = useWorkspaceViewPreference("digital_records_review", "viewMode", "table", {
+    legacyKey: "pup_records_review_view_mode",
   })
 
-  const [filterRules, setFilterRules] = useState([])
-  const [groupBy, setGroupBy] = useState("status")
-  const [visibleColumns, setVisibleColumns] = useState([
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("digital_records_review", "filterRules", [])
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("digital_records_review", "groupBy", "status")
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("digital_records_review", "visibleColumns", [
     "student_no",
     "student_name",
     "doc_type",
@@ -206,13 +201,6 @@ export default function DigitalRecordsReviewTab({
     ],
     [activeDocTypes]
   )
-
-  const handleViewModeChange = (mode) => {
-    setViewMode(mode)
-    try {
-      localStorage.setItem("pup_records_review_view_mode", mode)
-    } catch {}
-  }
 
   // Horizontal scroll container ref & scroll state
   const tableContainerRef = useRef(null)
@@ -503,7 +491,7 @@ export default function DigitalRecordsReviewTab({
     setDateFrom("")
     setDateTo("")
     setCurrentPage(1)
-  }, [setStatusFilter, setCurrentPage])
+  }, [setStatusFilter, setCurrentPage, setFilterRules])
 
   const activeChips = useMemo(() => {
     const chips = []
@@ -559,6 +547,7 @@ export default function DigitalRecordsReviewTab({
   }, [
     localSearch,
     filterRules,
+    setFilterRules,
     filterFields,
     docTypeFilters,
     dateFrom,
@@ -746,7 +735,7 @@ export default function DigitalRecordsReviewTab({
               <SegmentedControl
                 id="records-review-view-mode"
                 value={viewMode}
-                onValueChange={handleViewModeChange}
+                onValueChange={setViewMode}
                 variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0"
                 items={[
@@ -865,16 +854,23 @@ export default function DigitalRecordsReviewTab({
           <div className="relative flex flex-[1_0_auto] flex-col" aria-busy={isLoading || undefined}>
           {initialLoading && viewMode !== "table" ? (
             <DataContentSkeleton columns={activeTableColumns} viewMode={viewMode} kanbanColumnCount={DIGITAL_RECORDS_KANBAN_COLUMNS.length} />
-          ) : error && !records ? (
+          ) : error && sortedRecords.length === 0 ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia className="text-red-600 dark:text-red-400">
                     <EmptyAlertCircleIcon size="1em" />
                   </EmptyMedia>
-                  <EmptyTitle>Load failed</EmptyTitle>
+                  <EmptyTitle>Could Not Load Digital Records</EmptyTitle>
                   <EmptyDescription>{error}</EmptyDescription>
                 </EmptyHeader>
+                {onRefresh && (
+                  <EmptyContent>
+                    <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading || isManualLoading}>
+                      Try Again
+                    </Button>
+                  </EmptyContent>
+                )}
               </Empty>
             </div>
           ) : !initialLoading && sortedRecords.length === 0 ? (
@@ -1026,19 +1022,6 @@ export default function DigitalRecordsReviewTab({
                                 sortOrder={sortOrder}
                               />
                             </button>
-                            {isScrolledX && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  resetTableScroll()
-                                }}
-                                title="Reset scroll to start"
-                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                              >
-                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                              </button>
-                            )}
                           </div>
                         </th>
                       )}

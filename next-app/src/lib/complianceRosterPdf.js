@@ -1,13 +1,17 @@
+import { formatReportOffice } from "./exportHelpers.js"
 import { createReportDocument } from "./reportDocument.js"
 import { complianceRequirementLabel } from "./complianceReportExport.js"
 
 export async function generateComplianceRosterPdf(report, options = {}) {
   const document = await createReportDocument({ title: "Incomplete Records Report", branding: options.branding, orientation: "landscape", generatedAt: report.meta.generatedAt })
   document.metadata([
-    ["Office", report.meta.officeId || "All authorized offices"],
+    ["Office", formatReportOffice(report.meta.officeId, report.meta.officeName) || "All authorized offices"],
     ["Document requirement", report.documentType || "All mandatory requirements"],
     ["Student status", report.meta.studentStatus || "All"],
     ["Academic programs", report.meta.courseCode || "All"],
+    ...(report.meta.startDate || report.meta.endDate
+      ? [["Student records created (Manila)", `${report.meta.startDate || "Any"} to ${report.meta.endDate || "Any"}`]]
+      : []),
     ["Evidence rule", report.meta.requireApproved ? "Approved evidence required" : "Pending uploads count as submitted"],
     ["Students in report", String(report.total)],
   ])

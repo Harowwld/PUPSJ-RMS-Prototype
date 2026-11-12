@@ -6,7 +6,7 @@ import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,7 @@ import AppIcon from "@/components/ui/app-icon";
 const STUDENT_SORT_OPTIONS = [
   { key: "studentNo", label: "Student Number" },
   { key: "name", label: "Student Name" },
+  { key: "odrsEmail", label: "Email" },
   { key: "courseCode", label: "Academic Program" },
   { key: "yearLevel", label: "Year Level" },
   { key: "section", label: "Section" },
@@ -76,6 +77,7 @@ const STUDENT_GROUP_OPTIONS = [
 const STUDENT_TABLE_COLUMNS = [
   { key: "studentNo", label: "Student Number", size: { kind: "identifier", minWidth: 160 } },
   { key: "name", label: "Student Name", size: { kind: "text", minWidth: 240, maxWidth: 340 } },
+  { key: "odrsEmail", label: "Email", size: { kind: "text", minWidth: 200, maxWidth: 320 } },
   { key: "courseCode", label: "Program", size: { kind: "category", minWidth: 120 } },
   { key: "section", label: "Section", size: { kind: "category", minWidth: 100 } },
   { key: "yearLevel", label: "Year Level", size: { kind: "year", minWidth: 104 } },
@@ -108,6 +110,7 @@ export default function StudentDirectoryTab({
   fetchData,
   showToast,
 }) {
+  const isRegistrar = (authUser?.office_id || authUser?.officeId) === "registrar";
   const [activeTab, setActiveTab] = useOsasViewPreference("student_directory", "activeTab", "active");
   const [searchQuery, setSearchQuery] = useOsasViewPreference("student_directory", "searchQuery", "");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -132,9 +135,24 @@ export default function StudentDirectoryTab({
     "visibleColumns",
     STUDENT_TABLE_COLUMNS.map((c) => c.key)
   );
+  const hasAddedEmailColumn = useRef(false);
+  useEffect(() => {
+    if (!isRegistrar || hasAddedEmailColumn.current) return;
+    hasAddedEmailColumn.current = true;
+    setVisibleColumns((current) => current.includes("odrsEmail") ? current : [...current, "odrsEmail"]);
+  }, [isRegistrar, setVisibleColumns]);
+  const availableStudentColumns = isRegistrar
+    ? STUDENT_TABLE_COLUMNS
+    : STUDENT_TABLE_COLUMNS.filter(({ key }) => key !== "odrsEmail");
+  const visibleStudentColumns = isRegistrar
+    ? visibleColumns
+    : visibleColumns.filter((key) => key !== "odrsEmail");
+  const studentSortOptions = isRegistrar
+    ? STUDENT_SORT_OPTIONS
+    : STUDENT_SORT_OPTIONS.filter(({ key }) => key !== "odrsEmail");
   const studentTableColumns = [
     "selection",
-    ...STUDENT_TABLE_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ size }) => size),
+    ...availableStudentColumns.filter(({ key }) => visibleStudentColumns.includes(key)).map(({ size }) => size),
     "actions",
   ];
   const [startDate, setStartDate] = useOsasViewPreference("student_directory", "startDate", "");
@@ -846,7 +864,7 @@ export default function StudentDirectoryTab({
                   setPage(1);
                 }}
                 resultCount={filteredCount}
-                placeholder="Search student no. or name..."
+                placeholder={isRegistrar ? "Search student no., name, or email..." : "Search student no. or name..."}
               />
               <TableScrollControls
                 scrollContainerRef={tableContainerRef}
@@ -870,7 +888,7 @@ export default function StudentDirectoryTab({
                 entityLabel="students"
               />
               <SortPopover
-                options={STUDENT_SORT_OPTIONS}
+                options={studentSortOptions}
                 sortBy={sortBy}
                 onSortByChange={(val) => {
                   setSortBy(val);
@@ -889,8 +907,8 @@ export default function StudentDirectoryTab({
                 onGroupByChange={setGroupBy}
               />
               <ColumnsPopover
-                columns={STUDENT_TABLE_COLUMNS}
-                visibleColumns={visibleColumns}
+                columns={availableStudentColumns}
+                visibleColumns={visibleStudentColumns}
                 onVisibleColumnsChange={setVisibleColumns}
                 minVisible={2}
               />
@@ -975,7 +993,7 @@ export default function StudentDirectoryTab({
                         />
                       </th>
 
-                      {visibleColumns.includes("studentNo") && (
+                      {visibleStudentColumns.includes("studentNo") && (
                         <th
                           className={cn(
                             "py-2.5 px-4 sticky left-12 z-20 bg-white dark:bg-card transition-shadow",
@@ -991,24 +1009,11 @@ export default function StudentDirectoryTab({
                               <span>Student No.</span>
                               <SortIndicator column="studentNo" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                            {isScrolledX && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  resetScroll();
-                                }}
-                                title="Reset table scroll"
-                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                              >
-                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                              </button>
-                            )}
                           </div>
                         </th>
                       )}
 
-                      {visibleColumns.includes("name") && (
+                      {visibleStudentColumns.includes("name") && (
                         <th className="py-2.5 px-4">
                           <button
                             type="button"
@@ -1021,7 +1026,20 @@ export default function StudentDirectoryTab({
                         </th>
                       )}
 
-                      {visibleColumns.includes("courseCode") && (
+                      {visibleStudentColumns.includes("odrsEmail") && (
+                        <th className="py-2.5 px-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("odrsEmail")}
+                            className="group flex items-center focus:outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                          >
+                            <span>Email</span>
+                            <SortIndicator column="odrsEmail" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </th>
+                      )}
+
+                      {visibleStudentColumns.includes("courseCode") && (
                         <th className="py-2.5 px-4">
                           <button
                             type="button"
@@ -1034,11 +1052,11 @@ export default function StudentDirectoryTab({
                         </th>
                       )}
 
-                      {visibleColumns.includes("section") && (
+                      {visibleStudentColumns.includes("section") && (
                         <th>Section</th>
                       )}
 
-                      {visibleColumns.includes("yearLevel") && (
+                      {visibleStudentColumns.includes("yearLevel") && (
                         <th className="py-2.5 px-4">
                           <button
                             type="button"
@@ -1051,13 +1069,13 @@ export default function StudentDirectoryTab({
                         </th>
                       )}
 
-                      {visibleColumns.includes("location") && (
+                      {visibleStudentColumns.includes("location") && (
                         <th className="py-2.5 px-4">
                           <span>Physical Archive</span>
                         </th>
                       )}
 
-                      {visibleColumns.includes("documentCount") && (
+                      {visibleStudentColumns.includes("documentCount") && (
                         <th className="py-2.5 px-4 text-center">
                           <button
                             type="button"
@@ -1070,7 +1088,7 @@ export default function StudentDirectoryTab({
                         </th>
                       )}
 
-                      {visibleColumns.includes("status") && (
+                      {visibleStudentColumns.includes("status") && (
                         <th className="py-2.5 px-4 text-center">
                           <span>Status</span>
                         </th>
@@ -1129,7 +1147,7 @@ export default function StudentDirectoryTab({
                             />
                           </td>
 
-                          {visibleColumns.includes("studentNo") && (
+                          {visibleStudentColumns.includes("studentNo") && (
                             <td
                               className={cn(
                                 "py-2.5 px-4 whitespace-nowrap align-middle sticky left-12 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
@@ -1143,7 +1161,7 @@ export default function StudentDirectoryTab({
                             </td>
                           )}
 
-                          {visibleColumns.includes("name") && (
+                          {visibleStudentColumns.includes("name") && (
                             <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={formatTitleCase(s.name)}>
                                 {formatTitleCase(s.name)}
@@ -1151,23 +1169,31 @@ export default function StudentDirectoryTab({
                             </td>
                           )}
 
-                          {visibleColumns.includes("courseCode") && (
+                          {visibleStudentColumns.includes("odrsEmail") && (
+                            <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
+                              <span className="block max-w-[320px] truncate text-xs text-gray-600 dark:text-zinc-300" title={s.odrsEmail || undefined}>
+                                {s.odrsEmail || "—"}
+                              </span>
+                            </td>
+                          )}
+
+                          {visibleStudentColumns.includes("courseCode") && (
                             <td className="py-2.5 px-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <Badge variant="outline" className={BADGE_BASE}>{s.courseCode || "N/A"}</Badge>
                             </td>
                           )}
 
-                          {visibleColumns.includes("section") && (
+                          {visibleStudentColumns.includes("section") && (
                             <td>{s.section || "N/A"}</td>
                           )}
 
-                          {visibleColumns.includes("yearLevel") && (
+                          {visibleStudentColumns.includes("yearLevel") && (
                             <td className="py-2.5 px-4 text-xs font-medium text-gray-500 dark:text-zinc-400 whitespace-nowrap align-middle border-r border-border/70 dark:border-border/70">
                               {s.yearLevel || "N/A"}
                             </td>
                           )}
 
-                          {visibleColumns.includes("location") && (
+                          {visibleStudentColumns.includes("location") && (
                             <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap">
                                 <Location01Icon size="1em"  className="text-gray-400 text-xs shrink-0"></Location01Icon>
@@ -1178,7 +1204,7 @@ export default function StudentDirectoryTab({
                             </td>
                           )}
 
-                          {visibleColumns.includes("documentCount") && (
+                          {visibleStudentColumns.includes("documentCount") && (
                             <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                               <span className="tabular-nums">
                                 {docCount} {docCount === 1 ? "file" : "files"}
@@ -1186,7 +1212,7 @@ export default function StudentDirectoryTab({
                             </td>
                           )}
 
-                          {visibleColumns.includes("status") && (
+                          {visibleStudentColumns.includes("status") && (
                             <td className="py-2.5 px-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                               <span
                                 className={cn(
@@ -1337,6 +1363,7 @@ export default function StudentDirectoryTab({
 
         {/* Register Student Modal */}
         <RegisterStudentModal
+          collectOdrsEmail={isRegistrar}
           open={registerOpen}
           onOpenChange={setRegisterOpen}
           courses={courses}
@@ -1349,6 +1376,7 @@ export default function StudentDirectoryTab({
 
         {/* Bulk Import Students Modal */}
         <BulkImportStudentsModal
+          collectOdrsEmail={isRegistrar}
           open={bulkImportOpen}
           onOpenChange={setBulkImportOpen}
           storageLayout={storageLayout}
@@ -1366,9 +1394,16 @@ export default function StudentDirectoryTab({
           courses={courses}
           sections={sections}
           storageLayout={storageLayout}
-          onSuccess={onDataChanged}
+          collectOdrsEmail={isRegistrar}
+          onSuccess={(updated) => {
+            if (updated?.odrsEmail !== undefined) {
+              setActiveStudent((current) => current?.studentNo === updated.student_no
+                ? { ...current, odrsEmail: updated.odrsEmail }
+                : current);
+            }
+            onDataChanged();
+          }}
           showToast={showToast}
-          authUser={authUser}
         />
 
         {/* Student Profile Sheet */}
@@ -1401,6 +1436,10 @@ export default function StudentDirectoryTab({
               onEditStudent={(s) => {
                 setActiveStudent(s);
                 setEditOpen(true);
+              }}
+              onOdrsEmailSaved={(studentNo, odrsEmail) => {
+                setActiveStudent((current) => current?.studentNo === studentNo ? { ...current, odrsEmail } : current);
+                setBrowseVersion((version) => version + 1);
               }}
               onArchiveStudent={() => {
                 setArchiveTarget(activeStudent);

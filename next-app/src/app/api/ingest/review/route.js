@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
 import { query, queryOne } from "../../../../lib/postgres";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -20,12 +21,25 @@ export async function GET(req) {
   const docType = String(searchParams.get("docType") || "").trim();
   const batchId = String(searchParams.get("batchId") || "").trim();
   const q = String(searchParams.get("q") || "").trim();
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  if (!isValidCalendarDateRange(startDate, endDate)) {
+    return NextResponse.json({ ok: false, error: "Invalid date range." }, { status: 400 });
+  }
   const limit = Math.min(Math.max(Number(searchParams.get("limit") || 50), 1), 200);
   const offset = Math.max(Number(searchParams.get("offset") || 0), 0);
   const values = [officeId];
   const filters = ["office_id = $1"];
   if (searchParams.get("monitor") === "1") {
     filters.push("review_status <> 'Rejected' AND status NOT IN ('rejected', 'abandoned')");
+  }
+  if (startDate) {
+    values.push(startDate);
+    filters.push(`created_at >= ($${values.length}::date::timestamp AT TIME ZONE 'Asia/Manila')`);
+  }
+  if (endDate) {
+    values.push(endDate);
+    filters.push(`created_at < (($${values.length}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`);
   }
 
   if (status) {

@@ -4,7 +4,7 @@ import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
 
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
@@ -224,7 +224,7 @@ export default function OsasProposalReviewSheet({
             <h3 className="min-w-0 wrap-anywhere text-sm font-bold leading-snug text-gray-900 dark:text-zinc-100">
               {selected.title}
             </h3>
-            <span className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}>
+            <span className={cn(getProposalStatusBadgeClass(selected.status), COMPACT_BADGE_BASE)}>
               {selected.status}
             </span>
           </div>
@@ -257,7 +257,7 @@ export default function OsasProposalReviewSheet({
                       </h5>
                     </CardTitle>
                     {selected.bylaws_filename && (
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>Active</span>
+                      <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>Active</span>
                     )}
                   </div>
                   {selected.bylaws_filename ? (
@@ -348,7 +348,7 @@ export default function OsasProposalReviewSheet({
                     </span>
                   </div>
                   <span
-                    className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold", getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission"), BADGE_BASE)}
+                    className={cn(getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission"), COMPACT_BADGE_BASE)}
                   >
                     {selected.post_event_status || "Pending Submission"}
                   </span>
@@ -594,7 +594,7 @@ export default function OsasProposalReviewSheet({
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
                         <span
-                          className={cn("inline-flex items-center rounded-full border px-2 py-0.2 text-[9px]", getProposalStatusBadgeClass(update.status), BADGE_BASE)}
+                          className={cn(getProposalStatusBadgeClass(update.status), COMPACT_BADGE_BASE)}
                         >
                           {update.status}
                         </span>

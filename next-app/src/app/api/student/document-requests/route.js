@@ -10,7 +10,8 @@ import { decryptPII, encryptPII } from "@/lib/piiEncryption";
 import { StudentNoSchema, PhoneSchema, PersonNameSchema } from "@/lib/validationSchemas";
 import { ATTACHMENT_MAX_SIZE_BYTES, ATTACHMENT_MAX_SIZE_LABEL } from "@/lib/uploadLimits";
 
-import { getRequestAffiliation, hasLinkedStudentRecord, isStudentAffiliation } from "@/lib/studentAffiliation";
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
+import { getRequestAffiliation, isStudentAffiliation } from "@/lib/studentAffiliation";
 
 export const runtime = "nodejs";
 
@@ -39,7 +40,7 @@ export async function GET(req) {
     const access = await requireStudent(req);
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   const requests = await query(
-    `SELECT dr.*, d.approval_status AS linked_document_status,
+    `SELECT dr.*,
             COALESCE(dr.course_code, s.course_code) AS course_code,
             c.name AS course_name,
             rf.id AS feedback_id,
@@ -48,7 +49,6 @@ export async function GET(req) {
             rf.comments AS feedback_comments,
             rf.created_at AS feedback_created_at
      FROM document_requests dr
-     LEFT JOIN documents d ON d.id = dr.linked_document_id AND d.office_id = 'registrar'
      LEFT JOIN students s ON s.student_no = dr.student_no
      LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
      LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
@@ -58,13 +58,6 @@ export async function GET(req) {
     [access.user.identityProfileId]
   );
   const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
-
-  const documents = hasLinkedStudentRecord(access.user)
-    ? (await query(
-        "SELECT * FROM documents WHERE office_id = 'registrar' AND student_no = $1 ORDER BY created_at DESC",
-        [access.user.studentNo]
-      )).filter((item) => canAccessResource(access.user, "document", item))
-    : [];
 
   const ids = authorizedRequests.map((item) => item.id);
   const rawUpdates = ids.length
@@ -133,7 +126,14 @@ export async function GET(req) {
   authorizedRequests.forEach((item) => {
     const safeVal = (v) => (v && typeof v === "string" && !v.startsWith("enc:v1:") ? v.trim() : null);
     item.requester_name = safeVal(decryptField(item.requester_name)) || "Student / Alumnus";
-    item.updates = updatesByRequest[String(item.id)] || [];
+    delete item.linked_document_id;
+    const inquiryAwaitingAuthorization = item.doc_type === MISSING_DOCUMENTS_INQUIRY && !item.spa_verified;
+    item.updates = inquiryAwaitingAuthorization ? [] : updatesByRequest[String(item.id)] || [];
+    if (inquiryAwaitingAuthorization) {
+      item.notes = null;
+      item.course_name = null;
+      item.course_code = null;
+    }
     item.attachments = attachmentsByRequest[String(item.id)] || [];
     item.feedback = item.feedback_id
       ? {
@@ -146,7 +146,7 @@ export async function GET(req) {
       : null;
   });
 
-    return NextResponse.json({ ok: true, data: { requests: authorizedRequests, documents } });
+    return NextResponse.json({ ok: true, data: { requests: authorizedRequests } });
   } catch (err) {
     console.error("GET /api/student/document-requests error:", err);
     return NextResponse.json(
@@ -170,6 +170,7 @@ export async function POST(req) {
     if (form) {
       body.studentNo = form.get("studentNo");
       body.docType = form.get("docType");
+      body.requestKind = form.get("requestKind");
       body.notes = form.get("notes") || form.get("description");
       body.clientType = form.get("clientType");
       body.courseCode = form.get("courseCode");
@@ -195,7 +196,8 @@ export async function POST(req) {
 
   const requestedClientType = String(body?.clientType || "").trim();
   const requestedStudentNo = String(body?.studentNo || "").trim().toUpperCase() || null;
-  const docType = String(body?.docType || "").trim();
+  const isInquiry = body?.requestKind === "missing_documents";
+  const docType = isInquiry ? MISSING_DOCUMENTS_INQUIRY : String(body?.docType || "").trim();
   const notes = String(body?.notes || body?.description || "").trim();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase() || null;
   const requesterRelationship = String(body?.requesterRelationship || "").trim() || null;
@@ -236,7 +238,16 @@ export async function POST(req) {
 
   const affiliation = access.user.clientType || acc?.client_type
     || (session.studentNo?.startsWith("ALUM-") ? "Alumni" : "Student");
-  const clientType = getRequestAffiliation(affiliation, requestedClientType);
+  if (access.user.portalSetupComplete === false) {
+    return NextResponse.json({ ok: false, error: "Complete account setup before submitting a request." }, { status: 403 });
+  }
+  if (isInquiry && !["Parent", "Alumni"].includes(affiliation)) {
+    return NextResponse.json({ ok: false, error: "Use Document Checklist to view your submission status." }, { status: 403 });
+  }
+  const clientType = isInquiry ? affiliation : getRequestAffiliation(affiliation, requestedClientType);
+  if (isInquiry && !uploadedFiles.some(({ attachmentType }) => attachmentType === "valid_id")) {
+    return NextResponse.json({ ok: false, error: "Attach a valid government-issued ID." }, { status: 400 });
+  }
 
   if (!isStudentAffiliation(clientType)) {
     return NextResponse.json({ ok: false, error: "Select a valid request affiliation." }, { status: 400 });
@@ -307,7 +318,7 @@ export async function POST(req) {
     }
   }
 
-  if (!docType) {
+  if (!docType || (!isInquiry && docType === MISSING_DOCUMENTS_INQUIRY)) {
     return NextResponse.json({ ok: false, error: "Document type is required." }, { status: 400 });
   }
 
@@ -318,21 +329,24 @@ export async function POST(req) {
     );
   }
 
-  const validType = await queryOne(
-    "SELECT id, name, is_requestable, is_compliance FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
-    [docType]
-  );
-  if (!validType) {
-    return NextResponse.json({ ok: false, error: "Invalid document type." }, { status: 400 });
-  }
-  if (!validType.is_requestable || validType.is_compliance) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: `'${validType.name}' is an inward compliance requirement (not an issuable credential) and cannot be requested online. Please submit it through the Compliance Checklist or visit the Registrar counter (Room 102).`,
-      },
-      { status: 400 }
+  if (!isInquiry) {
+    const validType = await queryOne(
+      "SELECT id, name, is_requestable, is_compliance FROM document_types WHERE office_id = 'registrar' AND name = $1 AND status = 'Active'",
+      [docType]
     );
+    if (!validType) {
+      return NextResponse.json({ ok: false, error: "Invalid document type." }, { status: 400 });
+    }
+    if (!validType.is_requestable || validType.is_compliance) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `'${validType.name}' is an inward compliance requirement (not an issuable credential) and cannot be requested online. Please submit it through the Compliance Checklist or visit the Registrar counter (Room 102).`,
+        },
+        { status: 400 }
+      );
+    }
+
   }
 
   const accFirst = acc?.first_name ? decryptPII(acc.first_name) : "";

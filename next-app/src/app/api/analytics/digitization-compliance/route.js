@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 import {
   getPrincipalOfficeId,
   requireAdmin,
@@ -54,6 +55,12 @@ export async function GET(req) {
       return NextResponse.json({ ok: true, data });
     }
 
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+    if (!isValidCalendarDateRange(startDate, endDate)) {
+      return NextResponse.json({ ok: false, error: "Invalid student record date range." }, { status: 400 });
+    }
+
     const statusParam = searchParams.get("status");
     const studentStatus =
       statusParam === null || statusParam === ""
@@ -75,6 +82,8 @@ export async function GET(req) {
 
     const data = await getDigitizationComplianceSummary({
       studentStatus,
+      startDate,
+      endDate,
       courseCodes: courseCodes.length ? courseCodes : undefined,
       requireApproved,
       officeId,

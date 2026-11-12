@@ -85,7 +85,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
       {/* ONE Single Card Container encapsulating Header, Inline Request Form, Toolbar, List & Pagination */}
       <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate">
         {/* 1. Page Header Skeleton (matches PageHeader without left icon box) */}
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2.5 flex-wrap">
               <Skeleton className="h-5 w-44 rounded-md dark:bg-muted" />
@@ -101,7 +101,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
 
         {/* 2. Inline Non-Modal Request Form Skeleton */}
         {showForm && (
-          <div className="border-t border-border dark:border-border flex flex-col">
+          <div className="flex flex-col">
             {/* Duplicate-ticket reminder strip */}
             <div className="px-5 sm:px-6 py-3 bg-amber-50/70 dark:bg-amber-500/5 border-b border-amber-200/50 dark:border-amber-500/10 flex items-center gap-2.5">
               <Skeleton className="size-4 rounded-full dark:bg-muted shrink-0" />
@@ -163,7 +163,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
         )}
 
         {/* 3. Canonical 2-Zone DataViewToolbar Skeleton */}
-        <div className="border-t border-border dark:border-border px-6 py-3 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card">
+        <div className={cn("px-6 py-3 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card", showForm && "border-t border-border")}>
           <Skeleton className="h-9 w-72 sm:w-80 shrink-0 rounded-xl dark:bg-muted" />
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />

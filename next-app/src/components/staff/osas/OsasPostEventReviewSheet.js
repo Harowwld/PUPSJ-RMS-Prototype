@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -209,11 +209,11 @@ export default function OsasPostEventReviewSheet({
                 <span className="text-xs text-gray-600 dark:text-zinc-400">
                   {selectedPostEvent.organization_name}
                 </span>
-                <span className={cn("font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300", BADGE_BASE)}>
+                <span className={cn("font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300", COMPACT_BADGE_BASE)}>
                   {trackingNo}
                 </span>
                 <span
-                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), BADGE_BASE)}
+                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), COMPACT_BADGE_BASE)}
                 >
                   {selectedPostEvent.status}
                 </span>

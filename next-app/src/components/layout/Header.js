@@ -33,7 +33,7 @@ import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges, getDefaultHomeView } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { matchesSearchQuery } from "@/lib/searchUtils";
 import AppIcon from "@/components/ui/app-icon";
 import {
@@ -394,7 +394,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   // Dynamically reflect the current view role & accent color based on activeView
   const currentViewRole = (() => {
-    if (isStudent) return "Student";
+    if (isStudent) return authUser?.client_type || "Student";
     if (isSuperAdmin || activeView === "systemadmin" || activeView === "superadmin") {
       return "System Administrator";
     }
@@ -1557,7 +1557,7 @@ export default function Header({ authUser, onLogout, children }) {
                           <span className="truncate">{item.label}</span>
                         </div>
                         {isActive && (
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[9px] px-2 py-0.5")}>
+                          <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>
                             Active
                           </span>
                         )}

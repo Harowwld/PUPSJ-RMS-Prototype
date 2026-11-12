@@ -1,3 +1,4 @@
+import { formatManilaCalendarDate } from "../src/lib/timeFormat.js";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
@@ -157,7 +158,7 @@ async function runOsasTests() {
   const unwhitelistedFormData = new FormData();
   unwhitelistedFormData.append("title", "Unauthorized Test Proposal");
   unwhitelistedFormData.append("organizationName", "Computer Science Guild");
-  unwhitelistedFormData.append("eventDate", "2026-11-20");
+  unwhitelistedFormData.append("eventDate", formatManilaCalendarDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
   unwhitelistedFormData.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "test-proposal.pdf");
 
   const unwhitelistedSubmitRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {
@@ -184,7 +185,7 @@ async function runOsasTests() {
   formData.append("title", "Automated Test Coding Competition 2026");
   formData.append("organizationId", "helping-hands");
   formData.append("organizationName", "Helping Hands Community Organization");
-  formData.append("eventDate", "2026-11-20");
+  formData.append("eventDate", formatManilaCalendarDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
   formData.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "automated-test-proposal.pdf");
 
   const submitRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {

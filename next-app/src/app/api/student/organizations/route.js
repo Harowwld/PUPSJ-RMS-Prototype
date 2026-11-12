@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { getOrganizationsForStudentEmail } from "@/lib/organizationsRepo";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(
       access.error || "Student authentication required",

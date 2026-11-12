@@ -160,11 +160,11 @@ export default function DocumentRequestsTab({
   error = null,
   officeId = "registrar",
 }) {
-  const isOsasOffice = String(officeId || "").toLowerCase() === "osas";
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [listError, setListError] = useState("");
   const listRequest = useRef(0);
   const [isManualLoading, setIsManualLoading] = useState(false);
   const [q, setQ] = useOsasViewPreference("document_requests", "search", "");
@@ -179,30 +179,10 @@ export default function DocumentRequestsTab({
   const [sortBy, setSortBy] = useOsasViewPreference("document_requests", "sortBy", "created_at");
   const [sortOrder, setSortOrder] = useOsasViewPreference("document_requests", "sortOrder", "DESC");
 
-  const [osasViewMode, setOsasViewMode] = useOsasViewPreference("document_requests", "viewMode", "table", {
+  const [viewMode, setViewMode] = useOsasViewPreference("document_requests", "viewMode", "table", {
     legacyKey: "pup_doc_requests_view_mode",
   });
-  const [otherOfficeViewMode, setOtherOfficeViewMode] = useState(() => {
-    if (isOsasOffice || typeof window === "undefined") return "table";
-    try {
-      const saved = localStorage.getItem("pup_doc_requests_view_mode");
-      if (saved && ["list", "table", "kanban"].includes(saved)) return saved;
-    } catch {}
-    return "table";
-  });
-  const viewMode = isOsasOffice ? osasViewMode : otherOfficeViewMode;
-  const setViewMode = (mode) => {
-    if (isOsasOffice) {
-      setOsasViewMode(mode);
-      return;
-    }
-    setOtherOfficeViewMode(mode);
-    try {
-      localStorage.setItem("pup_doc_requests_view_mode", mode);
-    } catch {}
-  };
-  const viewModeRef = useRef(viewMode);
-  viewModeRef.current = viewMode;
+  const isKanbanView = viewMode === "kanban";
 
   const [filterRules, setFilterRules] = useOsasViewPreference("document_requests", "filterRules", []);
   const [startDate, setStartDate] = useOsasViewPreference("document_requests", "startDate", "");
@@ -377,7 +357,6 @@ export default function DocumentRequestsTab({
     setCreateRequesterRelationship("Mother");
     setCreateRequesterContact("");
     setCreateAttachments([]);
-    setIsDraggingAttachment(false);
     setCreateDocType("");
     setCreateNotes("");
     setStudentSearch("");
@@ -447,9 +426,8 @@ export default function DocumentRequestsTab({
       }
       const startTime = Date.now();
       try {
-        const currentView = opts.viewModeOverride || viewModeRef.current;
-        const effectiveLimit = currentView === "kanban" ? 100 : itemsPerPage;
-        const offset = currentView === "kanban" ? 0 : (page - 1) * itemsPerPage;
+        const effectiveLimit = isKanbanView ? 100 : itemsPerPage;
+        const offset = isKanbanView ? 0 : (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
         qs.set("limit", String(effectiveLimit));
         qs.set("offset", String(offset));
@@ -476,7 +454,9 @@ export default function DocumentRequestsTab({
         });
         const json = await res.json().catch(() => null);
         if (request !== listRequest.current) return;
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load");
+        if (!res.ok || !json?.ok || !Array.isArray(json.data)) {
+          throw new Error(json?.error || "Unable to load document requests.");
+        }
 
         if (isManual) {
           loadSlaStandards();
@@ -487,11 +467,13 @@ export default function DocumentRequestsTab({
         }
 
         if (request !== listRequest.current) return;
-        setRows(Array.isArray(json.data) ? json.data : []);
+        setRows(json.data);
         setTotal(Number(json.total) || 0);
         setHasLoaded(true);
+        setListError("");
       } catch (e) {
         if (request !== listRequest.current) return;
+        setListError(e.message || "Unable to load document requests.");
         if (showLoading || isManual) {
           showToast?.(
             formatErrorMessage(e, {
@@ -508,19 +490,8 @@ export default function DocumentRequestsTab({
         }
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
+    [isKanbanView, page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
   );
-
-  const handleViewModeChange = (mode) => {
-    setViewMode(mode);
-    viewModeRef.current = mode;
-
-    if (mode === "kanban" && rows.length < 100 && rows.length < total) {
-      loadList({ showLoading: false, viewModeOverride: "kanban" });
-    } else if (mode !== "kanban" && rows.length > itemsPerPage) {
-      loadList({ showLoading: false, viewModeOverride: mode });
-    }
-  };
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -941,15 +912,6 @@ export default function DocumentRequestsTab({
 
   const displayedRows = useMemo(() => {
     return rows.filter((r) => {
-      if (startDate || endDate) {
-        const itemDate = r.created_at ? new Date(r.created_at) : null;
-        if (itemDate && !isNaN(itemDate.getTime())) {
-          const dateStr = itemDate.toISOString().slice(0, 10);
-          if (startDate && dateStr < startDate) return false;
-          if (endDate && dateStr > endDate) return false;
-        }
-      }
-
       if (charterFilters.length > 0) {
         const charter = getRequestCharterStatus(r, slaStandards);
         if (!charterFilters.includes(charter.status)) return false;
@@ -979,7 +941,7 @@ export default function DocumentRequestsTab({
         return actVal === ruleVal;
       });
     });
-  }, [rows, filterRules, charterFilters, startDate, endDate, slaStandards]);
+  }, [rows, filterRules, charterFilters, slaStandards]);
 
   const clientTypeValue = clientTypeFilters.length === 1 ? clientTypeFilters[0] : "";
   const handleClientTypeChange = (val) => {
@@ -1221,7 +1183,7 @@ export default function DocumentRequestsTab({
             <div className="ml-auto shrink-0">
               <SegmentedControl
                 value={viewMode}
-                onValueChange={handleViewModeChange}
+                onValueChange={setViewMode}
                 variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0"
                 items={[
@@ -1346,16 +1308,21 @@ export default function DocumentRequestsTab({
           <div className={cn("relative w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")} aria-busy={loading}>
             {(loading && !hasLoaded) ? (
               <DataContentSkeleton columns={dynamicTableColumns} viewMode={viewMode} kanbanColumnCount={ODRS_KANBAN_COLUMNS.length} className={dynamicTableMinWidthClass} />
-            ) : error && !hasLoaded ? (
+            ) : (listError || error) && displayedRows.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
                     <EmptyTitle>Could Not Load Requests</EmptyTitle>
                     <EmptyDescription>
-                      {error}
+                      {listError || error}
                     </EmptyDescription>
                   </EmptyHeader>
+                  <EmptyContent>
+                    <Button variant="outline" size="sm" disabled={loading || isManualLoading} onClick={() => loadList()}>
+                      Try Again
+                    </Button>
+                  </EmptyContent>
                 </Empty>
               </div>
             ) : displayedRows.length === 0 ? (
@@ -1441,19 +1408,6 @@ export default function DocumentRequestsTab({
                               <span>ID</span>
                               <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                            {isScrolledX && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  resetScroll();
-                                }}
-                                title="Reset table scroll"
-                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                              >
-                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                              </button>
-                            )}
                           </div>
                         </th>
                       )}

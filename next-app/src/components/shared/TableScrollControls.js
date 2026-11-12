@@ -10,6 +10,20 @@ import {
 import { cn } from "@/lib/utils";
 import { ArrowLeft01Icon, ArrowRight01Icon, ReloadIcon } from "hugeicons-react";
 
+const toolbarCounts = new WeakMap();
+export const tableScrollToolbarChange = "table-scroll-toolbar-change";
+export const hasTableScrollToolbar = (viewport) => toolbarCounts.has(viewport);
+
+function registerToolbar(viewport) {
+  toolbarCounts.set(viewport, (toolbarCounts.get(viewport) ?? 0) + 1);
+  viewport.dispatchEvent(new Event(tableScrollToolbarChange));
+  return () => {
+    const remaining = toolbarCounts.get(viewport) - 1;
+    if (remaining) toolbarCounts.set(viewport, remaining);
+    else toolbarCounts.delete(viewport);
+    viewport.dispatchEvent(new Event(tableScrollToolbarChange));
+  };
+}
 
 /**
  * Standardized horizontal scroll controls for data tables.
@@ -28,7 +42,8 @@ export default function TableScrollControls({
   controlSize = "md",
   scrollTargetLabel = "table",
 }) {
-  const isScrolledX = propIsScrolledX ?? propIsScrolled ?? false;
+  const [viewportIsScrolled, setViewportIsScrolled] = useState(false);
+  const isScrolledX = scrollContainerRef ? viewportIsScrolled : propIsScrolledX ?? propIsScrolled ?? false;
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollBackward, setCanScrollBackward] = useState(Boolean(canScrollLeft));
   const [canScrollForward, setCanScrollForward] = useState(Boolean(canScrollRight));
@@ -43,10 +58,12 @@ export default function TableScrollControls({
     let observedElement = null;
     let observedContent = null;
     let resizeObserver = null;
+    let unregisterToolbar;
     const checkOverflow = () => {
       const element = observedElement;
       if (!element) return;
       const maxScroll = element.scrollWidth - element.clientWidth;
+      setViewportIsScrolled(element.scrollLeft > 20);
       setHasOverflow(maxScroll > 5);
       setCanScrollBackward(element.scrollLeft > 5);
       setCanScrollForward(maxScroll - element.scrollLeft > 5);
@@ -60,15 +77,19 @@ export default function TableScrollControls({
       }
       observedElement?.removeEventListener("scroll", checkOverflow);
       resizeObserver?.disconnect();
+      unregisterToolbar?.();
+      unregisterToolbar = undefined;
       observedElement = nextElement;
       observedContent = nextContent;
       if (!observedElement) {
         setHasOverflow(false);
+        setViewportIsScrolled(false);
         setCanScrollBackward(false);
         setCanScrollForward(false);
         return;
       }
       observedElement.addEventListener("scroll", checkOverflow, { passive: true });
+      unregisterToolbar = registerToolbar(observedElement);
       resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => checkOverflow()) : null;
       resizeObserver?.observe(observedElement);
       if (observedContent) resizeObserver?.observe(observedContent);
@@ -84,6 +105,7 @@ export default function TableScrollControls({
       mutationObserver?.disconnect();
       resizeObserver?.disconnect();
       observedElement?.removeEventListener("scroll", checkOverflow);
+      unregisterToolbar?.();
       window.removeEventListener("resize", checkOverflow);
     };
   }, [scrollContainerRef, canScrollLeft, canScrollRight]);

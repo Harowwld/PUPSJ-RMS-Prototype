@@ -1,4 +1,5 @@
 "use client"
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -68,7 +69,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [isExportingCsv, setIsExportingCsv] = useState(false)
   const [previewReportType, setPreviewReportType] = useState("sla") // "sla", "csm", "comprehensive"
-  const [viewMode, setViewMode] = useState("all") // "all", "sla", "csm"
+  const [viewMode, setViewMode] = useWorkspaceViewPreference("sla_analytics", "viewMode", "all")
   const shouldReduceMotion = useAppReducedMotion()
 
   const [startDate, setStartDate] = useState("")

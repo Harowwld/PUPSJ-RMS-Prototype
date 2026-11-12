@@ -4,7 +4,7 @@ import test from "node:test";
 import { isDemoAccount } from "../src/lib/demoAccounts.js";
 import { hashPassword, verifyPasswordHash } from "../src/lib/passwordHash.js";
 
-const demoEmails = ["superadmin@pup.local", "admin.registrar@pup.local", "staff.registrar@pup.local", "admin.osas@pup.local", "staff.osas@pup.local", "student@pup.local", "test.student@pup.local"];
+const demoEmails = ["superadmin@pup.com", "admin.registrar@pup.com", "staff.registrar@pup.com", "admin.osas@pup.com", "staff.osas@pup.com", "student@pup.com", "test.student@pup.com"];
 const defaultHash = hashPassword("pupstaff");
 const changedHash = hashPassword("Changed-password-42!");
 
@@ -45,7 +45,7 @@ test("demo exemption uses the exact demo sign-in allowlist", () => {
     assert.equal(isDemoAccount(email), true);
     assert.equal(isDemoAccount(` ${email.toUpperCase()} `), true);
   }
-  for (const email of ["real.staff@pup.local", "admin.default@pup.local", "superadmin@pup.local.example", "", null]) assert.equal(isDemoAccount(email), false);
+  for (const email of ["real.staff@pup.local", "admin.default@pup.local", "superadmin@pup.com.example", "", null]) assert.equal(isDemoAccount(email), false);
 });
 
 for (const [path, method] of [["login", "POST"], ["login/verify-2fa", "POST"], ["me", "GET"]]) {
@@ -67,11 +67,42 @@ for (const [path, method] of [["login", "POST"], ["login/verify-2fa", "POST"], [
 }
 
 test("me suppresses stale demo token flags but retains real-account flags", async () => {
-  for (const [email, staleFlag, expected] of [["staff.registrar@pup.local", true, false], ["real.staff@pup.local", true, true], ["real.staff@pup.local", false, false]]) {
+  for (const [email, staleFlag, expected] of [["staff.registrar@pup.com", true, false], ["real.staff@pup.local", true, true], ["real.staff@pup.local", false, false]]) {
     const { bindings } = dependencies(account(email, changedHash), staleFlag);
     const route = await handler("me", "GET", bindings);
     const response = await route(new Request("http://localhost:3000/api/auth/me"));
     assert.equal(response.status, 200);
     assert.equal((await response.json()).data.mustChangePassword, expected);
   }
+});
+
+test("pending staff must verify email before a password or TOTP session is issued", async () => {
+  const staff = { ...account("new.staff@example.com"), email_verification_required: true };
+  const { bindings, issued } = dependencies(staff);
+  let sent = 0;
+  bindings.sendStaffVerification = async () => {
+    sent += 1;
+    return { sent: true };
+  };
+  bindings.verifyStaffEmail = async (row, code) => row.id === staff.id && code === "042816";
+  const route = await handler("login", "POST", bindings);
+  const credentials = { username: staff.email, password: "pupstaff" };
+
+  const pending = await route(request(credentials));
+  assert.equal((await pending.json()).data.staffEmailVerificationRequired, true);
+  assert.equal(issued.length, 0);
+
+  const resend = await route(request({ ...credentials, resendStaffEmailCode: true }));
+  assert.deepEqual((await resend.json()).data.delivery, { sent: true });
+  assert.equal(sent, 1);
+  assert.equal(issued.length, 0);
+
+  const invalid = await route(request({ ...credentials, staffEmailCode: "000000" }));
+  assert.equal(invalid.status, 400);
+  assert.equal(issued.length, 0);
+
+  const valid = await route(request({ ...credentials, staffEmailCode: "042816" }));
+  assert.equal((await valid.json()).data.totpRequired, true);
+  assert.equal(issued.length, 1);
+  assert.equal(issued[0].purpose, "2fa");
 });

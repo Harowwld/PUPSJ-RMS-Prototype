@@ -130,7 +130,7 @@ async function checkLayout(name) {
 
 try {
   if (process.env.BROWSER_START !== "students") {
-  await login("admin.registrar@pup.local");
+  await login("admin.registrar@pup.com");
   await open("/admin?view=system_data&subtab=document-types", "Add Document Type", "/api/doc-types");
   await checkLayout("Document type");
   await toggle();
@@ -177,18 +177,21 @@ try {
   await toggle();
   await fill(0, "Browser");
   await fill(1, "Test");
+  await page.locator("#register-staff-email").fill("browser.test@example.com");
   await submit(1);
   await checkReady();
   await page.waitForFunction((id) => document.querySelector('[role="dialog"]').innerText.includes(id), {}, `PUPREGISTRAR-${nextId}`);
   await fill(0, "Browser");
   await fill(1, "Second");
+  await page.locator("#register-staff-email").fill("browser.second@example.com");
   await submit(2);
   await checkReady();
   assert.notEqual(JSON.parse(posts[0]).id, JSON.parse(posts[1]).id);
+  assert.equal(JSON.parse(posts[1]).email, "browser.second@example.com");
   console.log("PASS staff accounts: clears personal details and generates a fresh ID for each entry");
   }
 
-  await login("staff.registrar@pup.local");
+  await login("staff.registrar@pup.com");
   await open("/staff?view=students", "Register Student", "/api/students");
   await toggle();
   await fill(0, "2024-99999-SJ-0");
@@ -218,7 +221,7 @@ try {
   await checkLayout("Request");
   console.log("PASS requests: clears requester, document and purpose, retains Alumni category");
 
-  await login("staff.osas@pup.local");
+  await login("staff.osas@pup.com");
   await open("/staff?view=organizations", "Register Organization", "/api/osas/organizations");
   await toggle();
   await fill(0, "Browser Test Organization");
@@ -228,11 +231,12 @@ try {
   assert.ok((await page.$$eval('[role="dialog"] input[type="text"], [role="dialog"] textarea', (els) => els.map((el) => el.value))).every((value) => value === ""));
   console.log("PASS organizations: clears organization identity, adviser and description");
 
-  await login("superadmin@pup.local");
+  await login("superadmin@pup.com");
   await open("/systemadmin?view=staff", "Register Personnel", "/api/staff");
   await toggle();
   await fill(0, "Browser");
   await fill(1, "Test");
+  await page.locator("#personnel-email").fill("browser.personnel@example.com");
   await submit(1);
   await page.locator("text/Staff Credentials Generated").wait();
   const doneButtons = await page.$$('[role="dialog"] button');

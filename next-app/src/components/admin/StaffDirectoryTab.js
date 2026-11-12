@@ -1,5 +1,7 @@
 "use client"
-import { BADGE_BASE } from "@/lib/badgeStyles";
+
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
 import { Table, TableRow } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -9,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import StaffDirectorySkeleton from "@/components/admin/skeletons/StaffDirectorySkeleton";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
@@ -25,6 +28,7 @@ import {
 import {
   formatRelativeTime,
   formatPHDateTime,
+  isInManilaDateRange,
 } from "@/lib/timeFormat";
 import {
   Empty,
@@ -96,7 +100,8 @@ const STAFF_SORT_OPTIONS = [
   { key: "created_at", label: "Date Added" },
 ]
 
-const OPTIONAL_COLUMNS = [
+const STAFF_COLUMNS = [
+  { key: "id", label: "Staff ID" },
   { key: "name", label: "Staff Name" },
   { key: "role", label: "Role" },
   { key: "section", label: "Section" },
@@ -105,7 +110,7 @@ const OPTIONAL_COLUMNS = [
   { key: "email", label: "Email Address", defaultHidden: true },
   { key: "created_at", label: "Date Added", defaultHidden: true },
 ]
-const DEFAULT_VISIBLE_COLUMNS = ["name", "role", "section", "totp_enabled", "last_active"]
+const DEFAULT_VISIBLE_COLUMNS = ["id", "name", "role", "section", "totp_enabled", "last_active"]
 
 const formatLastLoginDate = (dateStr) => {
   if (!dateStr || dateStr === "N/A") return "N/A"
@@ -445,7 +450,7 @@ const StaffTableRow = React.memo(({
           />
         )}
       </td>
-      <td className={cn(
+      {visibleColumns.includes("id") && <td className={cn(
         "p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
         isSelected
           ? "bg-blue-50 dark:bg-blue-950"
@@ -455,7 +460,7 @@ const StaffTableRow = React.memo(({
         <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
           {s.id}
         </span>
-      </td>
+      </td>}
 
       {visibleColumns.includes("name") && (
         <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
@@ -623,19 +628,9 @@ export default function StaffDirectoryTab({
   onRefresh,
 }) {
   const [activeTab, setActiveTab] = useState("active")
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("staffDir_viewMode")
-      if (saved === "grid" || saved === "table") return saved
-    }
-    return "table"
+  const [viewMode, setViewMode] = useWorkspaceViewPreference("staff_directory", "viewMode", "table", {
+    legacyKey: "staffDir_viewMode",
   })
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("staffDir_viewMode", viewMode)
-    }
-  }, [viewMode])
 
   const [inspectMember, setInspectMember] = useState(null)
   const [copiedField, setCopiedField] = useState(null)
@@ -663,39 +658,12 @@ export default function StaffDirectoryTab({
   const [itemsPerPage, setItemsPerPage] = useState(20)
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
-  const [groupBy, setGroupBy] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("staffDir_groupBy")
-      if (saved && ["none", "role", "section", "totp_enabled"].includes(saved)) return saved
-    }
-    return "none"
-  })
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("staff_directory", "groupBy", "none")
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("staff_directory", "visibleColumns", DEFAULT_VISIBLE_COLUMNS)
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("staffDir_groupBy", groupBy)
-    }
-  }, [groupBy])
-
-  const [visibleColumns, setVisibleColumns] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = JSON.parse(localStorage.getItem("staffDir_visibleColumns"))
-        if (Array.isArray(saved) && saved.length > 0) return saved
-      } catch {}
-    }
-    return DEFAULT_VISIBLE_COLUMNS
-  })
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("staffDir_visibleColumns", JSON.stringify(visibleColumns))
-    }
-  }, [visibleColumns])
-
-  const [filterRules, setFilterRules] = useState([])
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("staff_directory", "filterRules", [])
+  const [startDate, setStartDate] = useWorkspaceViewPreference("staff_directory", "startDate", "")
+  const [endDate, setEndDate] = useWorkspaceViewPreference("staff_directory", "endDate", "")
 
   const roleFilters = useMemo(() => {
     if (!roleFilter || roleFilter === "All") return []
@@ -778,7 +746,7 @@ export default function StaffDirectoryTab({
     setStartDate("")
     setEndDate("")
     setCurrentPage(1)
-  }, [setSearch, setRoleFilter, setCurrentPage, setFilterRules])
+  }, [setSearch, setRoleFilter, setCurrentPage, setFilterRules, setStartDate, setEndDate])
 
   // Debounce search update
   useEffect(() => {
@@ -827,15 +795,7 @@ export default function StaffDirectoryTab({
       const matchesRole = roleFilters.length === 0 || roleFilters.includes(s.role)
 
       // Filter by created_at date range
-      const matchesDateRange = (() => {
-        if (!startDate && !endDate) return true
-        const itemDate = s.created_at ? new Date(s.created_at) : null
-        if (!itemDate || isNaN(itemDate.getTime())) return true
-        const dateStr = itemDate.toISOString().slice(0, 10)
-        if (startDate && dateStr < startDate) return false
-        if (endDate && dateStr > endDate) return false
-        return true
-      })()
+      const matchesDateRange = isInManilaDateRange(s.created_at, startDate, endDate)
 
       // Filter by tab status
       const isArchived = s.status === "Archived"
@@ -845,8 +805,8 @@ export default function StaffDirectoryTab({
     })
   }, [search, filterRules, roleFilters, startDate, endDate, officeStaff, activeTab])
 
-  const [sortBy, setSortBy] = useState("id")
-  const [sortOrder, setSortOrder] = useState("ASC")
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("staff_directory", "sortBy", "id")
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("staff_directory", "sortOrder", "ASC")
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -928,8 +888,8 @@ export default function StaffDirectoryTab({
 
   const staffTableColumns = useMemo(() => [
     "selection",
-    "identifier",
-    ...OPTIONAL_COLUMNS.filter((c) => visibleColumns.includes(c.key)).map((c) => {
+    ...STAFF_COLUMNS.filter((c) => visibleColumns.includes(c.key)).map((c) => {
+      if (c.key === "id") return "identifier"
       if (c.key === "name" || c.key === "email") return { kind: "text", maxWidth: 360 }
       if (c.key === "section") return { kind: "text", maxWidth: 200 }
       if (c.key === "last_active" || c.key === "created_at") return { kind: "date" }
@@ -938,10 +898,7 @@ export default function StaffDirectoryTab({
     }),
     "actions",
   ], [visibleColumns])
-
-  const tableColSpan = useMemo(() => {
-    return OPTIONAL_COLUMNS.filter((c) => visibleColumns.includes(c.key)).length + 3
-  }, [visibleColumns])
+  const tableWidth = visibleColumns.length >= 6 ? "min-w-[1240px]" : "min-w-[560px]"
 
   const {
     containerRef: tableContainerRef,
@@ -1232,7 +1189,7 @@ export default function StaffDirectoryTab({
 
             {viewMode === "table" && (
               <ColumnsPopover
-                columns={OPTIONAL_COLUMNS}
+                columns={STAFF_COLUMNS}
                 visibleColumns={visibleColumns}
                 defaultColumns={DEFAULT_VISIBLE_COLUMNS}
                 onVisibleColumnsChange={setVisibleColumns}
@@ -1322,7 +1279,9 @@ export default function StaffDirectoryTab({
         {/* Content Area: Loading / Error / Empty / Grid / Table */}
         {isLoading && !hasLoaded ? (
           <div className="w-full flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-            <StaffDirectorySkeleton rowCount={8} layoutView={viewMode} />
+            {viewMode === "grid"
+              ? <StaffDirectorySkeleton rowCount={8} layoutView={viewMode} />
+              : <DataContentSkeleton columns={staffTableColumns} rowCount={8} className={tableWidth} />}
           </div>
         ) : error ? (
           <div className="p-6 flex-[1_0_auto] flex flex-col justify-center border-t border-border dark:border-border rounded-b-2xl">
@@ -1469,7 +1428,7 @@ export default function StaffDirectoryTab({
               ref={tableContainerRef}
               className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2"
             >
-              <Table columns={staffTableColumns} className={visibleColumns.length >= 5 ? "min-w-[1240px]" : "min-w-[960px]"}>
+              <Table columns={staffTableColumns} className={tableWidth}>
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                     <th className="w-12 p-4 text-center sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs">
@@ -1494,7 +1453,7 @@ export default function StaffDirectoryTab({
                         }
                       />
                     </th>
-                    <th className={cn(
+                    {visibleColumns.includes("id") && <th className={cn(
                       "p-4 w-[16%] min-w-[150px] sticky left-12 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow duration-200",
                       isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                     )}>
@@ -1513,22 +1472,8 @@ export default function StaffDirectoryTab({
                             sortOrder={sortOrder}
                           />
                         </button>
-                        {isScrolledX && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              resetScroll();
-                            }}
-                            title="Reset scroll to start"
-                            aria-label="Reset scroll to start"
-                            className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
-                          >
-                            <AppIcon className=" ArrowLeft01Icon text-xs" />
-                          </button>
-                        )}
                       </div>
-                    </th>
+                    </th>}
                     {visibleColumns.includes("name") && (
                       <th className="p-4 w-[33%]">
                         <button
@@ -1666,7 +1611,7 @@ export default function StaffDirectoryTab({
                       {group.label && (
                         <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
                           <td
-                            colSpan={tableColSpan}
+                            colSpan={staffTableColumns.length}
                             className="px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-zinc-200"
                           >
                             {group.label}
@@ -1846,7 +1791,7 @@ export default function StaffDirectoryTab({
                           {getStaffCleanName(inspectMember)}
                         </span>
                         {isSelf && (
-                          <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0")}>
+                          <span className={cn(COMPACT_BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
                             You
                           </span>
                         )}
@@ -1858,7 +1803,7 @@ export default function StaffDirectoryTab({
                   </div>
 
                   <div className="shrink-0">
-                    <span className={cn(BADGE_BASE, "bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}>
+                    <span className={cn(COMPACT_BADGE_BASE, "bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}>
                       {office?.name || officeShortName || officePrefix}
                     </span>
                   </div>
@@ -1987,13 +1932,11 @@ export default function StaffDirectoryTab({
                       Close
                     </Button>
                     <CopyButton
+                      iconOnly
                       textToCopy={() => JSON.stringify(inspectMember, null, 2)}
                       entityName="Staff Data"
                       idleLabel="Copy Staff Data"
                       copiedLabel="Data Copied!"
-                      size="sm"
-                      title="Copy staff record data"
-                      className="h-9 px-3.5"
                     />
                   </div>
 

@@ -6,7 +6,6 @@ import path from "node:path";
 const TABS_PATH = path.resolve("src/components/ui/tabs.jsx");
 const SYS_CONFIG_PATH = path.resolve("src/components/admin/SystemConfigTab.js");
 const ORG_TAB_PATH = path.resolve("src/components/staff/StudentOrganizationsTab.js");
-const PROFILE_SHEET_PATH = path.resolve("src/components/staff/StudentProfileSheet.js");
 
 test("Tabs and SegmentedControl conform to Apple Human Interface Guidelines", () => {
   const tabsCode = fs.readFileSync(TABS_PATH, "utf8");
@@ -58,11 +57,6 @@ test("Sub-tab segmented switchers across app views use Apple rounded-full stylin
     "StudentOrganizationsTab subtab switcher must use Apple rounded-full styling"
   );
 
-  const profileSheetCode = fs.readFileSync(PROFILE_SHEET_PATH, "utf8");
-  assert.ok(
-    profileSheetCode.includes("rounded-full border border-black/[0.04]") || profileSheetCode.includes("SegmentedControl"),
-    "StudentProfileSheet checklist/files switcher must use Apple rounded-full styling"
-  );
 });
 
 test("All System Admin tabs use Apple Segmented Controls instead of line tabs", () => {

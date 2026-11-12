@@ -20,7 +20,7 @@ import { generateComplianceRosterPdf } from "@/lib/complianceRosterPdf";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import ComplianceStudentsList from "@/components/shared/ComplianceStudentsList";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { cn } from "@/lib/utils";
 
 const endpoint = "/api/analytics/digitization-compliance/missing-students";
@@ -292,7 +292,7 @@ function ComplianceStudentsSheetContent({
                         : "Pending uploads count as submitted"}
                     </p>
                   </div>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                  <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.amber)}>
                     Action Needed
                   </span>
                 </div>

@@ -17,7 +17,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { EmptyState } from "@/components/ui/empty";
 import { UserGroupIcon, LayoutGridIcon, Building01Icon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
@@ -295,7 +295,7 @@ export default function OfficeDetailSheet({
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
                     {displayOffice.short_name}
                   </span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
+                  <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
                     #{displayOffice.id}
                   </span>
                 </div>
@@ -311,7 +311,7 @@ export default function OfficeDetailSheet({
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={cn(
-                  BADGE_BASE,
+                  COMPACT_BADGE_BASE,
                   isActive
                     ? BADGE_PALETTES.emerald
                     : BADGE_PALETTES.gray
@@ -540,7 +540,7 @@ export default function OfficeDetailSheet({
                   Assigned Personnel Roster
                 </h3>
               </div>
-              <Badge variant="outline" className={cn(BADGE_BASE, "font-sans tabular-nums text-gray-600 dark:text-zinc-300")}>
+              <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {staffLoading ? "..." : `${staffList.length} Staff`}
               </Badge>
             </div>
@@ -574,7 +574,7 @@ export default function OfficeDetailSheet({
                             </span>
                             <span
                               className={cn(
-                                BADGE_BASE,
+                                COMPACT_BADGE_BASE,
                                 "text-[10px]",
                                 staff.role === "Admin"
                                   ? BADGE_PALETTES.rose
@@ -591,7 +591,7 @@ export default function OfficeDetailSheet({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0 ml-2">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
+                        <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
                           {staff.id}
                         </span>
                       </div>
@@ -639,7 +639,7 @@ export default function OfficeDetailSheet({
                   Department Workspace Modules
                 </h3>
               </div>
-              <Badge variant="outline" className={cn(BADGE_BASE, "font-sans tabular-nums text-gray-600 dark:text-zinc-300")}>
+              <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {modulesLoading ? "..." : `${enabledModules.length} Active`}
               </Badge>
             </div>
@@ -668,7 +668,7 @@ export default function OfficeDetailSheet({
                         </span>
                       </div>
                       {mod.is_system && (
-                        <span className={cn(BADGE_BASE, "font-sans tabular-nums bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300")}>
+                        <span className={cn(COMPACT_BADGE_BASE, "font-sans tabular-nums bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300")}>
                           Core
                         </span>
                       )}
@@ -715,13 +715,10 @@ export default function OfficeDetailSheet({
               Close
             </Button>
             <CopyButton
+              iconOnly
               textToCopy={() => JSON.stringify(displayOffice, null, 2)}
               entityName="Department Data"
-              idleLabel="Copy Data"
               copiedLabel="Data Copied!"
-              size="sm"
-              title="Copy department metadata"
-              className="h-9 px-3.5"
             />
           </div>
 

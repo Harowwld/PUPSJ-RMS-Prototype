@@ -1,4 +1,5 @@
 "use client";
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -18,7 +19,7 @@ import {
 import { cn, formatTitleCase } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
-import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
@@ -102,6 +103,7 @@ export default function DocumentRequestDetailSheet({
   if (!open) return null;
 
   const charter = detail ? getRequestCharterStatus(detail, slaStandards) : null;
+  const isInquiry = detail?.doc_type === MISSING_DOCUMENTS_INQUIRY;
   const isParent = detail?.client_type === "Parent";
   const attachments = Array.isArray(detail?.attachments) ? detail.attachments : [];
 
@@ -271,7 +273,7 @@ export default function DocumentRequestDetailSheet({
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
+                    className={cn(getRequestStatusBadgeClass(detail.status), COMPACT_BADGE_BASE)}
                   >
                     {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                   </span>
@@ -340,26 +342,26 @@ export default function DocumentRequestDetailSheet({
                   />
 
                   {/* Parent / Guardian specifics */}
-                  {isParent && (
+                  {(isParent || isInquiry) && (
                     <>
                       <InfoRow
                         icon=" UserCircleIcon"
                         label="Representative"
                         value={detail.requester_name || "N/A"}
                       />
-                      <InfoRow
+                      {isParent && <InfoRow
                         icon=" UserSearch01Icon"
                         label="Relationship"
                         value={detail.requester_relationship || "Legal Guardian"}
-                      />
+                      />}
                       <InfoRow
                         icon=" Shield01Icon"
-                        label="SPA Status"
+                        label={isInquiry ? "Requester Verification" : "SPA Status"}
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
                             <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
-                              SPA Verified
+                              {isInquiry ? "Requester Verified" : "SPA Verified"}
                             </span>
                           ) : (
                             <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
@@ -373,7 +375,7 @@ export default function DocumentRequestDetailSheet({
                             onClick={() => patchDetail({ spaVerified: !detail.spa_verified })}
                             className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
                           >
-                            {detail.spa_verified ? "Revoke SPA" : "Verify SPA"}
+                            {detail.spa_verified ? "Revoke Verification" : isInquiry ? "Verify Requester" : "Verify SPA"}
                           </Button>
                         </div>
                       </InfoRow>

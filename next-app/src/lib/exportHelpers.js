@@ -1,4 +1,11 @@
 import { formatPHDateTime } from "./timeFormat.js"
+import { getOfficePrefix } from "./roleUtils.js"
+
+export function formatReportOffice(officeId, officeName) {
+  const id = String(officeId ?? "").trim()
+  const name = String(officeName ?? "").trim() || (id ? getOfficePrefix(id) : "")
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
 
 /**
  * Generates a standardized export filename

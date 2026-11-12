@@ -2,9 +2,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { isFutureManilaCalendarDate } from "@/lib/timeFormat";
 import { query, transaction } from "@/lib/postgres";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { isStudentOfficerForOrg, getOrganizationsForStudentEmail } from "@/lib/organizationsRepo";
 
@@ -19,7 +20,7 @@ function uploadsDir() {
 
 export async function GET(req) {
   try {
-    const access = await requireStudent(req);
+    const access = await requireCurrentStudent(req);
     if (access.error || !access.user) {
       return createAuthErrorResponse(
         access.error || "Student authentication required",
@@ -121,7 +122,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(
       access.error || "Student authentication required",
@@ -142,9 +143,8 @@ export async function POST(req) {
       { status: 400 }
     );
   }
-  const parsedEventDate = new Date(`${eventDate}T00:00:00.000Z`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || Number.isNaN(parsedEventDate.getTime()) || parsedEventDate.toISOString().slice(0, 10) !== eventDate) {
-    return NextResponse.json({ ok: false, error: "Event date must be a valid calendar date in YYYY-MM-DD format." }, { status: 400 });
+  if (!isFutureManilaCalendarDate(eventDate)) {
+    return NextResponse.json({ ok: false, error: "Select a valid event date after today (Manila time)." }, { status: 400 });
   }
 
   // Verify whitelist affiliation for the student's email

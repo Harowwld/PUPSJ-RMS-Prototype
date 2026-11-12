@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { getPostEventReportById } from "@/lib/osasPostEventRepo";
 import { isStudentOfficerForOrg } from "@/lib/organizationsRepo";
 import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
@@ -20,7 +20,7 @@ function resolveFilePath(storageFilename) {
 }
 
 export async function GET(req, ctx) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(
       access.error || "Student authentication required",

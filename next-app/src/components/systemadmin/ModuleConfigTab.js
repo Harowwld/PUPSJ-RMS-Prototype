@@ -135,11 +135,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     if (initialOfficeId) {
       const timer = setTimeout(() => {
         setSelectedOfficeId(initialOfficeId)
-        setViewMode("office")
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [initialOfficeId, setSelectedOfficeId, setViewMode])
+  }, [initialOfficeId, setSelectedOfficeId])
 
   // System-Wide Demo Accounts Setting
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(true)
@@ -650,7 +649,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     ].filter((group) => group.modules.length)
   }, [filteredModules, groupedModules, matrixGroupBy])
 
-  const visibleMatrixOffices = useMemo(() => filteredOffices.filter((office) => !hiddenOfficeIds.includes(office.id)), [filteredOffices, hiddenOfficeIds])
+  const visibleMatrixOffices = useMemo(() => {
+    const visible = filteredOffices.filter((office) => !hiddenOfficeIds.includes(office.id))
+    return visible.length ? visible : filteredOffices.slice(0, 1)
+  }, [filteredOffices, hiddenOfficeIds])
 
   const officeCounts = useMemo(() => {
     if (!matrix?.offices || !matrix?.assignments) return {}
@@ -789,7 +791,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               {filteredOffices.length > 1 && <ColumnsPopover
                 columns={filteredOffices.map((office) => ({ key: office.id, label: office.short_name || office.name || office.id }))}
                 visibleColumns={visibleMatrixOffices.map((office) => office.id)}
-                minVisible={0}
+                minVisible={1}
                 onVisibleColumnsChange={(visibleIds) => {
                   setHiddenOfficeIds(filteredOffices.filter((office) => !visibleIds.includes(office.id)).map((office) => office.id))
                 }}

@@ -33,10 +33,12 @@ export const PLATFORM_BACKUP_COLUMNS = [
   { key: "status", label: "Storage status", kind: "status" },
 ]
 
+export const SYSTEM_BACKUP_COLUMNS = [{ key: "filename", label: "Backup archive", kind: "text" }, ...PLATFORM_BACKUP_COLUMNS]
+
 export function platformBackupSchema(visibleColumns) {
   return [
     "selection",
-    { kind: "text", growthWeight: visibleColumns.length ? 3 : 2 },
+    ...(visibleColumns.includes("filename") ? [{ kind: "text", growthWeight: 3 }] : []),
     ...PLATFORM_BACKUP_COLUMNS
       .filter(({ key }) => visibleColumns.includes(key))
       .map(({ key, kind }) => {
@@ -120,7 +122,7 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
       {rows.length > 0 && <Table columns={platformBackupSchema(visibleColumns)}>
         <TableHeader><TableRow>
           <TableHead><input type="checkbox" aria-label="Select all backups on this page" checked={allVisibleSelected} onChange={(event) => onSelectAll(event.target.checked, rows)} disabled={!rows.length} /></TableHead>
-          <TableHead aria-sort={sortBy === "filename" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>{heading("filename", "Backup archive")}</TableHead>
+          {visibleColumns.includes("filename") && <TableHead aria-sort={sortBy === "filename" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>{heading("filename", "Backup archive")}</TableHead>}
           {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key, label }) => {
             const sortKey = key === "size" ? "size_bytes" : key === "created" ? "created_at" : key === "actor" ? "actor" : key === "type" ? "backup_type" : "status_local"
             return <TableHead key={key} aria-sort={sortBy === sortKey ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>{heading(sortKey, label)}</TableHead>
@@ -128,7 +130,7 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
           <TableHead kind="actions"><span className="sr-only">Actions</span></TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {groups.length ? groups.flatMap(({ label, items }) => [<TableRow key={`group-${label}`}><TableCell colSpan={visibleColumns.length + 3} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">{label} <span className="ml-1.5 font-normal text-gray-400 dark:text-zinc-500 tabular-nums">{items.length}</span></TableCell></TableRow>, ...items.map(renderRow)]) : rows.map(renderRow)}
+          {groups.length ? groups.flatMap(({ label, items }) => [<TableRow key={`group-${label}`}><TableCell colSpan={visibleColumns.length + 2} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">{label} <span className="ml-1.5 font-normal text-gray-400 dark:text-zinc-500 tabular-nums">{items.length}</span></TableCell></TableRow>, ...items.map(renderRow)]) : rows.map(renderRow)}
         </TableBody>
       </Table>}
       {!rows.length && <EmptyState
@@ -189,7 +191,7 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
     }
     return <TableRow key={backup.id} selected={selected} onClick={(event) => { if (!event.target.closest("button, input")) onToggle(backup.id) }}>
       <TableCell><input type="checkbox" aria-label={`Select ${backup.filename}`} checked={selected} onChange={() => onToggle(backup.id)} /></TableCell>
-      <TableCell><TableText title={backup.filename} className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">{backup.filename}</TableText></TableCell>
+      {visibleColumns.includes("filename") && <TableCell><TableText title={backup.filename} className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100">{backup.filename}</TableText></TableCell>}
       {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => cells[key])}
       <TableCell kind="actions"><div className="flex items-center justify-center"><BackupActionsMenu backup={backup} onDownload={onDownload} onDelete={onDelete} /></div></TableCell>
     </TableRow>

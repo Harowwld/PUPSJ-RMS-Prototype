@@ -8,8 +8,6 @@
  *         └── Staff (office-scoped)
  */
 
-import { hasLinkedStudentRecord } from "./studentAffiliation.js";
-
 /**
  * Convert all supported role spellings to the documented canonical labels.
  * SystemAdmin and SuperAdmin remain distinct labels for compatibility, but
@@ -350,7 +348,7 @@ export function getDefaultHomeView(authUser, activeViewRole = null) {
   const pref = authUser?.preferences?.default_home_view;
 
   if (isStudent) {
-    if (pref === "compliance" && hasLinkedStudentRecord(authUser)) {
+    if (pref === "compliance") {
       return { view: "compliance", label: "Requirements & Compliance", basePath: "/student", path: "/student?view=compliance" };
     }
     if (pref === "requests" || pref === "odrs") {

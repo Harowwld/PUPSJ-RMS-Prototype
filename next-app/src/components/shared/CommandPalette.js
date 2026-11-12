@@ -1,5 +1,4 @@
 "use client";
-import { hasLinkedStudentRecord } from "@/lib/studentAffiliation";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -1096,15 +1095,13 @@ export default function CommandPalette({
             },
           ],
         },
-      ];
-      if (!hasLinkedStudentRecord(authUser)) {
-        candidateGroups = candidateGroups
-          .map((group) => ({
-            ...group,
-            items: group.items.filter(({ view }) => view !== "compliance" && view !== "osas"),
-          }))
-          .filter(({ items }) => items.length);
-      }
+      ].map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          (authUser?.client_type === "Student" && authUser?.portal_setup_complete !== false) ||
+          !["compliance", "osas"].includes(item.view)),
+      })).filter((group) => group.items.length > 0);
+
     }
 
     // Universal Controls

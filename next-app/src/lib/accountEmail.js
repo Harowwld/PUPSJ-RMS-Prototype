@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { join } from "node:path";
 
 let transporter;
 let transporterConfigKey;
@@ -62,16 +63,127 @@ export function assertAccountEmailConfigured() {
   getTransporter();
 }
 
-export async function sendStudentSignupCode({ to, code }) {
+export async function sendEmailVerificationCode({ to, code, staff = false }) {
+  const instructions = staff
+    ? "Enter this code after signing in with your staff email and password."
+    : "Enter this code in eManage to continue setting up your account.";
+  const ignore = staff
+    ? "If you weren’t expecting a staff account, contact your administrator."
+    : "If you didn’t start signing up, you can ignore this email.";
   const mailer = getTransporter();
+  const logoCid = "emanage-signup-logo@pupsj-rms";
   const result = await mailer.transporter.sendMail({
     from: mailer.from,
     to: { name: "", address: to },
     subject: "Verify your eManage email address",
-    text: `Your eManage verification code is ${code}. It expires in 10 minutes. If you did not start registration, ignore this email.`,
+    text: [
+      "Verify your email address",
+      "",
+      instructions,
+      "",
+      String(code),
+      "",
+      `This code expires in 10 minutes. ${ignore}`,
+    ].join("\n"),
+    html: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Verify your eManage email address</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .bg-page  { background-color: #000000 !important; }
+      .bg-panel { background-color: #1c1c1e !important; }
+      .bg-tile  { background-color: #2c2c2e !important; }
+      .bg-note  { background-color: #2c2c2e !important; }
+      .text-pri { color: #f5f5f7 !important; }
+      .text-sec { color: #98989d !important; }
+      .digit    { color: #ff8a8a !important; }
+    }
+    @media only screen and (max-width: 520px) {
+      .panel-pad { padding: 28px 24px 32px !important; }
+      .headline  { font-size: 30px !important; }
+      .tile      { width: 42px !important; height: 54px !important; font-size: 26px !important; line-height: 54px !important; }
+    }
+    @media only screen and (max-width: 375px) {
+      .panel-pad { padding-left: 16px !important; padding-right: 16px !important; }
+      .tile      { width: 34px !important; height: 48px !important; line-height: 48px !important; }
+    }
+  </style>
+</head>
+<body class="bg-page" style="margin:0;padding:0;background-color:#f5f5f7;-webkit-text-size-adjust:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;color:#1d1d1f">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:#f5f5f7">Your eManage verification code. It expires in 10 minutes.</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-page" bgcolor="#f5f5f7">
+    <tr>
+      <td align="center" style="padding:32px 12px 40px">
+        <!--[if mso]><table role="presentation" width="520" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:0 8px 20px">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-right:10px"><img src="cid:${logoCid}" alt="" width="32" height="32" style="display:block;width:32px;height:32px;border:0;border-radius:8px;background-color:#ffffff"></td>
+                  <td class="text-pri" style="color:#1d1d1f;font-size:17px;font-weight:600;letter-spacing:-0.2px">eManage</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main panel -->
+          <tr>
+            <td class="bg-panel panel-pad" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:24px;padding:40px" align="left">
+              <h1 class="headline text-pri" style="margin:0;color:#1d1d1f;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.8px;text-align:left">Verify your<br>email address</h1>
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">${instructions}</p>
+
+              <!-- Code tiles -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="margin:32px 0 0;border-collapse:separate;border-spacing:8px 0;margin-left:-8px">
+                <tr>
+                  ${[...String(code)].map((digit) => `<td class="tile bg-tile digit" align="center" bgcolor="#faf0f0" width="48" height="60" style="width:48px;height:60px;background-color:#faf0f0;border-radius:14px;color:#800000;font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;font-weight:600;line-height:60px;text-align:center">${escapeHtml(digit)}</td>`).join("")}
+                </tr>
+              </table>
+              <div style="clear:both;font-size:0;line-height:0;height:0">&nbsp;</div>
+
+              <!-- Expiry note -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px">
+                <tr>
+                  <td class="bg-note text-sec" bgcolor="#f5f5f7" style="background-color:#f5f5f7;border-radius:12px;padding:12px 16px;color:#6e6e73;font-size:14px;line-height:1.4;text-align:left">This code expires in <strong class="text-pri" style="color:#1d1d1f;font-weight:600">10 minutes</strong>.</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td class="text-sec" style="padding:20px 8px 0;color:#6e6e73;font-size:13px;line-height:1.5;text-align:left">
+              ${ignore}
+            </td>
+          </tr>
+
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    attachments: [{
+      filename: "emanage-logo.png",
+      path: join(process.cwd(), "public", "assets", "branding", "black-icon.png"),
+      contentType: "image/png",
+      cid: logoCid,
+    }],
   });
   if (!result.accepted?.length) throw new Error("Signup verification email was not accepted.");
 }
+
+export const sendStudentSignupCode = sendEmailVerificationCode;
 
 export async function sendSmtpTestEmail({ to }) {
   const recipient = String(to || "").trim();
@@ -132,6 +244,7 @@ export async function sendAccountCredentialsEmail({
   accountType,
   accountId,
   requiresActivation = false,
+  verificationCode,
   username,
   password,
 }) {
@@ -170,6 +283,7 @@ export async function sendAccountCredentialsEmail({
     ...(accountId ? [`Account ID: ${accountId}`] : []),
     `Username: ${username}`,
     passwordText,
+    ...(verificationCode ? [`Email verification code: ${verificationCode} (expires in 10 minutes). Enter it at first sign-in.`] : []),
     signInText,
     "",
     securityText,
@@ -182,6 +296,7 @@ export async function sendAccountCredentialsEmail({
     <p><strong>Username:</strong> ${escapeHtml(username)}${password ? `<br><strong>Password:</strong> ${escapeHtml(password)}` : ""}</p>
     ${password ? "" : "<p>Use the password you chose during registration.</p>"}
     ${loginUrl ? `<p><a href="${escapeHtml(loginUrl)}">Open the eManage sign-in page</a></p>` : "<p>Open the eManage sign-in page provided by your institution.</p>"}
+    ${verificationCode ? `<p><strong>Email verification code:</strong> ${escapeHtml(verificationCode)}. Enter it at first sign-in. The code expires in 10 minutes.</p>` : ""}
     <p>${securityText}</p>
   </body></html>`;
 
@@ -192,6 +307,7 @@ export async function sendAccountCredentialsEmail({
     text,
     html,
   });
+  if (!result.accepted?.length) throw new Error("Account credentials email was not accepted.");
   return { messageId: result.messageId };
 }
 

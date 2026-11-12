@@ -12,6 +12,7 @@ import { requireStaff, createAuthErrorResponse } from "../../../../lib/authHelpe
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
+import { signupEmail } from "@/lib/studentSignup";
 import { PersonNameSchema } from "@/lib/validationSchemas";
 import { normalizeStudentRecordName } from "@/lib/studentRecordName";
 
@@ -39,7 +40,7 @@ export async function GET(req, ctx) {
 
   const officeId = resolveOfficeId(access.user, req);
   if (!officeId) return createAuthErrorResponse("Office scope is required", 403);
-  const row = await getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership: true });
+  const row = await getStudentByStudentNo(studentNo, { officeId, includeArchivedMembership: true, includeOdrsEmail: true });
   if (!row || !canAccessResource(access.user, "student", { ...row, office_id: officeId })) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -77,6 +78,7 @@ export async function PATCH(req, ctx) {
   const allowedFields = new Set([
     "name",
     "firstName", "middleName", "lastName",
+    "odrsEmail",
     "courseCode",
     "yearLevel",
     "section",
@@ -91,6 +93,18 @@ export async function PATCH(req, ctx) {
   }
   if (Object.keys(body).length === 0) {
     return NextResponse.json({ ok: false, error: "At least one field is required" }, { status: 400 });
+  }
+
+  let odrsEmail;
+  if (Object.hasOwn(body, "odrsEmail")) {
+    if (officeId !== "registrar") return createAuthErrorResponse("Registrar access required", 403);
+    try {
+      odrsEmail = typeof body.odrsEmail === "string" && !body.odrsEmail.trim()
+        ? ""
+        : signupEmail(body.odrsEmail);
+    } catch {
+      return NextResponse.json({ ok: false, error: "Enter a valid ODRS email." }, { status: 400 });
+    }
   }
 
   const validStatuses = new Set(["Active", "Archived"]);
@@ -208,18 +222,27 @@ export async function PATCH(req, ctx) {
     }
   }
 
-  const row = await updateStudent(studentNo, {
-    ...nameParts,
-    name: body.name === undefined ? undefined : String(body.name).trim(),
-    courseCode:
-      body.courseCode === undefined ? undefined : String(body.courseCode).trim(),
-    yearLevel: body.yearLevel,
-    section: body.section === undefined ? undefined : String(body.section).trim(),
-    room: body.room,
-    cabinet: body.cabinet === undefined ? undefined : canonicalizeCabinetId(body.cabinet),
-    drawer: body.drawer,
-    officeId,
-  });
+  let row;
+  try {
+    row = await updateStudent(studentNo, {
+      ...nameParts,
+      name: body.name === undefined ? undefined : String(body.name).trim(),
+      courseCode:
+        body.courseCode === undefined ? undefined : String(body.courseCode).trim(),
+      yearLevel: body.yearLevel,
+      section: body.section === undefined ? undefined : String(body.section).trim(),
+      room: body.room,
+      cabinet: body.cabinet === undefined ? undefined : canonicalizeCabinetId(body.cabinet),
+      drawer: body.drawer,
+      officeId,
+      odrsEmail,
+    });
+  } catch (error) {
+    if (error?.constraint === "registrar_odrs_contacts_email_unique") {
+      return NextResponse.json({ ok: false, error: "This ODRS email is already recorded for another student." }, { status: 409 });
+    }
+    throw error;
+  }
 
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });

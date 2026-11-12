@@ -1,3 +1,4 @@
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { NextResponse } from "next/server";
 import { transaction } from "@/lib/postgres";
 import { requireOfficeModule } from "@/lib/moduleAccess";
@@ -40,6 +41,10 @@ export async function PATCH(req, ctx) {
     if (!existing || !canAccessResource(access, "request", existing)) return { error: "Not found", status: 404 };
 
     const nextStatus = status ?? existing.status;
+    if (existing.doc_type === MISSING_DOCUMENTS_INQUIRY && ["Ready", "Completed"].includes(nextStatus)
+        && !(hasSpaVerified ? spaVerified : existing.spa_verified) && status !== null) {
+      return { error: "Verify the requester before completing a missing-documents inquiry.", status: 400 };
+    }
     const isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(nextStatus);
 
     if (nextStatus === "Deficient" && !rawMessage) {
@@ -59,7 +64,9 @@ export async function PATCH(req, ctx) {
     if (isReopen) {
       defaultMsg = `Request reopened to ${nextStatus}. Reason: ${reopenReason}`;
     } else if (hasSpaVerified) {
-      defaultMsg = spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.";
+      defaultMsg = existing.doc_type === MISSING_DOCUMENTS_INQUIRY
+        ? (spaVerified ? "Requester identity and authorization verified by the Registrar." : "Requester verification revoked.")
+        : (spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.");
     } else if (statusChanged) {
       defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
     }

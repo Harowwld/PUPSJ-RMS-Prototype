@@ -38,9 +38,11 @@ test("every application table uses the shared table and declares its column cont
     const source = fs.readFileSync(file, "utf8");
     if (!/<(?:table|Table)\b/.test(source)) continue;
     const primitive = file.endsWith(path.join("components", "ui", "table.jsx"));
-    if (!primitive) assert.doesNotMatch(source, /<table\b/, `${file} bypasses shared density and presentation`);
     const ast = parseSync(source, { babelrc: false, configFile: false, parserOpts: { plugins: ["jsx"] } });
     visit(ast, (node) => {
+      if (!primitive && node.type === "JSXElement") {
+        assert.notEqual(node.openingElement.name.name, "table", `${file} bypasses shared density and presentation`);
+      }
       if (node.type !== "JSXElement" || node.openingElement.name.name !== "Table") return;
       tableCount += 1;
       const columns = node.openingElement.attributes.find((attribute) => attribute.name?.name === "columns");

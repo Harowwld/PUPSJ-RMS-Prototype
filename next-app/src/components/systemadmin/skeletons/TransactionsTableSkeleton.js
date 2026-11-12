@@ -5,11 +5,12 @@ import { Table } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function TransactionsTableSkeleton({ rowCount = 8, showPagination = true, visibleColumns = ["department", "requester", "title", "details", "status", "submitted"], groupBy = "none" }) {
+export default function TransactionsTableSkeleton({ rowCount = 8, showPagination = true, visibleColumns = ["id", "department", "requester", "title", "details", "status", "submitted"], groupBy = "none" }) {
   return (
     <div className="overflow-hidden rounded-b-2xl bg-white dark:bg-card flex flex-col flex-1 isolate">
       <div className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2">
-            <Table columns={[{ kind: "identifier", maxWidth: 180, growthWeight: 0 }, ...visibleColumns.map((key) => {
+            <Table columns={[...visibleColumns.map((key) => {
+              if (key === "id") return { kind: "identifier", maxWidth: 180, growthWeight: 0 }
               if (key === "department") return { kind: "category", maxWidth: 150, growthWeight: 0 }
               if (key === "status" || key === "slaStatus") return { kind: "status", maxWidth: 160, growthWeight: 0 }
               if (key === "submitted" || key === "updatedAt") return { kind: "date", maxWidth: 180, growthWeight: 0 }
@@ -17,9 +18,9 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
             }), { kind: "actions" }]} className="min-w-0">
           <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-              <th className="py-3 px-4 pl-6">
+              {visibleColumns.includes("id") && <th className="py-3 px-4 pl-6">
                 <Skeleton className="h-3.5 w-10 dark:bg-muted" />
-              </th>
+              </th>}
               {visibleColumns.includes("department") && <th className="py-3 px-4">
                 <Skeleton className="h-3.5 w-16 dark:bg-muted" />
               </th>}
@@ -48,13 +49,13 @@ export default function TransactionsTableSkeleton({ rowCount = 8, showPagination
           <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
             {Array.from({ length: rowCount }).map((_, i) => (
               <Fragment key={i}>
-              {groupBy !== "none" && i % 4 === 0 && <tr className="bg-gray-100/70 dark:bg-zinc-950/60"><td colSpan={visibleColumns.length + 2} className="px-6 py-2.5"><Skeleton className="h-3.5 w-32 rounded dark:bg-muted" /></td></tr>}
+              {groupBy !== "none" && i % 4 === 0 && <tr className="bg-gray-100/70 dark:bg-zinc-950/60"><td colSpan={visibleColumns.length + 1} className="px-6 py-2.5"><Skeleton className="h-3.5 w-32 rounded dark:bg-muted" /></td></tr>}
               <tr
                 className="border-b border-border dark:border-border last:border-b-0"
               >
-                <td className="py-3 px-4 pl-6 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
+                {visibleColumns.includes("id") && <td className="py-3 px-4 pl-6 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-5 w-10 rounded-md dark:bg-muted" />
-                </td>
+                </td>}
                 {visibleColumns.includes("department") && <td className="py-3 px-4 align-middle border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                 </td>}

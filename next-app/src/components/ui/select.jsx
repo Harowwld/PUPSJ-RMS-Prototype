@@ -19,7 +19,7 @@ function extractOptions(nodes, groupDisabled = false) {
 }
 
 const Select = React.forwardRef(({
-  className, buttonClassName, containerClassName, children, options: optionsProp,
+  className, buttonClassName, containerClassName, valueClassName, children, options: optionsProp,
   value, defaultValue, onChange, onValueChange, placeholder, title, menuClassName,
   optionClassName, usePortal = true, indicator = "caret", align = "start",
   name, form, required, disabled, readOnly, ...props
@@ -59,7 +59,7 @@ const Select = React.forwardRef(({
     }} items={items} name={name} form={form} required={required} disabled={disabled} readOnly={readOnly}>
       <div className={cn("relative h-auto w-full min-w-0", containerClassName)}>
         <Primitive.Trigger ref={ref} data-slot="select-trigger" className={cn("flex h-10 w-full min-w-0 cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white px-3 text-[13px] font-normal text-gray-700 shadow-none outline-none transition-colors focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon data-popup-open:border-pup-maroon data-popup-open:ring-1 data-popup-open:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-200", buttonClassName, className)} {...props}>
-          <Primitive.Value className="min-w-0 flex-1 truncate text-left" placeholder={placeholder ?? items[0]?.label ?? "Select…"} />
+          <Primitive.Value className={cn("min-w-0 flex-1 truncate text-left", valueClassName)} placeholder={placeholder ?? items[0]?.label ?? "Select…"} />
           <Primitive.Icon><Indicator size={16} aria-hidden="true" className="shrink-0 text-gray-400" /></Primitive.Icon>
         </Primitive.Trigger>
         {usePortal ? <Primitive.Portal>{content}</Primitive.Portal> : isOpen ? content : null}

@@ -6,6 +6,18 @@ import { getSessionVersion, isSessionActive, registerSessionToken } from "./auth
 import { hashPassword, verifyPasswordHash } from "./passwordHash.js";
 import { validatePasswordPolicy } from "./passwordPolicy.js";
 
+export async function studentSignupEmailExists(email, db = { queryOne }) {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  const profile = await db.queryOne(
+    `SELECT id
+       FROM student_identity_profiles
+      WHERE email = $1 OR lower(email) = $2
+      LIMIT 1`,
+    [encryptPII(cleanEmail), cleanEmail],
+  );
+  return Boolean(profile);
+}
+
 export async function registerStudent(
   { studentNo, name, firstName, lastName, middleName, password, email, clientType },
   { tx, securityAnswers = [] } = {},
@@ -32,15 +44,7 @@ export async function registerStudent(
     throw new Error("A valid email address is required.");
   }
 
-  // 1. Check whether an identity profile already owns this email
-  const existingEmail = await (tx?.queryOne || queryOne)(
-    `SELECT id, email
-       FROM student_identity_profiles
-      WHERE email = $1 OR lower(coalesce(email, '')) = $2
-      LIMIT 1`,
-    [encryptPII(cleanEmail), cleanEmail]
-  );
-  if (existingEmail) {
+  if (await studentSignupEmailExists(cleanEmail, tx)) {
     throw new Error("An account with this email address already exists. Please sign in.");
   }
 
@@ -120,13 +124,13 @@ export async function authenticateStudent({ studentNo, username, email, identifi
       (row.student_status && String(row.student_status).toLowerCase() !== "active") ||
       (row.has_archived_office && !row.has_active_office)) return null;
   let verification = verifyPasswordHash(password, row.password_hash);
-  const isDemoStudent = cleanEmail === "student@pup.local" ||
-                        cleanEmail === "test.student@pup.local" ||
+  const isDemoStudent = cleanEmail === "student@pup.com" ||
+                        cleanEmail === "test.student@pup.com" ||
                         cleanEmail === "marianocedrick412@gmail.com" ||
                         cleanNo === "2022-10001-SJ-0" ||
                         cleanNo === "2023-00001-SJ-0" ||
                         cleanNo === "2021-00123-SJ-0" ||
-                        String(row.email || "").toLowerCase() === "student@pup.local" ||
+                        String(row.email || "").toLowerCase() === "student@pup.com" ||
                         String(row.email || "").toLowerCase() === "marianocedrick412@gmail.com" ||
                         String(row.student_no || "").toUpperCase() === "2022-10001-SJ-0";
   if (!verification.valid && isDemoStudent) {

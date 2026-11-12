@@ -35,7 +35,7 @@ import { format } from "date-fns"
 import { cn, formatTitleCase, formatLogDetails } from "@/lib/utils"
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips"
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
-import { generateExportFilename } from "@/lib/exportHelpers"
+import { formatReportOffice, generateExportFilename } from "@/lib/exportHelpers"
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 
@@ -105,10 +105,12 @@ function formatActionLabel(actionStr) {
   return actionStr;
 }
 
-const OPTIONAL_COLUMNS = [
+const AUDIT_COLUMNS = [
+  { key: "created_at", label: "Timestamp", kind: "date", maxWidth: 205 },
   { key: "severity", label: "Level", kind: "status", maxWidth: 120 },
   { key: "actor", label: "Actor", kind: "text", maxWidth: 240 },
   { key: "office_id", label: "Scope", kind: "status", maxWidth: 180 },
+  { key: "action", label: "Action", kind: "text", maxWidth: 300 },
   { key: "details", label: "Description", kind: "text", maxWidth: 340 },
   { key: "ip", label: "IP Address", kind: "text", maxWidth: 200, defaultHidden: true },
 ]
@@ -138,26 +140,14 @@ export default function GlobalAuditLogsTab({ showToast }) {
   const [isManualLoading, setIsManualLoading] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
   const [expandedRows, setExpandedRows] = useState({})
-  const [visibleColumns, setVisibleColumns] = useViewPreference("logs", "visibleColumns", OPTIONAL_COLUMNS.filter(({ key }) => key !== "ip").map(({ key }) => key))
+  const [visibleColumns, setVisibleColumns] = useViewPreference("logs", "visibleColumns", AUDIT_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key))
   const showColumn = (key) => visibleColumns.includes(key)
-
-  const visibleColumnCount =
-    2 +
-    (showColumn("severity") ? 1 : 0) +
-    1 +
-    (showColumn("office_id") ? 1 : 0) +
-    1 +
-    (showColumn("details") ? 1 : 0) +
-    (showColumn("ip") ? 1 : 0) +
-    1
 
   const tableColumns = [
     { kind: "selection" },
-    { kind: "date", maxWidth: 205, growthWeight: 0 },
-    ...OPTIONAL_COLUMNS.filter(({ key }) => !["details", "ip"].includes(key) && showColumn(key)).map(({ kind, maxWidth }) => ({ kind, maxWidth, ...(kind === "status" ? { growthWeight: 0 } : {}) })),
-    { kind: "text", maxWidth: 300 },
-    ...(showColumn("details") ? [{ kind: "text", maxWidth: 340 }] : []),
-    ...(showColumn("ip") ? [{ kind: "text", maxWidth: 200 }] : []),
+    ...AUDIT_COLUMNS.filter(({ key }) => showColumn(key)).map(({ kind, maxWidth }) => ({
+      kind, maxWidth, ...(kind === "date" || kind === "status" ? { growthWeight: 0 } : {}),
+    })),
     { kind: "actions" },
   ]
 
@@ -253,7 +243,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   // Sorting
   const [sortBy, setSortBy] = useViewPreference("logs", "sortBy", "created_at")
   const [sortOrder, setSortOrder] = useViewPreference("logs", "sortOrder", "DESC")
-  const [groupBy, setGroupBy] = useState("none")
+  const [groupBy, setGroupBy] = useViewPreference("logs", "groupBy", "none")
 
   const groupedLogs = useMemo(() => {
     if (groupBy === "none") {
@@ -572,7 +562,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
       : selectedOffices.map((off) => {
         if (off === "global") return "Global (Platform)"
         const offObj = offList.find((o) => o.id === off)
-        return offObj ? offObj.short_name || offObj.name : off
+        return formatReportOffice(off, offObj?.short_name || offObj?.name)
       }).join(", ")
     const severityLabel = selectedSeverities.length === 0 ? "All Severities" : selectedSeverities.join(", ")
     const labels = formatType === "pdf" ? `&scope=${encodeURIComponent(scopeLabel)}&severityLabel=${encodeURIComponent(severityLabel)}` : ""
@@ -821,7 +811,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
               />
               <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
               <GroupPopover options={AUDIT_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={setGroupBy} />
-              <ColumnsPopover columns={OPTIONAL_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+              <ColumnsPopover columns={AUDIT_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
 
               <DateRangeFilterButton
                 startDate={startDate}
@@ -991,7 +981,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           </TooltipContent>
                         </Tooltip>
                       </th>
-                      <th className="p-4 w-[14%]" aria-sort={sortBy === "created_at" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                      {showColumn("created_at") && <th className="p-4 w-[14%]" aria-sort={sortBy === "created_at" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
                         <button
                           onClick={() => handleSort("created_at")}
                           className={cn(
@@ -1002,7 +992,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           Timestamp{" "}
                           <SortIndicator column="created_at" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
-                      </th>
+                      </th>}
                       {showColumn("severity") && <th className="p-4 w-[9%]" aria-sort={sortBy === "severity" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
                         <button
                           onClick={() => handleSort("severity")}
@@ -1039,7 +1029,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           <SortIndicator column="office_id" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
                       </th>}
-                      <th className="p-4 w-[16%]" aria-sort={sortBy === "action" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
+                      {showColumn("action") && <th className="p-4 w-[16%]" aria-sort={sortBy === "action" ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>
                         <button
                           onClick={() => handleSort("action")}
                           className={cn(
@@ -1050,7 +1040,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                           Action{" "}
                           <SortIndicator column="action" sortBy={sortBy} sortOrder={sortOrder} />
                         </button>
-                      </th>
+                      </th>}
                       {showColumn("details") && <th className="p-4 text-xs font-semibold text-gray-500 dark:text-zinc-400">
                         Description
                       </th>}
@@ -1065,7 +1055,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       <React.Fragment key={group.key}>
                         {groupBy !== "none" && (
                           <tr className="bg-gray-50/70 dark:bg-zinc-800/50">
-                            <td colSpan={visibleColumnCount} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                            <td colSpan={tableColumns.length} className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                               {group.label} ({group.logs.length})
                             </td>
                           </tr>
@@ -1123,9 +1113,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             </td>
 
                             {/* Timestamp */}
-                            <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            {showColumn("created_at") && <td className="p-4 align-middle text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               {formattedTimestamp}
-                            </td>
+                            </td>}
 
                             {/* Level / Severity */}
                             {showColumn("severity") && <td className="p-4 align-middle border-r border-border/70 dark:border-border/70">
@@ -1179,9 +1169,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                             </td>}
 
                             {/* Action */}
-                            <td className="p-4 align-middle text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
+                            {showColumn("action") && <td className="p-4 align-middle text-[13px] font-medium text-gray-900 dark:text-zinc-100 border-r border-border/70 dark:border-border/70">
                               <span className="block w-full min-w-0 truncate" title={formatActionLabel(log.action)}>{formatActionLabel(log.action)}</span>
-                            </td>
+                            </td>}
 
                             {showColumn("details") && <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                               <span className="block w-full min-w-0 truncate text-xs font-normal text-gray-700 dark:text-zinc-300">

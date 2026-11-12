@@ -152,7 +152,7 @@ foreach ($shortcut in @(
 
 Write-Host ""
 Write-Host "PUPSJ RMS is installed and responding at $appUrl"
-Write-Host "Initial SuperAdmin login: superadmin@pup.local"
+Write-Host "Initial SuperAdmin login: superadmin@pup.com"
 Write-Host "The password is the one you chose during setup. Keep it private."
 Write-Host "Start, Stop, and Configure Email shortcuts were added to the Public Desktop."
 Read-Host "Installation complete. Press Enter to close"

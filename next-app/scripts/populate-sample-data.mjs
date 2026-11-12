@@ -13,6 +13,8 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { hashPassword } from "../src/lib/passwordHash.js";
 import { ADDITIONAL_REGISTRAR_SCAN_TYPES } from "../src/lib/registrarScanDocumentTypes.js";
 import { encryptPII } from "../src/lib/piiEncryption.js";
+import { getOfficeUploadsDir } from "../src/lib/officePaths.js";
+import { generateSampleCompliancePdf, getSampleComplianceReview } from "./sampleDataPdf.mjs";
 
 dotenv.config({ path: ".env" });
 
@@ -29,34 +31,56 @@ const studentPasswordHash = hashPassword("student123");
 const staffPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 const officialStaff = [
-  ["PUPSUPERADMIN-001", null, "System", "Administrator", "SuperAdmin", "System Administration", "superadmin@pup.local"],
-  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.local"],
-  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.local"],
-  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.local"],
-  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.local"],
+  ["PUPSUPERADMIN-001", null, "Ramon", "Villanueva", "SuperAdmin", "System Administration", "superadmin@pup.com"],
+  ["PUPREGISTRAR-003", "registrar", "Elias", "Austria", "Admin", "Administrative", "admin.registrar@pup.com"],
+  ["PUPREGISTRAR-002", "registrar", "Marcus", "Reyes", "Staff", "Records", "staff.registrar@pup.com"],
+  ["PUPOSAS-001", "osas", "Sandra", "Gomez", "Admin", "OSAS Admin", "admin.osas@pup.com"],
+  ["PUPOSAS-002", "osas", "Juanito", "Rizal", "Staff", "Student Affairs", "staff.osas@pup.com"],
 ];
 
 const demoStudentAccounts = [
-  ["2023-00001-SJ-0", "test.student@pup.local"],
-  ["2022-10001-SJ-0", "student@pup.local"],
+  ["2023-00001-SJ-0", "test.student@pup.com"],
+  ["2022-10001-SJ-0", "student@pup.com"],
 ];
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "pup_emanage_birth_certificate_students.csv");
+const registrarTaxonomyPath = path.join(repoRoot, "_SAMPLE_DATA", "registrar_system_data - final.csv");
+const registrarRequestableDocTypes = fs.readFileSync(registrarTaxonomyPath, "utf8")
+  .split(/\r?\n/)
+  .map((line) => line.split(",").map((value) => value.trim()))
+  .filter(([kind, , , compliance, requestable]) => kind === "DocumentType" && compliance === "false" && requestable === "true")
+  .map(([, name, , , , category]) => [name, category]);
+const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "cleaned_student_data.csv");
 const studentRosterRows = fs.readFileSync(studentRosterPath, "utf8").trim().split(/\r?\n/).slice(1);
+const sectionByCohort = {
+  2020: "4-1",
+  2021: "3-1",
+  2022: "3-2",
+  2023: "2-1",
+  2024: "2-2",
+  2025: "1-1",
+  2026: "1-2",
+};
 const rosterStudents = studentRosterRows.map((line, index) => {
-  const [studentNo, name, courseCode, academicYear, section, room, cabinet, drawer] = line.split(",");
-  if (![studentNo, name, courseCode, academicYear, section, room, cabinet, drawer].every(Boolean)) {
+  const [studentNo, name, odrsEmail, courseCode, academicYear, section, room, cabinet, drawer] = line.split(",");
+  if (![studentNo, name, odrsEmail, courseCode, academicYear, section, room, cabinet, drawer].every(Boolean)) {
     throw new Error(`Invalid student roster row ${index + 2} in ${studentRosterPath}`);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.com$/i.test(odrsEmail.trim())) {
+    throw new Error(`Invalid .com student email on roster row ${index + 2} in ${studentRosterPath}`);
   }
   if (name.includes(",")) {
     throw new Error(`Student name must be First Middle Last on roster row ${index + 2}`);
   }
   const cleanNo = studentNo.trim().replace(/-(MN|IT)-/g, "-SJ-").replace(/-SJ-[12]$/, "-SJ-0");
-  return [cleanNo, name.trim(), courseCode.trim().toUpperCase(), Number(academicYear), section.trim(), 1, cabinet.trim(), Number(drawer)];
+  const cohort = Number(cleanNo.slice(0, 4));
+  if (section.trim() !== sectionByCohort[cohort] || Number(academicYear) !== cohort || Number(room) !== 1 || cabinet.trim() !== String(cohort)) {
+    throw new Error(`Invalid cohort section or storage assignment on roster row ${index + 2} in ${studentRosterPath}`);
+  }
+  return [cleanNo, name.trim(), courseCode.trim().toUpperCase(), cohort, section.trim(), 1, cabinet.trim(), Number(drawer), odrsEmail.trim().toLowerCase()];
 });
-if (rosterStudents.length !== 85) {
-  throw new Error(`Expected 85 certificate-backed students; found ${rosterStudents.length}`);
+if (!rosterStudents.length) {
+  throw new Error(`No valid students found in ${studentRosterPath}`);
 }
 if (new Set(rosterStudents.map(([studentNo]) => studentNo)).size !== rosterStudents.length) {
   throw new Error(`Duplicate student number in ${studentRosterPath}`);
@@ -75,29 +99,15 @@ const rosterCourses = [
 const rosterSections = [...new Set(rosterStudents.map(([, , courseCode, , section]) => `${courseCode}\t${section}`))]
   .map((entry) => entry.split("\t"));
 
-const documents = [
-  [1, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "PSA Birth Certificate (circled)", "sample-psa-juan.pdf", "Approved"],
-  [2, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "Health and Information Sheet", "sample-health-juan.pdf", "Approved"],
-  [3, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "SAR Form (circled)", "sample-sar-juan.pdf", "Approved"],
-  [4, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "CAEPUP 2023 Application Form", "sample-caepup-juan.pdf", "Approved"],
-  [5, "2022-10001-SJ-0", "DELA CRUZ, JUAN A.", "Undertaking and Waiver of Right", "sample-uwr-juan.pdf", "Approved"],
-  [6, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "PSA Birth Certificate (circled)", "sample-psa-clara.pdf", "Approved"],
-  [7, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Grade 12 Report Card (1st and 2nd Semester)", "sample-g12-clara.pdf", "Approved"],
-  [8, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Certificate of Good Moral Character", "sample-moral-clara.pdf", "Pending"],
-  [9, "2023-00001-SJ-0", "SANTOS, MARIA CLARA L.", "Photocopy of ID", "sample-id-clara.pdf", "Pending"],
-  [10, "2022-10002-SJ-0", "SANTOS, MARIA B.", "Grade 12 Report Card (1st and 2nd Semester)", "sample-g12-maria.pdf", "Pending"],
-  [11, "2021-30004-SJ-0", "GARCIA, ANA D.", "SAR Form (circled)", "sample-sar-ana.pdf", "Pending"],
-  [12, "2023-20003-SJ-0", "RAMIREZ, CARLOS E.", "CTC Grade 10 Report Card", "sample-g10-carlos.pdf", "Pending"],
-  [13, "2024-40005-SJ-0", "NAVARRO, PATRICIA M.", "CTC Grade 11 Report Card", "sample-g11-patricia.pdf", "Pending"],
-  [14, "2023-20003-SJ-0", "RAMIREZ, CARLOS E.", "SHS Diploma or Certificate of Graduation", "sample-diploma-carlos.pdf", "Pending"],
-];
-
 const requests = [
   [1, "2023-20003-SJ-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
   [2, "2024-40005-SJ-0", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
   [3, "2022-10001-SJ-0", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
-  [4, "2022-10002-SJ-0", "Form 137", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
-  [5, "2020-50006-SJ-0", "Certificate of Good Moral", "Pending", "Urgent request for scholarship application", "PUPREGISTRAR-002"],
+  [4, "2022-10002-SJ-0", "Certified True Copy of Records", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
+  [5, "2020-50006-SJ-0", "Certificate of Good Moral", "Pending", "Requested for a scholarship application.", "PUPREGISTRAR-002"],
+  [6, "2023-00001-SJ-0", "Certificate of Transfer Credentials (Honorable Dismissal)", "Cancelled", "Registrar declined processing because the applicant already had transfer credentials issued for this enrollment.", "PUPREGISTRAR-003"],
+  [7, "2023-00001-SJ-0", "Certificate of Registration", "InProgress", "Registrar is checking the enrollment record for the requested term.", "PUPREGISTRAR-002"],
+  [8, "2022-10001-SJ-0", "Transcript of Records", "Completed", "Sealed transcript released to the requester at the Registrar counter.", "PUPREGISTRAR-003"],
 ];
 
 async function generateProposalPdf({ title, orgName, eventDate, venue, desc, studentNo, studentName, status }) {
@@ -180,11 +190,19 @@ async function generateProposalPdf({ title, orgName, eventDate, venue, desc, stu
   return Buffer.from(await doc.save());
 }
 
+const postEventExamples = [
+  ["glitch", "Student Technology Help Desk", "Submitted", null, 48, 3200],
+  ["sa", "Student Leadership Workshop", "Under Review", "Checking the attendance sheet against the narrative report.", 76, 8400],
+  ["jfinex", "Budgeting Basics Seminar", "Needs Revision", "Attach the missing receipts and reconcile the transportation subtotal.", 63, 5100],
+  ["yes", "Campus Reading Outreach", "Cleared", "Attendance and expenses were verified. All requirements are complete.", 52, 4600],
+  ["hhc", "Community Food Drive", "Declined", "The submitted receipts were for a different activity. Submit the records for this event.", 42, 6800],
+];
+
 const proposals = [
   [
     "2022-10001-SJ-0",
     "Annual Tech Summit & Hackathon 2026",
-    "Junior Philippine Computer Society (JPCS)",
+    "glitch",
     "2026-10-15",
     "PUP San Juan Audio-Visual Room",
     "Inter-collegiate programming contest, tech symposium, and innovation showcase for IT and CS majors.",
@@ -198,9 +216,9 @@ const proposals = [
     ],
   ],
   [
-    "2022-10002-SJ-0",
+    "2023-00001-SJ-0",
     "University Leadership Congress & General Assembly",
-    "Central Student Council (CSC)",
+    "sa",
     "2026-09-28",
     "PUP San Juan Gymnasium",
     "Mandatory leadership development and student council budget consultation for accredited org leaders.",
@@ -209,15 +227,15 @@ const proposals = [
     "Approved by OSAS Director. Activity permit #OSAS-2026-042 issued.",
     null,
     [
-      ["Submitted", "Event proposal submitted by CSC."],
+      ["Submitted", "Event proposal submitted by Student Assembly."],
       ["Under Review", "Gymnasium booking requested from Facilities Office."],
       ["Approved", "Approved by OSAS Director. Activity permit #OSAS-2026-042 issued."],
     ],
   ],
   [
-    "2023-20003-SJ-0",
+    "2022-10001-SJ-0",
     "Freshmen Orientation & Welcoming Gala",
-    "Association of Computer Science Students (ACSS)",
+    "glitch",
     "2026-09-20",
     "Campus Quadrangle",
     "Welcoming event for batch 2026 freshmen, campus tour, and student organization fair.",
@@ -226,13 +244,13 @@ const proposals = [
     null,
     null,
     [
-      ["Submitted", "Event proposal submitted for ACSS freshmen orientation."],
+      ["Submitted", "Event proposal submitted for the first-year student orientation."],
     ],
   ],
   [
-    "2024-40005-SJ-0",
+    "2023-00001-SJ-0",
     "Financial Literacy & Investment Forum",
-    "Junior Financial Executives (JFINEX)",
+    "jfinex",
     "2026-11-05",
     "Room 304 Seminar Hall",
     "Educational forum on personal wealth management, stock investing, and digital banking literacy.",
@@ -247,9 +265,9 @@ const proposals = [
     ],
   ],
   [
-    "2021-30004-SJ-0",
+    "2022-10001-SJ-0",
     "Cybersecurity Defense & Ethical Hacking Workshop",
-    "Association of Computer Science Students (ACSS)",
+    "glitch",
     "2026-10-22",
     "Computer Laboratory 2",
     "Hands-on technical workshop on network security fundamentals and cyber hygiene.",
@@ -264,9 +282,9 @@ const proposals = [
     ],
   ],
   [
-    "2025-10001-SJ-0",
+    "2023-00001-SJ-0",
     "Campus Mental Health Awareness Week & Wellness Fair",
-    "Red Cross Youth - PUP San Juan Chapter",
+    "hhc",
     "2026-10-08",
     "Student Center & University Clinic Lobby",
     "Interactive wellness booths, peer counseling orientation, and stress-reduction workshops.",
@@ -279,9 +297,9 @@ const proposals = [
     ],
   ],
   [
-    "2025-60007-SJ-0",
+    "2022-10001-SJ-0",
     "Inter-College Debate Championship: The San Juan Cup",
-    "Guild of English Majors & Orators",
+    "yes",
     "2026-11-12",
     "PUP San Juan Amphitheater",
     "Parliamentary debate tournament featuring inter-departmental student teams discussing youth and education issues.",
@@ -295,9 +313,9 @@ const proposals = [
     ],
   ],
   [
-    "2025-60008-SJ-0",
+    "2023-00001-SJ-0",
     "Overnight E-Sports LAN Tournament & Gaming Festival",
-    "PUP San Juan Gaming Guild",
+    "pylon-esports",
     "2026-10-30",
     "University Gymnasium",
     "Collegiate gaming tournament and live exhibition match for PC and mobile games.",
@@ -311,6 +329,22 @@ const proposals = [
       ["Declined", "Campus security regulations strictly prohibit overnight student gatherings past 10:00 PM. Please restructure into a day-time program."],
     ],
   ],
+  ...postEventExamples.map(([orgId, title], index) => [
+    demoStudentAccounts[index % demoStudentAccounts.length][0],
+    title,
+    orgId,
+    `2026-08-${17 + index}`,
+    "PUP San Juan Campus",
+    `${title} organized for the campus community.`,
+    `post-event-${orgId}.pdf`,
+    "Approved",
+    "Activity proposal approved by OSAS.",
+    null,
+    [
+      ["Submitted", "Activity proposal submitted by the organization."],
+      ["Approved", "Activity proposal approved by OSAS."],
+    ],
+  ]),
 ];
 
 const osasDocuments = [
@@ -405,6 +439,15 @@ export async function seed({ force: forceOverride } = {}) {
         [name, name.toLowerCase(), cat]
       );
     }
+    for (const [name, category] of registrarRequestableDocTypes) {
+      await run(
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('registrar', $1, $2, 'Active', false, true, $3)
+         ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active',
+           is_compliance=false, is_requestable=true, compliance_category=EXCLUDED.compliance_category`,
+        [name, name.toLowerCase(), category],
+      );
+    }
 
     for (const [name, category] of ADDITIONAL_REGISTRAR_SCAN_TYPES) {
       await run(
@@ -473,7 +516,7 @@ export async function seed({ force: forceOverride } = {}) {
       const rawCourse = student[2];
       let normalizedCourse = rawCourse;
       if (rawCourse === "BSEDUC") normalizedCourse = "BSEDEN";
-      if (rawCourse === "BSPSYCH") normalizedCourse = "BS Psy";
+      if (rawCourse === "BSPSYCH" || rawCourse === "BS PSY") normalizedCourse = "BS Psy";
       if (rawCourse === "DIT") normalizedCourse = "DICT";
       if (rawCourse === "BSCS") normalizedCourse = "BSIT";
       const studentData = [student[0], student[1], normalizedCourse, student[3], student[4], student[5], student[6], student[7]];
@@ -490,6 +533,11 @@ export async function seed({ force: forceOverride } = {}) {
          VALUES ($1, 'registrar', 'Active')
          ON CONFLICT (student_no, office_id) DO UPDATE SET status='Active', updated_at=NOW()`,
         [student[0]],
+      );
+      await run(
+        `INSERT INTO registrar_odrs_contacts (student_no, email) VALUES ($1, $2)
+         ON CONFLICT (student_no) DO UPDATE SET email=EXCLUDED.email`,
+        [student[0], encryptPII(student[8])],
       );
     }
 
@@ -510,46 +558,62 @@ export async function seed({ force: forceOverride } = {}) {
       );
     }
 
-    const uploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "uploads");
+    const registrarUploadsDir = getOfficeUploadsDir("registrar");
     const osasUploadsDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "osas", "uploads");
-    const osasStorageDir = path.join(process.env.LOCAL_DATA_DIR || ".local", "storage", "osas", "uploads");
-    fs.mkdirSync(uploadsDir, { recursive: true });
+    const osasStorageDir = getOfficeUploadsDir("osas");
+    fs.mkdirSync(registrarUploadsDir, { recursive: true });
     fs.mkdirSync(osasUploadsDir, { recursive: true });
     fs.mkdirSync(osasStorageDir, { recursive: true });
 
-    for (const [legacyId, studentNo, studentName, docType, filename, status] of documents) {
-      const storageFilename = `sample-${legacyId}-${filename}`;
-      const pdfBytes = await generateDocumentPdfByType({
-        docType,
-        studentNo,
-        studentName,
-        courseCode: "BSIT",
-        section: "1-1",
-        dateStr: "AY 2023-2024",
-      });
-      fs.writeFileSync(path.join(uploadsDir, storageFilename), pdfBytes);
-      const isApproved = status === "Approved";
-      await run(
-        `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, legacy_id)
-         VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,$7,$8,$9,$10,$11)
-         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
-           doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename,
-           size_bytes=EXCLUDED.size_bytes, approval_status=EXCLUDED.approval_status, reviewed_by=EXCLUDED.reviewed_by, reviewed_at=EXCLUDED.reviewed_at, review_note=EXCLUDED.review_note`,
-        [
+    let generatedDocumentCount = 0;
+    const incompleteStudentCount = students.filter((_, index) => index % 4 === 0).length;
+    for (let studentIndex = 0; studentIndex < students.length; studentIndex += 1) {
+      const [studentNo, studentName, courseCode, , section] = students[studentIndex];
+      const missingTypeIndexes = studentIndex % 4 === 0
+        ? new Set([studentIndex % registrarComplianceDocTypes.length, (studentIndex + 3) % registrarComplianceDocTypes.length])
+        : new Set();
+
+      for (let typeIndex = 0; typeIndex < registrarComplianceDocTypes.length; typeIndex += 1) {
+        if (missingTypeIndexes.has(typeIndex)) continue;
+        const [docType] = registrarComplianceDocTypes[typeIndex];
+        const review = getSampleComplianceReview(studentIndex, typeIndex, registrarComplianceDocTypes.length);
+        generatedDocumentCount += 1;
+        const legacyId = generatedDocumentCount <= 14 ? generatedDocumentCount : 10000 + generatedDocumentCount;
+        const storageFilename = `sample-compliance-${legacyId}.pdf`;
+        const pdfBytes = await generateSampleCompliancePdf({
+          docType,
           studentNo,
           studentName,
-          docType,
-          filename,
-          storageFilename,
-          pdfBytes.length,
-          status || "Pending",
-          isApproved ? "PUPREGISTRAR-003" : null,
-          isApproved ? new Date().toISOString() : null,
-          isApproved ? "Legible scan, complete details verified." : null,
-          legacyId,
-        ],
-      );
+          courseCode,
+          section,
+        });
+        fs.writeFileSync(path.join(registrarUploadsDir, storageFilename), pdfBytes);
+        await run(
+          `INSERT INTO documents (office_id, student_no, student_name, doc_type, original_filename, storage_filename, mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, legacy_id)
+           VALUES ('registrar',$1,$2,$3,$4,$5,'application/pdf',$6,$7,
+             CASE WHEN $7 <> 'Pending' THEN 'PUPREGISTRAR-003' END,
+             CASE WHEN $7 <> 'Pending' THEN NOW() END,$8,$9)
+           ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, student_name=EXCLUDED.student_name,
+             doc_type=EXCLUDED.doc_type, original_filename=EXCLUDED.original_filename, storage_filename=EXCLUDED.storage_filename,
+             size_bytes=EXCLUDED.size_bytes, approval_status=EXCLUDED.approval_status, reviewed_by=EXCLUDED.reviewed_by,
+             reviewed_at=EXCLUDED.reviewed_at, review_note=EXCLUDED.review_note`,
+          [
+            studentNo,
+            studentName,
+            docType,
+            `SAMPLE_${String(typeIndex + 1).padStart(2, "0")}_${docType.replace(/[^A-Z0-9]+/gi, "_")}.pdf`,
+            storageFilename,
+            pdfBytes.length,
+            review.status,
+            review.note,
+            legacyId,
+          ],
+        );
+      }
     }
+
+    const expectedDocumentCount = students.length * registrarComplianceDocTypes.length;
+    console.log(`Seeded ${generatedDocumentCount} of ${expectedDocumentCount} synthetic compliance documents. ${students.length - incompleteStudentCount} students are fully approved. The other ${incompleteStudentCount} have two missing files and one pending or declined review.`);
 
     for (const [legacyId, studentNo, studentName, docType, filename] of osasDocuments) {
       const storageFilename = `sample-${legacyId}-${filename}`;
@@ -572,45 +636,51 @@ export async function seed({ force: forceOverride } = {}) {
     }
 
     for (const [legacyId, studentNo, docType, status, notes, actor] of requests) {
+      const [, name, , , , , , , rosterEmail] = students.find(([number]) => number === studentNo);
+      const email = demoStudentAccounts.find(([number]) => number === studentNo)?.[1] || rosterEmail;
       const reqRow = await runOne(
-        `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id, identity_profile_id)
-         VALUES ('registrar',$1,$2,$3,$4,$5,$5,$6,(SELECT identity_profile_id FROM students WHERE student_no=$1))
-         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, identity_profile_id=EXCLUDED.identity_profile_id, doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by, updated_at=NOW()
+        `INSERT INTO document_requests (office_id, student_no, doc_type, status, notes, created_by, updated_by, legacy_id,
+           identity_profile_id, course_code, requester_name, requester_contact)
+         SELECT 'registrar',student_no,$2,$3,$4,$5,$5,$6,identity_profile_id,course_code,$7,$8 FROM students WHERE student_no=$1
+         ON CONFLICT (office_id, legacy_id) DO UPDATE SET student_no=EXCLUDED.student_no, identity_profile_id=EXCLUDED.identity_profile_id,
+           doc_type=EXCLUDED.doc_type, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_by=EXCLUDED.updated_by,
+           course_code=EXCLUDED.course_code, requester_name=EXCLUDED.requester_name, requester_contact=EXCLUDED.requester_contact, updated_at=NOW()
          RETURNING id`,
-        [studentNo, docType, status, notes, actor, legacyId],
+        [studentNo, docType, status, notes, actor, legacyId, encryptPII(name), encryptPII(email)],
       );
       if (reqRow?.id) {
         await run(
           `INSERT INTO transaction_updates (document_request_id, status, message)
-           VALUES ($1, $2, $3)`,
-          [reqRow.id, status, notes || `Status updated to ${status}`],
-        ).catch(() => {});
+           SELECT $1, $2, $3 WHERE NOT EXISTS (
+             SELECT 1 FROM transaction_updates WHERE document_request_id=$1 AND status=$2 AND message=$3
+           )`,
+          [reqRow.id, status, notes],
+        );
       }
     }
 
-    for (const [studentNo, title, orgName, eventDate, venue, desc, filename, status, reviewNote, archivedAt, updates] of proposals) {
+    for (const [studentNo, title, orgId, eventDate, venue, desc, filename, status, reviewNote, archivedAt, updates] of proposals) {
       const storageFilename = `sample-prop-${filename}`;
-      const studentObj = students.find((s) => s[0] === studentNo);
-      const studentName = studentObj ? studentObj[1] : "STUDENT";
+      const [, studentName] = students.find(([number]) => number === studentNo);
+      const [, orgName] = organizations.find(([id]) => id === orgId);
+      const [, email] = demoStudentAccounts.find(([number]) => number === studentNo);
+      const officer = await runOne(
+        `INSERT INTO organization_officers (organization_id, email, student_name, student_no, position, status)
+         VALUES ($1, $2, $3, $4, 'Events Coordinator', 'Active')
+         ON CONFLICT (organization_id, email) DO UPDATE SET student_name=EXCLUDED.student_name,
+           student_no=EXCLUDED.student_no, status='Active', updated_at=NOW()
+         RETURNING position`,
+        [orgId, email, studentName, studentNo],
+      );
       const pdfBytes = await generateProposalPdf({
         title, orgName, eventDate, venue, desc, studentNo, studentName, status
       });
       fs.writeFileSync(path.join(osasUploadsDir, storageFilename), pdfBytes);
       fs.writeFileSync(path.join(osasStorageDir, storageFilename), pdfBytes);
 
-      const existing = await runOne(`SELECT id FROM event_proposals WHERE title = $1 AND organization_name = $2`, [title, orgName]);
+      const existing = await runOne(`SELECT id FROM event_proposals WHERE office_id='osas' AND storage_filename=$1`, [storageFilename]);
       let propId = existing?.id;
       const reviewedAt = reviewNote ? (archivedAt || new Date().toISOString()) : null;
-
-      const orgRow = await runOne(
-        `SELECT id FROM student_organizations 
-         WHERE name ILIKE $1 OR acronym ILIKE $1 
-            OR $2 ILIKE '%' || acronym || '%' 
-            OR $2 ILIKE '%' || name || '%'
-         LIMIT 1`,
-        [`%${orgName}%`, orgName]
-      );
-      const orgId = orgRow?.id || null;
 
       if (!propId) {
         const propRow = await runOne(
@@ -632,6 +702,12 @@ export async function seed({ force: forceOverride } = {}) {
           [studentNo, orgId, eventDate, venue, desc, status, reviewNote, reviewedAt, archivedAt || null, pdfBytes.length, propId],
         );
       }
+      await run(
+        `UPDATE event_proposals ep SET organization_name=$2, submitted_by_email=$3, officer_position=$4,
+           is_verified_officer=true, student_account_id=sa.id, reviewed_by=$5
+         FROM student_accounts sa WHERE ep.id=$1 AND sa.identity_profile_id=ep.identity_profile_id`,
+        [propId, orgName, email, officer.position, reviewNote ? "PUPOSAS-001" : null],
+      );
       if (propId && Array.isArray(updates)) {
         await run(`DELETE FROM transaction_updates WHERE event_proposal_id = $1`, [propId]);
         for (const [uStatus, uMsg] of updates) {
@@ -642,6 +718,47 @@ export async function seed({ force: forceOverride } = {}) {
           );
         }
       }
+
+      const report = postEventExamples.find(([reportOrgId, reportTitle]) => reportOrgId === orgId && reportTitle === title);
+      if (!report) continue;
+      const [, , reportStatus, reportNote, attendance, expenses] = report;
+      const narrativeFilename = `sample-report-${orgId}-narrative.pdf`;
+      const liquidationFilename = `sample-report-${orgId}-liquidation.pdf`;
+      for (const [reportFilename, docType] of [
+        [narrativeFilename, "Post-Event Narrative Report"],
+        [liquidationFilename, "Financial Liquidation Report"],
+      ]) {
+        const pdfBytes = await generateDocumentPdfByType({
+          docType: `Sample ${docType}: ${title}`, studentNo, studentName, orgName, dateStr: eventDate,
+        });
+        fs.writeFileSync(path.join(osasStorageDir, reportFilename), pdfBytes);
+      }
+      const reviewer = reportStatus === "Submitted" ? null : "PUPOSAS-001";
+      const reportReviewedAt = reviewer ? new Date().toISOString() : null;
+      await run(
+        `WITH updated AS (
+           UPDATE osas_post_event_reports SET organization_id=$2, submitted_by_email=$3, actual_attendance=$4,
+             total_expenses=$5, status=$8, review_note=$9, reviewed_by=$10, reviewed_at=$11, updated_at=NOW()
+           WHERE event_proposal_id=$1 AND narrative_storage_filename=$6 RETURNING id
+         )
+         INSERT INTO osas_post_event_reports (event_proposal_id, organization_id, submitted_by_email, actual_attendance,
+           total_expenses, narrative_storage_filename, narrative_original_filename, liquidation_storage_filename,
+           liquidation_original_filename, status, review_note, reviewed_by, reviewed_at)
+         SELECT $1,$2,$3,$4,$5,$6,'Narrative Report.pdf',$7,'Financial Liquidation Report.pdf',$8,$9,$10,$11
+         WHERE NOT EXISTS (SELECT 1 FROM updated)`,
+        [propId, orgId, email, attendance, expenses, narrativeFilename, liquidationFilename, reportStatus, reportNote, reviewer, reportReviewedAt],
+      );
+      const parentStatus = reportStatus === "Declined" ? "Pending Submission" : reportStatus;
+      await run(
+        `UPDATE event_proposals SET post_event_status=$2, post_event_due_date=event_date+10,
+           post_event_cleared_by=$3, post_event_cleared_at=$4 WHERE id=$1`,
+        [propId, parentStatus, reportStatus === "Cleared" ? reviewer : null, reportStatus === "Cleared" ? reportReviewedAt : null],
+      );
+      await run(
+        `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
+         VALUES ($1,$2,$3,$4)`,
+        [propId, `Post-Event ${reportStatus}`, reportNote || "Narrative and financial liquidation reports submitted.", reviewer],
+      );
     }
 
     await run(`INSERT INTO global_audit_logs (office_id, actor, role, action, ip) VALUES ('registrar', 'System Administrator', 'Admin', 'Sample data populated (PostgreSQL)', '127.0.0.1')`);

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 import {
   createAuthErrorResponse,
   getPrincipalOfficeId,
@@ -40,6 +41,12 @@ export async function GET(req) {
       if (!office) return NextResponse.json({ ok: false, error: "Office not found" }, { status: 404 });
     }
 
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+    if (!isValidCalendarDateRange(startDate, endDate)) {
+      return NextResponse.json({ ok: false, error: "Invalid student record date range." }, { status: 400 });
+    }
+
     const rawCourseCodes = [
       ...searchParams.getAll("courseCode"),
       ...searchParams.getAll("courseCodes"),
@@ -54,6 +61,8 @@ export async function GET(req) {
     const data = await getMissingStudentsForDocumentType({
       documentTypeId: searchParams.get("documentTypeId"),
       studentStatus: searchParams.get("status") || "Active",
+      startDate,
+      endDate,
       courseCodes: courseCodes.length ? courseCodes : undefined,
       requireApproved: !["0", "false", "no"].includes(
         String(searchParams.get("requireApproved") || "").trim().toLowerCase(),

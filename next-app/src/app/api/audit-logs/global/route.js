@@ -10,6 +10,7 @@ import { decryptPII } from "@/lib/piiEncryption";
 import { addAuditActorIds } from "@/lib/auditActor";
 import { formatLogDetails } from "@/lib/auditLogFormatting";
 import { query } from "@/lib/postgres";
+import { formatReportOffice } from "@/lib/exportHelpers";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { createAuditLogCsvResponse, generateServerAuditLogsPdf } from "@/lib/auditLogExport";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
@@ -59,8 +60,9 @@ export async function GET(req) {
       sortOrder,
     };
 
+    const isExport = format === "csv" || format === "pdf";
     const officeNames = new Map();
-    if (format === "csv" || format === "pdf") {
+    if (isExport) {
       const offices = await query("SELECT id, short_name, name FROM offices");
       for (const office of offices) officeNames.set(office.id, office.short_name || office.name);
     }
@@ -70,11 +72,16 @@ export async function GET(req) {
         actor: decryptPII(row.actor),
         details: formatLogDetails(decryptPII(row.details)),
       })));
-      return readableRows.map((row) => ({
-        ...row,
-        officeName: row.office_id ? officeNames.get(row.office_id) || row.office_id : "Global (Platform)",
-        scope: row.office_id ? officeNames.get(row.office_id) || row.office_id : "Global",
-      }));
+      return readableRows.map((row) => {
+        const officeLabel = isExport
+          ? formatReportOffice(row.office_id, officeNames.get(row.office_id))
+          : row.office_id;
+        return {
+          ...row,
+          officeName: officeLabel || "Global (Platform)",
+          scope: officeLabel || "Global",
+        };
+      });
     };
 
     if (format === "csv") {

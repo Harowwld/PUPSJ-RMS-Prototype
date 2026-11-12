@@ -1,4 +1,7 @@
 "use client"
+
+import { isInManilaDateRange } from "@/lib/timeFormat";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { IdentifierBadge, Table } from "@/components/ui/table";
@@ -64,11 +67,11 @@ export default function OfficeDocumentsTable({
   const [pageSize, setPageSize] = useState(20);
   const [serverPage, setServerPage] = useState({ rows: [], total: 0 });
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState([
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("office_documents", "filterRules", []);
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("office_documents", "sortBy", "created_at");
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("office_documents", "sortOrder", "desc");
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("office_documents", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("office_documents", "visibleColumns", [
     "identifier",
     "name",
     "doc_type",
@@ -190,20 +193,7 @@ export default function OfficeDocumentsTable({
             if (rule.operator === "is_not" ? match : !match) return false;
           }
         }
-        if (startDate) {
-          const s = new Date(startDate).getTime();
-          if (!isNaN(s)) {
-            const rowDate = new Date(document.created_at).getTime();
-            if (!isNaN(rowDate) && rowDate < s) return false;
-          }
-        }
-        if (endDate) {
-          const e = new Date(endDate);
-          e.setHours(23, 59, 59, 999);
-          const rowDate = new Date(document.created_at).getTime();
-          if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-        }
-        return true;
+        return isInManilaDateRange(document.created_at, startDate, endDate);
       });
   }, [rawRows, selectedYear, query, serverPaged, filterRules, startDate, endDate]);
 
@@ -280,7 +270,7 @@ export default function OfficeDocumentsTable({
       });
     }
     return chips;
-  }, [filterRules, filterFields, startDate, endDate]);
+  }, [filterRules, filterFields, startDate, endDate, setFilterRules]);
 
   const {
     containerRef: tableContainerRef,
@@ -368,7 +358,7 @@ export default function OfficeDocumentsTable({
             columns={tableColumns}
             visibleColumns={visibleColumns}
             onVisibleColumnsChange={setVisibleColumns}
-            minVisible={1}
+            minVisible={2}
           />
           <DateRangeFilterButton
             startDate={startDate}

@@ -73,6 +73,8 @@ async function loadComplianceSnapshot({
   requireApproved = true,
   officeId,
   studentNo,
+  startDate = "",
+  endDate = "",
   includeDigitizedDocuments = false,
   summaryOnly = false,
 } = {}) {
@@ -83,6 +85,19 @@ async function loadComplianceSnapshot({
   const courses = normalizeList(courseCodes ?? courseCode).map((code) =>
     code.toUpperCase()
   )
+  const params = [office, studentStatus || "Active", courses]
+  const bind = (value) => {
+    params.push(value)
+    return `$${params.length}`
+  }
+  const studentClause = studentNo ? `AND s.student_no = ${bind(studentNo)}` : ""
+  const dateFromClause = startDate
+    ? `AND s.created_at >= (${bind(startDate)}::date::timestamp AT TIME ZONE 'Asia/Manila')`
+    : ""
+  const dateToClause = endDate
+    ? `AND s.created_at < ((${bind(endDate)}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`
+    : ""
+  const dateClause = `${dateFromClause} ${dateToClause}`
   // One statement keeps requirements, evidence and population on the same database snapshot.
   const snapshot = await queryOne(
     `
@@ -95,7 +110,8 @@ async function loadComplianceSnapshot({
         s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
       FROM students s
       WHERE ($2 = 'all' OR ($2 = 'Archived' AND s.status != 'Active') OR s.status = $2)
-        ${studentNo ? "AND s.student_no = $4" : ""}
+        ${studentClause}
+        ${dateClause}
         AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
         AND ($1::text IS NULL OR EXISTS (
           SELECT 1 FROM student_office_memberships som
@@ -109,14 +125,15 @@ async function loadComplianceSnapshot({
     )
     SELECT
       (SELECT count(*)::int FROM students s
-       WHERE s.status = 'Active'
+       WHERE s.status = 'Active' ${dateClause}
          AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
          AND ($1::text IS NULL OR EXISTS (
            SELECT 1 FROM student_office_memberships som
            WHERE som.student_no = s.student_no AND som.office_id = $1 AND som.status = 'Active'
          ))) AS active_students_count,
       (SELECT count(*)::int FROM students s
-       WHERE (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
+       WHERE TRUE ${dateClause}
+         AND (cardinality($3::text[]) = 0 OR upper(s.course_code) = ANY($3::text[]))
          AND ($1::text IS NULL OR EXISTS (
            SELECT 1 FROM student_office_memberships som
            WHERE som.student_no = s.student_no AND som.office_id = $1
@@ -152,12 +169,7 @@ async function loadComplianceSnapshot({
         }
         FROM population s
       ) record) AS students`,
-    [
-      office,
-      studentStatus || "Active",
-      courses,
-      ...(studentNo ? [studentNo] : []),
-    ]
+    params
   )
   const types = snapshot?.types || []
   const records = calculateStudentCompliance(
@@ -170,6 +182,8 @@ async function loadComplianceSnapshot({
     office,
     courses,
     studentStatus,
+    startDate,
+    endDate,
     requireApproved,
     activeStudentsCount: Number(snapshot?.active_students_count) || 0,
     archivedStudentsCount: Number(snapshot?.archived_students_count) || 0,
@@ -184,6 +198,8 @@ function summarize(snapshot) {
     office,
     courses,
     studentStatus,
+    startDate,
+    endDate,
     requireApproved,
     generatedAt,
   } = snapshot
@@ -265,6 +281,8 @@ function summarize(snapshot) {
     meta: {
       officeId: office,
       studentStatus,
+      startDate,
+      endDate,
       courseCode: courses.join(", ") || null,
       courseCodes: courses,
       requireApproved,

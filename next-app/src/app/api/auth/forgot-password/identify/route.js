@@ -5,6 +5,7 @@ import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
 import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { getStaffByUsername } from "@/lib/staffRepo";
+import { isDemoAccount } from "@/lib/demoAccounts";
 import { assertAccountEmailConfigured, sendPasswordResetEmail } from "@/lib/accountEmail";
 import { createPasswordResetUrl, getPasswordRecoveryOrigin } from "@/lib/passwordRecovery";
 
@@ -74,7 +75,7 @@ export async function POST(req) {
   }
 
   let staff = await getStaffByUsername(identifier);
-  if (staff && staff.status !== "Active") staff = null;
+  if (staff && (staff.status !== "Active" || isDemoAccount(staff.email))) staff = null;
 
   if (staff) {
     const resetToken = crypto.randomBytes(32).toString("base64url");

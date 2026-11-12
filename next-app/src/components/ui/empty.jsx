@@ -13,8 +13,8 @@ function Empty({ className, variant = "page", ...props }) {
     <motion.div
       data-slot="empty"
       data-variant={variant}
-      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={shouldReduceMotion ? false : { y: 6 }}
+      animate={{ y: 0 }}
       transition={{
         duration: shouldReduceMotion ? 0.1 : 0.22,
         ease: EASE_OUT,

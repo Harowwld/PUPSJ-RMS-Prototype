@@ -1,5 +1,6 @@
 "use client";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { isInManilaDateRange } from "@/lib/timeFormat";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -246,6 +247,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [organizationsLoadFailed, setOrganizationsLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const fetchRequestRef = useRef(0);
   const [search, setSearchState] = useOsasViewPreference("student_organizations", "search", "");
@@ -338,12 +340,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           cache: "no-store",
         });
         const json = await res.json();
-        if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load student organizations.");
+        if (!res.ok || !json?.ok || !Array.isArray(json.data)) {
+          throw new Error(json?.error || "Failed to load student organizations.");
         }
         if (request !== fetchRequestRef.current) return;
-        setOrganizations(json.data || []);
+        setOrganizations(json.data);
         setHasLoaded(true);
+        setOrganizationsLoadFailed(false);
         if (showFeedback) {
           showToast({
             title: "Organizations Refreshed",
@@ -352,6 +355,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         }
       } catch (err) {
         if (request !== fetchRequestRef.current) return;
+        setOrganizationsLoadFailed(true);
         showToast(
           formatErrorMessage(err, {
             title: "Organizations Load Failed",
@@ -846,14 +850,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     const list = organizations.filter((org) => {
       if ((org.status === "Archived") !== showArchived) return false;
 
-      if (startDate || endDate) {
-        const itemDate = org.created_at ? new Date(org.created_at) : null;
-        if (itemDate && !isNaN(itemDate.getTime())) {
-          const dateStr = itemDate.toISOString().slice(0, 10);
-          if (startDate && dateStr < startDate) return false;
-          if (endDate && dateStr > endDate) return false;
-        }
-      }
+      if (!isInManilaDateRange(org.created_at, startDate, endDate)) return false;
 
       if (activeFilterRules.length > 0) {
         const matchesRules = activeFilterRules.every((rule) => {
@@ -1319,6 +1316,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           <div className={cn("flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredOrganizations.length === 0 && "rounded-b-2xl")}>
             {loading && !hasLoaded ? (
               <DataContentSkeleton columns={organizationTableColumns} viewMode={viewMode} />
+            ) : organizationsLoadFailed && filteredOrganizations.length === 0 ? (
+              <EmptyState
+                icon={EmptyBuilding03Icon}
+                title="Could Not Load Student Organizations"
+                description="Try loading the organization directory again."
+              >
+                <Button variant="outline" size="sm" onClick={() => fetchOrganizations(true)} disabled={refreshing}>
+                  Try Again
+                </Button>
+              </EmptyState>
             ) : filteredOrganizations.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                 <Empty>
@@ -1370,29 +1377,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
                       {visibleColumns.includes("name") && (
-                        <th
-                          className={cn(
-                            "p-4 pl-6 sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow",
-                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span>Organization</span>
-                            {isScrolledX && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  resetScroll();
-                                }}
-                                title="Reset table scroll"
-                                className="w-5 h-5 flex items-center justify-center rounded bg-gray-200/70 hover:bg-gray-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-600 dark:text-zinc-300 transition-colors"
-                              >
-                                <AppIcon className=" ArrowLeft01Icon text-[10px]" />
-                              </button>
-                            )}
-                          </div>
-                        </th>
+                        <th className="p-4 pl-6">Organization</th>
                       )}
                       {visibleColumns.includes("category") && (
                         <th className="p-4">Category</th>
@@ -1436,12 +1421,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             >
                               {/* Org Name & Acronym */}
                               {visibleColumns.includes("name") && (
-                                <td
-                                  className={cn(
-                                    "p-4 pl-6 overflow-hidden sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                                    isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                                  )}
-                                >
+                                <td className="p-4 pl-6 overflow-hidden">
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-2 min-w-0">
                                       <span
@@ -1945,7 +1925,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </p>
                       </div>
                       <span
-                        className={cn("inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(orgForm.status), BADGE_BASE)}
+                        className={cn(getOrgStatusBadgeClass(orgForm.status), COMPACT_BADGE_BASE)}
                       >
                         {orgForm.status}
                       </span>
@@ -2260,7 +2240,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 truncate">
                                       {displayName}
                                     </span>
-                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.violet)}>
+                                    <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.violet)}>
                                       {officer.position}
                                     </span>
                                   </div>
@@ -2338,7 +2318,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
                                 </span>
                                 <span
-                                  className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border", getBylawsStatusBadgeClass(ver.status), BADGE_BASE)}
+                                  className={cn(getBylawsStatusBadgeClass(ver.status), COMPACT_BADGE_BASE)}
                                 >
                                   {ver.status}
                                 </span>
@@ -2452,6 +2432,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   setSelectedOrgForOfficers(null);
                   setEditingOrg(null);
                 }}
+                className="h-9 px-4"
               >
                 Close
               </Button>
@@ -2461,6 +2442,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   form="org-info-form"
                   size="sm"
                   disabled={savingOrg}
+                  className="h-9 px-4"
                 >
                   {savingOrg ? "Saving Organization Details…" : "Save Organization Details"}
                 </Button>

@@ -23,6 +23,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Empty,
   EmptyHeader,
+  EmptyContent,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
@@ -90,6 +91,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [queueLoadFailed, setQueueLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
   const [note, setNote] = useState("");
@@ -161,6 +163,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       setRows(rowsRef.current);
       setTotal(Number(json.data?.total || 0));
       setHasLoaded(true);
+      if (!append) setQueueLoadFailed(false);
       if (!append && !preserveSelection) {
         setSelectedId((current) => nextRows.some((row) => Number(row.id) === Number(current)) ? current : nextRows[0]?.id || null);
         setSelectedIds([]);
@@ -174,6 +177,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       }
     } catch (error) {
       if (version !== requestVersion.current) return;
+      if (!append) setQueueLoadFailed(true);
       showToast(
         formatErrorMessage(error, {
           title: "Review Queue Failed",
@@ -776,14 +780,25 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       <EmptyHeader>
                         <EmptyMedia><EmptyCheckmarkSquare01Icon size="1em" /></EmptyMedia>
                         <EmptyTitle>
-                          No Documents in Queue
+                          {queueLoadFailed ? "Could Not Load Review Queue" : activeChips.length > 0 ? "No Matching Documents" : "No Documents in Queue"}
                         </EmptyTitle>
                         <EmptyDescription>
-                          {query.trim()
-                            ? "No documents match your active search filter."
-                            : `There are no inbound documents waiting under "${status ? STATUS_TABS.find(t => t.id === status)?.label || status : "All"}".`}
+                          {queueLoadFailed
+                            ? "Try loading the review queue again."
+                            : activeChips.length > 0
+                              ? "Adjust your search or reset your filters."
+                              : `There are no inbound documents waiting under "${status ? STATUS_TABS.find(t => t.id === status)?.label || status : "All"}".`}
                         </EmptyDescription>
                       </EmptyHeader>
+                      {queueLoadFailed ? (
+                        <EmptyContent>
+                          <Button variant="outline" size="sm" onClick={() => load()} disabled={loading}>Try Again</Button>
+                        </EmptyContent>
+                      ) : activeChips.length > 0 ? (
+                        <EmptyContent>
+                          <Button variant="outline" size="sm" onClick={handleClearFilters}>Reset Filters</Button>
+                        </EmptyContent>
+                      ) : null}
                     </Empty>
                   </div>
                 ) : (

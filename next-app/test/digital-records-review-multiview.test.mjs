@@ -85,11 +85,8 @@ test("Digital Records Review multi-view architecture and toolbar design standard
     "ActiveFilterChips row must be conditionally rendered only when activeChips exist"
   );
 
-  // 6. Anti-Flicker: Lazy useState initialization
-  assert.ok(
-    reviewCode.includes("const [viewMode, setViewMode] = useState(() =>"),
-    "viewMode must be lazily initialized in useState to prevent first-paint flickering"
-  );
+  // 6. Restore the account's saved layout through the workspace preference hook.
+  assert.match(reviewCode, /useWorkspaceViewPreference\("digital_records_review", "viewMode", "table"/);
 
   // 7. Strictly Text-Only Status Badges (No indicator dots)
   assert.ok(

@@ -161,3 +161,64 @@ tr:focus-within .table-action-button,
   .table-action-button { width: 44px; height: 44px; }
   .table-page-controls button, .table-page-sizes button { min-height: 44px; min-width: 44px; }
 }
+
+.app-table[data-horizontal-overflow] [data-table-pin] {
+  position: sticky;
+  transition: box-shadow 150ms ease;
+}
+.app-table[data-horizontal-overflow] [data-table-pin="identity"] {
+  left: var(--table-identity-left);
+}
+.app-table[data-horizontal-overflow] [data-table-pin="selection"] {
+  left: 0;
+}
+.app-table[data-horizontal-overflow] td[data-table-pin] {
+  z-index: 11;
+  background: var(--table-surface);
+}
+.app-table[data-horizontal-overflow] td[data-table-pin="selection"] { z-index: 13; }
+.app-table[data-horizontal-overflow] th[data-table-pin] { z-index: 21; }
+.app-table[data-horizontal-overflow] th[data-table-pin="selection"] { z-index: 23; }
+.app-table[data-horizontal-overflow] tr:hover > td[data-table-pin] { background: #f9fafb; }
+.dark .app-table[data-horizontal-overflow] tr:hover > td[data-table-pin] { background: #27272a; }
+.app-table[data-scrolled-x] [data-table-pin="identity"] {
+  box-shadow: 4px 0 12px -2px rgb(0 0 0 / 6%);
+}
+.dark .app-table[data-scrolled-x] [data-table-pin="identity"] {
+  box-shadow: 4px 0 12px -2px rgb(0 0 0 / 40%);
+}
+.table-header-with-scroll-reset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.table-header-with-scroll-reset > :first-child { flex: 1; min-width: 0; }
+.app-table th[data-kind="number"] .table-header-with-scroll-reset button:not(.table-header-scroll-reset) { margin-left: auto; }
+.app-table th:is([data-kind="status"], [data-kind="year"], [data-kind="category"]) .table-header-with-scroll-reset button:not(.table-header-scroll-reset) { margin-inline: auto; }
+.table-header-scroll-reset {
+  display: inline-flex;
+  flex: 0 0 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #e5e7eb;
+  color: #4b5563;
+  cursor: pointer;
+}
+.table-header-scroll-reset:hover { background: #d1d5db; }
+.dark .table-header-scroll-reset { background: #27272a; color: #d4d4d8; }
+.dark .table-header-scroll-reset:hover { background: #3f3f46; }
+.table-inline-scroll-controls {
+  position: sticky;
+  left: 0;
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-self: flex-start;
+  padding: 8px;
+}
+.table-inline-scroll-controls:has(+ .app-table tbody tr:first-child [data-slot="skeleton"]) {
+  display: none;
+}
