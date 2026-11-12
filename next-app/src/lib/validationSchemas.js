@@ -3,7 +3,7 @@ import { z } from "zod";
 export function formatRegistrarStudentName({ firstName, middleName, lastName }) {
   const first = String(firstName || "").trim().replace(/\s+/g, " ").toUpperCase();
   const last = String(lastName || "").trim().replace(/\s+/g, " ").toUpperCase();
-  const middleLetters = String(middleName || "").replace(/[^a-z]/gi, "");
+  const middleLetters = String(middleName || "").replace(/[^\p{L}]/gu, "");
   const middleInitial = middleLetters ? ` ${middleLetters[0].toUpperCase()}.` : "";
   return first && last ? `${last}, ${first}${middleInitial}` : "";
 }
@@ -64,12 +64,12 @@ export const StudentNoSchema = z
     "Invalid Student Number format (e.g. 2024-00123-SJ-0 or 2024-00123)"
   );
 
-export const PersonNameSchema = (fieldLabel = "Name") =>
+export const PersonNameSchema = (fieldLabel = "Name", maxLength = 60) =>
   z
     .string({ required_error: `${fieldLabel} is required` })
     .trim()
     .min(2, `${fieldLabel} must be at least 2 characters`)
-    .max(60, `${fieldLabel} cannot exceed 60 characters`)
+    .max(maxLength, `${fieldLabel} cannot exceed ${maxLength} characters`)
     .regex(
       HUMAN_NAME_REGEX,
       `${fieldLabel} can only contain letters, spaces, hyphens, apostrophes, commas, and periods`
@@ -118,7 +118,7 @@ export const ForgotPasswordIdentifySchema = z.object({
 
 export const StudentRegistrationSchema = z.object({
   studentNo: StudentNoSchema.transform((value) => value.toUpperCase()),
-  name: PersonNameSchema("Student Name"),
+  name: PersonNameSchema("Student Name", 200),
   courseCode: z
     .string({ required_error: "Course code is required" })
     .trim()
@@ -154,7 +154,7 @@ export const StudentRegistrationSchema = z.object({
 });
 
 export const StudentUpdateSchema = z.object({
-  name: PersonNameSchema("Student Name").optional(),
+  name: PersonNameSchema("Student Name", 200).optional(),
   courseCode: z.string().trim().min(2).max(15).optional(),
   yearLevel: z.coerce.number().int().min(2000).max(2100).optional(),
   section: z.string().trim().min(1).max(20).optional(),

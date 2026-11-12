@@ -27,6 +27,9 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { splitNameComponents } from "@/lib/ocrClient"
+import StudentNameFields from "@/components/shared/StudentNameFields"
+import { studentRecordNameParts } from "@/lib/studentRecordName"
+import { formatRegistrarStudentName } from "@/lib/validationSchemas"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -1240,6 +1243,7 @@ export default function ScanUploadTab({
                                           setNewRec({
                                             studentNo: "",
                                             name: "",
+                                            firstName: "", middleName: "", lastName: "",
                                             course: "",
                                             year: "",
                                             sectionPart: "",
@@ -1359,6 +1363,7 @@ export default function ScanUploadTab({
                                           setNewRec({
                                             studentNo: "",
                                             name: "",
+                                            firstName: "", middleName: "", lastName: "",
                                             course: "",
                                             year: "",
                                             sectionPart: "",
@@ -1532,6 +1537,7 @@ export default function ScanUploadTab({
                                         setNewRec({
                                           studentNo: "",
                                           name: "",
+                                          firstName: "", middleName: "", lastName: "",
                                           course: "",
                                           year: "",
                                           sectionPart: "",
@@ -1641,27 +1647,22 @@ export default function ScanUploadTab({
                                 </div>
                               ) : (
                                 <div>
-                                  <label
-                                    className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300"
-                                  >
-                                    Full Name (LN, FN MI.)
-                                  </label>
-                                  <div className="relative">
-                                    <Input
-                                      type="text"
-                                      className={cn(
-                                        "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                        ring("name")
-                                      )}
-                                      placeholder="e.g. DELA CRUZ, JUAN S."
-                                      value={newRec.name || ""}
-                                      onFocus={() => setShowNameSuggestions(true)}
-                                      onBlur={() => {
+                                  <div
+                                    className="relative"
+                                    onFocus={() => setShowNameSuggestions(true)}
+                                    onBlur={(event) => {
+                                      if (!event.currentTarget.contains(event.relatedTarget)) {
                                         setTimeout(() => setShowNameSuggestions(false), 200)
-                                      }}
-                                      onChange={(e) => {
+                                      }
+                                    }}
+                                  >
+                                    <StudentNameFields
+                                      idPrefix="scan-student"
+                                      value={studentRecordNameParts(newRec)}
+                                      invalid={Boolean(uploadFieldErrors.name)}
+                                      onChange={(parts) => {
                                         clearUploadFieldError?.("name")
-                                        setNewRec((p) => ({ ...p, name: e.target.value }))
+                                        setNewRec((p) => ({ ...p, ...parts, name: formatRegistrarStudentName(parts) }))
                                       }}
                                     />
                                     {ocrSuggestion?.studentMatches?.length > 0 && !uploadStudentIsExisting && (

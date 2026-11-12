@@ -9,6 +9,7 @@ import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { StudentRegistrationSchema } from "@/lib/validationSchemas";
+import { normalizeStudentRecordName } from "@/lib/studentRecordName";
 
 export const runtime = "nodejs";
 
@@ -63,6 +64,16 @@ export async function POST(req) {
   const officeId = resolveOfficeId(access.user, req, body.officeId || body.office_id);
   if (!officeId) return createAuthErrorResponse("You cannot access that office", 403);
 
+  let nameParts;
+  if (["firstName", "middleName", "lastName"].some((key) => body[key] !== undefined)) {
+    try {
+      nameParts = normalizeStudentRecordName(body);
+      body.name = nameParts.name;
+    } catch (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
+  }
+
   const validation = StudentRegistrationSchema.safeParse(body);
   if (!validation.success) {
     const errorMsg = validation.error.issues?.[0]?.message || "Invalid student data";
@@ -88,6 +99,7 @@ export async function POST(req) {
 
   try {
     const row = await createStudent({
+      ...nameParts,
       studentNo,
       name,
       courseCode,

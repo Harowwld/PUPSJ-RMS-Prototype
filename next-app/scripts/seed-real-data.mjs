@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
+import { ADDITIONAL_REGISTRAR_SCAN_TYPES } from "../src/lib/registrarScanDocumentTypes.js";
 
 dotenv.config({ path: ".env" });
 
@@ -69,6 +70,15 @@ async function main() {
   // OSAS office does not handle degree programs or sections
   await query("DELETE FROM courses WHERE office_id = 'osas'");
   await query("DELETE FROM sections WHERE office_id = 'osas'");
+
+  for (const [name, category] of ADDITIONAL_REGISTRAR_SCAN_TYPES) {
+    await query(
+      `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+       VALUES ('registrar', $1, $2, 'Active', false, false, $3)
+       ON CONFLICT (office_id, name_norm) DO NOTHING`,
+      [name, name.toLowerCase(), category],
+    );
+  }
 
   // Insert Registrar document types (strictly the 11 compliance docs)
   for (const line of taxLines.slice(1)) {

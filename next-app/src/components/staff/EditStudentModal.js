@@ -16,6 +16,9 @@ import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { PersonNameSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Loading01Icon } from "hugeicons-react";
+import StudentNameFields from "@/components/shared/StudentNameFields";
+import { normalizeStudentRecordName, studentRecordNameParts } from "@/lib/studentRecordName";
+import { formatRegistrarStudentName } from "@/lib/validationSchemas";
 
 
 export default function EditStudentModal({
@@ -28,7 +31,8 @@ export default function EditStudentModal({
   onSuccess,
   showToast,
 }) {
-  const [name, setName] = useState("");
+  const [nameParts, setNameParts] = useState({ firstName: "", middleName: "", lastName: "" });
+  const name = formatRegistrarStudentName(nameParts);
   const [courseCode, setCourseCode] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   const [section, setSection] = useState("");
@@ -40,7 +44,7 @@ export default function EditStudentModal({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (student && open) {
-        setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
+        setNameParts(studentRecordNameParts(student));
         setCourseCode(student.courseCode || student.course_code || "");
         setYearLevel(String(student.yearLevel || student.year_level || ""));
         setSection(student.section || "");
@@ -95,6 +99,13 @@ export default function EditStudentModal({
     if (!student) return;
 
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
+    let normalizedParts;
+    try {
+      normalizedParts = normalizeStudentRecordName(nameParts);
+    } catch (error) {
+      showToast?.({ title: "Validation Error", description: error.message }, "warning");
+      return;
+    }
     const cleanCourse = courseCode.trim();
     const parsedYear = parseInt(yearLevel, 10);
     const cleanSec = section.trim();
@@ -110,7 +121,7 @@ export default function EditStudentModal({
       return;
     }
 
-    const nameCheck = PersonNameSchema("Student Name").safeParse(cleanName);
+    const nameCheck = PersonNameSchema("Student Name", 200).safeParse(cleanName);
     if (!nameCheck.success) {
       showToast?.({
         title: "Validation Error",
@@ -133,6 +144,7 @@ export default function EditStudentModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...normalizedParts,
           name: cleanName,
           courseCode: cleanCourse,
           yearLevel: parsedYear,
@@ -195,17 +207,10 @@ export default function EditStudentModal({
             </h4>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
               <div className="md:col-span-8">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Full Name (Last, First)
-                </label>
-                <Input
-                  type="text"
-                  required
-                  placeholder="DELA CRUZ, JUAN"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs uppercase"
-                />
+                <StudentNameFields idPrefix="edit-student" value={nameParts} onChange={setNameParts} />
+                {student?.name && !student.first_name && !student.firstName && !student.name.includes(",") && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400">Existing recorded name: {student.name}. Enter its name parts above to confirm their order.</p>
+                )}
               </div>
 
               <div className="md:col-span-4">

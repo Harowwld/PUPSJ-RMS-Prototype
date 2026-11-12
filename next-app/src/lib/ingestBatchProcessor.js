@@ -5,11 +5,12 @@ import { rotateDocumentBuffer } from "./documentOrientation.js";
 import { createAuditLog } from "./auditLogsRepo.js";
 import {
   detectDocType,
-  extractNameFromCoordinates,
-  rotateOcrPages,
+  detectName,
+  formatToLNFnMi,
+  recognizeNameFromTemplates,
 } from "./ocrClient.js";
 import { query } from "./postgres.js";
-import { matchStudentsByConfiguredOcrName, matchStudentsByOcrText, mergeStudentMatchCandidates } from "./studentNameMatcher.js";
+import { matchOcrStudents, uniqueOcrStudentMatch } from "./studentNameMatcher.js";
 import { getOcrStudentRoster } from "./ocrStudentRoster.js";
 import {
   claimNextBatchItem,
@@ -62,36 +63,19 @@ export async function processNextBatchItem(batchId, officeId) {
       )
       : [];
     const templateMs = performance.now() - templateStartedAt;
-    let templateName = null;
-    let coordinateRecognition = null;
-    let detectedRotation = 0;
-    for (const rotation of [0, 90, 180, 270]) {
-      for (const template of templates) {
-        const recognition = extractNameFromCoordinates(rotateOcrPages(ocrResult.pages, rotation), template);
-        if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
-        if (recognition?.extractedName) {
-          templateName = recognition.extractedName;
-          coordinateRecognition = recognition;
-          detectedRotation = rotation;
-          break;
-        }
-      }
-      if (templateName) break;
-    }
+    const { coordinateRecognition, detectedRotation } = recognizeNameFromTemplates(ocrResult.pages, templates);
+    const templateName = coordinateRecognition?.extractedName || null;
 
-    let configuredStudentMatches = [];
-    let textStudentMatches = [];
     let matchingMs = 0;
     const matchingStartedAt = performance.now();
     const studentRoster = await getOcrStudentRoster(officeId);
-    if (templateName) configuredStudentMatches = matchStudentsByConfiguredOcrName(templateName, studentRoster);
-    textStudentMatches = matchStudentsByOcrText(text, studentRoster);
-    const studentMatches = mergeStudentMatchCandidates(configuredStudentMatches, textStudentMatches);
+    const rosterMatchName = templateName || formatToLNFnMi(detectName(text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)));
+    const studentMatches = matchOcrStudents(rosterMatchName, text, studentRoster);
     matchingMs = performance.now() - matchingStartedAt;
     // A unique roster match from either the configured OCR fields or the
     // whole-page OCR text is sufficient for automatic assignment. Multiple
     // plausible roster records remain in review for staff to disambiguate.
-    const autoMatchedStudent = studentMatches.length === 1 ? studentMatches[0] : null;
+    const autoMatchedStudent = uniqueOcrStudentMatch(studentMatches);
     const studentCandidates = studentMatches.map(({ studentNo, mismatchPercent }) => ({ studentNo, mismatchPercent }));
     const ocrName = templateName || (studentMatches.length === 1 ? studentMatches[0].name : null);
     const duplicate = await findDuplicateIngest(item.id, item.content_sha256, { officeId });

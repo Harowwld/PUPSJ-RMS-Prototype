@@ -6,7 +6,7 @@ const folderYear = `COALESCE(CASE WHEN split_part(s.student_no, '-', 1) ~ '^[0-9
   AND split_part(s.student_no, '-', 1)::int BETWEEN 1900 AND 2200
   THEN split_part(s.student_no, '-', 1)::int END, s.year_level)`;
 const status = `CASE WHEN som.status = 'Archived' THEN 'Archived' ELSE s.status END`;
-const studentColumns = `s.student_no, s.name, s.course_code, s.year_level, s.section,
+const studentColumns = `s.student_no, s.name, s.first_name, s.middle_name, s.last_name, s.course_code, s.year_level, s.section,
   s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer,
   s.created_at, s.updated_at, ${status} AS status`;
 

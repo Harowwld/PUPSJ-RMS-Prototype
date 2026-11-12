@@ -306,6 +306,12 @@ The build script places the executable where the application expects it. `pnpm d
 
 ## PSA Coordinate-Template Workflow
 
+Dropped files and Continuous Scanning share saved-template orientation detection and office-scoped roster matching from configured name regions plus whole-page OCR text. Exact names outrank approximate names; the existing 10% letter-difference limit remains. A single candidate fills the dropped-file form, while multiple candidates require selection. A student already selected by staff is preserved, with the existing mismatch confirmation before upload. Dropped files still require staff to submit the upload.
+
+Document types are detected from document headings and specific supporting evidence, using aliases for Registrar labels. A program preference such as “Diploma in Information Technology” does not identify an application as a diploma. Unknown content is left unassigned for staff review. The regression corpus covers the 21 supplied demo documents, including separate JHS/SHS permanent records, SF9, and the portal certificates.
+
+Migration `097_registrar_scan_document_types.sql` adds Confirmation Slip, Route and Approval Slip, Certification and Undertaking, SF10 JHS Permanent Record, Form 137 SHS Permanent Record, and SF9 Progress Report Card as scan-only types. They do not add enrollment requirements or student-requestable services. Existing equivalent labels remain in use for health forms, birth certificates, student IDs, SHS diplomas, and good-moral certificates.
+
 1. Log in as the Registrar Admin.
 2. Navigate to **System Configuration → OCR Recognition** tab.
 3. Select the PSA document type.
@@ -316,6 +322,12 @@ The build script places the executable where the application expects it. `pnpm d
 8. Click **Save template** at the bottom of the panel.
 
 Coordinates are normalized from `0` to `1`, so templates work across scan resolutions. Calibrate using multiple PSA layouts and verify that parent/informant fields are outside the selected regions. Recognition presents database candidates; staff confirmation is still required before association.
+
+## Student Record Names
+
+Register Student Record, Edit Student Record, and the new-student form in Scan & Upload collect first name, optional middle name, and last name separately. The full parts are encrypted in `students`; the display name uses `LAST, FIRST M.`. Apply migration `096_student_record_name_parts.sql` with `pnpm db:migrate` before running this version. Existing records keep their original names; a saved middle initial cannot be expanded into a full middle name automatically.
+
+Student number remains the unique identifier. Two students can have the same name with different student numbers. Existing bulk imports retain their combined-name input format.
 
 ## Useful Commands
 

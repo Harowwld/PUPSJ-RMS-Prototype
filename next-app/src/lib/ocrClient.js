@@ -1,4 +1,6 @@
 export { matchStudentsByConfiguredOcrName } from "./studentNameMatcher.js";
+import { uniqueOcrStudentMatch } from "./studentNameMatcher.js";
+import { detectDocType } from "./documentTypeMatcher.js";
 
 /**
  * ocrClient.js: Offline OCR pipeline for PUPSJ Records Keeping System
@@ -54,192 +56,7 @@ function labelIs(line, ...candidates) {
 
 // ─── 1. TESSERACT WORKER REMOVED (NATIVE SYSTEM OCR IS USED EXCLUSIVELY) ───
 
-// ─── 3. DOCUMENT-TYPE DETECTION ────────────────────────────────────────────
-//
-// Strategy: We define "keyword clusters" that describe what OCR text looks like
-// for each common PH document category.  We score the raw text against every
-// cluster, pick the winner, then map it to the closest DB doc-type label.
-//
-// Even if nothing matches at all we still return docTypes[0], never "".
-
-const DOC_CLUSTERS = [
-  {
-    id: "grade11ReportCard",
-    phrases: [
-      "grade 11 report card",
-      "grade 11",
-      "senior high school report card",
-      "learner's progress report card",
-      "report card",
-      "general average",
-      "school year",
-    ],
-    labelHints: ["grade 11 report card"],
-  },
-  {
-    id: "birth",
-    /** phrases likely in PSA / NSO birth certificates */
-    phrases: [
-      "certificate of live birth",
-      "live birth",
-      "registry no",
-      "civil registrar",
-      "philippine statistics authority",
-      "national statistics office",
-      "psa",
-      "nso",
-      "maiden name",
-      "mother",
-      "father",
-      "attendant",
-      "informant",
-    ],
-    /** match DB labels containing any of these */
-    labelHints: ["birth", "psa", "nso"],
-  },
-  {
-    id: "form137",
-    phrases: [
-      "form 137",
-      "form-137",
-      "137-a",
-      "sf10",
-      "sf 10",
-      "school form",
-      "permanent record",
-      "scholastic record",
-      "learner's permanent",
-      "learning areas",
-      "action taken",
-      "final rating",
-      "deped",
-      "department of education",
-    ],
-    labelHints: ["137", "form", "permanent", "sf10", "sf 10", "137-a", "137a", "f137"],
-  },
-  {
-    id: "transcript",
-    phrases: [
-      "transcript of records",
-      "official transcript",
-      "transcript of academic",
-      "collegiate",
-      "grading system",
-      "course description",
-      "units earned",
-      "academic record",
-    ],
-    labelHints: ["transcript", "tor"],
-  },
-  {
-    id: "diploma",
-    phrases: [
-      "diploma",
-      "this certifies that",
-      "has conferred",
-      "is hereby conferred",
-      "conferred upon",
-      "awarded the degree",
-      "degree of",
-      "bachelor of",
-      "graduated",
-    ],
-    labelHints: ["diploma"],
-  },
-  {
-    id: "goodmoral",
-    phrases: [
-      "good moral",
-      "good moral character",
-      "moral character",
-      "character certificate",
-    ],
-    labelHints: ["moral", "character"],
-  },
-  {
-    id: "enrollment",
-    phrases: [
-      "certificate of enrollment",
-      "currently enrolled",
-      "enrollment",
-      "bona fide",
-      "bonafide",
-      "certification",
-    ],
-    labelHints: ["enrollment", "certification"],
-  },
-];
-
-export function detectDocType(rawText, docTypes, { requireEvidence = false } = {}) {
-  if (!Array.isArray(docTypes) || docTypes.length === 0) return "";
-  const fallback = docTypes[0]; // guaranteed non-blank
-
-  const hay = String(rawText ?? "").toLowerCase();
-  if (!hay.trim()) return requireEvidence ? "" : fallback;
-
-  // --- Phase A: score every cluster against the OCR text ---
-  let bestCluster = null;
-  let bestClusterScore = 0;
-
-  for (const cl of DOC_CLUSTERS) {
-    let score = 0;
-    for (const ph of cl.phrases) {
-      if (hay.includes(ph)) score += ph.includes(" ") ? 6 : 3; // multi-word phrases worth more
-    }
-    if (score > bestClusterScore) {
-      bestClusterScore = score;
-      bestCluster = cl;
-    }
-  }
-
-  // --- Phase B: score every DB doc type ---
-  let bestType = fallback;
-  let bestScore = -1;
-
-  for (const dt of docTypes) {
-    if (!dt) continue;
-    let score = 0;
-    const dtLo = lo(dt);
-    const dtNoSpace = dtLo.replace(/[^a-z0-9]/g, "");
-
-    // B1: exact substring of the rawText (strongest signal)
-    if (hay.includes(dtLo)) score += 1000 + dtLo.length;
-
-    // B2: compressed match (catches OCR spacing issues)
-    const hayNoSpace = hay.replace(/[^a-z0-9]/g, "");
-    if (dtNoSpace.length > 4 && hayNoSpace.includes(dtNoSpace)) score += 500;
-
-    // B3: cluster-winner boost: if this label relates to the winning cluster
-    if (bestCluster && bestClusterScore > 0) {
-      for (const hint of bestCluster.labelHints) {
-        if (dtLo.includes(hint)) {
-          score += 800;
-          break; // one hit is enough
-        }
-      }
-    }
-
-    // B4: individual keyword hits (words ≥ 3 chars only)
-    const words = dtLo.split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
-    let hits = 0;
-    for (const w of words) {
-      if (hay.includes(w)) hits++;
-    }
-    if (hits > 0) {
-      score += hits * 10;
-      if (words.length > 0 && hits === words.length) score += 50;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestType = dt;
-    }
-  }
-
-   
-  console.log("[OCR] docType →", bestType, { cluster: bestCluster?.id, clScore: bestClusterScore, dtScore: bestScore });
-  return requireEvidence && bestScore < 500 ? "" : bestType;
-}
+export { detectDocType } from "./documentTypeMatcher.js";
 
 // ─── 4. NAME EXTRACTION ────────────────────────────────────────────────────
 //
@@ -960,6 +777,23 @@ export function rotateOcrPages(pages, rotation = 0) {
 }
 
 
+export function recognizeNameFromTemplates(pages, templates, { rotation = 0, autoRotate = true } = {}) {
+  const rotations = [...new Set(autoRotate ? [rotation, 0, 90, 180, 270] : [rotation])];
+  let coordinateRecognition = null;
+  for (const angle of rotations) {
+    for (const template of templates) {
+      const recognition = extractNameFromCoordinates(rotateOcrPages(pages, angle), template);
+      if (!coordinateRecognition && recognition) coordinateRecognition = recognition;
+      const completeName = recognition?.regions?.wholeName?.text
+        || (recognition?.regions?.firstName?.text && recognition?.regions?.lastName?.text);
+      if (recognition?.extractedName && completeName) {
+        return { coordinateRecognition: recognition, detectedRotation: angle };
+      }
+    }
+  }
+  return { coordinateRecognition, detectedRotation: rotation };
+}
+
 // ─── 7. NLP FALLBACK (compromise.js) ────────────────────────────────────────
 
 async function loadNlp() {
@@ -983,7 +817,7 @@ export async function scanPdfForSuggestion(payload) {
   return scanFileForSuggestion(payload);
 }
 
-export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matchStudents = true, ocrContext = null }) {
+export async function scanFileForSuggestion({ file, docTypes, rotation = 0, autoRotate = true, matchStudents = true, ocrContext = null }) {
   if (!file) throw new Error("Missing file");
   const totalStartedAt = performance.now();
 
@@ -1047,7 +881,7 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
     .filter(Boolean);
 
   // ── Detect doc type ──
-  const docType = detectDocType(rawText, docTypes);
+  const docType = detectDocType(rawText, docTypes, { requireEvidence: true });
 
   let coordinateTemplates = Array.isArray(ocrContext?.templates) ? ocrContext.templates : [];
   const templateStartedAt = performance.now();
@@ -1064,13 +898,9 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
   }
   const templateMs = performance.now() - templateStartedAt;
 
-  let coordinateRecognition = null;
-  const pagesAtRotation = rotateOcrPages(ocrPages, rotation);
-  for (const template of coordinateTemplates) {
-    const candidate = extractNameFromCoordinates(pagesAtRotation, template);
-    if (!coordinateRecognition || candidate?.extractedName) coordinateRecognition = candidate;
-    if (candidate?.extractedName) break;
-  }
+  const { coordinateRecognition, detectedRotation } = recognizeNameFromTemplates(
+    ocrPages, coordinateTemplates, { rotation, autoRotate },
+  );
 
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
@@ -1078,6 +908,7 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
   const templateExtractedName = coordinateRecognition?.extractedName || "";
   const naturalLanguageName = detectName(lines, { nlp });
   const rawExtracted = templateExtractedName || naturalLanguageName;
+  const rosterMatchName = templateExtractedName || formatToLNFnMi(naturalLanguageName);
   const matchingStartedAt = performance.now();
   let studentMatches = [];
   if (matchStudents && (templateExtractedName || rawText)) {
@@ -1091,7 +922,7 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
           "Content-Type": "application/json",
           ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
         },
-        body: JSON.stringify({ extractedName: templateExtractedName, ocrText: rawText }),
+        body: JSON.stringify({ extractedName: rosterMatchName, ocrText: rawText }),
         cache: "no-store",
       });
       const data = await response.json().catch(() => null);
@@ -1109,11 +940,14 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, matc
       : "";
   const nameComponents = splitNameComponents(suggestedName);
 
+  const matchedStudent = uniqueOcrStudentMatch(studentMatches)?.student || null;
   const suggestion = {
+    matchedStudent,
+    detectedRotation,
     name: suggestedName,
-    firstName: nameComponents.firstName,
-    middleName: nameComponents.middleName,
-    lastName: nameComponents.lastName,
+    firstName: matchedStudent?.firstName || coordinateRecognition?.regions?.firstName?.text || nameComponents.firstName,
+    middleName: matchedStudent?.middleName || coordinateRecognition?.regions?.middleName?.text || nameComponents.middleName,
+    lastName: matchedStudent?.lastName || coordinateRecognition?.regions?.lastName?.text || nameComponents.lastName,
     docType,
     coordinateRecognition,
     studentMatches,

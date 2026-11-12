@@ -5,13 +5,14 @@ import { decryptStudentRow } from "./studentAuth.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 import { matchesSearchQuery } from "./searchUtils.js";
 import { invalidateOcrStudentRoster } from "./ocrStudentRoster.js";
+import { normalizeStudentRecordName } from "./studentRecordName.js";
 
 async function hasPhysicalStorage() {
   return true;
 }
 
 const STUDENT_SELECT = `
-  student_no, name, course_code, year_level, section, status,
+  student_no, name, first_name, middle_name, last_name, course_code, year_level, section, status,
   storage_room AS room, storage_cabinet AS cabinet, storage_drawer AS drawer,
   created_at, updated_at
 `;
@@ -69,6 +70,9 @@ function normalizeStudentName(name) {
 export async function createStudent({
   studentNo,
   name,
+  firstName,
+  middleName,
+  lastName,
   courseCode,
   yearLevel,
   section,
@@ -81,7 +85,9 @@ export async function createStudent({
   const normalizedOfficeId = normalizeOfficeId(officeId);
   if (!normalizedOfficeId) throw new Error("Office scope is required");
   const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
-  const normalizedName = encryptPII(normalizeStudentName(name));
+  const nameParts = firstName !== undefined || middleName !== undefined || lastName !== undefined
+    ? normalizeStudentRecordName({ firstName, middleName, lastName }) : null;
+  const normalizedName = encryptPII(nameParts?.name || normalizeStudentName(name));
   const normalizedSection = String(section || "").trim();
   const academicYear = parseInt(yearLevel);
   const registryStatus = status === "Archived" ? "Active" : (status || "Active");
@@ -130,6 +136,11 @@ export async function createStudent({
       );
     }
 
+    if (nameParts) {
+      await run("UPDATE students SET first_name = $1, middle_name = $2, last_name = $3 WHERE student_no = $4", [
+        encryptPII(nameParts.firstName), encryptPII(nameParts.middleName), encryptPII(nameParts.lastName), studentNo,
+      ]);
+    }
     await run(
       `INSERT INTO student_office_memberships (student_no, office_id, status)
        VALUES ($1, $2, $3)
@@ -300,7 +311,9 @@ export async function updateStudent(studentNo, patch) {
     );
     if (!currentRaw) return false;
     const existing = decryptStudentRow(currentRaw);
-    const rawName = patch.name === undefined || patch.name === null
+    const nameParts = patch.firstName !== undefined || patch.middleName !== undefined || patch.lastName !== undefined
+      ? normalizeStudentRecordName({ firstName: patch.firstName, middleName: patch.middleName, lastName: patch.lastName }) : null;
+    const rawName = nameParts ? nameParts.name : patch.name === undefined || patch.name === null
       ? existing.name
       : normalizeStudentName(patch.name);
     const next = {
@@ -354,6 +367,14 @@ export async function updateStudent(studentNo, patch) {
                        WHERE som.student_no = students.student_no AND som.office_id = $7 AND som.status = 'Active')`,
         [next.name, canonicalCourseCode, next.year_level, next.section, next.status, studentNo, officeId]
       );
+    }
+    if (nameParts || (patch.name !== undefined && rawName !== existing.name)) {
+      await run("UPDATE students SET first_name = $1, middle_name = $2, last_name = $3 WHERE student_no = $4", [
+        nameParts ? encryptPII(nameParts.firstName) : null,
+        nameParts ? encryptPII(nameParts.middleName) : null,
+        nameParts ? encryptPII(nameParts.lastName) : null,
+        studentNo,
+      ]);
     }
     return true;
   });

@@ -173,3 +173,14 @@ export function prepareOcrStudentRows(rows) {
     _ocrNameTokens: tokenizeName(student?.name || student?.Name),
   }));
 }
+
+export function matchOcrStudents(extractedName, ocrText, students) {
+  return mergeStudentMatchCandidates(
+    extractedName ? matchStudentsByConfiguredOcrName(extractedName, students) : [],
+    ocrText ? matchStudentsByOcrText(ocrText, students) : [],
+  );
+}
+
+export function uniqueOcrStudentMatch(candidates) {
+  return candidates.length === 1 ? candidates[0] : null;
+}

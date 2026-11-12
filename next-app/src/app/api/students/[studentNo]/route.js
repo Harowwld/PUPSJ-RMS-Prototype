@@ -13,6 +13,7 @@ import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { PersonNameSchema } from "@/lib/validationSchemas";
+import { normalizeStudentRecordName } from "@/lib/studentRecordName";
 
 export const runtime = "nodejs";
 
@@ -75,6 +76,7 @@ export async function PATCH(req, ctx) {
 
   const allowedFields = new Set([
     "name",
+    "firstName", "middleName", "lastName",
     "courseCode",
     "yearLevel",
     "section",
@@ -95,8 +97,17 @@ export async function PATCH(req, ctx) {
   if (body.status !== undefined && !validStatuses.has(String(body.status).trim())) {
     return NextResponse.json({ ok: false, error: "Invalid status" }, { status: 400 });
   }
+  let nameParts;
+  if (["firstName", "middleName", "lastName"].some((key) => body[key] !== undefined)) {
+    try {
+      nameParts = normalizeStudentRecordName(body);
+      body.name = nameParts.name;
+    } catch (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
+  }
   if (body.name !== undefined) {
-    const nameCheck = PersonNameSchema("Student Name").safeParse(body.name);
+    const nameCheck = PersonNameSchema("Student Name", 200).safeParse(body.name);
     if (!nameCheck.success) {
       return NextResponse.json({ ok: false, error: nameCheck.error.issues[0]?.message || "Invalid student name" }, { status: 400 });
     }
@@ -198,6 +209,7 @@ export async function PATCH(req, ctx) {
   }
 
   const row = await updateStudent(studentNo, {
+    ...nameParts,
     name: body.name === undefined ? undefined : String(body.name).trim(),
     courseCode:
       body.courseCode === undefined ? undefined : String(body.courseCode).trim(),

@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { hashPassword } from "../src/lib/passwordHash.js";
+import { ADDITIONAL_REGISTRAR_SCAN_TYPES } from "../src/lib/registrarScanDocumentTypes.js";
 import { encryptPII } from "../src/lib/piiEncryption.js";
 
 dotenv.config({ path: ".env" });
@@ -402,6 +403,15 @@ export async function seed({ force: forceOverride } = {}) {
          VALUES ('registrar', $1, $2, 'Active', true, false, $3)
          ON CONFLICT (office_id, name_norm) DO UPDATE SET name=EXCLUDED.name, status='Active', is_compliance=true, is_requestable=false, compliance_category=EXCLUDED.compliance_category`,
         [name, name.toLowerCase(), cat]
+      );
+    }
+
+    for (const [name, category] of ADDITIONAL_REGISTRAR_SCAN_TYPES) {
+      await run(
+        `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
+         VALUES ('registrar', $1, $2, 'Active', false, false, $3)
+         ON CONFLICT (office_id, name_norm) DO NOTHING`,
+        [name, name.toLowerCase(), category],
       );
     }
 

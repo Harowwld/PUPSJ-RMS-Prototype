@@ -22,7 +22,7 @@ export async function getOcrStudentRoster(officeId) {
   if (cached?.promise) return cached.promise;
 
   const promise = query(
-    `SELECT s.student_no, s.name, s.course_code, s.year_level, s.section, s.status,
+    `SELECT s.student_no, s.name, s.first_name, s.middle_name, s.last_name, s.course_code, s.year_level, s.section, s.status,
             s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
        FROM students s
       WHERE s.status = 'Active'

@@ -1,4 +1,5 @@
 "use client";
+import { normalizeStudentRecordName, studentRecordNameParts } from "@/lib/studentRecordName";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -320,6 +321,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [newRec, setNewRec] = useState({
     studentNo: "",
     name: "",
+    firstName: "", middleName: "", lastName: "",
     course: "",
     year: "",
     sectionPart: "",
@@ -334,6 +336,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     adviserEmail: "",
   });
   const [newRecStudentNoHint] = useState("");
+  const lockedUploadIdentityRef = useRef(false);
+  useEffect(() => {
+    lockedUploadIdentityRef.current = Boolean(
+      rescanContext || isReplaceMode || uploadStudentIsExisting || students.some((student) =>
+        String(student.studentNo || student.student_no || "").trim().toUpperCase() === String(newRec.studentNo || "").trim().toUpperCase()
+      ),
+    );
+  }, [rescanContext, isReplaceMode, uploadStudentIsExisting, students, newRec.studentNo]);
   const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
   const newStudentNoInputRef = useRef(null);
 
@@ -1108,6 +1118,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setNewRec((p) => ({
       ...p,
       studentNo: s.studentNo ?? "",
+      ...studentRecordNameParts(s),
       name: String(s.name ?? "")
         .trim()
         .replace(/\s+/g, " ")
@@ -1197,6 +1208,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           file: activeFile,
           docTypes,
           rotation: rotationParam !== undefined ? rotationParam : rotation,
+          autoRotate: rotationParam === undefined,
           matchStudents: !isOsas,
           ocrContext: rotationParam !== undefined && ocrContextFileRef.current === activeFile
             ? ocrContextRef.current
@@ -1206,8 +1218,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         ocrContextRef.current = suggestion.ocrContext;
         ocrContextFileRef.current = activeFile;
         delete suggestion.ocrContext;
-        lastRotationOcrRef.current =
-          rotationParam !== undefined ? rotationParam : rotation;
+        const detectedRotation = suggestion.detectedRotation ?? (rotationParam !== undefined ? rotationParam : rotation);
+        lastRotationOcrRef.current = detectedRotation;
+        if (detectedRotation !== rotation) setRotation(detectedRotation);
         setOcrSuggestion(suggestion);
 
         console.log("[OCR handleFileSelect] extracted fields:", {
@@ -1215,11 +1228,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           docType: suggestion.docType,
           docTypesAvailable: docTypes,
         });
-        const keepExistingIdentity = Boolean(
-          rescanContext || isReplaceMode || uploadStudentIsExisting
-        );
+        const keepExistingIdentity = lockedUploadIdentityRef.current;
         setNewRec((p) => ({
           ...p,
+          ...(!keepExistingIdentity && !students.some((student) =>
+            String(student.studentNo || student.student_no || "").trim().toUpperCase() === String(p.studentNo || "").trim().toUpperCase()
+          ) ? {
+            ...studentRecordNameParts({ name: suggestion.name || p.name }),
+            ...(suggestion.firstName ? { firstName: suggestion.firstName } : {}),
+            ...(suggestion.middleName ? { middleName: suggestion.middleName } : {}),
+            ...(suggestion.lastName ? { lastName: suggestion.lastName } : {}),
+          } : {}),
           name: keepExistingIdentity || students.some((student) =>
             String(student.studentNo || student.student_no || "").trim().toUpperCase() ===
             String(p.studentNo || "").trim().toUpperCase()
@@ -1241,7 +1260,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 : p.docType,
         }));
         if (!keepExistingIdentity) {
-          setUploadStudentIsExisting(false);
+          if (suggestion.matchedStudent) {
+            applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType || null);
+            setUploadStudentIsExisting(true);
+          } else {
+            setUploadStudentIsExisting(false);
+          }
         }
         clearAllUploadFieldErrors();
       } catch (err) {
@@ -1398,6 +1422,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       } else {
         if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
         if (!String(newRec.name || "").trim()) err.name = true;
+        try {
+          normalizeStudentRecordName(studentRecordNameParts(newRec));
+        } catch {
+          err.name = true;
+        }
         if (!newRec.course) err.course = true;
         if (!newRec.year) err.year = true;
         if (!newRec.sectionPart) err.sectionPart = true;
@@ -1559,6 +1588,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         payload.append("drawer", newRec.drawer);
         payload.append("docType", newRec.docType);
         payload.append("isNewStudent", "true");
+        const parts = normalizeStudentRecordName(studentRecordNameParts(newRec));
+        for (const key of ["firstName", "middleName", "lastName"]) payload.append(key, parts[key]);
       }
     }
 
@@ -1640,6 +1671,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setNewRec({
         studentNo: "",
         name: "",
+        firstName: "", middleName: "", lastName: "",
         course: "",
         year: "",
         sectionPart: "",

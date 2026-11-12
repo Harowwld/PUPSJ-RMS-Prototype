@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
-import { matchStudentsByConfiguredOcrName, matchStudentsByOcrText, mergeStudentMatchCandidates } from "../../../../lib/studentNameMatcher";
+import { matchOcrStudents } from "../../../../lib/studentNameMatcher";
 import { getOcrStudentRoster } from "../../../../lib/ocrStudentRoster";
 
 export const runtime = "nodejs";
@@ -23,11 +23,7 @@ export async function POST(req) {
 
   try {
     const roster = await getOcrStudentRoster(officeId);
-    const configuredMatches = extractedName
-      ? matchStudentsByConfiguredOcrName(extractedName, roster)
-      : [];
-    const textMatches = ocrText ? matchStudentsByOcrText(ocrText, roster) : [];
-    const candidates = mergeStudentMatchCandidates(configuredMatches, textMatches);
+    const candidates = matchOcrStudents(extractedName, ocrText, roster);
     return NextResponse.json({
       ok: true,
       data: candidates.map(({ studentNo, name, mismatchPercent, student }) => ({
@@ -37,6 +33,9 @@ export async function POST(req) {
         student: {
           studentNo: student.student_no || student.studentNo,
           name: student.name,
+          firstName: student.first_name || "",
+          middleName: student.middle_name || "",
+          lastName: student.last_name || "",
           courseCode: student.course_code || student.courseCode || "",
           yearLevel: student.year_level ?? student.yearLevel ?? "",
           section: student.section || "",

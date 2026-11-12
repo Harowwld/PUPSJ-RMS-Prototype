@@ -7,6 +7,7 @@ import { createStudent, deleteStudent, getStudentByStudentNo } from "../../../li
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../lib/authHelpers";
 import { isUniqueViolation } from "../../../lib/dbErrors";
+import { normalizeStudentRecordName } from "@/lib/studentRecordName";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
 import { canAccessResource } from "../../../lib/resourceAuthorization";
 import { dbGet } from "../../../lib/postgresCompat";
@@ -96,6 +97,7 @@ export async function POST(req) {
   const studentNoRaw = String(form.get("studentNo") || "").trim();
   const studentNo = studentNoRaw.toUpperCase();
   let studentName = String(form.get("studentName") || "").trim();
+  let nameParts;
   const docType = String(form.get("docType") || "").trim();
   const isNewStudent =
     String(form.get("isNewStudent") || "").toLowerCase() === "true";
@@ -258,6 +260,16 @@ export async function POST(req) {
 
   let createdStudentForUpload = false;
   if (isNewStudent) {
+    if (["firstName", "middleName", "lastName"].some((key) => form.has(key))) {
+      try {
+        nameParts = normalizeStudentRecordName(Object.fromEntries(
+          ["firstName", "middleName", "lastName"].map((key) => [key, form.get(key)]),
+        ));
+        studentName = nameParts.name;
+      } catch (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+      }
+    }
     if (!studentName) {
       return NextResponse.json(
         { ok: false, error: "studentName is required when creating a new student" },
@@ -321,6 +333,7 @@ export async function POST(req) {
 
     try {
       await createStudent({
+        ...nameParts,
         studentNo,
         name: studentName,
         courseCode,

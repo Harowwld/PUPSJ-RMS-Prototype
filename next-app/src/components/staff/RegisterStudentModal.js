@@ -18,6 +18,9 @@ import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { StudentRegistrationSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Loading01Icon } from "hugeicons-react";
+import StudentNameFields from "@/components/shared/StudentNameFields";
+import { normalizeStudentRecordName } from "@/lib/studentRecordName";
+import { formatRegistrarStudentName } from "@/lib/validationSchemas";
 
 
 export default function RegisterStudentModal({
@@ -33,7 +36,8 @@ export default function RegisterStudentModal({
   const { attachForm, ...repeat } = useCreateAnother(open);
 
   const [studentNo, setStudentNo] = useState("");
-  const [name, setName] = useState("");
+  const [nameParts, setNameParts] = useState({ firstName: "", middleName: "", lastName: "" });
+  const name = formatRegistrarStudentName(nameParts);
   const [courseCode, setCourseCode] = useState("");
   const [yearLevel, setYearLevel] = useState(String(currentYear));
   const [section, setSection] = useState("");
@@ -121,6 +125,13 @@ export default function RegisterStudentModal({
 
     const cleanNo = studentNo.trim().toUpperCase();
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
+    let normalizedParts;
+    try {
+      normalizedParts = normalizeStudentRecordName(nameParts);
+    } catch (error) {
+      showToast?.({ title: "Validation Error", description: error.message }, "warning");
+      return;
+    }
     const cleanCourse = courseCode.trim();
     const parsedYear = parseInt(yearLevel, 10);
     const cleanSec = section.trim();
@@ -156,6 +167,7 @@ export default function RegisterStudentModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...normalizedParts,
           studentNo: cleanNo,
           name: cleanName,
           courseCode: cleanCourse,
@@ -181,7 +193,7 @@ export default function RegisterStudentModal({
 
       repeat.complete(() => {
         setStudentNo("");
-        setName("");
+        setNameParts({ firstName: "", middleName: "", lastName: "" });
         setYearLevel(String(currentYear));
         if (!repeat.createAnother) setSection("");
       }, () => onOpenChange(false));
@@ -237,18 +249,8 @@ export default function RegisterStudentModal({
                 />
               </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
-                  Full Name (Last, First)
-                </label>
-                <Input
-                  type="text"
-                  required
-                  placeholder="DELA CRUZ, JUAN"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs uppercase"
-                />
+              <div className="md:col-span-2">
+                <StudentNameFields idPrefix="register-student" value={nameParts} onChange={setNameParts} />
               </div>
             </div>
           </div>
