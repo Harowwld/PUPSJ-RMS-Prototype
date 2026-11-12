@@ -44,12 +44,19 @@ describe("student signup", () => {
 
     const response = await sendSignupChallenge(email);
 
-    expect(response).toEqual({ challengeId: expect.any(String) });
+    expect(response).toEqual({ challengeId: expect.any(String), retryAfter: 60 });
     expect(sendStudentSignupCode).toHaveBeenCalledWith({ to: email, code: expect.stringMatching(/^\d{6}$/) });
     const [, params] = query.mock.calls[1];
     expect(params[0]).not.toBe(email);
     expect(params[2]).toMatch(/^[a-f0-9]{64}$/);
     expect(registerStudent).not.toHaveBeenCalled();
+  });
+
+  it("reports the remaining cooldown without sending another code", async () => {
+    query.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([{ retry_after: "23" }]);
+
+    await expect(sendSignupChallenge(email)).rejects.toMatchObject({ status: 429, retryAfter: 23 });
+    expect(sendStudentSignupCode).not.toHaveBeenCalled();
   });
 
   async function issueChallenge() {

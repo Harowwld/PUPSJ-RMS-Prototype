@@ -7,10 +7,13 @@ import { registerStudent, studentSignupEmailExists } from "./studentAuth.js";
 import { sendStudentSignupCode } from "./accountEmail.js";
 import { formatRegistrarStudentName, PersonNameSchema } from "./validationSchemas.js";
 
+const SIGNUP_RESEND_SECONDS = 60;
+
 export class StudentSignupError extends Error {
-  constructor(message, status = 400) {
+  constructor(message, status = 400, retryAfter) {
     super(message);
     this.status = status;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -45,13 +48,21 @@ export async function sendSignupChallenge(email) {
        challenge_id = EXCLUDED.challenge_id, code_hash = EXCLUDED.code_hash,
        sent_at = NOW(), expires_at = EXCLUDED.expires_at,
        attempts_remaining = 5, setup_token_hash = NULL
-     WHERE pending.sent_at <= NOW() - INTERVAL '1 minute'
+     WHERE pending.sent_at <= NOW() - ($4::integer * INTERVAL '1 second')
      RETURNING challenge_id`,
     [
-      emailKey, challengeId, digest(challengeId, code),
+      emailKey, challengeId, digest(challengeId, code), SIGNUP_RESEND_SECONDS,
     ],
   );
-  if (!rows.length) throw new StudentSignupError("Wait before requesting another code.", 429);
+  if (!rows.length) {
+    const [pending] = await query(
+      `SELECT CEIL(EXTRACT(EPOCH FROM sent_at - NOW()) + $2::integer) AS retry_after
+       FROM student_signup_verifications WHERE email_key = $1`,
+      [emailKey, SIGNUP_RESEND_SECONDS],
+    );
+    const retryAfter = Math.max(1, Number(pending?.retry_after ?? 1));
+    throw new StudentSignupError("A verification code was sent recently. Try again in a moment.", 429, retryAfter);
+  }
   try {
     await sendStudentSignupCode({ to: email, code });
   } catch (error) {
@@ -59,7 +70,7 @@ export async function sendSignupChallenge(email) {
     await query("DELETE FROM student_signup_verifications WHERE email_key = $1 AND challenge_id = $2", [emailKey, challengeId]);
     throw new StudentSignupError("We couldn't send the verification code. Check the email address or contact your administrator.", 503);
   }
-  return { challengeId };
+  return { challengeId, retryAfter: SIGNUP_RESEND_SECONDS };
 }
 
 export function validateStudentSignupDetails(body) {

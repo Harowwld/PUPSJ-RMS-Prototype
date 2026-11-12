@@ -32,7 +32,10 @@ export async function POST(req) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
         || req.headers.get("x-real-ip")?.trim() || req.ip || "unknown";
       const limit = await getRateLimiter().checkRateLimit("student_signup_email", `ip:${ip}`, { ipAddress: ip });
-      if (!limit.allowed) throw new StudentSignupError("Too many verification emails requested. Try again later.", 429);
+      if (!limit.allowed) {
+        const retryAfter = limit.resetTime ? Math.max(1, Math.ceil((limit.resetTime - Date.now()) / 1000)) : undefined;
+        throw new StudentSignupError("Too many verification emails requested. Try again later.", 429, retryAfter);
+      }
       return NextResponse.json({ ok: true, data: await sendSignupChallenge(email) });
     }
     if (action !== "verify") throw new StudentSignupError("Invalid registration step.");
@@ -55,7 +58,11 @@ export async function POST(req) {
     }, { status: 201 }), token, req);
   } catch (error) {
     if (error instanceof StudentSignupError) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: error.status });
+      const retryAfter = error.retryAfter;
+      return NextResponse.json({ ok: false, error: error.message, retryAfter }, {
+        status: error.status,
+        headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined,
+      });
     }
     console.error("Student signup failed:", { step, code: error?.code || error?.name });
     if (step === "sign-in") {

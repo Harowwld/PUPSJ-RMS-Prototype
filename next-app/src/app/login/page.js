@@ -152,6 +152,9 @@ export default function Home() {
   const studentSignupLoading = pendingSignupAction !== null;
   const [signupChallengeId, setSignupChallengeId] = useState("");
   const [signupCode, setSignupCode] = useState("");
+  const [signupResendAt, setSignupResendAt] = useState(0);
+  const [signupResendSeconds, setSignupResendSeconds] = useState(0);
+  const [signupResendError, setSignupResendError] = useState("");
   const [firstNameFocused, setFirstNameFocused] = useState(false);
   const [middleNameFocused, setMiddleNameFocused] = useState(false);
   const [lastNameFocused, setLastNameFocused] = useState(false);
@@ -160,12 +163,32 @@ export default function Home() {
   const [signupConfirmFocused, setSignupConfirmFocused] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
 
+  useEffect(() => {
+    if (!signupResendAt) return;
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((signupResendAt - Date.now()) / 1000));
+      setSignupResendSeconds(remaining);
+      if (!remaining) setSignupResendAt(0);
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [signupResendAt]);
+
+  const startSignupResendCountdown = (seconds) => {
+    setSignupResendSeconds(seconds);
+    setSignupResendAt(Date.now() + seconds * 1000);
+  };
+
   const resetStudentSignupState = () => {
     setStudentSignup({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
     setStudentSignupError("");
     setPendingSignupAction(null);
     setSignupChallengeId("");
     setSignupCode("");
+    setSignupResendAt(0);
+    setSignupResendSeconds(0);
+    setSignupResendError("");
     setFirstNameFocused(false);
     setMiddleNameFocused(false);
     setLastNameFocused(false);
@@ -504,8 +527,11 @@ export default function Home() {
 
   async function submitSignupStep(action) {
     if (studentSignupLoading) return;
+    if (action === "send" && signupResendAt > Date.now()) return;
     setStudentSignupError("");
+    setSignupResendError("");
     setPendingSignupAction(action);
+    let isResending = action === "send" && Boolean(signupChallengeId);
     try {
       const { firstName, middleName, lastName, password } = studentSignup;
       const payload = {
@@ -523,7 +549,13 @@ export default function Home() {
         body: JSON.stringify(payload),
       });
       if (!result.ok || !result.body?.ok || !result.data) {
+        if (action === "send" && result.status === 429 && Number.isInteger(result.body?.retryAfter) && result.body.retryAfter > 0) {
+          startSignupResendCountdown(result.body.retryAfter);
+          setPendingSignupAction(null);
+          return;
+        }
         if (result.status === 409) {
+          isResending = false;
           setSignupChallengeId("");
           setSignupCode("");
         }
@@ -534,6 +566,7 @@ export default function Home() {
       }
       if (action === "send") {
         if (signupChallengeId) toast.success("Verification Code Sent");
+        startSignupResendCountdown(result.data.retryAfter);
         setSignupChallengeId(result.data.challengeId);
         setSignupCode("");
         setPendingSignupAction(null);
@@ -545,7 +578,9 @@ export default function Home() {
       localStorage.removeItem("pup-logout");
       router.replace("/student");
     } catch (err) {
-      setStudentSignupError(err?.message || "Unable to create student account.");
+      const message = err?.message || "Unable to create student account.";
+      if (isResending) setSignupResendError(message);
+      else setStudentSignupError(message);
       setPendingSignupAction(null);
     }
   }
@@ -1126,16 +1161,10 @@ export default function Home() {
                     </>
                   ) : "Verify Email"}
                 </Button>
-                <div className="mt-2 flex w-full flex-wrap justify-center gap-x-1">
-                  <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
-                    {pendingSignupAction === "send" ? "Sending Code…" : "Resend Code"}
-                  </Button>
-                  <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => {
-                    setSignupChallengeId("");
-                    setSignupCode("");
-                    setStudentSignupError("");
-                  }}>
-                    Edit Signup Details
+                {signupResendError && <p role="alert" className="mt-2 text-sm text-destructive">{signupResendError}</p>}
+                <div className="mt-2 flex w-full justify-center">
+                  <Button type="button" variant="ghost" className="h-11 px-3 text-xs tabular-nums" disabled={studentSignupLoading || signupResendSeconds > 0} onClick={() => submitSignupStep("send")}>
+                    {pendingSignupAction === "send" ? "Sending Code…" : signupResendSeconds > 0 ? `Resend Code in ${signupResendSeconds}s` : "Resend Code"}
                   </Button>
                 </div>
               </form>
@@ -1308,13 +1337,13 @@ export default function Home() {
                   <div className="w-full mt-8 space-y-3">
                     <Button
                       type="submit"
-                      disabled={studentSignupLoading}
+                      disabled={studentSignupLoading || signupResendSeconds > 0}
                       className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {studentSignupLoading ? (
                         <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
-                        <span>Send Verification Code</span>
+                        <span>{signupResendSeconds > 0 ? `Try Again in ${signupResendSeconds}s` : "Send Verification Code"}</span>
                       )}
                     </Button>
                     <div className="text-center">
