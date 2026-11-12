@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getClientSession } from "@/lib/clientAuth";
+import { SPRING_LAYOUT, useAppReducedMotion } from "@/lib/motion";
 import { Clock01Icon, CovidInfoIcon, Files01Icon, HelpCircleIcon, WorkflowCircle01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function LandingNavbar() {
@@ -14,6 +15,7 @@ export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const shouldReduceMotion = useAppReducedMotion();
 
   useEffect(() => {
     let isMounted = true;
@@ -88,38 +90,27 @@ export default function LandingNavbar() {
   // Scroll smoothly back to top when clicking logo
   const scrollToTop = (e) => {
     if (e) e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: shouldReduceMotion ? "instant" : "smooth" });
     if (window.location.hash) {
       window.history.pushState(null, "", window.location.pathname);
     }
     setMobileMenuOpen(false);
-    setActiveSection("");
   };
 
-  // Smooth animated transition to specific section with focus pulse
+  // Keep the active link driven by the scroll position for click and manual scrolling alike.
   const scrollToSection = (e, targetId) => {
     if (e) e.preventDefault();
     const element = document.getElementById(targetId);
     if (!element) return;
 
-    setActiveSection(targetId);
     const navOffset = 76;
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - navOffset;
 
     window.scrollTo({
       top: offsetPosition,
-      behavior: "smooth",
+      behavior: shouldReduceMotion ? "instant" : "smooth",
     });
-
-    // Subtle Apple-style highlight pulse on arrival
-    element.animate(
-      [
-        { transform: "scale(0.992)", filter: "brightness(1.08)" },
-        { transform: "scale(1)", filter: "brightness(1)" },
-      ],
-      { duration: 650, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
-    );
 
     setMobileMenuOpen(false);
   };
@@ -159,32 +150,34 @@ export default function LandingNavbar() {
 
               {/* NAVIGATION LINKS WITH SMOOTH ANIMATION (Desktop) */}
               <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-black">
-                {[
-                  { id: "about", label: "About" },
-                  { id: "workflow", label: "How It Works" },
-                  { id: "catalog", label: "Catalog" },
-                  { id: "faq", label: "FAQ" },
-                  { id: "office", label: "Contacts" }
-                ].map((item) => (
-                  <button 
-                    key={item.id}
-                    type="button"
-                    onClick={(e) => scrollToSection(e, item.id)}
-                    className={`relative px-3.5 py-1.5 rounded-full cursor-pointer transition-colors ${activeSection === item.id ? "text-black font-semibold" : "bg-transparent text-black/90 hover:text-black/60"}`}
-                  >
-                    {item.label}
-                    {activeSection === item.id && (
-                      <motion.div
-                        layoutId="navUnderline"
-                        layout="x"
-                        className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    )}
-                  </button>
-                ))}
+                <LayoutGroup id="landing-navbar-links">
+                  {[
+                    { id: "about", label: "About" },
+                    { id: "workflow", label: "How It Works" },
+                    { id: "catalog", label: "Catalog" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "office", label: "Contacts" }
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={(e) => scrollToSection(e, item.id)}
+                      className={`relative px-3.5 py-1.5 rounded-full cursor-pointer transition-colors ${activeSection === item.id ? "text-black font-semibold" : "bg-transparent text-black/90 hover:text-black/60"}`}
+                    >
+                      {item.label}
+                      {activeSection === item.id && (
+                        <motion.span
+                          layoutId="landing-navbar-active-underline"
+                          layout="x"
+                          initial={false}
+                          transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
+                          aria-hidden="true"
+                          className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
+                        />
+                      )}
+                    </button>
+                  ))}
+                </LayoutGroup>
               </nav>
 
               {/* RIGHT ACTION BUTTONS */}
@@ -197,12 +190,14 @@ export default function LandingNavbar() {
                     Dashboard ↗
                   </Button>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="h-8 px-3 rounded-full text-[13px] font-medium cursor-pointer bg-transparent text-black"
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-4 rounded-xl text-[13px] font-medium leading-none text-black hover:bg-black/5 hover:text-black"
                   >
-                    Sign In
-                  </Link>
+                    <Link href="/login">Sign In</Link>
+                  </Button>
                 )}
 
                 {/* Mobile Sidebar Trigger */}

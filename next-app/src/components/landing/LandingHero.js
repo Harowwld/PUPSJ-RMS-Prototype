@@ -142,7 +142,7 @@ export default function LandingHero() {
             >
               <Button
                 onClick={() => router.push("/login")}
-                className="h-11 px-8 flex items-center justify-center gap-2 cursor-pointer"
+                className="h-11 rounded-xl px-8 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>{hero.ctaText || "Request"}</span>
               </Button>
