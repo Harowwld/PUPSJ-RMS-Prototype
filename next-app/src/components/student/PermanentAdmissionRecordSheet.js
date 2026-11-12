@@ -317,21 +317,25 @@ export default function PermanentAdmissionRecordSheet({
           {statusOnly && !isSubmitted && item?.instructions && (
             <section className="space-y-2.5">
               <SheetSectionHeading icon="File02Icon" title="How to get it" />
-              <p className="text-[13px] leading-relaxed text-gray-600 dark:text-zinc-300">
-                <NarrativeText text={item.instructions} mode="full" highlightedPhrases={highlightedPhrases} />
-              </p>
-              {item.source && (
-                <a
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                  href={item.source.href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {item.source.label}
-                  <ArrowUpRight01Icon size={14} aria-hidden="true" data-icon="inline-end" />
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              )}
+              <InfoRow icon="Message01Icon" label="Description">
+                <div className="flex flex-col items-start gap-2.5">
+                  <div className="font-normal leading-relaxed">
+                    <NarrativeText text={item.instructions} mode="full" highlightedPhrases={highlightedPhrases} />
+                  </div>
+                  {item.source && (
+                    <a
+                      className={buttonVariants({ variant: "outline", size: "sm", className: "h-auto min-h-9 max-w-full whitespace-normal py-2 text-left" })}
+                      href={item.source.href}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {item.source.label}
+                      <ArrowUpRight01Icon size={14} aria-hidden="true" data-icon="inline-end" />
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  )}
+                </div>
+              </InfoRow>
             </section>
           )}
 
