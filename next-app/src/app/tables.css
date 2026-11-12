@@ -125,6 +125,7 @@
 }
 tr:hover .table-action-button,
 tr:focus-within .table-action-button,
+.table-action-row:is(:hover, :focus-visible) .table-action-button,
 .table-action-button:hover,
 .table-action-button:focus-visible,
 .table-action-button[data-state="open"],
@@ -137,6 +138,7 @@ tr:focus-within .table-action-button,
 }
 .dark tr:hover .table-action-button,
 .dark tr:focus-within .table-action-button,
+.dark .table-action-row:is(:hover, :focus-visible) .table-action-button,
 .dark .table-action-button:hover,
 .dark .table-action-button:focus-visible,
 .dark .table-action-button[data-state="open"],

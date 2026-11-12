@@ -4675,7 +4675,7 @@ function StudentDashboard() {
                   type="button"
                   onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
                   aria-label={`Preview ${selectedProposalForDetail.original_filename}`}
-                  className="group/preview flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:border-border/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
+                  className="table-action-row flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:border-border/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -4694,7 +4694,7 @@ function StudentDashboard() {
                   </div>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-gray-600 opacity-60 shadow-xs transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:bg-zinc-800 dark:text-zinc-300">
+                      <span className="table-action-button shrink-0">
                         <ViewIcon size={16} aria-hidden="true" />
                       </span>
                     </TooltipTrigger>
@@ -4744,8 +4744,8 @@ function StudentDashboard() {
                         key={version.id}
                         {...previewProps}
                         className={cn(
-                          "group/preview flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 text-left dark:bg-zinc-900/40",
-                          available && "cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
+                          "flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 text-left dark:bg-zinc-900/40",
+                          available && "table-action-row cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
                         )}
                       >
                         <span className="min-w-0">
@@ -4759,7 +4759,7 @@ function StudentDashboard() {
                         {available ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-gray-600 opacity-60 transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:text-zinc-300">
+                              <span className="table-action-button shrink-0">
                                 <ViewIcon size={16} aria-hidden="true" />
                               </span>
                             </TooltipTrigger>
