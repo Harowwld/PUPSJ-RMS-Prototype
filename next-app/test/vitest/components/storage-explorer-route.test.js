@@ -27,3 +27,24 @@ test.each([
   rerender(<RoomMap2D kind="cabinets" cabinets={cabinets} roomDoor={roomDoor} />);
   expect(getRoute()).toBeNull();
 });
+
+test("record wayfinding uses the selected cabinet and requires a matched drawer", () => {
+  const cabinets = [
+    { cab: "2021", rect: { x: 0.15, y: 0.15, w: 0.15, h: 0.2 } },
+    { cab: "B", rect: { x: 0.65, y: 0.65, w: 0.15, h: 0.2 }, isTarget: true },
+  ];
+  const props = {
+    kind: "drawers",
+    selectedCabinetId: "B",
+    cabinets,
+    activeStudent: { cabinet: "B", drawer: 1 },
+  };
+  const { container, rerender } = render(
+    <RoomMap2D {...props} drawerSlots={[{ drawer: 1, isTarget: true }]} />
+  );
+  const getRoute = () => container.querySelector('[data-slot="storage-route"]');
+  expect(Number.parseFloat(getRoute().lastElementChild.style.left)).toBeGreaterThan(50);
+
+  rerender(<RoomMap2D {...props} drawerSlots={[{ drawer: 2 }]} />);
+  expect(getRoute()).toBeNull();
+});

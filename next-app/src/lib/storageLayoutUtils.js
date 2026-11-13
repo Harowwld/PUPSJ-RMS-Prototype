@@ -196,6 +196,22 @@ export function areCabinetsEqual(cab1, cab2, cabinetsList = []) {
   return false;
 }
 
+export function findStorageDrawer(layout, { room, cabinet, drawer }) {
+  const roomKey = String(room ?? "").trim();
+  const cabinetKey = canonicalizeCabinetId(cabinet);
+  const drawerKey = String(drawer ?? "").trim();
+  if (!roomKey || !cabinetKey || !drawerKey) return null;
+
+  const roomDef = layout?.rooms?.find(({ id }) => String(id) === roomKey);
+  const cabinets = roomDef?.cabinets ?? [];
+  const cabinetDef = cabinets.find(({ id }) => String(id) === String(cabinet).trim())
+    ?? cabinets.find(({ id }) => canonicalizeCabinetId(id) === cabinetKey);
+  const drawerId = cabinetDef?.drawerIds?.find((id) => String(id) === drawerKey);
+  if (drawerId == null) return null;
+
+  return { room: roomDef.id, cabinet: cabinetDef.id, drawer: drawerId };
+}
+
 export function findMatchingCabinet(cabinets, targetCab) {
   if (!Array.isArray(cabinets) || cabinets.length === 0 || !targetCab) return null;
   const targetStr = String(targetCab).trim().toUpperCase();
