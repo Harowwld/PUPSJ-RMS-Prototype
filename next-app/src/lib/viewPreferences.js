@@ -3,7 +3,7 @@ const columns = {
   staff: ["name", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
   operations: ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"],
   logs: ["severity", "actor", "office_id", "details", "ip"],
-  backups: ["size", "created", "type", "status", "external", "offsite"],
+  backups: ["size", "created", "actor", "type", "status", "external", "offsite"],
 };
 const enums = {
   statusFilter: ["Active", "Inactive", "Archived"],
@@ -20,7 +20,7 @@ const sortKeys = {
   staff: ["name", "id", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
   operations: ["createdAt", "id", "officeId", "studentName", "title", "organizationName", "status", "slaStatus", "updatedAt"],
   logs: ["created_at", "severity", "actor", "office_id", "action"],
-  backups: ["created_at", "filename", "size_bytes", "backup_type", "status_local"],
+  backups: ["created_at", "filename", "size_bytes", "actor", "backup_type", "status_local"],
 };
 const groups = {
   offices: ["none", "status", "station", "staff_count"],
@@ -42,7 +42,7 @@ const strings = (value) => Array.isArray(value) && value.length <= 100 && value.
 
 export function viewPreferenceKey(user, page, field) {
   if (!user?.id || !["superadmin", "systemadmin"].includes(String(user.role).toLowerCase())) return null;
-  return `pup_superadmin_view_v1:${encodeURIComponent(String(user.id))}:${page}:${field}`;
+  return `pup_superadmin_view_v2:${encodeURIComponent(String(user.id))}:${page}:${field}`;
 }
 
 export function normalizeViewPreference(page, field, value, fallback) {

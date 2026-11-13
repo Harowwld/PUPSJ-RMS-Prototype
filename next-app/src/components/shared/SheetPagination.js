@@ -5,6 +5,7 @@ import { paginationRange } from "@/lib/tablePresentation";
 import { cn } from "@/lib/utils";
 
 export default function SheetPagination({ page = 1, totalPages = 1, onPrevious, onNext, previousDisabled, nextDisabled, disabled = false, compact = false, totalCount = 0, displayCount = 0, pageSize, onPageSizeChange, label = "Record pages", previousLabel = "Previous page", nextLabel = "Next page" }) {
+  if (Number(totalCount) <= 0) return null;
   const lastPage = Math.max(1, totalPages);
   const currentPage = Math.min(Math.max(1, page), lastPage);
   const range = paginationRange({ page: currentPage, pageSize: pageSize || displayCount || 10, totalCount, displayedCount: displayCount });

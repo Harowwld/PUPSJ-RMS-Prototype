@@ -95,3 +95,52 @@ test("blocked and full storage retain usable in-memory preferences, and recover 
   assert.deepEqual(store.read("view", ["name"], normalize), ["email"]);
   assert.equal(storage.getItem("view"), '["email"]');
 });
+
+test("SuperAdmin and shared table column controls default to essential columns and reset to defaults instead of all columns", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+  const controlsCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/components/systemadmin/OfficeTableControls.js"),
+    "utf8"
+  );
+  assert.ok(
+    controlsCode.includes("onClick={() => onVisibleColumnsChange(defaultColumnKeys)}") &&
+      controlsCode.includes("disabled={isAtDefault}"),
+    "ColumnsPopover Reset Columns must restore defaultColumnKeys and disable when at defaults"
+  );
+  assert.ok(
+    !controlsCode.includes("onClick={() => onVisibleColumnsChange(columns.map(({ key }) => key))}"),
+    "ColumnsPopover Reset Columns must not check all columns indiscriminately"
+  );
+
+  const staffCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/components/systemadmin/GlobalStaffTab.js"),
+    "utf8"
+  );
+  assert.ok(
+    staffCode.includes('["name", "email", "office", "role", "section", "totp_enabled"]'),
+    "GlobalStaffTab must default visibleColumns to essential staff columns (excluding last_active, created_at, updated_at)"
+  );
+  assert.ok(
+    staffCode.includes('{ key: "last_active", label: "Last Sign-in", defaultHidden: true }') &&
+      staffCode.includes('{ key: "created_at", label: "Date Added", defaultHidden: true }') &&
+      staffCode.includes('{ key: "updated_at", label: "Last Updated", defaultHidden: true }'),
+    "GlobalStaffTab must mark Last Sign-in, Date Added, and Last Updated as defaultHidden"
+  );
+
+  const backupTableCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/components/systemadmin/PlatformBackupTable.js"),
+    "utf8"
+  );
+  assert.ok(
+    backupTableCode.includes('{ key: "actor", label: "Actor", kind: "text", defaultHidden: true }'),
+    "PlatformBackupTable must mark Actor column as defaultHidden"
+  );
+  assert.deepEqual(
+    normalizeViewPreference("backups", "visibleColumns", ["size", "created", "actor", "type", "status"], []),
+    ["size", "created", "actor", "type", "status"]
+  );
+});

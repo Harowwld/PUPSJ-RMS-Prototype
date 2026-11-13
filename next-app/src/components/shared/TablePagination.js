@@ -1,4 +1,5 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ export function PageControls({
         aria-current="page"
         aria-label={`Page ${page} of ${totalPages}`}
         title={`Page ${page} of ${totalPages}`}
-        className="flex h-8 min-w-8 items-center justify-center rounded-full border border-black/[0.08] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.04] px-2.5 text-xs font-semibold tabular-nums text-gray-900 dark:text-zinc-100 shadow-2xs"
+        className={cn("min-w-8 bg-black/[0.02] dark:bg-white/[0.04] tabular-nums text-gray-900 dark:text-zinc-100", BADGE_BASE)}
       >
         {page}
       </span>
@@ -102,6 +103,10 @@ export default function TablePagination({
   useEffect(() => {
     if (!loading && Number(page) !== range.page) onPageChange?.(range.page);
   }, [page, range.page, loading, onPageChange]);
+
+  if (Number(totalCount) <= 0 && !loading) {
+    return null;
+  }
 
   return (
     <nav

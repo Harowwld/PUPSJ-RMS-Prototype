@@ -23,7 +23,7 @@ const clickText = async (text) => {
     button.click();
   }, text);
 };
-const key = (userId, scope, field) => `pup_superadmin_view_v1:${encodeURIComponent(userId)}:${scope}:${field}`;
+const key = (userId, scope, field) => `pup_superadmin_view_v2:${encodeURIComponent(userId)}:${scope}:${field}`;
 
 try {
   await page.goto(`${origin}/login`, { waitUntil: "networkidle2" });
@@ -128,8 +128,8 @@ try {
   assert.equal(new Set(rules.map((rule) => rule.id)).size, 2);
   console.log("PASS rule filters: restoration and unique IDs after adding another rule");
   await page.evaluate((userId) => {
-    localStorage.setItem(`pup_superadmin_view_v1:OTHER:staff:search`, '"Another account"');
-    localStorage.setItem(`pup_superadmin_view_v1:${encodeURIComponent(userId)}:staff:visibleColumns`, "{invalid json");
+    localStorage.setItem(`pup_superadmin_view_v2:OTHER:staff:search`, '"Another account"');
+    localStorage.setItem(`pup_superadmin_view_v2:${encodeURIComponent(userId)}:staff:visibleColumns`, "{invalid json");
   }, user.id);
   await open("staff");
   await page.waitForFunction(() => document.querySelector("main thead")?.textContent.includes("Staff Name"));

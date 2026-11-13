@@ -4,6 +4,17 @@ export const TABLE_DENSITIES = Object.freeze({
   comfortable: { label: "Comfortable", height: 64, padding: 12 },
 });
 
+export const LIST_DENSITIES = Object.freeze({
+  compact: Object.freeze({ paddingY: "py-2.5", paddingX: "px-4 sm:px-5", gap: "gap-2.5", minHeight: "min-h-[48px]" }),
+  normal: Object.freeze({ paddingY: "py-3.5", paddingX: "px-5 sm:px-6", gap: "gap-3.5", minHeight: "min-h-[58px]" }),
+  comfortable: Object.freeze({ paddingY: "py-4.5", paddingX: "px-6 sm:px-7", gap: "gap-4.5", minHeight: "min-h-[68px]" }),
+});
+
+export function getListDensityClasses(density) {
+  const norm = normalizeTableDensity(density);
+  return LIST_DENSITIES[norm] || LIST_DENSITIES.normal;
+}
+
 export const TABLE_PAGE_SIZES = Object.freeze([10, 20, 50, 100]);
 
 export function normalizeTableDensity(value) {
