@@ -146,7 +146,6 @@ export async function createStudent({
       await run("INSERT INTO registrar_odrs_contacts (student_no, email) VALUES ($1, $2)",
         [studentNo, encryptPII(odrsEmail.trim().toLowerCase())]);
     }
-    }
     await run(
       `INSERT INTO student_office_memberships (student_no, office_id, status)
        VALUES ($1, $2, $3)
