@@ -63,6 +63,10 @@ export default function OfficeDocumentsTable({
   serverPaged = false,
   borderTop = true,
 }) {
+  const previewDocument = (document) => {
+    onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id);
+  };
+
   const [query, setQuery] = useState("");
   const [page, setPage] = useUrlPage();
   const [pageSize, setPageSize] = useState(20);
@@ -467,7 +471,11 @@ export default function OfficeDocumentsTable({
                       <DataGroupHeader label={group.label} count={group.rows.length} colSpan={visibleColumns.length + 1} />
                     )}
                     {group.rows.map((document) => (
-                      <tr key={document.id} className="group transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 select-none">
+                      <tr
+                        key={document.id}
+                        className="group cursor-pointer select-none transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40"
+                        onClick={() => previewDocument(document)}
+                      >
                         {visibleColumns.includes("identifier") && (
                           <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {officeLabel === "OSAS" ? (
@@ -507,8 +515,8 @@ export default function OfficeDocumentsTable({
                                 : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400", BADGE_BASE)}>{document.approval_status || "Pending"}</Badge>
                           </td>
                         )}
-                        <td className="p-4 pr-6 align-middle text-right">
-                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-4 pr-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
                             {onRescan && !document.source_type && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -536,7 +544,7 @@ export default function OfficeDocumentsTable({
                               <TooltipTrigger asChild>
                                 <button
                                   type="button"
-                                  onClick={() => onPreviewDocument?.(document.doc_type, document.student_name, document.student_no, document.id)}
+                                  onClick={() => previewDocument(document)}
                                   aria-label={PDF_ACTION_LABELS.preview}
                                   className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                 >

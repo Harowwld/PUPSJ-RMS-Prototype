@@ -1,4 +1,6 @@
 "use client"
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
@@ -867,49 +869,16 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           </div>
         </DataViewToolbar>
 
-        {/* Full Top-Level Turnaround Standards Institutional Banner */}
-        <div className="border-t border-border dark:border-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card text-xs transition-colors">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#800000]/10 text-[#800000] dark:bg-red-950/40 dark:text-red-400 shadow-2xs">
-              <Timer01Icon size="1em" className="text-lg" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                  {slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
-                </p>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
-                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
-                    <Tick01Icon size={8} className="stroke-[3]" />
-                  </span>
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Standard</span>
-                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
-                  <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
-                    {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
-                  </span>
-                </span>
-                <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal">
-                  • {slaStandards?.workingDaysOnly !== false ? "Business Days (Mon–Fri)" : "Consecutive Calendar Days"}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Target processing deadlines and on-time completion rates for Registrar and OSAS requests are calculated using this schedule.
-              </p>
-            </div>
+        <NoticeBanner
+          title={slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
+          action={<Button type="button" variant="secondary" size="sm" onClick={() => setStandardsSheetOpen(true)}>Configure Standards</Button>}
+        >
+          <div className="text-white/90">
+            <span className="tabular-nums">{slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA</span>
+            {" · "}{slaStandards?.workingDaysOnly !== false ? "Business Days (Mon–Fri)" : "Consecutive Calendar Days"}
+            <p>Target processing deadlines and on-time completion rates for Registrar and OSAS requests are calculated using this schedule.</p>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setStandardsSheetOpen(true)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
-            >
-              Configure Standards
-            </Button>
-          </div>
-        </div>
+        </NoticeBanner>
 
         {/* Active Filter Chips & Horizontal Scroll Controls */}
         {hasActiveFilters && (
@@ -1350,49 +1319,21 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
           {/* Edge-to-Edge Line-Attached Status Notice */}
           {sheetItem && (
-            <div
-              className={cn(
-                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
-                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                  : sheetItem?.status === "InProgress"
-                  ? "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-                  : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
-                  ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                  : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-              )}
-            >
-              <AppIcon
-                className={cn(
-                  " text-[15px] shrink-0",
-                  sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
-                    ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+            <NoticeBanner tone={["Ready", "Completed"].includes(sheetItem.status) ? "success" : ["Cancelled", "Declined"].includes(sheetItem.status) ? "danger" : sheetItem.status === "InProgress" ? "info" : "warning"} title={sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                    ? "Completed Operation"
                     : sheetItem?.status === "InProgress"
-                    ? "Clock01Icon text-blue-600 dark:text-blue-400"
+                    ? "Fulfillment In Progress"
                     : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
-                    ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                    : "Alert01Icon text-amber-600 dark:text-amber-400"
-                )}
-              />
-              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                <strong className="font-semibold">
-                  {sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
-                    ? "Completed Operation:"
-                    : sheetItem?.status === "InProgress"
-                    ? "Fulfillment In Progress:"
-                    : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
-                    ? "Operation Cancelled:"
-                    : "Pending Operational Review:"}
-                </strong>{" "}
-                {sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
+                    ? "Operation Cancelled"
+                    : "Pending Operational Review"}>
+              {sheetItem?.status === "Ready" || sheetItem?.status === "Completed"
                   ? "Transaction fulfillment finalized and archived across campus partitions."
                   : sheetItem?.status === "InProgress"
                   ? "Department personnel actively fulfilling credentials and processing records."
                   : sheetItem?.status === "Cancelled" || sheetItem?.status === "Declined"
                   ? "This cross-office operation was declined or cancelled."
                   : "Awaiting department evaluation and staff assignment."}
-              </span>
-            </div>
+            </NoticeBanner>
           )}
 
           {/* SCROLLABLE 1-COLUMN BODY */}
@@ -1444,12 +1385,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
             {/* SECTION 1: Transaction Specification */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                  Transaction Specification
-                </h3>
-              </div>
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Transaction Specification" />
 
               <div className="divide-y-0">
                 <InfoRow
@@ -1604,12 +1540,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
             {/* SECTION 2: Purpose & Remarks */}
             <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <AppIcon className=" Message01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                  Purpose & Remarks
-                </h3>
-              </div>
+              <SheetSectionHeading icon="Message01Icon" title="Purpose & Remarks" />
               <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap pt-0.5">
                 {sheetItem?.notes || "No special remarks provided by the applicant."}
               </p>
@@ -1618,12 +1549,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {/* SECTION 3: Attached Document */}
             {sheetItem?.originalFilename && (
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    Attached Document
-                  </h3>
-                </div>
+                <SheetSectionHeading icon={File02Icon} title="Attached Document" />
                 <div className="p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">

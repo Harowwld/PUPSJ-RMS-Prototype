@@ -1,5 +1,6 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetPagination from "@/components/shared/SheetPagination";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -182,31 +183,11 @@ export default function PermanentAdmissionRecordSheet({
         </SheetHeader>
 
         {/* 2. Line-Attached Edge-to-Edge Status Notice (Zero card margins, takes the line) */}
-        {!statusOnly && <div
-          className={cn(
-            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-            isSubmitted
-              ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-              : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-          )}
-        >
-          <AppIcon
-            className={cn(
-              " text-[15px] shrink-0",
-              isSubmitted
-                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                : "Alert01Icon text-amber-600 dark:text-amber-400"
-            )}
-          />
-          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-            <strong className="font-semibold">
-              {isSubmitted ? "Archived & Verified:" : "Action Required:"}
-            </strong>{" "}
+        {!statusOnly && <NoticeBanner tone={isSubmitted ? "success" : "warning"} title={isSubmitted ? "Archived & Verified" : "Action Required"}>
             {isSubmitted
               ? "Physical authenticated hard copy is securely vaulted in institutional records."
               : "Physical hard copy submission required to clear academic records hold."}
-          </span>
-        </div>}
+          </NoticeBanner>}
 
         {/* 3. Scrollable Body: Clean, Typographic & Card-Free */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
@@ -248,9 +229,7 @@ export default function PermanentAdmissionRecordSheet({
             {statusOnly ? (
               <SheetSectionHeading icon="SlidersHorizontalIcon" title="Document Information" />
             ) : (
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Record Specification
-              </h4>
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Record Specification" />
             )}
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               {statusOnly && (
@@ -342,9 +321,7 @@ export default function PermanentAdmissionRecordSheet({
           {/* Contextual Action: Submission Instructions (Pending Only, Unboxed) */}
           {!statusOnly && !isSubmitted && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Submission Guidelines
-              </h4>
+              <SheetSectionHeading icon="ClipboardIcon" title="Submission Guidelines" />
               <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                 <NarrativeText text={docInstructions} mode="full" />
               </div>
@@ -358,9 +335,7 @@ export default function PermanentAdmissionRecordSheet({
           {/* Contextual Action: Digitized Reference (Submitted Only, Single Unboxed Row) */}
           {!statusOnly && isSubmitted && originalFilename && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Digitized Archive Reference
-              </h4>
+              <SheetSectionHeading icon="File02Icon" title="Digitized Archive Reference" />
               <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">

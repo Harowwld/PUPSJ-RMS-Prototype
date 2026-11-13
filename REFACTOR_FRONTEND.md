@@ -10,9 +10,15 @@ This file is an agent-facing UI standard for the whole app. When a request refer
 
 ### Sheets
 
+- Use `SheetSectionHeading` for detail-sheet section headings across all roles. Pair a relevant icon with bold, uppercase text.
+
 - Use the shared `Button` with `variant="ghost"` for icon-only actions in sheets. Give every icon-only action an accessible name and a tooltip.
 - Use `<Badge size="compact">` for badges in sheet headers, metadata, and sheet content. Keep the normal badge size for badges that are values in label/value lists.
 - Put concise record context beneath a sheet title into a structured metadata treatment instead of leaving it as loose, repeated helper text.
+
+### Banners
+
+- Use the shared campus-photo `NoticeBanner` for status and workflow notices across roles. Choose the semantic tone that matches the status.
 
 ### Motion and Navigation
 

@@ -1,5 +1,7 @@
 "use client"
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
@@ -1732,34 +1734,14 @@ export default function StaffDirectoryTab({
                   </div>
                 </SheetHeader>
 
-                {/* Status Banner */}
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                    inspectMember.status !== "Archived"
-                      ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                      : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                  )}
+                <NoticeBanner
+                  tone={inspectMember.status === "Archived" ? "warning" : "success"}
+                  title={inspectMember.status === "Archived" ? "Archived Staff Account" : "Active Staff Account"}
                 >
-                  <AppIcon
-                    className={cn(
-                      " text-[15px] shrink-0",
-                      inspectMember.status !== "Archived"
-                        ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                        : "Alert01Icon text-amber-600 dark:text-amber-400"
-                    )}
-                  />
-                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                    <strong className="font-semibold">
-                      {inspectMember.status !== "Archived"
-                        ? "Active Staff Account:"
-                        : "Archived Staff Account:"}
-                    </strong>{" "}
-                    {inspectMember.status !== "Archived"
-                      ? "Operational access granted to office archives and workstation."
-                      : "Account access deactivated. Historical audit logs and records preserved."}
-                  </span>
-                </div>
+                  {inspectMember.status === "Archived"
+                    ? "Account access deactivated. Historical audit logs and records preserved."
+                    : "Operational access granted to office archives and workstation."}
+                </NoticeBanner>
 
                 {/* Identity Summary Strip */}
                 <div className="px-6 pt-4 flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border shrink-0">
@@ -1798,12 +1780,7 @@ export default function StaffDirectoryTab({
                 {/* Scrollable Metadata Details */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                        Identity & Access Metadata
-                      </h3>
-                    </div>
+                    <SheetSectionHeading icon="Contact01Icon" title="Identity & Access Metadata" />
                     <div>
                       <InfoRow icon="Contact01Icon" label="Employee ID">
                         <div className="flex items-center gap-2">
@@ -1882,12 +1859,7 @@ export default function StaffDirectoryTab({
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                        Activity & Lifecycle
-                      </h3>
-                    </div>
+                    <SheetSectionHeading icon={Clock01Icon} title="Activity & Lifecycle" />
                     <div>
                       <InfoRow icon="Clock01Icon" label="Last Active Session">
                         <span className="font-sans tabular-nums text-xs font-medium text-gray-800 dark:text-zinc-200">

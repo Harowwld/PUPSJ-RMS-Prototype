@@ -1,5 +1,6 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Add01Icon, Archive01Icon, Certificate01Icon, CovidInfoIcon, File02Icon, MinusSignIcon, Shield01Icon } from "hugeicons-react";
+import { Add01Icon, Archive01Icon, Certificate01Icon, File02Icon, MinusSignIcon, Shield01Icon } from "hugeicons-react";
 
 
 const PRESETS = [
@@ -328,20 +329,16 @@ export default function ServiceStandardsTab({ showToast }) {
               })}
             </div>
 
-            {/* Active Preset Context Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50/70 dark:bg-zinc-900/40 border border-border/70 text-xs">
-              <div className="flex items-start gap-2.5">
-                <div className="h-6 w-6 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
-                  <CovidInfoIcon size="1em" className="text-xs" />
-                </div>
-                <span className="text-gray-600 dark:text-zinc-400 text-xs leading-relaxed">
-                  {activePreset?.description}
+            <NoticeBanner
+              title="Active Preset"
+              action={
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "tabular-nums")}>
+                  {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
                 </span>
-              </div>
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums self-start sm:self-auto")}>
-                {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
-              </span>
-            </div>
+              }
+            >
+              {activePreset?.description}
+            </NoticeBanner>
           </div>
 
           {/* Two-Column Responsive Layout */}

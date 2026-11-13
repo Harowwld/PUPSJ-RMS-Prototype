@@ -1,19 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 
-export function OsasSheetSectionHeading({ icon: Icon, title, children }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-1.5 dark:border-border">
-      <div className="flex items-center gap-2">
-        <Icon size="1em" aria-hidden="true" className="shrink-0 text-sm text-pup-maroon dark:text-red-400" />
-        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-          {title}
-        </h4>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 export function OsasSheetInfoRow({ icon: Icon, label, value, children }) {
   return (
     <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-1 py-1.5 text-xs sm:grid-cols-[10rem_minmax(0,1fr)]">

@@ -1,5 +1,7 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -311,13 +313,9 @@ export default function ServiceStandardsSheet({
           </SheetHeader>
 
           {/* Line-Attached Edge-to-Edge Policy Notice */}
-          <div className="flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0 border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200">
-            <HourglassIcon size="1em" className="text-blue-600 dark:text-blue-400 text-sm shrink-0" />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">Processing Standards:</strong>{" "}
-              Official target deadlines track on-time delivery and prioritize pending requests across campus offices.
-            </span>
-          </div>
+          <NoticeBanner tone={"info"} title="Processing Standards">
+            Official target deadlines track on-time delivery and prioritize pending requests across campus offices.
+          </NoticeBanner>
 
           {/* Body Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 select-none">
@@ -369,12 +367,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 1. Presets Segmented Selector */}
                 <div className="space-y-2.5">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <LayoutGridIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      Standard Timeline Presets
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon={LayoutGridIcon} title="Standard Timeline Presets" />
                   <div className="grid grid-cols-2 gap-2">
                     {PRESETS.map((p) => {
                       const isSelected = activePreset?.id === p.id;
@@ -412,12 +405,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 2. Policy & Calendar Configuration */}
                 <div className="space-y-3 pt-2">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      Policy & Calendar Configuration
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon="SlidersHorizontalIcon" title="Policy & Calendar Configuration" />
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -465,12 +453,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 3. Tier Steppers */}
                 <div className="space-y-2.5 pt-2">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <HourglassIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      Processing Days by Request Type
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon={HourglassIcon} title="Processing Days by Request Type" />
                   <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 divide-y divide-border/60 overflow-hidden shadow-2xs">
                     {/* Simple */}
                     <div className="flex items-center justify-between p-3.5">
@@ -554,12 +537,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 4. Live Simulator */}
                 <div className="space-y-2.5 pt-2">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <CalendarCheckIn01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                      Estimated Completion Dates
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon={CalendarCheckIn01Icon} title="Estimated Completion Dates" />
 
                   <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-4 flex flex-col gap-3 shadow-2xs">
                     <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">

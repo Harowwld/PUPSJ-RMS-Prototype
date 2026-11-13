@@ -1,0 +1,21 @@
+.surface {
+  --campus-backdrop-color: #172945;
+  --campus-backdrop-end-opacity: 84%;
+  background-color: var(--campus-backdrop-color);
+}
+
+:global([data-tone="campus"]) > .surface {
+  --campus-backdrop-color: #280f16;
+}
+
+:global([data-tone="success"]) > .surface {
+  --campus-backdrop-color: #12362e;
+}
+
+:global([data-tone="warning"]) > .surface {
+  --campus-backdrop-color: #482b10;
+}
+
+:global([data-tone="danger"]) > .surface {
+  --campus-backdrop-color: #4d1726;
+}

@@ -14,7 +14,7 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchReviewModal";
 import { ContentSwap } from "@/components/ui/motion";
-import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
+import { canonicalizeCabinetId, findStorageDrawer } from "@/lib/storageLayoutUtils";
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { fetchAllPages } from "@/lib/fetchAllPages";
 import { cn } from "@/lib/utils";
@@ -659,19 +659,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         return;
       }
 
-      // If cabinet selected, validate with robust matching and normalize ID.
-      if (selectedCabinet) {
-        const matchedCab = findMatchingCabinet(roomDef.cabinets, selectedCabinet);
-        if (matchedCab) {
-          if (String(selectedCabinet) !== String(matchedCab.id)) {
-            setSelectedCabinet(matchedCab.id);
-          }
-        } else {
-          setSelectedCabinet(roomDef.cabinets?.[0]?.id || null);
-        }
+      if (selectedCabinet && !roomDef.cabinets?.some((cabinet) => String(cabinet.id) === String(selectedCabinet))) {
+        setSelectedCabinet(null);
+        setCurrentLocatorLevel("cabinets");
       }
     }
-  }, [storageLayout, currentLocatorLevel, selectedRoom, selectedCabinet]);
+  }, [storageLayout, currentLocatorLevel, selectedRoom, selectedCabinet, setSelectedRoom, setSelectedCabinet, setCurrentLocatorLevel]);
 
   const handleLogout = async () => {
     try {
@@ -748,7 +741,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             occupiedCount,
             isTarget:
               String(activeStudent?.room) === String(selectedRoom) &&
-              areCabinetsEqual(activeStudent?.cabinet, normCab, roomDef.cabinets),
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
@@ -759,7 +752,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     if (currentLocatorLevel === "drawers") {
       const roomDef = storageLayout.rooms.find((r) => String(r.id) === String(selectedRoom));
       const cabinetDef = roomDef?.cabinets?.find(
-        (c) => areCabinetsEqual(c.id, selectedCabinet, roomDef.cabinets)
+        (c) => String(c.id) === String(selectedCabinet)
       );
       if (!cabinetDef)
         return {
@@ -789,7 +782,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             occupiedCount,
             isTarget:
               String(activeStudent?.room) === String(selectedRoom) &&
-              areCabinetsEqual(activeStudent?.cabinet, normCab, roomDef.cabinets),
+              String(activeStudent?.cabinet) === normCab,
             rect: c.rect,
             rotation: c.rotation || 0,
             drawerIds: c.drawerIds,
@@ -844,7 +837,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               }),
               isTarget:
                 String(activeStudent?.room) === String(selectedRoom) &&
-                areCabinetsEqual(activeStudent?.cabinet, selectedCabinet, roomDef.cabinets) &&
+                String(activeStudent?.cabinet) === String(selectedCabinet) &&
                 String(activeStudent?.drawer) === String(d),
             };
           }
@@ -872,7 +865,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             })),
             isTarget:
               String(activeStudent?.room) === String(selectedRoom) &&
-              areCabinetsEqual(activeStudent?.cabinet, selectedCabinet, roomDef.cabinets) &&
+              String(activeStudent?.cabinet) === String(selectedCabinet) &&
               String(activeStudent?.drawer) === String(d),
           };
         }),
@@ -904,52 +897,47 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const locateStudent = useCallback(
     (s) => {
-      if (!s) return;
-      const isOsas = authUser?.office_id === "osas";
-      if (isOsas) {
+      if (!s) return false;
+      if (!storageLayout) {
+        toast.error("The storage layout is still loading. Try again shortly.");
+        return false;
+      }
+
+      const room = s.rawOrg?.storage_room ?? s.storage_room ?? s.room;
+      const cabinet = s.rawOrg?.storage_cabinet ?? s.storage_cabinet ?? s.cabinet;
+      const drawer = s.rawOrg?.storage_drawer ?? s.storage_drawer ?? s.drawer;
+      const location = findStorageDrawer(storageLayout, { room, cabinet, drawer });
+      if (!location) {
+        toast.error("Archive drawer not found", {
+          description: "This record’s room, cabinet, or drawer does not match the storage layout.",
+        });
+        return false;
+      }
+
+      if (authUser?.office_id === "osas") {
         setSelectedCategory(s.category || s.rawOrg?.category || null);
         setCurrentLevel("organizations");
       } else {
-        const derivedYear = getStudentNoYear(s.studentNo);
         const yearFromDb = Number(s.yearLevel);
-        const nextYear =
-          derivedYear != null
-            ? derivedYear
-            : Number.isFinite(yearFromDb)
-              ? yearFromDb
-              : null;
-
+        const nextYear = getStudentNoYear(s.studentNo) ??
+          (Number.isFinite(yearFromDb) ? yearFromDb : null);
         setSelectedYear(nextYear);
         setCurrentLevel("students");
       }
-
-      // Canonicalize target room (fallback to 1)
-      const rawRoom = s.room ?? s.rawOrg?.storage_room ?? 1;
-      const targetRoom = Number.isFinite(Number(rawRoom)) ? Number(rawRoom) : rawRoom;
-
-      // Canonicalize target cabinet using layout if available
-      const rawCab = s.cabinet ?? s.rawOrg?.storage_cabinet;
-      const rooms = storageLayout?.rooms || [];
-      const roomDef = rooms.find((r) => String(r.id) === String(targetRoom));
-      const matchedCab = findMatchingCabinet(roomDef?.cabinets, rawCab);
-      const targetCab = matchedCab?.id || rawCab || (isOsas ? "ACADEMIC ORGANIZATIONS" : "A");
 
       if (locateTimeoutRef.current) {
         clearTimeout(locateTimeoutRef.current);
         locateTimeoutRef.current = null;
       }
 
-      setActiveStudent({
-        ...s,
-        room: targetRoom,
-        cabinet: targetCab,
-      });
-      setSelectedRoom(targetRoom);
-      setSelectedCabinet(targetCab);
+      setActiveStudent({ ...s, ...location });
+      setSelectedRoom(location.room);
+      setSelectedCabinet(location.cabinet);
       setCurrentLocatorLevel("drawers");
       switchView("storage");
+      return true;
     },
-    [switchView, authUser?.office_id, storageLayout],
+    [switchView, authUser?.office_id, storageLayout, setCurrentLevel, setCurrentLocatorLevel, setSelectedCabinet, setSelectedCategory, setSelectedRoom, setSelectedYear],
   );
 
   const handleUnfocusStudent = useCallback(() => {
@@ -1034,7 +1022,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     const locateNo = searchParams?.get("locate");
-    if (locateNo && students.length > 0 && processedLocateRef.current !== locateNo) {
+    if (locateNo && storageLayout && students.length > 0 && processedLocateRef.current !== locateNo) {
       processedLocateRef.current = locateNo;
       const match = students.find(s => s.studentNo === locateNo) || archivedStudents.find(s => s.studentNo === locateNo);
       if (match) {
@@ -1042,11 +1030,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         const params = new URLSearchParams(window.location.search);
         params.delete("locate");
         router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-        
-        locateStudent(match);
+        queueMicrotask(() => locateStudent(match));
       }
     }
-  }, [searchParams, students, archivedStudents, locateStudent, router]);
+  }, [searchParams, storageLayout, students, archivedStudents, locateStudent, router]);
 
   const applyStudentNoMask = (val) => {
     let clean = val.replace(/[^0-9A-Z]/g, "").toUpperCase();

@@ -97,7 +97,7 @@ import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/Fi
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
-import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, Download01Icon, Loading01Icon, Shield01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
+import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, Download01Icon, Loading01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
 import { getRequestAffiliation, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import AppIcon from "@/components/ui/app-icon";
 const RATING_LABELS = {
@@ -247,17 +247,17 @@ function SheetUpdateCount({ count }) {
 }
 
 const REQUEST_STATUS_NOTICES = {
-  pending: { title: "Under Review", message: "Your request is queued for verification by the Office of the Campus Registrar." },
-  underreview: { title: "Under Review", message: "The Office of the Campus Registrar is reviewing your request." },
-  pendingpayment: { title: "Payment Slip Required", message: "Upload your official receipt or payment slip below so the Registrar can prepare your document." },
-  deficient: { title: "Action Required", message: "Review the Registrar’s feedback for the missing or incomplete requirements." },
-  inprogress: { title: "Processing In Progress", message: "Registrar staff are preparing and authenticating your document." },
-  ready: { title: "Ready for Claiming", message: "Pick up at Registrar Window 1." },
-  completed: { title: "Request Completed", message: "Your document was claimed and recorded in the University Archives." },
-  cancelled: { title: "Request Cancelled", message: "This request is closed. Check the processing timeline for details." },
-  declined: { title: "Request Declined", message: "Check the processing timeline for the Registrar’s decision." },
-  rejected: { title: "Request Rejected", message: "Check the processing timeline for the Registrar’s decision." },
-  shredded: { title: "Document Disposed", message: "The unclaimed document is no longer available for pickup." },
+  pending: { tone: "info", title: "Under Review", message: "Your request is queued for verification by the Office of the Campus Registrar." },
+  underreview: { tone: "info", title: "Under Review", message: "The Office of the Campus Registrar is reviewing your request." },
+  pendingpayment: { tone: "warning", title: "Payment Slip Required", message: "Upload your official receipt or payment slip below so the Registrar can prepare your document." },
+  deficient: { tone: "warning", title: "Action Required", message: "Review the Registrar’s feedback for the missing or incomplete requirements." },
+  inprogress: { tone: "info", title: "Processing In Progress", message: "Registrar staff are preparing and authenticating your document." },
+  ready: { tone: "success", title: "Ready for Claiming", message: "Pick up at Registrar Window 1." },
+  completed: { tone: "success", title: "Request Completed", message: "Your document was claimed and recorded in the University Archives." },
+  cancelled: { tone: "danger", title: "Request Cancelled", message: "This request is closed. Check the processing timeline for details." },
+  declined: { tone: "danger", title: "Request Declined", message: "Check the processing timeline for the Registrar’s decision." },
+  rejected: { tone: "danger", title: "Request Rejected", message: "Check the processing timeline for the Registrar’s decision." },
+  shredded: { tone: "info", title: "Document Disposed", message: "The unclaimed document is no longer available for pickup." },
 };
 
 const PROPOSAL_SUBMISSION_UPDATE = /^((?:Event proposal|Revised proposal \(Revision \d+\)) submitted by) (.+?) \(([^()]+)\)\.?$/i;
@@ -280,25 +280,25 @@ function ProposalSubmissionNarrative({ submission, name, user }) {
 }
 
 const PROPOSAL_STATUS_NOTICES = {
-  Approved: { title: "Proposal Approved", message: "OSAS has cleared your event proposal." },
-  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and upload a revised proposal." },
-  Declined: { title: "Proposal Declined", message: "OSAS did not approve this event proposal." },
+  Approved: { tone: "success", title: "Proposal Approved", message: "OSAS has cleared your event proposal." },
+  "Needs Revision": { tone: "warning", title: "Revision Required", message: "Review the evaluator notes and upload a revised proposal." },
+  Declined: { tone: "danger", title: "Proposal Declined", message: "OSAS did not approve this event proposal." },
 };
 
 const POST_EVENT_STATUS_NOTICES = {
-  Submitted: { title: "Post-Event Report Submitted", message: "Your report is awaiting OSAS review." },
-  "Under Review": { title: "Under OSAS Review", message: "OSAS is reviewing your report and liquidation documents." },
-  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and resubmit your post-event report." },
-  Cleared: { title: "Post-Event Report Cleared", message: "OSAS cleared the narrative and liquidation report." },
-  Declined: { title: "Post-Event Report Declined", message: "OSAS declined this post-event report." },
+  Submitted: { tone: "info", title: "Post-Event Report Submitted", message: "Your report is awaiting OSAS review." },
+  "Under Review": { tone: "info", title: "Under OSAS Review", message: "OSAS is reviewing your report and liquidation documents." },
+  "Needs Revision": { tone: "warning", title: "Revision Required", message: "Review the evaluator notes and resubmit your post-event report." },
+  Cleared: { tone: "success", title: "Post-Event Report Cleared", message: "OSAS cleared the narrative and liquidation report." },
+  Declined: { tone: "danger", title: "Post-Event Report Declined", message: "OSAS declined this post-event report." },
 };
 
 const CBL_STATUS_NOTICES = {
-  Pending: { title: "Pending OSAS Review", message: "This charter submission is awaiting review." },
-  Approved: { title: "Charter Approved", message: "OSAS approved this Constitution & By-Laws version." },
-  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and upload a revised charter." },
-  Declined: { title: "Charter Declined", message: "OSAS declined this charter version." },
-  Superseded: { title: "Charter Superseded", message: "A newer approved charter version has replaced this submission." },
+  Pending: { tone: "info", title: "Pending OSAS Review", message: "This charter submission is awaiting review." },
+  Approved: { tone: "success", title: "Charter Approved", message: "OSAS approved this Constitution & By-Laws version." },
+  "Needs Revision": { tone: "warning", title: "Revision Required", message: "Review the evaluator notes and upload a revised charter." },
+  Declined: { tone: "danger", title: "Charter Declined", message: "OSAS declined this charter version." },
+  Superseded: { tone: "info", title: "Charter Superseded", message: "A newer approved charter version has replaced this submission." },
 };
 
 function ExpandablePanel({ children, id, reduceMotion, contentClassName = "border-b border-border" }) {
@@ -2346,20 +2346,14 @@ function StudentDashboard() {
                           <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
                             {/* Parent / Legal Guardian Compliance Notice */}
                             {requestForm.clientType === "Parent" && (
-                              <div className="rounded-xl border border-amber-200/90 bg-amber-50/70 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                                <Shield01Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                <div className="space-y-1 text-[11px] leading-relaxed">
-                                  <span className="font-semibold block text-amber-950 dark:text-amber-100">
-                                    What you need for this request
-                                  </span>
-                                  <ul className="list-disc space-y-1 pl-4">
-                                    <li>The student’s student number</li>
-                                    <li>A signed authorization letter or Special Power of Attorney (SPA)</li>
-                                    <li>A copy of a valid government ID</li>
-                                  </ul>
-                                  <p>The Registrar reviews your authorization with the request.</p>
-                                </div>
-                              </div>
+                              <CampusStatusNotice tone="warning" title="What you need for this request" imageSizes="100vw">
+                                <ul className="list-disc space-y-1 pl-4">
+                                  <li>The student’s student number</li>
+                                  <li>A signed authorization letter or Special Power of Attorney (SPA)</li>
+                                  <li>A copy of a valid government ID</li>
+                                </ul>
+                                <p>The Registrar reviews your authorization with the request.</p>
+                              </CampusStatusNotice>
                             )}
 
                             {/* Top Row: Client Type, Student Number, Academic Program, Document Type */}
@@ -2930,7 +2924,7 @@ function StudentDashboard() {
                   />
 
                   {myOrganizations.length === 0 && (
-                    <CampusStatusNotice title="Officer Authorization Required" imageSizes="100vw">
+                    <CampusStatusNotice tone="warning" title="Officer Authorization Required" imageSizes="100vw">
                       Contact OSAS to authorize your account before submitting on behalf of a recognized organization.
                     </CampusStatusNotice>
                   )}
@@ -2982,7 +2976,7 @@ function StudentDashboard() {
                     {selectedOsasOrganization && isFormOpen && (
                       <ExpandablePanel key="osas-submitting-organization" reduceMotion={reduceMotion} contentClassName="">
                         <div role="status">
-                          <CampusStatusNotice title="Submitting For" imageSizes="100vw">
+                          <CampusStatusNotice tone="info" title="Submitting For" imageSizes="100vw">
                             {selectedOsasOrganization.organization_name}. New submissions will be filed under this organization.
                           </CampusStatusNotice>
                         </div>
@@ -4364,7 +4358,7 @@ function StudentDashboard() {
           </SheetHeader>
 
           {requestNotice && (
-            <CampusStatusNotice title={requestNotice.title}>{requestNotice.message}</CampusStatusNotice>
+            <CampusStatusNotice tone={requestNotice.tone ?? "info"} title={requestNotice.title}>{requestNotice.message}</CampusStatusNotice>
           )}
 
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6 scrollbar-thin [&>section]:shrink-0">
@@ -4726,7 +4720,7 @@ function StudentDashboard() {
             </div>
           </SheetHeader>
 
-          <CampusStatusNotice title={proposalNotice.title}>{proposalNotice.message}</CampusStatusNotice>
+          <CampusStatusNotice tone={proposalNotice.tone ?? "info"} title={proposalNotice.title}>{proposalNotice.message}</CampusStatusNotice>
 
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
             <section className="space-y-2">
@@ -5003,7 +4997,7 @@ function StudentDashboard() {
 
           {selectedPostEventReportForDetail && (
             <>
-              <CampusStatusNotice title={postEventNotice.title}>{postEventNotice.message}</CampusStatusNotice>
+              <CampusStatusNotice tone={postEventNotice.tone ?? "info"} title={postEventNotice.title}>{postEventNotice.message}</CampusStatusNotice>
 
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
                 <section className="space-y-2">
@@ -5218,7 +5212,7 @@ function StudentDashboard() {
 
           {selectedCblVersionForDetail && (
             <>
-              <CampusStatusNotice title={cblNotice.title}>{cblNotice.message}</CampusStatusNotice>
+              <CampusStatusNotice tone={cblNotice.tone ?? "info"} title={cblNotice.title}>{cblNotice.message}</CampusStatusNotice>
 
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
                 <section className="space-y-2">

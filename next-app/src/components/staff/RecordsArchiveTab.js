@@ -7,7 +7,7 @@ import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage"
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
 
 import { Input } from "@/components/ui/input"
@@ -39,6 +39,7 @@ import {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyState,
 } from "@/components/ui/empty"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
@@ -70,9 +71,9 @@ function organizationRecord(org) {
     studentNo: org.id,
     acronym: org.acronym || org.id,
     name: org.name,
-    room: org.storage_room || 1,
-    cabinet: org.storage_cabinet || (org.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-    drawer: org.storage_drawer || "1",
+    room: org.storage_room,
+    cabinet: org.storage_cabinet,
+    drawer: org.storage_drawer,
     status: org.status,
     category: org.category || "Academic",
     adviser: org.adviser_name,
@@ -94,6 +95,7 @@ import {
   UserGroupIcon as EmptyUserGroupIcon,
   ArrowRight01Icon,
   Calendar01Icon,
+  Cancel01Icon,
   File02Icon,
   Files01Icon,
   FolderOpenIcon,
@@ -357,8 +359,10 @@ export default function RecordsArchiveTab({
   const [browseResults, setBrowseResults] = useState({ rows: [], total: 0 })
   const [browseLoading, setBrowseLoading] = useState(false)
   const [browseSortPending, setBrowseSortPending] = useState(false)
-  const [quickSearchLoading, setQuickSearchLoading] = useState(false)
+  const searchInputRef = useRef(null)
+  const searchTerm = quickQuery.trim()
   const [browseVersion, setBrowseVersion] = useState(0)
+  const searchKey = JSON.stringify([searchTerm, isOsas, showArchived, browseVersion, refreshVersion])
   const [selectedDocs, setSelectedDocs] = useState({ studentNo: null, rows: [] })
   const selectedYear = Number(breadcrumbs?.find((b) => b.level === "students")?.label.match(/\d{4}/)?.[0]) || null
   const archiveCategory = breadcrumbs?.find((b) => b.level === "organizations")?.label.replace(/ Organizations$/, "") || null
@@ -425,24 +429,29 @@ export default function RecordsArchiveTab({
   }, [isOsas, selectedYear, archiveCategory, showArchived, browseFolder, page, itemsPerPage, recordSortBy, recordSortOrder, browseVersion, refreshVersion])
 
   useEffect(() => {
-    if (!quickQuery.trim()) {
+    if (searchTerm.length < 2) {
       return
     }
     const controller = new AbortController()
     const timer = setTimeout(() => {
-      setQuickSearchLoading(true)
       const params = isOsas
-        ? new URLSearchParams({ search: quickQuery.trim(), status: showArchived ? "Archived" : "Active,Inactive", limit: "10" })
-        : new URLSearchParams({ q: quickQuery.trim(), archived: String(showArchived), pageSize: "10" })
+        ? new URLSearchParams({ search: searchTerm, status: showArchived ? "Archived" : "Active,Inactive", limit: "10" })
+        : new URLSearchParams({ q: searchTerm, archived: String(showArchived), pageSize: "10" })
       const url = isOsas ? `/api/osas/organizations?${params}` : `/api/students/browse?${params}`
       fetch(url, { cache: "no-store", signal: controller.signal })
         .then((res) => res.json())
-        .then((json) => { if (json?.ok) setBrowseResults(isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data) })
-        .catch(() => {})
-        .finally(() => { if (!controller.signal.aborted) setQuickSearchLoading(false) })
+        .then((json) => {
+          if (controller.signal.aborted) return
+          if (!json?.ok) throw new Error("Search unavailable")
+          const result = isOsas ? { rows: json.data.map(organizationRecord), total: json.total } : json.data
+          setBrowseResults({ ...result, key: searchKey })
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setBrowseResults({ rows: [], total: 0, key: searchKey, error: true })
+        })
     }, 300)
     return () => { clearTimeout(timer); controller.abort() }
-  }, [isOsas, quickQuery, showArchived, browseVersion, refreshVersion])
+  }, [isOsas, searchTerm, showArchived, searchKey])
 
 
   const [folderColors, setFolderColors] = useState({})
@@ -589,7 +598,7 @@ export default function RecordsArchiveTab({
   }
 
   const handleLocateStudentClick = (student) => {
-    onLocateStudent(student)
+    return onLocateStudent(student)
   }
 
   const handleStudentSelect = (student) => {
@@ -638,9 +647,11 @@ export default function RecordsArchiveTab({
   }
 
   // Derived filtered results
-  const filteredQuickResults = useMemo(() => {
-    return quickQuery.trim().length >= 2 ? browseResults.rows : []
-  }, [browseResults, quickQuery])
+  const quickSearchLoading = searchTerm.length >= 2 && browseResults.key !== searchKey
+  const filteredQuickResults = useMemo(
+    () => searchTerm.length >= 2 && !quickSearchLoading ? browseResults.rows : [],
+    [browseResults.rows, searchTerm, quickSearchLoading]
+  )
 
   const filteredExplorerItems = (() => {
     let items = []
@@ -749,8 +760,8 @@ export default function RecordsArchiveTab({
   })()
 
   const quickMatchCount = useMemo(() => {
-    return quickQuery.trim() ? browseResults.total : (showArchived ? archivedTabCount : activeTabCount)
-  }, [browseResults, quickQuery, showArchived, archivedTabCount, activeTabCount])
+    return searchTerm.length >= 2 ? (quickSearchLoading ? 0 : browseResults.total) : (showArchived ? archivedTabCount : activeTabCount)
+  }, [browseResults, searchTerm, quickSearchLoading, showArchived, archivedTabCount, activeTabCount])
 
   // Record Navigation for Profile Sheet (< > 01 of XX)
   const currentRecordList = useMemo(() => {
@@ -871,81 +882,114 @@ export default function RecordsArchiveTab({
           {/* Right: Filter Controls (Search FIRST, then Sort, Select All, Card/Table Toggle) */}
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* 1. Search Input Box (First) */}
-            <div className="w-full sm:w-64 md:w-72 relative group shrink-0">
+            <div className="relative w-full min-w-0 group sm:w-96 xl:w-[28rem]">
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
                 </div>
                 <Input
+                  ref={searchInputRef}
                   type="text"
+                  aria-label={isOsas ? "Search organizations" : "Search students"}
                   placeholder={isOsas ? "Search Organization" : "Search Student"}
-                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-16 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
+                  className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                   value={quickQuery}
                   onChange={(e) => setQuickQuery(e.target.value)}
                 />
-                <div className="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                  {quickMatchCount.toLocaleString()}
+                <div className="absolute inset-y-0 right-1.5 flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
+                  <span className="px-1">{quickMatchCount.toLocaleString()}</span>
+                  {quickQuery && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7"
+                          aria-label="Clear search"
+                          onClick={() => {
+                            setQuickQuery("")
+                            searchInputRef.current?.focus()
+                          }}
+                        >
+                          <Cancel01Icon size={14} aria-hidden="true" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Clear search</TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
 
               {/* Quick Search Results Dropdown Overlay */}
-              {quickQuery.trim().length >= 2 && (
+              {searchTerm.length >= 2 && (
                 <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-border bg-white shadow-lg p-2 dark:border-border dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
-                  {quickQuery.trim().length >= 2 && quickSearchLoading ? (
+                  {quickSearchLoading ? (
                     <div className="p-2 space-y-2">
                       {[1, 2, 3].map((i) => (
                         <Skeleton key={i} className="h-10 w-full rounded-lg" />
                       ))}
                     </div>
                   ) : filteredQuickResults.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-gray-900 dark:text-zinc-300">
-                      {showArchived
-                        ? (isOsas ? "No archived organizations found." : "No archived records found.")
-                        : (isOsas ? "No organizations found." : "No records found.")}
-                    </div>
+                    <EmptyState
+                      variant="compact"
+                      icon={Search01Icon}
+                      title={browseResults.error
+                        ? "Search unavailable"
+                        : `No ${showArchived ? "archived " : ""}${isOsas ? "organizations" : "records"} found`}
+                      description={browseResults.error
+                        ? "Try searching again."
+                        : isOsas
+                          ? "Try another organization name or acronym."
+                          : "Try another student name or number."}
+                    />
                   ) : (
                     filteredQuickResults.map((s) => (
                       <div
                         key={s.studentNo}
                         className="group flex cursor-pointer items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
-                        onClick={() => {
-                          handleStudentSelect(s)
-                          setQuickQuery("")
-                        }}
                       >
-                        <div className="min-w-0 flex-1 pr-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100 truncate">
-                              {s.name}
-                            </span>
-                            {isOsas && s.category && (
-                              <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-zinc-400">
-                                {s.category}
+                        <button
+                          type="button"
+                          className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md pr-2 text-left"
+                          onClick={() => {
+                            handleStudentSelect(s)
+                            setQuickQuery("")
+                          }}
+                        >
+                          <span className="min-w-0">
+                            <span className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100 truncate">
+                                {s.name}
                               </span>
-                            )}
-                          </div>
-                          <div className="text-xs font-medium text-gray-900 dark:text-zinc-300">
-                            {s.acronym || s.studentNo}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              {isOsas && s.category && (
+                                <Badge variant="secondary" size="compact" className="shrink-0 rounded-full">
+                                  {s.category}
+                                </Badge>
+                              )}
+                            </span>
+                            <span className="block truncate text-xs font-medium text-gray-900 dark:text-zinc-300">
+                              {s.acronym || s.studentNo}
+                            </span>
+                          </span>
+                          <ArrowRight01Icon size="1em" aria-hidden="true" className="shrink-0 text-sm text-muted-foreground" />
+                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  handleLocateStudentClick(s)
-                                  setQuickQuery("")
+                                  if (handleLocateStudentClick(s)) setQuickQuery("")
                                 }}
                                 className="w-7 h-7 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-zinc-100 flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer active:scale-95"
-                                title="Locate in Storage"
+                                aria-label={`Locate archive drawer for ${s.name}`}
                               >
                                 <Location01Icon size="1em" className="text-[14px]" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>Locate in Archive</TooltipContent>
                           </Tooltip>
-                          <ArrowRight01Icon size="1em" className="text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></ArrowRight01Icon>
                         </div>
                       </div>
                     ))
@@ -1496,19 +1540,7 @@ export default function RecordsArchiveTab({
               const res = await fetch(`/api/students/${encodeURIComponent(targetStudentNo)}`);
               const json = await res.json();
               if (json?.ok && json?.data) {
-                const updated = json.data;
-                const formatted = {
-                  studentNo: updated.student_no,
-                  name: updated.name,
-                  odrsEmail: updated.odrsEmail,
-                  courseCode: updated.course_code,
-                  yearLevel: updated.year_level,
-                  section: updated.section,
-                  room: updated.room,
-                  cabinet: updated.cabinet,
-                  drawer: updated.drawer,
-                  status: updated.status,
-                };
+                const formatted = organizationRecord(json.data);
                 setActiveStudent((prev) => (prev?.studentNo === targetStudentNo ? { ...prev, ...formatted } : prev));
                 setSelectedStudent((prev) => (prev?.studentNo === targetStudentNo ? { ...prev, ...formatted } : prev));
               }
@@ -1541,9 +1573,9 @@ export default function RecordsArchiveTab({
                   studentNo: updated.id,
                   acronym: updated.acronym || updated.id,
                   name: updated.name,
-                  room: updated.storage_room || 1,
-                  cabinet: updated.storage_cabinet || (updated.category === "Academic" ? "ACADEMIC ORGANIZATIONS" : "NON-ACADEMIC ORGANIZATIONS"),
-                  drawer: updated.storage_drawer || "1",
+                  room: updated.storage_room,
+                  cabinet: updated.storage_cabinet,
+                  drawer: updated.storage_drawer,
                   category: updated.category,
                   adviser: updated.adviser_name,
                   rawOrg: updated,

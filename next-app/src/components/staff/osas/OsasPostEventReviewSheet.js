@@ -1,12 +1,11 @@
 "use client";
-import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
+import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
 import {
   OsasSheetInfoRow as InfoRow,
-  OsasSheetSectionHeading as SectionHeading,
   OsasSheetSummaryBadge,
 } from "./OsasReviewSheetMetadata";
 import { Badge } from "@/components/ui/badge";
@@ -30,20 +29,23 @@ import {
   getPostEventStatusBadgeClass,
 } from "@/components/staff/OsasMonitoringTab";
 import {
-  Alert02Icon, Building01Icon, Calendar01Icon, Cancel01Icon, ClipboardIcon, Clock01Icon,
-  Coins01Icon, CovidInfoIcon, File02Icon, Loading01Icon, Mail01Icon,
+  Building01Icon, Calendar01Icon, Cancel01Icon, ClipboardIcon, Clock01Icon,
+  Coins01Icon, File02Icon, Loading01Icon, Mail01Icon,
   Tag01Icon, UserIcon, UserSearch01Icon,
 } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const CLEARED_NOTICE = {
+  tone: "success",
   title: "Post-Event Report Cleared",
   message: "OSAS cleared the narrative and liquidation report.",
 };
 const REVISION_NOTICE = {
+  tone: "warning",
   title: "Revision Required",
   message: "The student organization must revise and resubmit the requested documents or report details.",
 };
 const DECLINED_NOTICE = {
+  tone: "danger",
   title: "Post-Event Report Declined",
   message: "OSAS declined this post-event report.",
 };
@@ -56,7 +58,7 @@ const POST_EVENT_STATUS_NOTICES = {
   RevisionRequested: REVISION_NOTICE,
   Declined: DECLINED_NOTICE,
   Rejected: DECLINED_NOTICE,
-  Submitted: { title: "Report Submitted", message: "The post-event report is awaiting OSAS review." },
+  Submitted: { tone: "info", title: "Report Submitted", message: "The post-event report is awaiting OSAS review." },
 };
 
 export default function OsasPostEventReviewSheet({
@@ -167,7 +169,7 @@ export default function OsasPostEventReviewSheet({
           </div>
         </SheetHeader>
 
-        <CampusStatusNotice title={statusNotice.title}>
+        <CampusStatusNotice tone={statusNotice.tone ?? "info"} title={statusNotice.title}>
           {statusNotice.message}
         </CampusStatusNotice>
 
@@ -180,7 +182,7 @@ export default function OsasPostEventReviewSheet({
           </div>
 
           <section className="space-y-2">
-            <SectionHeading icon={ClipboardIcon} title="Clearance Specification" />
+            <SheetSectionHeading icon={ClipboardIcon} title="Clearance Specification" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Building01Icon} label="Organization" value={selectedPostEvent.organization_name} />
               <InfoRow icon={UserIcon} label="Submitter">
@@ -223,16 +225,12 @@ export default function OsasPostEventReviewSheet({
 
           {/* SECTION 2: Accomplishment Narrative & Previous Remarks */}
           <div className="space-y-3 pt-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Narrative & Evaluation History
-            </h4>
+            <SheetSectionHeading icon={ClipboardIcon} title="Narrative & Evaluation History" />
 
             {/* Narrative summary */}
             {selectedPostEvent.narrative_summary && (
               <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Accomplishment & Narrative Summary
-                </span>
+                <SheetSectionHeading icon={File02Icon} title="Accomplishment & Narrative Summary" />
                 <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                   {selectedPostEvent.narrative_summary}
                 </p>
@@ -264,14 +262,11 @@ export default function OsasPostEventReviewSheet({
 
           {/* SECTION 3: Official Compliance Documents */}
           <div className="space-y-2.5 pt-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Compliance Attachments
-              </h4>
+            <SheetSectionHeading icon={File02Icon} title="Compliance Attachments">
               <span className="text-[11px] text-slate-400 dark:text-zinc-500">
                 Official files submitted for clearance
               </span>
-            </div>
+            </SheetSectionHeading>
 
             <div className="space-y-2">
               {/* Narrative Report Row */}
@@ -342,16 +337,13 @@ export default function OsasPostEventReviewSheet({
 
           {/* SECTION 4: Clearance Evaluation & Decision */}
           <div className="space-y-3.5 pt-2 border-t border-border/80 dark:border-border">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Clearance Evaluation
-              </h4>
+            <SheetSectionHeading icon={Calendar01Icon} title="Clearance Evaluation">
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
                 {postEventStatus !== selectedPostEvent.status
                   ? `Move to: ${postEventStatus}`
                   : `Current: ${selectedPostEvent.status}`}
               </OsasSheetSummaryBadge>
-            </div>
+            </SheetSectionHeading>
 
             {/* Quick Stage Selection Pills */}
             <div className="space-y-1.5">
@@ -396,31 +388,15 @@ export default function OsasPostEventReviewSheet({
 
             {/* Contextual Warning */}
             {isRevokingClearance && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300 flex items-start gap-2.5">
-                <Alert02Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-amber-950 dark:text-amber-200">
-                    Revoking Clearance
-                  </p>
-                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300/90">
-                    Revokes approved clearance and returns report to evaluation. Written justification note (min 5 chars) is mandatory.
-                  </p>
-                </div>
-              </div>
+              <CampusStatusNotice tone="warning" title="Revoking Clearance">
+                Revokes approved clearance and returns report to evaluation. Written justification note (min 5 chars) is mandatory.
+              </CampusStatusNotice>
             )}
 
             {isRequestingRevision && (
-              <div className="rounded-xl border border-sky-200 bg-sky-50/80 p-3 text-xs text-sky-900 dark:border-sky-800/40 dark:bg-sky-950/30 dark:text-sky-300 flex items-start gap-2.5">
-                <CovidInfoIcon size="1em" className="text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-sky-950 dark:text-sky-200">
-                    Revision Instructions Required
-                  </p>
-                  <p className="text-[11px] leading-relaxed text-sky-800 dark:text-sky-300/90">
-                    Provide detailed instructions specifying what receipts or narrative items need amendment.
-                  </p>
-                </div>
-              </div>
+              <CampusStatusNotice tone="warning" title="Revision Instructions Required">
+                Provide detailed instructions specifying what receipts or narrative items need amendment.
+              </CampusStatusNotice>
             )}
 
             {/* Remarks Textarea */}
@@ -451,7 +427,7 @@ export default function OsasPostEventReviewSheet({
             </div>
           </div>
           <section className="space-y-3">
-            <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
+            <SheetSectionHeading icon={Clock01Icon} title="Evaluation Timeline & Updates">
               <OsasSheetSummaryBadge icon={Clock01Icon}>
                 {selectedPostEvent.updates?.length ?? 0} {selectedPostEvent.updates?.length === 1 ? "update" : "updates"}
               </OsasSheetSummaryBadge>

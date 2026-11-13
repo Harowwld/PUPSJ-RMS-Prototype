@@ -1,6 +1,7 @@
 "use client"
 
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import useOsasViewPreference from "@/hooks/useOsasViewPreference"
@@ -674,43 +675,12 @@ export default function ScanUploadTab({
             }
           />
 
-          {/* Workstation Hardware & Digitization Path Banner */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 bg-slate-50/70 dark:bg-zinc-900/60 border-b border-border dark:border-border text-xs">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-
-                <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
-                  Workstation:
-                </span>
-                <span className="font-semibold text-gray-800 dark:text-zinc-200">
-                  {authUser?.station_name || `${(authUser?.office_id || "REG").toUpperCase()}-ARCHIVE-PC01`}
-                </span>
-              </div>
+          <NoticeBanner title={authUser?.station_name || `${(authUser?.office_id || "REG").toUpperCase()}-ARCHIVE-PC01`}>
+            <div className="flex flex-wrap gap-x-4 text-white/90">
+              <span>Digitization save path: {authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}</span>
+              <span>Scanner inbound: {authUser?.inbound_path || `.local/hot-folder/${authUser?.office_id || "registrar"}/INBOUND`}</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
-                Digitization Save Path:
-              </span>
-              <span
-                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
-                title={authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
-              >
-                {authUser?.storage_path || `.local/storage/${authUser?.office_id || "registrar"}/uploads`}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-900 dark:text-zinc-300 uppercase tracking-wider">
-                Scanner Inbound:
-              </span>
-              <span
-                className="text-[11px] font-medium text-gray-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-border dark:border-border px-2.5 py-0.5 rounded-lg truncate max-w-[340px]"
-                title={authUser?.inbound_path || `.local/hot-folder/${authUser?.office_id || "registrar"}/INBOUND`}
-              >
-                {authUser?.inbound_path || `.local/hot-folder/${authUser?.office_id || "registrar"}/INBOUND`}
-              </span>
-            </div>
-          </div>
+          </NoticeBanner>
 
           <ContinuousScanningPanel onOpenReview={onOpenBatchReview} showToast={showToast} />
 
@@ -1151,28 +1121,17 @@ export default function ScanUploadTab({
 
                   {/* Rescan / Replacement Mode Banner (Attached edge-to-edge alert) */}
                   {(isReplaceMode || rescanContext || existingDocOnRecord) && (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all select-none">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <AppIcon className={cn(isReplaceMode || rescanContext ? " ReloadIcon text-[16px] text-amber-600 dark:text-amber-400 shrink-0" : " Alert02Icon text-[16px] text-amber-600 dark:text-amber-400 shrink-0")} />
-                        <div className="min-w-0">
-                          <span className="font-semibold text-amber-950 dark:text-amber-100 mr-1.5">
-                            {isReplaceMode || rescanContext ? "Rescan / Replacement Mode Active:" : "Existing Document On Record:"}
-                          </span>
-                          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                            {isReplaceMode || rescanContext
-                              ? `Submitting will update the on-file digital record for ${newRec.docType || "this document"} in-place and queue the new scan for administrative review.`
-                              : `A digital copy of ${newRec.docType || "this document"} already exists for this ${isOsas ? "organization" : "student"}. Enable replacement mode to rescan and overwrite the copy on file.`}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="-my-1 shrink-0 flex items-center gap-2 self-start sm:self-auto">
+                    <NoticeBanner
+                      tone="warning"
+                      title={isReplaceMode || rescanContext ? "Rescan / Replacement Mode Active" : "Existing Document On Record"}
+                      action={
+                        <div className="flex flex-wrap items-center gap-2">
                         {rescanContext?.docId && onPreviewDocument && (
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={() => onPreviewDocument(rescanContext.docType, newRec.name, rescanContext.targetId, rescanContext.docId)}
-                            className="h-8 px-3 text-xs font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-xl cursor-pointer shadow-2xs active:scale-95 transition-all"
                             title="View current on-file version in modal"
                           >
                             View Copy
@@ -1182,10 +1141,9 @@ export default function ScanUploadTab({
                           onCancelRescan && (
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
                               onClick={onCancelRescan}
-                              className="h-8 px-3 text-xs font-semibold text-amber-900 border-amber-300/80 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/40 rounded-xl cursor-pointer shadow-2xs active:scale-95 transition-all"
                             >
                               Cancel
                             </Button>
@@ -1194,14 +1152,19 @@ export default function ScanUploadTab({
                           <Button
                             type="button"
                             size="sm"
+                            variant="secondary"
                             onClick={() => setIsReplaceMode(true)}
-                            className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500 cursor-pointer shadow-2xs active:scale-95 transition-all"
                           >
                             Replace Document
                           </Button>
                         )}
-                      </div>
-                    </div>
+                        </div>
+                      }
+                    >
+                      {isReplaceMode || rescanContext
+                        ? `Submitting will update the on-file digital record for ${newRec.docType || "this document"} in-place and queue the new scan for administrative review.`
+                        : `A digital copy of ${newRec.docType || "this document"} already exists for this ${isOsas ? "organization" : "student"}. Enable replacement mode to rescan and overwrite the copy on file.`}
+                    </NoticeBanner>
                   )}
 
                   <div className="p-5 bg-white dark:bg-transparent">
@@ -1526,12 +1489,9 @@ export default function ScanUploadTab({
                           /* Existing Student Record Form for Registrar */
                           <div className="space-y-5">
                             {ocrMismatch && (
-                              <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
-                                <p className="text-xs font-semibold">OCR identifies a different student</p>
-                                <p className="mt-1 text-[11px] leading-relaxed">
-                                  The scanned document appears to belong to {ocrMismatch.candidateStudentName} ({ocrMismatch.candidateStudentNo}), while {ocrMismatch.selectedStudentName} ({ocrMismatch.selectedStudentNo}) is selected. Review the assignment before filing.
-                                </p>
-                              </div>
+                              <NoticeBanner role="alert" tone="warning" title="OCR identifies a different student">
+                                The scanned document appears to belong to {ocrMismatch.candidateStudentName} ({ocrMismatch.candidateStudentNo}), while {ocrMismatch.selectedStudentName} ({ocrMismatch.selectedStudentNo}) is selected. Review the assignment before filing.
+                              </NoticeBanner>
                             )}
                             {uploadStudentIsExisting && (
                               <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">

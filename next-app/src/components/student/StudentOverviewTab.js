@@ -1,5 +1,7 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import React, { useMemo, useState } from "react";
 
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
@@ -708,18 +710,13 @@ export default function StudentOverviewTab({
             </div>
 
             {/* Attached Edge-to-Edge Bottom Notice Strip */}
-            <div className="px-6 py-2.5 border-t border-border/80 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-zinc-300 min-w-0">
-                <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm shrink-0" />
-                <span className="truncate text-xs font-medium">
-                  {normalizeStatus(activeRequest.status) === "ready"
-                    ? "Your document is sealed and ready for release at Registrar Window 2. Bring a valid student ID."
-                    : normalizeStatus(activeRequest.status) === "pendingpayment"
-                    ? "Payment pending. Please upload the official university payment receipt to continue."
-                    : "Official turnaround standard: 3 to 5 business days from verification."}
-                </span>
-              </div>
-            </div>
+            <NoticeBanner tone={normalizeStatus(activeRequest.status) === "ready" ? "success" : normalizeStatus(activeRequest.status) === "pendingpayment" ? "warning" : "info"}>
+              {normalizeStatus(activeRequest.status) === "ready"
+                ? "Your document is sealed and ready for release at Registrar Window 2. Bring a valid student ID."
+                : normalizeStatus(activeRequest.status) === "pendingpayment"
+                ? "Payment pending. Please upload the official university payment receipt to continue."
+                : "Official turnaround standard: 3 to 5 business days from verification."}
+            </NoticeBanner>
           </div>
         ) : (
           <EmptyState
@@ -1012,24 +1009,22 @@ export default function StudentOverviewTab({
           </SheetHeader>
 
           {/* Line-Attached Edge-to-Edge Status Notice */}
-          <div className="flex items-center gap-2.5 px-6 py-2.5 text-xs border-b border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200 transition-colors shrink-0">
-            <Shield01Icon size="1em" className="text-[15px] shrink-0 text-blue-600 dark:text-blue-400" />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">
-                {selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
-                  ? "Liquidation Cleared:"
-                  : "Report Submitted:"}
-              </strong>{" "}
-              <NarrativeText
+          <NoticeBanner tone={["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status) ? "success" : selectedPostEventDetail?.status === "Needs Revision" ? "warning" : selectedPostEventDetail?.status === "Declined" ? "danger" : "info"} title={["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status)
+                  ? "Liquidation Cleared"
+                  : selectedPostEventDetail?.status === "Needs Revision" ? "Revision Required" : selectedPostEventDetail?.status === "Declined" ? "Report Declined" : "Report Submitted"}>
+            <NarrativeText
                 text={
-                  selectedPostEventDetail?.status === "Approved" || selectedPostEventDetail?.status === "Completed"
+                  ["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status)
                     ? "Financial liquidation statement and narrative report approved by OSAS."
+                    : selectedPostEventDetail?.status === "Needs Revision"
+                    ? "Review the feedback and resubmit the report."
+                    : selectedPostEventDetail?.status === "Declined"
+                    ? "OSAS declined the report."
                     : "Documentation is logged and pending OSAS financial liquidation evaluation."
                 }
                 mode="full"
               />
-            </span>
-          </div>
+          </NoticeBanner>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* Unboxed Event Identity Block */}
@@ -1052,9 +1047,7 @@ export default function StudentOverviewTab({
 
             {/* Post-Event Specification (Unboxed InfoRow List) */}
             <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Post-Event Specification
-              </h4>
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Post-Event Specification" />
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
                 <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
@@ -1070,9 +1063,7 @@ export default function StudentOverviewTab({
             {/* Attached Report Documents (Unboxed, Single Sleek Rows) */}
             {(selectedPostEventDetail?.narrative_original_filename || selectedPostEventDetail?.liquidation_original_filename) && (
               <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Attached Report Documents
-                </h4>
+                <SheetSectionHeading icon="Attachment01Icon" title="Attached Report Documents" />
                 <div className="space-y-2">
                   {selectedPostEventDetail?.narrative_original_filename && (
                     <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">

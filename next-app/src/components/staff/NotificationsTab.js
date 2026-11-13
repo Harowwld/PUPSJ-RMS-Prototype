@@ -1,4 +1,6 @@
 "use client";
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
 
@@ -61,7 +63,7 @@ import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TablePagination from "@/components/shared/TablePagination";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
-import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon, Alert01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, LinkSquare01Icon, Mail01Icon, TickDouble01Icon, Search01Icon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, NotificationOff01Icon as EmptyNotificationOff01Icon, Search01Icon as EmptySearch01Icon, TickDouble01Icon as EmptyTickDouble01Icon, Cancel01Icon, CovidInfoIcon, File02Icon, LinkSquare01Icon, Mail01Icon, TickDouble01Icon, Search01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Returns icon, badge styling, and title accent for a notification type & status.
@@ -1075,12 +1077,7 @@ export default function NotificationsTab({
 
                 {/* 1. Event Narrative / Message */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <AppIcon className=" Message01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                      Event Summary
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon="Message01Icon" title="Event Summary" />
                   <div className="pt-2">
                     <p className="text-xs text-gray-700 dark:text-zinc-200 leading-relaxed font-medium">
                       <NarrativeText text={selectedNotif.message} mode="full" />
@@ -1088,31 +1085,16 @@ export default function NotificationsTab({
 
                     {/* Rejection Note Banner */}
                     {selectedNotif.approval_status === "Declined" && selectedNotif.review_note && (
-                      <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 dark:border-rose-900/40 dark:bg-rose-950/25">
-                        <div className="flex gap-2.5">
-                          <Alert01Icon size="1em" className="text-rose-600 dark:text-rose-400 text-base shrink-0 mt-0.5" />
-                          <div className="text-xs space-y-1">
-                            <span className="font-bold text-rose-950 dark:text-rose-300 block tracking-wider text-[10px] uppercase">
-                              Reviewer Rejection Reason
-                            </span>
-                            <p className="text-rose-900 dark:text-rose-200 leading-relaxed font-medium italic">
-                              &ldquo;{selectedNotif.review_note}&rdquo;
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                      <NoticeBanner tone="danger" title="Reviewer Rejection Reason" className="mt-3">
+                        &ldquo;{selectedNotif.review_note}&rdquo;
+                      </NoticeBanner>
                     )}
                   </div>
                 </div>
 
                 {/* 2. Structured Information Section (InfoRow label : value) */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                    <CovidInfoIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                      Notification Specification
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon={CovidInfoIcon} title="Notification Specification" />
                   <div className="py-1">
                     {(() => {
                       const ui = getNotificationVisuals(selectedNotif);
@@ -1243,12 +1225,7 @@ export default function NotificationsTab({
                 {(selectedNotif.entity_type === "document" || selectedNotif.metadata?.document_id) && (
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                      <div className="flex items-center gap-2">
-                        <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                          Document Preview
-                        </h3>
-                      </div>
+                      <SheetSectionHeading icon={File02Icon} title="Document Preview" divider={false} />
                       <Button
                         variant="outline"
                         size="sm"

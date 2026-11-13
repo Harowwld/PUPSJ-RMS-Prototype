@@ -676,74 +676,18 @@ All selectable cards, preset cards, checklist cards, icon picker tiles, and pres
 </button>
 ```
 
-## 6. Standard Alert & Notice Banners (Edge-to-Edge Line Attached)
+## 6. Status and Notice Banners
 
-Use `@/components/shared/NoticeBanner` with `tone="info|warning|success|danger"`, an optional `action`, and a stable entity-specific `dismissKey` for session persistence. Existing parent-owned dismissal can use `onDismiss` instead. Place the component directly in the unpadded card/sheet/dialog shell between content tiers, not inside the padded form body. It supplies direct Hugeicons, semantic status/alert roles, shared colors, and an accessible dismiss control. Structured fields, guardian details, previews, and verification panels remain form/data groups.
+Use `NoticeBanner` from `@/components/shared/NoticeBanner` for full-width notices in dashboards, sheets, and dialogs. It supplies the campus photo, a status tint, white text, and a decorative status icon. Place persistent status banners directly below the header. Place contextual notices next to the action they explain.
 
-Alert and warning banners must never float as disconnected island cards (`mx-5 my-3.5 rounded-xl border`) inside cards or forms. Instead, all context notices, warnings, and status reminders must be **attached edge-to-edge directly to container divider lines** (`border-b` underneath card/section headers, or `border-t border-b` between layout tiers), taking up the exact line/space where they are located.
+| Tone | Use |
+|---|---|
+| `info` | Pending review, in-progress work, and general guidance |
+| `success` | Approved, verified, ready, or completed |
+| `warning` | Revision required, pending payment, or inactive |
+| `danger` | Declined, cancelled, errors, or critical events |
 
-### 6.1 Core Architectural Principles
-1. **Edge-to-Edge Line Attachment**: Zero outer margin (`mx-0 my-0`) and zero border radius (`rounded-none`). The banner attaches directly to the header divider line (`border-b`) or content separator, spanning the full 100% width of the card.
-2. **Snug Line Padding**: Use `px-5 sm:px-6 py-2.5` to maintain snug vertical rhythm without artificial layout blowout.
-3. **Typography & Strong Lead**: Always lead with a bold category label (e.g., `Archived Department Notice:`, `Rescan / Replacement Mode Active:`, `Pending Post-Event Compliance:`) in high-contrast text (`text-amber-950 dark:text-amber-100 font-semibold`), followed by concise message copy (`text-[11.5px] sm:text-xs leading-normal`).
-4. **Leading Status Icon**: 16px Hugeicons component (`size={16}`, `shrink-0`) matching the banner theme.
-5. **Direct Micro-Actions**: When an immediate remedy is available (e.g. `Restore`, `Replace Document`, `View Copy`), provide a compact micro-button (`h-7 px-2.5 text-[11px] font-semibold rounded-lg shadow-2xs active:scale-95`).
-6. **Dismissable Interaction**: Use the shared `NoticeBanner` dismiss control, which includes an accessible Hugeicons cancel symbol and session persistence when given a `dismissKey`.
-
-### 6.2 Color Palette Variants
-
-| Variant | Container Classes | Icon & Accent | Usage |
-|---|---|---|---|
-| **Warning / Amber** | `border-b border-amber-200/90 bg-amber-50/90 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200` | `AlertCircleIcon` with amber foreground | Archived department notice, rescan replacement mode, ticket duplicates, missing compliance |
-| **Success / Emerald** | `border-b border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200` | `CheckmarkCircle02Icon` with emerald foreground | Verified officer authorization, active system synchronization, verified credential status |
-| **Information / Blue** | `border-b border-blue-200/90 bg-blue-50/90 text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200` | `InformationCircleIcon` with blue foreground | Operational advisories, maintenance schedules, read-only mode alerts |
-| **Destructive / Rose** | `border-b border-rose-200/90 bg-rose-50/90 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200` | `AlertCircleIcon` with rose foreground | Rejection reasons, revoked credentials, severe security restriction warnings |
-
-### 6.3 Canonical Code Blueprint (Dismissable Line-Attached Alert)
-
-```jsx
-import { AlertCircleIcon, Cancel01Icon } from "hugeicons-react";
-
-{/* Attached edge-to-edge dismissable alert taking the line */}
-{isNoticeActive && !isNoticeDismissed && (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
-    {/* Left: Icon & Typographic Notice */}
-    <div className="flex items-center gap-2.5 min-w-0">
-      <AlertCircleIcon size={16} aria-hidden="true" className="shrink-0 text-amber-600 dark:text-amber-400" />
-      <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-        <strong className="font-semibold text-amber-950 dark:text-amber-100">
-          Archived Department Notice:
-        </strong>{" "}
-        This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold text-amber-950 dark:text-amber-100">Departments & Stations</strong> to change feature access.
-      </span>
-    </div>
-
-    {/* Right: Quick Action & Dismiss Button */}
-    <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-      {onAction && (
-        <button
-          type="button"
-          onClick={onAction}
-          className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600 text-[11px] font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs flex items-center justify-center active:scale-95"
-        >
-          Restore
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={handleDismissNotice}
-        className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-        aria-label="Dismiss notice"
-        title="Dismiss notice"
-      >
-        <Cancel01Icon size={16} aria-hidden="true" />
-      </button>
-    </div>
-  </div>
-)}
-```
-
----
+Use `title` for the lead text, `action` for a related control, and `dismissKey` for session-persistent dismissal. Supply `onDismiss` when the parent owns dismissal. The banner uses a status role by default and an alert role for danger.
 
 ## 7. Color Tokens & Brand Styles
 

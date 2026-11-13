@@ -1,12 +1,11 @@
 "use client";
-import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
+import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
 import {
   OsasSheetInfoRow as InfoRow,
-  OsasSheetSectionHeading as SectionHeading,
   OsasSheetSummaryBadge,
 } from "./OsasReviewSheetMetadata";
 import { Badge } from "@/components/ui/badge";
@@ -33,18 +32,18 @@ import {
 import { NarrativePersonBadge } from "@/components/shared/NarrativeText";
 import PDFPreview from "@/components/shared/PDFPreview";
 import {
-  Alert02Icon, ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
+  ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
   Cancel01Icon, Clock01Icon, Coins01Icon, CovidInfoIcon, File02Icon, HourglassIcon,
-  Loading01Icon, Location01Icon, Mail01Icon, ReloadIcon, Tag01Icon, UserCircleIcon,
+  Loading01Icon, Location01Icon, Mail01Icon, Tag01Icon, UserCircleIcon,
   UserIcon, UserSearch01Icon,
 } from "hugeicons-react";
 import { EmptyState } from "@/components/ui/empty";
 const PROPOSAL_STATUS_NOTICES = {
-  Approved: { title: "Proposal Approved", message: "OSAS has approved this event proposal." },
-  "Needs Revision": { title: "Revision Required", message: "The proponent must revise and resubmit the proposal based on the evaluator’s notes." },
-  Declined: { title: "Proposal Declined", message: "OSAS declined this event proposal." },
-  Submitted: { title: "Proposal Submitted", message: "The proposal is awaiting OSAS review." },
-  Archived: { title: "Proposal Archived", message: "This proposal is in the archive." },
+  Approved: { tone: "success", title: "Proposal Approved", message: "OSAS has approved this event proposal." },
+  "Needs Revision": { tone: "warning", title: "Revision Required", message: "The proponent must revise and resubmit the proposal based on the evaluator’s notes." },
+  Declined: { tone: "danger", title: "Proposal Declined", message: "OSAS declined this event proposal." },
+  Submitted: { tone: "info", title: "Proposal Submitted", message: "The proposal is awaiting OSAS review." },
+  Archived: { tone: "info", title: "Proposal Archived", message: "This proposal is in the archive." },
 };
 
 export default function OsasProposalReviewSheet({
@@ -166,7 +165,7 @@ export default function OsasProposalReviewSheet({
           </div>
         </SheetHeader>
 
-        <CampusStatusNotice title={statusNotice.title}>
+        <CampusStatusNotice tone={statusNotice.tone ?? "info"} title={statusNotice.title}>
           {statusNotice.message}
         </CampusStatusNotice>
 
@@ -179,7 +178,7 @@ export default function OsasProposalReviewSheet({
           </div>
 
           <section className="space-y-2">
-            <SectionHeading icon={Building01Icon} title="Organization Information" />
+            <SheetSectionHeading icon={Building01Icon} title="Organization Information" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Building01Icon} label="Organization" value={selected.verified_org_name || selected.organization_name} />
               <InfoRow icon={UserIcon} label="Proponent">
@@ -205,7 +204,7 @@ export default function OsasProposalReviewSheet({
                 <div className="min-w-0 flex-1 basis-44 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle>
-                      <h5 className="flex items-center gap-2">
+                      <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
                         <BookOpen01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-400 dark:text-zinc-500" />
                         Constitution &amp; By-Laws
                       </h5>
@@ -225,8 +224,8 @@ export default function OsasProposalReviewSheet({
                   <EmptyState
                     variant="compact"
                     icon={BookOpen01Icon}
-                    title="No active charter on file"
-                    className="w-full"
+                    title="No Active By-Laws on File"
+                    description="This organization has no approved Constitution & By-Laws available to review."
                   />
                 )}
 
@@ -250,7 +249,7 @@ export default function OsasProposalReviewSheet({
           </section>
 
           <section className="space-y-2">
-            <SectionHeading icon={BookOpen01Icon} title="Proposal Specification" />
+            <SheetSectionHeading icon={BookOpen01Icon} title="Proposal Specification" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Tag01Icon} label="Proposal Status">
                 <Badge variant="gray" size="compact" className={getProposalStatusBadgeClass(selected.status)}>
@@ -283,14 +282,12 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 2: Objectives & Charter Compliance */}
           <div className="space-y-3 pt-2">
-            <SectionHeading icon={CovidInfoIcon} title="Overview & Compliance" />
+            <SheetSectionHeading icon={CovidInfoIcon} title="Overview & Compliance" />
 
             {/* Description / Summary if available */}
             {selected.description && (
               <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Event Description & Objectives
-                </span>
+                <SheetSectionHeading icon={File02Icon} title="Event Description & Objectives" />
                 <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                   {selected.description}
                 </p>
@@ -344,14 +341,14 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 3: Official Proposal Document Preview */}
           <div className="space-y-2.5 pt-2">
-            <SectionHeading icon={File02Icon} title="Official Proposal Document">
+            <SheetSectionHeading icon={File02Icon} title="Official Proposal Document">
               {(selected.id || selected.url) && (
                 <SheetPreviewButton
                   label="Preview Proposal PDF"
                   onClick={() => handleOpenPdfPreview?.(selected)}
                 />
               )}
-            </SectionHeading>
+            </SheetSectionHeading>
 
             {selected.id ? (
               <div className="relative h-[clamp(480px,65dvh,640px)] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
@@ -365,7 +362,10 @@ export default function OsasProposalReviewSheet({
           {selected.versions?.length > 1 && (
             <details className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                <span>Submitted PDF versions</span>
+                <span className="flex items-center gap-2 font-bold uppercase tracking-wider">
+                  <File02Icon size={14} aria-hidden="true" className="shrink-0 text-pup-maroon dark:text-red-400" />
+                  Submitted PDF Versions
+                </span>
                 <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                   {selected.versions.length}
                 </span>
@@ -406,11 +406,11 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 4: Evaluation & Stage Decision */}
           <div className="space-y-3.5 pt-2">
-            <SectionHeading icon={Calendar01Icon} title="Evaluation & Decision">
+            <SheetSectionHeading icon={Calendar01Icon} title="Evaluation & Decision">
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
                 Stage: {selected.status}
               </OsasSheetSummaryBadge>
-            </SectionHeading>
+            </SheetSectionHeading>
 
             {/* Quick Stage Selection Pills */}
             <div className="space-y-1.5">
@@ -458,45 +458,21 @@ export default function OsasProposalReviewSheet({
 
             {/* Contextual Warning / Guidance Callouts */}
             {isRevokingApproval && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300 flex items-start gap-2.5">
-                <Alert02Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-amber-950 dark:text-amber-200">
-                    Revoking Official Approval
-                  </p>
-                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300/90">
-                    Cancels post-event compliance tracking for this organization and returns proposal to evaluation. Justification note (min 5 chars) is mandatory.
-                  </p>
-                </div>
-              </div>
+              <CampusStatusNotice tone="warning" title="Revoking Official Approval">
+                Cancels post-event compliance tracking for this organization and returns proposal to evaluation. Justification note (min 5 chars) is mandatory.
+              </CampusStatusNotice>
             )}
 
             {isReopeningDeclined && (
-              <div className="rounded-xl border border-purple-200 bg-purple-50/80 p-3 text-xs text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/30 dark:text-purple-300 flex items-start gap-2.5">
-                <ReloadIcon size="1em" className="text-base text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-purple-950 dark:text-purple-200">
-                    Reopening Declined Proposal
-                  </p>
-                  <p className="text-[11px] leading-relaxed text-purple-800 dark:text-purple-300/90">
-                    A written justification note citing grounds for reconsideration is required.
-                  </p>
-                </div>
-              </div>
+              <CampusStatusNotice tone="info" title="Reopening Declined Proposal">
+                A written justification note citing grounds for reconsideration is required.
+              </CampusStatusNotice>
             )}
 
             {isRequestingRevision && (
-              <div className="rounded-xl border border-sky-200 bg-sky-50/80 p-3 text-xs text-sky-900 dark:border-sky-800/40 dark:bg-sky-950/30 dark:text-sky-300 flex items-start gap-2.5">
-                <CovidInfoIcon size="1em" className="text-base text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-sky-950 dark:text-sky-200">
-                    Revision Instructions Required
-                  </p>
-                  <p className="text-[11px] leading-relaxed text-sky-800 dark:text-sky-300/90">
-                    Provide detailed instructions explaining what documents or aspects must be updated by the student organization.
-                  </p>
-                </div>
-              </div>
+              <CampusStatusNotice tone="warning" title="Revision Instructions Required">
+                Provide detailed instructions explaining what documents or aspects must be updated by the student organization.
+              </CampusStatusNotice>
             )}
 
             {/* Justification / Remarks Textarea */}
@@ -528,7 +504,7 @@ export default function OsasProposalReviewSheet({
           </div>
 
           <section className="space-y-3">
-            <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
+            <SheetSectionHeading icon={Clock01Icon} title="Evaluation Timeline & Updates">
               <OsasSheetSummaryBadge icon={Clock01Icon}>
                 {eventCount} {eventCount === 1 ? "update" : "updates"}
               </OsasSheetSummaryBadge>

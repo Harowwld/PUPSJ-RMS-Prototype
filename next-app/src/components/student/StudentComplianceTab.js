@@ -171,23 +171,23 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
         actions={<RefreshButton onRefresh={refresh} isLoading={loading} title="Refresh Checklist" />}
       />
       {data && !canVerify && (
-        <CampusStatusNotice title="For Current Students" imageSizes="100vw">
+        <CampusStatusNotice tone="info" title="For Current Students" imageSizes="100vw">
           This checklist covers enrollment documents. Personal submission status is available after verification.
         </CampusStatusNotice>
       )}
       {error && filtered.length > 0 && (
-        <p role="alert" className="border-b border-border px-6 py-3 text-sm text-destructive">{error}</p>
+        <CampusStatusNotice tone="danger" imageSizes="100vw">{error}</CampusStatusNotice>
       )}
       {canVerify && !verified && (initialLoading ? (
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-muted/30 px-6 py-3">
           <StudentChecklistVerificationSkeleton />
         </div>
       ) : data?.verificationUnavailable ? (
-        <CampusStatusNotice title="Verification Temporarily Unavailable" imageSizes="100vw">
+        <CampusStatusNotice tone="warning" title="Verification Temporarily Unavailable" imageSizes="100vw">
           Personal checklist status will be available after the records system update.
         </CampusStatusNotice>
       ) : data?.unavailable ? (
-        <CampusStatusNotice title="Registrar Record Unavailable" imageSizes="100vw">
+        <CampusStatusNotice tone="warning" title="Registrar Record Unavailable" imageSizes="100vw">
           Contact the Registrar to check your record’s status.
         </CampusStatusNotice>
       ) : data && (

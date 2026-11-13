@@ -1,4 +1,6 @@
 "use client"
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
@@ -2031,33 +2033,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                 </SheetHeader>
 
                 {/* Edge-to-Edge Line-Attached Status Notice */}
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                    inspectMember.status === "Active"
-                      ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                      : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                  )}
-                >
-                  <AppIcon
-                    className={cn(
-                      " text-[15px] shrink-0",
-                      inspectMember.status === "Active"
-                        ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                        : "Alert01Icon text-amber-600 dark:text-amber-400"
-                    )}
-                  />
-                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                    <strong className="font-semibold">
-                      {inspectMember.status === "Active"
-                        ? "Active Personnel Account:"
-                        : "Archived Personnel Account:"}
-                    </strong>{" "}
-                    {inspectMember.status === "Active"
+                <NoticeBanner tone={inspectMember.status === "Active" ? "success" : "warning"} title={inspectMember.status === "Active"
+                        ? "Active Personnel Account"
+                        : "Archived Personnel Account"}>
+                  {inspectMember.status === "Active"
                       ? "Operational access granted to university archives and department workstations."
                       : "Account access deactivated. Historical audit logs and archive records preserved."}
-                  </span>
-                </div>
+                </NoticeBanner>
 
                 {/* Identity Summary Strip (Unboxed) */}
                 <div className="px-6 pt-4 flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border shrink-0">
@@ -2137,12 +2119,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <>
                   {/* Profile & Credentials Section (Unboxed) */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                        Identity & Access Metadata
-                      </h3>
-                    </div>
+                    <SheetSectionHeading icon="Contact01Icon" title="Identity & Access Metadata" />
                     <div className="divide-y-0">
                       <InfoRow
                         icon=" Contact01Icon"
@@ -2234,12 +2211,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {/* Timestamps & Lifecycle (Unboxed) */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                      <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                        System Activity & Registration
-                      </h3>
-                    </div>
+                    <SheetSectionHeading icon={Clock01Icon} title="System Activity & Registration" />
                     <div className="divide-y-0">
                       <InfoRow
                         icon=" Calendar01Icon"
@@ -2257,12 +2229,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {/* Recent Activity History Preview (Unboxed) */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <div className="flex items-center gap-2">
-                        <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                        <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                          Recent Activity History
-                        </h3>
-                      </div>
+                      <SheetSectionHeading icon={Clock01Icon} title="Recent Activity History" divider={false} />
                       <span className="text-[11px] font-sans tabular-nums text-gray-500 dark:text-zinc-400">
                         {inspectActivitySummary.total} {inspectActivitySummary.total === 1 ? "event" : "events"}
                       </span>

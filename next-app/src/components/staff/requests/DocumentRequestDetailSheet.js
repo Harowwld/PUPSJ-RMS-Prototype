@@ -1,4 +1,6 @@
 "use client";
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Textarea } from "@/components/ui/textarea";
@@ -184,47 +186,18 @@ export default function DocumentRequestDetailSheet({
 
         {/* Line-Attached Edge-to-Edge Status Notice */}
         {detail && (
-          <div
-            className={cn(
-              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-              detail.status === "Ready"
-                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : detail.status === "PendingPayment" || detail.status === "Deficient"
-                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                : detail.status === "Completed"
-                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : detail.status === "Cancelled" || detail.status === "Declined"
-                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-            )}
-          >
-            <AppIcon
-              className={cn(
-                " text-[15px] shrink-0",
-                detail.status === "Ready" || detail.status === "Completed"
-                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                  : detail.status === "PendingPayment" || detail.status === "Deficient"
-                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                  : detail.status === "Cancelled" || detail.status === "Declined"
-                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                  : "Clock01Icon text-blue-600 dark:text-blue-400"
-              )}
-            />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">
-                {detail.status === "Ready"
-                  ? "Ready for Claiming:"
+          <NoticeBanner tone={["Ready", "Completed"].includes(detail.status) ? "success" : ["PendingPayment", "Deficient"].includes(detail.status) ? "warning" : ["Cancelled", "Declined"].includes(detail.status) ? "danger" : "info"} title={detail.status === "Ready"
+                  ? "Ready for Claiming"
                   : detail.status === "PendingPayment"
-                  ? "Payment Required:"
+                  ? "Payment Required"
                   : detail.status === "Deficient"
-                  ? "Deficiency Notice:"
+                  ? "Deficiency Notice"
                   : detail.status === "Completed"
-                  ? "Request Completed:"
+                  ? "Request Completed"
                   : detail.status === "InProgress"
-                  ? "Fulfillment In Progress:"
-                  : "Pending Review:"}
-              </strong>{" "}
-              {detail.status === "Ready"
+                  ? "Fulfillment In Progress"
+                  : "Pending Review"}>
+            {detail.status === "Ready"
                 ? "Document printed, certified, and ready for release at Registrar Window 1."
                 : detail.status === "PendingPayment"
                 ? "Awaiting proof of payment receipt upload from the student/client."
@@ -235,8 +208,7 @@ export default function DocumentRequestDetailSheet({
                 : detail.status === "InProgress"
                 ? "Staff is actively retrieving records and compiling requested credentials."
                 : "Awaiting staff evaluation and task assignment in ODRS queue."}
-            </span>
-          </div>
+          </NoticeBanner>
         )}
 
         {/* Scrollable Single-Column Body */}
@@ -282,12 +254,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 1. Candidate / Requester Information (Standard Info List) */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <AppIcon className=" Contact01Icon text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    Requester Information
-                  </h3>
-                </div>
+                <SheetSectionHeading icon="Contact01Icon" title="Requester Information" />
 
                 <div className="divide-y-0">
                   <InfoRow
@@ -397,12 +364,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 2. Document & Archival Information (Standard Info List) */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <File02Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    Request & Archival Details
-                  </h3>
-                </div>
+                <SheetSectionHeading icon={File02Icon} title="Request & Archival Details" />
 
                 <div className="divide-y-0">
                   <InfoRow
@@ -486,12 +448,7 @@ export default function DocumentRequestDetailSheet({
               {/* 3. Supporting Attachments */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                  <div className="flex items-center gap-2">
-                    <Attachment01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                      Supporting Attachments ({attachments.length})
-                    </h3>
-                  </div>
+                  <SheetSectionHeading icon={Attachment01Icon} title={`Supporting Attachments (${attachments.length})`} divider={false} />
                   <span className="text-[11px] text-gray-400">Official uploads</span>
                 </div>
 
@@ -542,12 +499,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 4. Workflow Stage Progression & Action */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <AppIcon className=" SlidersHorizontalIcon text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    {isTerminalStatus ? "Request Lifecycle State" : "Workflow Stage Progression"}
-                  </h3>
-                </div>
+                <SheetSectionHeading icon="SlidersHorizontalIcon" title={isTerminalStatus ? "Request Lifecycle State" : "Workflow Stage Progression"} />
 
                 {isTerminalStatus ? (
                   <div className="space-y-2 p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
@@ -651,12 +603,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 6. Activity History / Timeline */}
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                  <Time01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    Activity History ({detail.updates?.length || 0})
-                  </h3>
-                </div>
+                <SheetSectionHeading icon={Time01Icon} title={`Activity History (${detail.updates?.length || 0})`} />
 
                 {Array.isArray(detail.updates) && detail.updates.length > 0 ? (
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">

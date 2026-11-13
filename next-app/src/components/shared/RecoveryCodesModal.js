@@ -1,5 +1,6 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
 import { useState } from "react";
 
 import {
@@ -13,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { toast } from "sonner";
-import { Alert01Icon, Cancel01Icon, Download01Icon, SecurityCheckIcon } from "hugeicons-react";
+import { Cancel01Icon, Download01Icon, SecurityCheckIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function RecoveryCodesModal({
   open,
@@ -77,20 +78,11 @@ export default function RecoveryCodesModal({
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-4">
-          {/* Security Alert Banner */}
-          <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <Alert01Icon size="1em" className="text-amber-600 dark:text-amber-400 text-lg shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                Store these codes safely
-              </p>
-              <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal">
-                Each recovery code can only be used once. If you lose access to your authenticator app, these are the only way to recover account access.
-              </p>
-            </div>
-          </div>
+        <NoticeBanner tone="warning" title="Store these codes safely">
+          Each recovery code can only be used once. If you lose access to your authenticator app, these are the only way to recover account access.
+        </NoticeBanner>
 
+        <div className="p-6 space-y-4">
           {/* Recovery Codes Grid */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">

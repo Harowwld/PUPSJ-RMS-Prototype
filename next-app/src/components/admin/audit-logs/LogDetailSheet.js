@@ -1,5 +1,7 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { useState } from "react";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Button } from "@/components/ui/button";
@@ -178,37 +180,13 @@ export default function LogDetailSheet({
 
         {/* Line-Attached Edge-to-Edge Severity & Integrity Notice */}
         {selectedLog && (
-          <div
-            className={cn(
-              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-              severityInfo?.label === "Critical" || severityInfo?.label === "Security"
-                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                : severityInfo?.label === "Warning"
-                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-            )}
-          >
-            <AppIcon
-              className={cn(
-                " text-[15px] shrink-0",
-                severityInfo?.label === "Critical" || severityInfo?.label === "Security"
-                  ? "Alert01Icon text-rose-600 dark:text-rose-400"
-                  : severityInfo?.label === "Warning"
-                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                  : "Shield01Icon text-emerald-600 dark:text-emerald-400"
-              )}
-            />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">
-                {severityInfo?.label ? `${severityInfo.label} Audit Event:` : "Activity Log:"}
-              </strong>{" "}
-              {severityInfo?.label === "Critical" || severityInfo?.label === "Security"
+          <NoticeBanner tone={severityInfo?.label === "Critical" || severityInfo?.label === "Security" ? "danger" : severityInfo?.label === "Warning" ? "warning" : "info"} title={severityInfo?.label ? `${severityInfo.label} Audit Event` : "Activity Log"}>
+            {severityInfo?.label === "Critical" || severityInfo?.label === "Security"
                 ? "High-priority security or administrative event recorded in activity history."
                 : severityInfo?.label === "Warning"
                 ? "Precautionary system event flagged for operational review."
                 : "Recorded activity with a timestamp and actor attribution."}
-            </span>
-          </div>
+          </NoticeBanner>
         )}
 
         {selectedLog && (
@@ -248,12 +226,7 @@ export default function LogDetailSheet({
 
             {/* 1. Event Specification (Standard Information Rows) */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <Shield01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                  Event Specification
-                </h3>
-              </div>
+              <SheetSectionHeading icon={Shield01Icon} title="Event Specification" />
 
               <div className="divide-y-0">
                 <InfoRow
@@ -387,12 +360,7 @@ export default function LogDetailSheet({
 
             {/* 2. Network & Forensic Origin (Standard Information Rows) */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                <GlobeIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                  Forensic & Network Origin
-                </h3>
-              </div>
+              <SheetSectionHeading icon={GlobeIcon} title="Forensic & Network Origin" />
 
               <div className="divide-y-0">
                 <InfoRow

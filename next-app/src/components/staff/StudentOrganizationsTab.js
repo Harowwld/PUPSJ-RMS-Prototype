@@ -1803,6 +1803,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
             {selectedOrgForOfficers && (
               <CampusStatusNotice
+                tone={selectedOrgForOfficers.status === "Active" ? "success" : "warning"}
                 title={
                   selectedOrgForOfficers.status === "Archived" ? "Archived Organization"
                     : selectedOrgForOfficers.status === "Inactive" ? "Inactive Accreditation"

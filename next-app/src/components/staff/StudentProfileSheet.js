@@ -1,6 +1,8 @@
 "use client";
 
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import EditOdrsEmailDialog from "./EditOdrsEmailDialog";
 import CopyButton from "@/components/shared/CopyButton";
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -393,29 +395,11 @@ export default function StudentProfileSheet({
         </SheetHeader>
 
         {/* Line-Attached Edge-to-Edge Status Notice */}
-        <div
-          className={cn(
-            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-            isArchived
-              ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-              : "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-          )}
-        >
-          <AppIcon
-            className={cn(
-              " text-[15px] shrink-0",
-              isArchived ? "Archive01Icon text-amber-600 dark:text-amber-400" : "CheckmarkCircle01Icon text-emerald-600 dark:text-emerald-400"
-            )}
-          />
-          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-            <strong className="font-semibold">
-              {isArchived ? "Archived Record:" : "Active Archive Profile:"}
-            </strong>{" "}
-            {isArchived
+        <NoticeBanner tone={isArchived ? "warning" : "success"} title={isArchived ? "Archived Record" : "Active Archive Profile"}>
+          {isArchived
               ? `This record is archived. Located in Room ${student.room}, Cabinet ${student.cabinet}, Drawer ${student.drawer}.`
               : `Institutional record active in Room ${student.room}, Cabinet ${student.cabinet}, Drawer ${student.drawer}.`}
-          </span>
-        </div>
+        </NoticeBanner>
 
         {/* Scrollable Single-Column Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -467,8 +451,7 @@ export default function StudentProfileSheet({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  onOpenChange(false);
-                  onLocateStudent?.(student);
+                  if (onLocateStudent?.(student) !== false) onOpenChange(false);
                 }}
                 title="Locate in Physical Archive"
                 className="h-8 px-3 cursor-pointer"
@@ -480,17 +463,7 @@ export default function StudentProfileSheet({
 
           {/* 1. Academic & Enrollment Details (Standard Info List) */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-              <AppIcon
-                className={cn(
-                  "text-pup-maroon dark:text-red-400 text-sm",
-                  student?.category || student?.rawOrg ? " Building01Icon" : " GraduationScrollIcon"
-                )}
-              />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                {student?.category || student?.rawOrg ? "Organization & Registry Details" : "Academic & Registry Details"}
-              </h3>
-            </div>
+            <SheetSectionHeading icon={student?.category || student?.rawOrg ? "Building01Icon" : "GraduationScrollIcon"} title={student?.category || student?.rawOrg ? "Organization & Registry Details" : "Academic & Registry Details"} />
 
             <div className="divide-y-0">
               {student?.category || student?.rawOrg ? (
@@ -621,12 +594,7 @@ export default function StudentProfileSheet({
 
           {/* 2. Physical Archive Filing Location (Standard Info List) */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-              <WarehouseIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                Physical Archive Location
-              </h3>
-            </div>
+            <SheetSectionHeading icon={WarehouseIcon} title="Physical Archive Location" />
 
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow
@@ -644,8 +612,7 @@ export default function StudentProfileSheet({
                       variant="outline"
                       size="xs"
                       onClick={() => {
-                        onOpenChange(false);
-                        onLocateStudent(student);
+                        if (onLocateStudent(student) !== false) onOpenChange(false);
                       }}
                     >
                       Locate Drawer
@@ -660,12 +627,7 @@ export default function StudentProfileSheet({
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-1.5">
               <div>
-                <div className="flex items-center gap-2">
-                  <Files01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    {isOrg ? `Organization Records & Documents (${studentDocs.length})` : "Requirements Checklist"}
-                  </h3>
-                </div>
+                <SheetSectionHeading icon={Files01Icon} title={isOrg ? `Organization Records & Documents (${studentDocs.length})` : "Requirements Checklist"} divider={false} />
                 {!isOrg && complianceSummary.total > 0 && (
                   <div className="flex items-center gap-2 mt-1">
                     <div className="w-24 h-1.5 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
@@ -708,12 +670,7 @@ export default function StudentProfileSheet({
           {!isOrg && (
             <div className="space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                <div className="flex items-center gap-2">
-                  <Time01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    Requests History ({requests.length})
-                  </h3>
-                </div>
+                <SheetSectionHeading icon={Time01Icon} title={`Requests History (${requests.length})`} divider={false} />
               </div>
 
               {isLoadingRequests ? (

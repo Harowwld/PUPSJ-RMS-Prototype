@@ -5,7 +5,6 @@ import StorageRoute from "@/components/shared/StorageRoute"
 import { getStorageRoute, getWayfindingCabinetRect } from "@/lib/storageWayfinding"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
-import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
 import { Door01Icon } from "hugeicons-react";
 
 export default function RoomMap2D({
@@ -23,10 +22,10 @@ export default function RoomMap2D({
   const cabinetRects = useMemo(() => cabinets || [], [cabinets])
   const targetDrawer = drawerSlots?.find((slot) => slot.isTarget)?.drawer
   const routePoints = useMemo(() => {
-    if (isPreview || !selectedCabinetId || kind !== "drawers") return []
-    const selected = cabinetRects.find((cabinet) => areCabinetsEqual(cabinet.cab, selectedCabinetId, cabinetRects))
+    if (isPreview || !selectedCabinetId || kind !== "drawers" || (activeStudent && targetDrawer == null)) return []
+    const selected = cabinetRects.find((cabinet) => String(cabinet.cab) === String(selectedCabinetId))
     return getStorageRoute(cabinetRects, selected, roomDoor)
-  }, [selectedCabinetId, cabinetRects, roomDoor, kind, isPreview])
+  }, [selectedCabinetId, cabinetRects, roomDoor, kind, isPreview, activeStudent, targetDrawer])
 
   return (
     <div
@@ -65,7 +64,7 @@ export default function RoomMap2D({
 
       {cabinetRects.map((c) => {
         const hasActiveTarget = cabinetRects.some((cab) => cab.isTarget)
-        const isSelected = kind === "drawers" && areCabinetsEqual(c.cab, selectedCabinetId, cabinetRects)
+        const isSelected = kind === "drawers" && String(c.cab) === String(selectedCabinetId)
         const isTarget = Boolean(c.isTarget)
         const rect = getWayfindingCabinetRect(c)
         const isClickable = !hasActiveTarget || isTarget

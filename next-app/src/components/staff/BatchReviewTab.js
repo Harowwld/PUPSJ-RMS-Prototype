@@ -1206,8 +1206,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     </div>
                     {!Object.keys(ocrRegions).length && (
                       <div className="shrink-0">
-                        <NoticeBanner tone="warning" className="border-b-0">
-                          <strong>No OCR field regions were saved.</strong> Verify the student and document type against the preview, or select Retry OCR to generate field highlights.
+                        <NoticeBanner tone="warning" title="No OCR field regions were saved" className="border-b-0">
+                          Verify the student and document type against the preview, or select Retry OCR to generate field highlights.
                         </NoticeBanner>
                       </div>
                     )}

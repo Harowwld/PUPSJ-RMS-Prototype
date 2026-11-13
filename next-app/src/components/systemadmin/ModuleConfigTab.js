@@ -1089,6 +1089,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               {isCurrentArchived && !dismissedArchivedAlerts.includes(currentOffice.id) && (
                 <NoticeBanner
                   tone="warning"
+                  title="Archived Department Notice"
                   className="border-t-0"
                   onDismiss={() => handleDismissArchivedAlert(currentOffice.id)}
                   action={
@@ -1096,14 +1097,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       type="button"
                       onClick={() => navigateToRestoreOffice(currentOffice.id)}
                       title="Open in Departments & Stations to restore this department"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-white hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
                     >
                       <span>Restore in Departments &amp; Stations</span>
                       <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
                     </button>
                   }
                 >
-                  <strong className="font-semibold">Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
+                  This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
                 </NoticeBanner>
               )}
 
@@ -1382,6 +1383,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               {officeFilter === "Archived" && !dismissedArchivedAlerts.includes("__matrix__") && (
                 <NoticeBanner
                   tone="warning"
+                  title="Archived Departments Notice"
                   className="border-t-0"
                   onDismiss={() => handleDismissArchivedAlert("__matrix__")}
                   action={
@@ -1389,14 +1391,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       type="button"
                       onClick={() => navigateToRestoreOffice(visibleMatrixOffices[0]?.id || filteredOffices[0]?.id)}
                       title="Open Departments & Stations to restore archived departments"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-white hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
                     >
                       <span>Restore in Departments &amp; Stations</span>
                       <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
                     </button>
                   }
                 >
-                  <strong className="font-semibold">Archived Departments Notice:</strong> Archived departments are read-only and their features cannot be modified. Restore a department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
+                  Archived departments are read-only and their features cannot be modified. Restore a department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
                 </NoticeBanner>
               )}
               <div

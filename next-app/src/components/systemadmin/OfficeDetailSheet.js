@@ -1,5 +1,7 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetPagination from "@/components/shared/SheetPagination";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -246,29 +248,11 @@ export default function OfficeDetailSheet({
         </SheetHeader>
 
         {/* Edge-to-Edge Line-Attached Status Notice */}
-        <div
-          className={cn(
-            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-            isActive
-              ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-              : "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-          )}
-        >
-          <AppIcon
-            className={cn(
-              " text-[15px] shrink-0",
-              isActive ? "Shield01Icon text-emerald-600 dark:text-emerald-400" : "Alert01Icon text-amber-600 dark:text-amber-400"
-            )}
-          />
-          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-            <strong className="font-semibold">
-              {isActive ? "Active Department Workspace:" : "Deactivated Department Workspace:"}
-            </strong>{" "}
-            {isActive
+        <NoticeBanner tone={isActive ? "success" : "warning"} title={isActive ? "Active Department Workspace" : "Deactivated Department Workspace"}>
+          {isActive
               ? "Workstations, hot-folder ingest, and archival routing are operational."
               : "Scanning station link and student request routing are suspended."}
-          </span>
-        </div>
+        </NoticeBanner>
 
         {/* Scrollable Single-Column Body with smooth entrance animation */}
         <div
@@ -324,12 +308,7 @@ export default function OfficeDetailSheet({
 
           {/* Section 1: Department Overview & Identity */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-border dark:border-border">
-              <Building01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-              <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                Department Identity & Scope
-              </h3>
-            </div>
+            <SheetSectionHeading icon={Building01Icon} title="Department Identity & Scope" />
             <div className="divide-y-0">
               <InfoRow
                 icon=" Contact01Icon"
@@ -397,12 +376,7 @@ export default function OfficeDetailSheet({
 
           {/* Section 2: Scanning Workstation & Hardware */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 pb-1.5 border-b border-border dark:border-border">
-              <ComputerIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-              <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                Scanning Station & Ingestion Hardware
-              </h3>
-            </div>
+            <SheetSectionHeading icon={ComputerIcon} title="Scanning Station & Ingestion Hardware" />
             <div className="divide-y-0">
               <InfoRow
                 icon=" Tablet01Icon"
@@ -534,12 +508,7 @@ export default function OfficeDetailSheet({
           {/* Section 3: Assigned Personnel ({staffList.length}) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
-              <div className="flex items-center gap-2">
-                <UserSearch01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                  Assigned Personnel Roster
-                </h3>
-              </div>
+              <SheetSectionHeading icon={UserSearch01Icon} title="Assigned Personnel Roster" divider={false} />
               <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {staffLoading ? "..." : `${staffList.length} Staff`}
               </Badge>
@@ -633,12 +602,7 @@ export default function OfficeDetailSheet({
           {/* Section 4: Enabled Workspace Modules */}
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
-              <div className="flex items-center gap-2">
-                <LayoutGridIcon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                  Department Workspace Modules
-                </h3>
-              </div>
+              <SheetSectionHeading icon={LayoutGridIcon} title="Department Workspace Modules" divider={false} />
               <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {modulesLoading ? "..." : `${enabledModules.length} Active`}
               </Badge>

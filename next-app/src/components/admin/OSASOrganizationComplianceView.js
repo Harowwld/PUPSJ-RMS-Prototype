@@ -1,5 +1,7 @@
 "use client";
 
+import NoticeBanner from "@/components/shared/NoticeBanner";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { isInManilaDateRange } from "@/lib/timeFormat";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
@@ -1460,41 +1462,17 @@ export default function OSASOrganizationComplianceView({
 
             {/* Line-Attached Edge-to-Edge Status Notice */}
             {selectedOrgForOfficers && (
-              <div
-                className={cn(
-                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                  selectedOrgForOfficers?.status === "Active"
-                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                    : selectedOrgForOfficers?.status === "Inactive"
-                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                    : "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                )}
-              >
-                <AppIcon
-                  className={cn(
-                    " text-[15px] shrink-0",
-                    selectedOrgForOfficers?.status === "Active"
-                      ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+              <NoticeBanner tone={selectedOrgForOfficers.status === "Active" ? "success" : selectedOrgForOfficers.status === "Inactive" ? "warning" : "info"} title={selectedOrgForOfficers?.status === "Active"
+                      ? "Accredited Campus Organization"
                       : selectedOrgForOfficers?.status === "Inactive"
-                      ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                      : "Archive01Icon text-rose-600 dark:text-rose-400"
-                  )}
-                />
-                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                  <strong className="font-semibold">
-                    {selectedOrgForOfficers?.status === "Active"
-                      ? "Accredited Campus Organization:"
-                      : selectedOrgForOfficers?.status === "Inactive"
-                      ? "Inactive Accreditation:"
-                      : "Archived Organization:"}
-                  </strong>{" "}
-                  {selectedOrgForOfficers?.status === "Active"
+                      ? "Inactive Accreditation"
+                      : "Archived Organization"}>
+                {selectedOrgForOfficers?.status === "Active"
                     ? "Leadership roster authorized to sponsor campus events and execute official paperwork."
                     : selectedOrgForOfficers?.status === "Inactive"
                     ? "Accreditation expired or suspended. Renewal required before scheduling activities."
                     : "Archived organizational records on file for historical reference."}
-                </span>
-              </div>
+              </NoticeBanner>
             )}
 
             {/* SCROLLABLE 1-COLUMN BODY */}
@@ -1525,9 +1503,7 @@ export default function OSASOrganizationComplianceView({
 
               {/* SECTION 1: Organization & Compliance Summary (Unboxed InfoRow) */}
               <div className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Organization & Compliance Summary
-                </h4>
+                <SheetSectionHeading icon="Building01Icon" title="Organization & Compliance Summary" />
                 <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                   <InfoRow icon="Tag01Icon" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
 
@@ -1603,9 +1579,7 @@ export default function OSASOrganizationComplianceView({
               {/* SECTION 2: Accredited Officers Roster */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Accredited Officer Roster
-                  </h4>
+                  <SheetSectionHeading icon="UserGroupIcon" title="Accredited Officer Roster" />
                   <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                     {selectedOrgForOfficers?.officers?.length || 0} registered
                   </span>
