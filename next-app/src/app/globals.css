@@ -2260,14 +2260,6 @@ html[data-pointer-cursor="false"] [contenteditable=""] {
   color: #E5484D !important;
 }
 
-/* Email bottom divider (Step 2 state) */
-.email-wrapper.step2-active {
-  border-bottom: 1px solid rgba(0,0,0,0.12) !important;
-}
-.dark .email-wrapper.step2-active {
-  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-}
-
 /* Concentric logo rings animations */
 @keyframes spin-clockwise {
   from {

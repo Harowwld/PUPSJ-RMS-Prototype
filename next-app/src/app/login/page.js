@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +99,6 @@ const DEMO_ACCOUNTS = [
 export default function Home() {
   const router = useRouter();
   const [view, setView] = useState("login"); // "login" or "forgot"
-  const [loginStep, setLoginStep] = useState(1); // 1 = email, 2 = password
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [staffVerificationEmail, setStaffVerificationEmail] = useState("");
@@ -112,7 +111,6 @@ export default function Home() {
   const [passwordError, setPasswordError] = useState("");
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const passwordRef = useRef(null);
   const [demoOpen, setDemoOpen] = useState(false);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(false);
 
@@ -127,19 +125,12 @@ export default function Home() {
     setUsername(acc.email);
     setPassword("");
     resetStaffVerification();
-    setLoginStep(2);
     setEmailError("");
     setPasswordError("");
     setError("");
     setDemoOpen(false);
     handleLogin(acc.email, "", true);
   };
-
-  useEffect(() => {
-    if (loginStep === 2) {
-      passwordRef.current?.focus();
-    }
-  }, [loginStep]);
 
   // 2FA State
   const [show2FAModal, setShow2FAModal] = useState(false);
@@ -294,7 +285,6 @@ export default function Home() {
     setForgotMessage("");
     setForgotError("");
     setForgotLoading(false);
-    setLoginStep(1);
     resetStaffVerification();
     setForgotIdentifierFocused(false);
   };
@@ -375,33 +365,25 @@ export default function Home() {
     return re.test(email);
   };
 
-  const handleContinue = () => {
-    const emailValue = username.trim();
-    if (!emailValue) {
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const identifier = username.trim();
+    if (!identifier) {
       setEmailError("Enter your email address or student number.");
       return;
     }
-    const check = LoginIdentifierSchema.safeParse(emailValue);
+    const check = LoginIdentifierSchema.safeParse(identifier);
     if (!check.success) {
       setEmailError(check.error.issues[0]?.message || "Please enter a valid institutional email, Student Number, or Staff ID.");
       return;
     }
     setEmailError("");
-    setLoginStep(2);
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (loginStep === 1) {
-      handleContinue();
-    } else {
-      if (!password) {
-        setPasswordError("Enter your password.");
-        return;
-      }
-      setPasswordError("");
-      handleLogin();
+    if (!password) {
+      setPasswordError("Enter your password.");
+      return;
     }
+    setPasswordError("");
+    handleLogin();
   };
 
   function handleLogin(usernameValue = username, passwordValue = password, isDemo = false, resendStaffEmailCode = false) {
@@ -758,19 +740,20 @@ export default function Home() {
                   Sign in with eManage Account
                 </h1>
 
-                <form onSubmit={handleFormSubmit} className="w-full flex-1 flex flex-col justify-between">
+                <form onSubmit={handleFormSubmit} className="flex w-full flex-1 flex-col">
                   <div className="w-full text-left">
                     {/* Merged Field Container */}
                     <div className={`merged-container bg-white dark:bg-zinc-800 ${
                       emailError || passwordError || error ? "has-error" : ""
                     }`}>
                       {/* EMAIL FIELD (top half) */}
-                      <div className={`field-wrapper email-wrapper ${emailFocused || username.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                        <label htmlFor="username">Email Address or Student Number</label>
+                      <div className={`field-wrapper border-b border-border dark:border-border/50 ${emailFocused || username.length > 0 ? "active" : ""}`}>
+                        <label htmlFor="username">Email Address, Student Number, or Staff ID</label>
                         <Input variant="floating"
                           type="text"
                           id="username"
-                          aria-label="Email Address or Student Number"
+                          name="username"
+                          autoComplete="username"
                           aria-required="true"
                           placeholder=" "
                           className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -779,76 +762,49 @@ export default function Home() {
                           onFocus={() => setEmailFocused(true)}
                           onBlur={() => setEmailFocused(false)}
                           onChange={(e) => {
-                            const val = e.target.value;
-                            setUsername(val);
+                            setUsername(e.target.value);
                             resetStaffVerification();
                             if (emailError) setEmailError("");
-                            if (val.trim() === "") {
-                              setLoginStep(1);
-                              setPassword("");
-                              setPasswordError("");
-                            }
+                            if (error) setError("");
                           }}
                         />
                       </div>
 
                       {/* PASSWORD FIELD (bottom half) */}
-                      <div 
-                        id="password-step-container"
-                        role="region"
-                        aria-label="Password credentials"
-                        aria-hidden={loginStep !== 2}
-                        className={`flex flex-col transition-opacity duration-200 ${
-                        loginStep === 2 
-                          ? 'opacity-100 max-h-[52px] pointer-events-auto' 
-                          : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
-                      }`}>
-                        <div className={`field-wrapper password-wrapper ${passwordFocused || password.length > 0 ? "active" : ""} ${loginStep === 2 ? "step2-active" : ""}`}>
-                          <label htmlFor="password">Password</label>
-                          <Input variant="floating"
-                            ref={passwordRef}
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            aria-label="Password"
-                            aria-required={loginStep === 2}
-                            tabIndex={loginStep === 2 ? 0 : -1}
-                            placeholder=" "
-                            className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
-                            value={password}
-                            onFocus={() => setPasswordFocused(true)}
-                            onBlur={() => setPasswordFocused(false)}
-                            onChange={(e) => {
-                              setPassword(e.target.value);
-                              resetStaffVerification();
-                              if (passwordError) setPasswordError("");
-                              if (error) setError("");
-                            }}
-                          />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                            <button
-                              type="button"
-                              aria-label={showPassword ? "Hide password" : "Show password"}
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="w-7 h-7 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
-                            >
-                              <AppIcon  className={` ${showPassword ? "ViewOffIcon" : "ViewIcon"} text-[16px]`}></AppIcon>
-                            </button>
-                          </div>
+                      <div className={`field-wrapper ${passwordFocused || password.length > 0 ? "active" : ""}`}>
+                        <label htmlFor="password">Password</label>
+                        <Input variant="floating"
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          name="password"
+                          autoComplete="current-password"
+                          aria-required="true"
+                          placeholder=" "
+                          className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          value={password}
+                          onFocus={() => setPasswordFocused(true)}
+                          onBlur={() => setPasswordFocused(false)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            resetStaffVerification();
+                            if (passwordError) setPasswordError("");
+                            if (error) setError("");
+                          }}
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                          <button
+                            type="button"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="w-7 h-7 flex items-center justify-center text-[#8E8E93] hover:text-[#1D1D1F] focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200"
+                          >
+                            <AppIcon  className={` ${showPassword ? "ViewOffIcon" : "ViewIcon"} text-[16px]`}></AppIcon>
+                          </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Validation Errors displayed below the merged container (Step 1 only) */}
-                    {loginStep === 1 && (emailError || passwordError || error) && (
-                      <div role="alert" aria-live="polite" className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D]">
-                        <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
-                        <p className="text-[12px] font-normal leading-none">
-                          {emailError || passwordError || error}
-                        </p>
-                      </div>
-                    )}
-
-                    {loginStep === 2 && staffVerificationEmail && (
+                    {staffVerificationEmail && (
                       <div className="mt-5 space-y-2 text-left">
                         <label htmlFor="staff-email-code" className="block text-sm font-medium">Email verification code</label>
                         <p className="text-xs text-muted-foreground">Enter the six-digit code for {staffVerificationEmail}.</p>
@@ -875,81 +831,72 @@ export default function Home() {
                       </div>
                     )}
 
-                    {/* Keep me signed in and Forgot Password options (Step 2 only) */}
-                    {loginStep === 2 && (
-                      <div className="flex items-center justify-between w-full mt-6 select-none animate-in fade-in duration-200">
-                        {emailError || passwordError || error ? (
-                          <div role="alert" aria-live="polite" className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
-                            <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
-                            <p className="text-[12px] font-normal leading-none">
-                              {emailError || passwordError || error}
-                            </p>
-                          </div>
-                        ) : (
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4 m-0 shrink-0 align-middle rounded-full border-border text-blue-600 focus:ring-blue-600 accent-blue-600"
-                            />
-                            <span className="text-[13px] text-[#1D1D1F] dark:text-zinc-300">Keep me signed in</span>
-                          </label>
-                        )}
+                    <div className="flex items-center justify-between w-full mt-6 select-none animate-in fade-in duration-200">
+                      {emailError || passwordError || error ? (
+                        <div role="alert" aria-live="polite" className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
+                          <Alert01Icon size="1em"  className="text-[14px] shrink-0 mt-[1px]"></Alert01Icon>
+                          <p className="text-[12px] font-normal leading-none">
+                            {emailError || passwordError || error}
+                          </p>
+                        </div>
+                      ) : (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 m-0 shrink-0 align-middle rounded-full border-border text-blue-600 focus:ring-blue-600 accent-blue-600"
+                          />
+                          <span className="text-[13px] text-[#1D1D1F] dark:text-zinc-300">Keep me signed in</span>
+                        </label>
+                      )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            resetForgotState();
-                            setView("forgot");
-                          }}
-                          className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none shrink-0 font-normal"
-                        >
-                          Forgot Password?
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Student Sign Up Link (Step 1 only) */}
-                    {loginStep === 1 && (
-                      <div className="mt-6 flex flex-wrap items-center animate-in fade-in duration-200">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            resetStudentSignupState();
-                            setView("student-signup");
-                          }}
-                          className="text-[14px] text-gray-800 hover:text-black hover:underline focus:outline-none font-semibold"
-                        >
-                          Create your eManage Account
-                        </button>
-                      </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetForgotState();
+                          setView("forgot");
+                        }}
+                        className="text-[13px] text-[#0A84FF] hover:underline focus:outline-none shrink-0 font-normal"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Disclaimer Text with Icon (Step 1 only) */}
-                  {loginStep === 1 ? (
-                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
-                      <UserSearch01Icon size="1em"  className="text-[23px] text-gray-800 mb-2"></UserSearch01Icon>
-                      <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
-                        Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-auto" />
-                  )}
-
-                  <div className={staffVerificationEmail ? "mt-6" : "absolute bottom-[64px] left-[52px] right-[52px]"}>
+                  <div className="mt-6">
                     <Button
                       type="submit"
-                      disabled={isLoading || (loginStep === 1 && !username.trim()) || (Boolean(staffVerificationEmail) && staffEmailCode.length !== 6)}
+                      disabled={isLoading || (Boolean(staffVerificationEmail) && staffEmailCode.length !== 6)}
                       className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {isLoading ? (
                         <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
-                        <span>{loginStep === 1 ? "Continue" : staffVerificationEmail ? "Verify Email" : "Sign In"}</span>
+                        <span>{staffVerificationEmail ? "Verify Email" : "Sign In"}</span>
                       )}
                     </Button>
                   </div>
+
+                  {!staffVerificationEmail && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => {
+                          resetStudentSignupState();
+                          setView("student-signup");
+                        }}
+                        className="mt-4 self-center text-sm font-semibold text-foreground hover:underline focus-visible:underline disabled:opacity-50"
+                      >
+                        Create your eManage Account
+                      </button>
+                      <div className="mt-auto pt-8 text-left text-muted-foreground">
+                        <UserSearch01Icon size={20} aria-hidden="true" className="mb-2" />
+                        <p className="text-[11px] leading-normal">
+                          Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </form>
               </div>
             ) : view === "forgot" ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
@@ -15,6 +15,7 @@ export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const scrollDestination = useRef(null);
   const shouldReduceMotion = useAppReducedMotion();
 
   useEffect(() => {
@@ -43,6 +44,10 @@ export default function LandingNavbar() {
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 45);
+      if (scrollDestination.current !== null) {
+        if (Math.abs(window.scrollY - scrollDestination.current) > 1) return;
+        scrollDestination.current = null;
+      }
       
       const sections = ["about", "workflow", "catalog", "faq", "office"];
       let current = "";
@@ -60,6 +65,11 @@ export default function LandingNavbar() {
       }
       setActiveSection(current);
     };
+    const handleScrollEnd = () => {
+      if (scrollDestination.current === null) return;
+      scrollDestination.current = null;
+      handleScroll();
+    };
     handleScroll();
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -68,11 +78,13 @@ export default function LandingNavbar() {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("scrollend", handleScrollEnd);
     window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
       isMounted = false;
       window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scrollend", handleScrollEnd);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("storage", handleStorageChange);
     };
@@ -87,32 +99,30 @@ export default function LandingNavbar() {
     return "/staff";
   };
 
-  // Scroll smoothly back to top when clicking logo
-  const scrollToTop = (e) => {
-    if (e) e.preventDefault();
-    window.scrollTo({ top: 0, behavior: shouldReduceMotion ? "instant" : "smooth" });
-    if (window.location.hash) {
-      window.history.pushState(null, "", window.location.pathname);
-    }
+  const scrollToNavbarDestination = (section, position) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const top = Math.max(0, Math.min(position, maxScroll));
+    scrollDestination.current = Math.abs(window.scrollY - top) > 1 ? top : null;
+    setActiveSection(section);
+    window.scrollTo({ top, behavior: shouldReduceMotion ? "instant" : "smooth" });
     setMobileMenuOpen(false);
   };
 
-  // Keep the active link driven by the scroll position for click and manual scrolling alike.
+  const scrollToTop = (e) => {
+    if (e) e.preventDefault();
+    scrollToNavbarDestination("", 0);
+    if (window.location.hash) {
+      window.history.pushState(null, "", window.location.pathname);
+    }
+  };
+
   const scrollToSection = (e, targetId) => {
     if (e) e.preventDefault();
     const element = document.getElementById(targetId);
     if (!element) return;
 
     const navOffset = 76;
-    const elementPosition = element.getBoundingClientRect().top;
-    const offsetPosition = elementPosition + window.pageYOffset - navOffset;
-
-    window.scrollTo({
-      top: offsetPosition,
-      behavior: shouldReduceMotion ? "instant" : "smooth",
-    });
-
-    setMobileMenuOpen(false);
+    scrollToNavbarDestination(targetId, element.getBoundingClientRect().top + window.scrollY - navOffset);
   };
 
   return (

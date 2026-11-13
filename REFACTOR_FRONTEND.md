@@ -17,7 +17,7 @@ This file is an agent-facing UI standard for the whole app. When a request refer
 ### Motion and Navigation
 
 - Use a shared-layout indicator for active navigation links and tabs so selection moves continuously between items. Use the app motion tokens (`SPRING_LAYOUT`) and honor the app's reduced-motion preference (`useAppReducedMotion`).
-- For in-page navigation, derive the active section from scroll position during both manual and programmatic scrolling. Do not set the clicked destination active before scrolling; that makes the indicator jump ahead and then reset while the scroll handler catches up.
+- For in-page navigation, move the active indicator directly to the clicked link and keep it there throughout the scroll. Resume tracking the visible section once the scroll reaches its destination or is interrupted. During manual scrolling, derive the active link from the scroll position.
 - Keep tabbed sections that precede a footer at the height of their tallest tab panel so switching tabs does not move the footer. For dynamic content, derive the reserved height from the available panels instead of guessing a fixed value.
 - Navbar actions must share the navbar's control height and center their content on both axes.
 
