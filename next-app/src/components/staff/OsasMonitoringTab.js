@@ -387,6 +387,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const [postEventTotal, setPostEventTotal] = useState(0);
   const [postEventOrganizations, setPostEventOrganizations] = useState([]);
   const [selectedPostEvent, setSelectedPostEvent] = useState(null);
+  const postEventDetailRequest = useRef(0);
   const [postEventSheetOpen, setPostEventSheetOpen] = useState(false);
   const [postEventStatus, setPostEventStatus] = useState("Cleared");
   const [postEventNote, setPostEventNote] = useState("");
@@ -546,19 +547,22 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  const selectPostEvent = async (report) => {
+  const selectPostEvent = async (report, requestedStatus) => {
+    const request = ++postEventDetailRequest.current;
+    const initialStatus = report.status === "Submitted" ? "Under Review" : report.status;
     setSelectedPostEvent(report);
-    setPostEventStatus(report.status === "Submitted" ? "Under Review" : report.status);
-    setPostEventNote(report.review_note || report.review_notes || "");
+    setPostEventStatus(requestedStatus ?? initialStatus);
+    setPostEventNote(requestedStatus === "Needs Revision" ? "" : report.review_note || report.review_notes || "");
     setPostEventSheetOpen(true);
     try {
       const res = await fetch(`/api/osas/post-event-reports/${report.id}`, { cache: "no-store" });
       const json = await res.json();
-      if (res.ok && json.ok) {
-        setSelectedPostEvent((prev) => (prev?.id === report.id ? { ...prev, ...json.data } : prev));
-        if (json.data?.status) {
-          setPostEventStatus(json.data.status === "Submitted" ? "Under Review" : json.data.status);
-        }
+      if (request !== postEventDetailRequest.current || !res.ok || !json.ok) return;
+
+      setSelectedPostEvent((prev) => (prev?.id === report.id ? { ...prev, ...json.data } : prev));
+      if (!requestedStatus && json.data?.status) {
+        const latestStatus = json.data.status === "Submitted" ? "Under Review" : json.data.status;
+        setPostEventStatus((current) => current === initialStatus ? latestStatus : current);
       }
     } catch (err) {
       console.error("Failed to fetch post-event report details", err);
@@ -602,6 +606,11 @@ export default function OsasMonitoringTab({ showToast }) {
         );
       }
       showToast?.({ title: "Post-Event Clearance Updated", description: `Report marked as ${targetStatus}.` });
+      postEventDetailRequest.current++;
+      setSelectedPostEvent((prev) => prev?.id === selectedPostEvent.id ? { ...prev, ...json.data } : prev);
+      setPostEventReports((prev) => prev.map((report) =>
+        report.id === selectedPostEvent.id ? { ...report, ...json.data } : report
+      ));
       setPostEventSheetOpen(false);
       await load();
     } catch (err) {
@@ -655,8 +664,7 @@ export default function OsasMonitoringTab({ showToast }) {
 
     // Special UX: Needs Revision requires explicit instructions for the student org
     if (targetStatus === "Needs Revision") {
-      selectPostEvent(reportToMove);
-      setPostEventStatus("Needs Revision");
+      selectPostEvent(reportToMove, targetStatus);
       showToast?.({
         title: "Revision Instructions Required",
         description: "Please specify the required post-event revisions in the clearance review drawer.",
@@ -1785,7 +1793,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 <OsasKanbanPipeline
                   stream="proposals"
                   columns={KANBAN_COLUMNS}
-                  items={filteredRows}
+                  items={sortedRows}
                   onSelectItem={select}
                   onDropItem={handleDrop}
                   draggingItem={draggingProposal}
@@ -2059,7 +2067,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     <OsasKanbanPipeline
                       stream="post_events"
                       columns={POST_EVENT_KANBAN_COLUMNS}
-                      items={filteredPostEvents}
+                      items={sortedPostEvents}
                       onSelectItem={selectPostEvent}
                       onDropItem={handlePostEventDrop}
                       onOpenPdfPreview={handleOpenPdfPreview}

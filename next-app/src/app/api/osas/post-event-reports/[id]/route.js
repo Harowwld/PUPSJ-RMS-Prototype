@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
-import { getPostEventReportById, updatePostEventReportStatus } from "@/lib/osasPostEventRepo";
+import { getPostEventReportById, listPostEventReportUpdates, updatePostEventReportStatus } from "@/lib/osasPostEventRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
@@ -104,7 +104,8 @@ export async function GET(req, ctx) {
     });
   }
 
-  return NextResponse.json({ ok: true, data: report });
+  const updates = await listPostEventReportUpdates(report.id);
+  return NextResponse.json({ ok: true, data: { ...report, updates } });
 }
 
 export const POST_EVENT_ALLOWED_TRANSITIONS = {

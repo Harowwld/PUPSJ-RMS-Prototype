@@ -1,4 +1,6 @@
 "use client";
+import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
@@ -26,10 +28,9 @@ import {
 import {
   normalizeProposalStatus,
   getProposalStatusBadgeClass,
-  getProposalStatusDotClass,
   getPostEventStatusBadgeClass,
 } from "@/components/staff/OsasMonitoringTab";
-import NarrativeText, { NarrativePersonBadge } from "@/components/shared/NarrativeText";
+import { NarrativePersonBadge } from "@/components/shared/NarrativeText";
 import PDFPreview from "@/components/shared/PDFPreview";
 import {
   Alert02Icon, ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
@@ -526,63 +527,14 @@ export default function OsasProposalReviewSheet({
             </div>
           </div>
 
-          {/* SECTION 5: Audit Timeline */}
-          <div className="space-y-3 pt-2">
-            <SectionHeading icon={Clock01Icon} title="Audit Timeline">
+          <section className="space-y-3">
+            <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
               <OsasSheetSummaryBadge icon={Clock01Icon}>
-                {eventCount} {eventCount === 1 ? "event" : "events"}
+                {eventCount} {eventCount === 1 ? "update" : "updates"}
               </OsasSheetSummaryBadge>
-            </SectionHeading>
-
-            {selected.updates?.length > 0 ? (
-              <ol className="relative border-l border-border ml-2 pl-4 text-xs space-y-3 dark:border-border">
-                {selected.updates.map((update) => (
-                  <li key={update.id} className="relative">
-                    <div
-                      className={cn(
-                        "absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 shadow-2xs",
-                        getProposalStatusDotClass(update.status)
-                      )}
-                    />
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="gray" size="compact" className={getProposalStatusBadgeClass(update.status)}>
-                          {update.status}
-                        </Badge>
-                        {update.actor_name && (
-                          <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
-                            by {update.actor_name}
-                          </span>
-                        )}
-                        {update.actor_id && (
-                          <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
-                            {update.actor_id}
-                          </Badge>
-                        )}
-                      </div>
-                      {update.created_at && (
-                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                          {new Date(update.created_at).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed bg-gray-50/70 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-border/70 dark:border-border/60">
-                      <NarrativeText text={update.message} mode="full" />
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <div className="py-4 text-center text-gray-400 dark:text-zinc-500 text-xs">
-                No status transitions recorded yet.
-              </div>
-            )}
-          </div>
+            </SheetSectionHeading>
+            <SheetEvaluationTimeline updates={selected.updates} />
+          </section>
         </div>
 
         {/* STICKY SHEET FOOTER */}

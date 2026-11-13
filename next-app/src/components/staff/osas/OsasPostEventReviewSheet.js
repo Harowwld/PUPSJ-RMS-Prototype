@@ -1,4 +1,6 @@
 "use client";
+import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
@@ -28,7 +30,7 @@ import {
   getPostEventStatusBadgeClass,
 } from "@/components/staff/OsasMonitoringTab";
 import {
-  Alert02Icon, Building01Icon, Calendar01Icon, Cancel01Icon, ClipboardIcon,
+  Alert02Icon, Building01Icon, Calendar01Icon, Cancel01Icon, ClipboardIcon, Clock01Icon,
   Coins01Icon, CovidInfoIcon, File02Icon, Loading01Icon, Mail01Icon,
   Tag01Icon, UserIcon, UserSearch01Icon,
 } from "hugeicons-react";
@@ -108,7 +110,7 @@ export default function OsasPostEventReviewSheet({
 
   const handleSelectStatusPill = (val) => {
     setPostEventStatus(val);
-    if (!postEventNote.trim()) {
+    if (val !== "Needs Revision" && !postEventNote.trim()) {
       setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
     }
   };
@@ -345,7 +347,9 @@ export default function OsasPostEventReviewSheet({
                 Clearance Evaluation
               </h4>
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
-                Current: {selectedPostEvent.status}
+                {postEventStatus !== selectedPostEvent.status
+                  ? `Move to: ${postEventStatus}`
+                  : `Current: ${selectedPostEvent.status}`}
               </OsasSheetSummaryBadge>
             </div>
 
@@ -358,19 +362,16 @@ export default function OsasPostEventReviewSheet({
                 {availablePostEventStatusOptions.map((opt) => {
                   const isChosen = postEventStatus === opt;
                   return (
-                    <button
+                    <Button
                       key={opt}
                       type="button"
+                      size="sm"
+                      variant={isChosen ? "default" : "secondary"}
+                      aria-pressed={isChosen}
                       onClick={() => handleSelectStatusPill(opt)}
-                      className={cn(
-                        "px-2.5 py-1.5 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer",
-                        isChosen
-                          ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-slate-900 dark:border-zinc-100 shadow-xs"
-                          : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-border dark:border-border hover:bg-gray-100 dark:hover:bg-zinc-700"
-                      )}
                     >
                       {opt}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -449,6 +450,14 @@ export default function OsasPostEventReviewSheet({
               />
             </div>
           </div>
+          <section className="space-y-3">
+            <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
+              <OsasSheetSummaryBadge icon={Clock01Icon}>
+                {selectedPostEvent.updates?.length ?? 0} {selectedPostEvent.updates?.length === 1 ? "update" : "updates"}
+              </OsasSheetSummaryBadge>
+            </SheetSectionHeading>
+            <SheetEvaluationTimeline updates={selectedPostEvent.updates} />
+          </section>
         </div>
 
         {/* STICKY SHEET FOOTER */}

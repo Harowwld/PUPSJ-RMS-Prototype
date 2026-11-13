@@ -221,6 +221,28 @@ export async function getPostEventReportById(id) {
   return r;
 }
 
+// Existing post-event updates are stored against the proposal. Limit the history
+// to this report's submission window so an earlier report cannot show a later one's notes.
+export async function listPostEventReportUpdates(reportId) {
+  return query(
+    `SELECT tu.id, tu.status, tu.message, tu.created_at
+       FROM osas_post_event_reports report
+       JOIN transaction_updates tu ON tu.event_proposal_id = report.event_proposal_id
+      WHERE report.id = $1
+        AND tu.status LIKE 'Post-Event %'
+        AND tu.created_at >= report.created_at
+        AND tu.created_at < COALESCE(
+          (SELECT MIN(next_report.created_at)
+             FROM osas_post_event_reports next_report
+            WHERE next_report.event_proposal_id = report.event_proposal_id
+              AND next_report.id > report.id),
+          'infinity'::timestamptz
+        )
+      ORDER BY tu.created_at ASC, tu.id ASC`,
+    [reportId],
+  );
+}
+
 /**
  * Updates status of a post-event report (e.g. Cleared, Needs Revision, Declined)
  */

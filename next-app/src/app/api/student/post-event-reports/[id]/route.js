@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
-import { getPostEventReportById } from "@/lib/osasPostEventRepo";
+import { getPostEventReportById, listPostEventReportUpdates } from "@/lib/osasPostEventRepo";
 import { isStudentOfficerForOrg } from "@/lib/organizationsRepo";
 import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
 
@@ -58,5 +58,6 @@ export async function GET(req, ctx) {
     });
   }
 
-  return NextResponse.json({ ok: true, data: report });
+  const updates = await listPostEventReportUpdates(report.id);
+  return NextResponse.json({ ok: true, data: { ...report, updates } });
 }

@@ -605,7 +605,11 @@ export default function BulkImportOrganizationsModal({
               ref={tableContainerRef}
               className="flex-1 min-h-0 w-full overflow-x-auto show-scrollbar pb-2 select-none border-t border-border dark:border-border"
             >
-                    <Table columns={["selection", "identifier", "text", "category", "text", "category", "category", "category", "status"]} className="min-w-[1260px]">
+              <Table columns={[
+                "selection", "identifier", { kind: "text", minWidth: 220 }, "category",
+                { kind: "text", minWidth: 160 }, { kind: "category", width: 110 },
+                { kind: "category", width: 270 }, { kind: "category", width: 110 }, "status",
+              ]}>
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="w-12 min-w-[48px] p-3 text-center">
@@ -630,9 +634,9 @@ export default function BulkImportOrganizationsModal({
                     <th className="p-3 min-w-[220px] whitespace-nowrap">Organization Name</th>
                     <th className="p-3 w-36 min-w-[130px] whitespace-nowrap">Category</th>
                     <th className="p-3 w-48 min-w-[160px] whitespace-nowrap">Adviser</th>
-                    <th className="p-3 pr-4 w-28 min-w-[95px] whitespace-nowrap">Room</th>
-                    <th className="p-3 pr-6 w-64 min-w-[240px] whitespace-nowrap">Cabinet</th>
-                    <th className="p-3 pl-2 pr-4 w-32 min-w-[110px] whitespace-nowrap">Drawer</th>
+                    <th className="p-3 text-center whitespace-nowrap">Room</th>
+                    <th className="p-3 text-center whitespace-nowrap">Cabinet</th>
+                    <th className="p-3 text-center whitespace-nowrap">Drawer</th>
                     <th className="p-3 pr-5 text-right w-20 min-w-[70px] whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -680,9 +684,11 @@ export default function BulkImportOrganizationsModal({
                         <td className="p-3 align-middle text-gray-600 dark:text-zinc-400 truncate border-r border-border/70 dark:border-border/70" title={r.organization?.adviserName || "N/A"}>
                           {r.organization?.adviserName || "N/A"}
                         </td>
-                        <td className="p-3 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-20 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Room"
+                            className="h-8 w-full rounded-xl px-2 text-[11px]"
+                            valueClassName="text-center"
                             value={String(room || "1")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "room", parseInt(e.target.value, 10))
@@ -692,9 +698,11 @@ export default function BulkImportOrganizationsModal({
                             <option value="2">2</option>
                           </Select>
                         </td>
-                        <td className="p-3 pr-6 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-56 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Cabinet"
+                            className="h-8 w-full rounded-xl px-2 text-[11px]"
+                            valueClassName="text-center"
                             value={String(cabinet || "ACADEMIC ORGANIZATIONS")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "cabinet", e.target.value)
@@ -707,9 +715,11 @@ export default function BulkImportOrganizationsModal({
                             ))}
                           </Select>
                         </td>
-                        <td className="p-3 pl-2 pr-4 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
                           <Select
-                            className="h-7.5 w-22 rounded-md border border-border text-[11px] bg-white dark:bg-zinc-800 px-1.5"
+                            aria-label="Drawer"
+                            className="h-8 w-full rounded-xl px-2 text-[11px]"
+                            valueClassName="text-center"
                             value={String(drawer || "1")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "drawer", parseInt(e.target.value, 10))

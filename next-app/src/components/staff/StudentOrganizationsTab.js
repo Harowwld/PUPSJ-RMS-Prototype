@@ -1,6 +1,6 @@
 "use client";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
-import { isInManilaDateRange } from "@/lib/timeFormat";
+import { formatPHDateTime, isInManilaDateRange } from "@/lib/timeFormat";
 import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
 import { Table } from "@/components/ui/table";
@@ -8,7 +8,9 @@ import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
-import NoticeBanner from "@/components/shared/NoticeBanner";
+import CampusStatusNotice from "@/components/student/CampusStatusNotice";
+import { NarrativePersonBadge } from "@/components/shared/NarrativeText";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle";
 import useCreateAnother from "@/hooks/useCreateAnother";
 
@@ -156,22 +158,16 @@ const getOrgStatusBadgeClass = (status) => {
 
 const getBannerStatusClass = (status) => {
   if (status === "Active") {
-    return "bg-emerald-500/25 text-emerald-200 border-emerald-400/30";
+    return "bg-emerald-500/25 text-emerald-200";
   }
   if (status === "Archived") {
-    return "bg-amber-500/25 text-amber-200 border-amber-400/30";
+    return "bg-amber-500/25 text-amber-200";
   }
-  return "bg-white/15 text-white/90 border-white/20";
-};
-
-const getBannerStatusDotClass = (status) => {
-  if (status === "Active") return "bg-emerald-400";
-  if (status === "Archived") return "bg-amber-400";
-  return "bg-white/60";
+  return "bg-white/15 text-white/90";
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, Contact01Icon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, BookBookmark01Icon, CalendarCheckIn01Icon, Cancel01Icon, Contact01Icon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
@@ -348,12 +344,6 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         setOrganizations(json.data);
         setHasLoaded(true);
         setOrganizationsLoadFailed(false);
-        if (showFeedback) {
-          showToast({
-            title: "Organizations Refreshed",
-            description: "Directory records up to date.",
-          });
-        }
       } catch (err) {
         if (request !== fetchRequestRef.current) return;
         setOrganizationsLoadFailed(true);
@@ -1437,14 +1427,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                         {org.name}
                                       </span>
                                     </div>
-                                    {org.description ? (
+                                    {org.description && !/^recognized pup san juan student organization under osas\.?$/i.test(org.description.trim()) && (
                                       <p className="text-[11px] text-gray-600 dark:text-zinc-300 truncate mt-0.5 block" title={org.description}>
                                         {org.description}
                                       </p>
-                                    ) : (
-                                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic mt-0.5 block truncate">
-                                        No description provided
-                                      </span>
                                     )}
                                   </div>
                                 </td>
@@ -1495,14 +1481,14 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   <button
                                     type="button"
                                     onClick={() => openManageOrgSheet(org, "cbl")}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40 hover:bg-amber-100 transition-colors cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-0 hover:bg-amber-100 transition-colors cursor-pointer"
                                     title="Click to review pending CBL submission"
                                   >
                                     <span>{org.pending_cbl_count} Pending Review</span>
                                   </button>
                                 ) : hasCbl ? (
                                   <div className="flex items-center gap-2">
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-0">
                                       <File02Icon size="1em" className="text-xs" />
                                       <span>Archived</span>
                                     </span>
@@ -1539,23 +1525,18 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center justify-center">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setCblUploadOrg(org);
-                                            setCblFile(null);
-                                          }}
-                                          aria-label="Upload Archival CBL"
-                                          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
-                                        >
-                                          <Upload01Icon size="1em" className="text-xs" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Upload Archival CBL</TooltipContent>
-                                    </Tooltip>
+                                  <div className="flex justify-center">
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      size="xs"
+                                      onClick={() => {
+                                        setCblUploadOrg(org);
+                                        setCblFile(null);
+                                      }}
+                                    >
+                                      Upload By-Laws
+                                    </Button>
                                   </div>
                                 )}
                               </td>
@@ -1639,32 +1620,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           getOrgBannerGradientClasses(org.banner_gradient)
                         )}
                       >
-                        {/* Ambient watermark */}
-                        <div className="absolute -right-2 -bottom-2 text-white/10 pointer-events-none select-none transition-transform duration-300 group-hover:scale-105">
-                          <Building01Icon size="1em" className="text-5xl" />
-                        </div>
-
                         {/* Top Meta Chips */}
                         <div className="relative z-10 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {org.acronym && (
-                              <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs border border-white/25 shadow-2xs">
+                              <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs">
                                 {org.acronym}
                               </span>
                             )}
-                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/25 text-white/90 backdrop-blur-xs border border-white/15">
+                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/25 text-white/90 backdrop-blur-xs">
                               {org.category}
                             </span>
                           </div>
                           <span
                             className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border backdrop-blur-xs shrink-0", getBannerStatusClass(org.status), BADGE_BASE)}
                           >
-                            <span
-                              className={cn(
-                                "w-1.5 h-1.5 rounded-full",
-                                getBannerStatusDotClass(org.status)
-                              )}
-                            />
                             {org.status}
                           </span>
                         </div>
@@ -1831,54 +1801,29 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               </div>
             </SheetHeader>
 
-            {/* Line-Attached Operational Notice for Status */}
-            {selectedOrgForOfficers?.status === "Archived" ? (
-              <NoticeBanner
-                tone="danger"
-                role="status"
-                action={
-                  sheetSubTab !== "info" ? (
-                    <button
-                      type="button"
-                      onClick={() => setSheetSubTab("info")}
-                      title="Switch to Organization Info to reinstate"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-rose-950 dark:text-rose-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
-                    >
-                      <span>Reinstate in Organization Info</span>
-                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
-                    </button>
-                  ) : null
+            {selectedOrgForOfficers && (
+              <CampusStatusNotice
+                title={
+                  selectedOrgForOfficers.status === "Archived" ? "Archived Organization"
+                    : selectedOrgForOfficers.status === "Inactive" ? "Inactive Accreditation"
+                    : "Accredited Campus Organization"
                 }
+                action={sheetSubTab !== "info" && ["Archived", "Inactive"].includes(selectedOrgForOfficers.status) && (
+                  <Button type="button" size="xs" variant="secondary" onClick={() => setSheetSubTab("info")}>
+                    {selectedOrgForOfficers.status === "Archived" ? "Review Reinstatement" : "Update Status"}
+                  </Button>
+                )}
               >
-                <span className="font-semibold">Archived Organization:</span> This organization record is archived. Modification of officers and records is restricted until reinstated.
-              </NoticeBanner>
-            ) : selectedOrgForOfficers?.status === "Inactive" ? (
-              <NoticeBanner
-                tone="warning"
-                action={
-                  sheetSubTab !== "info" ? (
-                    <button
-                      type="button"
-                      onClick={() => setSheetSubTab("info")}
-                      title="Switch to Organization Info to update accreditation status"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
-                    >
-                      <span>Update Status in Organization Info</span>
-                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
-                    </button>
-                  ) : null
-                }
-              >
-                <span className="font-semibold">Inactive Accreditation:</span> Officers cannot submit proposals, post-event reports, or charter amendments for this organization until it is set back to Active.
-              </NoticeBanner>
-            ) : (
-              <NoticeBanner tone="success">
-                <span className="font-semibold">Accredited Campus Organization:</span> Leadership roster authorized to sponsor campus events and execute official paperwork.
-              </NoticeBanner>
+                {selectedOrgForOfficers.status === "Archived"
+                  ? "Reinstate the organization to modify its officers and records."
+                  : selectedOrgForOfficers.status === "Inactive"
+                    ? "Set the organization to Active to restore officer submissions."
+                    : "Authorized officers can submit proposals, reports, and by-laws."}
+              </CampusStatusNotice>
             )}
 
             {/* Sub-tab segmented switcher */}
-            <div className="px-6 py-2.5 border-b border-border dark:border-border">
+            <div className="shrink-0 px-6 py-2.5 border-b border-border dark:border-border">
               <SegmentedControl
                 value={sheetSubTab}
                 onValueChange={setSheetSubTab}
@@ -1907,26 +1852,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div key={sheetSubTab} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6 scrollbar-thin">
               {sheetSubTab === "info" ? (
                 /* Organization Info Form */
                 <form id="org-info-form" onSubmit={handleSaveOrg} className="space-y-5">
                   <div className="space-y-4 pb-2">
-                    <div className="flex items-center justify-between border-b border-border/80 dark:border-border pb-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                          Organization Profile
-                        </h4>
-                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                          Update accreditation details, faculty adviser, and organization scope.
-                        </p>
-                      </div>
-                      <span
-                        className={cn(getOrgStatusBadgeClass(orgForm.status), COMPACT_BADGE_BASE)}
-                      >
+                    <SheetSectionHeading icon="Contact01Icon" title="Organization Profile">
+                      <span className={cn(getOrgStatusBadgeClass(orgForm.status), COMPACT_BADGE_BASE)}>
                         {orgForm.status}
                       </span>
-                    </div>
+                    </SheetSectionHeading>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="sm:col-span-2">
@@ -2071,16 +2006,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <>
                   {/* Authorize Student Officer Section */}
                   <div className="space-y-3 pb-5 border-b border-border/80 dark:border-border">
-                    <div className="flex items-center gap-2">
-                      <UserAdd01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Authorize Student Officer
-                      </h4>
-                    </div>
+                    <SheetSectionHeading icon="UserAdd01Icon" title="Authorize Student Officer" />
                     <form onSubmit={handleAddOfficer} className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                             Student Account Email
                           </label>
                           <Input
@@ -2096,7 +2026,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                             Officer Position
                           </label>
                           <Select
@@ -2116,7 +2046,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                             Student Full Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                           </label>
                           <Input
@@ -2131,7 +2061,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 dark:text-zinc-300 mb-1">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                             Student Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
                           </label>
                           <Input
@@ -2159,13 +2089,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   </div>
 
                   {/* Officer Roster Table */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Active Authorized Officers ({officersList.length})
-                      </h4>
-                    </div>
-
+                  <section className="flex flex-1 flex-col gap-3">
+                    <SheetSectionHeading icon="UserGroupIcon" title="Active Authorized Officers" />
                     {officersLoading ? (
                       <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-xl" />
@@ -2174,6 +2099,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     ) : officersList.length === 0 ? (
                       <EmptyState
                         variant="compact"
+                        className="flex-1 min-h-32"
                         icon={UserGroupIcon}
                         title="No Authorized Officers"
                         description="No student officers are authorized for this organization yet. Add an officer's account email above."
@@ -2265,29 +2191,21 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         })}
                       </div>
                     )}
-                  </div>
+                  </section>
                 </>
               ) : (
                 /* CBL Version History View */
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Constitution & By-Laws Versions ({bylawsHistory.length})
-                      </h4>
-                      <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5">
-                        Track ratification milestones, student amendment proposals, and official archived texts.
-                      </p>
-                    </div>
+                <section className="flex flex-1 flex-col gap-3">
+                  <SheetSectionHeading icon="BookBookmark01Icon" title="Constitution & By-Laws Versions">
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
                       onClick={() => setCblUploadOrg(selectedOrgForOfficers)}
                     >
-                      Archive Charter
+                      Upload By-Laws
                     </Button>
-                  </div>
+                  </SheetSectionHeading>
 
                   {bylawsHistoryLoading ? (
                     <div className="space-y-3">
@@ -2297,9 +2215,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   ) : bylawsHistory.length === 0 ? (
                     <EmptyState
                       variant="compact"
+                      className="flex-1 min-h-32"
                       icon={BookOpen01Icon}
-                      title="No CBL Records on File"
-                      description="Use Archive Charter to upload the first official charter, or officers may submit an amendment."
+                      title="No By-Laws on File"
+                      description="Upload the official Constitution & By-Laws to start the version history."
                     />
                   ) : (
                     <div className="space-y-3">
@@ -2308,28 +2227,27 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           key={ver.id}
                           className="rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-4 space-y-3 shadow-xs hover:border-border dark:hover:border-zinc-700 transition-all"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={cn("px-2 py-0.5 text-xs font-bold rounded-lg", BADGE_PALETTES.violet)}>
-                                  {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={cn("px-2 py-0.5 text-xs font-bold rounded-lg", BADGE_PALETTES.violet)}>
+                                {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
+                              </span>
+                              <span
+                                className={cn(getBylawsStatusBadgeClass(ver.status), COMPACT_BADGE_BASE)}
+                              >
+                                {ver.status}
+                              </span>
+                              {ver.effective_date && (
+                                <span className="text-[11px] text-gray-900 dark:text-zinc-300">
+                                  Effective: <strong className="text-gray-700 dark:text-zinc-300">{new Date(ver.effective_date).toLocaleDateString("en-PH", {
+                                    timeZone: "Asia/Manila",
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}</strong>
                                 </span>
-                                <span
-                                  className={cn(getBylawsStatusBadgeClass(ver.status), COMPACT_BADGE_BASE)}
-                                >
-                                  {ver.status}
-                                </span>
-                                {ver.effective_date && (
-                                  <span className="text-[11px] text-gray-900 dark:text-zinc-300">
-                                    Effective: <strong className="text-gray-700 dark:text-zinc-300">{ver.effective_date}</strong>
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs font-medium text-gray-800 dark:text-zinc-200 mt-2">
-                                {ver.amendment_summary || "Constitution & By-Laws official document"}
-                              </p>
+                              )}
                             </div>
-
                             <Button
                               type="button"
                               size="sm"
@@ -2346,19 +2264,23 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             </Button>
                           </div>
 
+                          <p className="whitespace-pre-wrap wrap-anywhere text-xs font-medium text-gray-800 dark:text-zinc-200">
+                            {ver.amendment_summary || "Constitution & By-Laws official document"}
+                          </p>
+
                           <div className="pt-2 border-t border-border dark:border-border flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500">
                             <span>
-                              Submitted by {ver.submitted_by_name || "OSAS Admin"}
-                              {ver.submitted_by_student_no ? ` (${ver.submitted_by_student_no})` : ""}
+                              Submitted by{" "}
+                              <NarrativePersonBadge
+                                name={ver.submitted_by_name || "OSAS Admin"}
+                                avatarId={ver.submitted_by_student_no}
+                              />
+                              {ver.submitted_by_student_no && (
+                                <span className="tabular-nums"> · {ver.submitted_by_student_no}</span>
+                              )}
                             </span>
                             <span>
-                              {ver.created_at
-                                ? new Date(ver.created_at).toLocaleDateString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
-                                : ""}
+                              {ver.created_at && formatPHDateTime(ver.created_at)}
                             </span>
                           </div>
 
@@ -2416,7 +2338,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       ))}
                     </div>
                   )}
-                </div>
+                </section>
               )}
             </div>
 
@@ -2686,7 +2608,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   title="Archive Constitution & By-Laws"
                   className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 >
-                  {uploadingCbl ? "Uploading Charter…" : "Upload Charter"}
+                  {uploadingCbl ? "Uploading By-Laws…" : "Upload By-Laws"}
                 </Button>
               </DialogFooter>
             </form>

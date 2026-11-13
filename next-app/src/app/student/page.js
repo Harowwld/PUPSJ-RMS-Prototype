@@ -4,8 +4,8 @@ import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference";
 import TablePagination from "@/components/shared/TablePagination";
 import CopyButton from "@/components/shared/CopyButton";
+import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
-import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
@@ -285,7 +285,23 @@ const PROPOSAL_STATUS_NOTICES = {
   Declined: { title: "Proposal Declined", message: "OSAS did not approve this event proposal." },
 };
 
-function ExpandablePanel({ children, reduceMotion, contentClassName = "border-b border-border" }) {
+const POST_EVENT_STATUS_NOTICES = {
+  Submitted: { title: "Post-Event Report Submitted", message: "Your report is awaiting OSAS review." },
+  "Under Review": { title: "Under OSAS Review", message: "OSAS is reviewing your report and liquidation documents." },
+  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and resubmit your post-event report." },
+  Cleared: { title: "Post-Event Report Cleared", message: "OSAS cleared the narrative and liquidation report." },
+  Declined: { title: "Post-Event Report Declined", message: "OSAS declined this post-event report." },
+};
+
+const CBL_STATUS_NOTICES = {
+  Pending: { title: "Pending OSAS Review", message: "This charter submission is awaiting review." },
+  Approved: { title: "Charter Approved", message: "OSAS approved this Constitution & By-Laws version." },
+  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and upload a revised charter." },
+  Declined: { title: "Charter Declined", message: "OSAS declined this charter version." },
+  Superseded: { title: "Charter Superseded", message: "A newer approved charter version has replaced this submission." },
+};
+
+function ExpandablePanel({ children, id, reduceMotion, contentClassName = "border-b border-border" }) {
   const isPresent = useIsPresent();
 
   return (
@@ -297,7 +313,7 @@ function ExpandablePanel({ children, reduceMotion, contentClassName = "border-b 
       transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE_OUT }}
       className="bg-gray-50/40 dark:bg-zinc-900/20"
     >
-      <div className={contentClassName}>{children}</div>
+      <div id={id} className={contentClassName}>{children}</div>
     </motion.div>
   );
 }
@@ -366,6 +382,7 @@ function StudentDashboard() {
   const [eventDatePickerOpen, setEventDatePickerOpen] = useState(false);
   const proposalToday = formatManilaCalendarDate(new Date());
   const proposalDateInvalid = Boolean(proposalForm.eventDate) && proposalForm.eventDate <= proposalToday;
+  const osasRevisionFormTarget = useRef(null);
   const [revisionTargetProposal, setRevisionTargetProposal] = useState(null);
   const [myOrganizations, setMyOrganizations] = useState([]);
   const [selectedOsasOrgId, setSelectedOsasOrgId] = useState("");
@@ -405,6 +422,36 @@ function StudentDashboard() {
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState(null);
   const [selectedPostEventReportForDetail, setSelectedPostEventReportForDetail] = useState(null);
+  const [postEventTimeline, setPostEventTimeline] = useState(null);
+  const selectedPostEventReportId = selectedPostEventReportForDetail?.id;
+  const reportTimeline = postEventTimeline?.reportId === selectedPostEventReportId ? postEventTimeline : null;
+
+  useEffect(() => {
+    if (!selectedPostEventReportId) return;
+    const controller = new AbortController();
+
+    async function loadTimeline() {
+      try {
+        const res = await fetch(`/api/student/post-event-reports/${selectedPostEventReportId}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok) throw new Error("Could not load the post-event timeline.");
+        if (!controller.signal.aborted) {
+          setPostEventTimeline({ reportId: selectedPostEventReportId, updates: json.data.updates });
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setPostEventTimeline({ reportId: selectedPostEventReportId, failed: true });
+        }
+      }
+    }
+
+    void loadTimeline();
+    return () => controller.abort();
+  }, [selectedPostEventReportId]);
+
   const [selectedCblVersionForDetail, setSelectedCblVersionForDetail] = useState(null);
 
   // Proposals Table & Filter state
@@ -528,6 +575,8 @@ function StudentDashboard() {
     [pendingPostEvents, selectedOsasOrgId]
   );
   const selectedProposalStatus = normalizeProposalStatus(selectedProposalForDetail?.status);
+  const postEventNotice = POST_EVENT_STATUS_NOTICES[selectedPostEventReportForDetail?.status] ?? POST_EVENT_STATUS_NOTICES.Submitted;
+  const cblNotice = CBL_STATUS_NOTICES[selectedCblVersionForDetail?.status] ?? CBL_STATUS_NOTICES.Pending;
   const proposalNotice = PROPOSAL_STATUS_NOTICES[selectedProposalStatus] ?? {
     title: "Under OSAS Evaluation",
     message: "OSAS is reviewing your proposal.",
@@ -1841,6 +1890,19 @@ function StudentDashboard() {
     } finally { setProposalSubmitting(false); }
   }
 
+  function focusOsasRevisionForm(open) {
+    if (open || !osasRevisionFormTarget.current) return;
+    const targetId = osasRevisionFormTarget.current;
+    osasRevisionFormTarget.current = null;
+
+    requestAnimationFrame(() => {
+      const panel = document.getElementById(targetId);
+      if (!panel) return;
+      panel.querySelector("h2")?.focus({ preventScroll: true });
+      panel.scrollIntoView({ block: "start", behavior: reduceMotion ? "instant" : "smooth" });
+    });
+  }
+
   function startProposalRevision(proposal) {
     const organizationId = String(proposal?.organization_id || "");
     const authorizedOrganization = myOrganizations.find((org) => String(org.organization_id) === organizationId);
@@ -1854,6 +1916,7 @@ function StudentDashboard() {
       eventDate: proposal.event_date ? String(proposal.event_date).slice(0, 10) : "",
       file: null,
     });
+    osasRevisionFormTarget.current = "osas-proposal-form";
     setRevisionTargetProposal(proposal);
     setView("osas");
     setOsasSubView("proposals");
@@ -1870,6 +1933,7 @@ function StudentDashboard() {
   }
 
   function startPostEventRevision(report) {
+    osasRevisionFormTarget.current = "osas-post-event-form";
     setRevisionTargetReport(report);
     setPostEventForm({
       eventProposalId: String(report.event_proposal_id),
@@ -1985,6 +2049,18 @@ function StudentDashboard() {
       return () => clearTimeout(timer);
     }
   }, [osasSubView, selectedOsasOrgId, loadCblData]);
+
+  function startCblRevision(version) {
+    setCblForm({
+      versionTag: version.version_tag || "",
+      amendmentSummary: version.amendment_summary || "",
+      file: null,
+    });
+    osasRevisionFormTarget.current = "osas-charter-form";
+    setOsasSubView("cbl");
+    setIsFormOpen(true);
+    setSelectedCblVersionForDetail(null);
+  }
 
   async function submitCbl(event) {
     event.preventDefault();
@@ -2926,6 +3002,7 @@ function StudentDashboard() {
                         {isFormOpen && selectedOsasOrganization && (
                           <ExpandablePanel
                             key="event-proposal-form"
+                            id="osas-proposal-form"
                             reduceMotion={reduceMotion}
                             contentClassName="border-t border-border p-5 sm:p-6"
                           >
@@ -2935,7 +3012,7 @@ function StudentDashboard() {
                                 <AddCircleIcon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">
+                                <h2 tabIndex={-1} className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">
                                   {revisionTargetProposal ? "Revise Event Proposal" : "New Event Proposal"}
                                 </h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
@@ -3351,6 +3428,7 @@ function StudentDashboard() {
                         {isFormOpen && selectedOsasOrganization && (
                           <ExpandablePanel
                             key="post-event-report-form"
+                            id="osas-post-event-form"
                             reduceMotion={reduceMotion}
                             contentClassName="border-t border-border p-5 sm:p-6"
                           >
@@ -3360,7 +3438,7 @@ function StudentDashboard() {
                                 <ClipboardIcon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{revisionTargetReport ? "Revise Post-Event Report" : "New Post-Event & Liquidation Report"}</h2>
+                                <h2 tabIndex={-1} className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{revisionTargetReport ? "Revise Post-Event Report" : "New Post-Event & Liquidation Report"}</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
                                   {revisionTargetReport
                                     ? "Upload a revised narrative PDF. You can also replace the liquidation PDF."
@@ -3791,6 +3869,7 @@ function StudentDashboard() {
                         {isFormOpen && selectedOsasOrganization && (
                           <ExpandablePanel
                             key="charter-submission-form"
+                            id="osas-charter-form"
                             reduceMotion={reduceMotion}
                             contentClassName="border-t border-border p-5 sm:p-6"
                           >
@@ -3800,7 +3879,7 @@ function StudentDashboard() {
                                 <BookOpen01Icon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Constitution & By-Laws Submission</h2>
+                                <h2 tabIndex={-1} className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Constitution & By-Laws Submission</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
                                   Submit a ratified charter, baseline document, or amendment for OSAS review and archival · Submitting for {selectedOsasOrganization.organization_name}
                                 </p>
@@ -4594,6 +4673,7 @@ function StudentDashboard() {
       {/* OSAS Proposal Details & Timeline: Sheet Slide-Over */}
       <Sheet
         open={Boolean(selectedProposalForDetail)}
+        onOpenChangeComplete={focusOsasRevisionForm}
         onOpenChange={(open) => !open && setSelectedProposalForDetail(null)}
       >
         <SheetContent
@@ -4870,6 +4950,7 @@ function StudentDashboard() {
       {/* OSAS Post-Event Report Details: Sheet Slide-Over */}
       <Sheet
         open={Boolean(selectedPostEventReportForDetail)}
+        onOpenChangeComplete={focusOsasRevisionForm}
         onOpenChange={(open) => !open && setSelectedPostEventReportForDetail(null)}
       >
         <SheetContent
@@ -4922,50 +5003,7 @@ function StudentDashboard() {
 
           {selectedPostEventReportForDetail && (
             <>
-              {selectedPostEventReportForDetail.status === "Cleared" ? (
-                <CampusStatusNotice title="Post-Event Report Cleared">OSAS cleared the narrative and liquidation report.</CampusStatusNotice>
-              ) : (
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                    selectedPostEventReportForDetail.status === "Needs Revision"
-                      ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                      : selectedPostEventReportForDetail.status === "Declined"
-                      ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                      : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-                  )}
-                >
-                  <Shield01Icon
-                    size="1em"
-                    className={cn(
-                      "text-[15px] shrink-0",
-                      selectedPostEventReportForDetail.status === "Needs Revision"
-                        ? "text-amber-600 dark:text-amber-400"
-                        : selectedPostEventReportForDetail.status === "Declined"
-                        ? "text-rose-600 dark:text-rose-400"
-                        : "text-blue-600 dark:text-blue-400"
-                    )}
-                  />
-                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                    <strong className="font-semibold">
-                      {selectedPostEventReportForDetail.status === "Needs Revision"
-                        ? "Revision Required:"
-                        : selectedPostEventReportForDetail.status === "Declined"
-                        ? "Post-Event Report Declined:"
-                        : selectedPostEventReportForDetail.status === "Under Review"
-                        ? "Under OSAS Review:"
-                        : "Post-Event Report Submitted:"}
-                    </strong>{" "}
-                    {selectedPostEventReportForDetail.status === "Needs Revision"
-                      ? "OSAS requested changes to this post-event report."
-                      : selectedPostEventReportForDetail.status === "Declined"
-                      ? "OSAS declined this post-event report."
-                      : selectedPostEventReportForDetail.status === "Under Review"
-                      ? "OSAS is reviewing your post-event report and liquidation documents."
-                      : "Your report has been received by OSAS."}
-                  </span>
-                </div>
-              )}
+              <CampusStatusNotice title={postEventNotice.title}>{postEventNotice.message}</CampusStatusNotice>
 
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
                 <section className="space-y-2">
@@ -5004,20 +5042,6 @@ function StudentDashboard() {
                   </div>
                 )}
 
-                {selectedPostEventReportForDetail.review_note && (
-                  <div className="space-y-2">
-                    <SheetSectionHeading icon="Message01Icon" title="OSAS Review Note">
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                        {selectedPostEventReportForDetail.reviewer_name || "OSAS"}
-                        {selectedPostEventReportForDetail.reviewed_at && ` · ${formatPHDateTime(selectedPostEventReportForDetail.reviewed_at)}`}
-                      </span>
-                    </SheetSectionHeading>
-                    <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                      <NarrativeText text={selectedPostEventReportForDetail.review_note} mode="full" />
-                    </div>
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <SheetSectionHeading icon="Attachment01Icon" title="Submitted Documents" />
                   <div className="space-y-2">
@@ -5036,38 +5060,78 @@ function StudentDashboard() {
                         filename: selectedPostEventReportForDetail.liquidation_original_filename,
                         storageFilename: selectedPostEventReportForDetail.liquidation_storage_filename,
                       },
-                    ].map((file) => (
-                      <div key={file.key} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                            <File02Icon size={16} />
+                    ].map((file) => {
+                      const Row = file.storageFilename ? "button" : "div";
+                      const previewProps = file.storageFilename ? {
+                        type: "button",
+                        "aria-label": `Preview ${file.label}`,
+                        onClick: () => handleOpenPdfPreview(null, {
+                          url: `/api/student/post-event-reports/${selectedPostEventReportForDetail.id}?file=${file.key}`,
+                          title: `${file.label}: ${selectedPostEventReportForDetail.event_title}`,
+                          subtitle: `Submitted by ${selectedPostEventReportForDetail.submitted_by_email || me?.email || "Student Officer"}`,
+                          studentName: me?.name || "Student",
+                          docType: file.docType,
+                          originalFilename: file.filename || `${file.key}.pdf`,
+                        }),
+                      } : {};
+
+                      return (
+                        <Row
+                          key={file.key}
+                          {...previewProps}
+                          className={cn(
+                            "flex w-full items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left dark:border-border/60 dark:bg-zinc-800/40",
+                            file.storageFilename && "table-action-row cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                              <File02Icon size={16} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{file.label}</p>
+                              <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate" title={file.filename || "No file attached"}>
+                                {file.filename || "No file attached"}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{file.label}</p>
-                            <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate" title={file.filename || "No file attached"}>
-                              {file.filename || "No file attached"}
-                            </p>
-                          </div>
-                        </div>
-                        {file.storageFilename ? (
-                          <SheetPreviewButton
-                            label={`Preview ${file.label}`}
-                            onClick={() => handleOpenPdfPreview(null, {
-                              url: `/api/student/post-event-reports/${selectedPostEventReportForDetail.id}?file=${file.key}`,
-                              title: `${file.label}: ${selectedPostEventReportForDetail.event_title}`,
-                              subtitle: `Submitted by ${selectedPostEventReportForDetail.submitted_by_email || me?.email || "Student Officer"}`,
-                              studentName: me?.name || "Student",
-                              docType: file.docType,
-                              originalFilename: file.filename || `${file.key}.pdf`,
-                            })}
-                          />
-                        ) : (
-                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
-                        )}
-                      </div>
-                    ))}
+                          {file.storageFilename ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="table-action-button shrink-0">
+                                  <ViewIcon size={16} aria-hidden="true" />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>Preview PDF</TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="shrink-0 text-[11px] italic text-gray-400 dark:text-zinc-500">No file</span>
+                          )}
+                        </Row>
+                      );
+                    })}
                   </div>
                 </div>
+                <section className="space-y-3">
+                  <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
+                    {reportTimeline?.updates && <SheetUpdateCount count={reportTimeline.updates.length} />}
+                  </SheetSectionHeading>
+                  {!reportTimeline ? (
+                    <p role="status" className="text-xs text-muted-foreground">Loading evaluation updates…</p>
+                  ) : reportTimeline.failed ? (
+                    <p role="status" className="text-xs text-muted-foreground">Could not load evaluation updates. Reopen the report to try again.</p>
+                  ) : (
+                    <SheetEvaluationTimeline updates={reportTimeline.updates} />
+                  )}
+                  {selectedPostEventReportForDetail.review_note
+                    && reportTimeline
+                    && !reportTimeline.updates?.some((update) => update.message === selectedPostEventReportForDetail.review_note) && (
+                      <div className="space-y-1 text-xs text-gray-700 dark:text-zinc-300">
+                        <p className="font-semibold">Latest OSAS Review Note</p>
+                        <NarrativeText text={selectedPostEventReportForDetail.review_note} mode="full" />
+                      </div>
+                    )}
+                </section>
               </div>
 
               <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
@@ -5101,6 +5165,7 @@ function StudentDashboard() {
       {/* OSAS Constitution & By-Laws Details: Sheet Slide-Over */}
       <Sheet
         open={Boolean(selectedCblVersionForDetail)}
+        onOpenChangeComplete={focusOsasRevisionForm}
         onOpenChange={(open) => !open && setSelectedCblVersionForDetail(null)}
       >
         <SheetContent
@@ -5153,54 +5218,7 @@ function StudentDashboard() {
 
           {selectedCblVersionForDetail && (
             <>
-              {selectedCblVersionForDetail.status === "Approved" ? (
-                <CampusStatusNotice title="Charter Approved">OSAS approved this Constitution & By-Laws version.</CampusStatusNotice>
-              ) : (
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                    selectedCblVersionForDetail.status === "Needs Revision"
-                      ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                      : selectedCblVersionForDetail.status === "Declined"
-                      ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                      : selectedCblVersionForDetail.status === "Superseded"
-                      ? "border-gray-200/90 bg-gray-50/90 text-gray-800 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
-                      : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-                  )}
-                >
-                  <BookBookmark01Icon
-                    size="1em"
-                    className={cn(
-                      "text-[15px] shrink-0",
-                      selectedCblVersionForDetail.status === "Needs Revision"
-                        ? "text-amber-600 dark:text-amber-400"
-                        : selectedCblVersionForDetail.status === "Declined"
-                        ? "text-rose-600 dark:text-rose-400"
-                        : selectedCblVersionForDetail.status === "Superseded"
-                        ? "text-gray-500 dark:text-zinc-400"
-                        : "text-blue-600 dark:text-blue-400"
-                    )}
-                  />
-                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                    <strong className="font-semibold">
-                      {selectedCblVersionForDetail.status === "Needs Revision"
-                        ? "Revision Requested:"
-                        : selectedCblVersionForDetail.status === "Declined"
-                        ? "Submission Declined:"
-                        : selectedCblVersionForDetail.status === "Superseded"
-                        ? "Superseded:"
-                        : "Pending OSAS Review:"}
-                    </strong>{" "}
-                    {selectedCblVersionForDetail.status === "Needs Revision"
-                      ? "OSAS requested changes to this charter submission."
-                      : selectedCblVersionForDetail.status === "Declined"
-                      ? "OSAS did not approve this charter version."
-                      : selectedCblVersionForDetail.status === "Superseded"
-                      ? "A newer approved charter version has replaced this submission."
-                      : "This charter submission is awaiting review."}
-                  </span>
-                </div>
-              )}
+              <CampusStatusNotice title={cblNotice.title}>{cblNotice.message}</CampusStatusNotice>
 
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
                 <section className="space-y-2">
@@ -5243,54 +5261,56 @@ function StudentDashboard() {
 
                 <div className="space-y-2">
                   <SheetSectionHeading icon="Attachment01Icon" title="Submitted Document" />
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                        <File02Icon size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Constitution &amp; By-Laws PDF</p>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate" title={selectedCblVersionForDetail.original_filename || "No file attached"}>
-                          {selectedCblVersionForDetail.original_filename || "No file attached"}
-                        </p>
-                      </div>
-                    </div>
-                    {selectedCblVersionForDetail.storage_filename && selectedOsasOrgId ? (
-                      <div className="flex shrink-0 items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenPdfPreview(null, {
-                            url: `/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`,
-                            title: `${cblOrgData?.name || "Organization"}: ${selectedCblVersionForDetail.version_tag || "CBL"}`,
-                            subtitle: `Submitted by ${selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"}. Status: ${selectedCblVersionForDetail.status}`,
-                            studentName: selectedCblVersionForDetail.submitted_by_name || me?.name || "Student",
-                            docType: "Constitution & By-Laws",
-                            originalFilename: selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf",
-                          })}
-                          className="shrink-0"
-                        >
-                          View Document
-                        </Button>
+                  {selectedCblVersionForDetail.storage_filename && selectedOsasOrgId ? (
+                    <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 dark:border-border/60 dark:bg-zinc-800/40">
+                      <button
+                        type="button"
+                        aria-label="Preview Constitution & By-Laws PDF"
+                        className="table-action-row flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-ring"
+                        onClick={() => handleOpenPdfPreview(null, {
+                          url: `/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`,
+                          title: `${cblOrgData?.name || "Organization"}: ${selectedCblVersionForDetail.version_tag || "CBL"}`,
+                          subtitle: `Submitted by ${selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"}. Status: ${selectedCblVersionForDetail.status}`,
+                          studentName: selectedCblVersionForDetail.submitted_by_name || me?.name || "Student",
+                          docType: "Constitution & By-Laws",
+                          originalFilename: selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf",
+                        })}
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                            <File02Icon size={16} aria-hidden="true" />
+                          </div>
+                          <p className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-100" title={selectedCblVersionForDetail.original_filename}>
+                            {selectedCblVersionForDetail.original_filename || "Constitution & By-Laws PDF"}
+                          </p>
+                        </div>
                         <Tooltip>
                           <TooltipTrigger asChild>
+                            <span className="table-action-button shrink-0">
+                              <ViewIcon size={16} aria-hidden="true" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>Preview PDF</TooltipContent>
+                        </Tooltip>
+                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button asChild variant="secondary" className="table-action-button shrink-0">
                             <a
                               href={`/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`}
                               download={selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf"}
                               aria-label="Download Constitution & By-Laws document"
-                              className="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors"
                             >
                               <Download01Icon size={16} aria-hidden="true" />
                             </a>
-                          </TooltipTrigger>
-                          <TooltipContent>Download Constitution &amp; By-Laws</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
-                    )}
-                  </div>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Download Constitution &amp; By-Laws</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : (
+                    <EmptyState variant="compact" title="No File Attached" />
+                  )}
                 </div>
               </div>
 
@@ -5303,6 +5323,11 @@ function StudentDashboard() {
                 >
                   Close
                 </Button>
+                {selectedCblVersionForDetail.status === "Needs Revision" && selectedOsasOrganization && (
+                  <Button size="sm" onClick={() => startCblRevision(selectedCblVersionForDetail)}>
+                    Revise &amp; Resubmit
+                  </Button>
+                )}
               </SheetFooter>
             </>
           )}

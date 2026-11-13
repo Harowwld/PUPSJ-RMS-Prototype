@@ -8,7 +8,7 @@ export default function SheetPreviewButton({ label, onClick }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label={label} onClick={onClick}>
+        <Button type="button" variant="secondary" size="icon-sm" className="table-action-button shrink-0" aria-label={label} onClick={onClick}>
           <ViewIcon size={16} aria-hidden="true" />
         </Button>
       </TooltipTrigger>
