@@ -491,6 +491,7 @@ export default function OfficeDocumentsTable({
                         {visibleColumns.includes("doc_type") && (
                           <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                             <div className="font-semibold text-xs text-gray-900 dark:text-zinc-100 truncate" title={document.doc_type}>{document.doc_type}</div>
+                            {document.event_name && <div className="truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.event_name}>Event: {document.event_name}</div>}
                             <div className="truncate text-xs text-gray-500 dark:text-zinc-400 mt-0.5" title={document.original_filename}>{document.original_filename}</div>
                           </td>
                         )}

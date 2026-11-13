@@ -1078,6 +1078,7 @@ export default function DocumentsTab({
                   </DialogTitle>
                   <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                     Viewing details for student {selectedDoc?.student_no}.
+                    {selectedDoc?.event_name ? ` Event: ${selectedDoc.event_name}.` : ""}
                   </DialogDescription>
                 </div>
               </div>

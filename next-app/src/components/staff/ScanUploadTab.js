@@ -48,6 +48,19 @@ const COORDINATE_REGION_LABELS = {
 
 const SELECT_BASE_CLASS = "h-10 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border text-xs shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80";
 
+function isFuzzyEventMatch(candidate, query) {
+  const value = candidate.toLowerCase();
+  const needle = query.toLowerCase();
+  if (value.includes(needle)) return true;
+  if (needle.length < 3) return false;
+  let cursor = 0;
+  for (const char of value) {
+    if (char === needle[cursor]) cursor += 1;
+    if (cursor === needle.length) return true;
+  }
+  return false;
+}
+
 export default function ScanUploadTab({
   authUser = null,
   loading,
@@ -169,14 +182,33 @@ export default function ScanUploadTab({
             String(d.student_no || "").trim().toUpperCase() === cleanId
           : String(d.student_no || "").trim().toUpperCase() === cleanId;
         const matchType = String(d.doc_type || "").trim().toUpperCase() === cleanType;
+        const matchEvent = !isOsas || String(d.event_name || "").trim().toLowerCase() === String(newRec.eventName || "").trim().toLowerCase();
         const notDeclined = String(d.approval_status || "").toLowerCase() !== "declined";
-        return matchTarget && matchType && notDeclined;
+        return matchTarget && matchType && matchEvent && notDeclined;
       }) || null
     );
-  }, [staffDocs, isOsas, newRec.organizationId, newRec.acronym, newRec.name, newRec.studentNo, newRec.docType]);
+  }, [staffDocs, isOsas, newRec.organizationId, newRec.acronym, newRec.name, newRec.studentNo, newRec.docType, newRec.eventName]);
 
   const [showStudentNoSuggestions, setShowStudentNoSuggestions] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
+  const [showEventNameSuggestions, setShowEventNameSuggestions] = useState(false)
+
+  const eventNameSuggestions = useMemo(() => {
+    if (!isOsas) return [];
+    const targetId = String(newRec.organizationId || newRec.acronym || newRec.name || "").trim().toLowerCase();
+    const docType = String(newRec.docType || "").trim().toLowerCase();
+    const query = String(newRec.eventName || "").trim();
+    if (!targetId || !docType || !query) return [];
+    const names = new Map();
+    staffDocs.forEach((document) => {
+      const docTarget = String(document.organization_id || document.student_no || "").trim().toLowerCase();
+      const eventName = String(document.event_name || "").trim();
+      if (docTarget === targetId && String(document.doc_type || "").trim().toLowerCase() === docType && eventName && isFuzzyEventMatch(eventName, query)) {
+        names.set(eventName.toLowerCase(), eventName);
+      }
+    });
+    return [...names.values()].sort((a, b) => a.localeCompare(b));
+  }, [isOsas, staffDocs, newRec.organizationId, newRec.acronym, newRec.name, newRec.docType, newRec.eventName]);
 
   const filteredStudentNoSuggestions = useMemo(() => {
     const q = (newRec.studentNo || "").trim().toLowerCase();
@@ -1200,6 +1232,7 @@ export default function ScanUploadTab({
                                 onClick={() => {
                                   if (rescanContext) return
                                   setUploadStudentIsExisting(false)
+                                  setNewRec((current) => ({ ...current, eventName: "" }))
                                   clearAllUploadFieldErrors?.()
                                 }}
                                 className={cn(
@@ -1256,6 +1289,7 @@ export default function ScanUploadTab({
                                             category: "",
                                             adviserName: "",
                                             adviserEmail: "",
+                                            eventName: "",
                                           })
                                           setUploadStudentIsExisting(true)
                                           onCancelRescan?.()
@@ -1296,6 +1330,22 @@ export default function ScanUploadTab({
                                       </option>
                                     ))}
                                   </Select>
+                                </div>
+
+                                <div>
+                                  <label htmlFor="osas-event-name" className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">Event Name</label>
+                                  <div className="relative">
+                                    <Input id="osas-event-name" role="combobox" aria-autocomplete="list" aria-expanded={showEventNameSuggestions && eventNameSuggestions.length > 0} aria-controls="osas-event-name-options" value={newRec.eventName || ""} maxLength={200} placeholder="Enter event name" onFocus={() => setShowEventNameSuggestions(true)} onBlur={() => window.setTimeout(() => setShowEventNameSuggestions(false), 120)} onChange={(e) => { setNewRec((p) => ({ ...p, eventName: e.target.value })); setShowEventNameSuggestions(true); }} />
+                                    {showEventNameSuggestions && eventNameSuggestions.length > 0 && (
+                                      <div id="osas-event-name-options" role="listbox" aria-label="Similar event names" className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-zinc-900">
+                                        {eventNameSuggestions.map((eventName) => (
+                                          <button key={eventName.toLowerCase()} type="button" role="option" aria-selected={String(newRec.eventName || "").toLowerCase() === eventName.toLowerCase()} className="block w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800" onMouseDown={(event) => event.preventDefault()} onClick={() => { setNewRec((p) => ({ ...p, eventName })); setShowEventNameSuggestions(false); }}>
+                                            {eventName}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {newRec.organizationId && (

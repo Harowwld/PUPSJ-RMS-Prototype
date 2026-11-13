@@ -51,6 +51,7 @@ export async function findDuplicateActiveDocument({
   studentNo = null,
   organizationId = null,
   docType,
+  eventName = null,
 }) {
   if (!officeId || !docType) return null;
   const effectiveOrgId = organizationId ? String(organizationId).trim() : null;
@@ -64,9 +65,10 @@ export async function findDuplicateActiveDocument({
           AND student_no = ?
           AND lower(doc_type) = lower(?)
           AND (approval_status IS NULL OR approval_status != 'Declined')
+          AND (? = FALSE OR lower(trim(coalesce(event_name, ''))) = lower(trim(coalesce(?, ''))))
         ORDER BY id DESC
         LIMIT 1`,
-      [officeId, effectiveStudentNo, String(docType).trim()]
+      [officeId, effectiveStudentNo, String(docType).trim(), officeId === 'osas', eventName]
     );
   }
 
@@ -78,9 +80,10 @@ export async function findDuplicateActiveDocument({
           AND organization_id = ?
           AND lower(doc_type) = lower(?)
           AND (approval_status IS NULL OR approval_status != 'Declined')
+          AND (? = FALSE OR lower(trim(coalesce(event_name, ''))) = lower(trim(coalesce(?, ''))))
         ORDER BY id DESC
         LIMIT 1`,
-      [officeId, effectiveOrgId, String(docType).trim()]
+      [officeId, effectiveOrgId, String(docType).trim(), officeId === 'osas', eventName]
     );
   }
 
@@ -102,6 +105,7 @@ export async function createDocument({
   sourceIngestId = null,
   allowOverwrite = false,
   replaceDocumentId = null,
+  eventName = null,
 }) {
   await ensureReviewColumns();
   if (!officeId) throw new Error("Document office scope is required.");
@@ -182,11 +186,14 @@ export async function createDocument({
     }
   }
 
+  const normalizedEventName = officeId === 'osas' ? String(eventName || '').trim() || null : null;
+  if (normalizedEventName?.length > 200) throw new Error('Event name must be 200 characters or fewer.');
   let existingActiveDoc = await findDuplicateActiveDocument({
     officeId,
     studentNo: verifiedStudentNo || effectiveStudentNo,
     organizationId: effectiveOrgId,
     docType,
+    eventName: normalizedEventName,
   });
 
   if (!existingActiveDoc && allowOverwrite && replaceDocumentId) {
@@ -209,6 +216,7 @@ export async function createDocument({
           studentName: effectiveStudentName,
           docType,
           organizationId: effectiveOrgId,
+          eventName: normalizedEventName,
         },
         { officeId }
       );
@@ -258,7 +266,8 @@ export async function createDocument({
       size_bytes,
       approval_status,
       uploaded_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      , event_name
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         officeId,
@@ -273,6 +282,7 @@ export async function createDocument({
         sizeBytes,
         "Pending",
         uploadedBy || null,
+        normalizedEventName,
       ],
     );
   } catch (error) {
@@ -594,7 +604,7 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, organ
 
 export async function replaceDocumentFile(
   id,
-  { originalFilename, mimeType, sizeBytes, buffer, studentNo, studentName, docType, organizationId, isPreviewed },
+  { originalFilename, mimeType, sizeBytes, buffer, studentNo, studentName, docType, organizationId, isPreviewed, eventName },
   { officeId } = {},
 ) {
   await ensureReviewColumns();
@@ -615,6 +625,8 @@ export async function replaceDocumentFile(
   const nextDocType = docType ?? existing.doc_type;
   const nextIsPreviewed = isPreviewed !== undefined ? Boolean(isPreviewed) : Boolean(existing.is_previewed);
   const nextOrgId = organizationId !== undefined ? organizationId : existing.organization_id;
+  const nextEventName = scopedOfficeId === "osas" ? (eventName !== undefined ? (String(eventName || "").trim() || null) : existing.event_name || null) : null;
+  if (nextEventName?.length > 200) throw new Error("Event name must be 200 characters or fewer.");
   if (scopedOfficeId === "osas") {
     if (nextOrgId) {
       const org = await dbGet("SELECT id FROM student_organizations WHERE lower(id) = lower(?) OR lower(coalesce(acronym, '')) = lower(?)", [nextOrgId, nextOrgId]);
@@ -652,11 +664,12 @@ export async function replaceDocumentFile(
            mime_type = ?,
            size_bytes = ?,
            approval_status = 'Pending',
+           event_name = ?,
            reviewed_by = NULL,
            reviewed_at = NULL,
            review_note = NULL
        WHERE id = ? AND office_id = ?`,
-      [originalFilename, storageFilename, verifiedStudentNo?.student_no || null, nextStudentName || null, nextOrgId || null, nextDocType, nextIsPreviewed, mimeType, sizeBytes, id, scopedOfficeId]
+      [originalFilename, storageFilename, verifiedStudentNo?.student_no || null, nextStudentName || null, nextOrgId || null, nextDocType, nextIsPreviewed, mimeType, sizeBytes, nextEventName, id, scopedOfficeId]
     );
   } catch (error) {
     try { await fs.promises.unlink(absPath); } catch {}
@@ -692,9 +705,10 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
         `SELECT id, approval_status FROM documents
           WHERE office_id = $1 AND ${entityColumn} = $2
             AND lower(trim(doc_type)) = lower(trim($3))
+            AND ($5 != 'osas' OR lower(trim(coalesce(event_name, ''))) = lower(trim(coalesce($6, ''))))
             AND approval_status = 'Approved' AND id != $4
           ORDER BY id LIMIT 1`,
-        [scopedOfficeId, entityId, existing.doc_type, id],
+        [scopedOfficeId, entityId, existing.doc_type, id, scopedOfficeId, existing.event_name],
       );
       if (duplicate) {
         const entityLabel = existing.student_no ? "student" : "organization";

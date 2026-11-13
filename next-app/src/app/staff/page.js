@@ -339,6 +339,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     cabinet: "",
     drawer: "",
     docType: "",
+    eventName: "",
     organizationId: "",
     acronym: "",
     category: "",
@@ -1390,6 +1391,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         (String(d.student_no || "").trim().toUpperCase() === cleanId ||
          String(d.organization_id || "").trim().toUpperCase() === cleanId) &&
         String(d.doc_type || "").trim().toUpperCase() === cleanType &&
+        (authUser?.office_id !== "osas" || String(d.event_name || "").trim().toLowerCase() === String(newRec.eventName || "").trim().toLowerCase()) &&
         String(d.approval_status).toLowerCase() !== "declined"
     );
 
@@ -1397,7 +1399,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setDuplicateTargetDoc(existing);
       setDuplicateConfirmOpen(true);
     }
-  }, [staffDocs, isReplaceMode, rescanContext]);
+  }, [staffDocs, isReplaceMode, rescanContext, authUser?.office_id, newRec.eventName]);
 
   const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
@@ -1563,6 +1565,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
     if (isOsas) {
       payload.append("docType", newRec.docType);
+      payload.append("eventName", String(newRec.eventName || "").trim());
       if (uploadStudentIsExisting) {
         payload.append("organizationId", String(newRec.organizationId || "").trim());
         payload.append("organizationName", String(newRec.name || "").trim());
@@ -1787,6 +1790,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }));
         setUploadStudentIsExisting(Boolean(resolvedTargetId));
       }
+    }
+    if (isOsas) {
+      setNewRec((current) => ({ ...current, eventName: matchedDoc?.event_name || "" }));
     }
     clearAllUploadFieldErrors();
     // Clear previous uploads so the dropzone is ready for the new scan/replacement file
