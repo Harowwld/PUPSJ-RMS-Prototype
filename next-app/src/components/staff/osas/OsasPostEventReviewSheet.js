@@ -1,12 +1,19 @@
 "use client";
+import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
+import CampusStatusNotice from "@/components/student/CampusStatusNotice";
+import {
+  OsasSheetInfoRow as InfoRow,
+  OsasSheetSectionHeading as SectionHeading,
+  OsasSheetSummaryBadge,
+} from "./OsasReviewSheetMetadata";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
-import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import { NarrativePersonBadge } from "@/components/shared/NarrativeText";
+import { getOsasRecordReference } from "@/lib/osasRecordReference";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import {
@@ -19,35 +26,36 @@ import {
 } from "@/components/ui/sheet";
 import {
   getPostEventStatusBadgeClass,
-  getPostEventStatusDotClass,
 } from "@/components/staff/OsasMonitoringTab";
-import { Alert02Icon, Cancel01Icon, CovidInfoIcon, File02Icon, Loading01Icon, ViewIcon } from "hugeicons-react";
+import {
+  Alert02Icon, Building01Icon, Calendar01Icon, Cancel01Icon, ClipboardIcon,
+  Coins01Icon, CovidInfoIcon, File02Icon, Loading01Icon, Mail01Icon,
+  Tag01Icon, UserIcon, UserSearch01Icon,
+} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-/**
- * Standard Information Row (label : value)
- * Clean unboxed metadata layout aligned with colons and icons.
- */
-function InfoRow({ icon, label, value, children, className }) {
-  return (
-    <div
-      className={cn(
-        "grid grid-cols-[135px_12px_1fr] sm:grid-cols-[150px_14px_1fr] items-start gap-1 text-xs py-1.5 border-b border-gray-100/70 dark:border-zinc-800/50 last:border-0",
-        className
-      )}
-    >
-      <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
-        {icon && (
-          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
-        )}
-        <span className="truncate">{label}</span>
-      </div>
-      <span className="text-gray-300 dark:text-zinc-600 select-none">:</span>
-      <div className="text-gray-900 dark:text-zinc-100 font-semibold break-words min-w-0">
-        {children ?? (value || <span className="text-gray-400 font-normal italic">None</span>)}
-      </div>
-    </div>
-  );
-}
+const CLEARED_NOTICE = {
+  title: "Post-Event Report Cleared",
+  message: "OSAS cleared the narrative and liquidation report.",
+};
+const REVISION_NOTICE = {
+  title: "Revision Required",
+  message: "The student organization must revise and resubmit the requested documents or report details.",
+};
+const DECLINED_NOTICE = {
+  title: "Post-Event Report Declined",
+  message: "OSAS declined this post-event report.",
+};
+
+const POST_EVENT_STATUS_NOTICES = {
+  Cleared: CLEARED_NOTICE,
+  Approved: CLEARED_NOTICE,
+  Completed: CLEARED_NOTICE,
+  "Needs Revision": REVISION_NOTICE,
+  RevisionRequested: REVISION_NOTICE,
+  Declined: DECLINED_NOTICE,
+  Rejected: DECLINED_NOTICE,
+  Submitted: { title: "Report Submitted", message: "The post-event report is awaiting OSAS review." },
+};
 
 export default function OsasPostEventReviewSheet({
   open,
@@ -70,9 +78,14 @@ export default function OsasPostEventReviewSheet({
 }) {
   if (!selectedPostEvent) return null;
 
+  const statusNotice = POST_EVENT_STATUS_NOTICES[selectedPostEvent.status] ?? {
+    title: "Under Financial Review",
+    message: "OSAS is reviewing the post-event report and liquidation documents.",
+  };
+
   const trackingNo =
     selectedPostEvent.event_tracking_number ||
-    `EVT-${selectedPostEvent.event_proposal_id || selectedPostEvent.id}`;
+    (selectedPostEvent.event_proposal_id != null ? `EVT-${selectedPostEvent.event_proposal_id}` : null);
   const attendeesCount =
     selectedPostEvent.actual_attendance ??
     selectedPostEvent.actual_attendees ??
@@ -152,149 +165,59 @@ export default function OsasPostEventReviewSheet({
           </div>
         </SheetHeader>
 
-        {/* Line-Attached Edge-to-Edge Status Notice */}
-        <div
-          className={cn(
-            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-            selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
-              ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-              : selectedPostEvent.status === "RevisionRequested"
-              ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-              : selectedPostEvent.status === "Rejected"
-              ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-              : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-          )}
-        >
-          <AppIcon
-            className={cn(
-              " text-[15px] shrink-0",
-              selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
-                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                : selectedPostEvent.status === "RevisionRequested"
-                ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                : selectedPostEvent.status === "Rejected"
-                ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                : "Clock01Icon text-blue-600 dark:text-blue-400"
-            )}
-          />
-          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-            <strong className="font-semibold">
-              {selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
-                ? "Liquidation Cleared:"
-                : selectedPostEvent.status === "RevisionRequested"
-                ? "Revision Required:"
-                : selectedPostEvent.status === "Rejected"
-                ? "Liquidation Rejected:"
-                : "Under Financial Review:"}
-            </strong>{" "}
-            {selectedPostEvent.status === "Approved" || selectedPostEvent.status === "Completed"
-              ? "Narrative report and financial liquidation statement approved by OSAS."
-              : selectedPostEvent.status === "RevisionRequested"
-              ? "Student organization must revise and resubmit receipts or report details."
-              : selectedPostEvent.status === "Rejected"
-              ? "This post-event liquidation report was declined."
-              : "Post-event documentation is logged and undergoing OSAS financial evaluation."}
-          </span>
-        </div>
+        <CampusStatusNotice title={statusNotice.title}>
+          {statusNotice.message}
+        </CampusStatusNotice>
 
         {/* SCROLLABLE 1-COLUMN BODY */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Summary Strip */}
-          <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-            <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center text-xl shrink-0 font-bold border border-purple-500/20 dark:border-purple-800/40 mt-0.5">
-              <AppIcon className=" Invoice01Icon" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-xs text-gray-600 dark:text-zinc-400">
-                  {selectedPostEvent.organization_name}
-                </span>
-                <span className={cn("font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300", COMPACT_BADGE_BASE)}>
-                  {trackingNo}
-                </span>
-                <span
-                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), COMPACT_BADGE_BASE)}
-                >
-                  {selectedPostEvent.status}
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                {selectedPostEvent.event_title}
-              </h3>
-              <div className="flex items-center gap-2 mt-2">
-                <ProfileAvatar
-                  id={
-                    selectedPostEvent.student_no ||
-                    selectedPostEvent.student_account_id
-                  }
-                  name={proponentName}
-                  initials={proponentName
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((part) => part[0]?.toUpperCase())
-                    .join("") || "ST"}
-                  className="size-7 border border-pup-maroon/20"
-                  fallbackClassName="text-[10px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
-                />
-                <p className="text-xs text-gray-500 dark:text-zinc-400 min-w-0 truncate">
-                  Submitter: <strong className="text-gray-900 dark:text-zinc-200">{proponentName}</strong>
-                  {selectedPostEvent.submitted_by_email && ` · ${selectedPostEvent.submitted_by_email}`}
-                </p>
-              </div>
-            </div>
+          <div className="border-b border-border pb-4">
+            <h3 className="min-w-0 wrap-anywhere text-sm font-bold leading-snug text-gray-900 dark:text-zinc-100">
+              {selectedPostEvent.event_title}
+            </h3>
           </div>
 
-          {/* SECTION 1: Post-Event Specification (Unboxed InfoRow) */}
-          <div className="space-y-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Clearance Specification
-            </h4>
-            <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-              <InfoRow icon="Building01Icon" label="Organization">
-                <span>
-                  {selectedPostEvent.organization_name}
-                  {selectedPostEvent.organization_acronym && (
-                    <span className="text-gray-400 font-normal ml-1">
-                      ({selectedPostEvent.organization_acronym})
-                    </span>
-                  )}
-                </span>
+          <section className="space-y-2">
+            <SectionHeading icon={ClipboardIcon} title="Clearance Specification" />
+            <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <InfoRow icon={Building01Icon} label="Organization" value={selectedPostEvent.organization_name} />
+              <InfoRow icon={UserIcon} label="Submitter">
+                <NarrativePersonBadge
+                  name={proponentName}
+                  avatarId={selectedPostEvent.student_no || selectedPostEvent.student_account_id}
+                />
               </InfoRow>
-
-              <InfoRow icon="UserIcon" label="Submitter" value={proponentName} />
-
-              {selectedPostEvent.submitted_by_email && (
-                <InfoRow icon="Mail01Icon" label="Email Address" value={selectedPostEvent.submitted_by_email} />
+              <InfoRow icon={Mail01Icon} label="Email Address" value={selectedPostEvent.submitted_by_email} />
+              <InfoRow icon={Tag01Icon} label="Report ID">
+                <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
+                  {getOsasRecordReference(selectedPostEvent, "post_events")}
+                </Badge>
+              </InfoRow>
+              {trackingNo && (
+                <InfoRow icon={Tag01Icon} label="Proposal ID">
+                  <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
+                    {trackingNo}
+                  </Badge>
+                </InfoRow>
               )}
-
-              <InfoRow icon="BarCode01Icon" label="Tracking Number">
-                <span className="font-sans tabular-nums text-xs">{trackingNo}</span>
+              <InfoRow icon={ClipboardIcon} label="Clearance Status">
+                <Badge variant="gray" size="compact" className={getPostEventStatusBadgeClass(selectedPostEvent.status)}>
+                  {selectedPostEvent.status}
+                </Badge>
               </InfoRow>
-
               <InfoRow
-                icon="UserSearch01Icon"
+                icon={UserSearch01Icon}
                 label="Actual Attendance"
                 value={`${Number(attendeesCount).toLocaleString()} verified attendees`}
               />
-
               <InfoRow
-                icon="Coins01Icon"
+                icon={Coins01Icon}
                 label="Liquidated Spend"
                 value={`₱${expensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
               />
-
-              <InfoRow icon="Calendar01Icon" label="Date Submitted" value={dateSubmittedStr} />
-
-              <InfoRow icon="PieChartIcon" label="Clearance Status">
-                <span
-                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), BADGE_BASE)}
-                >
-                  {selectedPostEvent.status}
-                </span>
-              </InfoRow>
-            </div>
-          </div>
+              <InfoRow icon={Calendar01Icon} label="Date Submitted" value={dateSubmittedStr} />
+            </dl>
+          </section>
 
           {/* SECTION 2: Accomplishment Narrative & Previous Remarks */}
           <div className="space-y-3 pt-2">
@@ -325,7 +248,7 @@ export default function OsasPostEventReviewSheet({
                     </strong>
                   </span>
                   {selectedPostEvent.reviewed_at && (
-                    <span className="font-sans tabular-nums">
+                    <span className="tabular-nums">
                       {new Date(selectedPostEvent.reviewed_at).toLocaleDateString()}
                     </span>
                   )}
@@ -365,12 +288,8 @@ export default function OsasPostEventReviewSheet({
                   </div>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  title="Inspect Narrative Accomplishment Report"
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-pup-maroon dark:text-red-400 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs shrink-0"
+                <SheetPreviewButton
+                  label="Preview Narrative Report"
                   onClick={() => {
                     handleOpenPdfPreview?.({
                       url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
@@ -380,9 +299,7 @@ export default function OsasPostEventReviewSheet({
                       originalFilename: selectedPostEvent.narrative_original_filename || "Narrative.pdf",
                     });
                   }}
-                >
-                  Inspect Narrative
-                </Button>
+                />
               </div>
 
               {/* Financial Liquidation Row */}
@@ -402,12 +319,8 @@ export default function OsasPostEventReviewSheet({
                 </div>
 
                 {selectedPostEvent.liquidation_storage_filename ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    title="Inspect Financial Liquidation & Vouchers"
-                    className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs shrink-0"
+                  <SheetPreviewButton
+                    label="Preview Financial Liquidation"
                     onClick={() => {
                       handleOpenPdfPreview?.({
                         url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
@@ -417,9 +330,7 @@ export default function OsasPostEventReviewSheet({
                         originalFilename: selectedPostEvent.liquidation_original_filename || "Liquidation.pdf",
                       });
                     }}
-                  >
-                    Inspect Liquidation
-                  </Button>
+                  />
                 ) : (
                   <span className="text-[11px] text-gray-400 italic">No file attached</span>
                 )}
@@ -433,9 +344,9 @@ export default function OsasPostEventReviewSheet({
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Clearance Evaluation
               </h4>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                Current: <strong className="text-gray-900 dark:text-zinc-100">{selectedPostEvent.status}</strong>
-              </span>
+              <OsasSheetSummaryBadge icon={Calendar01Icon}>
+                Current: {selectedPostEvent.status}
+              </OsasSheetSummaryBadge>
             </div>
 
             {/* Quick Stage Selection Pills */}
@@ -518,7 +429,7 @@ export default function OsasPostEventReviewSheet({
                   Feedback & Clearance Remarks {isPostEventNoteRequired && "(Required, min 5 chars)"}
                 </span>
                 {isPostEventNoteRequired && (
-                  <span className={cn("font-sans tabular-nums text-[10px]", isPostEventNoteValid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                  <span className={cn("tabular-nums text-[10px]", isPostEventNoteValid ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
                     {postEventNote.trim().length} / 5 min
                   </span>
                 )}
@@ -546,7 +457,6 @@ export default function OsasPostEventReviewSheet({
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
           >
             Close
           </Button>

@@ -1,10 +1,16 @@
 "use client";
+import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import CampusStatusNotice from "@/components/student/CampusStatusNotice";
+import {
+  OsasSheetInfoRow as InfoRow,
+  OsasSheetSectionHeading as SectionHeading,
+  OsasSheetSummaryBadge,
+} from "./OsasReviewSheetMetadata";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
@@ -18,47 +24,27 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
+  normalizeProposalStatus,
   getProposalStatusBadgeClass,
   getProposalStatusDotClass,
   getPostEventStatusBadgeClass,
 } from "@/components/staff/OsasMonitoringTab";
-import NarrativeText from "@/components/shared/NarrativeText";
+import NarrativeText, { NarrativePersonBadge } from "@/components/shared/NarrativeText";
 import PDFPreview from "@/components/shared/PDFPreview";
 import {
   Alert02Icon, ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
   Cancel01Icon, Clock01Icon, Coins01Icon, CovidInfoIcon, File02Icon, HourglassIcon,
   Loading01Icon, Location01Icon, Mail01Icon, ReloadIcon, Tag01Icon, UserCircleIcon,
-  UserIcon, UserSearch01Icon, ViewIcon,
+  UserIcon, UserSearch01Icon,
 } from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
-function SectionHeading({ icon: Icon, title, children }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 pb-1.5 dark:border-border">
-      <div className="flex items-center gap-2">
-        <Icon size="1em" aria-hidden="true" className="shrink-0 text-sm text-pup-maroon dark:text-red-400" />
-        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-          {title}
-        </h4>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function InfoRow({ icon: Icon, label, value, children }) {
-  return (
-    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-1 py-1.5 text-xs sm:grid-cols-[10rem_minmax(0,1fr)]">
-      <dt className="flex min-w-0 items-start gap-2 font-medium text-gray-500 dark:text-zinc-400">
-        <Icon size={14} aria-hidden="true" className="mt-px shrink-0 text-gray-400 dark:text-zinc-500" />
-        <span className="min-w-0">{label}</span>
-        <span aria-hidden="true" className="ml-auto w-3 shrink-0 select-none text-gray-300 dark:text-zinc-600">:</span>
-      </dt>
-      <dd className="min-w-0 wrap-anywhere font-semibold text-gray-900 dark:text-zinc-100">
-        {children ?? (value || "N/A")}
-      </dd>
-    </div>
-  );
-}
+import { EmptyState } from "@/components/ui/empty";
+const PROPOSAL_STATUS_NOTICES = {
+  Approved: { title: "Proposal Approved", message: "OSAS has approved this event proposal." },
+  "Needs Revision": { title: "Revision Required", message: "The proponent must revise and resubmit the proposal based on the evaluator’s notes." },
+  Declined: { title: "Proposal Declined", message: "OSAS declined this event proposal." },
+  Submitted: { title: "Proposal Submitted", message: "The proposal is awaiting OSAS review." },
+  Archived: { title: "Proposal Archived", message: "This proposal is in the archive." },
+};
 
 export default function OsasProposalReviewSheet({
   sheetOpen,
@@ -88,6 +74,12 @@ export default function OsasProposalReviewSheet({
   setSearchQuery,
 }) {
   if (!selected) return null;
+
+  const eventCount = selected.updates?.length ?? 0;
+  const statusNotice = PROPOSAL_STATUS_NOTICES[normalizeProposalStatus(selected.status)] ?? {
+    title: "Under Evaluation",
+    message: "OSAS is reviewing the proposal.",
+  };
 
   const eventDateStr = selected.event_date
     ? new Date(selected.event_date).toLocaleDateString(undefined, {
@@ -173,60 +165,16 @@ export default function OsasProposalReviewSheet({
           </div>
         </SheetHeader>
 
-        {/* Line-Attached Edge-to-Edge Status Notice */}
-        <div
-          className={cn(
-            "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-            selected.status === "Approved"
-              ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-              : selected.status === "RevisionRequested"
-              ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-              : selected.status === "Rejected"
-              ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-              : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-          )}
-        >
-          <AppIcon
-            className={cn(
-              " text-[15px] shrink-0",
-              selected.status === "Approved"
-                ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                : selected.status === "RevisionRequested"
-                ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                : selected.status === "Rejected"
-                ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                : "Clock01Icon text-blue-600 dark:text-blue-400"
-            )}
-          />
-          <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-            <strong className="font-semibold">
-              {selected.status === "Approved"
-                ? "Proposal Sanctioned:"
-                : selected.status === "RevisionRequested"
-                ? "Revision Requested:"
-                : selected.status === "Rejected"
-                ? "Proposal Declined:"
-                : "Under Evaluation:"}
-            </strong>{" "}
-            {selected.status === "Approved"
-              ? "Official sanction granted for organization event."
-              : selected.status === "RevisionRequested"
-              ? "Proponent must submit a revised proposal adhering to evaluator notes."
-              : selected.status === "Rejected"
-              ? "This event proposal was denied university clearance."
-              : "Administrative review and risk evaluation in progress by OSAS."}
-          </span>
-        </div>
+        <CampusStatusNotice title={statusNotice.title}>
+          {statusNotice.message}
+        </CampusStatusNotice>
 
         {/* SCROLLABLE 1-COLUMN BODY */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border pb-4">
+          <div className="border-b border-border pb-4">
             <h3 className="min-w-0 wrap-anywhere text-sm font-bold leading-snug text-gray-900 dark:text-zinc-100">
               {selected.title}
             </h3>
-            <span className={cn(getProposalStatusBadgeClass(selected.status), COMPACT_BADGE_BASE)}>
-              {selected.status}
-            </span>
           </div>
 
           <section className="space-y-2">
@@ -235,9 +183,14 @@ export default function OsasProposalReviewSheet({
               <InfoRow icon={Building01Icon} label="Organization" value={selected.verified_org_name || selected.organization_name} />
               <InfoRow icon={UserIcon} label="Proponent">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span>{selected.student_name || "N/A"}</span>
+                  {selected.student_name ? (
+                    <NarrativePersonBadge
+                      name={selected.student_name}
+                      avatarId={selected.student_no || selected.student_account_id}
+                    />
+                  ) : "N/A"}
                   {selected.is_verified_officer && (
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>Verified Officer</span>
+                    <Badge variant="success" size="compact">Verified Officer</Badge>
                   )}
                 </div>
               </InfoRow>
@@ -257,25 +210,28 @@ export default function OsasProposalReviewSheet({
                       </h5>
                     </CardTitle>
                     {selected.bylaws_filename && (
-                      <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>Active</span>
+                      <Badge variant="success" size="compact">Active</Badge>
                     )}
                   </div>
-                  {selected.bylaws_filename ? (
+                  {selected.bylaws_filename && (
                     <CardDescription className="wrap-anywhere">
                       {selected.bylaws_original_filename || selected.bylaws_filename}
                     </CardDescription>
-                  ) : (
-                    <CardDescription className="font-medium text-amber-800 dark:text-amber-300">No active charter on file</CardDescription>
                   )}
                 </div>
 
+                {!selected.bylaws_filename && (
+                  <EmptyState
+                    variant="compact"
+                    icon={BookOpen01Icon}
+                    title="No active charter on file"
+                    className="w-full"
+                  />
+                )}
+
                 {selected.bylaws_filename && selected.organization_id && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    title={PDF_ACTION_LABELS.preview}
-                    className="shrink-0"
+                  <SheetPreviewButton
+                    label="Preview Constitution & By-Laws"
                     onClick={() => {
                       setPdfPreviewData?.({
                         url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
@@ -286,9 +242,7 @@ export default function OsasProposalReviewSheet({
                       });
                       setPdfPreviewOpen?.(true);
                     }}
-                  >
-                    Inspect CBL
-                  </Button>
+                  />
                 )}
               </CardContent>
             </Card>
@@ -297,6 +251,11 @@ export default function OsasProposalReviewSheet({
           <section className="space-y-2">
             <SectionHeading icon={BookOpen01Icon} title="Proposal Specification" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <InfoRow icon={Tag01Icon} label="Proposal Status">
+                <Badge variant="gray" size="compact" className={getProposalStatusBadgeClass(selected.status)}>
+                  {selected.status}
+                </Badge>
+              </InfoRow>
               <InfoRow icon={Calendar01Icon} label="Target Date" value={eventDateStr || "To Be Announced"} />
 
               <InfoRow
@@ -347,11 +306,9 @@ export default function OsasProposalReviewSheet({
                       Post-Event Compliance
                     </span>
                   </div>
-                  <span
-                    className={cn(getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission"), COMPACT_BADGE_BASE)}
-                  >
+                  <Badge variant="gray" size="compact" className={getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission")}>
                     {selected.post_event_status || "Pending Submission"}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between text-xs text-purple-800 dark:text-purple-300 pt-1 border-t border-purple-200/60 dark:border-purple-900/40">
                   <span>
@@ -388,9 +345,10 @@ export default function OsasProposalReviewSheet({
           <div className="space-y-2.5 pt-2">
             <SectionHeading icon={File02Icon} title="Official Proposal Document">
               {(selected.id || selected.url) && (
-                <Button variant="outline" size="sm" onClick={() => handleOpenPdfPreview?.(selected)}>
-                  {PDF_ACTION_LABELS.preview}
-                </Button>
+                <SheetPreviewButton
+                  label="Preview Proposal PDF"
+                  onClick={() => handleOpenPdfPreview?.(selected)}
+                />
               )}
             </SectionHeading>
 
@@ -425,10 +383,8 @@ export default function OsasProposalReviewSheet({
                     {version.file_pruned_at ? (
                       <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
                     ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
+                      <SheetPreviewButton
+                        label={`Preview Proposal Revision ${version.revision_number}`}
                         onClick={() => {
                           setPdfPreviewData?.({
                             url: `/api/osas/event-proposals/${selected.id}?file=1&revisionId=${version.id}`,
@@ -439,10 +395,7 @@ export default function OsasProposalReviewSheet({
                           });
                           setPdfPreviewOpen?.(true);
                         }}
-                        className="h-8 shrink-0 rounded-lg px-3 text-xs"
-                      >
-                        {PDF_ACTION_LABELS.preview}
-                      </Button>
+                      />
                     )}
                   </div>
                 ))}
@@ -453,9 +406,9 @@ export default function OsasProposalReviewSheet({
           {/* SECTION 4: Evaluation & Stage Decision */}
           <div className="space-y-3.5 pt-2">
             <SectionHeading icon={Calendar01Icon} title="Evaluation & Decision">
-              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                Stage: <strong className="text-gray-900 dark:text-zinc-100">{selected.status}</strong>
-              </span>
+              <OsasSheetSummaryBadge icon={Calendar01Icon}>
+                Stage: {selected.status}
+              </OsasSheetSummaryBadge>
             </SectionHeading>
 
             {/* Quick Stage Selection Pills */}
@@ -576,9 +529,9 @@ export default function OsasProposalReviewSheet({
           {/* SECTION 5: Audit Timeline */}
           <div className="space-y-3 pt-2">
             <SectionHeading icon={Clock01Icon} title="Audit Timeline">
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500">
-                {selected.updates?.length || 0} events
-              </span>
+              <OsasSheetSummaryBadge icon={Clock01Icon}>
+                {eventCount} {eventCount === 1 ? "event" : "events"}
+              </OsasSheetSummaryBadge>
             </SectionHeading>
 
             {selected.updates?.length > 0 ? (
@@ -593,20 +546,18 @@ export default function OsasProposalReviewSheet({
                     />
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
-                        <span
-                          className={cn(getProposalStatusBadgeClass(update.status), COMPACT_BADGE_BASE)}
-                        >
+                        <Badge variant="gray" size="compact" className={getProposalStatusBadgeClass(update.status)}>
                           {update.status}
-                        </span>
+                        </Badge>
                         {update.actor_name && (
                           <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
                             by {update.actor_name}
                           </span>
                         )}
                         {update.actor_id && (
-                          <span className="font-sans text-[10px] text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 px-1 rounded tabular-nums">
+                          <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
                             {update.actor_id}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       {update.created_at && (

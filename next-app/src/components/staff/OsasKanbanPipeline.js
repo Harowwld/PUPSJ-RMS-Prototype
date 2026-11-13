@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { getOsasRecordReference } from "@/lib/osasRecordReference";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { EmptyState } from "@/components/ui/empty";
 import {
   KanbanStatusIcon,
-  KanbanDotTag,
   KanbanMiniAvatar,
 } from "@/components/shared/KanbanPrimitives";
 import {
@@ -304,7 +305,7 @@ export default function OsasKanbanPipeline({
                             onSelectItem?.(item);
                           }}
                           className={cn(
-                            "kanban-card group relative rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 flex flex-col gap-2.5 select-none",
+                            "kanban-card group relative rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 flex h-42 shrink-0 flex-col gap-1.5 select-none",
                             locked
                               ? "cursor-pointer"
                               : "cursor-grab active:cursor-grabbing",
@@ -313,13 +314,13 @@ export default function OsasKanbanPipeline({
                           )}
                         >
                           {/* Row 1: Status Icon + Proposal/Event Title (left) & Date (right) */}
-                          <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex h-9 shrink-0 items-start justify-between gap-2.5">
                             <div className="flex items-start gap-2 min-w-0 flex-1">
                               <KanbanStatusIcon
                                 status={itemStatus}
                                 className="mt-[3px]"
                               />
-                              <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-2">
+                              <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-2 wrap-anywhere" title={title}>
                                 {title}
                               </h4>
                             </div>
@@ -339,70 +340,62 @@ export default function OsasKanbanPipeline({
                           </div>
 
                           {/* Row 2: Organization and event metadata */}
-                          <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
+                          <div className="flex flex-col gap-1 pl-5.5">
                             {(acronym || orgName) && (
-                              <span title={orgName || acronym} className="max-w-full truncate text-[11px] text-gray-600 dark:text-zinc-300">
+                              <span title={orgName || acronym} className="block truncate text-[11px] text-gray-600 dark:text-zinc-300">
                                 {orgName || acronym}
                               </span>
                             )}
 
-                            {isProposal && item.event_date && (
-                              <KanbanDotTag
-                                label={new Date(
-                                  item.event_date
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                                dotColor="bg-sky-500"
-                                className="font-semibold"
-                              />
-                            )}
-
-                            {isProposal && item.estimated_budget && (
-                              <KanbanDotTag
-                                label={`₱${Number(
-                                  item.estimated_budget
-                                ).toLocaleString(undefined, {
-                                  minimumFractionDigits: 0,
-                                })}`}
-                                dotColor="bg-amber-500"
-                                className="font-semibold"
-                              />
-                            )}
-
-                            {isProposal &&
-                              !item.estimated_budget &&
-                              item.target_attendance && (
-                                <KanbanDotTag
-                                  label={`${Number(
-                                    item.target_attendance
-                                  ).toLocaleString()} target`}
-                                  dotColor="bg-teal-500"
-                                  className="font-semibold"
-                                />
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              {isProposal && item.event_date && (
+                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
+                                  <span className="truncate">{new Date(
+                                    item.event_date
+                                  ).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}</span>
+                                </Badge>
                               )}
 
-                            {!isProposal && attendees !== null && (
-                              <KanbanDotTag
-                                label={`${Number(
-                                  attendees
-                                ).toLocaleString()} attendees`}
-                                dotColor="bg-sky-500"
-                                className="font-semibold"
-                              />
-                            )}
+                              {isProposal && item.estimated_budget && (
+                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
+                                  <span className="truncate">{`₱${Number(
+                                    item.estimated_budget
+                                  ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 0,
+                                  })}`}</span>
+                                </Badge>
+                              )}
 
-                            {!isProposal && expenses !== null && (
-                              <KanbanDotTag
-                                label={`₱${Number(expenses).toLocaleString(
-                                  undefined,
-                                  { minimumFractionDigits: 2 }
-                                )}`}
-                                dotColor="bg-emerald-500"
-                                className="font-semibold"
-                              />
-                            )}
+                              {isProposal &&
+                                !item.estimated_budget &&
+                                item.target_attendance && (
+                                  <Badge variant="gray" size="compact" className="min-w-0 shrink">
+                                  <span className="truncate">{`${Number(
+                                      item.target_attendance
+                                    ).toLocaleString()} target`}</span>
+                                </Badge>
+                                )}
+
+                              {!isProposal && attendees !== null && (
+                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
+                                  <span className="truncate">{`${Number(
+                                    attendees
+                                  ).toLocaleString()} attendees`}</span>
+                                </Badge>
+                              )}
+
+                              {!isProposal && expenses !== null && (
+                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
+                                  <span className="truncate">{`₱${Number(expenses).toLocaleString(
+                                    undefined,
+                                    { minimumFractionDigits: 2 }
+                                  )}`}</span>
+                                </Badge>
+                              )}
+                            </div>
                           </div>
 
                           {/* Post-Event Quick Document Preview Links */}
@@ -466,11 +459,11 @@ export default function OsasKanbanPipeline({
                             )}
 
                           {/* Row 3: Footer — Reference ID (bottom-left) + Proponent Avatar & Name (bottom-right) */}
-                          <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                          <div className="flex items-center justify-between gap-2 mt-auto text-[11px] text-gray-400 dark:text-zinc-500">
                             <div className="flex items-center gap-1.5 font-medium tabular-nums">
-                              <span>
-                                #{isProposal ? "EP" : "PER"}-{item.id}
-                              </span>
+                              <Badge variant="gray" size="compact" className="rounded-lg">
+                                {getOsasRecordReference(item, stream)}
+                              </Badge>
                               {locked && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>

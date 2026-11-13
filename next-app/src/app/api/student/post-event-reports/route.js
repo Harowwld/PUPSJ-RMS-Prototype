@@ -71,6 +71,7 @@ export async function POST(req) {
   const studentEmail = (access.user.email || "").toLowerCase();
   const form = await req.formData().catch(() => null);
 
+  const revisionReportId = form?.get("revisionReportId") ?? null;
   const eventProposalId = form?.get("eventProposalId");
   const organizationId = String(form?.get("organizationId") || "").trim();
   const actualAttendance = Number(form?.get("actualAttendance") ?? form?.get("actualAttendees") ?? 0);
@@ -83,6 +84,10 @@ export async function POST(req) {
       { ok: false, error: "Event proposal, organization, and a valid narrative report PDF are required." },
       { status: 400 }
     );
+  }
+
+  if (revisionReportId !== null && (typeof revisionReportId !== "string" || !/^[1-9]\d*$/.test(revisionReportId))) {
+    return NextResponse.json({ ok: false, error: "A valid report ID is required for a revision." }, { status: 400 });
   }
 
   if (!Number.isInteger(actualAttendance) || actualAttendance < 0 || actualAttendance > 2147483647
@@ -160,6 +165,7 @@ export async function POST(req) {
 
     const report = await createPostEventReport({
       eventProposalId: proposal.id,
+      revisionReportId,
       organizationId,
       submittedByEmail: studentEmail,
       actualAttendance,
@@ -171,7 +177,7 @@ export async function POST(req) {
       createdBy: access.user.student_no || access.user.studentNo || access.user.id || studentEmail,
     });
 
-    return NextResponse.json({ ok: true, data: report }, { status: 201 });
+    return NextResponse.json({ ok: true, data: report }, { status: revisionReportId ? 200 : 201 });
   } catch (error) {
     for (const filePath of createdPaths) {
       try { fs.unlinkSync(filePath); } catch {}

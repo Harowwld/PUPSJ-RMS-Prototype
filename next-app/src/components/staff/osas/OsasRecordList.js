@@ -2,6 +2,8 @@
 
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { getOsasRecordReference } from "@/lib/osasRecordReference";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
 import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat";
@@ -148,9 +150,9 @@ export default function OsasRecordList({
                     >
                       {/* Left: Identifier, title, and supporting context */}
                       <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
-                        <span className="font-sans tabular-nums text-xs text-gray-500 dark:text-zinc-400 font-medium shrink-0 min-w-[70px]">
-                          {item.id}
-                        </span>
+                        <Badge variant="gray" className="rounded-lg tabular-nums">
+                          {getOsasRecordReference(item, stream)}
+                        </Badge>
                         <div className="flex min-w-0 flex-col gap-1">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate max-w-[200px] sm:max-w-[320px] lg:max-w-md">

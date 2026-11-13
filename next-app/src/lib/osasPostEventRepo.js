@@ -3,10 +3,11 @@ import { decryptPII } from "./piiEncryption.js";
 import { getStaffFullName } from "./staffRepo.js";
 
 /**
- * Creates a post-event narrative & liquidation submission
+ * Saves a new or revised post-event narrative and liquidation submission
  */
 export async function createPostEventReport({
   eventProposalId,
+  revisionReportId = null,
   organizationId,
   submittedByEmail,
   actualAttendance = 0,
@@ -18,13 +19,31 @@ export async function createPostEventReport({
   createdBy = null,
 }) {
   return transaction(async (tx) => {
+    // Lock the report before its proposal, matching the staff review transaction.
+    const revision = revisionReportId ? await tx.queryOne(
+      `SELECT id FROM osas_post_event_reports
+        WHERE id = $1 AND event_proposal_id = $2 AND organization_id = $3
+          AND status = 'Needs Revision'
+          AND id = (
+            SELECT MAX(id) FROM osas_post_event_reports
+            WHERE event_proposal_id = $2 AND organization_id = $3
+          )
+        FOR UPDATE`,
+      [revisionReportId, eventProposalId, organizationId],
+    ) : null;
+    if (revisionReportId && !revision) {
+      const error = new Error("This report is no longer awaiting revision. Refresh and try again.");
+      error.code = "POST_EVENT_NOT_ELIGIBLE";
+      throw error;
+    }
+
     const proposal = await tx.queryOne(
       `SELECT id, student_no FROM event_proposals
         WHERE id = $1 AND organization_id = $2 AND office_id = 'osas'
           AND status = 'Approved'
-          AND post_event_status IN ('Pending Submission', 'Needs Revision', 'Overdue')
+          AND post_event_status = ANY($3::text[])
         FOR UPDATE`,
-      [eventProposalId, organizationId],
+      [eventProposalId, organizationId, revision ? ["Needs Revision"] : ["Pending Submission", "Overdue"]],
     );
     if (!proposal) {
       const error = new Error("This event is no longer eligible for a post-event submission.");
@@ -32,7 +51,19 @@ export async function createPostEventReport({
       throw error;
     }
 
-    const report = await tx.queryOne(
+    const report = revision ? await tx.queryOne(
+      `UPDATE osas_post_event_reports
+          SET submitted_by_email = $2, actual_attendance = $3, total_expenses = $4,
+              narrative_storage_filename = $5, narrative_original_filename = $6,
+              liquidation_storage_filename = COALESCE($7, liquidation_storage_filename),
+              liquidation_original_filename = COALESCE($8, liquidation_original_filename),
+              status = 'Submitted', review_note = NULL, reviewed_by = NULL,
+              reviewed_at = NULL, updated_at = NOW()
+        WHERE id = $1
+        RETURNING *`,
+      [revision.id, submittedByEmail.toLowerCase(), actualAttendance, totalExpenses,
+        narrativeStorageFilename, narrativeOriginalFilename, liquidationStorageFilename, liquidationOriginalFilename],
+    ) : await tx.queryOne(
       `INSERT INTO osas_post_event_reports (
         event_proposal_id, organization_id, submitted_by_email,
         actual_attendance, total_expenses,
@@ -52,8 +83,9 @@ export async function createPostEventReport({
     const actorIdentifier = createdBy || proposal.student_no || submittedByEmail;
     await tx.query(
       `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
-       VALUES ($1, 'Post-Event Submitted', $2, $3)`,
-      [eventProposalId, `Official Post-Event Narrative Report and Liquidation package submitted by ${submittedByEmail}.`, actorIdentifier],
+       VALUES ($1, $2, $3, $4)`,
+      [eventProposalId, revision ? "Post-Event Resubmitted" : "Post-Event Submitted",
+        `Official Post-Event Narrative Report and Liquidation package ${revision ? "resubmitted" : "submitted"} by ${submittedByEmail}.`, actorIdentifier],
     );
     return report;
   });

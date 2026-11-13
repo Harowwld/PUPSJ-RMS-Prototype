@@ -5,6 +5,7 @@ import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference";
 import TablePagination from "@/components/shared/TablePagination";
 import CopyButton from "@/components/shared/CopyButton";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
+import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
@@ -484,6 +485,7 @@ function StudentDashboard() {
     narrativeFile: null,
     liquidationFile: null,
   });
+  const [revisionTargetReport, setRevisionTargetReport] = useState(null);
   const [postEventSubmitting, setPostEventSubmitting] = useState(false);
 
   // Constitution & By-Laws (CBL) Governance States
@@ -579,7 +581,7 @@ function StudentDashboard() {
       originalFilename: proposal.original_filename || "Proposal.pdf",
     });
     setPdfPreviewOpen(true);
-  }, [me]);
+  }, [me, setPdfPreviewData, setPdfPreviewOpen]);
 
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(me);
 
@@ -1867,6 +1869,28 @@ function StudentDashboard() {
     }
   }
 
+  function startPostEventRevision(report) {
+    setRevisionTargetReport(report);
+    setPostEventForm({
+      eventProposalId: String(report.event_proposal_id),
+      actualAttendance: String(report.actual_attendance ?? ""),
+      totalExpenses: String(report.total_expenses ?? ""),
+      narrativeFile: null,
+      liquidationFile: null,
+    });
+    setOsasSubView("post_event");
+    setIsFormOpen(true);
+    setSelectedPostEventReportForDetail(null);
+  }
+
+  function closePostEventForm() {
+    setIsFormOpen(false);
+    if (revisionTargetReport) {
+      setRevisionTargetReport(null);
+      setPostEventForm({ eventProposalId: "", actualAttendance: "", totalExpenses: "", narrativeFile: null, liquidationFile: null });
+    }
+  }
+
   async function submitPostEventReport(event) {
     event.preventDefault();
     setPostEventSubmitting(true);
@@ -1875,7 +1899,7 @@ function StudentDashboard() {
       if (!selectedOrg) {
         throw new Error("Select an authorized organization before submitting a post-event report.");
       }
-      if (!hasSelectedApprovedProposal) {
+      if (!revisionTargetReport && !hasSelectedApprovedProposal) {
         throw new Error("Please select an approved event proposal.");
       }
       if (!postEventForm.narrativeFile) {
@@ -1889,6 +1913,7 @@ function StudentDashboard() {
         throw new Error("Liquidation report PDF exceeds the 25 MB limit. Please compress the file.");
       }
       const form = new FormData();
+      if (revisionTargetReport) form.set("revisionReportId", String(revisionTargetReport.id));
       form.set("eventProposalId", postEventForm.eventProposalId);
       form.set("organizationId", selectedOrg.organization_id);
       form.set("actualAttendance", postEventForm.actualAttendance || "0");
@@ -1917,7 +1942,8 @@ function StudentDashboard() {
         narrativeFile: null,
         liquidationFile: null,
       });
-      showToast("Post-Event Report Submitted", "Your Post-Event Narrative and Liquidation report has been received by OSAS.");
+      if (revisionTargetReport) closePostEventForm();
+      showToast(revisionTargetReport ? "Post-Event Report Resubmitted" : "Post-Event Report Submitted", "Your Post-Event Narrative and Liquidation report has been received by OSAS.");
       await load();
     } catch (error) {
       showToast(
@@ -2793,7 +2819,7 @@ function StudentDashboard() {
                           organizations={myOrganizations}
                           selectedOrganization={selectedOsasOrganization}
                           onChange={handleOsasOrganizationChange}
-                          selectionLocked={Boolean(revisionTargetProposal)}
+                          selectionLocked={Boolean(revisionTargetProposal || revisionTargetReport)}
                         />
                         <RefreshButton
                           onRefresh={async () => {
@@ -2837,7 +2863,10 @@ function StudentDashboard() {
                   <div className="border-b border-border/80 dark:border-white/10 bg-white dark:bg-card px-6 py-2.5 overflow-x-auto scrollbar-none">
                     <SegmentedControl
                       value={osasSubView}
-                      onValueChange={setOsasSubView}
+                      onValueChange={(nextView) => {
+                        if (nextView !== "post_event" && revisionTargetReport) closePostEventForm();
+                        setOsasSubView(nextView);
+                      }}
                       variant="capsule"
                       className="w-max"
                       items={[
@@ -3331,13 +3360,22 @@ function StudentDashboard() {
                                 <ClipboardIcon size="1em" className="text-xl" />
                               </div>
                               <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">New Post-Event & Liquidation Report</h2>
+                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{revisionTargetReport ? "Revise Post-Event Report" : "New Post-Event & Liquidation Report"}</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
-                                  Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event · Submitting for {selectedOsasOrganization.organization_name}
+                                  {revisionTargetReport
+                                    ? "Upload a revised narrative PDF. You can also replace the liquidation PDF."
+                                    : `Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event · Submitting for ${selectedOsasOrganization.organization_name}`}
                                 </p>
                               </div>
                             </div>
                           </div>
+
+                          {revisionTargetReport?.review_note && (
+                            <div className="mt-4 space-y-1 text-xs text-gray-700 dark:text-zinc-300">
+                              <p className="font-semibold">OSAS Review Note</p>
+                              <NarrativeText text={revisionTargetReport.review_note} mode="full" />
+                            </div>
+                          )}
 
                           <form onSubmit={submitPostEventReport} className="flex flex-col gap-4 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -3347,23 +3385,25 @@ function StudentDashboard() {
                                 </label>
                                 <Select
                                   id="post-event-proposal"
-                                  aria-describedby={!hasApprovedPostEventProposals ? "post-event-proposal-help" : undefined}
-                                  disabled={!hasApprovedPostEventProposals}
+                                  aria-describedby={!revisionTargetReport && !hasApprovedPostEventProposals ? "post-event-proposal-help" : undefined}
+                                  disabled={Boolean(revisionTargetReport) || !hasApprovedPostEventProposals}
                                   placeholder="Select an approved event…"
-                                  value={hasSelectedApprovedProposal ? postEventForm.eventProposalId : ""}
+                                  value={revisionTargetReport || hasSelectedApprovedProposal ? postEventForm.eventProposalId : ""}
                                   onChange={(e) => {
                                     const pId = e.target.value;
                                     setPostEventForm((prev) => ({ ...prev, eventProposalId: pId }));
                                   }}
                                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 shadow-none"
                                 >
-                                  {approvedPostEventProposals.map((p) => (
+                                  {revisionTargetReport ? (
+                                    <option value={postEventForm.eventProposalId}>{revisionTargetReport.event_title}</option>
+                                  ) : approvedPostEventProposals.map((p) => (
                                     <option key={p.id} value={p.id}>
                                       {p.title} ({formatProposalEventDate(p.event_date)}) : {p.organization_name}
                                     </option>
                                   ))}
                                 </Select>
-                                {!hasApprovedPostEventProposals && (
+                                {!revisionTargetReport && !hasApprovedPostEventProposals && (
                                   <p id="post-event-proposal-help" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                                     No approved event proposals are available for this organization.
                                   </p>
@@ -3446,16 +3486,17 @@ function StudentDashboard() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setIsFormOpen(false)}
+                                  onClick={closePostEventForm}
+                                  disabled={postEventSubmitting}
                                   className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
-                                  Hide
+                                  {revisionTargetReport ? "Cancel Revision" : "Hide"}
                                 </Button>
                                 <Button
                                   type="submit"
                                   size="sm"
-                                  disabled={postEventSubmitting || !hasApprovedPostEventProposals}
-                                  title="Submit Post-Event Report"
+                                  disabled={postEventSubmitting || (!revisionTargetReport && !hasSelectedApprovedProposal) || !postEventForm.narrativeFile}
+                                  title={revisionTargetReport ? "Resubmit Post-Event Report" : "Submit Post-Event Report"}
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
                                   {postEventSubmitting ? (
@@ -3464,7 +3505,7 @@ function StudentDashboard() {
                                       Submitting...
                                     </>
                                   ) : (
-                                    "Submit Post-Event Report"
+                                    revisionTargetReport ? "Resubmit Post-Event Report" : "Submit Post-Event Report"
                                   )}
                                 </Button>
                               </div>
@@ -5009,10 +5050,8 @@ function StudentDashboard() {
                           </div>
                         </div>
                         {file.storageFilename ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
+                          <SheetPreviewButton
+                            label={`Preview ${file.label}`}
                             onClick={() => handleOpenPdfPreview(null, {
                               url: `/api/student/post-event-reports/${selectedPostEventReportForDetail.id}?file=${file.key}`,
                               title: `${file.label}: ${selectedPostEventReportForDetail.event_title}`,
@@ -5021,10 +5060,7 @@ function StudentDashboard() {
                               docType: file.docType,
                               originalFilename: file.filename || `${file.key}.pdf`,
                             })}
-                            className="shrink-0"
-                          >
-                            View {file.key === "narrative" ? "Narrative" : "Liquidation"}
-                          </Button>
+                          />
                         ) : (
                           <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
                         )}
@@ -5043,6 +5079,19 @@ function StudentDashboard() {
                 >
                   Close
                 </Button>
+                {selectedPostEventReportForDetail.status === "Needs Revision"
+                  && selectedPostEventReportForDetail.post_event_status === "Needs Revision"
+                  && selectedPostEventReportForDetail.proposal_status === "Approved"
+                  && !organizationPostEventReports.some((report) =>
+                    String(report.event_proposal_id) === String(selectedPostEventReportForDetail.event_proposal_id)
+                    && Number(report.id) > Number(selectedPostEventReportForDetail.id)
+                  )
+                  && selectedOsasOrganization
+                  && String(selectedPostEventReportForDetail.organization_id) === String(selectedOsasOrganization.organization_id) && (
+                    <Button size="sm" onClick={() => startPostEventRevision(selectedPostEventReportForDetail)}>
+                      Revise Post-Event Report
+                    </Button>
+                  )}
               </SheetFooter>
             </>
           )}

@@ -7,6 +7,8 @@ import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { getOsasRecordReference } from "@/lib/osasRecordReference";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Button } from "@/components/ui/button";
@@ -85,7 +87,7 @@ export function normalizeProposalStatus(status) {
   const s = String(status || "").toLowerCase().trim();
   if (s === "submitted" || s === "pending") return "Submitted";
   if (s === "under review" || s === "underreview" || s === "inprogress" || s === "processing") return "Under Review";
-  if (s === "needs revision" || s === "revisionsrequested" || s === "revision") return "Needs Revision";
+  if (s === "needs revision" || s === "revisionrequested" || s === "revisionsrequested" || s === "revision") return "Needs Revision";
   if (s === "approved" || s === "completed" || s === "ready") return "Approved";
   if (s === "declined" || s === "rejected" || s === "cancelled") return "Declined";
   if (s === "archived") return "Archived";
@@ -883,7 +885,6 @@ export default function OsasMonitoringTab({ showToast }) {
   }, [activeStream, postEventFilterTabs, filterTabs]);
 
   const proposalTableColumns = useMemo(() => [
-    { key: "id", label: "Proposal ID" },
     { key: "event", label: "Event Proposal" },
     { key: "organization", label: "Organization" },
     { key: "proponent", label: "Proponent" },
@@ -904,11 +905,12 @@ export default function OsasMonitoringTab({ showToast }) {
   const currentTableColumns = useMemo(() => {
     return activeStream === "proposals" ? proposalTableColumns : postEventTableColumns;
   }, [activeStream, proposalTableColumns, postEventTableColumns]);
-  const visibleColumnCount = currentTableColumns.filter((column) => visibleColumns.includes(column.key)).length + 1;
+  // Include the actions column and the fixed Proposal ID column when present.
+  const visibleColumnCount = currentTableColumns.filter((column) => visibleColumns.includes(column.key)).length
+    + (activeStream === "proposals" ? 2 : 1);
 
   const proposalTableColumnsConfig = useMemo(() => {
-    const cols = [];
-    if (visibleColumns.includes("id")) cols.push({ kind: "identifier", width: 110 });
+    const cols = [{ kind: "identifier", width: 140 }];
     if (visibleColumns.includes("event")) cols.push({ kind: "text", minWidth: 320, maxWidth: 420, growthWeight: 4 });
     if (visibleColumns.includes("organization")) cols.push({ kind: "text", minWidth: 190, maxWidth: 340, growthWeight: 2 });
     if (visibleColumns.includes("proponent")) cols.push({ kind: "text", minWidth: 220, maxWidth: 300, growthWeight: 1 });
@@ -1099,7 +1101,8 @@ export default function OsasMonitoringTab({ showToast }) {
         const matchStudent =
           (item.student_name || "").toLowerCase().includes(q) ||
           (item.student_no || "").toLowerCase().includes(q);
-        if (!matchTitle && !matchOrg && !matchStudent) return false;
+        const matchReference = getOsasRecordReference(item).toLowerCase().includes(q);
+        if (!matchTitle && !matchOrg && !matchStudent && !matchReference) return false;
       }
       if (filterRules.length > 0) {
         const matchesRules = filterRules.every((rule) => {
@@ -1139,7 +1142,8 @@ export default function OsasMonitoringTab({ showToast }) {
           (item.student_name || "").toLowerCase().includes(q) ||
           (item.student_no || "").toLowerCase().includes(q) ||
           (item.submitted_by_email || "").toLowerCase().includes(q);
-        if (!matchTitle && !matchOrg && !matchStudent) return false;
+        const matchReference = getOsasRecordReference(item, "post_events").toLowerCase().includes(q);
+        if (!matchTitle && !matchOrg && !matchStudent && !matchReference) return false;
       }
       if (filterRules.length > 0) {
         const matchesRules = filterRules.every((rule) => {
@@ -1476,7 +1480,7 @@ export default function OsasMonitoringTab({ showToast }) {
                 columns={currentTableColumns}
                 visibleColumns={visibleColumns}
                 onVisibleColumnsChange={setVisibleColumns}
-                minVisible={2}
+                minVisible={activeStream === "proposals" ? 1 : 2}
               />
             )}
             <DateRangeFilterButton
@@ -1568,22 +1572,20 @@ export default function OsasMonitoringTab({ showToast }) {
                       <Table columns={proposalTableColumnsConfig}>
                         <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                           <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                            {visibleColumns.includes("id") && (
-                              <th
-                                aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
-                                className={cn(
-                                  "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
-                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                                )}
-                              >
-                                <div className="flex items-center justify-between gap-1">
-                                  <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
-                                    <span>Proposal ID</span>
-                                    <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
-                                  </button>
-                                </div>
-                              </th>
-                            )}
+                            <th
+                              aria-sort={tableSortBy !== "id" ? "none" : tableSortOrder === "ASC" ? "ascending" : "descending"}
+                              className={cn(
+                                "py-3.5 px-6 w-[140px] min-w-[140px] max-w-[140px] sticky left-0 z-20 bg-gray-50 dark:bg-zinc-900 transition-shadow whitespace-nowrap",
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <button type="button" onClick={() => handleTableSort("id")} className="group inline-flex items-center gap-1 text-left hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:hover:text-white dark:focus-visible:ring-red-400">
+                                  <span>Proposal ID</span>
+                                  <SortIndicator column="id" sortBy={tableSortBy} sortOrder={tableSortOrder} />
+                                </button>
+                              </div>
+                            </th>
                             {visibleColumns.includes("event") && (
                               <SortableTableHeader column="event" label="Event Proposal" sortBy={tableSortBy} sortOrder={tableSortOrder} onSort={handleTableSort} className="py-3.5 px-6 whitespace-nowrap" />
                             )}
@@ -1614,16 +1616,14 @@ export default function OsasMonitoringTab({ showToast }) {
                               onClick={() => select(item)}
                               className="hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                             >
-                              {visibleColumns.includes("id") && (
-                                <td className={cn(
-                                  "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
-                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                                )}>
-                                  <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                                    {item.id}
-                                  </span>
-                                </td>
-                              )}
+                              <td className={cn(
+                                "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                              )}>
+                                <Badge variant="gray" className="rounded-lg tabular-nums">
+                                  {getOsasRecordReference(item)}
+                                </Badge>
+                              </td>
                               {visibleColumns.includes("event") && (
                                 <td className="py-3.5 px-6 overflow-hidden border-r border-border/70 dark:border-border/70">
                                   <div className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate" title={item.title}>
@@ -1666,7 +1666,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                                  <div className="tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                                     {item.submitted_by_email || item.student_no}
                                   </div>
                                 </td>
@@ -1903,9 +1903,9 @@ export default function OsasMonitoringTab({ showToast }) {
                                     "py-3.5 px-6 whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/80 dark:group-hover:bg-zinc-800/90 border-r border-border/70 dark:border-border/70 transition-shadow w-[140px] min-w-[140px] max-w-[140px]",
                                     isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                                   )}>
-                                    <span className="font-sans tabular-nums text-xs font-medium text-gray-700 dark:text-zinc-300">
-                                      {item.id}
-                                    </span>
+                                    <Badge variant="gray" className="rounded-lg tabular-nums">
+                                      {getOsasRecordReference(item, "post_events")}
+                                    </Badge>
                                   </td>
                                 )}
                                 {visibleColumns.includes("event") && (
@@ -1927,7 +1927,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                     <div className="font-medium text-gray-800 dark:text-zinc-200 truncate" title={item.student_name}>
                                       {item.student_name}
                                     </div>
-                                    <div className="font-sans tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
+                                    <div className="tabular-nums text-[11px] text-gray-400 dark:text-zinc-500 truncate" title={item.submitted_by_email || item.student_no}>
                                       {item.submitted_by_email || item.student_no}
                                     </div>
                                   </td>

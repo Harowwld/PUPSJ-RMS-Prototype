@@ -227,6 +227,37 @@ async function runTests() {
     assert.ok(liquidationBytes.byteLength > 0, "Liquidation PDF must have non-zero bytes");
     console.log(`  ✓ Streamed liquidation PDF (${liquidationBytes.byteLength} bytes)`);
 
+    // Revision returns the same report to the review queue and keeps the liquidation PDF.
+    for (const status of ["Under Review", "Needs Revision"]) {
+      const review = await fetch(`${BASE_URL}/api/osas/post-event-reports/${testReportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: osasAuth.cookieHeader },
+        body: JSON.stringify({ status, note: "Please correct the narrative attendance figures." }),
+      });
+      assert.equal(review.status, 200);
+    }
+
+    postEventForm.set("revisionReportId", String(testReportId));
+    postEventForm.set("actualAttendance", "130");
+    postEventForm.set("narrativeFile", new Blob([narrativePdf], { type: "application/pdf" }), "revised-narrative.pdf");
+    postEventForm.delete("liquidationFile");
+
+    const resubmit = () => fetch(`${BASE_URL}/api/student/post-event-reports`, {
+      method: "POST",
+      headers: { cookie: studentAuth.cookieHeader, "x-csrf-token": studentAuth.csrfToken },
+      body: postEventForm,
+    });
+
+    const revisedResponse = await resubmit();
+    assert.equal(revisedResponse.status, 200);
+    const { data: revisedReport } = await revisedResponse.json();
+    assert.equal(revisedReport.id, testReportId);
+    assert.equal(revisedReport.status, "Submitted");
+    assert.equal(revisedReport.actual_attendance, 130);
+    assert.equal(revisedReport.narrative_original_filename, "revised-narrative.pdf");
+    assert.equal(revisedReport.liquidation_storage_filename, submitReportJson.data.liquidation_storage_filename);
+    assert.equal((await resubmit()).status, 409, "A repeat submission must not create another report");
+
     // 5d. OSAS Approves & Clears the Post-Event Report
     const clearReportRes = await fetch(`${BASE_URL}/api/osas/post-event-reports/${testReportId}`, {
       method: "PATCH",
