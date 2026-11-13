@@ -1,5 +1,25 @@
 # OCR accuracy baseline
 
+## Acronym legend
+
+| Acronym | Meaning |
+|---|---|
+| OCR | Optical Character Recognition; software that converts text in images or scanned documents into machine-readable text. |
+| CER | Character Error Rate; character-level edit errors divided by the number of characters in the reference text. |
+| WER | Word Error Rate; word-level edit errors divided by the number of words in the reference text. |
+| TP | True Positive; the correct student appears among the suggested roster candidates. |
+| FN | False Negative; the correct student is missing from the suggested roster candidates. |
+| FP | False Positive; an unrelated student appears among the suggested roster candidates. |
+| TN | True Negative; an unrelated roster student is correctly not suggested. |
+| FPR | False Positive Rate; unrelated students suggested divided by all unrelated-student opportunities. |
+| DPI | Dots Per Inch; a measure of image or print resolution. |
+| PDF | Portable Document Format; the file format used for the benchmark documents. |
+| PSA | Philippine Statistics Authority. |
+| SF10 | School Form 10; the learner's permanent academic record (formerly Form 137). |
+| N/A | Not Available or Not Applicable; no value is reported for that measure. |
+
+Quality tiers: **Q1** = pristine digital, **Q2** = reduced text-size proxy, **Q3** = 90° page rotation, **Q4** = synthetic speckle/streak artifacts, and **Q5** = faded-ink proxy. These are synthetic document-quality proxies, not physical scans.
+
 Generated Nov 8, 2026, 6:48:59 AM GMT+8 (Asia/Manila). Fixture schema 1, seed 20261108. Replay observations are constructed deterministically from synthetic fixture labels, not captured engine output.
 
 ## Metric definitions
