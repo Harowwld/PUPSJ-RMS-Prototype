@@ -107,7 +107,7 @@ describe("Scan & Upload OCR student mismatch warning", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(/different student/i);
-    expect(screen.getByText(/SANTOS, MARIA/i)).toBeVisible();
+    expect(screen.getByRole("alert")).toHaveTextContent(/SANTOS, MARIA/i);
   });
 
   it("recalculates the mismatch warning when the selected student changes", () => {
@@ -198,5 +198,63 @@ describe("Scan & Upload OCR student mismatch warning", () => {
     expect(processSubmission).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Upload to Selected Student" }));
     expect(processSubmission).toHaveBeenCalledOnce();
+  });
+});
+
+
+describe("Scan & Upload replacement and re-scan actions", () => {
+  it("replaces the selected page through a separate single-file picker", async () => {
+    const user = userEvent.setup();
+    const onFileSelect = vi.fn();
+    const onReplaceFile = vi.fn().mockResolvedValue(true);
+    const props = { ...scanUploadProps(), onFileSelect, onReplaceFile };
+    const { container } = render(React.createElement(ScanUploadTab, props));
+    await user.click(screen.getByRole("button", { name: "Replace File" }));
+    const picker = container.querySelector('input[data-replace-file]');
+    expect(picker).not.toBeNull();
+    expect(picker.multiple).toBe(false);
+    const replacement = new File(["new page"], "replacement.png", { type: "image/png" });
+    await user.upload(picker, replacement);
+    expect(onReplaceFile).toHaveBeenCalledWith(replacement);
+    expect(onFileSelect).not.toHaveBeenCalled();
+  });
+
+  it("re-scans the current file without adding a page", async () => {
+    const user = userEvent.setup();
+    const onRescanFile = vi.fn();
+    const props = { ...scanUploadProps(), onRescanFile };
+    const view = render(React.createElement(ScanUploadTab, props));
+    await user.click(screen.getByRole("button", { name: "Re-scan" }));
+    expect(onRescanFile).toHaveBeenCalledOnce();
+    expect(props.onFileSelect).not.toHaveBeenCalled();
+    view.rerender(React.createElement(ScanUploadTab, { ...props, ocrLoading: true }));
+    expect(screen.getByRole("button", { name: "Re-scan" })).toBeDisabled();
+  });
+});
+
+
+describe("current OCR suggestions alongside a selected student", () => {
+  const suggestionFor = (student) => ({
+    name: student.name,
+    studentMatches: [{ ...student, mismatchPercent: 0, student }],
+  });
+
+  it("updates visible suggestions from A to B and clears B when no match is found", () => {
+    const props = scanUploadProps({ suggestion: suggestionFor(selectedStudent) });
+    const view = render(React.createElement(ScanUploadTab, props));
+    expect(screen.getByRole("region", { name: "Suggested student matches" })).toHaveTextContent(selectedStudent.name);
+    view.rerender(React.createElement(ScanUploadTab, { ...props, ocrSuggestion: suggestionFor(differentStudent) }));
+    expect(screen.getByRole("region", { name: "Suggested student matches" })).toHaveTextContent(differentStudent.name);
+    expect(screen.getByRole("region", { name: "Suggested student matches" })).not.toHaveTextContent(selectedStudent.name);
+    expect(props.setNewRec).not.toHaveBeenCalled();
+    view.rerender(React.createElement(ScanUploadTab, { ...props, ocrSuggestion: { name: "", studentMatches: [] } }));
+    expect(screen.queryByRole("region", { name: "Suggested student matches" })).not.toBeInTheDocument();
+    expect(screen.getByText(/No student match found/)).toHaveAttribute("role", "status");
+    expect(props.setNewRec).not.toHaveBeenCalled();
+  });
+
+  it("keeps the selected assignment locked until the existing Switch action is used", () => {
+    renderScanUpload({ suggestion: suggestionFor(differentStudent) });
+    expect(screen.getByRole("button", { name: /SANTOS, MARIA.*2025-10002/ })).toBeDisabled();
   });
 });

@@ -2,12 +2,13 @@
 import { normalizeStudentRecordName, studentRecordNameParts } from "@/lib/studentRecordName";
 import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
-import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, useReducer, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "@/components/ui/sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
+import { createScanUploadForm, scanUploadFormReducer } from "@/lib/scanUploadAutofill";
 import { createOcrRequestGuard } from "@/lib/ocrRequestGuard";
 import { StaffGuard, useAuthUser } from "@/components/shared/AuthGuard";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
@@ -309,8 +310,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [selectedRoom, setSelectedRoom] = useOsasViewPreference("storage_explorer", "selectedRoom", null);
   const [selectedCabinet, setSelectedCabinet] = useOsasViewPreference("storage_explorer", "selectedCabinet", null);
 
-  /** When true, submit attaches the PDF to an existing student (no new student row). */
-  const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
   const [dropActive, setDropActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -328,7 +327,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [rescanContext, setRescanContext] = useState(null);
   const [isReplaceMode, setIsReplaceMode] = useState(false);
 
-  const [newRec, setNewRec] = useState({
+  const [uploadForm, dispatchUploadForm] = useReducer(scanUploadFormReducer, {
     studentNo: "",
     name: "",
     firstName: "", middleName: "", lastName: "",
@@ -345,16 +344,19 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     category: "",
     adviserName: "",
     adviserEmail: "",
+  }, createScanUploadForm);
+  const newRec = uploadForm.values;
+  /** When true, submit attaches the PDF to an existing student (no new student row). */
+  const uploadStudentIsExisting = uploadForm.existing;
+  const setNewRec = useCallback((update) => dispatchUploadForm({ type: "edit", update }), []);
+  const setUploadStudentIsExisting = useCallback((value) => dispatchUploadForm({ type: "select-existing", value }), []);
+  const applyOcrSuggestion = (suggestion) => dispatchUploadForm({
+    type: "ocr", suggestion,
+    lockedIdentity: Boolean(rescanContext || isReplaceMode),
+    lockedDocType: rescanContext?.docType || "",
+    isOsas: authUser?.office_id === "osas",
   });
   const [newRecStudentNoHint] = useState("");
-  const lockedUploadIdentityRef = useRef(false);
-  useEffect(() => {
-    lockedUploadIdentityRef.current = Boolean(
-      rescanContext || isReplaceMode || uploadStudentIsExisting || students.some((student) =>
-        String(student.studentNo || student.student_no || "").trim().toUpperCase() === String(newRec.studentNo || "").trim().toUpperCase()
-      ),
-    );
-  }, [rescanContext, isReplaceMode, uploadStudentIsExisting, students, newRec.studentNo]);
   const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
   const newStudentNoInputRef = useRef(null);
 
@@ -1131,9 +1133,9 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           ? String(docTypeFromOcr).trim()
           : p.docType,
     }));
-  }, [authUser?.office_id]);
+  }, [authUser?.office_id, setNewRec]);
 
-  const handleFileSelect = async (filesOrFile, skipOcr = false, rotationParam, skipQueue = false) => {
+  const handleFileSelect = async (filesOrFile, skipOcr = false, rotationParam, skipQueue = false, replaceSelected = false) => {
     if (!filesOrFile) return;
 
     let incomingFiles = [];
@@ -1164,7 +1166,42 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       if (incomingFiles.length === 0) return;
     }
 
-    if (!skipQueue) {
+    if (replaceSelected) {
+      if (incomingFiles.length !== 1) return false;
+      const replacement = incomingFiles[0];
+      const currentFile = uploadedFile;
+      const validationId = ocrRequestGuardRef.current.begin(currentFile);
+      try {
+        if (!replacement.size) throw new Error("The replacement file is empty.");
+        if (String(replacement.type).startsWith("image/")) {
+          const url = URL.createObjectURL(replacement);
+          try {
+            const image = new Image();
+            image.src = url;
+            await image.decode();
+          } finally {
+            URL.revokeObjectURL(url);
+          }
+        } else if (replacement.type === "application/pdf" || /\.pdf$/i.test(replacement.name)) {
+          const { PDFDocument } = await import("pdf-lib");
+          const pdf = await PDFDocument.load(await replacement.arrayBuffer());
+          if (!pdf.getPageCount()) throw new Error("The replacement PDF has no pages.");
+        } else {
+          throw new Error("Choose a PDF or image file.");
+        }
+      } catch (error) {
+        if (!ocrRequestGuardRef.current.isCurrent(validationId, currentFile)) return false;
+        setOcrLoading(false);
+        showToast({ title: "Replacement Failed", description: error.message || "Could not read the replacement. The original page is still loaded." }, true);
+        return false;
+      }
+      if (!ocrRequestGuardRef.current.isCurrent(validationId, currentFile)) return false;
+      setUploadedFiles((prev) => prev.length
+        ? prev.map((file, index) => index === selectedQueuedFileIndex ? replacement : file)
+        : [replacement]);
+      ocrContextRef.current = null;
+      ocrContextFileRef.current = replacement;
+    } else if (!skipQueue) {
       let newFiles = [];
       setUploadedFiles((prev) => {
         newFiles = [...prev, ...incomingFiles];
@@ -1181,15 +1218,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
     setUploadedFile(activeFile);
     clearUploadFieldError("pdfFile");
-    setOcrError("");
     setOcrSuggestion(null);
+    setOcrError("");
 
     if (!skipOcr) {
       // In merge mode (multiple pages), only run OCR autofill for the very first page.
       // We capture the queue length *before* the new file was enqueued (skipQueue path
       // bypasses the setUploadedFiles call, so we can rely on the pre-call snapshot).
       const wasQueueEmpty = uploadedFiles.length === 0;
-      const isLeadPage = wasQueueEmpty || skipQueue;
+      const isLeadPage = wasQueueEmpty || skipQueue || replaceSelected;
 
       if (!isLeadPage) {
         console.log("[OCR] Skipping OCR autofill: not the lead page (page 2+).");
@@ -1225,51 +1262,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           docType: suggestion.docType,
           docTypesAvailable: docTypes,
         });
-        const keepExistingIdentity = lockedUploadIdentityRef.current;
-        setNewRec((p) => ({
-          ...p,
-          ...(!keepExistingIdentity && !students.some((student) =>
-            String(student.studentNo || student.student_no || "").trim().toUpperCase() === String(p.studentNo || "").trim().toUpperCase()
-          ) ? {
-            ...studentRecordNameParts({ name: suggestion.name || p.name }),
-            ...(suggestion.firstName ? { firstName: suggestion.firstName } : {}),
-            ...(suggestion.middleName ? { middleName: suggestion.middleName } : {}),
-            ...(suggestion.lastName ? { lastName: suggestion.lastName } : {}),
-          } : {}),
-          name: keepExistingIdentity || students.some((student) =>
-            String(student.studentNo || student.student_no || "").trim().toUpperCase() ===
-            String(p.studentNo || "").trim().toUpperCase()
-          )
-            ? p.name
-            : String(suggestion.name || p.name || "")
-                .trim()
-                .replace(/\s+/g, " ")
-                .toUpperCase(),
-          room: p.room || (isOsas ? "1" : ""),
-          cabinet: p.cabinet || "",
-          drawer: p.drawer || (isOsas ? "1" : ""),
-          docType: rescanContext?.docType
-            ? rescanContext.docType
-            : keepExistingIdentity && p.docType
-              ? p.docType
-              : suggestion.docType != null && String(suggestion.docType).trim() !== ""
-                ? String(suggestion.docType).trim()
-                : p.docType,
-        }));
-        if (!keepExistingIdentity) {
-          if (suggestion.matchedStudent) {
-            applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType || null);
-            setUploadStudentIsExisting(true);
-          } else {
-            setUploadStudentIsExisting(false);
-          }
-        }
+        applyOcrSuggestion(suggestion);
         clearAllUploadFieldErrors();
       } catch (err) {
         if (!ocrRequestGuardRef.current.isCurrent(ocrRequestId, activeFile)) return;
         setOcrLoading(false);
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
+        setOcrError(message);
+        applyOcrSuggestion({ studentMatches: [], docType: "" });
         showToast(
           formatErrorMessage(err, {
             title: "OCR Detection Incomplete",
@@ -1282,7 +1283,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           setOcrLoading(false);
         }
       }
+    } else {
+      setOcrLoading(false);
     }
+    return true;
   };
 
   const handleRemoveQueuedFile = (indexToRemove) => {
@@ -1292,6 +1296,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       const nextFile = next[nextIndex] || null;
       ocrRequestGuardRef.current.invalidate(nextFile);
       setOcrSuggestion(null);
+      setOcrError("");
       setOcrLoading(false);
       if (next.length === 0) {
         setUploadedFile(null);
@@ -1454,46 +1459,21 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
     setUploadFieldErrors({});
 
-    // Convert image files to PDF before uploading (API only accepts PDFs)
-    const { imageToPdf, needsConversion, mergeImagesToPdf } = await import("@/lib/imageToPdf");
+    // Convert queued pages to one PDF in their displayed order.
+    const { imageToPdf, needsConversion, mergeFilesToPdf } = await import("@/lib/imageToPdf");
     let fileToUpload = uploadedFile;
     if (uploadedFiles.length > 1) {
-      const allImages = uploadedFiles.every(f => needsConversion(f));
-      if (allImages) {
-        try {
-          fileToUpload = await mergeImagesToPdf(uploadedFiles);
-        } catch (convErr) {
-          showToast(
-            formatErrorMessage(convErr, {
-              title: "Image Merge Failed",
-              description: "Could not combine images into a single PDF document. Please check file formats.",
-            }),
-            true
-          );
-          return;
-        }
-      } else {
+      try {
+        fileToUpload = await mergeFilesToPdf(uploadedFiles);
+      } catch (convErr) {
         showToast(
-          {
-            title: "Multi-page Merge Warning",
-            description: "Merging requires all selected files to be images. Proceeding with primary document.",
-          },
-          "warning"
+          formatErrorMessage(convErr, {
+            title: "Page Merge Failed",
+            description: "Could not combine the queued pages. Check the files and try again.",
+          }),
+          true
         );
-        if (needsConversion(uploadedFile)) {
-          try {
-            fileToUpload = await imageToPdf(uploadedFile);
-          } catch (convErr) {
-            showToast(
-              formatErrorMessage(convErr, {
-                title: "Conversion Failed",
-                description: "Could not convert image to PDF. Please try uploading a PDF directly.",
-              }),
-              true
-            );
-            return;
-          }
-        }
+        return;
       }
     } else if (needsConversion(uploadedFile)) {
       try {
@@ -1660,6 +1640,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       ocrRequestGuardRef.current.invalidate(null);
       setOcrLoading(false);
       setOcrSuggestion(null);
+      setOcrError("");
       setUploadedFiles([]);
       setSelectedQueuedFileIndex(0);
       setUploadFieldErrors({});
@@ -1787,11 +1768,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     ocrRequestGuardRef.current.invalidate(null);
     setOcrLoading(false);
     setOcrSuggestion(null);
+    setOcrError("");
     setUploadedFiles([]);
     setSelectedQueuedFileIndex(0);
     setRotation(0);
     setView("upload");
-  }, [students, archivedStudents, organizations, archivedOrganizations, allDocs, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors]);
+  }, [students, archivedStudents, organizations, archivedOrganizations, allDocs, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors, setNewRec, setUploadStudentIsExisting]);
 
   const confirmBulkArchive = async () => {
     if (bulkArchiveLoading) return;
@@ -2107,6 +2089,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onReorderQueuedFiles={handleReorderQueuedFiles}
               fileInputRef={fileInputRef}
               onFileSelect={handleFileSelect}
+              onReplaceFile={(file) => handleFileSelect(file, false, undefined, false, true)}
+              onRescanFile={() => handleFileSelect(uploadedFile, false, undefined, true)}
               rotation={rotation}
               setRotation={setRotation}
               onClearFile={() => {
@@ -2116,6 +2100,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 setUploadedFiles([]);
                 setSelectedQueuedFileIndex(0);
                 setOcrSuggestion(null);
+                setOcrError("");
                 clearUploadFieldError("pdfFile");
                 setRotation(0);
                 if (!rescanContext && !isReplaceMode && !uploadStudentIsExisting) {
@@ -2134,6 +2119,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               clearAllUploadFieldErrors={clearAllUploadFieldErrors}
               newRec={newRec}
               setNewRec={setNewRec}
+              onOcrResult={applyOcrSuggestion}
+              onSelectDocumentType={(docType) => dispatchUploadForm({
+                type: "edit", manualFields: ["docType"], update: (values) => ({ ...values, docType }),
+              })}
               newRecStudentNoHint={newRecStudentNoHint}
               setNewRecStudentNoTouched={setNewRecStudentNoTouched}
               applyStudentNoMask={applyStudentNoMask}

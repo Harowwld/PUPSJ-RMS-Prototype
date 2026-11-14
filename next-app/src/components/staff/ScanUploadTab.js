@@ -27,7 +27,6 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
-import { splitNameComponents } from "@/lib/ocrClient"
 import StudentNameFields from "@/components/shared/StudentNameFields"
 import { studentRecordNameParts } from "@/lib/studentRecordName"
 import { formatRegistrarStudentName } from "@/lib/validationSchemas"
@@ -78,8 +77,13 @@ export default function ScanUploadTab({
   onReorderQueuedFiles,
   fileInputRef,
   onFileSelect,
+  onReplaceFile,
+  onRescanFile,
+  onOcrResult,
+  onSelectDocumentType,
   onClearFile,
   ocrLoading,
+  ocrError = "",
   storageLayout,
   courses,
   docTypes,
@@ -121,6 +125,9 @@ export default function ScanUploadTab({
   const [windowDragActive, setWindowDragActive] = useState(false)
   const [mismatchConfirmOpen, setMismatchConfirmOpen] = useState(false)
   const mismatchSubmissionRef = useRef(null)
+  const replaceFileInputRef = useRef(null)
+  const [replacingFile, setReplacingFile] = useState(false)
+
 
   const ocrMismatch = (() => {
     if (isOsas) return null
@@ -353,38 +360,20 @@ export default function ScanUploadTab({
     showToast,
     onPromoted: onIngestPromoted,
     onOcrResult: (suggestion) => {
-      if (!suggestion) return
-      // OCR fills extracted fields; staff selects the student separately.
-      const ocrDocType =
-        suggestion.docType && String(suggestion.docType).trim()
-          ? String(suggestion.docType).trim()
-          : ""
-      if (rescanContext || isReplaceMode || uploadStudentIsExisting) {
-        setNewRec?.((p) => ({
-          ...p,
-          docType: rescanContext?.docType || p.docType || ocrDocType,
-        }))
-        return
-      }
-      if (suggestion.matchedStudent) {
-        // Existing student matched: lock the form fields to their record.
-        onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
-      } else {
-        // No match: only fill in the name/docType, leave form unlocked for manual entry.
-        const parsed = splitNameComponents(suggestion.name || "");
-        setNewRec?.((p) => ({
-          ...p,
-          name: suggestion.name
-            ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
-            : p.name,
-          firstName: suggestion.firstName || parsed.firstName || p.firstName,
-          middleName: suggestion.middleName || parsed.middleName || p.middleName,
-          lastName: suggestion.lastName || parsed.lastName || p.lastName,
-          docType: ocrDocType || p.docType,
-        }))
-      }
+      if (suggestion) onOcrResult?.(suggestion)
     },
   })
+
+  const replaceFile = async (file) => {
+    if (!file || replacingFile) return
+    setReplacingFile(true)
+    hf.clearIngestSelection()
+    try {
+      await onReplaceFile?.(file)
+    } finally {
+      setReplacingFile(false)
+    }
+  }
 
   useEffect(() => {
     if (!uploadedFile && !hf.selectedRow) return
@@ -611,7 +600,15 @@ export default function ScanUploadTab({
     })
 
     if (validFiles.length === 0) return
-    handlePdfFileSelect(validFiles)
+    if (uploadedFile) {
+      if (validFiles.length !== 1) {
+        showToast({ title: "Choose One Replacement", description: "Replace the selected page with one PDF or image." }, true)
+        return
+      }
+      replaceFile(validFiles[0])
+    } else {
+      handlePdfFileSelect(validFiles)
+    }
   }
 
   const handlePasteButtonClick = async (e) => {
@@ -784,8 +781,8 @@ export default function ScanUploadTab({
                             }}
                             onDrop={onPdfDrop}
                           >
-                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
-                          <div className="min-w-0">
+                            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-white px-5 py-3 dark:border-border dark:bg-card">
+                          <div className="min-w-0 max-w-full">
                             <div className="text-xs font-normal text-gray-900 dark:text-zinc-300">
                               {hf.selectedRow ? "Scanner Preview" : "Document Preview"}
                             </div>
@@ -793,7 +790,7 @@ export default function ScanUploadTab({
                               {hf.selectedRow?.original_filename || uploadedFile?.name}
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-2">
+                          <div className="flex max-w-full flex-wrap items-center gap-2">
                             {(hf.ocrLoading || ocrLoading) && (
                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 font-semibold text-[10px] tracking-wider animate-pulse dark:bg-amber-950/20 dark:border-amber-900/30">
                                 <Loading01Icon size={16}  className="animate-spin" />
@@ -815,11 +812,24 @@ export default function ScanUploadTab({
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => fileInputRef.current?.click()}
+                              onClick={() => replaceFileInputRef.current?.click()}
+                              disabled={replacingFile || ocrLoading || hf.ocrLoading}
                               className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95"
                               title="Choose or drop a different file"
                             >
                               Replace File
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={replacingFile || ocrLoading || hf.ocrLoading}
+                              onClick={() => {
+                                hf.clearIngestSelection()
+                                onRescanFile?.()
+                              }}
+                            >
+                              Re-scan
                             </Button>
                             <button
                               type="button"
@@ -1083,6 +1093,19 @@ export default function ScanUploadTab({
                         )}
                       </div>
                         <input
+                          ref={replaceFileInputRef}
+                          data-replace-file
+                          aria-label="Replace selected page"
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            e.target.value = ""
+                            replaceFile(file)
+                          }}
+                        />
+                        <input
                           ref={fileInputRef}
                           type="file"
                           className="hidden"
@@ -1091,6 +1114,16 @@ export default function ScanUploadTab({
                           onChange={(e) => handlePdfFileSelect(e.target.files)}
                         />
                       </div>
+                  {ocrError && (
+                    <p role="alert" className="mt-3 text-xs text-red-600 dark:text-red-400">
+                      OCR failed. The current file is still loaded. Re-scan or enter details manually.
+                    </p>
+                  )}
+                  {!ocrLoading && !ocrError && ocrSuggestion && !isOsas && !ocrSuggestion.studentMatches?.length && (
+                    <p role="status" className="mt-3 text-xs text-gray-500 dark:text-zinc-400">
+                      No student match found. Select a student manually or re-scan the current file.
+                    </p>
+                  )}
                   {(ocrLoading || hf.ocrLoading) ? (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white/95 backdrop-blur-sm dark:bg-card/90">
                       <div className="w-full max-w-xs px-6">
@@ -1493,6 +1526,40 @@ export default function ScanUploadTab({
                                 The scanned document appears to belong to {ocrMismatch.candidateStudentName} ({ocrMismatch.candidateStudentNo}), while {ocrMismatch.selectedStudentName} ({ocrMismatch.selectedStudentNo}) is selected. Review the assignment before filing.
                               </NoticeBanner>
                             )}
+                            {!ocrLoading && !ocrError && ocrSuggestion?.studentMatches?.length > 0 && (
+                              <div role="region" aria-label="Suggested student matches" className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
+                                <p className="mb-2 text-[11px] text-blue-800 dark:text-blue-200">
+                                  Suggested student matches from the current scan.
+                                  {uploadStudentIsExisting
+                                    ? rescanContext
+                                      ? " The student assignment is locked for this replacement."
+                                      : " The selected student is kept. Use Switch to choose a different suggestion."
+                                    : " Select a match to assign it."}
+                                </p>
+                                <div className="space-y-1">
+                                  {ocrSuggestion.studentMatches.map((candidate) => {
+                                    const studentNo = candidate.studentNo || candidate.student_no;
+                                    const student = candidate.student || students.find((item) => String(item.studentNo || item.student_no) === String(studentNo));
+                                    if (!student) return null;
+                                    return (
+                                      <button
+                                        key={studentNo}
+                                        type="button"
+                                        disabled={uploadStudentIsExisting || Boolean(rescanContext)}
+                                        onClick={() => handleSelectStudent(student)}
+                                        className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs enabled:hover:bg-white dark:enabled:hover:bg-zinc-900 enabled:cursor-pointer disabled:cursor-default"
+                                      >
+                                        <span className="min-w-0">
+                                          <span className="block truncate font-semibold text-gray-900 dark:text-zinc-100">{student.name}</span>
+                                          <span className="text-[11px] text-gray-600 dark:text-zinc-400">{studentNo}</span>
+                                        </span>
+                                        <span className="shrink-0 text-[11px] text-gray-600 dark:text-zinc-400">{candidate.mismatchPercent}% difference</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                             {uploadStudentIsExisting && (
                               <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20">
                                 <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
@@ -1675,34 +1742,6 @@ export default function ScanUploadTab({
                                         setNewRec((p) => ({ ...p, ...parts, name: formatRegistrarStudentName(parts) }))
                                       }}
                                     />
-                                    {ocrSuggestion?.studentMatches?.length > 0 && !uploadStudentIsExisting && (
-                                      <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-950/20">
-                                        <p className="mb-2 text-[11px] text-blue-800 dark:text-blue-200">
-                                          OCR found possible roster matches within 10% letter difference. Select one to assign it.
-                                        </p>
-                                        <div className="space-y-1">
-                                          {ocrSuggestion.studentMatches.map((candidate) => {
-                                            const studentNo = candidate.studentNo || candidate.student_no;
-                                            const student = candidate.student || students.find((item) => String(item.studentNo || item.student_no) === String(studentNo));
-                                            if (!student) return null;
-                                            return (
-                                              <button
-                                                key={studentNo}
-                                                type="button"
-                                                onClick={() => handleSelectStudent(student)}
-                                                className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-white dark:hover:bg-zinc-900 cursor-pointer"
-                                              >
-                                                <span className="min-w-0">
-                                                  <span className="block truncate font-semibold text-gray-900 dark:text-zinc-100">{student.name}</span>
-                                                  <span className="text-[11px] text-gray-600 dark:text-zinc-400">{studentNo}</span>
-                                                </span>
-                                                <span className="shrink-0 text-[11px] text-gray-600 dark:text-zinc-400">{candidate.mismatchPercent}% difference</span>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    )}
                                     {showNameSuggestions && filteredNameSuggestions.length > 0 && (
                                       <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-900 overflow-hidden shadow-xl p-1 animate-in fade-in slide-in-from-top-1 duration-fast">
                                         {filteredNameSuggestions.map((s) => {
@@ -1904,7 +1943,8 @@ export default function ScanUploadTab({
                             onChange={(e) => {
                               clearUploadFieldError?.("docType")
                               const selectedDocType = e.target.value
-                              setNewRec((p) => ({ ...p, docType: selectedDocType }))
+                              if (onSelectDocumentType) onSelectDocumentType(selectedDocType)
+                              else setNewRec((p) => ({ ...p, docType: selectedDocType }))
                               const cleanId = String(
                                 isOsas
                                   ? (newRec.organizationId || newRec.acronym || newRec.name || "")

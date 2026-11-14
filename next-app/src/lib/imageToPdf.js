@@ -168,3 +168,17 @@ export async function mergeImagesToPdf(imageFiles) {
   return new File([pdfBlob], "merged.pdf", { type: "application/pdf" });
 }
 
+
+/** Combine queued images and PDFs in their displayed order. */
+export async function mergeFilesToPdf(files) {
+  if (files.every(needsConversion)) return mergeImagesToPdf(files);
+  const { PDFDocument } = await import("pdf-lib");
+  const merged = await PDFDocument.create();
+  for (const file of files) {
+    const source = needsConversion(file) ? await imageToPdf(file) : file;
+    const pdf = await PDFDocument.load(await source.arrayBuffer());
+    const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+    pages.forEach((page) => merged.addPage(page));
+  }
+  return new File([await merged.save()], "combined-document.pdf", { type: "application/pdf" });
+}

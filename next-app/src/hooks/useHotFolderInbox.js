@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { scanFileForSuggestion } from "@/lib/ocrClient";
 import { formatErrorMessage } from "@/lib/errorUtils";
 
@@ -18,6 +18,7 @@ export function useHotFolderInbox({
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewMime, setPreviewMime] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
+  const ocrRequestRef = useRef(0);
 
   const selectedRow = useMemo(
     () => rows.find((r) => Number(r.id) === Number(selected)) || null,
@@ -53,6 +54,8 @@ export function useHotFolderInbox({
   );
 
   const clearIngestSelection = useCallback(() => {
+    ocrRequestRef.current += 1;
+    setOcrLoading(false);
     setSelected(null);
     setPreviewUrl("");
     setPreviewMime("");
@@ -60,6 +63,7 @@ export function useHotFolderInbox({
 
   const runOcrForRow = async (row, { successTitle = "", successDesc = "" } = {}) => {
     if (!row) return null;
+    const requestId = ++ocrRequestRef.current;
     setOcrLoading(true);
     try {
       const blobRes = await fetch(`/api/ingest/hot-folder/${row.id}/file`);
@@ -70,6 +74,7 @@ export function useHotFolderInbox({
       });
       file.ingestId = row.id;
       const suggestion = await scanFileForSuggestion({ file, students, docTypes });
+      if (requestId !== ocrRequestRef.current) return null;
       // Forward OCR result to parent so it can populate newRec (the standard form).
       onOcrResult?.(suggestion);
       
@@ -80,6 +85,7 @@ export function useHotFolderInbox({
       // Return the file so callers can use it as the uploaded file
       return file;
     } catch (e) {
+      if (requestId !== ocrRequestRef.current) return null;
       setOcrLoading(false);
       showToast(
         formatErrorMessage(e, {

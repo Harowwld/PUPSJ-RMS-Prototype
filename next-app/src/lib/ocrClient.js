@@ -908,7 +908,7 @@ export async function scanFileForSuggestion({ file, docTypes, rotation = 0, auto
   const templateExtractedName = coordinateRecognition?.extractedName || "";
   const naturalLanguageName = detectName(lines, { nlp });
   const rawExtracted = templateExtractedName || naturalLanguageName;
-  const rosterMatchName = templateExtractedName || formatToLNFnMi(naturalLanguageName);
+  const rosterMatchName = templateExtractedName || naturalLanguageName;
   const matchingStartedAt = performance.now();
   let studentMatches = [];
   if (matchStudents && (templateExtractedName || rawText)) {
