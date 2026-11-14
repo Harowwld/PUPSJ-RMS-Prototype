@@ -26,7 +26,7 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
@@ -34,7 +34,7 @@ import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import { SegmentedControl } from "@/components/ui/tabs"
 import { FilterPopover, SortPopover, GroupPopover, ColumnsPopover } from "@/components/systemadmin/OfficeTableControls"
-import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, Contact01Icon, Shield01Icon, TableIcon, Tick01Icon, UserSwitchIcon, Search01Icon} from "hugeicons-react";
+import { Archive01Icon as EmptyArchive01Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowUp01Icon, ArrowUpDownIcon, ArrowUpRight01Icon, Building01Icon, Cancel01Icon, Contact01Icon, Shield01Icon, TableIcon, Tick01Icon, UserSwitchIcon, Search01Icon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function getOfficeIcon(office) {
   if (office?.icon && office.icon.trim()) return office.icon
@@ -91,15 +91,19 @@ function getModuleTargetText(m) {
 function StatusChip({ status }) {
   const isInactive = status === "Inactive" || status === "Archived"
   return (
-    <span
-      className={cn(
-        "rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none inline-flex items-center",
-        isInactive
-          ? "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400"
-          : "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none shrink-0">
+      {isInactive ? (
+        <Cancel01Icon size={12} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+      ) : (
+        <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+          <Tick01Icon size={8} className="stroke-[3]" />
+        </span>
       )}
-    >
-      {isInactive ? "Archived" : "Active"}
+      <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+      <span className="font-medium text-gray-500 dark:text-zinc-400">
+        {isInactive ? "Archived" : "Active"}
+      </span>
     </span>
   )
 }
@@ -285,6 +289,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       return updated
     })
   }
+
+  const navigateToRestoreOffice = useCallback((officeId) => {
+    window.dispatchEvent(
+      new CustomEvent("switch-view", {
+        detail: { view: "offices", officeId: officeId || currentOffice?.id },
+      })
+    )
+  }, [currentOffice?.id])
 
   const handleMatrixSort = (column) => {
     if (matrixSortBy === column) {
@@ -691,9 +703,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               </EmptyHeader>
               <EmptyContent>
                 <Button
+                  size="sm"
                   onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices" } }))}
                   title="Manage Departments"
-                  className="flex h-10 items-center justify-center px-5 cursor-pointer"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                 >
                   Manage Departments
                 </Button>
@@ -800,8 +813,13 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   Public Login Demo Accounts
                 </p>
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
-                  Prototype Access
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <Shield01Icon size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Access</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">
+                    Prototype Access
+                  </span>
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -864,9 +882,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                     <EmptyContent>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => selectOfficeScope(officeFilter === "Archived" ? "Active" : "Archived")}
                         title={officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
-                        className="flex h-10 items-center justify-center px-5"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl"
                       >
                         {officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
                       </Button>
@@ -968,14 +987,14 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isOfficeArchived ? (
-                              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400">
+                              <span className={cn(BADGE_BASE, "bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400")}>
                                 Archived
                               </span>
                             ) : (
                               <Badge
                                 variant="secondary"
                                 className={cn(
-                                  "text-[10px] px-2 py-0.5 rounded-full border-0 font-semibold font-sans tabular-nums transition-colors",
+                                  BADGE_BASE, "font-sans tabular-nums transition-colors",
                                   isSelected
                                     ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                                     : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -1045,19 +1064,21 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 {/* Quick Batch Actions for this department */}
                 <div className="flex items-center gap-2 shrink-0">
                   <Button
+                    size="sm"
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", true)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Enable all workspace features for this department"}
-                    className="h-9 cursor-pointer flex items-center justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Enable All Features
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     disabled={isCurrentArchived || Boolean(toggling[`${currentOffice.id}-all-batch`])}
                     onClick={() => handleBatchToggle(currentOffice.id, "all", false)}
                     title={isCurrentArchived ? "Archived departments cannot be modified" : "Turn off optional features and keep required system tools only"}
-                    className="h-9 flex items-center justify-center px-4"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl"
                   >
                     Reset to Core
                   </Button>
@@ -1066,9 +1087,22 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
               {/* Archived Office Warning Notice Banner (Attached edge-to-edge dismissable alert) */}
               {isCurrentArchived && !dismissedArchivedAlerts.includes(currentOffice.id) && (
-                <NoticeBanner tone="warning" onDismiss={() => handleDismissArchivedAlert(currentOffice.id)} action={
-                  <Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "offices", officeId: currentOffice.id } }))} title="Restore Department in Departments & Stations">Restore</Button>
-                }>
+                <NoticeBanner
+                  tone="warning"
+                  className="border-t-0"
+                  onDismiss={() => handleDismissArchivedAlert(currentOffice.id)}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => navigateToRestoreOffice(currentOffice.id)}
+                      title="Open in Departments & Stations to restore this department"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                    >
+                      <span>Restore in Departments &amp; Stations</span>
+                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
+                    </button>
+                  }
+                >
                   <strong className="font-semibold">Archived Department Notice:</strong> This department is currently archived. Its features cannot be modified while it is archived. Restore this department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
                 </NoticeBanner>
               )}
@@ -1091,9 +1125,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                       <EmptyContent>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={handleClearFilters}
                           title="Reset Filters"
-                          className="flex h-10 items-center justify-center gap-2 px-5"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl"
                         >
                           Reset Filters
                         </Button>
@@ -1115,13 +1150,20 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                                   Supervisor & Department Head Tools
                                 </h4>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
-                                  {groupedModules.admin.filter(
-                                    (m) =>
-                                      m.is_system ||
-                                      matrix.assignments[currentOffice.id]?.[m.id]?.enabled
-                                  ).length}{" "}
-                                  / {groupedModules.admin.length} active
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                    <Tick01Icon size={8} className="stroke-[3]" />
+                                  </span>
+                                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Active</span>
+                                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                  <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                                    {groupedModules.admin.filter(
+                                      (m) =>
+                                        m.is_system ||
+                                        matrix.assignments[currentOffice.id]?.[m.id]?.enabled
+                                    ).length}{" "}
+                                    / {groupedModules.admin.length}
+                                  </span>
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-900 dark:text-zinc-300">
@@ -1195,13 +1237,20 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                                 <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                                   Staff & Frontline Tools
                                 </h4>
-                                <span className="text-[10px] px-2 py-0.2 rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400 font-bold">
-                                  {groupedModules.staff.filter(
-                                    (m) =>
-                                      m.is_system ||
-                                      matrix.assignments[currentOffice.id]?.[m.id]?.enabled
-                                  ).length}{" "}
-                                  / {groupedModules.staff.length} active
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                    <Tick01Icon size={8} className="stroke-[3]" />
+                                  </span>
+                                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Active</span>
+                                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                                  <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                                    {groupedModules.staff.filter(
+                                      (m) =>
+                                        m.is_system ||
+                                        matrix.assignments[currentOffice.id]?.[m.id]?.enabled
+                                    ).length}{" "}
+                                    / {groupedModules.staff.length}
+                                  </span>
                                 </span>
                               </div>
                               <p className="text-[11px] text-gray-900 dark:text-zinc-300">
@@ -1291,9 +1340,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <EmptyContent>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => selectOfficeScope(officeFilter === "Archived" ? "Active" : "Archived")}
                     title={officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
-                    className="flex h-10 items-center justify-center px-5"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl"
                   >
                     {officeFilter === "Archived" ? "View Active Departments" : "View Archived Departments"}
                   </Button>
@@ -1315,9 +1365,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
                 <EmptyContent>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={handleClearFilters}
                     title="Reset Filters"
-                    className="flex h-10 items-center justify-center gap-2 px-5"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl"
                   >
                     Reset Filters
                   </Button>
@@ -1325,77 +1376,110 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
               </Empty>
             </div>
           ) : (
-            <div
-              ref={matrixTableContainerRef}
-              className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
-            >
-              <Table layout="matrix" columns={[{ kind: "text", width: matrixFeatureWidth, maxWidth: matrixFeatureWidth }, ...visibleMatrixOffices.map(() => ({ kind: "category", width: matrixOfficeWidth }))]}>
-                <thead className="sticky top-0 z-20 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
-                  <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                    <th aria-sort={matrixSortBy === "name" ? matrixSortOrder === "ASC" ? "ascending" : "descending" : "none"} className="p-4 pl-6 min-w-[420px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30">
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleMatrixSort("name")}
-                          className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
-                            matrixSortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                          )}
-                        >
-                          <span>System Feature</span>
-                          <SortIndicator column="name" sortBy={matrixSortBy} sortOrder={matrixSortOrder} />
-                        </button>
-                      </div>
-                    </th>
-                    {visibleMatrixOffices.map((o) => {
-                      const isArchived = o.status === "Inactive" || o.status === "Archived"
-                      return (
-                        <th
-                          key={o.id}
-                          className={cn(
-                            "p-4 text-center min-w-[150px] select-none",
-                            isArchived && "opacity-75"
-                          )}
-                        >
-                          <div className="flex items-center justify-center">
-                            <span 
-                              className="systemadmin-office-label text-xs font-semibold tracking-tight truncate max-w-[130px]"
-                              style={{ "--office-accent": o.accent_color || "#800000" }}
-                              title={o.name}
-                            >
-                              {o.short_name}
-                            </span>
-                          </div>
-                        </th>
-                      )
-                    })}
-                  </tr>
-                </thead>
+            <div className="flex flex-col flex-[1_0_auto]">
+              {officeFilter === "Archived" && !dismissedArchivedAlerts.includes("__matrix__") && (
+                <NoticeBanner
+                  tone="warning"
+                  className="border-t-0"
+                  onDismiss={() => handleDismissArchivedAlert("__matrix__")}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => navigateToRestoreOffice(visibleMatrixOffices[0]?.id || filteredOffices[0]?.id)}
+                      title="Open Departments & Stations to restore archived departments"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                    >
+                      <span>Restore in Departments &amp; Stations</span>
+                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
+                    </button>
+                  }
+                >
+                  <strong className="font-semibold">Archived Departments Notice:</strong> Archived departments are read-only and their features cannot be modified. Restore a department in <strong className="font-semibold">Departments &amp; Stations</strong> to change feature access.
+                </NoticeBanner>
+              )}
+              <div
+                ref={matrixTableContainerRef}
+                className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
+              >
+                <Table layout="matrix" columns={[{ kind: "text", width: matrixFeatureWidth, maxWidth: matrixFeatureWidth }, ...visibleMatrixOffices.map(() => ({ kind: "category", width: matrixOfficeWidth }))]}>
+                  <thead className="sticky top-0 z-20 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
+                    <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
+                      <th aria-sort={matrixSortBy === "name" ? matrixSortOrder === "ASC" ? "ascending" : "descending" : "none"} className="p-4 pl-6 min-w-[420px] sticky left-0 bg-gray-50/95 dark:bg-zinc-900/95 z-30">
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleMatrixSort("name")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-xs font-semibold",
+                              matrixSortBy === "name" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>System Feature</span>
+                            <SortIndicator column="name" sortBy={matrixSortBy} sortOrder={matrixSortOrder} />
+                          </button>
+                        </div>
+                      </th>
+                      {visibleMatrixOffices.map((o) => {
+                        const isArchived = o.status === "Inactive" || o.status === "Archived"
+                        return (
+                          <th
+                            key={o.id}
+                            className={cn(
+                              "p-4 text-center min-w-[150px] select-none",
+                              isArchived && "opacity-90"
+                            )}
+                          >
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <span 
+                                className="systemadmin-office-label text-xs font-semibold tracking-tight truncate max-w-[130px]"
+                                style={{ "--office-accent": o.accent_color || "#800000" }}
+                                title={o.name}
+                              >
+                                {o.short_name}
+                              </span>
+                              {isArchived && (
+                                <button
+                                  type="button"
+                                  onClick={() => navigateToRestoreOffice(o.id)}
+                                  title={`Open ${o.short_name} in Departments & Stations to restore`}
+                                  className="inline-flex items-center gap-0.5 text-[11px] font-medium text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:underline underline-offset-3 transition-colors cursor-pointer active:scale-95"
+                                >
+                                  <span>Restore</span>
+                                  <ArrowUpRight01Icon size={11} aria-hidden="true" className="shrink-0" />
+                                </button>
+                              )}
+                            </div>
+                          </th>
+                        )
+                      })}
+                    </tr>
+                  </thead>
 
-                <tbody className="divide-y divide-border dark:divide-border">
-                  {matrixGroups.map((group) => (
-                    <Fragment key={group.key}>
-                      {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
-                        <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-50/90 px-4 py-2 pl-6 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">
-                          <div className="flex items-center gap-2">
-                            {group.key === "staff" ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" /> : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
-                            <span>{group.label}</span>
-                            <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.modules.length}</span>
-                          </div>
-                        </td>
-                      </tr>}
-                      {group.modules.map((feature) => <MatrixTableRow
-                        key={feature.id}
-                        m={feature}
-                        offices={visibleMatrixOffices}
-                        assignments={matrix.assignments}
-                        toggling={toggling}
-                        onToggle={handleToggle}
-                      />)}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </Table>
+                  <tbody className="divide-y divide-border dark:divide-border">
+                    {matrixGroups.map((group) => (
+                      <Fragment key={group.key}>
+                        {group.label && <tr className="bg-gray-50/90 dark:bg-zinc-900/80">
+                          <td colSpan={visibleMatrixOffices.length + 1} className="sticky left-0 border-y border-border/50 bg-gray-50/90 px-4 py-2 pl-6 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">
+                            <div className="flex items-center gap-2">
+                              {group.key === "staff" ? <Contact01Icon size={14} aria-hidden="true" className="text-blue-600 dark:text-blue-400" /> : <Shield01Icon size={14} aria-hidden="true" className="text-pup-maroon dark:text-red-400" />}
+                              <span>{group.label}</span>
+                              <span className="font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{group.modules.length}</span>
+                            </div>
+                          </td>
+                        </tr>}
+                        {group.modules.map((feature) => <MatrixTableRow
+                          key={feature.id}
+                          m={feature}
+                          offices={visibleMatrixOffices}
+                          assignments={matrix.assignments}
+                          toggling={toggling}
+                          onToggle={handleToggle}
+                        />)}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
             </div>
           )}
         </>
@@ -1476,14 +1560,14 @@ function ModuleCard({ m, office, assignments, toggling, onToggle, isOfficeArchiv
           </div>
 
           {isSystem ? (
-            <Badge className="bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 text-[9px] font-semibold border-0 rounded-full px-2 py-0.5">
+            <Badge className={cn(BADGE_BASE, "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300")}>
               Required
             </Badge>
           ) : (
             <Badge
               variant="outline"
               className={cn(
-                "text-[9px] font-semibold border-0 rounded-full px-2 py-0.5",
+                BADGE_BASE,
                 isEnabled
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
                   : "bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400"
@@ -1543,7 +1627,7 @@ function MatrixTableRow({ m, offices, assignments, toggling, onToggle }) {
               </span>
               <span className="flex min-w-0 max-w-[55%] shrink-0 items-center justify-end gap-2">
                 {isSystem && (
-                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className={cn(BADGE_BASE, "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300")}>
                     Required
                   </span>
                 )}

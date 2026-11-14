@@ -125,9 +125,9 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
               <StudentOsasProposalsSkeleton />
             ) : view === "compliance" ? (
               <StudentComplianceSkeleton />
-            ) : (
+            ) : view === "odrs" ? (
               <StudentRequestsTableSkeleton />
-            )}
+            ) : null}
           </div>
         </main>
       </div>

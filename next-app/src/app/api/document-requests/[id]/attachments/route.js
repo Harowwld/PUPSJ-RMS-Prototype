@@ -86,9 +86,9 @@ export async function POST(req, ctx) {
         [requestId, originalFilename, storageFilename, mimeType, file.size, access.user.id]
       );
       await run(
-        `INSERT INTO transaction_updates (document_request_id, status, message)
-         VALUES ($1, 'PendingPayment', $2)`,
-        [requestId, "Student uploaded payment proof: " + originalFilename]
+        `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+         VALUES ($1, 'PendingPayment', $2, $3)`,
+        [requestId, "Student uploaded payment proof: " + originalFilename, access.user.id || access.user.studentNo || null]
       );
       return { attachment };
     });

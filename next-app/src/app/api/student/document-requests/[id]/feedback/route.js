@@ -77,7 +77,7 @@ export async function POST(req, props) {
   );
 
   await writeGlobalAuditLog(req, "Student document request feedback submitted", {
-    actor: access.user.studentNo || access.user.email || "Student",
+    actor: [access.user.fname, access.user.lname].filter(Boolean).join(" ").trim() || access.user.studentNo || "Student",
     role: "Student",
     officeId: "registrar",
     details: `Rated request #${requestId} (${rawRating}/5 stars)${aspectTags.length ? ` - Tags: ${aspectTags.join(", ")}` : ""}`,

@@ -604,7 +604,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                       size="sm"
                       onClick={addScheduleRow}
                       disabled={footerData.scheduleItems.length >= MAX_SCHEDULE_ITEMS}
-                      className="h-8 px-3 cursor-pointer disabled:opacity-40"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-40"
                     >
                       Add Window
                     </Button>
@@ -748,7 +748,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                       size="sm"
                       onClick={addContactChannel}
                       disabled={footerData.contactItems.length >= MAX_CONTACT_ITEMS}
-                      className="h-8 px-3 cursor-pointer disabled:opacity-40"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-40"
                     >
                       Add Channel
                     </Button>
@@ -895,7 +895,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                   variant="outline"
                   size="sm"
                   onClick={() => window.open("/#office", "_blank")}
-                  className=""
+                  className="h-9 px-4 text-xs font-semibold rounded-xl"
                 >
                   Test Link
                 </Button>

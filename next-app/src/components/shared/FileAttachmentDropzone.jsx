@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -192,10 +194,7 @@ export function AttachedFileCard({
 
         {/* Extension Pill Badge at Bottom-Right */}
         <span
-          className={cn(
-            "absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-2xs tracking-wider uppercase select-none z-10",
-            formatConfig.badgeBg
-          )}
+          className={cn("absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-2xs tracking-wider select-none z-10", formatConfig.badgeBg, BADGE_BASE)}
         >
           {formatConfig.extLabel}
         </span>

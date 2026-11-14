@@ -206,18 +206,15 @@ export default function OsasPostEventReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "font-sans uppercase tracking-wider text-[10px]")}>
+                <span className={cn(BADGE_PALETTES.maroon, "font-sans tracking-wider text-[10px]", BADGE_BASE)}>
                   {selectedPostEvent.organization_acronym ? `[${selectedPostEvent.organization_acronym}] ` : ""}
                   {selectedPostEvent.organization_name}
                 </span>
-                <span className="font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300">
+                <span className={cn("font-sans tabular-nums text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300", BADGE_BASE)}>
                   {trackingNo}
                 </span>
                 <span
-                  className={cn(
-                    BADGE_BASE,
-                    getPostEventStatusBadgeClass(selectedPostEvent.status)
-                  )}
+                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), BADGE_BASE)}
                 >
                   {selectedPostEvent.status}
                 </span>
@@ -292,10 +289,7 @@ export default function OsasPostEventReviewSheet({
 
               <InfoRow icon="PieChartIcon" label="Clearance Status">
                 <span
-                  className={cn(
-                    BADGE_BASE,
-                    getPostEventStatusBadgeClass(selectedPostEvent.status)
-                  )}
+                  className={cn(getPostEventStatusBadgeClass(selectedPostEvent.status), BADGE_BASE)}
                 >
                   {selectedPostEvent.status}
                 </span>
@@ -322,7 +316,7 @@ export default function OsasPostEventReviewSheet({
             )}
 
             {/* Previous Review Remarks */}
-            {selectedPostEvent.review_notes && (
+            {(selectedPostEvent.review_note || selectedPostEvent.review_notes) && (
               <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 p-3.5 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-zinc-500 pb-1.5 border-b border-border/80 dark:border-border">
                   <span>
@@ -338,7 +332,7 @@ export default function OsasPostEventReviewSheet({
                   )}
                 </div>
                 <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                  {selectedPostEvent.review_notes}
+                  {selectedPostEvent.review_note || selectedPostEvent.review_notes}
                 </p>
               </div>
             )}

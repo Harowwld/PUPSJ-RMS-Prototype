@@ -20,8 +20,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
-import { Alert01Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon, Search01Icon } from "hugeicons-react";
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { Alert01Icon, Alert02Icon, CheckmarkCircle01Icon, Delete01Icon, Loading01Icon, Search01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 
 function normalizeQuestions(items) {
   const list = items.map((item, idx) => typeof item === "string"
@@ -295,16 +295,27 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                 {counts.all} questions · {counts.required} required
               </span>
               <span
-                className={cn(
-                  "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-normal leading-4",
-                  isDirty
-                    ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300"
-                )}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none"
                 role="status"
                 aria-live="polite"
               >
-                {isDirty ? "Unsaved question changes" : "All questions saved"}
+                {isDirty ? (
+                  <>
+                    <Alert02Icon size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span className="font-semibold text-gray-900 dark:text-zinc-100">Draft</span>
+                    <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                    <span className="font-medium text-gray-500 dark:text-zinc-400">Unsaved question changes</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                      <Tick01Icon size={8} className="stroke-[3]" />
+                    </span>
+                    <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                    <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                    <span className="font-medium text-gray-500 dark:text-zinc-400">All questions saved</span>
+                  </>
+                )}
               </span>
             </div>
           }
@@ -381,15 +392,20 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Question {i + 1}
                         </span>
-                        {q.is_required ? (
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.rose)}>
-                            Required
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                          {q.is_required ? (
+                            <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                              <Tick01Icon size={8} className="stroke-[3]" />
+                            </span>
+                          ) : (
+                            <Shield01Icon size={12} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                          )}
+                          <span className="font-semibold text-gray-900 dark:text-zinc-100">Challenge</span>
+                          <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                          <span className="font-medium text-gray-500 dark:text-zinc-400">
+                            {q.is_required ? "Required" : "Optional"}
                           </span>
-                        ) : (
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>
-                            Optional
-                          </span>
-                        )}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2">

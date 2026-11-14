@@ -85,11 +85,11 @@
 }
 .app-table [data-slot="table-identifier"] { line-height: 16px; vertical-align: middle; }
 .app-table [data-slot="table-status"] { line-height: 16px; vertical-align: middle; }
-[data-slot="table-status"][data-tone="neutral"] { background: #f4f4f5; color: #52525b; }
-[data-slot="table-status"][data-tone="success"] { background: #ecfdf5; color: #047857; }
-[data-slot="table-status"][data-tone="warning"] { background: #fffbeb; color: #92400e; }
-[data-slot="table-status"][data-tone="danger"] { background: #fef2f2; color: #b91c1c; }
-[data-slot="table-status"][data-tone="info"] { background: #eff6ff; color: #1d4ed8; }
+[data-slot="table-status"][data-tone="neutral"] { background: #f1f5f9; color: #334155; }
+[data-slot="table-status"][data-tone="success"] { background: #d1fae5; color: #065f46; }
+[data-slot="table-status"][data-tone="warning"] { background: #fef3c7; color: #92400e; }
+[data-slot="table-status"][data-tone="danger"] { background: #ffe4e6; color: #9f1239; }
+[data-slot="table-status"][data-tone="info"] { background: #dbeafe; color: #1e40af; }
 .dark [data-slot="table-status"][data-tone="neutral"] { background: #27272a; color: #d4d4d8; }
 .dark [data-slot="table-status"][data-tone="success"] { background: #052e24; color: #6ee7b7; }
 .dark [data-slot="table-status"][data-tone="warning"] { background: #451a03; color: #fcd34d; }

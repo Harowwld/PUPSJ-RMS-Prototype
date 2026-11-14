@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn, formatTitleCase } from "@/lib/utils";
@@ -229,10 +231,7 @@ export default function DigitalRecordsKanbanPipeline({
                       {col.label}
                     </span>
                     <span
-                      className={cn(
-                        "rounded-full px-2 py-0.2 text-[10px] font-semibold tabular-nums",
-                        col.badge
-                      )}
+                      className={cn("rounded-full px-2 py-0.2 text-[10px] font-semibold tabular-nums", col.badge, BADGE_BASE)}
                     >
                       {colItems.length}
                     </span>
@@ -288,7 +287,7 @@ export default function DigitalRecordsKanbanPipeline({
                       {/* Top row: Doc Type pill & File type */}
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-700 px-2 py-0.5 text-[10px] font-semibold text-gray-800 dark:text-zinc-200 truncate max-w-[190px]"
+                          className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-700 px-2 py-0.5 text-[10px] font-semibold text-gray-800 dark:text-zinc-200 truncate max-w-[190px]", BADGE_BASE)}
                           title={record.doc_type}
                         >
                           {record.doc_type}

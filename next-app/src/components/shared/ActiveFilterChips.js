@@ -1,4 +1,5 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -130,7 +131,7 @@ export default function ActiveFilterChips({
         <span className="text-[11px] font-medium tracking-normal text-gray-500 dark:text-zinc-400">
           Filters
         </span>
-        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-200/70 dark:bg-zinc-800 px-1 text-[10px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300">
+        <span className={cn("bg-gray-200/70 dark:bg-zinc-800 tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
           {chips.length}
         </span>
       </div>

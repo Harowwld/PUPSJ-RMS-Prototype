@@ -1,4 +1,6 @@
 "use client"
+
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
@@ -480,7 +482,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                     <span>Sequential Application Process</span>
-                    <span className="text-xs font-sans tabular-nums font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
+                    <span className={cn(BADGE_BASE, "font-sans tabular-nums text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10")}>
                       {currentSteps.length} of {MAX_STEPS} Steps
                     </span>
                   </h3>
@@ -515,9 +517,10 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                   {/* Add Blank Step */}
                   <Button
                     type="button"
+                    size="sm"
                     disabled={currentSteps.length >= MAX_STEPS}
                     onClick={addNewStep}
-                    className="h-9 px-4 cursor-pointer disabled:opacity-40"
+                    className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-40"
                     title={currentSteps.length >= MAX_STEPS ? `Maximum of ${MAX_STEPS} steps reached` : "Add blank step"}
                   >
                     Add Step
@@ -692,7 +695,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                               {(step.tags || []).map((tag, tIdx) => (
                                 <span
                                   key={tIdx}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-sans tabular-nums font-medium bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-border dark:border-border"
+                                  className={cn(BADGE_BASE, "font-sans tabular-nums bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}
                                 >
                                   <span>{tag}</span>
                                   <button
@@ -822,7 +825,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                               {(step.tags || []).map((t, ti) => (
                                 <span
                                   key={ti}
-                                  className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium bg-transparent border border-white/10 text-zinc-400"
+                                  className={cn(BADGE_BASE, "bg-transparent text-zinc-400")}
                                 >
                                   {t}
                                 </span>

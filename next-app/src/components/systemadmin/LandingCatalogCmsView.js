@@ -14,7 +14,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export const MAX_CATALOG_ITEMS = 8
@@ -465,7 +465,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                         <span className="text-sm font-bold text-gray-900 dark:text-zinc-100">
                           Catalog Credentials
                         </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-sans tabular-nums">
+                        <span className={cn(BADGE_BASE, "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-sans tabular-nums")}>
                           {currentItems.length} of {MAX_CATALOG_ITEMS}
                         </span>
                       </div>
@@ -480,7 +480,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       onClick={handleAddCard}
                       disabled={currentItems.length >= MAX_CATALOG_ITEMS}
                       title="Add Card to Catalog"
-                      className="h-8 px-3 cursor-pointer disabled:opacity-50"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer disabled:opacity-50"
                     >
                       Add Document
                     </Button>
@@ -578,7 +578,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                           {currentCard.title || "Untitled Document"}
                         </h3>
                       </div>
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 font-sans tabular-nums font-bold">
+                      <span className={cn(BADGE_BASE, "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 font-sans tabular-nums")}>
                         Slot {String(safeSelectedIdx + 1).padStart(2, "0")}
                       </span>
                     </div>
@@ -709,7 +709,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                           size="sm"
                           onClick={addRequirement}
                           disabled={!newRequirementText.trim()}
-                          className="h-9 px-3 cursor-pointer"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                         >
                           Add Requirement
                         </Button>

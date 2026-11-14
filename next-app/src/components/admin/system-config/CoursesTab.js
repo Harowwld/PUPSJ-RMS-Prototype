@@ -1,4 +1,5 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -316,12 +317,9 @@ export default function CoursesTab({
             >
               <span>Active</span>
               <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  !showArchived
+                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
                     ? BADGE_PALETTES.emerald
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
               >
                 {courses.filter((c) => c.status !== "Archived").length}
               </span>
@@ -341,12 +339,9 @@ export default function CoursesTab({
             >
               <span>Archived</span>
               <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  showArchived
+                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
                     ? BADGE_PALETTES.amber
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
               >
                 {courses.filter((c) => c.status === "Archived").length}
               </span>
@@ -564,7 +559,7 @@ export default function CoursesTab({
                               : "bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40",
                             isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
                           )}>
-                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap", BADGE_BASE)}>
                               {c.code}
                             </span>
                           </td>
@@ -575,11 +570,11 @@ export default function CoursesTab({
                           </td>
                           <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {c.status === "Archived" ? (
-                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400", BADGE_BASE)}>
                                 Archived
                               </div>
                             ) : (
-                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400", BADGE_BASE)}>
                                 Active
                               </div>
                             )}
@@ -683,7 +678,9 @@ export default function CoursesTab({
               </div>
             )}
 
-        <TablePagination label="Courses pages" page={pageCourse} pageSize={itemsPerPage} totalCount={filteredCoursesFull.length} displayedCount={filteredCourses.length} onPageChange={setPageCourse} onPageSizeChange={(size) => handleItemsPerPageChange({ target: { value: size } })} />
+        {filteredCoursesFull.length > 0 && (
+          <TablePagination label="Courses pages" page={pageCourse} pageSize={itemsPerPage} totalCount={filteredCoursesFull.length} displayedCount={filteredCourses.length} onPageChange={setPageCourse} onPageSizeChange={(size) => handleItemsPerPageChange({ target: { value: size } })} />
+        )}
       </div>
 
       <FloatingActionBar

@@ -146,7 +146,6 @@ export default function DigitalRecordsReviewTab({
     "student_no",
     "student_name",
     "doc_type",
-    "original_filename",
     "status",
     "created_at",
     "actions",
@@ -158,7 +157,7 @@ export default function DigitalRecordsReviewTab({
       { key: "student_no", label: "Student No." },
       { key: "student_name", label: "Full Name" },
       { key: "doc_type", label: "Document Type" },
-      { key: "original_filename", label: "Filename" },
+      { key: "original_filename", label: "Filename", defaultHidden: true },
       { key: "status", label: "Status" },
       { key: "created_at", label: "Upload Date" },
       { key: "actions", label: "Actions" },
@@ -784,7 +783,7 @@ export default function DigitalRecordsReviewTab({
                           Pending Review
                         </span>
                       </div>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "select-none")}>
+                      <span className={cn(BADGE_PALETTES.amber, "select-none", BADGE_BASE)}>
                         Needs Action
                       </span>
                     </div>
@@ -815,7 +814,7 @@ export default function DigitalRecordsReviewTab({
                           Approved
                         </span>
                       </div>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "select-none")}>
+                      <span className={cn(BADGE_PALETTES.emerald, "select-none", BADGE_BASE)}>
                         Archival Ready
                       </span>
                     </div>
@@ -846,7 +845,7 @@ export default function DigitalRecordsReviewTab({
                           Declined
                         </span>
                       </div>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.rose, "select-none")}>
+                      <span className={cn(BADGE_PALETTES.rose, "select-none", BADGE_BASE)}>
                         Returned
                       </span>
                     </div>
@@ -1325,7 +1324,7 @@ export default function DigitalRecordsReviewTab({
                                   : "border-r border-border/70 dark:border-border/70"
                               )}
                             >
-                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                                 {r.student_no}
                               </span>
                             </td>
@@ -1345,7 +1344,7 @@ export default function DigitalRecordsReviewTab({
                           {visibleColumns.includes("doc_type") && (
                             <td className="p-4 w-[180px] min-w-[180px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                               <span
-                                className="inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"
+                                className={cn("inline-block max-w-full truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200", BADGE_BASE)}
                                 title={r.doc_type}
                               >
                                 {r.doc_type}
@@ -1368,11 +1367,7 @@ export default function DigitalRecordsReviewTab({
                             <td className="w-32 min-w-[130px] p-4 text-center align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <div className="flex items-center justify-center">
                                 <span
-                                  className={cn(
-                                    BADGE_BASE,
-                                    "transition-all",
-                                    getStatusBadge(r.approval_status)
-                                  )}
+                                  className={cn("transition-all", getStatusBadge(r.approval_status), BADGE_BASE)}
                                 >
                                   {r.approval_status || "Pending"}
                                 </span>

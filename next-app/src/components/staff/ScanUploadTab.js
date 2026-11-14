@@ -847,7 +847,7 @@ export default function ScanUploadTab({
                                 <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                                   Scan Pages ({uploadedFiles.length})
                                 </span>
-                                <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">
+                                <span className={cn("text-[10px] font-semibold text-pup-maroon dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full", BADGE_BASE)}>
                                   Combine Pages
                                 </span>
                               </div>
@@ -1118,7 +1118,7 @@ export default function ScanUploadTab({
                           </span>
                         </div>
                       </div>
-                      <div className="shrink-0 flex items-center gap-2 self-start sm:self-auto">
+                      <div className="-my-1 shrink-0 flex items-center gap-2 self-start sm:self-auto">
                         {rescanContext?.docId && onPreviewDocument && (
                           <Button
                             type="button"
@@ -1907,7 +1907,7 @@ export default function ScanUploadTab({
                             <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
                               <span>Digitization Destination</span>
                             </span>
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                            <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
                               Local Partition
                             </span>
                           </div>

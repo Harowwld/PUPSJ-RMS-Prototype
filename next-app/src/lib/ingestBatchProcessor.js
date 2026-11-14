@@ -65,8 +65,8 @@ export async function processNextBatchItem(batchId, officeId) {
       ? await query(
         `SELECT rt.*, dt.name AS document_type
          FROM recognition_templates rt
-         JOIN document_types dt ON dt.id = rt.document_type_id
-         WHERE rt.office_id = $1 AND rt.status = 'Active' AND lower(dt.name) = lower($2)
+         JOIN document_types dt ON dt.id = rt.document_type_id AND dt.office_id = rt.office_id
+         WHERE rt.office_id = $1 AND rt.status = 'Active' AND dt.status = 'Active' AND lower(dt.name) = lower($2)
          ORDER BY rt.version DESC`,
         [officeId, docType],
       )

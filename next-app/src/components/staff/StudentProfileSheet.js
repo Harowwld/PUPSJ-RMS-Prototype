@@ -418,10 +418,7 @@ export default function StudentProfileSheet({
                     label="Registry Status"
                   >
                     <span
-                      className={cn(
-                        BADGE_BASE,
-                        isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald
-                      )}
+                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, BADGE_BASE)}
                     >
                       {student.status || "Active"}
                     </span>
@@ -471,10 +468,7 @@ export default function StudentProfileSheet({
                     label="Registry Status"
                   >
                     <span
-                      className={cn(
-                        BADGE_BASE,
-                        isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald
-                      )}
+                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, BADGE_BASE)}
                     >
                       {student.status || "Active"}
                     </span>
@@ -636,17 +630,13 @@ export default function StudentProfileSheet({
 
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={cn(
-                            BADGE_BASE,
-                            "text-[10px]",
-                            isApproved
+                          className={cn("text-[10px]", isApproved
                               ? BADGE_PALETTES.emerald
                               : isPending
                               ? BADGE_PALETTES.blue
                               : isDeclined
                               ? BADGE_PALETTES.rose
-                              : BADGE_PALETTES.amber
-                          )}
+                              : BADGE_PALETTES.amber, BADGE_BASE)}
                         >
                           {req.status === "Missing" ? "Not Submitted" : req.status}
                         </span>
@@ -735,15 +725,11 @@ export default function StudentProfileSheet({
 
                     <div className="flex items-center gap-2 shrink-0">
                       <span
-                        className={cn(
-                          BADGE_BASE,
-                          "text-[10px]",
-                          doc.approval_status === "Approved"
+                        className={cn("text-[10px]", doc.approval_status === "Approved"
                             ? BADGE_PALETTES.emerald
                             : doc.approval_status === "Declined"
                             ? BADGE_PALETTES.rose
-                            : BADGE_PALETTES.amber
-                        )}
+                            : BADGE_PALETTES.amber, BADGE_BASE)}
                       >
                         {doc.approval_status || "Pending"}
                       </span>
@@ -837,17 +823,13 @@ export default function StudentProfileSheet({
                           {req.doc_type || req.requested_document || "Document Request"}
                         </span>
                         <span
-                          className={cn(
-                            BADGE_BASE,
-                            "text-[10px]",
-                            req.status === "Completed"
+                          className={cn("text-[10px]", req.status === "Completed"
                               ? BADGE_PALETTES.emerald
                               : req.status === "InProgress"
                               ? BADGE_PALETTES.blue
                               : req.status === "Ready"
                               ? BADGE_PALETTES.purple
-                              : BADGE_PALETTES.amber
-                          )}
+                              : BADGE_PALETTES.amber, BADGE_BASE)}
                         >
                           {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
                         </span>

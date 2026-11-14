@@ -88,12 +88,48 @@ export async function GET(req) {
     : [];
 
   const ids = authorizedRequests.map((item) => item.id);
-  const updates = ids.length
+  const rawUpdates = ids.length
     ? await query(
-        "SELECT * FROM transaction_updates WHERE document_request_id = ANY($1::bigint[]) ORDER BY created_at ASC",
+        `SELECT tu.*,
+                s.fname AS staff_fname, s.lname AS staff_lname, s.preferences AS staff_preferences, s.role AS staff_role,
+                st.name AS student_name
+         FROM transaction_updates tu
+         LEFT JOIN staff s ON tu.created_by = s.id
+         LEFT JOIN students st ON tu.created_by = st.student_no
+         WHERE tu.document_request_id = ANY($1::bigint[])
+         ORDER BY tu.created_at ASC`,
         [ids]
       )
     : [];
+  const { getStaffFullName } = await import("@/lib/staffRepo");
+  const { decryptPII } = await import("@/lib/piiEncryption");
+  const updates = rawUpdates.map((u) => {
+    let actorName = "Staff";
+    if (u.staff_fname || u.staff_lname) {
+      actorName = getStaffFullName({
+        fname: decryptPII(u.staff_fname),
+        lname: decryptPII(u.staff_lname),
+        preferences: u.staff_preferences,
+        role: u.staff_role,
+        id: u.created_by,
+      });
+    } else if (u.student_name) {
+      actorName = decryptPII(u.student_name);
+    } else if (u.created_by) {
+      actorName = u.created_by;
+    }
+    return {
+      id: u.id,
+      document_request_id: u.document_request_id,
+      event_proposal_id: u.event_proposal_id,
+      status: u.status,
+      message: u.message,
+      created_by: u.created_by,
+      actor_id: u.created_by || null,
+      actor_name: actorName,
+      created_at: u.created_at,
+    };
+  });
   const updatesByRequest = updates.reduce((grouped, item) => {
     const key = String(item.document_request_id);
     (grouped[key] ||= []).push(item);
@@ -344,6 +380,19 @@ export async function POST(req) {
     }
 
     const result = await transaction(async ({ query: run, queryOne: runOne }) => {
+      if (clientType === "Student") {
+        const activeMembership = await runOne(
+          `SELECT 1 FROM student_office_memberships
+           WHERE student_no = $1 AND office_id = 'registrar' AND status = 'Active'
+           FOR SHARE`,
+          [effectiveStudentNo],
+        );
+        if (!activeMembership) {
+          const error = new Error("Restore the student in the Registrar office before submitting a request.");
+          error.code = "STUDENT_NOT_ACTIVE_IN_OFFICE";
+          throw error;
+        }
+      }
       if (effectiveStudentNo) {
         const existingStudent = await runOne(
           "SELECT student_no FROM students WHERE upper(student_no) = upper($1)",
@@ -407,9 +456,9 @@ export async function POST(req) {
         ? `Request submitted with ${attachments.length} supporting attachment(s)${clientType === "Parent" ? " including Special Power of Attorney (SPA)" : ""}.`
         : "Request submitted.";
       await run(
-        `INSERT INTO transaction_updates (document_request_id, status, message)
-         VALUES ($1, 'Pending', $2)`,
-        [createdRequest.id, initialMessage],
+        `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
+         VALUES ($1, 'Pending', $2, $3)`,
+        [createdRequest.id, initialMessage, access.user.student_no || access.user.id || null],
       );
       return { request: createdRequest, attachments };
     });
@@ -418,6 +467,9 @@ export async function POST(req) {
   } catch (error) {
     for (const filePath of createdPaths) {
       try { fs.unlinkSync(filePath); } catch {}
+    }
+    if (error?.code === "STUDENT_NOT_ACTIVE_IN_OFFICE") {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
     }
     console.error("Student document request creation failed:", error);
     return NextResponse.json({ ok: false, error: "Request could not be completed" }, { status: 500 });

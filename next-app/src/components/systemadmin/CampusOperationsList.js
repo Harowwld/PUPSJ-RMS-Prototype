@@ -7,8 +7,10 @@ import { getRequestCharterStatus, buildSlaTiers } from "@/lib/citizenCharter"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { ArrowDown01Icon } from "hugeicons-react"
+import { useTablePreferences } from "@/components/shared/TablePreferences"
+import { getListDensityClasses } from "@/lib/tablePresentation"
 import {
-  BADGE_BASE,
+  SUPERADMIN_BADGE_BASE as BADGE_BASE,
   BADGE_PALETTES,
   getDepartmentBadgeClass,
   getStatusBadgeClass,
@@ -44,6 +46,8 @@ export default function CampusOperationsList({
   onPreviewPdf,
   statusBadgeClass,
 }) {
+  const { density } = useTablePreferences()
+  const densityClasses = getListDensityClasses(density)
   const [collapsedGroups, setCollapsedGroups] = useState({})
 
   const toggleGroup = (key) => {
@@ -146,7 +150,7 @@ export default function CampusOperationsList({
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                     {group.label}
                   </span>
-                  <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
                     {group.items.length}
                   </span>
                 </div>
@@ -180,7 +184,13 @@ export default function CampusOperationsList({
                     <div
                       key={tx.id}
                       onClick={() => onOpenDetails?.(tx)}
-                      className="group flex items-center justify-between gap-3 px-4 sm:px-6 min-h-[64px] h-16 hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0"
+                      className={cn(
+                        "group flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
+                        densityClasses.paddingX,
+                        densityClasses.paddingY,
+                        densityClasses.gap,
+                        densityClasses.minHeight
+                      )}
                     >
                       {/* Left: Identifier, Title, and Secondary Requester Context */}
                       <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
@@ -208,7 +218,7 @@ export default function CampusOperationsList({
                         <span
                           className={cn(
                             BADGE_BASE,
-                            statusBadgeClass ? statusBadgeClass(tx.status) : getStatusBadgeClass(tx.status)
+                                                      statusBadgeClass ? statusBadgeClass(tx.status) : getStatusBadgeClass(tx.status)
                           )}
                         >
                           <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
@@ -218,7 +228,7 @@ export default function CampusOperationsList({
                         <span
                           className={cn(
                             BADGE_BASE,
-                            getDepartmentBadgeClass(isRegistrar)
+                                                      getDepartmentBadgeClass(isRegistrar)
                           )}
                         >
                           <span>{isRegistrar ? "Registrar" : "OSAS"}</span>
@@ -228,7 +238,7 @@ export default function CampusOperationsList({
                         <span
                           className={cn(
                             BADGE_BASE,
-                            charter.badgeClass
+                                                      charter.badgeClass
                           )}
                         >
                           <span>{charter.label}</span>
@@ -259,7 +269,7 @@ export default function CampusOperationsList({
                                 e.stopPropagation()
                                 onPreviewPdf(tx)
                               }}
-                              className="h-7 px-3 text-[11px] font-semibold rounded-full cursor-pointer"
+                              className="h-7 px-3 text-[11px] font-semibold rounded-lg cursor-pointer"
                             >
                               Preview PDF
                             </Button>
@@ -273,7 +283,7 @@ export default function CampusOperationsList({
                               e.stopPropagation()
                               onOpenDetails?.(tx)
                             }}
-                            className="h-7 px-3 text-[11px] font-semibold rounded-full cursor-pointer"
+                            className="h-7 px-3 text-[11px] font-semibold rounded-lg cursor-pointer"
                           >
                             View Details
                           </Button>

@@ -3,25 +3,35 @@
  * Clean, borderless tinted pills with uniform padding and rounded-full curvature.
  */
 
-// Universal badge geometry: rounded-full with px-2.5 py-0.5
+// Status badges share the same height, type, and horizontal spacing.
 export const BADGE_BASE =
-  "inline-flex items-center justify-center rounded-full font-semibold text-[11px] px-2.5 py-0.5 shrink-0 whitespace-nowrap"
+  "inline-flex h-6 min-h-6 max-w-full items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold leading-4 tracking-[-0.01em] shrink-0 whitespace-nowrap border-0 shadow-none"
 
-// Curated pool of borderless badge colors
-// Light mode: soft pastel background with deep dark-800 text
-// Dark mode: translucent 950/40 background with crisp 300 text
-// Zero border line color
+export const SUPERADMIN_BADGE_BASE = BADGE_BASE
+
+// Semantic colors stay readable in both themes.
 export const BADGE_PALETTES = {
   maroon: "bg-[#800000]/10 text-[#800000] dark:bg-red-950/40 dark:text-red-300",
-  blue: "bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300",
-  emerald: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-  amber: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-  orange: "bg-orange-50 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300",
-  rose: "bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
-  purple: "bg-purple-50 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300",
-  indigo: "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300",
-  sky: "bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
-  gray: "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300",
+  slate: "bg-[#F1F5F9] text-[#334155] dark:bg-slate-800 dark:text-slate-200",
+  zinc: "bg-[#F4F4F5] text-[#52525B] dark:bg-zinc-800 dark:text-zinc-200",
+  red: "bg-[#FFE4E6] text-[#9F1239] dark:bg-rose-950/50 dark:text-rose-200",
+  orange: "bg-[#FFEDD5] text-[#9A3412] dark:bg-orange-950/50 dark:text-orange-200",
+  amber: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/50 dark:text-amber-200",
+  yellow: "bg-[#FEFCE8] text-[#854D0E] dark:bg-yellow-950/50 dark:text-yellow-200",
+  lime: "bg-[#ECFCCB] text-[#3F6212] dark:bg-lime-950/50 dark:text-lime-200",
+  green: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/50 dark:text-emerald-200",
+  teal: "bg-[#CCFBF1] text-[#115E59] dark:bg-teal-950/50 dark:text-teal-200",
+  cyan: "bg-[#CFFAFE] text-[#155E75] dark:bg-cyan-950/50 dark:text-cyan-200",
+  sky: "bg-[#E0F2FE] text-[#075985] dark:bg-sky-950/50 dark:text-sky-200",
+  blue: "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/50 dark:text-blue-200",
+  indigo: "bg-[#E0E7FF] text-[#3730A3] dark:bg-indigo-950/50 dark:text-indigo-200",
+  violet: "bg-[#EDE9FE] text-[#5B21B6] dark:bg-violet-950/50 dark:text-violet-200",
+  purple: "bg-[#F3E8FF] text-[#6B21A8] dark:bg-purple-950/50 dark:text-purple-200",
+  fuchsia: "bg-[#FAE8FF] text-[#86198F] dark:bg-fuchsia-950/50 dark:text-fuchsia-200",
+  pink: "bg-[#FCE7F3] text-[#9D174D] dark:bg-pink-950/50 dark:text-pink-200",
+  emerald: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/50 dark:text-emerald-200",
+  rose: "bg-[#FFE4E6] text-[#9F1239] dark:bg-rose-950/50 dark:text-rose-200",
+  gray: "bg-[#F1F5F9] text-[#334155] dark:bg-slate-800 dark:text-slate-200",
 }
 
 /**
@@ -36,20 +46,22 @@ export function getDepartmentBadgeClass(isRegistrar) {
  * Standard stage status badge resolver.
  */
 export function getStatusBadgeClass(status) {
-  const s = String(status || "").toUpperCase()
+  const s = String(status || "").trim().toUpperCase()
   if (s === "PENDING" || s === "SUBMITTED") {
     return BADGE_PALETTES.amber
   }
-  if (s === "PROCESSING" || s === "INPROGRESS" || s === "UNDER REVIEW") {
+  if (s === "PROCESSING" || s === "INPROGRESS" || s === "IN PROGRESS" || s === "UNDER REVIEW") {
     return BADGE_PALETTES.blue
   }
-  if (s === "READY" || s === "APPROVED" || s === "DONE" || s === "COMPLETED") {
+  if (s === "READY") return BADGE_PALETTES.sky
+  if (s === "APPROVED" || s === "DONE" || s === "COMPLETED") {
     return BADGE_PALETTES.emerald
   }
   if (s === "NEEDS REVISION" || s === "REVISION") {
     return BADGE_PALETTES.orange
   }
-  if (s === "CANCELLED" || s === "DECLINED" || s === "SHREDDED") {
+  if (s === "CANCELLED" || s === "SHREDDED") return BADGE_PALETTES.zinc
+  if (s === "DECLINED") {
     return BADGE_PALETTES.rose
   }
   return BADGE_PALETTES.gray

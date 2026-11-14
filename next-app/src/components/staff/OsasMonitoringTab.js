@@ -302,9 +302,7 @@ export default function OsasMonitoringTab({ showToast }) {
     "id",
     "event",
     "proponent",
-    "attendance",
     "status",
-    "submitted",
     "actions",
   ]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -846,7 +844,7 @@ export default function OsasMonitoringTab({ showToast }) {
     { key: "event", label: "Event & Organization" },
     { key: "proponent", label: "Proponent" },
     { key: "status", label: "Status" },
-    { key: "submitted", label: "Date Submitted" },
+    { key: "submitted", label: "Date Submitted", defaultHidden: true },
     { key: "actions", label: "Actions" },
   ], []);
 
@@ -854,9 +852,9 @@ export default function OsasMonitoringTab({ showToast }) {
     { key: "id", label: "Report ID" },
     { key: "event", label: "Event & Organization" },
     { key: "proponent", label: "Proponent" },
-    { key: "attendance", label: "Attendance & Spend" },
+    { key: "attendance", label: "Attendance & Spend", defaultHidden: true },
     { key: "status", label: "Clearance Status" },
-    { key: "submitted", label: "Date Submitted" },
+    { key: "submitted", label: "Date Submitted", defaultHidden: true },
     { key: "actions", label: "Actions" },
   ], []);
 
@@ -1582,10 +1580,7 @@ export default function OsasMonitoringTab({ showToast }) {
                               {visibleColumns.includes("status") && (
                                 <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                   <span
-                                    className={cn(
-                                      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none",
-                                      getProposalStatusBadgeClass(item.status)
-                                    )}
+                                    className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none", getProposalStatusBadgeClass(item.status), BADGE_BASE)}
                                   >
                                     {item.status}
                                   </span>
@@ -1865,10 +1860,7 @@ export default function OsasMonitoringTab({ showToast }) {
                                 {visibleColumns.includes("status") && (
                                   <td className="py-3.5 px-6 whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                     <span
-                                      className={cn(
-                                        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none",
-                                        getPostEventStatusBadgeClass(item.status)
-                                      )}
+                                      className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold select-none", getPostEventStatusBadgeClass(item.status), BADGE_BASE)}
                                     >
                                       {item.status}
                                     </span>
@@ -2006,7 +1998,7 @@ export default function OsasMonitoringTab({ showToast }) {
         </div>
 
         {/* 6. Apple HIG Pagination Footer (Unified for both record views) */}
-        {viewMode !== "kanban" && (
+        {viewMode !== "kanban" && activeFilteredList.length > 0 && (
           <TablePagination
             label="OSAS monitoring pages"
             page={page}

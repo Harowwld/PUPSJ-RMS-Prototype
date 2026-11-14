@@ -1,3 +1,4 @@
+import { BADGE_BASE } from "@/lib/badgeStyles";
 import useUrlPage from "@/hooks/useUrlPage"
 
 import { useState, useMemo, useEffect } from "react"
@@ -312,11 +313,11 @@ export default function StorageExplorerTab({
 
                                     {/* Status badge moved inline */}
                                     {isTarget ? (
-                                      <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white animate-pulse shrink-0">
+                                      <div className={cn("bg-white/20 backdrop-blur-md text-white", BADGE_BASE)}>
                                         Target Room
                                       </div>
                                     ) : (
-                                      <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none shrink-0", statusColor)}>
+                                      <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none shrink-0", statusColor, BADGE_BASE)}>
                                         {statusLabel}
                                       </Badge>
                                     )}
@@ -578,16 +579,13 @@ export default function StorageExplorerTab({
                                                 </div>
                                                 {/* Soft Tag for Student Number / Org Acronym & Category */}
                                                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                                                  <div className="inline-block bg-[#F5F5F7] border border-[#E5E5EA] rounded-full px-2.5 py-0.5 text-[12px] font-semibold text-[#8E8E93] dark:bg-zinc-850 dark:border-border dark:text-zinc-400">
+                                                  <div className={cn("bg-[#F5F5F7] text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 tabular-nums", BADGE_BASE)}>
                                                     {student.studentNo}
                                                   </div>
                                                   {student.category && (
-                                                    <span className={cn(
-                                                      "inline-block rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide",
-                                                      student.category === "Academic"
+                                                    <span className={cn("inline-block rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide", student.category === "Academic"
                                                         ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40"
-                                                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                                                    )}>
+                                                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40", BADGE_BASE)}>
                                                       {student.category}
                                                     </span>
                                                   )}

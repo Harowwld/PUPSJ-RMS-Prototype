@@ -184,7 +184,6 @@ function OfficeCardSkeleton({ archived, index }) {
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex items-center gap-2">
               <Skeleton className={cn("h-4 rounded dark:bg-muted", index % 2 ? "w-24" : "w-28")} />
-              <Skeleton className="h-4 w-10 shrink-0 rounded-md dark:bg-muted" />
             </div>
             <Skeleton className={cn("h-3 rounded dark:bg-muted", index % 2 ? "w-36" : "w-44")} />
           </div>

@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -120,7 +122,7 @@ const getBannerStatusDotClass = (status) => {
 };
 
 import { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses } from "@/lib/constants";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, BookBookmark01Icon, Building01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, BookOpen01Icon , ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, BookBookmark01Icon, Building01Icon, CalendarCheckIn01Icon, Cancel01Icon, DragDropIcon, File02Icon, Loading01Icon, PencilEdit01Icon, Search01Icon, Shield01Icon, Tick01Icon, Upload01Icon, UserAdd01Icon, UserSearch01Icon, ViewIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export { BANNER_GRADIENT_PRESETS, getOrgBannerGradientClasses };
 
@@ -1551,12 +1553,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     >
                       <span>{cat === "All" ? "All Organizations" : cat}</span>
                       <span
-                        className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-sans tabular-nums",
-                          isActive
+                        className={cn("px-1.5 py-0.2 rounded-full text-[10px] font-sans tabular-nums", isActive
                             ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300 font-bold"
-                            : "bg-gray-200/60 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 font-medium"
-                        )}
+                            : "bg-gray-200/60 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 font-medium", BADGE_BASE)}
                       >
                         {count}
                       </span>
@@ -1646,7 +1645,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           )}
 
           {/* 5. Main Content Area (Dual View Engine) */}
-          <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card">
+          <div className={cn("flex-[1_0_auto] flex flex-col border-t border-border dark:border-border bg-white dark:bg-card overflow-hidden", filteredOrganizations.length === 0 && "rounded-b-2xl")}>
             {loading && organizations.length === 0 ? (
               viewMode === "table" ? (
                 <div className="p-6 space-y-3">
@@ -1919,10 +1918,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           {/* Status */}
                           <td className="p-4 text-center whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <span
-                              className={cn(
-                                "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",
-                                getOrgStatusBadgeClass(org.status)
-                              )}
+                              className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(org.status), BADGE_BASE)}
                             >
                               <span
                                 className={cn(
@@ -2010,10 +2006,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                             </span>
                           </div>
                           <span
-                            className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border backdrop-blur-xs shrink-0",
-                              getBannerStatusClass(org.status)
-                            )}
+                            className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border backdrop-blur-xs shrink-0", getBannerStatusClass(org.status), BADGE_BASE)}
                           >
                             <span
                               className={cn(
@@ -2213,7 +2206,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           </div>
 
           {/* 6. Shared Table and Card Pagination Footer */}
-          <TablePagination label="Student organization pages" page={orgPage} pageSize={orgPageSize} totalCount={filteredOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setOrgPage} onPageSizeChange={setOrgPageSize} loading={loading} />
+          {!loading && filteredOrganizations.length > 0 && (
+            <TablePagination label="Student organization pages" page={orgPage} pageSize={orgPageSize} totalCount={filteredOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setOrgPage} onPageSizeChange={setOrgPageSize} loading={loading} />
+          )}
         </Card>
 
         {/* Manage Organization Slide-Over Sheet */}
@@ -2287,10 +2282,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       {selectedOrgForOfficers?.category}
                     </span>
                     <span
-                      className={cn(
-                        "inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border",
-                        getOrgStatusBadgeClass(selectedOrgForOfficers?.status)
-                      )}
+                      className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border", getOrgStatusBadgeClass(selectedOrgForOfficers?.status), BADGE_BASE)}
                     >
                       {selectedOrgForOfficers?.status}
                     </span>
@@ -2304,14 +2296,49 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
             {/* Line-Attached Operational Notice for Status */}
             {selectedOrgForOfficers?.status === "Archived" ? (
-              <NoticeBanner tone="danger" role="status">
+              <NoticeBanner
+                tone="danger"
+                role="status"
+                action={
+                  sheetSubTab !== "info" ? (
+                    <button
+                      type="button"
+                      onClick={() => setSheetSubTab("info")}
+                      title="Switch to Organization Info to reinstate"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-rose-950 dark:text-rose-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                    >
+                      <span>Reinstate in Organization Info</span>
+                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
+                    </button>
+                  ) : null
+                }
+              >
                 <span className="font-semibold">Archived Organization:</span> This organization record is archived. Modification of officers and records is restricted until reinstated.
               </NoticeBanner>
             ) : selectedOrgForOfficers?.status === "Inactive" ? (
-              <NoticeBanner tone="warning">
+              <NoticeBanner
+                tone="warning"
+                action={
+                  sheetSubTab !== "info" ? (
+                    <button
+                      type="button"
+                      onClick={() => setSheetSubTab("info")}
+                      title="Switch to Organization Info to update accreditation status"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-950 dark:text-amber-100 hover:underline underline-offset-4 transition-colors cursor-pointer active:scale-95"
+                    >
+                      <span>Update Status in Organization Info</span>
+                      <ArrowUpRight01Icon size={13} aria-hidden="true" className="shrink-0" />
+                    </button>
+                  ) : null
+                }
+              >
                 <span className="font-semibold">Inactive Accreditation:</span> Accreditation for this organization is currently inactive. Review officers and Constitution before processing proposals.
               </NoticeBanner>
-            ) : null}
+            ) : (
+              <NoticeBanner tone="success">
+                <span className="font-semibold">Accredited Campus Organization:</span> Leadership roster authorized to sponsor campus events and execute official paperwork.
+              </NoticeBanner>
+            )}
 
             {/* Sub-tab segmented switcher */}
             <div className="px-6 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 border-b border-border dark:border-border flex items-center justify-between gap-2 flex-wrap">
@@ -2347,7 +2374,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "officers"
                         ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
+                      BADGE_BASE
                     )}
                   >
                     {officersList.length}
@@ -2371,7 +2399,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       "px-1.5 py-0.2 rounded-full text-[10px] font-bold min-w-4 text-center",
                       sheetSubTab === "cbl"
                         ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                        : "bg-black/5 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300",
+                      BADGE_BASE
                     )}
                   >
                     {bylawsHistory.length}
@@ -2406,10 +2435,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         </p>
                       </div>
                       <span
-                        className={cn(
-                          "inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border",
-                          getOrgStatusBadgeClass(orgForm.status)
-                        )}
+                        className={cn("inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border", getOrgStatusBadgeClass(orgForm.status), BADGE_BASE)}
                       >
                         {orgForm.status}
                       </span>
@@ -2506,41 +2532,36 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Banner Gradient Theme
-                      </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {BANNER_GRADIENT_PRESETS.map((preset) => {
-                          const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
-                          return (
-                            <button
-                              key={preset.id}
-                              type="button"
-                              onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
-                              className={cn(
-                                "relative group flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95",
-                                isSelected
-                                  ? "border-pup-maroon dark:border-red-500 bg-pup-maroon/5 dark:bg-red-950/20 ring-2 ring-pup-maroon/20 dark:ring-red-500/20"
-                                  : "border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/50"
-                              )}
-                            >
-                              <div
-                                className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
-                                style={{ background: preset.previewGradient }}
-                              >
-                                {isSelected && <Tick01Icon size="1em" className="text-xs" />}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                          Banner Gradient Theme
+                        </label>
+                        <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                          {BANNER_GRADIENT_PRESETS.find((p) => p.id === (orgForm.bannerGradient || "maroon"))?.label}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
+                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 place-items-center">
+                          {BANNER_GRADIENT_PRESETS.map((preset) => {
+                            const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
+                            return (
+                              <div key={preset.id} className="flex items-center justify-center size-8 shrink-0 aspect-square">
+                                <button
+                                  type="button"
+                                  onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
+                                  style={{ background: preset.previewGradient }}
+                                  className="relative size-6 sm:size-6.5 rounded-full aspect-square shrink-0 cursor-pointer shadow-2xs border border-white/20 transition-transform duration-150 hover:scale-110 active:scale-90 flex items-center justify-center"
+                                  title={`${preset.label} • ${preset.description}`}
+                                  aria-label={preset.label}
+                                >
+                                  {isSelected && (
+                                    <span className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none" />
+                                  )}
+                                </button>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
-                                  {preset.label}
-                                </span>
-                                <span className="block text-[9px] text-gray-500 dark:text-zinc-400 truncate leading-tight">
-                                  {preset.description}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
 
@@ -2732,10 +2753,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                     </span>
                                     <Badge
                                       variant="outline"
-                                      className={cn(
-                                        "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
-                                        roleStyle.badge
-                                      )}
+                                      className={cn("text-[10px] font-semibold px-2.5 py-0.5 rounded-full border", roleStyle.badge, BADGE_BASE)}
                                     >
                                       {officer.position}
                                     </Badge>
@@ -2807,10 +2825,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                   {ver.version_tag || (ver.version_number ? `v${ver.version_number}` : "CBL")}
                                 </span>
                                 <span
-                                  className={cn(
-                                    "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border",
-                                    getBylawsStatusBadgeClass(ver.status)
-                                  )}
+                                  className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border", getBylawsStatusBadgeClass(ver.status), BADGE_BASE)}
                                 >
                                   {ver.status}
                                 </span>
@@ -3069,41 +3084,36 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Banner Gradient Theme
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {BANNER_GRADIENT_PRESETS.map((preset) => {
-                      const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
-                          className={cn(
-                            "relative group flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95",
-                            isSelected
-                              ? "border-pup-maroon dark:border-red-500 bg-pup-maroon/5 dark:bg-red-950/20 ring-2 ring-pup-maroon/20 dark:ring-red-500/20"
-                              : "border-border/80 dark:border-border hover:border-gray-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-800/50"
-                          )}
-                        >
-                          <div
-                            className="w-7 h-7 rounded-lg shrink-0 shadow-xs border border-white/20 flex items-center justify-center text-white"
-                            style={{ background: preset.previewGradient }}
-                          >
-                            {isSelected && <Tick01Icon size="1em" className="text-xs" />}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Banner Gradient Theme
+                    </label>
+                    <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                      {BANNER_GRADIENT_PRESETS.find((p) => p.id === (orgForm.bannerGradient || "maroon"))?.label}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40">
+                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 place-items-center">
+                      {BANNER_GRADIENT_PRESETS.map((preset) => {
+                        const isSelected = (orgForm.bannerGradient || "maroon") === preset.id;
+                        return (
+                          <div key={preset.id} className="flex items-center justify-center size-8 shrink-0 aspect-square">
+                            <button
+                              type="button"
+                              onClick={() => setOrgForm({ ...orgForm, bannerGradient: preset.id })}
+                              style={{ background: preset.previewGradient }}
+                              className="relative size-6 sm:size-6.5 rounded-full aspect-square shrink-0 cursor-pointer shadow-2xs border border-white/20 transition-transform duration-150 hover:scale-110 active:scale-90 flex items-center justify-center"
+                              title={`${preset.label} • ${preset.description}`}
+                              aria-label={preset.label}
+                            >
+                              {isSelected && (
+                                <span className="absolute -inset-1 rounded-full ring-2 ring-gray-950 dark:ring-white pointer-events-none" />
+                              )}
+                            </button>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="block text-[11px] font-semibold text-gray-900 dark:text-zinc-100 truncate leading-tight">
-                              {preset.label}
-                            </span>
-                            <span className="block text-[9px] text-gray-500 dark:text-zinc-400 truncate leading-tight">
-                              {preset.description}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

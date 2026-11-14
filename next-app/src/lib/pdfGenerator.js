@@ -30,10 +30,15 @@ export async function generateAuditLogsPdf(logs = [], options = {}) {
   const head = ["Timestamp (Asia/Manila)", "Severity", "Actor", "Role", ...(scoped ? ["Scope"] : []), "Action", "Details"]
   report.table(head, list(logs).map((log) => [
     log?.created_at || log?.time || log?.timestamp ? formatPHDateTime(log.created_at || log.time || log.timestamp) : "Not recorded",
-    log?.severity || "INFO", log?.actor || log?.user || log?.actor_name || "System", log?.role || "Not recorded",
+    log?.severity || "INFO", log?.actor_display_name || log?.actor || log?.user || log?.actor_name || "System", log?.role || "Not recorded",
     ...(scoped ? [log?.officeName || log?.office_name || log?.scope || log?.office_id || "Global"] : []),
     log?.action || "Activity", formatLogDetails(log?.details) || "No additional details",
-  ]), { fontSize: 8.5, columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 55 }, 2: { cellWidth: 85 }, 3: { cellWidth: 60 } } })
+  ]), {
+    fontSize: 8.5,
+    columnStyles: scoped
+      ? { 0: { cellWidth: 95 }, 1: { cellWidth: 50 }, 2: { cellWidth: 85 }, 3: { cellWidth: 60 }, 4: { cellWidth: 70 }, 5: { cellWidth: 75 } }
+      : { 0: { cellWidth: 105 }, 1: { cellWidth: 50 }, 2: { cellWidth: 95 }, 3: { cellWidth: 65 }, 4: { cellWidth: 80 } },
+  })
   report.paragraph("Source: Recorded system activity. This report reflects the selected records at the time of generation.", { size: 9 })
   return report.finish()
 }
@@ -51,11 +56,13 @@ export async function generateDigitizationCompliancePdf(data = {}, summary = {},
     ["Digitized documents", count(summary.totalDigitizedDocsCount)],
     ["Expected documents", count(summary.totalExpectedDocsCount)],
     ["Configured mandatory document types", count(list(meta.definitions?.configuredDocTypes).length)],
-  ], { columnStyles: numericColumns(1) })
+  ], { columnStyles: { 1: { cellWidth: 140, halign: "right" } } })
   analyticsSection(report, "Student Population by Academic Year")
-  report.table(["Academic Year", "Students"], list(data.byYear).map((year) => [year?.year || "Not recorded", count(year?.count)]), { columnStyles: numericColumns(1) })
+  report.table(["Academic Year", "Students"], list(data.byYear).map((year) => [year?.year || "Not recorded", count(year?.count)]), { columnStyles: { 1: { cellWidth: 120, halign: "right" } } })
   analyticsSection(report, "Program-Specific Breakdown")
-  report.table(["Academic Program", "Students", "Complete Records", "Progress"], list(byCourse).map((course) => [course?.courseCode || "Not recorded", count(course?.total), count(course?.digitized), percent(course?.percent)]), { columnStyles: numericColumns(1, 2, 3) })
+  report.table(["Academic Program", "Students", "Complete Records", "Progress"], list(byCourse).map((course) => [course?.courseCode || "Not recorded", count(course?.total), count(course?.digitized), percent(course?.percent)]), {
+    columnStyles: { 1: { cellWidth: 80, halign: "right" }, 2: { cellWidth: 105, halign: "right" }, 3: { cellWidth: 80, halign: "right" } },
+  })
   report.review("Source: Student records, configured mandatory requirements, and digitized document entries. Missing or pending requirements should be reviewed against the student's current record before notification.")
   return report.finish()
 }
@@ -76,13 +83,15 @@ export async function generateOrganizationCompliancePdf(data = {}, summary = {},
     ["Organizations with officers", count(summary.withOfficersCount)],
     ["Active officers", count(summary.totalActiveOfficers)],
     ["Organizations with faculty advisers", count(summary.withAdviserCount ?? summary.withAdvisersCount)],
-  ], { columnStyles: numericColumns(1) })
+  ], { columnStyles: { 1: { cellWidth: 140, halign: "right" } } })
   analyticsSection(report, "Category Performance")
   report.table(["Category", "Organizations", "Complete", "CBL on File", "With Officers", "Compliance"], list(byCategory).map((category) => {
     const total = number(category?.totalOrganizations ?? category?.totalOrgs)
     const complete = number(category?.fullyCompliantCount ?? category?.compliantCount)
     return [category?.category || "Not recorded", count(total), count(complete), count(category?.cblArchivedCount), count(category?.withOfficersCount), percent(category?.complianceRate ?? (total ? Math.round(complete / total * 100) : null))]
-  }), { columnStyles: numericColumns(1, 2, 3, 4, 5) })
+  }), {
+    columnStyles: { 1: { cellWidth: 65, halign: "right" }, 2: { cellWidth: 55, halign: "right" }, 3: { cellWidth: 60, halign: "right" }, 4: { cellWidth: 65, halign: "right" }, 5: { cellWidth: 60, halign: "right" } },
+  })
   analyticsSection(report, "Organization Compliance Matrix")
   report.table(["Organization", "Category", "Faculty Adviser", "CBL", "Officers", "Standing", "Compliance"], orgs.map((org) => [
     `${org?.name || "Unnamed Organization"}${org?.acronym ? ` (${org.acronym})` : ""}`,
@@ -107,7 +116,7 @@ function processingSummary(report, data, total, completionRate) {
     ["Delayed completed requests", count(sla.delayedCompleted)],
     ["Active overdue requests", count(sla.activeOverdue)],
     ["Requests due soon", count(sla.activeDueSoon)],
-  ], { columnStyles: numericColumns(1) })
+  ], { columnStyles: { 1: { cellWidth: 140, halign: "right" } } })
 }
 
 function processingTiers(report, data) {
@@ -117,7 +126,10 @@ function processingTiers(report, data) {
   report.table(["Service Classification", "Configured Window", "Requests", "System Compliant / Exempt", "Recorded Rate"], Object.entries(tiers).map(([key, stat]) => [
     stat.label || key, (stat.days ?? stat.windowDays) ? `${stat.days ?? stat.windowDays} ${unit}` : "Not configured", count(stat.total), count(stat.compliant),
     number(stat.total) > 0 ? `${Math.round(number(stat.compliant) / number(stat.total) * 100)}%` : "N/A",
-  ]), { empty: "No service classification results were recorded for this period.", columnStyles: numericColumns(2, 3, 4) })
+  ]), {
+    empty: "No service classification results were recorded for this period.",
+    columnStyles: { 1: { cellWidth: 95 }, 2: { cellWidth: 55, halign: "right" }, 3: { cellWidth: 90, halign: "right" }, 4: { cellWidth: 65, halign: "right" } },
+  })
 }
 
 function documentDemand(report, data, total) {
@@ -126,7 +138,11 @@ function documentDemand(report, data, total) {
   report.table(["Document Type", "Requests", "Share of Requests", ...(hasWindows ? ["Configured Window"] : [])], list(data.topDocTypes).map((type) => [
     type?.name || "Unspecified Document", count(type?.count), number(total) > 0 ? `${Math.round(number(type?.count) / number(total) * 100)}%` : "N/A",
     ...(hasWindows ? [type?.slaWindow ? `${type.slaWindow} ${data.sla?.standards?.workingDaysOnly === false ? "calendar days" : "working days"}` : "Not recorded"] : []),
-  ]), { columnStyles: { 0: { cellWidth: 210 }, ...numericColumns(1, 2) } })
+  ]), {
+    columnStyles: hasWindows
+      ? { 1: { cellWidth: 60, halign: "right" }, 2: { cellWidth: 80, halign: "right" }, 3: { cellWidth: 100, halign: "right" } }
+      : { 1: { cellWidth: 85, halign: "right" }, 2: { cellWidth: 110, halign: "right" } },
+  })
 }
 
 function satisfactionSummary(report, data) {
@@ -138,7 +154,7 @@ function satisfactionSummary(report, data) {
     ["Feedback responses", count(responses)],
     ["Mean rating (1 to 5)", responses > 0 && feedback.averageRating != null ? number(feedback.averageRating).toFixed(1) : "N/A"],
     ["Positive ratings (4 and 5)", responses > 0 ? percent(feedback.satisfactionRate) : "N/A"],
-  ], { columnStyles: numericColumns(1) })
+  ], { columnStyles: { 1: { cellWidth: 140, halign: "right" } } })
 }
 
 function ratingDistribution(report, data) {
@@ -147,13 +163,14 @@ function ratingDistribution(report, data) {
   analyticsSection(report, "Five-Point Rating Distribution")
   report.table(["Rating", "Responses", "Share of Responses"], [5, 4, 3, 2, 1].map((rating) => [
     `${rating} of 5`, count(feedback.ratingBreakdown?.[rating]), responses > 0 ? `${Math.round(number(feedback.ratingBreakdown?.[rating]) / responses * 100)}%` : "N/A",
-  ]), { columnStyles: numericColumns(1, 2) })
+  ]), { columnStyles: { 1: { cellWidth: 100, halign: "right" }, 2: { cellWidth: 120, halign: "right" } } })
 }
 
 function qualityDimensions(report, data) {
   analyticsSection(report, "Service Quality Dimensions")
   report.table(["Recorded Feedback Aspect", "Mentions", "Share of Responses"], list(data.feedback?.topAspects).map((aspect) => [aspect?.label || aspect?.tag || "Not recorded", count(aspect?.count), percent(aspect?.percentage)]), {
-    empty: "No service quality dimension results were recorded for this period.", columnStyles: numericColumns(1, 2),
+    empty: "No service quality dimension results were recorded for this period.",
+    columnStyles: { 1: { cellWidth: 90, halign: "right" }, 2: { cellWidth: 110, halign: "right" } },
   })
 }
 
@@ -207,7 +224,7 @@ export async function generateSampleBrandingPdf(branding) {
     ["Body", "Numbered sections, readable paragraphs, and consistent data tables"],
     ["Continuation pages", "Institution and report title with repeated table headings"],
     ["Footer", "Page X of Y"],
-  ])
+  ], { columnStyles: { 0: { cellWidth: 150, fontStyle: "bold" } } })
   report.review("Where review is required, space is provided for the responsible personnel. Signature lines remain blank until the document is reviewed and signed.", "Review and Signatures")
   return report.finish()
 }
@@ -227,7 +244,7 @@ export async function generateStudentComplianceSlipPdf(student = {}, requirement
   report.table(["Requirement / Credential", "Category", "Status"], reqs.map((requirement) => [
     requirement?.docType || requirement?.name || "Not recorded", requirement?.category || "Not recorded",
     requirement?.status === "Submitted" || requirement?.submitted ? "Submitted" : "Not Submitted",
-  ]), { empty: "No requirements are configured for this record.", columnStyles: { 0: { cellWidth: 225 } } })
+  ]), { empty: "No requirements are configured for this record.", columnStyles: { 1: { cellWidth: 120 }, 2: { cellWidth: 95 } } })
   report.paragraph("Source: The student's recorded document requirements. Submission status does not replace verification of the uploaded documents.", { size: 9 })
   return report.finish()
 }
@@ -253,7 +270,7 @@ export async function generateCampusOperationsPdf(transactions = [], options = {
     ["Lifecycle Scope", options.lifecycle ? String(options.lifecycle).toUpperCase() : "ALL OPERATIONS"],
     ["Total Records", count(list(transactions).length)],
     ["Target SLA Tiers", `${slaStandards.simpleDays || 3}d Simple · ${slaStandards.complexDays || 7}d Complex · ${slaStandards.highlyTechnicalDays || 20}d Technical`],
-    ["Generated At", formatPHDateTime(new Date().toISOString())],
+    ["Report As Of", formatPHDateTime(new Date().toISOString())],
     ["Active Filters", options.search || options.filters || "None"],
   ])
 
@@ -311,13 +328,13 @@ export async function generateCampusOperationsPdf(transactions = [], options = {
   report.table(head, body, {
     fontSize: 8,
     columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 75 },
-      2: { cellWidth: 85 },
-      3: { cellWidth: 120 },
-      4: { cellWidth: 65 },
-      5: { cellWidth: 75 },
-      6: { cellWidth: 80 },
+      0: { cellWidth: 65 },
+      1: { cellWidth: 85 },
+      2: { cellWidth: 110 },
+      // Column 3 (Document / Proposal Title) is flexible to expand and take all remaining space
+      4: { cellWidth: 80 },
+      5: { cellWidth: 95 },
+      6: { cellWidth: 90 },
     },
   })
 

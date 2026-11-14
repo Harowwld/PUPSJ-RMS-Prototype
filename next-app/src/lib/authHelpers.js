@@ -75,6 +75,8 @@ export async function getAuthenticatedPrincipal(req) {
       const account = await queryOne(
         `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
                 sa.status AS account_status, s.status AS student_status,
+                EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
+                EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office,
                 COALESCE(sip.display_name, s.name) AS name
            FROM student_accounts sa
            JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
@@ -83,7 +85,8 @@ export async function getAuthenticatedPrincipal(req) {
         [payload.account_id || userId]
       );
       if (!account || String(account.account_status).toLowerCase() !== "active" ||
-          (account.student_status && String(account.student_status).toLowerCase() !== "active")) {
+          (account.student_status && String(account.student_status).toLowerCase() !== "active") ||
+          (account.has_archived_office && !account.has_active_office)) {
         if (!isMeRoute) {
           await logUnauthorizedAccess(req, "Inactive or missing student account", { userId });
         } else {

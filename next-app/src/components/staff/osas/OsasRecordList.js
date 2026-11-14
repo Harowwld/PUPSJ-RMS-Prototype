@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
   ArrowDown01Icon,
   CalendarCheckIn01Icon,
@@ -64,6 +66,8 @@ export default function OsasRecordList({
   onSelect,
   onReview,
 }) {
+  const { density } = useTablePreferences();
+  const densityClasses = getListDensityClasses(density);
   const isPostEvent = stream === "post_events";
   const [collapsedGroups, setCollapsedGroups] = useState({});
 
@@ -144,7 +148,7 @@ export default function OsasRecordList({
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 tracking-[-0.01em] truncate">
                       {group.label}
                     </span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/[0.06] dark:bg-white/10 text-gray-600 dark:text-zinc-300 tabular-nums">
+                    <span className={cn("px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/[0.06] dark:bg-white/10 text-gray-600 dark:text-zinc-300 tabular-nums", BADGE_BASE)}>
                       {group.items.length}
                     </span>
                   </div>
@@ -180,7 +184,13 @@ export default function OsasRecordList({
                       key={item.id}
                       role="listitem"
                       onClick={() => onSelect?.(item)}
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 gap-3.5 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
+                      className={cn(
+                        "group flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer",
+                        densityClasses.paddingY,
+                        densityClasses.paddingX,
+                        densityClasses.gap,
+                        densityClasses.minHeight
+                      )}
                     >
                       {/* Left: Main details */}
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -244,10 +254,7 @@ export default function OsasRecordList({
                       <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Apple HIG Text-Only Status Badge (NO indicator dot) */}
                         <div
-                          className={cn(
-                            BADGE_BASE,
-                            badgeClass
-                          )}
+                          className={cn(badgeClass, BADGE_BASE)}
                         >
                           {status}
                         </div>

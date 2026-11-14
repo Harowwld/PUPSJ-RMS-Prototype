@@ -10,6 +10,7 @@ import { sanitizeUser } from "@/lib/dataSanitizer";
 import { bumpSessionVersion } from "@/lib/authSessions";
 import { queryOne } from "@/lib/postgres";
 import { PersonNameSchema } from "@/lib/validationSchemas";
+import { getOfficeById } from "@/lib/officesRepo";
 
 export const runtime = "nodejs";
 
@@ -136,6 +137,9 @@ export async function PATCH(req, ctx) {
         }
       }
       if (body.status === "Active") {
+        if (targetStaff.office_id && (await getOfficeById(targetStaff.office_id))?.status !== "Active") {
+          return NextResponse.json({ ok: false, error: "Restore the department before restoring its personnel." }, { status: 400 });
+        }
         const row = await restoreStaff(id, { officeId: targetStaff.office_id });
         if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
         await bumpSessionVersion(id);
@@ -230,6 +234,10 @@ export async function PATCH(req, ctx) {
   }
   if (patch.officeId !== undefined && !isSuper && String(patch.officeId || "") !== String(targetStaff.office_id || "")) {
     return NextResponse.json({ ok: false, error: "You cannot move staff between offices." }, { status: 403 });
+  }
+  if (patch.officeId !== undefined && patch.officeId &&
+      (await getOfficeById(patch.officeId))?.status !== "Active") {
+    return NextResponse.json({ ok: false, error: "Restore the department before assigning personnel to it." }, { status: 400 });
   }
 
   const needsTOTP = Object.keys(patch).some((key) => patch[key] !== undefined);

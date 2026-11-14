@@ -248,7 +248,7 @@ export default function RegistrarODRSTab({ showToast }) {
             <section className="flex flex-col bg-white p-6 dark:bg-card">
             <div className="flex items-center justify-between pb-3 border-b border-border dark:border-border mb-4">
               <h2 className="text-base font-bold text-gray-900 dark:text-zinc-50">Request Queue</h2>
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">
+              <span className={cn("rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600 dark:bg-zinc-800 dark:text-zinc-300", BADGE_BASE)}>
                 {rows.length} total
               </span>
             </div>
@@ -284,12 +284,12 @@ export default function RegistrarODRSTab({ showToast }) {
                         <strong className="text-gray-900 dark:text-zinc-100 font-semibold">{item.doc_type}</strong>
                         <div className="flex items-center gap-1.5">
                           {item.feedback && (
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1")}>
+                            <span className={cn(BADGE_PALETTES.amber, "gap-1", BADGE_BASE)}>
                               <StarIcon size="1em" className="text-[11px] text-amber-500" />
                               <span>{item.feedback.rating}/5</span>
                             </span>
                           )}
-                          <span className={cn(BADGE_BASE, getStatusBadgeClass(item.status))}>
+                          <span className={cn(getStatusBadgeClass(item.status), BADGE_BASE)}>
                             {item.status}
                           </span>
                         </div>
@@ -299,14 +299,11 @@ export default function RegistrarODRSTab({ showToast }) {
                         <span>·</span>
                         <span>{item.student_no || "No Student ID"}</span>
                         {item.client_type && (
-                          <span className={cn(
-                            BADGE_BASE,
-                            item.client_type === "Parent"
+                          <span className={cn(item.client_type === "Parent"
                               ? BADGE_PALETTES.amber
                               : item.client_type === "Alumni"
                               ? BADGE_PALETTES.purple
-                              : BADGE_PALETTES.blue
-                          )}>
+                              : BADGE_PALETTES.blue, BADGE_BASE)}>
                             {item.client_type === "Parent" ? "Parent/Guardian" : item.client_type}
                           </span>
                         )}
@@ -338,14 +335,11 @@ export default function RegistrarODRSTab({ showToast }) {
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-900 dark:text-zinc-300">
                     <span>Requester: <strong className="text-gray-800 dark:text-zinc-200">{selected.student_name}</strong> {selected.student_no ? `(${selected.student_no})` : <span className="italic text-gray-400">(No Student ID)</span>}</span>
                     {selected.client_type && (
-                      <span className={cn(
-                        BADGE_BASE,
-                        selected.client_type === "Parent"
+                      <span className={cn(selected.client_type === "Parent"
                           ? BADGE_PALETTES.amber
                           : selected.client_type === "Alumni"
                           ? BADGE_PALETTES.purple
-                          : BADGE_PALETTES.blue
-                      )}>
+                          : BADGE_PALETTES.blue, BADGE_BASE)}>
                         {selected.client_type === "Parent" ? "Parent/Guardian" : selected.client_type}
                       </span>
                     )}
@@ -361,12 +355,12 @@ export default function RegistrarODRSTab({ showToast }) {
                         Parent / Legal Guardian
                       </span>
                       {selected.spa_verified ? (
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1")}>
+                        <span className={cn(BADGE_PALETTES.emerald, "gap-1", BADGE_BASE)}>
                           <CheckmarkCircle01Icon size="1em" className="text-[10px]" />
                           SPA Verified
                         </span>
                       ) : (
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "gap-1")}>
+                        <span className={cn(BADGE_PALETTES.amber, "gap-1", BADGE_BASE)}>
                           <Clock01Icon size="1em" className="text-[10px]" />
                           SPA Pending
                         </span>

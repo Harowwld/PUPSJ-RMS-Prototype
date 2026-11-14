@@ -1,4 +1,6 @@
 "use client"
+
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
 
 
@@ -779,6 +781,7 @@ export default function SystemBackupsTab({ showToast }) {
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => setStatusSheetOpen(true)}
                       className="h-9 w-9 p-0"
                       aria-label="Open System Status"
@@ -789,6 +792,7 @@ export default function SystemBackupsTab({ showToast }) {
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => restoreFileRef.current?.click()}
                       disabled={localLoading.uploading}
                       className="h-9 px-4"
@@ -804,6 +808,7 @@ export default function SystemBackupsTab({ showToast }) {
                     </Button>
 
                     <Button
+                      size="sm"
                       onClick={() => handleGenerateBackup()}
                       disabled={localLoading.generating}
                       className="h-9 px-4 cursor-pointer"
@@ -910,10 +915,11 @@ export default function SystemBackupsTab({ showToast }) {
                         </EmptyDescription>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => fetchData(true)}
-                          className="mt-6 flex h-10 items-center justify-center px-5"
+                          className="mt-6 h-9 px-4 text-xs font-semibold rounded-xl"
                         >
-                          Retry
+                          Retry Loading
                         </Button>
                       </EmptyHeader>
                     </Empty>
@@ -968,7 +974,7 @@ export default function SystemBackupsTab({ showToast }) {
           secondaryActions={[
             {
               label: "Copy Filenames",
-              copiedLabel: "Filenames Copied!",
+              copiedLabel: "Copied Filenames",
               onClick: () => {
                 const selectedBackups = backups.filter((b) => selectedBackupIds.includes(b.id))
                 const filenames = selectedBackups.map((b) => b.filename).filter(Boolean)

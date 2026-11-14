@@ -219,20 +219,17 @@ export default function OsasProposalReviewSheet({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "font-sans uppercase tracking-wider text-[10px]")}>
+                <span className={cn(BADGE_PALETTES.maroon, "font-sans tracking-wider text-[10px]", BADGE_BASE)}>
                   {selected.org_acronym ? `[${selected.org_acronym}] ` : ""}
                   {selected.verified_org_name || selected.organization_name}
                 </span>
                 {selected.is_verified_officer && (
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                  <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
                     Verified Officer
                   </span>
                 )}
                 <span
-                  className={cn(
-                    BADGE_BASE,
-                    getProposalStatusBadgeClass(selected.status)
-                  )}
+                  className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}
                 >
                   {selected.status}
                 </span>
@@ -315,10 +312,7 @@ export default function OsasProposalReviewSheet({
 
               <InfoRow icon="PieChartIcon" label="Current Stage">
                 <span
-                  className={cn(
-                    BADGE_BASE,
-                    getProposalStatusBadgeClass(selected.status)
-                  )}
+                  className={cn(getProposalStatusBadgeClass(selected.status), BADGE_BASE)}
                 >
                   {selected.status}
                 </span>
@@ -356,7 +350,7 @@ export default function OsasProposalReviewSheet({
                       <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
                         Organization Charter (CBL)
                       </span>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                      <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
                         Active
                       </span>
                     </div>
@@ -415,10 +409,7 @@ export default function OsasProposalReviewSheet({
                     </span>
                   </div>
                   <span
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                      getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission")
-                    )}
+                    className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold", getPostEventStatusBadgeClass(selected.post_event_status || "Pending Submission"), BADGE_BASE)}
                   >
                     {selected.post_event_status || "Pending Submission"}
                   </span>
@@ -642,15 +633,24 @@ export default function OsasProposalReviewSheet({
                         getProposalStatusDotClass(update.status)
                       )}
                     />
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full border px-2 py-0.2 text-[9px] font-bold",
-                          getProposalStatusBadgeClass(update.status)
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn("inline-flex items-center rounded-full border px-2 py-0.2 text-[9px] font-bold", getProposalStatusBadgeClass(update.status), BADGE_BASE)}
+                        >
+                          {update.status}
+                        </span>
+                        {update.actor_name && (
+                          <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
+                            by {update.actor_name}
+                          </span>
                         )}
-                      >
-                        {update.status}
-                      </span>
+                        {update.actor_id && (
+                          <span className="font-sans text-[10px] text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 px-1 rounded tabular-nums">
+                            {update.actor_id}
+                          </span>
+                        )}
+                      </div>
                       {update.created_at && (
                         <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
                           {new Date(update.created_at).toLocaleDateString(undefined, {

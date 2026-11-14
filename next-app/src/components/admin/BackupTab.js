@@ -314,9 +314,10 @@ export default function BackupTab({
                 actions={
                   <div className="flex items-center gap-2">
                     <Button
+                      size="sm"
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-10 items-center justify-center px-5 cursor-pointer border-0"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                     >
                       {localLoading.generating ? (
                         <span className="flex items-center gap-1.5">
@@ -386,8 +387,9 @@ export default function BackupTab({
                       </EmptyDescription>
                       <Button 
                         variant="outline" 
+                        size="sm"
                         onClick={onRefresh}
-                        className="mt-6 flex h-10 items-center justify-center rounded-xl! border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer px-5 shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700"
+                        className="mt-6 h-9 px-4 text-xs font-semibold rounded-xl"
                       >
                         Retry Connection
                       </Button>

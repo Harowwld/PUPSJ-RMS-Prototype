@@ -1,5 +1,6 @@
 import { query, queryOne, transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
+import { getStaffFullName } from "./staffRepo.js";
 
 /**
  * Creates a post-event narrative & liquidation submission
@@ -14,10 +15,11 @@ export async function createPostEventReport({
   narrativeOriginalFilename,
   liquidationStorageFilename = null,
   liquidationOriginalFilename = null,
+  createdBy = null,
 }) {
   return transaction(async (tx) => {
     const proposal = await tx.queryOne(
-      `SELECT id FROM event_proposals
+      `SELECT id, student_no FROM event_proposals
         WHERE id = $1 AND organization_id = $2 AND office_id = 'osas'
           AND status = 'Approved'
           AND post_event_status IN ('Pending Submission', 'Needs Revision', 'Overdue')
@@ -47,10 +49,11 @@ export async function createPostEventReport({
       `UPDATE event_proposals SET post_event_status = 'Submitted', updated_at = NOW() WHERE id = $1`,
       [eventProposalId],
     );
+    const actorIdentifier = createdBy || proposal.student_no || submittedByEmail;
     await tx.query(
-      `INSERT INTO transaction_updates (event_proposal_id, status, message)
-       VALUES ($1, 'Post-Event Submitted', $2)`,
-      [eventProposalId, `Official Post-Event Narrative Report and Liquidation package submitted by ${submittedByEmail}.`],
+      `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
+       VALUES ($1, 'Post-Event Submitted', $2, $3)`,
+      [eventProposalId, `Official Post-Event Narrative Report and Liquidation package submitted by ${submittedByEmail}.`, actorIdentifier],
     );
     return report;
   });
@@ -97,12 +100,17 @@ export async function listPostEventReports({ status, organizationId, search } = 
             COALESCE(sip.display_name, s.name, ep.student_no, 'Student Officer') AS student_name,
             so.name AS organization_name,
             so.acronym AS org_acronym,
-            so.category AS org_category
+            so.category AS org_category,
+            st.fname AS reviewer_fname,
+            st.lname AS reviewer_lname,
+            st.preferences AS reviewer_preferences,
+            st.role AS reviewer_role
      FROM osas_post_event_reports per
      JOIN event_proposals ep ON ep.id = per.event_proposal_id
      LEFT JOIN students s ON s.student_no = ep.student_no
      LEFT JOIN student_identity_profiles sip ON sip.id = ep.identity_profile_id
      JOIN student_organizations so ON so.id = per.organization_id
+     LEFT JOIN staff st ON st.id = per.reviewed_by
      ${whereClause}
      ORDER BY per.created_at DESC`,
     params
@@ -110,6 +118,19 @@ export async function listPostEventReports({ status, organizationId, search } = 
 
   return rows.map((r) => {
     if (r.student_name) r.student_name = decryptPII(r.student_name);
+    let reviewerName = null;
+    if (r.reviewer_fname || r.reviewer_lname) {
+      reviewerName = getStaffFullName({
+        fname: decryptPII(r.reviewer_fname),
+        lname: decryptPII(r.reviewer_lname),
+        preferences: r.reviewer_preferences,
+        role: r.reviewer_role,
+        id: r.reviewed_by,
+      });
+    } else if (r.reviewed_by) {
+      reviewerName = r.reviewed_by;
+    }
+    r.reviewer_name = reviewerName;
     return r;
   });
 }
@@ -131,7 +152,10 @@ export async function getPostEventReportById(id) {
             so.name AS organization_name,
             so.acronym AS org_acronym,
             so.category AS org_category,
-            st.fname || ' ' || st.lname AS reviewer_name
+            st.fname AS reviewer_fname,
+            st.lname AS reviewer_lname,
+            st.preferences AS reviewer_preferences,
+            st.role AS reviewer_role
      FROM osas_post_event_reports per
      JOIN event_proposals ep ON ep.id = per.event_proposal_id
      LEFT JOIN students s ON s.student_no = ep.student_no
@@ -143,6 +167,19 @@ export async function getPostEventReportById(id) {
   );
   if (!r) return null;
   if (r.student_name) r.student_name = decryptPII(r.student_name);
+  let reviewerName = null;
+  if (r.reviewer_fname || r.reviewer_lname) {
+    reviewerName = getStaffFullName({
+      fname: decryptPII(r.reviewer_fname),
+      lname: decryptPII(r.reviewer_lname),
+      preferences: r.reviewer_preferences,
+      role: r.reviewer_role,
+      id: r.reviewed_by,
+    });
+  } else if (r.reviewed_by) {
+    reviewerName = r.reviewed_by;
+  }
+  r.reviewer_name = reviewerName;
   return r;
 }
 

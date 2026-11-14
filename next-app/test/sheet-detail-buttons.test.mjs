@@ -135,6 +135,21 @@ test("Codebase enforces zero occurrences of excessive h-10 px-5 and h-10 px-6 bu
           !content.includes("h-10 px-6"),
           `${full} contains forbidden 'h-10 px-6' padding`
         );
+
+        // Ensure no <Button tag has px-5 or px-6 in className (excluding ui/button.jsx)
+        if (!full.endsWith("ui/button.jsx")) {
+          const buttonMatches = content.match(/<Button[\s\S]*?>/g) || [];
+          for (const btn of buttonMatches) {
+            assert.ok(
+              !btn.includes("px-5"),
+              `${full} Button contains forbidden 'px-5' padding: ${btn}`
+            );
+            assert.ok(
+              !btn.includes("px-6"),
+              `${full} Button contains forbidden 'px-6' padding: ${btn}`
+            );
+          }
+        }
       }
     }
   }

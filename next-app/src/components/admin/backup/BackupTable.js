@@ -42,28 +42,28 @@ function getBackupTypeBadge(backup) {
   const type = String(backup?.backup_type || "").trim().toLowerCase();
   if (type === "pre-restore safety" || type === "safety snapshot") {
     return (
-      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+      <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
         Safety Snapshot
       </span>
     );
   }
   if (type === "manual") {
     return (
-      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+      <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
         Manual
       </span>
     );
   }
   if (type === "scheduled") {
     return (
-      <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+      <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
         Scheduled
       </span>
     );
   }
   if (type === "governance") {
     return (
-      <span className={cn(BADGE_BASE, BADGE_PALETTES.purple)}>
+      <span className={cn(BADGE_PALETTES.purple, BADGE_BASE)}>
         Governance
       </span>
     );
@@ -315,7 +315,7 @@ export default function BackupTable({
                         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
                       )}>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]" title={b.filename}>
+                          <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-[260px] sm:max-w-[320px]", BADGE_BASE)} title={b.filename}>
                             {b.filename}
                           </span>
                           {getBackupTypeBadge(b)}
@@ -341,12 +341,9 @@ export default function BackupTable({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div
-                                  className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] select-none",
-                                    b.status_local === "Success"
-                                      ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
-                                      : "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400"
-                                  )}
+                                  className={cn(b.status_local === "Success"
+                                      ? BADGE_PALETTES.emerald
+                                      : BADGE_PALETTES.gray, "gap-1 select-none border-0", BADGE_BASE)}
                                 >
                                   <HardDriveIcon size="1em"  className="text-[11px]" />
                                   <span>Internal Storage</span>
@@ -366,7 +363,7 @@ export default function BackupTable({
                             {b.status_external === "Success" ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className={cn(BADGE_BASE, BADGE_PALETTES.blue, "gap-1 select-none")}>
+                                  <div className={cn(BADGE_PALETTES.blue, "gap-1 select-none", BADGE_BASE)}>
                                     <CheckmarkCircle01Icon size="1em"  className="text-[11px]" />
                                     <span>External Drive</span>
                                   </div>
@@ -381,7 +378,7 @@ export default function BackupTable({
                             ) : !externalDriveConnected ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1 select-none cursor-not-allowed")}>
+                                  <div className={cn(BADGE_PALETTES.gray, "gap-1 select-none cursor-not-allowed", BADGE_BASE)}>
                                     <Plug01Icon size="1em"  className="text-[11px]" />
                                     <span>Drive Offline</span>
                                   </div>
@@ -404,10 +401,11 @@ export default function BackupTable({
                                     }}
                                     disabled={localLoading?.syncingId === b.id}
                                     className={cn(
-                                      "h-[22px] px-2.5 rounded-full text-[11px] font-medium tracking-[0.04em] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border",
+                                      BADGE_BASE,
+                                      "active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1 border-0",
                                       b.status_external === "Failed"
-                                        ? "border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
-                                        : "border-blue-200 dark:border-blue-800/60 bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                        ? BADGE_PALETTES.amber
+                                        : BADGE_PALETTES.blue
                                     )}
                                   >
                                     {localLoading?.syncingId === b.id ? (
@@ -432,7 +430,7 @@ export default function BackupTable({
                         </td>
                       ) : (
                         <td className="p-4 align-middle text-center border-r border-border/70 dark:border-border/70">
-                          <div className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                          <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide select-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400", BADGE_BASE)}>
                             Ready
                           </div>
                         </td>

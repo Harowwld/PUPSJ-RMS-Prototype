@@ -10,6 +10,7 @@ import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
 import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
 import { StaffRegistrationSchema } from "@/lib/validationSchemas";
+import { getOfficeById } from "@/lib/officesRepo";
 
 export const runtime = "nodejs";
 
@@ -119,6 +120,10 @@ export async function POST(req) {
     if (!canAccessOffice(user, requestedOffice)) {
       return NextResponse.json({ ok: false, error: "You cannot assign staff outside your office." }, { status: 403 });
     }
+  }
+
+  if (officeId && (await getOfficeById(officeId))?.status !== "Active") {
+    return NextResponse.json({ ok: false, error: "Restore the department before adding personnel." }, { status: 400 });
   }
 
   try {

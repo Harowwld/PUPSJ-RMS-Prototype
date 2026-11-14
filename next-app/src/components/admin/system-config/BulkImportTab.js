@@ -339,7 +339,7 @@ export default function BulkImportTab({
                                 </div>
                               </td>
                               <td className="p-4 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 border-r border-border/70 dark:border-border/70">
-                                <span className="inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-zinc-300">
+                                <span className={cn("inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
                                   NEW
                                 </span>
                               </td>
@@ -488,14 +488,11 @@ export default function BulkImportTab({
                             </Select>
                           ) : (
                             <div
-                              className={cn(
-                                "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
-                                row.category.toLowerCase() === "documenttype"
+                              className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap", row.category.toLowerCase() === "documenttype"
                                   ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
                                   : row.category.toLowerCase() === "course"
                                   ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                              )}
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", BADGE_BASE)}
                             >
                               {String(row.category || "").toLowerCase() === "documenttype" ? "Document Type" : (row.category || "MISSING")}
                             </div>
@@ -528,12 +525,12 @@ export default function BulkImportTab({
                               {String(row.category || "").toLowerCase() === "documenttype" && (row.isCompliance || row.isRequestable) && (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {row.isCompliance && (
-                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                                    <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
                                       Compliance
                                     </span>
                                   )}
                                   {row.isRequestable && (
-                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+                                    <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
                                       Requestable
                                     </span>
                                   )}
@@ -578,7 +575,7 @@ export default function BulkImportTab({
                           ) : (
                             <div>
                               {row.code ? (
-                                <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                                <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 whitespace-nowrap", BADGE_BASE)}>
                                   {row.code}
                                 </span>
                               ) : (
@@ -621,7 +618,7 @@ export default function BulkImportTab({
                             <div className="flex items-center justify-end gap-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
+                                  <div className={cn("inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", BADGE_BASE)}>
                                     <Alert01Icon size="1em"  className="text-xs"></Alert01Icon>
                                     <span>{row.error}</span>
                                   </div>
@@ -646,7 +643,7 @@ export default function BulkImportTab({
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
-                              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap">
+                              <div className={cn("inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", BADGE_BASE)}>
                                 <CheckmarkCircle01Icon size="1em"  className="text-xs"></CheckmarkCircle01Icon>
                                 <span>Validated</span>
                               </div>
@@ -671,7 +668,9 @@ export default function BulkImportTab({
               </Table>
             </div>
 
-            <TablePagination label="Lookup import preview pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRows.length} displayedCount={paginatedRows.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
+            {filteredRows.length > 0 && (
+              <TablePagination label="Lookup import preview pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRows.length} displayedCount={paginatedRows.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
+            )}
          </>
         )
       })()}
@@ -801,7 +800,7 @@ export default function BulkImportTab({
                 {["Category", "Name", "Code"].map((col) => (
                   <span
                     key={col}
-                    className="bg-black/[0.04] dark:bg-white/[0.06] rounded-full px-3 py-1 text-[12px] font-medium text-gray-900 dark:text-zinc-200 border-0"
+                    className={cn("bg-black/[0.04] dark:bg-white/[0.06] rounded-full px-3 py-1 text-[12px] font-medium text-gray-900 dark:text-zinc-200 border-0", BADGE_BASE)}
                   >
                     {col}
                   </span>

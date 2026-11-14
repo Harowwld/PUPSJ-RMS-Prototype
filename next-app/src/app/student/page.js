@@ -90,6 +90,14 @@ const RATING_LABELS = {
   5: "Excellent",
 };
 
+const STUDENT_VIEWS = ["overview", "odrs", "osas", "compliance", "activity", "settings"];
+
+function normalizeStudentTab(rawView) {
+  if (rawView === "default") return "overview";
+  if (rawView === "requests") return "odrs";
+  return STUDENT_VIEWS.includes(rawView) ? rawView : null;
+}
+
 export function normalizeProposalStatus(status) {
   const s = String(status || "").toLowerCase().trim();
   if (s === "submitted" || s === "pending") return "Submitted";
@@ -214,7 +222,7 @@ function StudentDashboard() {
   });
   const [proposalForm, setProposalForm] = useState({ title: "", organizationId: "", organizationName: "", eventDate: "", file: null });
   const [myOrganizations, setMyOrganizations] = useState([]);
-  const [view, setView] = useState("overview");
+  const [view, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
   const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -674,9 +682,7 @@ function StudentDashboard() {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
-    const normalized = nextView === "default" ? "overview" : nextView === "requests" ? "odrs" : nextView;
-    const target = allowed.has(normalized) ? normalized : "overview";
+    const target = normalizeStudentTab(nextView) || "overview";
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
@@ -697,15 +703,7 @@ function StudentDashboard() {
 
   // Synchronize view from URL parameter
   useEffect(() => {
-    const rawTab = searchParams?.get("view");
-    const allowed = new Set(["overview", "odrs", "osas", "compliance", "activity", "settings"]);
-    const normalizeStudentTab = (v) => {
-      if (!v) return null;
-      if (v === "default") return "overview";
-      if (v === "requests") return "odrs";
-      return allowed.has(v) ? v : null;
-    };
-    const tab = normalizeStudentTab(rawTab);
+    const tab = normalizeStudentTab(searchParams?.get("view"));
     const prefTab = normalizeStudentTab(authUser?.preferences?.default_home_view);
     const target = tab || prefTab || "overview";
     const timer = setTimeout(() => setView(target), 0);
@@ -1215,7 +1213,9 @@ function StudentDashboard() {
   }
 
   if (!me || (loading && !data.requests?.length && !data.proposals?.length && !complianceData)) {
-    return <StudentDashboardSkeleton view={view} />;
+    const requestedView = normalizeStudentTab(searchParams?.get("view"));
+    const preferredView = me ? normalizeStudentTab(me.preferences?.default_home_view) || "overview" : null;
+    return <StudentDashboardSkeleton view={requestedView || preferredView} />;
   }
 
   const readyRequestsCount = (data.requests || []).filter(
@@ -2011,7 +2011,9 @@ function StudentDashboard() {
                     {/* 6. Pagination Bar */}
                     {loading ? (
                       <StudentRequestsPaginationSkeleton />
-                    ) : <TablePagination label="Student request pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRequests.length} displayedCount={paginatedRequests.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />}
+                    ) : filteredRequests.length > 0 ? (
+                      <TablePagination label="Student request pages" page={currentPage} pageSize={itemsPerPage} totalCount={filteredRequests.length} displayedCount={paginatedRequests.length} onPageChange={setCurrentPage} onPageSizeChange={setItemsPerPage} />
+                    ) : null}
                   </Card>
                 </div>
               ) : (
@@ -2414,12 +2416,13 @@ function StudentDashboard() {
                               <EmptyContent>
                                 <Button
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => {
                                     setProposalSearch("");
                                     setProposalFilters({ status: [], organization: [] });
                                   }}
                                   title="Reset Filters"
-                                  className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                                  className="h-9 px-4 text-xs font-semibold rounded-xl"
                                 >
                                   Reset Filters
                                 </Button>
@@ -3843,10 +3846,21 @@ function StudentDashboard() {
   );
 }
 
+function StudentPageWithView() {
+  const searchParams = useSearchParams();
+  const fallback = <StudentDashboardSkeleton view={normalizeStudentTab(searchParams?.get("view"))} />;
+
+  return (
+    <Suspense fallback={fallback}>
+      <StudentDashboard />
+    </Suspense>
+  );
+}
+
 export default function StudentPage() {
   return (
-    <Suspense fallback={<StudentDashboardSkeleton />}>
-      <StudentDashboard />
+    <Suspense fallback={<StudentDashboardSkeleton view={null} />}>
+      <StudentPageWithView />
     </Suspense>
   );
 }

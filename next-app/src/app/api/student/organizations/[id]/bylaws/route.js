@@ -189,7 +189,7 @@ export async function POST(req, ctx) {
 
   await writeGlobalAuditLog(req, "Submitted Constitution & By-Laws for OSAS review", {
     officeId: "osas",
-    details: `Student officer ${access.user.username || studentEmail} (${officer.position}) submitted CBL amendment "${cleanVersionTag}" for ${org.name}.`,
+    details: `Student officer ${[access.user.fname, access.user.lname].filter(Boolean).join(" ").trim() || access.user.studentNo || "Student"} (${officer.position}) submitted CBL amendment "${cleanVersionTag}" for ${org.name}.`,
     entity_type: "student_organization",
     entity_id: org.id,
   });

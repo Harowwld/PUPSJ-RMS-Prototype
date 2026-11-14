@@ -11,7 +11,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import ServiceStandardsSkeleton from "./skeletons/ServiceStandardsSkeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Add01Icon, Archive01Icon, Certificate01Icon, CovidInfoIcon, File02Icon, MinusSignIcon, Shield01Icon } from "hugeicons-react";
 
 
@@ -280,6 +280,7 @@ export default function ServiceStandardsTab({ showToast }) {
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setConfirmResetOpen(true)}
                 disabled={saving}
                 className="h-9 px-4"
@@ -289,6 +290,7 @@ export default function ServiceStandardsTab({ showToast }) {
 
               <Button
                 type="button"
+                size="sm"
                 onClick={() => setConfirmSaveOpen(true)}
                 disabled={!isModified || saving}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -336,7 +338,7 @@ export default function ServiceStandardsTab({ showToast }) {
                   {activePreset?.description}
                 </span>
               </div>
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs self-start sm:self-auto")}>
+              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums self-start sm:self-auto")}>
                 {standards.simpleDays}d · {standards.complexDays}d · {standards.highlyTechnicalDays}d
               </span>
             </div>
@@ -405,7 +407,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Simple Requests
                       </span>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "")}>
                         Routine
                       </span>
                     </div>
@@ -431,7 +433,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Complex Requests
                       </span>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "text-[10px]")}>
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "")}>
                         Record Search
                       </span>
                     </div>
@@ -457,7 +459,7 @@ export default function ServiceStandardsTab({ showToast }) {
                       <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                         Specialized Requests
                       </span>
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "text-[10px]")}>
+                      <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "")}>
                         Verification
                       </span>
                     </div>
@@ -507,7 +509,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Simple Requests
                         </span>
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "")}>
                           {standards.simpleDays} {unitSuffix}
                         </span>
                       </div>
@@ -532,7 +534,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Complex Requests
                         </span>
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "text-[10px]")}>
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "")}>
                           {standards.complexDays} {unitSuffix}
                         </span>
                       </div>
@@ -557,7 +559,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                           Specialized Requests
                         </span>
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "text-[10px]")}>
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "")}>
                           {standards.highlyTechnicalDays} {unitSuffix}
                         </span>
                       </div>
@@ -580,7 +582,7 @@ export default function ServiceStandardsTab({ showToast }) {
                         {standards.frameworkName}
                       </span>
                     </div>
-                    <span className="text-[10px] text-zinc-300 dark:text-zinc-400 font-medium px-2 py-0.5 rounded-full bg-white/10 dark:bg-white/5">
+                    <span className={cn(BADGE_BASE, "text-zinc-300 dark:text-zinc-400 bg-white/10 dark:bg-white/5")}>
                       {standards.workingDaysOnly ? "Working Days" : "Calendar Days"}
                     </span>
                   </div>

@@ -169,6 +169,7 @@ export async function POST(req) {
       narrativeOriginalFilename: narrativeFile.name || "Narrative-Report.pdf",
       liquidationStorageFilename,
       liquidationOriginalFilename: liquidationOriginalFilename || (liquidationStorageFilename ? "Liquidation-Report.pdf" : null),
+      createdBy: access.user.student_no || access.user.studentNo || access.user.id || studentEmail,
     });
 
     return NextResponse.json({ ok: true, data: report }, { status: 201 });

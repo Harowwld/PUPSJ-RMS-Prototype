@@ -410,35 +410,35 @@ Run `pnpm db:verify` first. The sample seed is designed to update existing sampl
     <td align="center" width="20%">
       <a href="https://github.com/Harowwld">
         <img src="https://github.com/Harowwld.png" width="80" alt="Harold dela Peña"/><br />
-        <sub><b>Harold dela Peña</b></sub>
+        <nobr><sub><b>Harold&nbsp;dela&nbsp;Peña</b></sub></nobr>
       </a><br />
       <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
     </td>
     <td align="center" width="20%">
       <a href="https://github.com/rjjackflorida">
         <img src="https://github.com/rjjackflorida.png" width="80" alt="Rj Jack Florida"/><br />
-        <sub><b>Rj Jack Florida</b></sub>
+        <nobr><sub><b>Rj&nbsp;Jack&nbsp;Florida</b></sub></nobr>
       </a><br />
       <img src="https://img.shields.io/badge/Documentation-f68a1e?style=flat" alt="Technical Documentation" />
     </td>
     <td align="center" width="20%">
       <a href="https://github.com/icodecedd">
         <img src="https://github.com/icodecedd.png" width="80" alt="Cedrick Mariano"/><br />
-        <sub><b>Cedrick Mariano</b></sub>
+        <nobr><sub><b>Cedrick&nbsp;Mariano</b></sub></nobr>
       </a><br />
       <img src="https://img.shields.io/badge/Full%20Stack-800000?style=flat" alt="Full Stack" />
     </td>
     <td align="center" width="20%">
       <a href="https://github.com/paulomscln">
         <img src="https://github.com/paulomscln.png" width="80" alt="Paulo Masculino"/><br />
-        <sub><b>Paulo Masculino</b></sub>
+        <nobr><sub><b>Paulo&nbsp;Masculino</b></sub></nobr>
       </a><br />
       <img src="https://img.shields.io/badge/Frontend-0969da?style=flat" alt="Frontend" />
     </td>
     <td align="center" width="20%">
       <a href="https://github.com/Poche15">
         <img src="https://github.com/Poche15.png" width="80" alt="Joshua Poche"/><br />
-        <sub><b>Joshua Poche</b></sub>
+        <nobr><sub><b>Joshua&nbsp;Poche</b></sub></nobr>
       </a><br />
       <img src="https://img.shields.io/badge/QA-2ea44f?style=flat" alt="Quality Assurance" />
     </td>
@@ -449,10 +449,10 @@ Run `pnpm db:verify` first. The sample seed is designed to update existing sampl
 
 | Developer | Role | Focus Area |
 |:---:|:---:|:---:|
-| [**Harold dela Peña**](https://github.com/Harowwld) | `Full Stack` | Database Architecture, Backend Repositories & Ingest |
-| [**Rj Jack Florida**](https://github.com/rjjackflorida) | `Documentation` | Technical Writing, Operational Manuals & System Records |
-| [**Cedrick Mariano**](https://github.com/icodecedd) | `Full Stack` | System Architecture, Authentication & Security |
-| [**Paulo Masculino**](https://github.com/paulomscln) | `Frontend` | UI/UX Design System, Dashboard Views & Component Polish |
-| [**Joshua Poche**](https://github.com/Poche15) | `Quality Assurance` | System Testing, Process Auditing & Quality Verification |
+| <nobr>[**Harold&nbsp;dela&nbsp;Peña**](https://github.com/Harowwld)</nobr> | `Full Stack` | Database Architecture, Backend Repositories & Ingest |
+| <nobr>[**Rj&nbsp;Jack&nbsp;Florida**](https://github.com/rjjackflorida)</nobr> | `Documentation` | Technical Writing, Operational Manuals & System Records |
+| <nobr>[**Cedrick&nbsp;Mariano**](https://github.com/icodecedd)</nobr> | `Full Stack` | System Architecture, Authentication & Security |
+| <nobr>[**Paulo&nbsp;Masculino**](https://github.com/paulomscln)</nobr> | `Frontend` | UI/UX Design System, Dashboard Views & Component Polish |
+| <nobr>[**Joshua&nbsp;Poche**](https://github.com/Poche15)</nobr> | `Quality Assurance` | System Testing, Process Auditing & Quality Verification |
 
 </div>

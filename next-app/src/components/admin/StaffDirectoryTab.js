@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table, TableRow } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -135,7 +137,7 @@ const StaffTableRow = React.memo(({
           : "bg-white group-hover:bg-gray-50/40 dark:bg-card dark:group-hover:bg-zinc-800/80",
         isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)] border-r border-border/70"
       )}>
-        <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+        <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
           {s.id}
         </span>
       </td>
@@ -152,14 +154,11 @@ const StaffTableRow = React.memo(({
         </div>
       </td>
       <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-        <div className={cn(
-          "inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide",
-          s.role === "SystemAdmin" || s.role === "SuperAdmin"
+        <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide", s.role === "SystemAdmin" || s.role === "SuperAdmin"
             ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
             : s.role === "Admin"
               ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-        )}>
+              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", BADGE_BASE)}>
           {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
         </div>
       </td>
@@ -687,6 +686,7 @@ export default function StaffDirectoryTab({
             value={activeTab}
             onValueChange={handleTabChange}
             variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
             items={[
               {
                 value: "active",

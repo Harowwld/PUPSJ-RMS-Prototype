@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -1782,7 +1784,7 @@ export default function CommandPalette({
                         <span>{group.title}</span>
                       </span>
                       {group.badge && (
-                        <span className="font-semibold text-[9.5px] px-1.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-500 dark:text-zinc-400">
+                        <span className={cn("font-semibold text-[9.5px] px-1.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-500 dark:text-zinc-400", BADGE_BASE)}>
                           {group.badge}
                         </span>
                       )}
@@ -1852,33 +1854,30 @@ export default function CommandPalette({
                                   </span>
 
                                   {isActiveTab && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300", BADGE_BASE)}>
                                       Active
                                     </span>
                                   )}
 
                                   {item.badge && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400">
+                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400", BADGE_BASE)}>
                                       {item.badge}
                                     </span>
                                   )}
 
                                   {item.storageBadge && (
-                                    <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
+                                    <span className={cn("hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300", BADGE_BASE)}>
                                       {item.storageBadge}
                                     </span>
                                   )}
 
                                   {item.statusBadge && (
                                     <span
-                                      className={cn(
-                                        "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold",
-                                        item.statusBadge === "Completed" || item.statusBadge === "Approved"
+                                      className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold", item.statusBadge === "Completed" || item.statusBadge === "Approved"
                                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                                           : item.statusBadge === "Pending"
                                             ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                                      )}
+                                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300", BADGE_BASE)}
                                     >
                                       {item.statusBadge}
                                     </span>
@@ -1954,7 +1953,7 @@ export default function CommandPalette({
                 </h3>
 
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-200">
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-white/10 dark:text-zinc-200", BADGE_BASE)}>
                     {focusedItem.scope === "records"
                       ? "Records & Data"
                       : focusedItem.scope === "actions"
@@ -1965,7 +1964,7 @@ export default function CommandPalette({
                   </span>
 
                   {focusedItem.badge && (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400">
+                    <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-600 dark:text-zinc-400", BADGE_BASE)}>
                       {focusedItem.badge}
                     </span>
                   )}

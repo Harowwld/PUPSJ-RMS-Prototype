@@ -194,7 +194,7 @@ export default function RegisterAccountTab({
                   <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
                     System-Generated Credentials
                   </span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
+                  <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
                     Auto-assigned
                   </span>
                 </div>

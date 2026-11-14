@@ -42,14 +42,14 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { fetchJsonOnce } from "@/lib/clientRequest"
 import OfficeDetailSheet from "@/components/systemadmin/OfficeDetailSheet"
 import useTableScroll from "@/hooks/useTableScroll"
 import OfficeTableControls from "@/components/systemadmin/OfficeTableControls"
 import OfficeActionsMenu from "@/components/systemadmin/OfficeActionsMenu"
-import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
+import { Add01Icon, Archive01Icon as EmptyArchive01Icon, Building01Icon, Building02Icon, Building03Icon as EmptyBuilding03Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Copy01Icon, Folder01Icon, LayoutGridIcon, UserSearch01Icon, Search01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import ColorSelector, { REFERENCE_ACCENT_COLORS } from "@/components/ui/color-selector";
 // Stored icons may use either the " Cancel01Icon" or " Cancel01Icon" prefix, so compare by bare icon name.
@@ -177,7 +177,7 @@ function OfficeStatusBadge({ isActive }) {
     <span
       data-slot="table-status"
       data-tone={isActive ? "success" : "neutral"}
-      className="inline-flex min-h-6 max-w-full items-center justify-center rounded-full border border-transparent px-2.5 py-1 text-[11px] font-medium"
+      className={cn(BADGE_BASE)}
     >
       {label}
     </span>
@@ -245,6 +245,24 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       setPage(validPage)
     }
   }, [searchParams, page])
+
+  useEffect(() => {
+    const targetOfficeId = searchParams?.get("office")
+    if (!targetOfficeId || offices.length === 0) return
+    const targetOffice = offices.find(
+      (o) => String(o.id).toLowerCase() === String(targetOfficeId).toLowerCase()
+    )
+    if (!targetOffice) return
+    const isArchived = targetOffice.status !== "Active"
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStatusFilter(isArchived ? "Inactive" : "Active")
+    setSelectedOfficeIdForDetail(targetOffice.id)
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      params.delete("office")
+      router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [searchParams, offices, setStatusFilter, router])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -456,6 +474,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         }
         setDialogOpen(false)
         invalidateDataCache("systemadmin_offices")
+        invalidateDataCache("systemadmin_staff")
+        invalidateDataCache("systemadmin_offices_stats")
         fetchOffices(true)
       } else {
         showToast(json.error || "Failed to save office", true)
@@ -483,6 +503,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             : "Department archived successfully"
         )
         invalidateDataCache("systemadmin_offices")
+        invalidateDataCache("systemadmin_staff")
+        invalidateDataCache("systemadmin_offices_stats")
         fetchOffices(true)
       } else {
         showToast(json.error || "Failed to toggle status", true)
@@ -655,8 +677,8 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
     { key: "staff", label: "Staff", sort: "staff_count", icon: UserSearch01Icon },
     { key: "modules", label: "Modules", sort: "module_count", icon: LayoutGridIcon },
     { key: "status", label: "Status", sort: "status", icon: CheckmarkCircle01Icon },
-    { key: "created_at", label: "Date Added", sort: "created_at", icon: Building01Icon },
-    { key: "updated_at", label: "Last Updated", sort: "updated_at", icon: Building01Icon },
+    { key: "created_at", label: "Date Added", sort: "created_at", icon: Building01Icon, defaultHidden: true },
+    { key: "updated_at", label: "Last Updated", sort: "updated_at", icon: Building01Icon, defaultHidden: true },
   ]
   const sortOptions = tableColumns.map(({ sort, label, icon }) => ({ key: sort, label, icon }))
   const groupOptions = [
@@ -811,6 +833,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_offices_stats")
       invalidateDataCache("systemadmin_offices")
+      invalidateDataCache("systemadmin_staff")
       fetchOffices(true)
     } catch {
       showToast("Network error archiving selected departments", true)
@@ -847,6 +870,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_offices_stats")
       invalidateDataCache("systemadmin_offices")
+      invalidateDataCache("systemadmin_staff")
       fetchOffices(true)
     } catch {
       showToast("Network error restoring selected departments", true)
@@ -1017,27 +1041,30 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   {searchQuery || filterClauses.length > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 px-5"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>
                   ) : statusFilter === "Inactive" && stats.active > 0 ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => setStatusFilter("Active")}
                       title="View Active Departments"
-                      className="flex h-10 items-center justify-center px-5"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       View Active Departments
                     </Button>
                   ) : (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleOpenCreate}
                       title="Create Department"
-                      className="flex h-10 items-center justify-center px-5 cursor-pointer"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                     >
                       Create Department
                     </Button>
@@ -1088,9 +1115,6 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                               >
                                 {office.short_name}
                               </h3>
-                              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums uppercase tracking-wider shrink-0")}>
-                                {office.id}
-                              </span>
                             </div>
                             <p className="text-xs text-gray-500 dark:text-zinc-400 truncate mt-0.5" title={office.name}>
                               {office.name}
@@ -1100,7 +1124,20 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                         {/* Status Capsule & Overflow Actions Menu */}
                         <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <OfficeStatusBadge isActive={isActive} />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                            {isActive ? (
+                              <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                                <Tick01Icon size={8} className="stroke-[3]" />
+                              </span>
+                            ) : (
+                              <Cancel01Icon size={12} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                            )}
+                            <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                            <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                            <span className="font-medium text-gray-500 dark:text-zinc-400">
+                              {isActive ? "Active" : "Archived"}
+                            </span>
+                          </span>
                           <OfficeActionsMenu
                             office={office}
                             onViewDetails={(currentOffice) => setSelectedOfficeIdForDetail(currentOffice.id)}
@@ -1211,7 +1248,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   event.stopPropagation()
                                   handleOpenEdit(office)
                                 }}
-                                className="h-9 shrink-0"
+                                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                               >
                                 Configure Department
                               </Button>
@@ -1224,7 +1261,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                   event.stopPropagation()
                                   setRestoreOfficeTarget(office)
                                 }}
-                                className="h-9 shrink-0"
+                                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl cursor-pointer"
                               >
                                 Restore Department
                               </Button>
@@ -1762,7 +1799,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
                               Assign Default Modules
                             </span>
-                            <Badge className="text-[10px] px-2 py-0.2 rounded-full bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-0 font-medium">
+                            <Badge className={cn(BADGE_BASE, "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900")}>
                               {enabledCount} of {availableModules.length} enabled
                             </Badge>
                           </div>
@@ -1846,7 +1883,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                                       {mod.name}
                                     </span>
                                     {isSystem && (
-                                      <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0">
+                                      <span className={cn(BADGE_BASE, "bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400")}>
                                         System
                                       </span>
                                     )}
@@ -1886,9 +1923,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     <Button
                       variant="outline"
                       type="button"
+                      size="sm"
                       onClick={() => setConfirmMatrixLeaveOpen(true)}
                       title="Compare features across departments"
-                      className="h-8 px-3.5 flex items-center justify-center shrink-0 self-start"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl shrink-0 self-start"
                     >
                       Compare Features
                     </Button>
@@ -2096,7 +2134,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         secondaryActions={[
           {
             label: "Copy Codes",
-            copiedLabel: "Codes Copied!",
+            copiedLabel: "Copied Codes",
             onClick: handleCopyCodes,
           },
         ]}

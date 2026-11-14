@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import * as React from "react";
 import { GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LibraryIcon } from "hugeicons-react";

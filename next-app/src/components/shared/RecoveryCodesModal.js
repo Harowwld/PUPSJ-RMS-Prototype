@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { toast } from "sonner";
-import { Alert01Icon, Cancel01Icon, Download01Icon } from "hugeicons-react";
+import { Alert01Icon, Cancel01Icon, Download01Icon, SecurityCheckIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export default function RecoveryCodesModal({
   open,
@@ -97,8 +97,15 @@ export default function RecoveryCodesModal({
               <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Backup Codes ({recoveryCodes.length})
               </span>
-              <span className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
-                Single-Use Only
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
+                  <SecurityCheckIcon size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Recovery</span>
+                </span>
+                <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                <span className="font-medium text-gray-500 dark:text-zinc-400">
+                  Single-Use Only
+                </span>
               </span>
             </div>
 

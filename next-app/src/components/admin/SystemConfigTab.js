@@ -577,13 +577,6 @@ export default function SystemConfigTab({
         })
       )
 
-      logAdminAction({
-        action: `${isRestore ? "Bulk Restore" : "Bulk Archive"} ${category}`,
-        details: `${isRestore ? "restored" : "archived"} ${ids.length} ${label.toLowerCase()} in a single batch operation`,
-        severity: isRestore ? "INFO" : "WARNING",
-        entityType: "System",
-      })
-
       // Clear selections
       if (category === "DocumentType") setSelectedDocTypes({})
       else if (category === "Course") setSelectedCourses({})

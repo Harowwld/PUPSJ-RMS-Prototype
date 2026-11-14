@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -237,7 +239,7 @@ export default function DocumentRequestKanbanPipeline({
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     {col.label}
                   </span>
-                  <span className="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.2 text-[10px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300">
+                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.2 text-[10px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
                     {colItems.length}
                   </span>
                 </div>
@@ -294,14 +296,11 @@ export default function DocumentRequestKanbanPipeline({
                             #{item.id}
                           </span>
                           <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-medium shrink-0",
-                              item.client_type === "Parent"
+                            className={cn("inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-medium shrink-0", item.client_type === "Parent"
                                 ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
                                 : item.client_type === "Alumni" || item.is_alumni
                                 ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
-                            )}
+                                : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30", BADGE_BASE)}
                           >
                             {item.client_type === "Parent" ? "Parent" : item.client_type === "Alumni" || item.is_alumni ? "Alumni" : "Student"}
                           </span>
@@ -354,14 +353,14 @@ export default function DocumentRequestKanbanPipeline({
 
                       {/* Doc Type Badge */}
                       <div className="mb-2.5">
-                        <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 line-clamp-1 max-w-full">
+                        <span className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 line-clamp-1 max-w-full", BADGE_BASE)}>
                           {item.doc_type}
                         </span>
                       </div>
 
                       {/* SLA Chip & Date */}
                       <div className="pt-2 border-t border-border/60 dark:border-white/[0.06] flex items-center justify-between text-[11px]">
-                        <span className={cn("inline-flex items-center px-2 py-0.2 rounded-full text-[10px] font-semibold shrink-0", charter.badgeClass)}>
+                        <span className={cn("inline-flex items-center px-2 py-0.2 rounded-full text-[10px] font-semibold shrink-0", charter.badgeClass, BADGE_BASE)}>
                           <Clock01Icon size={10} className="mr-1" />
                           {charter.label}
                         </span>

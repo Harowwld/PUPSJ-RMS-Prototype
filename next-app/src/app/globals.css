@@ -1035,7 +1035,7 @@ html, body {
 
 /* Compatibility for native buttons and links awaiting migration to Button. */
 .btn-brand-red {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-5 text-xs font-semibold shadow-xs transition-colors duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 dark:border-white/10 dark:shadow-none motion-reduce:transition-none motion-reduce:transform-none;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-xs font-semibold shadow-xs transition-colors duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 dark:border-white/10 dark:shadow-none motion-reduce:transition-none motion-reduce:transform-none;
   background-color: var(--brand-accent, #800000);
   color: var(--brand-foreground, #ffffff);
 }

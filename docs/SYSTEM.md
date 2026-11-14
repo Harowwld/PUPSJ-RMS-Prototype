@@ -19,7 +19,7 @@
   * **OSAS Student Organization Governance:** Event proposal submissions with attached PDF documentation, revision loops, and status approval workflows.
   * **Digitization Compliance & SLA Analytics:** Degree document compliance checklists, deficiency reporting, fulfillment SLA duration tracking, and operational bottleneck visualization.
   * **Multi-Office Tenancy & Dynamic Modules:** System module toggles per campus office (Registrar, OSAS), preserving isolation between office workspaces.
-  * **Identity, Auth & Audit Trail:** 4-tier RBAC (`SuperAdmin`, `Admin`, `Staff`, `Student`), Scrypt password hashing, HS256 JWT cookies, RFC 6238 TOTP 2FA, 2+3 security questions, and tamper-evident append-only audit logging.
+  * **Identity, Auth & Audit Trail:** 4-tier RBAC (`SuperAdmin`, `Admin`, `Staff`, `Student`), Scrypt password hashing, HS256 JWT cookies, RFC 6238 TOTP 2FA, 2+3 security questions, and database-backed activity logging for selected security and record actions.
   * **Encrypted 3-2-1 Backup & Disaster Recovery:** AES-256-GCM encrypted snapshot packaging, SHA-256 checksum verification, and automated background sync to immutable external storage.
 * **Out-of-Scope Use Cases:**
   * Public cloud blob storage (AWS S3, Azure Blob, GCS) — campus governance mandates on-premise local disk persistence.

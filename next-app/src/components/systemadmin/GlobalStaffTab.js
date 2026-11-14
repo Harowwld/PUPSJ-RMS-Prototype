@@ -50,8 +50,11 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
-import { formatPHDateTime } from "@/lib/timeFormat"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { Skeleton } from "@/components/ui/skeleton"
+import NarrativeText from "@/components/shared/NarrativeText"
+import PersonnelActivityStream from "./PersonnelActivityStream"
+import { formatPHDateTime, formatNotificationTimeAgo } from "@/lib/timeFormat"
 import { getCachedData, setCachedData, invalidateDataCache } from "@/lib/dataCache"
 import { isSystemAdminRole, getOfficeRoleLabel, getOfficePrefix, registerOffices } from "@/lib/roleUtils"
 import useTableScroll from "@/hooks/useTableScroll"
@@ -165,6 +168,35 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   // Detail Sheet & Dialogs
   const [inspectMember, setInspectMember] = useState(null)
+  const [sheetTab, setSheetTab] = useState("profile")
+  const [inspectActivitySummary, setInspectActivitySummary] = useState({ total: 0, recent: [], loading: false })
+
+  useEffect(() => {
+    if (!inspectMember?.id) {
+      setInspectActivitySummary({ total: 0, recent: [], loading: false })
+      setSheetTab("profile")
+      return
+    }
+    let isMounted = true
+    setInspectActivitySummary((prev) => ({ ...prev, loading: true }))
+    fetch(`/api/staff/${encodeURIComponent(inspectMember.id)}/activity?limit=3`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        if (isMounted && json?.ok) {
+          setInspectActivitySummary({
+            total: Number(json.total) || 0,
+            recent: Array.isArray(json.data) ? json.data : [],
+            loading: false,
+          })
+        }
+      })
+      .catch(() => {
+        if (isMounted) setInspectActivitySummary({ total: 0, recent: [], loading: false })
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [inspectMember?.id])
   const [copiedInspectField, setCopiedInspectField] = useState(null)
   const handleCopyInspectField = (text, fieldKey, toastLabel) => {
     if (!text) return
@@ -875,17 +907,17 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }
 
   const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
-  const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["name", "email", "office", "role"])
+  const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["name", "email", "office", "role", "section", "totp_enabled"])
   const optionalColumns = [
     { key: "name", label: "Staff Name" },
     { key: "email", label: "Email" },
     { key: "office", label: "Office Partition" },
     { key: "role", label: "Privilege Level" },
     { key: "section", label: "Administrative Section" },
-    { key: "last_active", label: "Last Sign-in" },
+    { key: "last_active", label: "Last Sign-in", defaultHidden: true },
     { key: "totp_enabled", label: "Two-step Verification" },
-    { key: "created_at", label: "Date Added" },
-    { key: "updated_at", label: "Last Updated" },
+    { key: "created_at", label: "Date Added", defaultHidden: true },
+    { key: "updated_at", label: "Last Updated", defaultHidden: true },
   ]
   const filterFields = [
     { key: "role", label: "Role", icon: EmptyUserGroupIcon, options: [{ value: "SystemAdmin", label: "System Admin" }, { value: "Admin", label: "Administrator" }, { value: "Staff", label: "Regular Staff" }] },
@@ -1010,9 +1042,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {hasActiveFilters ? (
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 px-5"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>
@@ -1022,7 +1055,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       size="sm"
                       onClick={() => setStatusFilter("Active")}
                       title="View Active Personnel"
-                      className="flex h-9 items-center justify-center px-4"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       View Active Personnel
                     </Button>
@@ -1193,7 +1226,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               )}
                             </td>
                             <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className={cn(BADGE_BASE, "font-sans tabular-nums bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}>
                                 {member.id}
                               </span>
                             </td>
@@ -1222,13 +1255,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                               <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 {office ? (
                                   <span
-                                    className="systemadmin-office-badge inline-flex min-h-6 w-fit items-center justify-center rounded-full px-2.5 text-[11px] font-medium border-0 select-none"
+                                    className={cn(BADGE_BASE, "systemadmin-office-badge w-fit select-none")}
                                     style={{ "--office-accent": office.accent_color || "#800000" }}
                                   >
                                     {office.short_name}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex w-fit items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
+                                  <span className={cn(BADGE_BASE, "w-fit bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}>
                                     Platform Level
                                   </span>
                                 )}
@@ -1696,50 +1729,82 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* Identity Summary Strip (Unboxed) */}
-                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <ProfileAvatar
-                        staffId={inspectMember.id}
-                        name={getStaffCleanName(inspectMember)}
-                        initials={initials}
-                        className="size-12 rounded-full border shadow-2xs shrink-0"
-                        fallbackClassName="text-base font-bold"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
-                            {getStaffCleanName(inspectMember)}
+                {/* Identity Summary Strip (Unboxed) */}
+                <div className="px-6 pt-4 flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border shrink-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <ProfileAvatar
+                      staffId={inspectMember.id}
+                      name={getStaffCleanName(inspectMember)}
+                      initials={initials}
+                      className="size-12 rounded-full border shadow-2xs shrink-0"
+                      fallbackClassName="text-base font-bold"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                          {getStaffCleanName(inspectMember)}
+                        </span>
+                        {isSelf && (
+                          <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
+                            You
                           </span>
-                          {isSelf && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                              You
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
-                          {inspectMember.id} • <span className="font-sans font-medium text-gray-600 dark:text-zinc-300">{inspectMember.section || "Administration"}</span>
-                        </p>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="shrink-0">
-                      {office ? (
-                        <span
-                          className="systemadmin-office-badge inline-flex min-h-6 items-center justify-center rounded-full px-2.5 text-xs font-medium border-0 select-none"
-                          style={{ "--office-accent": office.accent_color || "#800000" }}
-                        >
-                          {office.name}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none">
-                          Platform Level
-                        </span>
-                      )}
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 font-sans tabular-nums truncate mt-0.5">
+                        {inspectMember.id} • <span className="font-sans font-medium text-gray-600 dark:text-zinc-300">{inspectMember.section || "Administration"}</span>
+                      </p>
                     </div>
                   </div>
 
+                  <div className="shrink-0">
+                    {office ? (
+                      <span
+                        className={cn(BADGE_BASE, "systemadmin-office-badge select-none")}
+                        style={{ "--office-accent": office.accent_color || "#800000" }}
+                      >
+                        {office.name}
+                      </span>
+                    ) : (
+                      <span className={cn(BADGE_BASE, "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}>
+                        Platform Level
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sub-Header Navigation Tabs */}
+                <div className="px-6 py-2.5 border-b border-border/80 dark:border-border shrink-0 bg-gray-50/40 dark:bg-zinc-900/20">
+                  <SegmentedControl
+                    value={sheetTab}
+                    onValueChange={setSheetTab}
+                    variant="capsule"
+                    className="inline-grid grid-flow-col auto-cols-fr w-full"
+                    items={[
+                      { value: "profile", label: "Profile Overview" },
+                      {
+                        value: "activity",
+                        label: "Activity History",
+                        badge: inspectActivitySummary.total > 0 ? inspectActivitySummary.total : undefined,
+                      },
+                    ]}
+                  />
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {sheetTab === "activity" ? (
+                    <PersonnelActivityStream
+                      member={inspectMember}
+                      onNavigateToLogs={() => {
+                        setInspectMember(null)
+                        window.dispatchEvent(
+                          new CustomEvent("switch-view", {
+                            detail: { view: "logs", search: inspectMember.id },
+                          })
+                        )
+                      }}
+                    />
+                  ) : (
+                    <>
                   {/* Profile & Credentials Section (Unboxed) */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 pb-1.5 border-b border-border/80 dark:border-border">
@@ -1859,32 +1924,81 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     </div>
                   </div>
 
-                  {/* Quick Audit Logs Jump */}
-                  <div className="p-4 rounded-xl border border-dashed border-border dark:border-border bg-gray-50/40 dark:bg-zinc-900/20 flex items-center justify-between gap-3">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Activity History</span>
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                        Inspect recorded audit events logged by this personnel account.
+                  {/* Recent Activity History Preview (Unboxed) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/80 dark:border-border">
+                      <div className="flex items-center gap-2">
+                        <Clock01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
+                        <h3 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                          Recent Activity History
+                        </h3>
+                      </div>
+                      <span className="text-[11px] font-sans tabular-nums text-gray-500 dark:text-zinc-400">
+                        {inspectActivitySummary.total} {inspectActivitySummary.total === 1 ? "event" : "events"}
                       </span>
                     </div>
+
+                    {inspectActivitySummary.loading ? (
+                      <div className="space-y-1.5 pt-1">
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                      </div>
+                    ) : inspectActivitySummary.recent.length > 0 ? (
+                      <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 divide-y divide-gray-100 dark:divide-zinc-800/60 overflow-hidden shadow-2xs">
+                        {inspectActivitySummary.recent.slice(0, 3).map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => setSheetTab("activity")}
+                            className="p-3 flex items-start justify-between gap-3 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none text-xs"
+                          >
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                                  {item.action}
+                                </span>
+                                {item.eventType === "operator" ? (
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "h-4 min-h-4 px-1.5 py-0 text-[10px] leading-none")}>
+                                    Operator
+                                  </span>
+                                ) : (
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "h-4 min-h-4 px-1.5 py-0 text-[10px] leading-none")}>
+                                    Account
+                                  </span>
+                                )}
+                              </div>
+                              {item.details && (
+                                <div className="text-[11.5px] text-gray-500 dark:text-zinc-400 line-clamp-1 font-sans">
+                                  <NarrativeText text={item.details} mode="full" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10.5px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums shrink-0 whitespace-nowrap pt-0.5">
+                              {formatNotificationTimeAgo(item.created_at)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-zinc-400 py-1">
+                        No activity events recorded for this account yet.
+                      </p>
+                    )}
+
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setInspectMember(null)
-                        window.dispatchEvent(
-                          new CustomEvent("switch-view", {
-                            detail: { view: "logs", search: inspectMember.id },
-                          })
-                        )
-                      }}
-                      className="h-8 px-3 shrink-0"
+                      onClick={() => setSheetTab("activity")}
+                      className="w-full h-9 text-xs font-semibold rounded-xl cursor-pointer"
                     >
-                      View History
+                      {inspectActivitySummary.total > 0
+                        ? `View All Activity (${inspectActivitySummary.total})`
+                        : "View Activity Tab"}
                     </Button>
                   </div>
-                </div>
+                </>
+              )}
+            </div>
 
                 <SheetFooter className="p-4 px-6 flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
@@ -1900,7 +2014,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <CopyButton
                       textToCopy={() => JSON.stringify(inspectMember, null, 2)}
                       entityName="Personnel Data"
-                      idleLabel="Copy Data"
+                      idleLabel="Copy Personnel Data"
                       copiedLabel="Data Copied!"
                       size="sm"
                       title="Copy personnel record data"
@@ -1981,12 +2095,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         secondaryActions={[
           {
             label: "Copy Emails",
-            copiedLabel: "Emails Copied!",
+            copiedLabel: "Copied Emails",
             onClick: handleCopyEmails,
           },
           {
             label: "Copy Employee IDs",
-            copiedLabel: "IDs Copied!",
+            copiedLabel: "Copied IDs",
             onClick: handleCopyIds,
           },
         ]}

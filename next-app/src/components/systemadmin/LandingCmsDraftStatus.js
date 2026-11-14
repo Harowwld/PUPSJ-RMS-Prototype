@@ -1,20 +1,31 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { Alert02Icon, Tick01Icon } from "hugeicons-react"
 
 export default function LandingCmsDraftStatus({ isDirty }) {
   return (
     <span
-      className={cn(
-        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-normal leading-4",
-        isDirty
-          ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200"
-          : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300"
-      )}
+      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none"
       role="status"
       aria-live="polite"
     >
-      {isDirty ? "Unsaved changes · Previewing draft" : "All changes saved"}
+      {isDirty ? (
+        <>
+          <Alert02Icon size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+          <span className="font-semibold text-gray-900 dark:text-zinc-100">Unsaved changes</span>
+          <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+          <span className="font-medium text-gray-500 dark:text-zinc-400">Previewing draft</span>
+        </>
+      ) : (
+        <>
+          <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+            <Tick01Icon size={8} className="stroke-[3]" />
+          </span>
+          <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+          <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+          <span className="font-medium text-gray-500 dark:text-zinc-400">All changes saved</span>
+        </>
+      )}
     </span>
   )
 }

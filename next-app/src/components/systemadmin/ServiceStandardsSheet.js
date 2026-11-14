@@ -17,8 +17,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Add01Icon, CalendarCheckIn01Icon, Cancel01Icon, HourglassIcon, LayoutGridIcon, MinusSignIcon, Timer01Icon } from "hugeicons-react";
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { Add01Icon, Alert02Icon, CalendarCheckIn01Icon, Cancel01Icon, HourglassIcon, LayoutGridIcon, MinusSignIcon, Tick01Icon, Timer01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const PRESETS = [
   {
@@ -348,16 +348,21 @@ export default function ServiceStandardsSheet({
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
-                      {activePreset?.badge || "Custom"}
-                    </span>
-                    <span
-                      className={cn(
-                        BADGE_BASE,
-                        isModified ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                      {isModified ? (
+                        <Alert02Icon size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                      ) : (
+                        <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                          <Tick01Icon size={8} className="stroke-[3]" />
+                        </span>
                       )}
-                    >
-                      {isModified ? "Unsaved Changes" : "Active Standard"}
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">
+                        {isModified ? "Unsaved Changes" : "Active Standard"}
+                      </span>
+                      <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                      <span className="font-medium text-gray-500 dark:text-zinc-400">
+                        {activePreset?.badge || "Custom"}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -392,7 +397,7 @@ export default function ServiceStandardsSheet({
                             )}>
                               {p.name}
                             </span>
-                            <span className="text-[10px] font-sans tabular-nums font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
                               {p.simpleDays}-{p.complexDays}-{p.highlyTechnicalDays}d
                             </span>
                           </div>
@@ -475,7 +480,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Simple Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.green)}>
                             Routine
                           </span>
                         </div>
@@ -501,7 +506,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Complex Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.amber, "text-[10px]")}>
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
                             Record Search
                           </span>
                         </div>
@@ -527,7 +532,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Specialized Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "text-[10px]")}>
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.purple)}>
                             Verification
                           </span>
                         </div>

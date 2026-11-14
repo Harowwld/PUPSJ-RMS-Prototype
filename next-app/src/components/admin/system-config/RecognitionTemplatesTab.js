@@ -608,11 +608,11 @@ export default function RecognitionTemplatesTab({ showToast }) {
                         <span>{label}</span>
                       </div>
                       {plotted ? (
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "gap-1")}>
+                        <span className={cn(BADGE_PALETTES.emerald, "gap-1", BADGE_BASE)}>
                           <Tick01Icon size="1em"  className="text-[10px]" /> Plotted
                         </span>
                       ) : (
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-normal")}>
+                        <span className={cn(BADGE_PALETTES.gray, "font-normal", BADGE_BASE)}>
                           Not set
                         </span>
                       )}
@@ -800,7 +800,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">Live Field Extraction Check</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300">
+                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-medium bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-300", BADGE_BASE)}>
                       {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Field"}
                     </span>
                   </div>

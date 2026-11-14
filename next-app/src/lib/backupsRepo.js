@@ -164,39 +164,47 @@ async function persistBackupArchive({ backupPath, filename, encryptedBuffer, ...
 
 export async function listBackups(filters = {}) {
   const { search, startDate, endDate, scope, officeId } = filters;
-  let sql = `SELECT * FROM backups`;
+  let sql = `
+    SELECT b.*,
+           s.fname AS creator_fname,
+           s.lname AS creator_lname,
+           s.role AS creator_role,
+           s.avatar_filename AS creator_avatar_filename
+      FROM backups b
+ LEFT JOIN staff s ON b.created_by = s.id
+  `;
   const params = [];
   const conditions = [];
 
   if (scope) {
-    conditions.push(`scope = ?`);
+    conditions.push(`b.scope = ?`);
     params.push(scope);
   }
 
   if (officeId) {
-    conditions.push(`office_id = ?`);
+    conditions.push(`b.office_id = ?`);
     params.push(officeId);
   }
 
   if (search) {
-    conditions.push(`filename LIKE ?`);
+    conditions.push(`b.filename LIKE ?`);
     params.push(`%${search}%`);
   }
 
   if (startDate) {
     if (startDate.includes("T") || startDate.includes(":")) {
-      conditions.push(`created_at >= ?::timestamptz`);
+      conditions.push(`b.created_at >= ?::timestamptz`);
     } else {
-      conditions.push(`(created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date`);
+      conditions.push(`(b.created_at AT TIME ZONE 'Asia/Manila')::date >= ?::date`);
     }
     params.push(startDate);
   }
 
   if (endDate) {
     if (endDate.includes("T") || endDate.includes(":")) {
-      conditions.push(`created_at <= ?::timestamptz`);
+      conditions.push(`b.created_at <= ?::timestamptz`);
     } else {
-      conditions.push(`(created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date`);
+      conditions.push(`(b.created_at AT TIME ZONE 'Asia/Manila')::date <= ?::date`);
     }
     params.push(endDate);
   }
@@ -205,15 +213,51 @@ export async function listBackups(filters = {}) {
     sql += ` WHERE ` + conditions.join(" AND ");
   }
 
-  sql += ` ORDER BY created_at DESC`;
+  sql += ` ORDER BY b.created_at DESC`;
 
   const rows = await dbAll(sql, params);
-  console.log(`[REPO] listBackups returned ${rows.length} rows.`);
-  return rows;
+  return (rows || []).map((b) => {
+    let actorName = null;
+    if (b.creator_fname || b.creator_lname) {
+      const fn = decryptPII(b.creator_fname) || "";
+      const ln = decryptPII(b.creator_lname) || "";
+      actorName = `${fn} ${ln}`.trim();
+    }
+    return {
+      ...b,
+      actor: actorName || (b.created_by ? b.created_by : "System"),
+      actor_id: b.created_by || null,
+      role: b.creator_role || (b.created_by ? "Admin" : "System"),
+      avatar_filename: b.creator_avatar_filename || null,
+    };
+  });
 }
 
 export async function getBackupById(id) {
-  return await dbGet(`SELECT * FROM backups WHERE id = ?`, [id]);
+  const row = await dbGet(`
+    SELECT b.*,
+           s.fname AS creator_fname,
+           s.lname AS creator_lname,
+           s.role AS creator_role,
+           s.avatar_filename AS creator_avatar_filename
+      FROM backups b
+ LEFT JOIN staff s ON b.created_by = s.id
+     WHERE b.id = ?
+  `, [id]);
+  if (!row) return null;
+  let actorName = null;
+  if (row.creator_fname || row.creator_lname) {
+    const fn = decryptPII(row.creator_fname) || "";
+    const ln = decryptPII(row.creator_lname) || "";
+    actorName = `${fn} ${ln}`.trim();
+  }
+  return {
+    ...row,
+    actor: actorName || (row.created_by ? row.created_by : "System"),
+    actor_id: row.created_by || null,
+    role: row.creator_role || (row.created_by ? "Admin" : "System"),
+    avatar_filename: row.creator_avatar_filename || null,
+  };
 }
 
 export async function updateBackupStatus(id, field, status) {

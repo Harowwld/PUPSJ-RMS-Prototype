@@ -1834,7 +1834,7 @@ export default function Sidebar({
                         >
                           {item.badge > 0 && (
                             <span
-                              className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                              className={cn("rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold", BADGE_BASE)}
                               data-background-color={hasActiveChild && !isExpanded ? activeForeground : activeColor}
                               data-color={hasActiveChild && !isExpanded ? activeColor : activeForeground}
                               style={{
@@ -1987,7 +1987,7 @@ export default function Sidebar({
                                   className="flex items-center shrink-0 mr-1 relative z-10"
                                 >
                                   <span
-                                    className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                                    className={cn("rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold", BADGE_BASE)}
                                     data-background-color={isChildActive ? activeForeground : activeColor}
                                     data-color={isChildActive ? activeColor : activeForeground}
                                     style={{
@@ -2121,7 +2121,7 @@ export default function Sidebar({
                       className="flex items-center shrink-0 mr-1 relative z-10"
                     >
                       <span
-                        className="rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                        className={cn("rms-style-background-color rms-style-color flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold", BADGE_BASE)}
                         data-background-color={isActive ? activeForeground : activeColor}
                         data-color={isActive ? activeColor : activeForeground}
                         style={{
@@ -2364,7 +2364,7 @@ export default function Sidebar({
                           <span className="truncate">{item.label}</span>
                         </div>
                         {isActive && (
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[9px] px-2 py-0.5")}>
+                          <span className={cn(BADGE_PALETTES.emerald, "text-[9px] px-2 py-0.5", BADGE_BASE)}>
                             Active
                           </span>
                         )}

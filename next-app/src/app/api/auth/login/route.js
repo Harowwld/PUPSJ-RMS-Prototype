@@ -4,7 +4,7 @@ import {
   setStaffPasswordById,
   verifyPasswordHash,
   touchStaffLastActiveById,
-  getStaffDisplayName,
+  getStaffFullName,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { attachRefreshSession } from "@/lib/refreshSessions";
@@ -164,9 +164,9 @@ async function _POST(req) {
     await audit(
       req,
       "Login Attempt",
-      `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`,
+      `authentication failure: attempt to access personnel account '${getStaffFullName(staff)}' which is currently archived and disabled`,
       "CRITICAL",
-      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+      { actor: getStaffFullName(staff) || username, actor_id: staff.id, role: staff.role || "Staff", officeId: staff.office_id }
     );
     const errorMsg = staff.status === "Inactive"
       ? "This account has been deactivated. Please contact an administrator."
@@ -189,9 +189,9 @@ async function _POST(req) {
     await audit(
       req,
       "Login Attempt",
-      `authentication failure: invalid credentials provided for recognized account '${username}'`,
+      `authentication failure: invalid credentials provided for recognized account '${getStaffFullName(staff)}'`,
       "WARNING",
-      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+      { actor: getStaffFullName(staff) || username, actor_id: staff.id, role: staff.role || "Staff", officeId: staff.office_id }
     );
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
@@ -202,7 +202,7 @@ async function _POST(req) {
       "Login Attempt",
       `authentication failure: office '${staff.office_id}' is inactive`,
       "WARNING",
-      { actor: getStaffDisplayName(staff) || username, role: staff.role || "Staff", officeId: staff.office_id }
+      { actor: getStaffFullName(staff) || username, actor_id: staff.id, role: staff.role || "Staff", officeId: staff.office_id }
     );
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: "This office is inactive. Please contact a system administrator." },
@@ -293,10 +293,11 @@ async function _POST(req) {
   await audit(
     req,
     "User Login",
-    `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`,
+    `personnel '${getStaffFullName(touched)}' successfully authenticated into the system repository`,
     "INFO",
     {
-      actor: getStaffDisplayName(touched),
+      actor: getStaffFullName(touched),
+      actor_id: touched.id,
       role: touched.role || "Staff",
       officeId: touched.office_id,
     }

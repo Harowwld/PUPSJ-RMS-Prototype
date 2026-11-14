@@ -285,10 +285,46 @@ export async function getDocumentRequestById(id, { officeId } = {}) {
   const row = formatDocumentRequestRow(rawRow);
 
   const updates = await dbAll(
-    "SELECT * FROM transaction_updates WHERE document_request_id = ? ORDER BY created_at ASC",
+    `SELECT tu.*,
+            s.fname AS staff_fname, s.lname AS staff_lname, s.preferences AS staff_preferences, s.role AS staff_role,
+            st.name AS student_name
+     FROM transaction_updates tu
+     LEFT JOIN staff s ON tu.created_by = s.id
+     LEFT JOIN students st ON tu.created_by = st.student_no
+     WHERE tu.document_request_id = ?
+     ORDER BY tu.created_at ASC`,
     [id]
   );
-  row.updates = updates || [];
+  const { getStaffFullName } = await import("./staffRepo.js");
+  row.updates = (updates || []).map((u) => {
+    let actorName = "Staff";
+    if (u.staff_fname || u.staff_lname) {
+      const decFname = decryptField(u.staff_fname);
+      const decLname = decryptField(u.staff_lname);
+      actorName = getStaffFullName({
+        fname: decFname,
+        lname: decLname,
+        preferences: u.staff_preferences,
+        role: u.staff_role,
+        id: u.created_by,
+      });
+    } else if (u.student_name) {
+      actorName = decryptField(u.student_name);
+    } else if (u.created_by) {
+      actorName = u.created_by;
+    }
+    return {
+      id: u.id,
+      document_request_id: u.document_request_id,
+      event_proposal_id: u.event_proposal_id,
+      status: u.status,
+      message: u.message,
+      created_by: u.created_by,
+      actor_id: u.created_by || null,
+      actor_name: actorName,
+      created_at: u.created_at,
+    };
+  });
 
   const attachments = await dbAll(
     "SELECT * FROM document_request_attachments WHERE document_request_id = ? ORDER BY created_at ASC",
@@ -373,6 +409,14 @@ export async function createDocumentRequest({
   if (!id) return null;
 
   try {
+    let creatorDisplayName = createdBy || "Student";
+    if (createdBy) {
+      const { getStaffById, getStaffFullName } = await import("./staffRepo.js");
+      const staffMember = await getStaffById(createdBy);
+      if (staffMember) {
+        creatorDisplayName = getStaffFullName(staffMember) || createdBy;
+      }
+    }
     const { createNotification } = await import("./notificationsRepo.js");
     await createNotification({
       officeId,
@@ -380,7 +424,8 @@ export async function createDocumentRequest({
       title: `Document Request: ${dt} (Pending)`,
       message: `Request #${id} for ${dt} (${rn || sn || "Student"}) submitted`,
       severity: "info",
-      actorName: createdBy || "Student",
+      actorName: creatorDisplayName,
+      actorId: createdBy || null,
       entityType: "document_request",
       entityId: id,
       metadata: {
@@ -536,6 +581,14 @@ export async function updateDocumentRequest(id, fields) {
   const result = await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
   if (result && fields.status) {
     try {
+      let updaterDisplayName = fields.updatedBy || "Staff";
+      if (fields.updatedBy) {
+        const { getStaffById, getStaffFullName } = await import("./staffRepo.js");
+        const staffMember = await getStaffById(fields.updatedBy);
+        if (staffMember) {
+          updaterDisplayName = getStaffFullName(staffMember) || fields.updatedBy;
+        }
+      }
       const { createNotification } = await import("./notificationsRepo.js");
       const sev = result.status === "Completed" || result.status === "Ready" ? "success"
         : result.status === "Cancelled" ? "error"
@@ -547,7 +600,8 @@ export async function updateDocumentRequest(id, fields) {
         title: `Request ${result.status}: ${result.doc_type}`,
         message: `Request #${id} for ${result.doc_type} (${result.requester_name || result.student_no || "Student"}) updated to ${result.status}`,
         severity: sev,
-        actorName: fields.updatedBy || "Staff",
+        actorName: updaterDisplayName,
+        actorId: fields.updatedBy || null,
         entityType: "document_request",
         entityId: id,
         metadata: {

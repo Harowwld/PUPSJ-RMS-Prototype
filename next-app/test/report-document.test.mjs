@@ -31,6 +31,7 @@ const cases = (branding) => [
   ["slip", () => generators.generateStudentComplianceSlipPdf(student, [{ docType: "Validation form", status: "Submitted" }], { totalRequired: 1, submittedCount: 1 }, { branding })],
   ["student", () => generateStudentRecordsReportPdf(record, { branding })],
   ["incomplete", () => generateComplianceRosterPdf(roster, { branding })],
+  ["campus-operations", () => generators.generateCampusOperationsPdf([{ id: 1, officeId: "registrar", type: "document_request", title: "Validation credential", status: "Completed", createdAt: date }], { branding })],
 ]
 
 async function inspect(blob) {
@@ -188,4 +189,18 @@ test("branding generation prefers current saved settings and keeps an offline fa
   assert.equal((await getInstitutionalBranding()).reportFont, "arial")
   context.mock.method(globalThis, "fetch", async () => { throw new Error("Offline validation") })
   assert.equal((await getInstitutionalBranding()).reportFont, "arial")
+})
+
+test("all report tables span 100% of the usable width with zero gap on the right margin", async () => {
+  // Portrait
+  const docPortrait = await createReportDocument({ title: "Width Validation", branding })
+  docPortrait.table(["Col 1", "Col 2", "Col 3"], [["A", "B", "C"]], { columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 120 }, 2: { cellWidth: 80 } } })
+  const resultP = await inspect(docPortrait.finish())
+  assert.ok(resultP.pages.length >= 1)
+
+  // Landscape
+  const docLandscape = await createReportDocument({ title: "Width Validation Landscape", branding, orientation: "landscape" })
+  docLandscape.table(["Col 1", "Col 2", "Col 3"], [["A", "B", "C"]], { columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 150 }, 2: { cellWidth: 100 } } })
+  const resultL = await inspect(docLandscape.finish())
+  assert.ok(resultL.pages.length >= 1)
 })

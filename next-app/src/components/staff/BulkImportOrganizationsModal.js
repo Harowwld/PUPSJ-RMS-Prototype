@@ -744,7 +744,9 @@ export default function BulkImportOrganizationsModal({
             </div>
 
             {/* Pagination */}
-            <TablePagination borderless label="Organizations import preview pages" page={csvPage} pageSize={csvRowsPerPage} totalCount={filteredCsvRows.length} onPageChange={setCsvPage} onPageSizeChange={setCsvRowsPerPage} />
+            {filteredCsvRows.length > 0 && (
+              <TablePagination borderless label="Organizations import preview pages" page={csvPage} pageSize={csvRowsPerPage} totalCount={filteredCsvRows.length} onPageChange={setCsvPage} onPageSizeChange={setCsvRowsPerPage} />
+            )}
           </div>
         )}
 

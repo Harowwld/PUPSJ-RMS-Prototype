@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getStaffById, parseStaffPreferences, updateStaffPreferences } from "@/lib/staffRepo";
-import { writeAuditLog } from "@/lib/auditLogRequest";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { queryOne, query } from "@/lib/postgres";
 import {
@@ -145,21 +144,11 @@ export async function POST(req) {
         ).catch(() => {});
       }
 
-      await writeAuditLog(req, "Updated Account Preferences", {
-        details: "Updated personal dashboard preferences.",
-        entity_type: "student_preferences",
-        entity_id: String(access.user.id),
-      });
       return NextResponse.json({ ok: true, data: updatedPrefs });
     }
 
     const userId = access.user.id;
     const updatedPrefs = await updateStaffPreferences(userId, preferences);
-    await writeAuditLog(req, "Updated Account Preferences", {
-      details: "Updated personal dashboard preferences.",
-      entity_type: "staff_preferences",
-      entity_id: String(userId),
-    });
     return NextResponse.json({ ok: true, data: updatedPrefs });
   } catch {
     return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });

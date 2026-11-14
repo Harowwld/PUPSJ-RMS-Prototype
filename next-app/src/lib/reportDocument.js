@@ -129,8 +129,39 @@ export async function createReportDocument({ title, branding: suppliedBranding, 
   const table = (head, rows, { columnStyles = {}, empty = "No records match the selected report criteria.", plain = false, fontSize = REPORT_STYLE.table } = {}) => {
     lastBlock = "table"
     ensure(60)
+
+    let effectiveColumnStyles = { ...columnStyles }
+    const colCount = (head && head.length) || (rows && rows[0] && rows[0].length) || 0
+    if (colCount > 0) {
+      const fixedIndices = []
+      let totalFixedWidth = 0
+      for (let i = 0; i < colCount; i++) {
+        const w = effectiveColumnStyles[i]?.cellWidth
+        if (typeof w === "number") {
+          fixedIndices.push(i)
+          totalFixedWidth += w
+        }
+      }
+      // If every column has a fixed numeric cellWidth that does not span the full usable width,
+      // free up the widest column so autoTable distributes the extra width and avoids leaving blank space on the right
+      if (fixedIndices.length === colCount && totalFixedWidth < usable - 1) {
+        let widestIndex = 0
+        let maxWidth = 0
+        for (const idx of fixedIndices) {
+          const w = effectiveColumnStyles[idx]?.cellWidth || 0
+          if (w > maxWidth) {
+            maxWidth = w
+            widestIndex = idx
+          }
+        }
+        const { cellWidth: _removed, ...restStyle } = effectiveColumnStyles[widestIndex] || {}
+        effectiveColumnStyles[widestIndex] = restStyle
+      }
+    }
+
     autoTable(doc, {
       startY: y,
+      tableWidth: usable,
       margin: { left: margin, right: margin, top: continuationTop, bottom: REPORT_STYLE.bottom },
       head: plain ? undefined : [head],
       body: rows.length ? rows : [[{ content: empty, colSpan: head.length }]],
@@ -140,7 +171,7 @@ export async function createReportDocument({ title, branding: suppliedBranding, 
       styles: { font, fontStyle: "normal", fontSize, cellPadding: { top: 6, bottom: 6, left: 7, right: 7 }, overflow: "linebreak", textColor: [31, 31, 31], lineColor: [200, 200, 200], lineWidth: plain ? 0 : 0.35, valign: "top" },
       headStyles: { font, fontStyle: "bold", fontSize, fillColor: [239, 239, 239], textColor: [20, 20, 20], lineColor: [170, 170, 170], lineWidth: plain ? 0 : 0.4 },
       bodyStyles: { font, fontStyle: "normal" },
-      columnStyles,
+      columnStyles: effectiveColumnStyles,
       willDrawPage: () => {
         const page = doc.internal.getCurrentPageInfo().pageNumber
         if (!drawnPages.has(page)) {

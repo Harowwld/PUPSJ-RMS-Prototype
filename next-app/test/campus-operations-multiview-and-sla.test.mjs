@@ -104,7 +104,7 @@ test("Citizen's Charter Turnaround Risk Tracker in Campus Operations", () => {
   );
   assert.ok(
     code.includes("Configure Standards"),
-    "Header actions must feature Configure Standards button"
+    "Turnaround standards banner must feature Configure Standards button"
   );
 
   // Table includes Charter SLA column and default unchecked state
@@ -179,8 +179,8 @@ test("CampusOperationsList component architecture and features", () => {
     "Registrar badge must use explicit PUP Maroon #800000 to prevent role color leakage"
   );
   assert.ok(
-    badgeStylesSrc.includes("text-blue-800"),
-    "OSAS badge must use consistent dark label text-blue-800 in light mode"
+    badgeStylesSrc.includes("bg-[#DBEAFE] text-[#1E40AF]"),
+    "OSAS badge must use the campus operations blue palette"
   );
 
   // Relative timestamp rendering safety
@@ -203,14 +203,12 @@ test("CampusOperationsList component architecture and features", () => {
     "Badges in list must not contain decorative dot indicators"
   );
 
-  // Comfortable Fixed Row Height (64px) & Disconnection from compact mode
+  // Table Row Density alignment across list rows
   assert.ok(
-    listCode.includes("min-h-[64px]") && listCode.includes("h-16"),
-    "List row must use comfortable 64px height (min-h-[64px] h-16)"
-  );
-  assert.ok(
-    !listCode.includes("useTablePreferences"),
-    "List view must not react to table row compact preferences"
+    listCode.includes("useTablePreferences") &&
+      listCode.includes("getListDensityClasses") &&
+      listCode.includes("densityClasses.minHeight"),
+    "List row must consume useTablePreferences and getListDensityClasses for unified row density"
   );
 
   // Action buttons
@@ -239,6 +237,21 @@ test("Campus Operations PDF and CSV export utilities", () => {
   assert.ok(
     pdfGenCode.includes("orientation: \"landscape\""),
     "PDF must use landscape orientation for broad tabular telemetry"
+  );
+  assert.ok(
+    !pdfGenCode.includes("3: { cellWidth: 120 }"),
+    "Document/proposal title column must not be clamped to 120pt, allowing it to expand across full usable width"
+  );
+
+  const reportDocPath = path.resolve(__dirname, "../src/lib/reportDocument.js");
+  const reportDocCode = fs.readFileSync(reportDocPath, "utf8");
+  assert.ok(
+    reportDocCode.includes("tableWidth: usable"),
+    "reportDocument.js table must specify tableWidth: usable to ensure full width usage"
+  );
+  assert.ok(
+    reportDocCode.includes("widestIndex"),
+    "reportDocument.js must provide full-width safeguard to prevent right-side gap when all columns are fixed"
   );
 
   // SLA Calculation Accuracy

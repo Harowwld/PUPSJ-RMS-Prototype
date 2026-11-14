@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { writeAuditLog } from "@/lib/auditLogRequest";
 import {
   getStaffReviewNotificationsState,
   listNotifications,
@@ -104,14 +103,6 @@ export async function POST(req) {
     await setNotificationReadState(staff.id, ids, false);
   } else {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
-  }
-
-  if (["markSeen", "markAllRead", "markAllUnread", "markRead", "markUnread"].includes(action)) {
-    await writeAuditLog(req, `Notifications ${action}`, {
-      details: ids.length ? `Notification IDs: ${ids.join(", ")}` : "Notification state updated.",
-      entity_type: "notification",
-      entity_id: ids.length === 1 ? String(ids[0]) : "",
-    });
   }
 
   const meta = await listNotifications({

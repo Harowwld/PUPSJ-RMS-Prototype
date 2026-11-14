@@ -1,5 +1,7 @@
 import { dbAll, dbGet, dbRun } from "./postgresCompat.js";
 import { query, queryOne } from "./postgres.js";
+import { decryptPII } from "./piiEncryption.js";
+import { getStaffFullName } from "./staffRepo.js";
 
 /**
  * Creates a new system or workflow notification.
@@ -247,6 +249,8 @@ export async function listNotifications({
         n.severity,
         n.actor_name,
         n.actor_id,
+        actor_staff.fname AS actor_staff_fname,
+        actor_staff.lname AS actor_staff_lname,
         n.entity_type,
         n.entity_id,
         n.metadata,
@@ -265,6 +269,7 @@ export async function listNotifications({
         COALESCE(n.metadata->>'mime_type', 'application/pdf') AS mime_type,
         CASE WHEN (n.metadata->>'is_previewed')::boolean THEN 1 ELSE 0 END AS is_previewed
       FROM notifications n
+      LEFT JOIN staff actor_staff ON actor_staff.id = n.actor_id
       LEFT JOIN staff_notification_reads nr ON n.id = nr.notification_id AND nr.staff_id = $1
       ${whereClause}
       ORDER BY ${sortCol} ${order}, n.id DESC
@@ -273,8 +278,20 @@ export async function listNotifications({
     params
   );
 
+  const displayedItems = items.map(({ actor_staff_fname, actor_staff_lname, ...item }) => {
+    if (!actor_staff_fname && !actor_staff_lname) return item;
+    return {
+      ...item,
+      actor_name: getStaffFullName({
+        fname: decryptPII(actor_staff_fname),
+        lname: decryptPII(actor_staff_lname),
+        id: item.actor_id,
+      }),
+    };
+  });
+
   return {
-    items,
+    items: displayedItems,
     total,
     unreadCount,
     readCount,

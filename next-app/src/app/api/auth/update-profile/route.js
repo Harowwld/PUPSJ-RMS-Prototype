@@ -101,6 +101,7 @@ export async function POST(req) {
 
       await writeGlobalAuditLog(req, "Student profile updated", {
         actor: currentStudentNo || cleanEmail,
+        actor_id: currentStudentNo || null,
         role: "Student",
         details: `Updated profile details (Name: ${formattedFullName}, Client Type: ${cleanClientType})`,
         entity_type: "student_account",

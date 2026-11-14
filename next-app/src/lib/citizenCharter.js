@@ -253,7 +253,7 @@ export function getRequestCharterStatus(request, dynamicStandards = null) {
       isOverdue: true,
       isDueSoon: false,
       isCompliant: false,
-      badgeClass: BADGE_PALETTES.amber,
+      badgeClass: BADGE_PALETTES.orange,
       icon: "Clock01Icon",
     };
   }

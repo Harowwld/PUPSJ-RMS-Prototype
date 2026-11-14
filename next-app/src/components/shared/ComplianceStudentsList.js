@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import { ArrowDown01Icon } from "hugeicons-react"
 import { cn } from "@/lib/utils"
@@ -91,10 +93,7 @@ export default function ComplianceStudentsList({
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <StudentIdentity student={student} />
                 <span
-                  className={cn(
-                    "mt-0.5 rounded-full px-2.5 py-1 text-[11px] leading-4 font-medium whitespace-nowrap",
-                    state.tone
-                  )}
+                  className={cn("mt-0.5 rounded-full px-2.5 py-1 text-[11px] leading-4 font-medium whitespace-nowrap", state.tone, BADGE_BASE)}
                 >
                   {state.label}
                 </span>
@@ -131,10 +130,7 @@ export default function ComplianceStudentsList({
                     {groups.map((group) => (
                       <span
                         key={group.status}
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-[11px] leading-4 font-medium",
-                          group.tone
-                        )}
+                        className={cn("rounded-full px-2 py-0.5 text-[11px] leading-4 font-medium", group.tone, BADGE_BASE)}
                       >
                         {group.requirements.length}{" "}
                         {countLabel(group, group.requirements.length)}

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { cn, formatTitleCase } from "@/lib/utils";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
   ArrowDown01Icon,
   Cancel01Icon,
@@ -62,6 +64,8 @@ export default function DigitalRecordsList({
   onSetStatus,
   getStatusBadge,
 }) {
+  const { density } = useTablePreferences();
+  const densityClasses = getListDensityClasses(density);
   const [collapsedGroups, setCollapsedGroups] = useState({});
 
   const toggleGroup = (key) => {
@@ -144,7 +148,7 @@ export default function DigitalRecordsList({
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     {group.label}
                   </span>
-                  <span className="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300">
+                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
                     {group.items.length}
                   </span>
                 </button>
@@ -180,7 +184,11 @@ export default function DigitalRecordsList({
                         }
                       }}
                       className={cn(
-                        "group flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer sm:px-6 select-none",
+                        "group flex flex-col md:flex-row md:items-center justify-between transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none",
+                        densityClasses.paddingX,
+                        densityClasses.paddingY,
+                        densityClasses.gap,
+                        densityClasses.minHeight,
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                       )}
                     >
@@ -211,7 +219,10 @@ export default function DigitalRecordsList({
                             onPreview?.(record);
                           }}
                           title={`Preview ${record.original_filename}`}
-                          className="relative shrink-0 w-9 h-11 sm:w-10 sm:h-12 rounded-lg overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-800/90 dark:to-zinc-900 border border-border/80 dark:border-zinc-700/80 shadow-2xs hover:shadow-xs hover:border-pup-maroon dark:hover:border-red-400/80 flex flex-col items-center justify-between p-1 transition-all group/thumb cursor-pointer"
+                          className={cn(
+                            "relative shrink-0 rounded-lg overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-800/90 dark:to-zinc-900 border border-border/80 dark:border-zinc-700/80 shadow-2xs hover:shadow-xs hover:border-pup-maroon dark:hover:border-red-400/80 flex flex-col items-center justify-between p-1 transition-all group/thumb cursor-pointer",
+                            density === "compact" ? "w-8 h-10" : density === "comfortable" ? "w-10 h-13 sm:w-11 sm:h-14" : "w-9 h-11 sm:w-10 sm:h-12"
+                          )}
                         >
                           {/* Mini document top bar */}
                           <div className="w-full flex items-center justify-between px-0.5">
@@ -251,12 +262,12 @@ export default function DigitalRecordsList({
                               {formatTitleCase(record.student_name)}
                             </span>
 
-                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0">
+                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 shrink-0", BADGE_BASE)}>
                               {record.student_no}
                             </span>
 
                             <span
-                              className="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 shrink-0 truncate max-w-[220px]"
+                              className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200 shrink-0 truncate max-w-[220px]", BADGE_BASE)}
                               title={record.doc_type}
                             >
                               {record.doc_type}
@@ -308,11 +319,7 @@ export default function DigitalRecordsList({
                       >
                         {/* Text-Only Status Badge without indicator dot */}
                         <span
-                          className={cn(
-                            BADGE_BASE,
-                            "select-none",
-                            badgeClass
-                          )}
+                          className={cn("select-none", badgeClass, BADGE_BASE)}
                         >
                           {record.approval_status || "Pending"}
                         </span>

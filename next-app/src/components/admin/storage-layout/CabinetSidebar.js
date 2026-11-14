@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 
 import React, { memo } from "react"
@@ -287,7 +289,7 @@ const CabinetSidebar = memo(({
                     >
                       <span className="truncate flex-1 text-xs font-medium">{item.label}</span>
                       {isActive && (
-                        <span className="text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 px-2 py-0.5 rounded-full shrink-0">
+                        <span className={cn("text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 px-2 py-0.5 rounded-full shrink-0", BADGE_BASE)}>
                           Active
                         </span>
                       )}

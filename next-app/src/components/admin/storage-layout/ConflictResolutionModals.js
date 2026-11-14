@@ -142,7 +142,7 @@ const ConflictResolutionModals = memo(({
                       </td>
 
                       <td className="py-3.5 px-4 align-top border-r border-border/70 dark:border-border/70">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                        <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
                           {row.count} {row.count === 1 ? "record" : "records"}
                         </span>
                       </td>
@@ -277,7 +277,7 @@ const ConflictResolutionModals = memo(({
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                        <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
                           {r.count}
                         </span>
                       </td>
@@ -355,7 +355,7 @@ const ConflictResolutionModals = memo(({
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                          <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
                             {Number(r?.moved || 0)}
                           </span>
                         </td>

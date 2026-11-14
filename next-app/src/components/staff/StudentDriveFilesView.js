@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useState, useMemo } from "react";
 
@@ -15,6 +17,7 @@ import {
 } from "@/components/ui/empty";
 import { cn, formatTitleCase } from "@/lib/utils";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import { SegmentedControl } from "@/components/ui/tabs";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { motion } from "framer-motion";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
@@ -125,7 +128,7 @@ export default function StudentDriveFilesView({
                 {formatTitleCase(displayName)}
               </h3>
               {student.category && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300", BADGE_BASE)}>
                   {student.category}
                 </span>
               )}
@@ -190,47 +193,16 @@ export default function StudentDriveFilesView({
           )}
 
           {/* View Mode Toggle: Grid vs List (Integrated into top header) */}
-          <div role="group" aria-label="Drive file view" className="inline-grid grid-flow-col auto-cols-fr shrink-0 items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] select-none">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  aria-pressed={viewMode === "grid"}
-                  className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95",
-                    viewMode === "grid"
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  aria-label="Show files as grid"
-                >
-                  <ViewModeIcon mode="grid" className="text-sm" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Show files as grid</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  aria-pressed={viewMode === "list"}
-                  className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95",
-                    viewMode === "list"
-                      ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                      : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                  )}
-                  aria-label="Show files as separate rows"
-                >
-                  <ViewModeIcon mode="list" className="text-sm" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Show files as separate rows</TooltipContent>
-            </Tooltip>
-          </div>
+          <SegmentedControl
+            value={viewMode}
+            onValueChange={setViewMode}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
+            items={[
+              { value: "grid", label: "Grid", icon: <ViewModeIcon mode="grid" className="text-sm" /> },
+              { value: "list", label: "List", icon: <ViewModeIcon mode="list" className="text-sm" /> },
+            ]}
+          />
         </div>
       </div>
 

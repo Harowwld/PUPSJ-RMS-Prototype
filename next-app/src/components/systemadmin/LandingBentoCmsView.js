@@ -1,4 +1,6 @@
 "use client"
+
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -1277,7 +1279,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex flex-col items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0 relative">
                           <Shield01Icon size="1em" className="text-2xl" />
-                          <span className="absolute -bottom-2 bg-[#800000] text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase">
+                          <span className={cn(BADGE_BASE, "absolute -bottom-2 bg-[#800000] text-white")}>
                             {bentoData.card5?.badgeLabel || "RA 11032"}
                           </span>
                         </div>

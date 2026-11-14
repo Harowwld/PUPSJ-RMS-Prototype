@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
 import TablePagination from "@/components/shared/TablePagination";
+import { SegmentedControl } from "@/components/ui/tabs";
 import useUrlPage from "@/hooks/useUrlPage";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
@@ -831,28 +832,18 @@ export default function StudentOverviewTab({
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-gray-200/60 dark:border-white/5 self-start sm:self-auto">
-            {[
-              { id: "all", label: "All Activity" },
-              { id: "requests", label: "Registrar Requests" },
-              { id: "compliance", label: "Permanent Records" },
-              { id: "osas", label: "OSAS Affairs" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleFilterChange(tab.id)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer",
-                  activityFilter === tab.id
-                    ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-xs"
-                    : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            value={activityFilter}
+            onValueChange={handleFilterChange}
+            variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0 self-start sm:self-auto"
+            items={[
+              { value: "all", label: "All Activity" },
+              { value: "requests", label: "Registrar Requests" },
+              { value: "compliance", label: "Permanent Records" },
+              { value: "osas", label: "OSAS Affairs" },
+            ]}
+          />
         </div>
 
         {/* Full-Width Activity Panel */}

@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { formatBytes } from "@/lib/utils"
 import { Database01Icon, Search01Icon, Download01Icon, Delete01Icon, MoreHorizontalIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon } from "hugeicons-react"
+import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
 import { cn } from "@/lib/utils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -25,6 +26,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export const PLATFORM_BACKUP_COLUMNS = [
   { key: "size", label: "Size", kind: "number" },
   { key: "created", label: "Created", kind: "date" },
+  { key: "actor", label: "Actor", kind: "text", defaultHidden: true },
   { key: "type", label: "Type", kind: "category" },
   { key: "status", label: "Storage status", kind: "status" },
 ]
@@ -114,7 +116,7 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
           <TableHead><input type="checkbox" aria-label="Select all backups on this page" checked={allVisibleSelected} onChange={(event) => onSelectAll(event.target.checked, rows)} disabled={!rows.length} /></TableHead>
           <TableHead aria-sort={sortBy === "filename" ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>{heading("filename", "Backup archive")}</TableHead>
           {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key, label }) => {
-            const sortKey = key === "size" ? "size_bytes" : key === "created" ? "created_at" : key === "type" ? "backup_type" : "status_local"
+            const sortKey = key === "size" ? "size_bytes" : key === "created" ? "created_at" : key === "actor" ? "actor" : key === "type" ? "backup_type" : "status_local"
             return <TableHead key={key} aria-sort={sortBy === sortKey ? (sortOrder === "ASC" ? "ascending" : "descending") : "none"}>{heading(sortKey, label)}</TableHead>
           })}
           <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -129,7 +131,12 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
         title={isFilterActive ? "No matching backups" : "No backups yet"}
         description={isFilterActive ? "Change your search or filters to see other backups." : "Create a platform backup to begin the archive history."}
       >
-        <Button variant="outline" onClick={isFilterActive ? onClearFilters : onCreate}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={isFilterActive ? onClearFilters : onCreate}
+          className="h-9 px-4 text-xs font-semibold rounded-xl"
+        >
           {isFilterActive ? "Reset Filters" : "Create Backup"}
         </Button>
       </EmptyState>}
@@ -142,8 +149,27 @@ export default function PlatformBackupTable({ backups, rows, visibleColumns, sel
     const cells = {
       size: <TableCell key="size" kind="number" className="text-xs text-gray-700 dark:text-zinc-300 tabular-nums">{formatBytes(backup.size_bytes)}</TableCell>,
       created: <TableCell key="created" kind="date" className="text-xs text-gray-600 dark:text-zinc-300 tabular-nums">{formatPHDateTime(backup.created_at)}</TableCell>,
+      actor: (
+        <TableCell key="actor" kind="text" className="text-xs text-gray-700 dark:text-zinc-300">
+          <div className="flex items-center gap-2 min-w-0">
+            <AuditActorAvatar
+              log={{
+                actor: backup.actor || (backup.created_by ? "Administrator" : "System"),
+                actor_id: backup.actor_id || backup.created_by,
+                role: backup.role || "Admin",
+                avatar_filename: backup.avatar_filename,
+              }}
+              className="size-6 border-0"
+              fallbackClassName="text-[9px] font-semibold"
+            />
+            <span className="truncate max-w-[140px] font-medium text-gray-900 dark:text-zinc-100" title={backup.actor}>
+              {backup.actor || (backup.created_by ? "Administrator" : "System")}
+            </span>
+          </div>
+        </TableCell>
+      ),
       type: <TableCell key="type" kind="category" className="text-center text-xs text-gray-700 dark:text-zinc-300">{backup.backup_type || "—"}</TableCell>,
-      status: <TableCell key="status" kind="status"><TableStatus value={backup.status_local || "Pending"} className="text-[11px]" /></TableCell>,
+      status: <TableCell key="status" kind="status"><TableStatus value={backup.status_local || "Pending"} /></TableCell>,
     }
     return <TableRow key={backup.id} selected={selected} onClick={(event) => { if (!event.target.closest("button, input")) onToggle(backup.id) }}>
       <TableCell><input type="checkbox" aria-label={`Select ${backup.filename}`} checked={selected} onChange={() => onToggle(backup.id)} /></TableCell>

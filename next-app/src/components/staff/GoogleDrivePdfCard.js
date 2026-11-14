@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useState, useEffect } from "react";
 
@@ -16,6 +18,8 @@ import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { toast } from "sonner";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Download01Icon, File02Icon, Location01Icon, MoreVerticalIcon, ReloadIcon, ViewIcon } from "hugeicons-react";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
 
 
 function formatFileSize(bytes) {
@@ -38,6 +42,8 @@ export default function GoogleDrivePdfCard({
   onDownload,
   className,
 }) {
+  const { density } = useTablePreferences();
+  const densityClasses = getListDensityClasses(density);
   const docTitle = doc?.doc_type || doc?.original_filename || "Document.pdf";
   const originalFilename = doc?.original_filename || `${docTitle}.pdf`;
   const fileSize = formatFileSize(doc?.size_bytes);
@@ -222,7 +228,11 @@ export default function GoogleDrivePdfCard({
       <div
         onClick={handlePreviewClick}
         className={cn(
-          "group flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-zinc-900/60 hover:bg-[#f0f4f9] dark:hover:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 transition-all shadow-2xs hover:shadow-sm cursor-pointer select-none active:scale-[0.99]",
+          "group flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900/60 hover:bg-[#f0f4f9] dark:hover:bg-zinc-800/80 border border-gray-200/70 dark:border-white/5 transition-all shadow-2xs hover:shadow-sm cursor-pointer select-none active:scale-[0.99]",
+          densityClasses.paddingX,
+          densityClasses.paddingY,
+          densityClasses.gap,
+          densityClasses.minHeight,
           className
         )}
       >
@@ -256,14 +266,11 @@ export default function GoogleDrivePdfCard({
 
           {/* Status Badge */}
           <span
-            className={cn(
-              "text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-              approvalStatus === "Approved"
+            className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", approvalStatus === "Approved"
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                 : approvalStatus === "Declined"
                 ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-            )}
+                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", BADGE_BASE)}
           >
             {approvalStatus}
           </span>
@@ -519,7 +526,7 @@ export default function GoogleDrivePdfCard({
 
         {/* Hover Quick Preview Pill Overlay */}
         <div className="absolute inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center pointer-events-none">
-          <div className="px-3.5 py-1.5 rounded-full bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-lg transform scale-95 group-hover:scale-100 transition-transform duration-150">
+          <div className={cn("bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 transform scale-95 group-hover:scale-100 transition-transform duration-150", BADGE_BASE)}>
             Quick Preview
           </div>
         </div>
@@ -534,14 +541,11 @@ export default function GoogleDrivePdfCard({
         </div>
 
         <span
-          className={cn(
-            "text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-            approvalStatus === "Approved"
+          className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", approvalStatus === "Approved"
               ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
               : approvalStatus === "Declined"
               ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-          )}
+              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", BADGE_BASE)}
         >
           {approvalStatus}
         </span>

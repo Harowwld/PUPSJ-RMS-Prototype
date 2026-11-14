@@ -50,7 +50,7 @@ import ServiceStandardsSheet from "./ServiceStandardsSheet"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import CampusOperationsList from "./CampusOperationsList"
 import {
-  BADGE_BASE,
+  SUPERADMIN_BADGE_BASE as BADGE_BASE,
   BADGE_PALETTES,
   getDepartmentBadgeClass,
   getStatusBadgeClass,
@@ -745,15 +745,6 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={() => setStandardsSheetOpen(true)}
-                className="h-9 shrink-0 px-3 text-xs font-semibold"
-              >
-                Configure Standards
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
                 onClick={handleDownloadCSV}
                 disabled={loading || filteredTransactions.length === 0 || isExporting}
                 className="h-9 shrink-0 px-4 text-xs font-semibold"
@@ -860,9 +851,9 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   { key: "title", label: "Document or proposal" },
                   { key: "details", label: "Organization / details" },
                   { key: "status", label: "Stage status" },
-                  { key: "slaStatus", label: "Citizen's Charter SLA" },
+                  { key: "slaStatus", label: "Citizen's Charter SLA", defaultHidden: true },
                   { key: "submitted", label: "Submitted" },
-                  { key: "updatedAt", label: "Last Updated" },
+                  { key: "updatedAt", label: "Last Updated", defaultHidden: true },
                 ]}
                 visibleColumns={visibleColumns}
                 onVisibleColumnsChange={setVisibleColumns}
@@ -883,8 +874,15 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   {slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
                 </p>
-                <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
-                  {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                    <Tick01Icon size={8} className="stroke-[3]" />
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Standard</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400 tabular-nums">
+                    {slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA
+                  </span>
                 </span>
                 <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal">
                   • {slaStandards?.workingDaysOnly !== false ? "Business Days (Mon–Fri)" : "Consecutive Calendar Days"}
@@ -902,7 +900,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               variant="outline"
               size="sm"
               onClick={() => setStandardsSheetOpen(true)}
-              className="h-9 px-4 text-xs font-semibold rounded-full cursor-pointer"
+              className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer"
             >
               Configure Standards
             </Button>
@@ -964,9 +962,10 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <EmptyContent>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleClearFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 px-5"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>
@@ -988,7 +987,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-                <Table columns={[{ kind: "identifier", width: 120 }, ...visibleTableColumns.map((key) => ({ kind: key === "status" ? "status" : key === "department" ? "category" : (key === "submitted" || key === "updatedAt") ? "date" : "text", width: key === "title" ? 300 : key === "details" ? 250 : key === "requester" ? 220 : key === "status" ? 150 : 160, maxWidth: key === "title" ? 340 : key === "details" ? 300 : undefined })), { kind: "actions" }]} className="min-w-0">
+                <Table columns={[{ kind: "text", width: 120 }, ...visibleTableColumns.map((key) => ({ kind: key === "status" ? "status" : key === "department" ? "category" : (key === "submitted" || key === "updatedAt") ? "date" : "text", width: key === "title" ? 300 : key === "details" ? 250 : key === "requester" ? 220 : key === "status" ? 150 : 160, maxWidth: key === "title" ? 340 : key === "details" ? 300 : undefined })), { kind: "actions" }]} className="min-w-0">
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
@@ -1167,7 +1166,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                             isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                           )}
                         >
-                          <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
+                          <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
                             {formatTransactionId(tx)}
                           </span>
                         </td>
@@ -1411,13 +1410,13 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-sans tabular-nums text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300">
+                <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
                   {formatTransactionId(sheetItem)}
                 </span>
                 <span
                   className={cn(
                     BADGE_BASE,
-                    statusBadgeClass(sheetItem?.status)
+                                      statusBadgeClass(sheetItem?.status)
                   )}
                 >
                   {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
@@ -1465,7 +1464,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <span
                     className={cn(
                       BADGE_BASE,
-                      getDepartmentBadgeClass(sheetItem?.officeId === "registrar")
+                                          getDepartmentBadgeClass(sheetItem?.officeId === "registrar")
                     )}
                   >
                     {sheetItem?.officeId === "registrar" ? "University Registrar" : "Student Affairs (OSAS)"}
@@ -1480,7 +1479,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     <span
                       className={cn(
                         BADGE_BASE,
-                        statusBadgeClass(sheetItem?.status)
+                                              statusBadgeClass(sheetItem?.status)
                       )}
                     >
                       <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
@@ -1499,7 +1498,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     <span
                       className={cn(
                         BADGE_BASE,
-                        sheetItemCharter?.badgeClass
+                                              sheetItemCharter?.badgeClass
                       )}
                     >
                       <span>{sheetItemCharter?.label}</span>
@@ -1629,7 +1628,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenPdfPreview(sheetItem)}
-                    className="shrink-0 h-8 px-3"
+                    className="shrink-0 h-8 px-3 text-xs font-semibold rounded-lg"
                   >
                     {PDF_ACTION_LABELS.preview}
                   </Button>

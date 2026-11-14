@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table, IdentifierBadge } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
@@ -196,8 +198,6 @@ export default function DocumentRequestsTab({
     "student",
     "docType",
     "status",
-    "charter",
-    "targetDate",
     "createdAt",
   ]);
 
@@ -265,8 +265,8 @@ export default function DocumentRequestsTab({
     { key: "student", label: "Requester" },
     { key: "docType", label: "Document Type" },
     { key: "status", label: "Status" },
-    { key: "charter", label: "Processing Time" },
-    { key: "targetDate", label: "Target Date" },
+    { key: "charter", label: "Processing Time", defaultHidden: true },
+    { key: "targetDate", label: "Target Date", defaultHidden: true },
     { key: "createdAt", label: "Date Filed" },
   ], []);
 
@@ -867,23 +867,17 @@ export default function DocumentRequestsTab({
           {required && (
             <div className="flex items-center gap-2 text-[11px] font-medium">
               <span
-                className={cn(
-                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]",
-                  hasSpa
+                className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]", hasSpa
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
-                )}
+                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800", BADGE_BASE)}
               >
                 <AppIcon className={cn("text-[10px]", hasSpa ? " Tick01Icon" : " CircleIcon")} />
                 SPA Letter
               </span>
               <span
-                className={cn(
-                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]",
-                  hasValidId
+                className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]", hasValidId
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
-                )}
+                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800", BADGE_BASE)}
               >
                 <AppIcon className={cn("text-[10px]", hasValidId ? " Tick01Icon" : " CircleIcon")} />
                 Government ID
@@ -1552,25 +1546,22 @@ export default function DocumentRequestsTab({
                                     {formatTitleCase(r.student_name || r.requester_name) || "N/A"}
                                   </span>
                                   <span
-                                    className={cn(
-                                      "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0",
-                                      isParent
+                                    className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0", isParent
                                         ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
                                         : isAlumni
                                         ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                        : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
-                                    )}
+                                        : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30", BADGE_BASE)}
                                   >
                                     {isParent ? "Parent/Guardian" : isAlumni ? "Alumni" : "Student"}
                                   </span>
                                   {r.course_code && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 shrink-0">
+                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 shrink-0", BADGE_BASE)}>
                                       {r.course_code}
                                     </span>
                                   )}
                                   {Number(r.attachment_count) > 0 && (
                                     <span
-                                      className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0 tabular-nums"
+                                      className={cn("inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0 tabular-nums", BADGE_BASE)}
                                       title={`${r.attachment_count} attachment(s)`}
                                     >
                                       {r.attachment_count} att.
@@ -1581,7 +1572,7 @@ export default function DocumentRequestsTab({
                             )}
                             {visibleColumns.includes("docType") && (
                               <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
-                                <div className="inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
+                                <div className={cn("inline-flex max-w-full items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-800 dark:bg-zinc-800 dark:text-zinc-200", BADGE_BASE)}>
                                   <span className="truncate" title={r.doc_type}>
                                     {r.doc_type}
                                   </span>
@@ -1590,7 +1581,7 @@ export default function DocumentRequestsTab({
                             )}
                             {visibleColumns.includes("status") && (
                               <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                                <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}>
+                                <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status), BADGE_BASE)}>
                                   {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
                                 </div>
                               </td>
@@ -1598,10 +1589,10 @@ export default function DocumentRequestsTab({
                             {visibleColumns.includes("charter") && (
                               <td className="py-2.5 px-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass)}>
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0", charter.tier.badgeClass, BADGE_BASE)}>
                                     {charter.tier.shortLabel}
                                   </span>
-                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass)}>
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0", charter.badgeClass, BADGE_BASE)}>
                                     {charter.label}
                                   </span>
                                 </div>
@@ -1644,7 +1635,7 @@ export default function DocumentRequestsTab({
           </div>
 
           {/* 5. Apple HIG Pagination Footer (Table & List views only) */}
-          {viewMode !== "kanban" && (
+          {viewMode !== "kanban" && !loading && total > 0 && rows.length > 0 && (
             <TablePagination label="Document request pages" page={page} pageSize={itemsPerPage} totalCount={total} displayedCount={rows.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
           )}
         </Card>

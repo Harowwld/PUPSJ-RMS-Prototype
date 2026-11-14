@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 
 import { useEffect, useRef, useState, useMemo } from "react"
@@ -399,14 +401,11 @@ export default function RoomMap2D({
 
               return (
                 <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
-                  <div className={cn(
-                    "inline-flex w-fit min-w-0 max-w-full items-center justify-center rounded-full px-[10px] py-[2px] text-[11px] font-medium tracking-[0.04em] shadow-xs border font-sans",
-                    isTarget
+                  <div className={cn("inline-flex w-fit min-w-0 max-w-full items-center justify-center rounded-full px-[10px] py-[2px] text-[11px] font-medium tracking-[0.04em] shadow-xs border font-sans", isTarget
                       ? "text-white"
                       : isSelected
                         ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
-                        : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
-                  )}
+                        : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30", BADGE_BASE)}
                   style={{
                     maxWidth: "12cqw",
                     ...(isTarget ? {

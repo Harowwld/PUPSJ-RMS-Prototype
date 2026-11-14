@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -532,7 +534,7 @@ export default function NotificationsTab({
               <div className="flex items-center gap-2">
                 <span>Notifications</span>
                 {unreadCount > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400">
+                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400", BADGE_BASE)}>
                     {unreadCount} new
                   </span>
                 )}
@@ -584,6 +586,7 @@ export default function NotificationsTab({
               value={activeTab}
               onValueChange={setActiveTab}
               variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
                 {
                   value: "unread",
@@ -679,8 +682,9 @@ export default function NotificationsTab({
                   <EmptyContent>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleClearFilters}
-                      className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>
@@ -748,7 +752,7 @@ export default function NotificationsTab({
                                   {n.title}
                                 </h4>
                                 {isUnread && (
-                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400">
+                                  <span className={cn("inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400", BADGE_BASE)}>
                                     New
                                   </span>
                                 )}
@@ -823,7 +827,7 @@ export default function NotificationsTab({
           )}
 
           {/* 5. Pagination Footer */}
-          {!isLoading && !error && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
+          {!isLoading && !error && total > 0 && items.length > 0 && <TablePagination label="Notification pages" page={displayPage} pageSize={itemsPerPage} totalCount={total} displayedCount={items.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={isLoading} />}
         </Card>
 
         {/* 6. Sliding Detail Sheet */}
@@ -912,10 +916,7 @@ export default function NotificationsTab({
 
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={cn(
-                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
-                            ui.badgeClass
-                          )}
+                          className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border", ui.badgeClass, BADGE_BASE)}
                         >
                           {ui.label}
                         </span>
@@ -982,10 +983,18 @@ export default function NotificationsTab({
                           />
 
                           <InfoRow
-                            icon=" UserCircleIcon"
+                            icon="UserCircleIcon"
                             label="Triggered By"
-                            value={formatTitleCase(selectedNotif.actor_name) || "System Automated"}
-                          />
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span>{formatTitleCase(selectedNotif.actor_name) || "System Automated"}</span>
+                              {selectedNotif.actor_id && (
+                                <span className="font-sans text-[10px] text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 px-1 rounded tabular-nums">
+                                  {selectedNotif.actor_id}
+                                </span>
+                              )}
+                            </div>
+                          </InfoRow>
 
                           <InfoRow
                             icon=" Calendar01Icon"
@@ -996,12 +1005,9 @@ export default function NotificationsTab({
                           <InfoRow icon=" Mail01Icon" label="Read Status">
                             <div className="flex items-center gap-2">
                               <span
-                                className={cn(
-                                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
-                                  selectedNotif.is_read
+                                className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold", selectedNotif.is_read
                                     ? "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
-                                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50"
-                                )}
+                                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50", BADGE_BASE)}
                               >
                                 {selectedNotif.is_read ? "Read" : "Unread"}
                               </span>

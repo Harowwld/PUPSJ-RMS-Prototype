@@ -709,9 +709,10 @@ export default function StudentComplianceTab({ authUser }) {
                   <EmptyContent>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={clearAllFilters}
                       title="Reset Filters"
-                      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                      className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
                       Reset Filters
                     </Button>

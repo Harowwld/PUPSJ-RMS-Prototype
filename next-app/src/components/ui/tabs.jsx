@@ -52,6 +52,7 @@ const tabsListVariants = cva(
         default: "gap-1",
         sm: "gap-0.5 p-0.5 text-xs",
         lg: "gap-1.5 p-1.5 text-sm",
+        capsule: "gap-1",
       },
     },
     defaultVariants: {
@@ -100,7 +101,7 @@ const tabsTriggerVariants = cva(
         default: "h-8 px-3.5 py-1 text-xs sm:text-[13px] rounded-[9px]",
         sm: "h-7 px-2.5 py-0.5 text-xs rounded-md",
         lg: "h-9 px-4 py-1.5 text-sm rounded-lg",
-        capsule: "px-3.5 py-1 text-xs rounded-full",
+        capsule: "h-7 px-3.5 text-xs rounded-full",
       },
     },
     defaultVariants: {
@@ -204,10 +205,11 @@ function SegmentedControl({
   value,
   onValueChange,
   items = [],
-  variant = "segmented",
+  variant = "capsule",
   size: sizeProp,
   className,
   pillClassName,
+  badgeClassName,
   ...props
 }) {
   const resolvedSize = sizeProp || (variant === "capsule" ? "capsule" : "default");
@@ -230,7 +232,14 @@ function SegmentedControl({
             {item.icon && <span className="shrink-0">{item.icon}</span>}
             <span>{item.label}</span>
             {item.badge !== undefined && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/10 tabular-nums">
+              <span
+                className={cn(
+                  "ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold tabular-nums leading-none shrink-0 border-0 shadow-none",
+                  "bg-black/[0.06] text-gray-700 dark:bg-white/15 dark:text-zinc-200",
+                  badgeClassName,
+                  item.badgeClassName
+                )}
+              >
                 {item.badge}
               </span>
             )}

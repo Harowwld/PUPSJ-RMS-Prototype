@@ -1484,14 +1484,11 @@ export default function OSASOrganizationComplianceView({
                                   {score}%
                                 </span>
                                             <span
-                                  className={cn(
-                                    BADGE_BASE,
-                                    isFullyCompliant
+                                  className={cn(isFullyCompliant
                                       ? BADGE_PALETTES.emerald
                                       : isPartiallyCompliant
                                       ? BADGE_PALETTES.amber
-                                      : BADGE_PALETTES.rose
-                                  )}
+                                      : BADGE_PALETTES.rose, BADGE_BASE)}
                                 >
                                   {org.complianceStatus}
                                 </span>
@@ -1534,9 +1531,10 @@ export default function OSASOrganizationComplianceView({
                         <Button
                           type="button"
                           variant="outline"
+                          size="sm"
                           onClick={handleResetFilters}
                           title="Reset Filters"
-                          className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl"
                         >
                           Reset Filters
                         </Button>
@@ -1549,7 +1547,9 @@ export default function OSASOrganizationComplianceView({
           </div>
 
           {/* 6. Standard Table Pagination Footer */}
-          <TablePagination label="Organization compliance pages" page={page} pageSize={pageSize} totalCount={sortedOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+          {!loading && sortedOrganizations.length > 0 && (
+            <TablePagination label="Organization compliance pages" page={page} pageSize={pageSize} totalCount={sortedOrganizations.length} displayedCount={paginatedOrganizations.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+          )}
         </Card>
 
         {/* Authorized Officers Slide-Over Sheet */}
@@ -1704,7 +1704,7 @@ export default function OSASOrganizationComplianceView({
                   />
 
                   <InfoRow icon="PieChartIcon" label="Accreditation Status">
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                    <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
                       {selectedOrgForOfficers?.status || "Active"}
                     </span>
                   </InfoRow>
@@ -1804,10 +1804,7 @@ export default function OSASOrganizationComplianceView({
                                   {officer.name}
                                 </h5>
                                 <span
-                                  className={cn(
-                                    BADGE_BASE,
-                                    roleStyle.badge
-                                  )}
+                                  className={cn(roleStyle.badge, BADGE_BASE)}
                                 >
                                   {officer.position}
                                 </span>

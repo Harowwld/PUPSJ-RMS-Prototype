@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import React, { useState, useRef, useEffect } from "react"
 import { Reorder } from "framer-motion"
@@ -94,11 +96,11 @@ export default function SlaKpiCards({
                       {frameworkLabel}
                     </span>
                     {activeOverdue > 0 ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 w-fit">
+                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 w-fit", BADGE_BASE)}>
                         {activeOverdue} Past Due
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 w-fit">
+                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 w-fit", BADGE_BASE)}>
                         {hasCompletedRequests && charterComplianceRate != null
                           ? `${charterComplianceRate}% completed on time`
                           : "No completed requests"}
@@ -255,7 +257,7 @@ export default function SlaKpiCards({
                       Client Satisfaction
                     </span>
                     {hasResponses ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 w-fit">
+                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 w-fit", BADGE_BASE)}>
                         {isNaN(feedback.satisfactionRate) ? 0 : feedback.satisfactionRate}% Positive ({feedback.totalResponses})
                       </span>
                     ) : (
@@ -352,7 +354,7 @@ export default function SlaKpiCards({
                             {feedback.topAspects.slice(0, 4).map((aspect) => (
                               <span
                                 key={aspect.tag}
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30"
+                                className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30", BADGE_BASE)}
                               >
                                 {aspect.label} ({aspect.percentage}%)
                               </span>

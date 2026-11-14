@@ -17,7 +17,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { EmptyState } from "@/components/ui/empty";
 import { UserGroupIcon, LayoutGridIcon, Building01Icon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
@@ -295,7 +295,7 @@ export default function OfficeDetailSheet({
                   <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
                     {displayOffice.short_name}
                   </span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-xs")}>
+                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
                     #{displayOffice.id}
                   </span>
                 </div>
@@ -545,7 +545,7 @@ export default function OfficeDetailSheet({
                   Assigned Personnel Roster
                 </h3>
               </div>
-              <Badge variant="outline" className="text-[11px] font-sans tabular-nums px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
+              <Badge variant="outline" className={cn(BADGE_BASE, "font-sans tabular-nums text-gray-600 dark:text-zinc-300")}>
                 {staffLoading ? "..." : `${staffList.length} Staff`}
               </Badge>
             </div>
@@ -596,7 +596,7 @@ export default function OfficeDetailSheet({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0 ml-2">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums text-[10px]")}>
+                        <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums")}>
                           {staff.id}
                         </span>
                       </div>
@@ -613,13 +613,14 @@ export default function OfficeDetailSheet({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     window.dispatchEvent(
                       new CustomEvent("switch-view", { detail: { view: "staff", officeId: displayOffice.id } })
                     );
                     handleClose();
                   }}
-                  className="w-full h-9 mt-2"
+                  className="w-full h-9 mt-2 text-xs font-semibold rounded-xl"
                 >
                   Manage All Staff in Global Directory
                 </Button>
@@ -643,7 +644,7 @@ export default function OfficeDetailSheet({
                   Department Workspace Modules
                 </h3>
               </div>
-              <Badge variant="outline" className="text-[11px] font-sans tabular-nums px-2 py-0.5 rounded-full border-border dark:border-border text-gray-600 dark:text-zinc-300">
+              <Badge variant="outline" className={cn(BADGE_BASE, "font-sans tabular-nums text-gray-600 dark:text-zinc-300")}>
                 {modulesLoading ? "..." : `${enabledModules.length} Active`}
               </Badge>
             </div>
@@ -672,7 +673,7 @@ export default function OfficeDetailSheet({
                         </span>
                       </div>
                       {mod.is_system && (
-                        <span className="text-[9px] font-sans tabular-nums px-2 py-0.5 rounded-full bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 uppercase shrink-0">
+                        <span className={cn(BADGE_BASE, "font-sans tabular-nums bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300")}>
                           Core
                         </span>
                       )}
@@ -683,13 +684,14 @@ export default function OfficeDetailSheet({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     window.dispatchEvent(
                       new CustomEvent("switch-view", { detail: { view: "modules", officeId: displayOffice.id } })
                     );
                     handleClose();
                   }}
-                  className="w-full h-9 mt-2"
+                  className="w-full h-9 mt-2 text-xs font-semibold rounded-xl"
                 >
                   Configure Feature Matrix
                 </Button>

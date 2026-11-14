@@ -83,7 +83,10 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   const cleanEmail = String(rawId).trim().toLowerCase();
   const select = `SELECT sa.id, sa.student_no, sa.password_hash, sa.status,
                          sip.email, sip.first_name, sip.middle_name, sip.last_name,
-                         sip.client_type, COALESCE(sip.display_name, s.name) AS name
+                         sip.client_type, COALESCE(sip.display_name, s.name) AS name,
+                         s.status AS student_status,
+                         EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
+                         EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office
                     FROM student_accounts sa
                     JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
                     LEFT JOIN students s ON s.student_no = sa.student_no`;
@@ -102,7 +105,9 @@ export async function authenticateStudent({ studentNo, username, email, identifi
       );
   if (matchingAccounts.length !== 1) return null;
   const row = decryptStudentRow(matchingAccounts[0]);
-  if (!row || String(row.status).toLowerCase() !== "active") return null;
+  if (!row || String(row.status).toLowerCase() !== "active" ||
+      (row.student_status && String(row.student_status).toLowerCase() !== "active") ||
+      (row.has_archived_office && !row.has_active_office)) return null;
   let verification = verifyPasswordHash(password, row.password_hash);
   const isDemoStudent = cleanEmail === "student@pup.local" ||
                         cleanEmail === "test.student@pup.local" ||
@@ -162,7 +167,9 @@ export async function getStudentSession(req) {
     if (payload?.role !== "Student" || !(await isSessionActive(payload))) return null;
 
     const sessionAccountSelect = `SELECT sa.id, sa.student_no, sip.email, sa.status AS account_status,
-                                         s.status AS student_status
+                                         s.status AS student_status,
+                                         EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
+                                         EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office
                                     FROM student_accounts sa
                                     JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
                                     LEFT JOIN students s ON s.student_no = sa.student_no`;
@@ -191,6 +198,7 @@ export async function getStudentSession(req) {
 
     if (!account || String(account.account_status).toLowerCase() !== "active") return null;
     if (account.student_status && String(account.student_status).toLowerCase() !== "active") return null;
+    if (account.has_archived_office && !account.has_active_office) return null;
 
     const decryptedAccount = decryptStudentRow(account);
     return {

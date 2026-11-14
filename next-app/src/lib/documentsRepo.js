@@ -365,6 +365,17 @@ export async function listDocuments({
   return (rows || []).map(decryptDocumentRow);
 }
 
+export async function countPendingDocuments({ officeId } = {}) {
+  const filters = ["approval_status = 'Pending'"];
+  const params = [];
+  if (officeId) {
+    filters.push("office_id = ?");
+    params.push(officeId);
+  }
+  const row = await dbGet(`SELECT COUNT(*)::int AS count FROM documents WHERE ${filters.join(" AND ")}`, params);
+  return Number(row?.count || 0);
+}
+
 export async function getDocumentById(id, { officeId } = {}) {
   await ensureReviewColumns();
   const filters = ["d.id = ?"];
@@ -589,16 +600,27 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
   const updated = await getDocumentById(id, { officeId: scopedOfficeId });
   if (updated && ["Approved", "Declined"].includes(approvalStatus)) {
     try {
+      let reviewerDisplayName = "Admin";
+      if (reviewedBy) {
+        const { getStaffById, getStaffFullName } = await import("./staffRepo.js");
+        const staffMember = await getStaffById(reviewedBy);
+        if (staffMember) {
+          reviewerDisplayName = getStaffFullName(staffMember) || reviewedBy;
+        } else {
+          reviewerDisplayName = reviewedBy;
+        }
+      }
       const { createNotification } = await import("./notificationsRepo.js");
       await createNotification({
         officeId: scopedOfficeId,
         type: "document_review",
         title: approvalStatus === "Approved" ? `Document Approved: ${updated.doc_type}` : `Document Declined: ${updated.doc_type}`,
         message: approvalStatus === "Approved"
-          ? `${reviewedBy || "Admin"} approved ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})`
-          : `${reviewedBy || "Admin"} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
+          ? `${reviewerDisplayName} approved ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})`
+          : `${reviewerDisplayName} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
         severity: approvalStatus === "Approved" ? "success" : "error",
-        actorName: reviewedBy || "Admin",
+        actorName: reviewerDisplayName,
+        actorId: reviewedBy || null,
         entityType: "document",
         entityId: id,
         metadata: {
@@ -609,6 +631,7 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
           original_filename: updated.original_filename,
           approval_status: approvalStatus,
           reviewed_by: reviewedBy,
+          reviewer_name: reviewerDisplayName,
           reviewed_at: updated.reviewed_at,
           review_note: reviewNote,
           is_previewed: updated.is_previewed,
@@ -643,14 +666,25 @@ export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote 
   const updated = await getDocumentById(id, { officeId: scopedOfficeId });
   if (updated) {
     try {
+      let reviewerDisplayName = "Admin";
+      if (reviewedBy) {
+        const { getStaffById, getStaffFullName } = await import("./staffRepo.js");
+        const staffMember = await getStaffById(reviewedBy);
+        if (staffMember) {
+          reviewerDisplayName = getStaffFullName(staffMember) || reviewedBy;
+        } else {
+          reviewerDisplayName = reviewedBy;
+        }
+      }
       const { createNotification } = await import("./notificationsRepo.js");
       await createNotification({
         officeId: scopedOfficeId,
         type: "document_review",
         title: `Document Declined: ${updated.doc_type}`,
-        message: `${reviewedBy || "Admin"} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
+        message: `${reviewerDisplayName} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
         severity: "error",
-        actorName: reviewedBy || "Admin",
+        actorName: reviewerDisplayName,
+        actorId: reviewedBy || null,
         entityType: "document",
         entityId: id,
         metadata: {
@@ -661,6 +695,7 @@ export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote 
           original_filename: updated.original_filename,
           approval_status: "Declined",
           reviewed_by: reviewedBy,
+          reviewer_name: reviewerDisplayName,
           reviewed_at: updated.reviewed_at,
           review_note: reviewNote,
           is_previewed: updated.is_previewed,

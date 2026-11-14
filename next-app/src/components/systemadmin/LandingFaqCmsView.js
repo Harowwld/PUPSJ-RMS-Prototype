@@ -1,4 +1,6 @@
 "use client"
+
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Textarea } from "@/components/ui/textarea";
@@ -523,7 +525,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
                             {item.q || "Untitled Question"}
                           </span>
-                          <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-200/80 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0">
+                          <span className={cn(BADGE_BASE, "hidden sm:inline-block bg-gray-200/80 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400")}>
                             {item.category || "General"}
                           </span>
                         </div>

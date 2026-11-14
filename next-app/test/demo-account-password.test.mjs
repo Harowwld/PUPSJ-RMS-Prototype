@@ -22,7 +22,7 @@ function dependencies(staff, staleFlag = false) {
     isDemoAccount, verifyPasswordHash,
     getStaffById: async () => staff, getStaffByUsername: async () => staff, touchStaffLastActiveById: async () => staff,
     hasAllSecurityAnswers: async () => false, authDebug() {}, query: async () => [], queryOne: async () => staff,
-    getStaffDisplayName: () => "Test Account",
+    getStaffFullName: () => "Test Account",
     checkAuthLoginRateLimit: async () => ({ allowed: true }), checkAuth2FARateLimit: async () => ({ allowed: true }),
     resetAuthLoginRateLimit: noop, resetAuth2FARateLimit: noop,
     LoginSchema: { safeParse: (data) => ({ success: true, data }) }, isStaffOfficeActive: async () => true,

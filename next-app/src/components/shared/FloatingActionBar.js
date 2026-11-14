@@ -1,4 +1,5 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles"
 
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
@@ -413,7 +414,7 @@ export default function FloatingActionBar({
           >
             {/* Left Zone: Apple-style Token Pill with Counter & Plain Entity Label */}
             <div className="flex items-center gap-2 shrink-0">
-              <span className="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-1.5 text-xs font-semibold tabular-nums text-gray-800 dark:text-zinc-200">
+              <span className={cn("bg-gray-100 dark:bg-zinc-800 tabular-nums text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                 {count}
               </span>
               <span className="text-xs font-medium text-gray-800 dark:text-zinc-100 whitespace-nowrap">

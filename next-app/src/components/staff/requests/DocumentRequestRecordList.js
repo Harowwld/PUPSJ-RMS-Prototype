@@ -1,10 +1,14 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useTablePreferences } from "@/components/shared/TablePreferences";
+import { getListDensityClasses } from "@/lib/tablePresentation";
 import {
   ArrowDown01Icon,
   Attachment01Icon,
@@ -30,6 +34,8 @@ export default function DocumentRequestRecordList({
   slaStandards = null,
   statusBadgeClass,
 }) {
+  const { density } = useTablePreferences();
+  const densityClasses = getListDensityClasses(density);
   const [collapsedGroups, setCollapsedGroups] = useState({});
 
   const toggleGroup = (key) => {
@@ -128,7 +134,7 @@ export default function DocumentRequestRecordList({
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                     {group.label}
                   </span>
-                  <span className="rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300">
+                  <span className={cn("rounded-full bg-black/5 dark:bg-white/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-zinc-300", BADGE_BASE)}>
                     {group.items.length}
                   </span>
                 </button>
@@ -151,7 +157,13 @@ export default function DocumentRequestRecordList({
                       key={item.id}
                       role="listitem"
                       onClick={() => onSelect?.(item.id)}
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer sm:px-6"
+                      className={cn(
+                        "group flex flex-col sm:flex-row sm:items-center justify-between transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer",
+                        densityClasses.paddingX,
+                        densityClasses.paddingY,
+                        densityClasses.gap,
+                        densityClasses.minHeight
+                      )}
                     >
                       {/* Left: Request Identity & Metadata */}
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -171,14 +183,11 @@ export default function DocumentRequestRecordList({
                           )}
 
                           <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
-                              isParent
+                            className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0", isParent
                                 ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/40"
                                 : isAlumni
                                 ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/30"
-                                : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30"
-                            )}
+                                : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30", BADGE_BASE)}
                           >
                             {isParent ? "Parent/Guardian" : isAlumni ? "Alumni" : "Student"}
                           </span>
@@ -207,24 +216,24 @@ export default function DocumentRequestRecordList({
                           )}
 
                           {item.course_code && (
-                            <span className="rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.2 text-[10px] font-semibold text-gray-700 dark:text-zinc-300">
+                            <span className={cn("rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.2 text-[10px] font-semibold text-gray-700 dark:text-zinc-300", BADGE_BASE)}>
                               {item.course_code}
                             </span>
                           )}
 
                           <span className="text-gray-300 dark:text-zinc-600">·</span>
 
-                          <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200">
+                          <span className={cn("inline-flex items-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                             {item.doc_type}
                           </span>
 
                           <span className="text-gray-300 dark:text-zinc-600">·</span>
 
                           <div className="inline-flex items-center gap-1.5">
-                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap", charter.tier.badgeClass)}>
+                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap", charter.tier.badgeClass, BADGE_BASE)}>
                               {charter.tier.shortLabel}
                             </span>
-                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap", charter.badgeClass)}>
+                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap", charter.badgeClass, BADGE_BASE)}>
                               <Clock01Icon size="1em" className="text-[10px] mr-1" />
                               {charter.label}
                             </span>
@@ -236,10 +245,7 @@ export default function DocumentRequestRecordList({
                       <div className="flex shrink-0 items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0">
                         <div className="flex flex-col items-start sm:items-end gap-1">
                           <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap select-none",
-                              badgeStyle
-                            )}
+                            className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap select-none", badgeStyle, BADGE_BASE)}
                           >
                             {item.status === "InProgress"
                               ? "In Progress"

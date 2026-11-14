@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -673,14 +675,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                               </span>
                             </div>
                             <div className="mt-2 flex items-center justify-between gap-1 text-[11px]">
-                              <span className={cn(
-                                "rounded-full px-2 py-0.5 font-medium text-[10px]",
-                                row.review_status === "Confirmed"
+                              <span className={cn("rounded-full px-2 py-0.5 font-medium text-[10px]", row.review_status === "Confirmed"
                                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
                                   : row.review_status === "Failed"
                                   ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                                  : "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
-                              )}>
+                                  : "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300", BADGE_BASE)}>
                                 {row.review_status || "Needs Review"}
                               </span>
                             </div>
@@ -703,14 +702,11 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   {selected?.original_filename || "Document Inspector"}
                 </h3>
                 {selected && (
-                  <span className={cn(
-                    "rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
-                    selected.review_status === "Confirmed"
+                  <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-semibold", selected.review_status === "Confirmed"
                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
                       : selected.review_status === "Failed"
                       ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                      : "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
-                  )}>
+                      : "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300", BADGE_BASE)}>
                     {selected.review_status || "Needs Review"}
                   </span>
                 )}

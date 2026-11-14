@@ -764,12 +764,9 @@ export default function DocumentsTab({
                   >
                     <span>All Students</span>
                     <span
-                      className={cn(
-                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                        matrixStatusFilter === "all"
+                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "all"
                           ? "bg-gray-200 text-gray-800 dark:bg-zinc-600 dark:text-zinc-200"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                      )}
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
                     >
                       {kpiStats.totalStudents}
                     </span>
@@ -790,12 +787,9 @@ export default function DocumentsTab({
                   >
                     <span>Incomplete / Missing</span>
                     <span
-                      className={cn(
-                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                        matrixStatusFilter === "incomplete"
+                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "incomplete"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                      )}
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
                     >
                       {kpiStats.incomplete}
                     </span>
@@ -816,12 +810,9 @@ export default function DocumentsTab({
                   >
                     <span>Fully Compliant</span>
                     <span
-                      className={cn(
-                        "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                        matrixStatusFilter === "compliant"
+                      className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", matrixStatusFilter === "compliant"
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                      )}
+                          : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
                     >
                       {kpiStats.fullyCompliant}
                     </span>
@@ -916,9 +907,10 @@ export default function DocumentsTab({
                         <Button
                           type="button"
                           variant="outline"
+                          size="sm"
                           onClick={handleClearMatrixFilters}
                           title="Reset Filters"
-                          className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                          className="h-9 px-4 text-xs font-semibold rounded-xl"
                         >
                           Reset Filters
                         </Button>
@@ -1172,7 +1164,9 @@ export default function DocumentsTab({
                 )}
 
                 {/* Matrix Pagination */}
-                <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
+                {!docsLoading && matrixTotal > 0 && paginatedMatrixRecords.length > 0 && (
+                  <TablePagination label="Student document matrix pages" page={matrixPage} pageSize={matrixItemsPerPage} totalCount={matrixTotal} displayedCount={paginatedMatrixRecords.length} onPageChange={setMatrixPage} onPageSizeChange={setMatrixItemsPerPage} loading={docsLoading} />
+                )}
               </div>
         </Card>
 
@@ -1284,7 +1278,7 @@ export default function DocumentsTab({
                         Document Category
                       </label>
                       <div className="mt-1.5">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon, "gap-1.5")}>
+                        <span className={cn(BADGE_PALETTES.maroon, "gap-1.5", BADGE_BASE)}>
                           <File01Icon size="1em" className="text-[11px]" />
                           {selectedDoc?.doc_type}
                         </span>
@@ -1305,18 +1299,18 @@ export default function DocumentsTab({
                       <div className="mt-1.5">
                         {selectedDoc?.status === "uploaded" ? (
                           selectedDoc.verificationStatus === "unverified" ? (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
+                            <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50", BADGE_BASE)}>
                               <Alert01Icon size="1em" className="text-[11px]" />
                               Unverified
                             </div>
                           ) : (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
+                            <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50", BADGE_BASE)}>
                               <CheckmarkCircle01Icon size="1em" className="text-[11px]" />
                               Uploaded
                             </div>
                           )
                         ) : (
-                          <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
+                          <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50", BADGE_BASE)}>
                             <CancelCircleIcon size="1em" className="text-[11px]" />
                             Missing
                           </div>

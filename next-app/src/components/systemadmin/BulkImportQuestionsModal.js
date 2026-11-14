@@ -386,6 +386,7 @@ export default function BulkImportQuestionsModal({
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       fileInputRef.current?.click();
@@ -432,8 +433,9 @@ export default function BulkImportQuestionsModal({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-8 px-3 shrink-0"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl shrink-0"
                 >
                   Change File
                 </Button>
@@ -528,8 +530,9 @@ export default function BulkImportQuestionsModal({
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={handleAddRow}
-                  className="w-full h-9"
+                  className="w-full h-9 text-xs font-semibold rounded-xl"
                 >
                   Add Row
                 </Button>

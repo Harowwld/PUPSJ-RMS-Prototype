@@ -127,9 +127,17 @@ export default function RestoreModal({
         </DialogHeader>
 
         {/* Content Body */}
-        {mode === "overwrite" && <NoticeBanner tone="warning">
-          <span className="font-semibold">Destructive Action:</span> Live records in this partition will be permanently overwritten. Any new records created after this snapshot was taken will be lost.
-        </NoticeBanner>}
+        <NoticeBanner tone={mode === "overwrite" ? "warning" : "success"} className="mt-4">
+          {mode === "overwrite" ? (
+            <>
+              <span className="font-semibold">Destructive Action:</span> Live records in this partition will be permanently overwritten. Any new records created after this snapshot was taken will be lost.
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">Safe Merge Active:</span> Existing live records will be preserved. Only missing records and files from this snapshot will be restored.
+            </>
+          )}
+        </NoticeBanner>
         <div className="p-6 space-y-4">
           {/* File Summary Badge */}
           <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border/80 bg-gray-50/70 dark:border-border dark:bg-zinc-900/40">
@@ -164,7 +172,7 @@ export default function RestoreModal({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold">Safe Merge</span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                  <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
                     Recommended
                   </span>
                 </div>
@@ -185,7 +193,7 @@ export default function RestoreModal({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold">Full Overwrite</span>
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.rose, "text-[10px]")}>
+                  <span className={cn(BADGE_PALETTES.rose, "text-[10px]", BADGE_BASE)}>
                     Disaster Rollback
                   </span>
                 </div>
@@ -265,20 +273,20 @@ export default function RestoreModal({
                             <td className="py-2.5 px-3.5 pr-4 text-right whitespace-nowrap">
                               {isSafeMerge ? (
                                 delta > 0 ? (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "text-[10px]")}>
+                                  <span className={cn(BADGE_PALETTES.emerald, "text-[10px]", BADGE_BASE)}>
                                     +{delta} missing restored
                                   </span>
                                 ) : (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "text-[10px]")}>
+                                  <span className={cn(BADGE_PALETTES.gray, "text-[10px]", BADGE_BASE)}>
                                     {t.liveRows} preserved
                                   </span>
                                 )
                               ) : delta < 0 ? (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.rose, "text-[10px]")}>
+                                <span className={cn(BADGE_PALETTES.rose, "text-[10px]", BADGE_BASE)}>
                                   {Math.abs(delta)} modern erased
                                 </span>
                               ) : (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "text-[10px]")}>
+                                <span className={cn(BADGE_PALETTES.blue, "text-[10px]", BADGE_BASE)}>
                                   {t.backupRows} restored
                                 </span>
                               )}

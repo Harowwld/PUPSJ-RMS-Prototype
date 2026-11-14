@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, getRefreshCookieName } from "../../../../lib/jwt";
 import { getLogoutPayload } from "@/lib/refreshSessions";
-import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { getStudentAuditName, writeAuditLog } from "../../../../lib/auditLogRequest";
 import { authDebug } from "@/lib/authDebug";
 import { revokeSession } from "@/lib/authSessions";
 import { isAllowedOrigin } from "@/lib/csrfProtection";
 import { shouldUseSecureCookie, clearAuthCookies } from "@/lib/cookieSecurity";
+import { getStaffById, getStaffFullName } from "@/lib/staffRepo";
 
 export const runtime = "nodejs";
 
@@ -41,17 +42,22 @@ export async function POST(req) {
 
       if (isStudent) {
         const studentIdentifier = payload?.student_no || username || userId;
+        const studentName = await getStudentAuditName(payload?.account_id || userId, payload?.student_no);
         await writeAuditLog(req, `Student Logout`, {
-          details: `student '${studentIdentifier}' successfully terminated system session and secure credentials`,
-          actor: studentIdentifier,
+          details: `student '${studentName || studentIdentifier}' successfully terminated system session and secure credentials`,
+          actor: studentName || studentIdentifier,
+          actor_id: payload?.student_no || payload?.account_id || userId,
           role: "Student",
           entity_type: "student_account",
           entity_id: studentIdentifier,
         });
       } else if (userId && userId !== "admin") {
         authDebug("logout.session_ended", { staffId: userId });
+        const staff = await getStaffById(userId).catch(() => null);
+        const staffName = staff ? getStaffFullName(staff) : userId;
         await writeAuditLog(req, `User Logout`, { 
-          details: `personnel '${username || userId}' successfully terminated system session and secure credentials`,
+          details: `personnel '${staffName}' successfully terminated system session and secure credentials`,
+          actor_id: userId,
           role: payload?.role || "Staff",
           officeId: payload?.office_id || null,
           entity_type: "User",

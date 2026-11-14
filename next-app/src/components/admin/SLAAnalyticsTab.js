@@ -515,6 +515,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             value={previewReportType}
             onValueChange={handleSwitchPreviewReport}
             variant="capsule"
+            className="inline-grid grid-flow-col auto-cols-fr shrink-0"
             items={[
               { value: "sla", label: "On-Time Processing" },
               { value: "csm", label: "Client Ratings (CSM)" },

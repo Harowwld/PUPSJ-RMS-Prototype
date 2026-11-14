@@ -47,26 +47,30 @@ export default function NoticeBanner({ children, tone = "info", action, dismissK
             shouldReduceMotion ? "" : "transition-none"
           )}
         >
-          <div className={cn("flex w-full items-start gap-3 border-y px-5 py-2.5 text-xs leading-relaxed sm:px-6", tones[tone] ?? tones.info, className)} {...props}>
-            <Icon size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+          <div className={cn("flex w-full items-center gap-3 border-y px-5 py-2.5 text-xs leading-normal sm:px-6", tones[tone] ?? tones.info, className)} {...props}>
+            <Icon size={16} aria-hidden="true" className="shrink-0" />
             <div className="min-w-0 flex-1 break-words font-medium">{children}</div>
-            {action && <div className="shrink-0">{action}</div>}
-            {(dismissKey || onDismiss) && (
-              <button
-                type="button"
-                aria-label="Dismiss notice"
-                className="flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-black/8 active:scale-95 transition-all focus-visible:outline-2 focus-visible:outline-current dark:hover:bg-white/15"
-                onClick={() => {
-                  setDismissed(true);
-                  if (dismissKey) {
-                    try { sessionStorage.setItem(`notice:${dismissKey}`, "dismissed"); } catch { /* Keep local dismissal when storage is unavailable. */ }
-                    window.dispatchEvent(new Event("notice-dismissed"));
-                  }
-                  onDismiss?.();
-                }}
-              >
-                <Cancel01Icon size={14} aria-hidden="true" />
-              </button>
+            {(action || dismissKey || onDismiss) && (
+              <div className="-my-1 flex shrink-0 items-center gap-2">
+                {action && <div className="shrink-0">{action}</div>}
+                {(dismissKey || onDismiss) && (
+                  <button
+                    type="button"
+                    aria-label="Dismiss notice"
+                    className="flex size-6.5 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-black/8 active:scale-95 transition-all focus-visible:outline-2 focus-visible:outline-current dark:hover:bg-white/15"
+                    onClick={() => {
+                      setDismissed(true);
+                      if (dismissKey) {
+                        try { sessionStorage.setItem(`notice:${dismissKey}`, "dismissed"); } catch { /* Keep local dismissal when storage is unavailable. */ }
+                        window.dispatchEvent(new Event("notice-dismissed"));
+                      }
+                      onDismiss?.();
+                    }}
+                  >
+                    <Cancel01Icon size={14} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </motion.div>

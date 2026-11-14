@@ -285,10 +285,7 @@ export default function DocumentRequestDetailSheet({
                     </Button>
                   )}
                   <span
-                    className={cn(
-                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0",
-                      getRequestStatusBadgeClass(detail.status)
-                    )}
+                    className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
                   >
                     {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                   </span>
@@ -381,11 +378,11 @@ export default function DocumentRequestDetailSheet({
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                            <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
                               SPA Verified
                             </span>
                           ) : (
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                            <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
                               Verification Pending
                             </span>
                           )}
@@ -443,7 +440,7 @@ export default function DocumentRequestDetailSheet({
                           <span className="font-semibold text-gray-900 dark:text-zinc-100">
                             {charter.deadlineFormatted}
                           </span>
-                          <span className={cn(BADGE_BASE, charter.badgeClass)}>
+                          <span className={cn(charter.badgeClass, BADGE_BASE)}>
                             {charter.label}
                           </span>
                         </div>
@@ -453,7 +450,7 @@ export default function DocumentRequestDetailSheet({
                         icon=" DashboardSpeed01Icon"
                         label="Service Standard"
                       >
-                        <span className={cn(BADGE_BASE, charter.tier.badgeClass)}>
+                        <span className={cn(charter.tier.badgeClass, BADGE_BASE)}>
                           {charter.tier.name} ({charter.tier.days} {slaStandards?.workingDaysOnly !== false ? "working days" : "calendar days"})
                         </span>
                       </InfoRow>
@@ -490,10 +487,7 @@ export default function DocumentRequestDetailSheet({
                     label="Current Status"
                   >
                     <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                        getRequestStatusBadgeClass(detail.status)
-                      )}
+                      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
                     >
                       {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
                     </span>
@@ -696,8 +690,13 @@ export default function DocumentRequestDetailSheet({
                             {u.message}
                           </p>
                         )}
-                        <div className="text-[10px] text-gray-400 dark:text-zinc-500">
-                          By {u.actor_name || "Staff"}
+                        <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
+                          <span>By {u.actor_name || "Staff"}</span>
+                          {u.actor_id && (
+                            <span className="font-sans tabular-nums text-[9px] px-1.5 py-0.2 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
+                              {u.actor_id}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}

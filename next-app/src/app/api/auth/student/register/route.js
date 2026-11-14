@@ -17,7 +17,14 @@ export async function POST(req) {
       accountId: student.student_no,
       username: student.email,
     });
-    await writeGlobalAuditLog(req, "Student account registered", { actor: student.student_no || student.email, role: "Student", details: "Created Student ODRS account", entity_type: "student_account", entity_id: String(student.id) });
+    await writeGlobalAuditLog(req, "Student account registered", {
+      actor: student.name || student.student_no || String(student.id),
+      actor_id: student.student_no || String(student.id),
+      role: "Student",
+      details: "Created Student ODRS account",
+      entity_type: "student_account",
+      entity_id: String(student.id),
+    });
     const token = await createStudentSession(student);
     return setStudentSessionCookie(NextResponse.json({
       ok: true,

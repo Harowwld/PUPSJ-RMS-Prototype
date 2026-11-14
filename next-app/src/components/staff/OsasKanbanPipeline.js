@@ -1,4 +1,5 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -251,7 +252,7 @@ export default function OsasKanbanPipeline({
                       </div>
                     </div>
 
-                    <span className={cn("inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold min-w-5 shadow-2xs", theme.badge)}>
+                    <span className={cn(theme.badge, BADGE_BASE)}>
                       {columnItems.length}
                     </span>
                   </div>

@@ -1,4 +1,5 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -14,6 +15,7 @@ import GlobalFailedBatchReviewModal from "@/components/staff/GlobalFailedBatchRe
 import { ContentSwap } from "@/components/ui/motion";
 import { canonicalizeCabinetId, findMatchingCabinet, areCabinetsEqual } from "@/lib/storageLayoutUtils";
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import {
@@ -26,7 +28,6 @@ import {
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
-import StaffTabSkeleton from "@/components/staff/skeletons/StaffTabSkeleton";
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
 import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
 import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
@@ -57,24 +58,74 @@ const STAFF_NAV_ITEMS = [
   { key: "notifications", label: "Notifications" },
 ];
 
-function StaffDashboardLoadingSkeleton() {
+const STAFF_VIEWS = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"];
+const STAFF_VIEW_MODULES = {
+  requests: "document_requests",
+  osas_monitoring: "osas_monitoring",
+  organizations: "student_organizations",
+  students: "student_directory",
+  upload: "scan_upload",
+  batch_review: "scan_upload",
+  documents: "documents",
+  notifications: "notifications",
+  search: "records_archive",
+  storage: "storage_explorer",
+};
+
+function resolveRequestedStaffView(rawView) {
+  return STAFF_VIEWS.includes(rawView) ? rawView : null;
+}
+
+function isStaffViewEnabled(view, user) {
+  const enabledModules = user?.enabled_modules;
+  const requiredModule = STAFF_VIEW_MODULES[view];
+  return !requiredModule || !Array.isArray(enabledModules) || enabledModules.length === 0 || enabledModules.includes(requiredModule);
+}
+
+function resolveStaffView(rawView, user) {
+  const requested = resolveRequestedStaffView(rawView);
+  if (requested && isStaffViewEnabled(requested, user)) return requested;
+  const preferred = resolveRequestedStaffView(user?.preferences?.default_home_view);
+  if (preferred && isStaffViewEnabled(preferred, user)) return preferred;
+  const officeDefault = user?.office_id === "osas" ? "osas_monitoring" : "requests";
+  if (isStaffViewEnabled(officeDefault, user)) return officeDefault;
+  return STAFF_VIEWS.find((view) => isStaffViewEnabled(view, user)) || officeDefault;
+}
+
+function StaffContentSkeleton({ view }) {
+  switch (view) {
+    case "requests": return <DocumentRequestsSkeleton />;
+    case "osas_monitoring": return <OsasMonitoringSkeleton />;
+    case "organizations": return <StudentOrganizationsSkeleton />;
+    case "students": return <StudentDirectorySkeleton />;
+    case "upload": return <ScanUploadSkeleton />;
+    case "batch_review": return <BatchReviewSkeleton />;
+    case "documents": return <DocumentsTabSkeleton />;
+    case "notifications": return <NotificationsTabSkeleton />;
+    case "search": return <RecordsArchiveSkeleton />;
+    case "storage": return <StorageExplorerSkeleton />;
+    default: return null;
+  }
+}
+
+function StaffDashboardLoadingSkeleton({ view }) {
   return (
     <DashboardShellSkeleton items={STAFF_NAV_ITEMS}>
-      <StaffTabSkeleton />
+      <StaffContentSkeleton view={view} />
     </DashboardShellSkeleton>
   );
 }
 
-const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: () => <RecordsArchiveSkeleton /> });
-const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: () => <StorageExplorerSkeleton /> });
-const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: () => <ScanUploadSkeleton /> });
-const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: () => <BatchReviewSkeleton /> });
-const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: () => <DocumentsTabSkeleton /> });
-const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: () => <NotificationsTabSkeleton /> });
-const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: () => <DocumentRequestsSkeleton /> });
-const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: () => <OsasMonitoringSkeleton /> });
-const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: () => <StudentOrganizationsSkeleton /> });
-const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: () => <StudentDirectorySkeleton /> });
+const RecordsArchiveTab = dynamic(() => import("@/components/staff/RecordsArchiveTab"), { loading: () => <StaffContentSkeleton view="search" /> });
+const StorageExplorerTab = dynamic(() => import("@/components/staff/StorageExplorerTab"), { loading: () => <StaffContentSkeleton view="storage" /> });
+const ScanUploadTab = dynamic(() => import("@/components/staff/ScanUploadTab"), { loading: () => <StaffContentSkeleton view="upload" /> });
+const BatchReviewTab = dynamic(() => import("@/components/staff/BatchReviewTab"), { loading: () => <StaffContentSkeleton view="batch_review" /> });
+const DocumentsTab = dynamic(() => import("@/components/staff/DocumentsTab"), { loading: () => <StaffContentSkeleton view="documents" /> });
+const NotificationsTab = dynamic(() => import("@/components/staff/NotificationsTab"), { loading: () => <StaffContentSkeleton view="notifications" /> });
+const DocumentRequestsTab = dynamic(() => import("@/components/staff/DocumentRequestsTab"), { loading: () => <StaffContentSkeleton view="requests" /> });
+const OsasMonitoringTab = dynamic(() => import("@/components/staff/OsasMonitoringTab"), { loading: () => <StaffContentSkeleton view="osas_monitoring" /> });
+const StudentOrganizationsTab = dynamic(() => import("@/components/staff/StudentOrganizationsTab"), { loading: () => <StaffContentSkeleton view="organizations" /> });
+const StudentDirectoryTab = dynamic(() => import("@/components/staff/StudentDirectoryTab"), { loading: () => <StaffContentSkeleton view="students" /> });
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -113,37 +164,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
+  const coreRequestRef = useRef(0);
   const docsLoadedRef = useRef(false);
+  const docsRequestRef = useRef(0);
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const validViews = ["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"];
-  const initialView = (() => {
-    const req = searchParams?.get("view");
-    const enabledSet = new Set(initialAuthUser?.enabled_modules || []);
-    const hasModuleFilter = Array.isArray(initialAuthUser?.enabled_modules) && initialAuthUser.enabled_modules.length > 0;
-    const isTabEnabled = (t) => {
-      const mod = {
-        requests: "document_requests",
-        osas_monitoring: "osas_monitoring",
-        organizations: "student_organizations",
-        students: "student_directory",
-        upload: "scan_upload",
-        batch_review: "scan_upload",
-        documents: "documents",
-        notifications: "notifications",
-        search: "records_archive",
-        storage: "storage_explorer",
-      }[t];
-      return !hasModuleFilter || !mod || enabledSet.has(mod);
-    };
-
-    if (validViews.includes(req) && isTabEnabled(req)) return req;
-    const defaultPreferred = initialAuthUser?.office_id === "osas" ? "osas_monitoring" : "requests";
-    if (isTabEnabled(defaultPreferred)) return defaultPreferred;
-    const firstAllowed = validViews.find(isTabEnabled);
-    return firstAllowed || defaultPreferred;
-  })();
+  const initialView = resolveStaffView(searchParams?.get("view") || searchParams?.get("tab"), initialAuthUser);
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
@@ -182,27 +209,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "osas_monitoring", "organizations", "students", "upload", "batch_review", "documents", "notifications", "search", "storage", "activity", "settings"])
-    const prefDefault = authUser?.preferences?.default_home_view
-    const fallbackTab = prefDefault && allowedTabs.has(prefDefault) ? prefDefault : "requests"
-    const targetTab = allowedTabs.has(tab) ? tab : fallbackTab
-    if (authUser?.enabled_modules) {
-      const enabledSet = new Set(authUser.enabled_modules);
-      const mod = {
-        requests: "document_requests",
-        osas_monitoring: "osas_monitoring",
-        organizations: "student_organizations",
-        students: "student_directory",
-        upload: "scan_upload",
-        batch_review: "scan_upload",
-        documents: "documents",
-        notifications: "notifications",
-        search: "records_archive",
-        storage: "storage_explorer",
-      }[targetTab];
-      if (mod && !enabledSet.has(mod)) return;
-    }
-    setView(targetTab)
+    setView(resolveStaffView(tab, authUser))
   }, [searchParams, authUser])
   const [loading, setLoading] = useState(!initialAuthUser);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
@@ -436,14 +443,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, []);
 
   const fetchData = useCallback(async () => {
+    const request = ++coreRequestRef.current;
     try {
       const orgsPromise = isOsas
         ? fetch("/api/osas/organizations?status=Active,Inactive,Archived").then(r => r.json()).catch(() => ({ ok: false, data: [] }))
         : Promise.resolve({ ok: true, data: [] });
 
-      const [sRes, aRes, dRes, reqDRes, cRes, secRes, layoutRes, orgsData] = await Promise.all([
-        fetch("/api/students"),
-        fetch("/api/students?includeArchived=true"),
+      const [studentRows, dRes, reqDRes, cRes, secRes, layoutRes, orgsData] = await Promise.all([
+        fetchAllPages("/api/students?includeArchived=true", 500),
         fetch("/api/doc-types"),
         fetch("/api/doc-types?scope=requestable"),
         fetch("/api/courses"),
@@ -451,21 +458,19 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         fetch("/api/storage-layout"),
         orgsPromise,
       ]);
-      const [sData, aData, dData, reqDData, cData, secData, layoutData] = await Promise.all([
-        sRes.json(),
-        aRes.json(),
+      const [dData, reqDData, cData, secData, layoutData] = await Promise.all([
         dRes.json(),
         reqDRes.json().catch(() => ({ ok: false, data: [] })),
         cRes.json(),
         secRes.json(),
         layoutRes.json(),
       ]);
+      if (request !== coreRequestRef.current) return;
       
-      setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
+      setStudents(studentRows.filter((s) => s.status === "Active").map(normalizeStudentRow));
       
-      const allFetched = Array.isArray(aData.data) ? aData.data : [];
       setArchivedStudents(
-        allFetched
+        studentRows
           .filter(s => s.status !== "Active")
           .map(normalizeStudentRow)
       );
@@ -481,6 +486,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       setStorageLayout(layoutData?.data || { version: 2, rooms: [] });
       coreDataLoadedRef.current = true;
     } catch (err) {
+      if (request !== coreRequestRef.current) return;
       showToast(
         formatErrorMessage(err, {
           title: "Sync Failed",
@@ -503,14 +509,14 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, []);
 
   const fetchAllDocs = useCallback(async () => {
+    const request = ++docsRequestRef.current;
     try {
       const [res, proposalsData] = await Promise.all([
-        fetch("/api/documents?excludeDeclined=1&limit=500"),
+        fetchAllPages("/api/documents?excludeDeclined=1", 200),
         isOsas
           ? fetch("/api/osas/event-proposals", { cache: "no-store" }).then(r => r.json()).catch(() => null)
           : Promise.resolve(null),
       ]);
-      const data = await res.json();
       const proposalDocuments = isOsas && Array.isArray(proposalsData?.data)
         ? proposalsData.data.map((proposal) => ({
             id: `event-proposal-${proposal.id}`,
@@ -531,7 +537,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             file_url: `/api/osas/event-proposals/${proposal.id}?file=1`,
           }))
         : [];
-      setAllDocs([...(Array.isArray(data.data) ? data.data : []), ...proposalDocuments]);
+      if (request !== docsRequestRef.current) return;
+      setAllDocs([...res, ...proposalDocuments]);
       docsLoadedRef.current = true;
     } catch {
       /* silent */
@@ -2019,7 +2026,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
 
   if (loading) {
-    return <StaffDashboardLoadingSkeleton />;
+    return <StaffDashboardLoadingSkeleton view={view} />;
   }
 
   return (
@@ -2069,7 +2076,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   {item.label}
                   {item.badge > 0 && (
                     <span 
-                      className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold"
+                      className={cn("min-w-6 tabular-nums", BADGE_BASE)}
                       style={{ backgroundColor: "var(--brand-accent)", color: "var(--brand-foreground)" }}
                     >
                       {item.badge}
@@ -2452,12 +2459,24 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   );
 }
 
-export default function StaffPage() {
+function StaffPageWithView() {
+  const searchParams = useSearchParams();
+  const requestedView = resolveRequestedStaffView(searchParams?.get("view") || searchParams?.get("tab"));
+  const fallback = <StaffDashboardLoadingSkeleton view={requestedView} />;
+
   return (
-    <StaffGuard fallback={<StaffDashboardLoadingSkeleton />}>
-      <Suspense fallback={<StaffDashboardLoadingSkeleton />}>
+    <StaffGuard fallback={fallback}>
+      <Suspense fallback={fallback}>
         <StaffPageContent />
       </Suspense>
     </StaffGuard>
+  );
+}
+
+export default function StaffPage() {
+  return (
+    <Suspense fallback={<StaffDashboardLoadingSkeleton />}>
+      <StaffPageWithView />
+    </Suspense>
   );
 }

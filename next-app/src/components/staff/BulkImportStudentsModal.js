@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -769,7 +771,7 @@ export default function BulkImportStudentsModal({
                           {formatTitleCase(r.student.name)}
                         </td>
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
-                          <span className="font-sans tabular-nums text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
+                          <span className={cn("font-sans tabular-nums text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300", BADGE_BASE)}>
                             {r.student.courseCode}
                           </span>
                         </td>
@@ -854,7 +856,9 @@ export default function BulkImportStudentsModal({
             </div>
 
             {/* Pagination Controls */}
-            <TablePagination borderless label="Students import preview pages" page={csvPage} pageSize={csvRowsPerPage} totalCount={filteredCsvRows.length} onPageChange={setCsvPage} onPageSizeChange={setCsvRowsPerPage} />
+            {filteredCsvRows.length > 0 && (
+              <TablePagination borderless label="Students import preview pages" page={csvPage} pageSize={csvRowsPerPage} totalCount={filteredCsvRows.length} onPageChange={setCsvPage} onPageSizeChange={setCsvRowsPerPage} />
+            )}
           </div>
         )}
 

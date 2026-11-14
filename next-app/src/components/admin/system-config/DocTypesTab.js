@@ -307,12 +307,9 @@ export default function DocTypesTab({
               >
                 <span>Active</span>
                 <span
-                  className={cn(
-                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                    !showArchived
+                  className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
                       ? BADGE_PALETTES.emerald
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                  )}
+                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
                 >
                   {docTypes.filter((dt) => dt.status !== "Archived").length}
                 </span>
@@ -332,12 +329,9 @@ export default function DocTypesTab({
               >
                 <span>Archived</span>
                 <span
-                  className={cn(
-                    "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                    showArchived
+                  className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
                       ? BADGE_PALETTES.amber
-                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                  )}
+                      : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
                 >
                   {docTypes.filter((dt) => dt.status === "Archived").length}
                 </span>
@@ -602,19 +596,19 @@ export default function DocTypesTab({
                           <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {dt.is_requestable && (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue, "gap-1")}>
+                                <span className={cn(BADGE_PALETTES.blue, "gap-1", BADGE_BASE)}>
                                   <CursorPointer01Icon size="1em" className="text-[10px]" />
                                   Requestable
                                 </span>
                               )}
                               {dt.is_compliance && (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.purple, "gap-1")}>
+                                <span className={cn(BADGE_PALETTES.purple, "gap-1", BADGE_BASE)}>
                                   <ClipboardIcon size="1em" className="text-[10px]" />
                                   Compliance
                                 </span>
                               )}
                               {!dt.is_requestable && !dt.is_compliance && (
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "gap-1 font-medium")}>
+                                <span className={cn(BADGE_PALETTES.gray, "gap-1 font-medium", BADGE_BASE)}>
                                   General
                                 </span>
                               )}
@@ -622,11 +616,11 @@ export default function DocTypesTab({
                           </td>
                           <td className="p-4 align-middle text-left whitespace-nowrap border-r border-border/70 dark:border-border/70">
                             {dt.status === "Archived" ? (
-                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400", BADGE_BASE)}>
                                 Archived
                               </div>
                             ) : (
-                              <div className="inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                              <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400", BADGE_BASE)}>
                                 Active
                               </div>
                             )}
@@ -722,7 +716,9 @@ export default function DocTypesTab({
               </Table>
               </div>
             )}
-        <TablePagination label="DocTypes pages" page={pageDoc} pageSize={itemsPerPage} totalCount={filteredDocTypesFull.length} displayedCount={filteredDocTypes.length} onPageChange={setPageDoc} onPageSizeChange={(size) => handleItemsPerPageChange({ target: { value: size } })} />
+        {filteredDocTypesFull.length > 0 && (
+          <TablePagination label="DocTypes pages" page={pageDoc} pageSize={itemsPerPage} totalCount={filteredDocTypesFull.length} displayedCount={filteredDocTypes.length} onPageChange={setPageDoc} onPageSizeChange={(size) => handleItemsPerPageChange({ target: { value: size } })} />
+        )}
       </div>
 
       <FloatingActionBar

@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -782,12 +784,9 @@ export default function RecordsArchiveTab({
             >
               <span>Active</span>
               <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  !showArchived
+                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", !showArchived
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
               >
                 {activeTabCount}
               </span>
@@ -804,12 +803,9 @@ export default function RecordsArchiveTab({
             >
               <span>Archived</span>
               <span
-                className={cn(
-                  "font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold",
-                  showArchived
+                className={cn("font-sans tabular-nums text-[10px] px-1.5 py-0.5 rounded-full font-bold", showArchived
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40"
-                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400"
-                )}
+                    : "bg-gray-200/70 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400", BADGE_BASE)}
               >
                 {archivedTabCount}
               </span>
@@ -1257,14 +1253,14 @@ export default function RecordsArchiveTab({
                           <div className="flex flex-col justify-between h-full min-h-[160px]">
                             <div>
                               <div className="flex items-center gap-2 pr-7 flex-wrap">
-                                <span className="rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 font-sans tabular-nums text-[11px] font-bold text-white tracking-wider">
+                                <span className={cn("rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 font-sans tabular-nums text-[11px] font-bold text-white tracking-wider", BADGE_BASE)}>
                                   {row.student.acronym || row.student.studentNo}
                                 </span>
-                                <span className="rounded-full border border-white/20 bg-black/10 px-2 py-0.5 text-[10px] font-semibold text-white/90">
+                                <span className={cn("rounded-full border border-white/20 bg-black/10 px-2 py-0.5 text-[10px] font-semibold text-white/90", BADGE_BASE)}>
                                   {row.student.category || "Academic"}
                                 </span>
                                 {showArchived && (
-                                  <Badge className="rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white">
+                                  <Badge className={cn("rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white", BADGE_BASE)}>
                                     Archived
                                   </Badge>
                                 )}
@@ -1373,11 +1369,11 @@ export default function RecordsArchiveTab({
                                 </h4>
                               </div>
                               <div className="mt-2 flex items-center gap-2">
-                                <div className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 font-sans text-[12px] font-medium text-white/90">
+                                <div className={cn("bg-white/10 text-white/90 tabular-nums", BADGE_BASE)}>
                                   {row.student.studentNo}
                                 </div>
                                 {showArchived && (
-                                  <Badge className="rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white">
+                                  <Badge className={cn("rounded-full border-white/30 bg-white/20 px-2 py-0.5 text-[9px] font-semibold text-white", BADGE_BASE)}>
                                     Archived
                                   </Badge>
                                 )}
@@ -1479,7 +1475,7 @@ export default function RecordsArchiveTab({
                                />
                             </td>
                             <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                              <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                              <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                                 {row.student.acronym || row.student.studentNo}
                               </span>
                             </td>
@@ -1515,7 +1511,7 @@ export default function RecordsArchiveTab({
                               </td>
                             )}
                             <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                               <div className="inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap">
+                               <div className={cn("inline-flex w-fit items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-gray-800 dark:text-zinc-200 whitespace-nowrap", BADGE_BASE)}>
                                  Room {row.student.room} • {row.student.cabinet} • Drawer {row.student.drawer}
                                </div>
                             </td>
@@ -1575,7 +1571,7 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            {isLeafLevel && !selectedStudent && <TablePagination label="Archive record pages" page={page} pageSize={itemsPerPage} totalCount={totalItems} displayedCount={paginatedExplorerItems.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />}
+            {isLeafLevel && !selectedStudent && totalItems > 0 && <TablePagination label="Archive record pages" page={page} pageSize={itemsPerPage} totalCount={totalItems} displayedCount={paginatedExplorerItems.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} />}
 
             {!selectedStudent && (
               <OfficeDocumentsTable

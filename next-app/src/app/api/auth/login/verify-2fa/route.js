@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { 
   getStaffById, 
   verifyRecoveryCode, 
-  getStaffDisplayName, 
+  getStaffFullName,
   verifyPasswordHash,
   verifySerialKey,
 } from "@/lib/staffRepo";
@@ -116,8 +116,9 @@ export async function POST(req) {
 
     if (!isValid) {
       await writeAuditLog(req, `2FA Verification Failure`, { 
-        details: `failed 2FA verification attempt for personnel '${getStaffDisplayName(staff)}'`, 
-        actor: getStaffDisplayName(staff),
+        details: `failed 2FA verification attempt for personnel '${getStaffFullName(staff)}'`,
+        actor: getStaffFullName(staff),
+        actor_id: staff.id,
         role: staff.role || "Staff",
         severity: "WARNING",
         entity_type: "User",
@@ -151,8 +152,9 @@ export async function POST(req) {
     await resetAuth2FARateLimit(ipAddress, staff.id);
 
     await writeAuditLog(req, `User Login (2FA)`, { 
-      details: `personnel '${getStaffDisplayName(staff)}' successfully verified via ${methodUsed} and authenticated`, 
-      actor: getStaffDisplayName(staff),
+      details: `personnel '${getStaffFullName(staff)}' successfully verified via ${methodUsed} and authenticated`,
+      actor: getStaffFullName(staff),
+      actor_id: staff.id,
       role: staff.role || "Staff",
       entity_type: "User",
       entity_id: staff.id

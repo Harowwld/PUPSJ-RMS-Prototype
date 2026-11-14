@@ -1,4 +1,6 @@
 "use client"
+
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 
 import { useRef, useState } from "react"
@@ -54,7 +56,7 @@ function ControlButton({ icon: Icon, children, badge, className, ...props }) {
     >
       {Icon && <Icon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />}
       <span className="truncate">{children}</span>
-      {badge > 0 && <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-pup-maroon px-1 text-[10px] font-semibold text-white dark:bg-red-500">{badge}</span>}
+      {badge > 0 && <span className={cn(BADGE_BASE, "bg-pup-maroon text-white dark:bg-red-500")}>{badge}</span>}
       <ArrowDown01Icon size={13} aria-hidden="true" className="shrink-0 text-gray-400 dark:text-zinc-500" />
     </Button>
   )
@@ -229,7 +231,16 @@ export function GroupPopover({ options, groupBy, onGroupByChange }) {
   )
 }
 
-export function ColumnsPopover({ columns, visibleColumns, onVisibleColumnsChange, minVisible = 0 }) {
+export function ColumnsPopover({ columns, visibleColumns, defaultColumns, onVisibleColumnsChange, minVisible = 0 }) {
+  const defaultColumnKeys = Array.isArray(defaultColumns)
+    ? columns.filter(({ key }) => defaultColumns.includes(key)).map(({ key }) => key)
+    : columns.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
+
+  const activeColumnKeys = columns.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => key)
+  const isAtDefault =
+    activeColumnKeys.length === defaultColumnKeys.length &&
+    activeColumnKeys.every((key, index) => key === defaultColumnKeys[index])
+
   const toggleColumn = (key, checked) => {
     onVisibleColumnsChange(checked
       ? [...visibleColumns, key]
@@ -252,7 +263,7 @@ export function ColumnsPopover({ columns, visibleColumns, onVisibleColumnsChange
           ))}
         </div>
         <PopoverFooter className="p-2">
-          <button type="button" onClick={() => onVisibleColumnsChange(columns.map(({ key }) => key))} disabled={columns.every(({ key }) => visibleColumns.includes(key))} className="flex min-h-7.5 w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"><ReloadIcon size={13} aria-hidden="true" />Reset Columns</button>
+          <button type="button" onClick={() => onVisibleColumnsChange(defaultColumnKeys)} disabled={isAtDefault} className="flex min-h-7.5 w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"><ReloadIcon size={13} aria-hidden="true" />Reset Columns</button>
         </PopoverFooter>
       </PopoverContent>
     </Popover>
@@ -277,6 +288,7 @@ export default function OfficeTableControls({
   onGroupByChange,
   columns,
   visibleColumns,
+  defaultColumns,
   onVisibleColumnsChange,
   showTableControls,
   scrollControls,
@@ -293,7 +305,7 @@ export default function OfficeTableControls({
         {showTableControls && <>
           <SortPopover options={sortOptions} sortBy={sortBy} onSortByChange={onSortByChange} sortOrder={sortOrder} onSortOrderChange={onSortOrderChange} />
           <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={onGroupByChange} />
-          <ColumnsPopover columns={columns} visibleColumns={visibleColumns} onVisibleColumnsChange={onVisibleColumnsChange} />
+          <ColumnsPopover columns={columns} visibleColumns={visibleColumns} defaultColumns={defaultColumns} onVisibleColumnsChange={onVisibleColumnsChange} />
         </>}
       </div>
     </DataViewToolbar>

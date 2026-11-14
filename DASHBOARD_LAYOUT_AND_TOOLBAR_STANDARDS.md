@@ -267,29 +267,296 @@ Keep the action contextual to the empty-state cause. In SuperAdmin, Department F
 
 ---
 
-## 7. Table Row Kebab Action Popover Pattern (No Header)
+## 7. Table Row Action Buttons & The Subdued/Ghost Affordance Pattern
 
-Use the standardized [`Popover`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/ui/popover.jsx) menu pattern established in [`OfficeActionsMenu.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeActionsMenu.js), [`PersonnelActionsMenu.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/PersonnelActionsMenu.js), and [`PlatformBackupTable.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/PlatformBackupTable.js#L36-L85). **Do not** render a `PopoverHeader` or `PopoverTitle` inside kebab action popovers.
+Across all data tables in the application, row action buttons (both multi-action kebab popover triggers and dedicated single-action icon buttons) adhere to **The Subdued/Ghost Pattern** with standardized Apple continuous squircle geometry (`var(--radius-lg)` = 12px) established by the **Departments & Stations** view ([`OfficeManagementTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeManagementTab.js) and [`OfficeActionsMenu.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeActionsMenu.js)).
+
+### 7.1 The Subdued/Ghost Pattern vs. "Hidden Until Hover" (`opacity-0`)
+
+#### Why Hiding Actions Completely (`opacity-0`) is Forbidden:
+1. **Broken on Touch Screens & Mobile**: Touch devices (iPads, smartphones, tablets) do not have cursor hover states. If action buttons are set to `opacity-0` or hidden until hover, touch users cannot discover or tap them without blindly tapping table cells.
+2. **Missing Affordance for Scanning Users**: When scanning dense datasets, users need visual reassurance that a row can be acted upon (configured, inspected, archived, or restored) without having to manually move the mouse over each individual row.
+3. **Visual Jitter & Sudden Pop-In**: Completely invisible buttons popping in and out on fast cursor motion create distracting visual flicker across the viewport.
+
+#### Why the Subdued/Ghost Pattern is the Production Standard:
+1. **Immediate Affordance**: The button is subtly visible by default (`opacity: 0.6` / `opacity-60`), providing a clear touch target and visible interactive affordance.
+2. **80% Noise Reduction**: Muted slate coloring and translucent backgrounds allow users to read and scan tabular data without visual competition from heavy buttons.
+3. **Elevated Prominence on Interaction**: Moving the mouse over the table row (`tr:hover`), focusing into the row (`tr:focus-within`), hovering the button directly, or opening the popover elevates the button to full prominence (`opacity: 1`, elevated white/zinc background, crisp border, and soft micro-shadow).
+
+```
+Default State (Subdued / Ghost):         Elevated State (Row Hover / Focus / Open):
+┌──────────────────────────────┐         ┌──────────────────────────────┐
+│ ...  Department Name  [ ••• ]│         │ ...  Department Name  [ ••• ]│
+└──────────────────────────────┘         └──────────────────────────────┘
+Opacity: 0.6 (translucent border)         Opacity: 1.0 (elevated white surface)
+Border:  border-border                    Border:  border-gray-300 / dark:border-white/20
+Surface: rgba(249, 250, 251, 0.7)        Surface: #ffffff / dark:#3f3f46
+Color:   text-gray-500                    Color:   text-gray-900 / dark:text-zinc-50
+                                         Shadow:  0 1px 2px rgba(0, 0, 0, 0.05)
+```
 
 ---
 
-## 8. Badge & Action Button Standards: Strict Text-Only Policy (No Dots or Icons)
+### 7.2 Border Radius & Geometry: Parity with Departments & Stations Grid View
 
-To adhere strictly to **Apple Human Interface Guidelines (HIG)** and eliminate visual noise, all badges and action buttons across dashboards—**both in data tables and inside slide-over sheets/drawers (`SheetContent`)**—must be strictly **text-only**:
+- **Exact Geometry**: Standardized to **`28×28px`** (`w-7 h-7` or `width: 28px; height: 28px;`).
+- **Standardized Border Radius**: **`border-radius: var(--radius-lg, var(--radius, 0.75rem)) !important;`** (`rounded-lg`).
+  - In Tailwind CSS v4, `--radius` is configured to `0.75rem` (12px), and `--radius-lg` resolves to `var(--radius)` (12px).
+  - Passing `rounded-lg` on the button trigger compiles to this exact 12px continuous squircle curvature (43% radius on a 28×28px button).
+  - This matches the exact corner curvature of the grid card more action button in [`OfficeActionsMenu.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeActionsMenu.js).
+  - **Prohibition of Arbitrary Radii**: Never use hardcoded `8px` (`rounded-md`), circular pills (`rounded-full`), or square corners on table action buttons. Squircles provide continuous curvature harmonizing with Apple HIG interface aesthetics.
 
-### 8.1 Badges: Text-Only & Standardized Border Radius (`rounded-full`)
-- **No colored status dots**: Do not render leading indicator dots (e.g. `<span className="w-1.5 h-1.5 rounded-full ..."/>`).
-- **No leading or trailing icons**: Do not render icons (e.g. `CheckmarkCircle01Icon`, `Clock01Icon`, `Shield01Icon`, `Certificate01Icon`, `StudentIcon`, or `AppIcon`) inside badge pills.
-- **Standardized Border Radius (`rounded-full`)**: All status, categorical, network, severity, platform, entity type, and scope badges **must** strictly use `rounded-full` pill geometry (`px-2.5 py-0.5 rounded-full text-[11px] font-medium` or `font-semibold`).
-  - Never use non-standard Tailwind artifacts like `rounded-md` (6px) or `rounded-lg` (8px) on badge pills.
-  - The **only** permitted exception for `rounded-lg` is monospace/tabular system identifier badges (e.g. Staff ID or Transaction ID: `rounded-lg px-2.5 py-1 text-xs font-semibold tabular-nums`).
-- **Styling**: Badges use subtle, theme-aware pastel backgrounds, matching border tints, and high-contrast text (`text-[10px]` or `text-[11px] font-semibold` or `font-medium px-2.5 py-0.5 rounded-full border select-none`).
-- **Applies to**:
-  - Table cells (e.g., Status, Department, Role, Security Severity, Backup Type)
-  - Expanded detail rows and cards (e.g., `LogExpandedRow`, `PlatformBackupTable`)
-  - Sheet headers and specification rows (e.g., `OfficeDetailSheet`, `CampusOperationsTab`, `LogDetailSheet`, `ServiceStandardsSheet`, `DocumentRequestDetailSheet`, `StudentProfileSheet`, `NotificationsTab`, `OsasProposalReviewSheet`, `OsasPostEventReviewSheet`, `StudentOrganizationsTab`, `PermanentAdmissionRecordSheet`, `StudentOverviewTab`, `OSASOrganizationComplianceView`)
+---
 
-### 8.2 Strict Button Affordance Policy: No Icons in Labeled Buttons, No Text in Icon Buttons
+### 7.3 State Transitions & CSS Specification (`.table-action-button`)
+
+All table action buttons across the application use the global utility class `.table-action-button` defined in [`tables.css`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/app/tables.css):
+
+```css
+.table-action-button {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, var(--radius, 0.75rem)) !important;
+  padding: 0;
+  background: rgba(249, 250, 251, 0.7);
+  color: #6b7280;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+}
+
+.dark .table-action-button {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(39, 39, 42, 0.6);
+  color: #a1a1aa;
+}
+
+/* Elevated Prominent State */
+tr:hover .table-action-button,
+tr:focus-within .table-action-button,
+.table-action-button:hover,
+.table-action-button:focus-visible,
+.table-action-button[data-state="open"],
+.table-action-button[aria-expanded="true"] {
+  opacity: 1;
+  border-color: #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dark tr:hover .table-action-button,
+.dark tr:focus-within .table-action-button,
+.dark .table-action-button:hover,
+.dark .table-action-button:focus-visible,
+.dark .table-action-button[data-state="open"],
+.dark .table-action-button[aria-expanded="true"] {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #3f3f46;
+  color: #fafafa;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.table-action-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.table-action-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+```
+
+---
+
+### 7.4 Prohibition of Outer Opacity Multiplication Wrappers (`opacity-40` Antipattern)
+
+> [!CAUTION]
+> **Nested Opacity Multiplication Bug**:
+> Never wrap `.table-action-button` inside a container or cell that specifies `opacity-40 group-hover:opacity-100` or `opacity-0 group-hover:opacity-100`.
+> 
+> In CSS, opacity is multiplicative:
+> `0.40 (outer wrapper) × 0.60 (inner button) = 0.24 (24% visible opacity!)`
+> 
+> This unintended multiplication washes out the button completely and renders it nearly invisible on light surfaces when the row is not hovered.
+
+#### Standard Neutral Container:
+Action button cells (`<td>`) and container wrappers must remain completely neutral:
+```jsx
+{/* Correct Neutral Container */}
+<td className="p-4 align-middle text-center whitespace-nowrap">
+  <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+    <OfficeActionsMenu office={office} triggerVariant="table" />
+  </div>
+</td>
+```
+All opacity transitions are self-contained inside `.table-action-button` responding directly to `tr:hover`, `tr:focus-within`, `:hover`, and `[data-state="open"]`.
+
+---
+
+### 7.5 Event Isolation & Stop Propagation (`e.stopPropagation()`)
+
+Because data tables often support row-level interactions (such as single-click row selection in [`OfficeManagementTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeManagementTab.js) or double-click to open inspection drawers in [`CampusOperationsTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/CampusOperationsTab.js)), action button containers and triggers **must** call `e.stopPropagation()`:
+
+```jsx
+<div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+  <button
+    type="button"
+    onClick={(e) => e.stopPropagation()}
+    ...
+  >
+```
+This isolates the action click, preventing accidental row selection, deselection, or background drawer opening when interacting with the menu.
+
+---
+
+### 7.6 Action Trigger Types & Icons
+
+1. **Multi-Action Kebab Menu (`MoreHorizontalIcon` vs. `MoreVerticalIcon`)**:
+   - **Horizontal Table Rows**: Always use **`MoreHorizontalIcon`** (`size={16}`). The horizontal three-dot aligns with the horizontal rhythm of tabular rows.
+   - **Vertical Grid Cards**: Always use **`MoreVerticalIcon`** (`size={16}`). The vertical three-dot aligns with vertical card headers.
+   - Example from [`OfficeActionsMenu.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/OfficeActionsMenu.js#L30-L31):
+     ```jsx
+     const isTableTrigger = triggerVariant === "table"
+     const TriggerIcon = isTableTrigger ? MoreHorizontalIcon : MoreVerticalIcon
+     ```
+
+2. **Dedicated Single-Action Buttons (Semantic Hugeicons)**:
+   - When a table row features a single primary action (e.g., `ViewIcon`, `Edit01Icon`, `Download01Icon`, `Folder01Icon`, `Share01Icon`), wrap the button in a `<Tooltip>` and apply `.table-action-button rounded-lg active:scale-95 cursor-pointer`:
+     ```jsx
+     <Tooltip>
+       <TooltipTrigger asChild>
+         <button
+           type="button"
+           onClick={(e) => {
+             e.stopPropagation()
+             handleInspect(record)
+           }}
+           aria-label={`Inspect ${record.name}`}
+           className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+         >
+           <ViewIcon size={16} aria-hidden="true" />
+         </button>
+       </TooltipTrigger>
+       <TooltipContent side="top">Inspect Details</TooltipContent>
+     </Tooltip>
+     ```
+
+3. **Compound Row Actions (Quick Action + Kebab Menu)**:
+   - In views where a direct action is paired with an overflow menu (e.g. `TableActions.js` in [`CampusOperationsTab.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/systemadmin/CampusOperationsTab.js)), arrange both buttons inside `<div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>`.
+   - Both buttons use `.table-action-button rounded-lg`, providing visual symmetry and uniform elevation states.
+
+---
+
+### 7.7 Popover Menu Architecture & Item Styling (Strictly No Header)
+
+Action popovers use the standardized [`Popover`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/ui/popover.jsx) primitive:
+- **Strictly No PopoverHeader or PopoverTitle**: Action popovers must open directly into the actionable options without redundant title text or decorative header bars.
+- **Popover Geometry & Placement**:
+  ```jsx
+  <PopoverContent
+    align="end"
+    sideOffset={6}
+    className="max-h-[calc(100dvh-2rem)] w-[min(12.5rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl p-1"
+  >
+  ```
+- **Menu Item Styling**:
+  ```jsx
+  const actionClassName = "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:text-zinc-300 dark:hover:bg-zinc-800/70 dark:focus-visible:ring-red-400"
+  ```
+  - Standard action item: Slate text, Hugeicons `size={14}` in `text-gray-500 dark:text-zinc-400`.
+  - Destructive action item (e.g. `Archive Department`): `text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30`.
+  - Restorative action item (e.g. `Restore Department`): `text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30`.
+  - Divider between action tiers: `<div aria-hidden="true" className="my-1 h-px bg-border dark:bg-white/10" />`.
+
+---
+
+### 7.8 Touch Screen & Coarse Pointer Accessibility (`@media (pointer: coarse)`)
+
+On touch-driven devices (smartphones, iPads, and touch kiosks):
+- Mouse hover does not exist. The CSS automatically expands the hit target to Apple HIG minimums via:
+  ```css
+  @media (pointer: coarse) {
+    .table-action-button {
+      width: 44px;
+      height: 44px;
+      opacity: 0.85;
+    }
+  }
+  ```
+- Default opacity is elevated to `0.85` so affordances are crisp and distinct without requiring prior contact.
+- Minimum geometry increases from `28×28px` to `44×44px` to prevent missed taps.
+
+---
+
+## 8. Universal Borderless Badge/Pill System & Action Button Standards
+
+To adhere strictly to **Apple Human Interface Guidelines (HIG)** and eliminate visual noise, all badges and action buttons across dashboards—**both in data tables and inside slide-over sheets/drawers (`SheetContent`), modals, list views, and navigation**—must follow the standardized borderless pill architecture:
+
+### 8.1 The Pure Borderless Badge Architecture (Zero Border Line Color)
+- **Zero Border Lines**: Badges, status pills, and categorical indicators must **never** carry border lines, border utility classes (`border`, `border-border`, `border-*`), or hairline outline strokes around tinted backgrounds.
+- **Why Border Lines are Eliminated**: Border outlines around tinted pills introduce visual clutter and compete with surrounding container and table borders. As established in the stage status and turnaround risk designs, a pure borderless badge relying on a soft tinted fill and high-contrast foreground text produces a much cleaner, elevated Apple-style appearance.
+- **Universal Geometry & Uniform Padding (`BADGE_BASE`)**:
+  All badges across the entire system use the shared token from [`next-app/src/lib/badgeStyles.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/lib/badgeStyles.js):
+  ```javascript
+  export const BADGE_BASE =
+    "inline-flex items-center justify-center rounded-full font-semibold text-[11px] px-2.5 py-0.5 shrink-0 whitespace-nowrap";
+  ```
+  - **`rounded-full` Curvature**: All status, categorical, network, severity, platform, entity type, and scope badges **must** strictly use `rounded-full` pill geometry.
+    - Never use non-standard Tailwind artifacts like `rounded-md` (6px) or `rounded-lg` (8px) on badge pills.
+    - The **only** permitted exception for `rounded-lg` is monospace/tabular system identifier badges (e.g. Staff ID or Transaction ID: `rounded-lg px-2.5 py-1 text-xs font-semibold tabular-nums`).
+  - **Uniform Padding (`px-2.5 py-0.5`)**: Exactly `10px` horizontal padding (`px-2.5`) and `2px` vertical padding (`py-0.5`). Badges maintain a standardized `22px` height (`h-5.5` in primitives).
+  - **Standardized Typography (`text-[11px] font-semibold`)**: Every badge renders at `11px` with `font-semibold` weight (never mismatched `text-xs`, `text-[10px]`, or `font-normal`).
+  - **Collapsing & Shrink Prevention (`shrink-0 whitespace-nowrap`)**: Badges never break across lines or shrink under flex layout pressure.
+
+### 8.2 The Curated Color Pool (`BADGE_PALETTES`)
+Colors must not be chosen randomly across screens. All badges draw from the curated pool defined in [`next-app/src/lib/badgeStyles.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/lib/badgeStyles.js):
+
+| Palette Key | Semantic Role | Light Mode Classes | Dark Mode Classes |
+|---|---|---|---|
+| **`maroon`** | Institutional Brand, Office of the Registrar | `bg-[#800000]/10 text-[#800000]` | `dark:bg-red-950/40 dark:text-red-300` |
+| **`blue`** | OSAS Office, In Progress, Processing, Under Review | `bg-blue-50 text-blue-800` | `dark:bg-blue-950/40 dark:text-blue-300` |
+| **`emerald`** | Ready for Pickup, Approved, Completed, Active, Success | `bg-emerald-50 text-emerald-800` | `dark:bg-emerald-950/40 dark:text-emerald-300` |
+| **`amber`** | Pending Submission, Submitted, Action Needed, Warning | `bg-amber-50 text-amber-800` | `dark:bg-amber-950/40 dark:text-amber-300` |
+| **`orange`** | Needs Revision, Returned for Correction, Moderate Risk | `bg-orange-50 text-orange-800` | `dark:bg-orange-950/40 dark:text-orange-300` |
+| **`rose`** | Declined, Rejected, Cancelled, Shredded, Critical Security Alert | `bg-rose-50 text-rose-800` | `dark:bg-rose-950/40 dark:text-rose-300` |
+| **`purple`** | Governance, System Administration, Institutional Policy | `bg-purple-50 text-purple-800` | `dark:bg-purple-950/40 dark:text-purple-300` |
+| **`indigo`** | Program Templates, Special Classifications, Metadata | `bg-indigo-50 text-indigo-800` | `dark:bg-indigo-950/40 dark:text-indigo-300` |
+| **`sky`** | Public Tracking, External Hard Drive Sync, Network Origin | `bg-sky-50 text-sky-800` | `dark:bg-sky-950/40 dark:text-sky-300` |
+| **`gray`** | Default Inactive, Archived, Neutral, General Categories | `bg-gray-100 text-gray-800` | `dark:bg-zinc-800 dark:text-zinc-300` |
+
+### 8.3 Canonical Resolvers & Cross-View Alignment
+To prevent color desynchronization between different sections of the app:
+1. **Department Badges**:
+   - Registrar is **always** PUP Maroon (`BADGE_PALETTES.maroon`), and OSAS is **always** Blue (`BADGE_PALETTES.blue`).
+   - Use `getDepartmentBadgeClass(isRegistrar)` from `@/lib/badgeStyles.js` instead of custom inline styles.
+2. **Lifecycle Stage Status**:
+   - Use `getStatusBadgeClass(status)` from `@/lib/badgeStyles.js` for document requests, event proposals, and archival records.
+3. **Cross-View Alignment (List View, Table View, Kanban & Sheets)**:
+   - A record must carry the **exact same badge color, text, and padding** regardless of the active view mode (Table View, List View, Kanban pipeline cards, or Slide-Over Details Sheet). For example, a "Pending" request must not render with dark black in list view and maroon in table view.
+
+### 8.4 Universal Component Scope: Beyond Tables to All UI Surfaces
+The borderless `BADGE_BASE` standard applies uniformly across all UI surfaces:
+- **Data Tables**: Status cells (`TableStatus`), department pills, severity levels, backup types.
+- **Multi-View Lists & Accordions**: Row badges in `CampusOperationsList`, `DocumentRequestRecordList`, `DigitalRecordsList`, and `OsasRecordList`.
+- **Slide-Over Sheets & Detail Drawers**: Header status badges, verification pills, and info row attributes in `LogDetailSheet`, `OfficeDetailSheet`, `DocumentRequestDetailSheet`, `StudentProfileSheet`, `ServiceStandardsSheet`, `OsasProposalReviewSheet`, `OsasPostEventReviewSheet`, `PermanentAdmissionRecordSheet`.
+- **Modals & Dialogs**: Status indicators and counter pills in `ConflictResolutionModals`, `StudentFeedbackModal`, `EditUserModal`, `RestoreModal`, `UserGuideModal`.
+- **Settings & Account Panels**: 2FA status, recovery code counts, table density, sound category badges, and accommodation pills in `AccountSettingsPanel`.
+- **Navigation & Layout**: Role indicators in `Header`, active view badges in mobile `Sidebar`, shortcut counter circles in `FloatingActionBar`, and command palette badges in `CommandPalette`.
+- **Activity History & Narrative Description Tokens**: Mention capsules and status transitions in `NarrativeText`.
+
+### 8.5 Strict Text-Only Discipline & Avatar Mention Exception
+- **No colored status dots**: Do not render leading indicator dots (e.g. `<span className="w-1.5 h-1.5 rounded-full ..."/>`) inside badges.
+- **No static leading or trailing icons**: Do not render icons (e.g. `CheckmarkCircle01Icon`, `Clock01Icon`, `Shield01Icon`, `Certificate01Icon`, `StudentIcon`, or `AppIcon`) inside badge pills. Text communicates the exact state cleanly.
+- **Distinct Exception for Actor Mentions in Narrative Text**:
+  - In narrative descriptions (`NarrativeText`), an actor mention (e.g. `@Marcus Reyes`) renders as a borderless capsule (`rounded-full px-2.5 py-0.5 bg-black/[0.04] dark:bg-white/[0.06] text-[11px] font-semibold border-0`) containing a micro circular [`ProfileAvatar`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/shared/ProfileAvatar.jsx) (`size-3.5 rounded-full border-0`) that queries `/api/account/avatar?id=...` and renders the actor's profile photo with fallback initial.
+
+### 8.6 Strict Button Affordance Policy: No Icons in Labeled Buttons, No Text in Icon Buttons
 To prevent visual clutter and maintain strict Apple HIG discipline, interactive buttons follow a strict binary rule:
 1. **Labeled Action Buttons (Strictly Text-Only)**:
    - Primary and secondary action buttons (`Add Department`, `Register Personnel`, `Configure Department`, `Edit Profile`, `Inspect PDF`, `Save Standards`, `Copy Record (JSON)`, `Open in Requests`, etc.) must **not** include decorative leading or trailing icons like `Plus01Icon`, `Upload01Icon`, `Copy01Icon`, `ViewIcon`, `LinkSquare01Icon`, or `Download01Icon`.
@@ -299,7 +566,7 @@ To prevent visual clutter and maintain strict Apple HIG discipline, interactive 
    - Must provide an accessible `aria-label` and `title` (or `<Tooltip>`), and include Apple tactile press feedback (`active:scale-95`).
 3. **Allowed Exception**: Dynamic loading spinners (`<Loading01Icon className="animate-spin mr-2" />`) shown conditionally while an asynchronous request is in flight.
 
-### 8.3 Standardized Secondary Button Appearance
+### 8.7 Standardized Secondary Button Appearance
 To ensure visual consistency and tactile feedback across all modal sheets, dialogs, inspection sidebars, toolbars, and palettes, all secondary and outline actions follow the design language established by the "Copy Student No" button in [`CommandPalette.js`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/shared/CommandPalette.js):
 
 - **Default Variant Classes** (baked into `@/components/ui/button.jsx` for both `variant="outline"` and `variant="secondary"`):
@@ -311,7 +578,7 @@ To ensure visual consistency and tactile feedback across all modal sheets, dialo
   - **Dark mode**: Soft elevated zinc surface (`dark:bg-zinc-800`), 8% translucent white border (`dark:border-white/[0.08]`), light zinc text (`dark:text-zinc-200`), and subtle hover brightness (`dark:hover:bg-zinc-700`).
   - **Micro-interactions**: Apple-style tactile click feedback via `active:scale-95 transition-all` and subtle depth with `shadow-xs`.
 
-### 8.4 Line Border Token Synchronization (`--border`)
+### 8.8 Line Border Token Synchronization (`--border`)
 All global boundary lines, card borders, sheet dividers, and table dividers match the exact line border color of the secondary button:
 - **Light mode**: `--border: rgb(0 0 0 / 6%);` (`border-black/[0.06]`), replacing heavy opaque lines with hairline Apple-style separators.
 - **Dark mode**: `--border: rgb(255 255 255 / 8%);` and `--input: rgb(255 255 255 / 8%);` (`dark:border-white/[0.08]`), harmonizing all dividers (`--table-divider`) and container frames with the Apple HIG dark translucent boundary standard.
@@ -364,7 +631,7 @@ All tables follow this 3-tier typographic scale (`13px` / `12px` / `11px`):
 | **Subtitle / Secondary Line in Two-Line Cell** (Email under Name, Description under Office, Checksum under Filename, Student No under Requester) | `11px` (`text-[11px]`), Regular (`400`) | `text-[11px] font-normal text-gray-500 dark:text-zinc-400` |
 | **Standard Single-Line Value Cell** (Workstation, Section, Backup Type, Size, Audit Description, IP Address, Details) | `12px` (`text-xs`), Regular (`400`) | `text-xs font-normal text-gray-700 dark:text-zinc-300` (add `tabular-nums` for numbers/IPs) |
 | **Date / Timestamp Cells** (`Created`, `Updated`, `Last Active`, `Submitted`, `Timestamp`) | `12px` (`text-xs`), Regular (`400`), Tabular | `text-xs font-normal text-gray-600 dark:text-zinc-300 tabular-nums` |
-| **Pill Badges (`rounded-full`)** (Status, Role, Department, Scope, Severity, 2FA) | `11px` (`text-[11px]`), Medium (`500`) | `rounded-full px-2.5 py-0.5 text-[11px] font-medium` |
+| **Pill Badges (`BADGE_BASE`)** (Status, Role, Department, Scope, Severity, 2FA) | `11px` (`text-[11px]`), Semibold (`600`) | `rounded-full px-2.5 py-0.5 text-[11px] font-semibold border-0` (`BADGE_BASE`) |
 | **Identifier Badges (`rounded-lg`)** (Staff ID, Transaction ID) | `12px` (`text-xs`), Semibold (`600`), Tabular | `rounded-lg px-2.5 py-1 text-xs font-semibold tabular-nums` |
 
 ### 9.3 Row Click vs. Double-Click Interaction Pattern
@@ -471,7 +738,7 @@ All inspection, detail, and editing drawers across the application adhere to sta
 
 2. **Header & Circular Identity Tile**:
    - The entity avatar or identity icon is anchored in the top-left of the header using continuous circular framing: `size-12 rounded-full border border-black/10 dark:border-white/10 shadow-2xs flex items-center justify-center font-bold shrink-0 overflow-hidden`.
-   - Badges in the header are **strictly text-only** (`rounded-full px-2.5 py-0.5 text-[11px] font-medium border select-none`, no indicator dots, no icons).
+   - Badges in the header are **strictly borderless and text-only** (`BADGE_BASE`: `rounded-full px-2.5 py-0.5 text-[11px] font-semibold select-none border-0`, no border line color, no indicator dots, no icons).
    - Dismissal close icon button (`XIcon`) is anchored at `top-4 right-4` with circular hover feedback: `size-7 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] active:scale-95`.
 
 3. **Summary Strip & Specification Rows**:
@@ -1108,7 +1375,7 @@ Loading skeletons must mirror the exact dimensions, alignments, and column weigh
   and
   ```jsx
   <td className="w-12 min-w-12 max-w-12 px-2 align-middle text-center whitespace-nowrap">
-    <Skeleton className="h-6 w-6 rounded-lg mx-auto dark:bg-muted" />
+    <Skeleton className="h-7 w-7 rounded-lg mx-auto dark:bg-muted" />
   </td>
   ```
 - **Zero Asymmetric Padding**: Never use right-aligned or offset padding (such as `pr-6 text-right w-20`) on centered action or expand skeleton columns. Any offset creates an asymmetric visual twitch when skeleton rows resolve into live data.
@@ -1128,21 +1395,25 @@ The **Narrative Typography System** (`@/components/shared/NarrativeText` and `@/
 ### 25.1 Token Parsing Rules & Visual Styling
 - **Mentions & Person Names (`token.type === "mention"`)**:
   - Automatically identifies `@username` mentions and student/person references preceded by context words (e.g., `student "Juan Dela Cruz"`, `account for "Maria Santos"`, `declined submission from John Doe`).
-  - Displays with a circular 16×16px deterministic avatar badge (initials) alongside bold, legible text:
+  - Displays as a borderless capsule (`rounded-full px-2.5 py-0.5 bg-black/[0.04] dark:bg-white/[0.06] border-0`) rendering a micro circular [`ProfileAvatar`](file:///home/cendrink/Programming/PUPSJ-RMS-Prototype/next-app/src/components/shared/ProfileAvatar.jsx) (`size-3.5 rounded-full border-0`) that queries the live profile photo via `/api/account/avatar?id=...` with deterministic initial fallback, paired with bold, legible name text:
     ```jsx
-    <span className="inline-flex items-center gap-1 font-semibold text-gray-900 dark:text-zinc-100">
-      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10 dark:bg-red-400/20 text-[9px] font-bold text-pup-maroon dark:text-red-300">
-        {initials}
-      </span>
-      <span>{cleanName}</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-gray-900 dark:text-zinc-100 font-semibold text-[11px] align-baseline transition-transform select-text mx-0.5 border-0">
+      <ProfileAvatar
+        id={token.value}
+        name={token.value}
+        initials={initial}
+        className="size-3.5 shrink-0 rounded-full border-0"
+        fallbackClassName={cn("text-[8px] font-bold text-white border-0", getDeterministicColor(token.value))}
+      />
+      <span className="truncate max-w-[200px]">{token.value}</span>
     </span>
     ```
 - **State & Status Transitions (`token.type === "transition"`)**:
   - Identifies state evolutions (e.g., `from Pending to Approved`, `Pending → Ready`).
-  - Renders the previous state in muted text, followed by an inline directional arrow (`ArrowRight01Icon` or `→`), and the new state wrapped in a micro-badge.
+  - Renders the previous state in muted text, followed by an inline directional arrow (`ArrowRight01Icon` or `→`), and the new state wrapped in a pure borderless micro-capsule (`rounded-full px-2.5 py-0.5 bg-black/[0.03] dark:bg-white/[0.05] text-[11px] font-medium border-0`).
 - **Record & Student Identifiers (`token.type === "record_id"`)**:
   - Matches student numbers (`2021-00123`), request IDs (`#REQ-402`), and numeric IDs (`#42`).
-  - Renders in tabular numbers with subtle slate highlight (`font-semibold tabular-nums text-gray-900 dark:text-zinc-100`).
+  - Renders as a pure borderless monospace pill (`inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[11px] font-medium bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200 tabular-nums border-0`).
 - **IP Addresses (`token.type === "ip"`)**:
   - Matches IPv4 network addresses (e.g., `192.168.1.100`, `127.0.0.1`).
   - Renders in compact monospace tabular styling with network pill highlight.
@@ -1176,7 +1447,11 @@ The **Narrative Typography System** (`@/components/shared/NarrativeText` and `@/
 - [ ] **Default Table Density (50 Rows for High-Volume)**: Is the default pagination limit for high-volume logs/activity history configured to 50 rows per page (`limit = 50`), and does the loading skeleton mirror `rowCount={50}`?
 - [ ] **Expandable Detail Row Bento**: Do expandable rows follow the Apple Inset Grouped 3-card bento architecture (`LogExpandedRow`) with translucent backdrop blur, divided rows, parsed User Agent attribution, and text-only `Copy Record (JSON)`?
 - [ ] **Row Selection vs. Double-Click Details**: On tables with checkboxes, does 1-click toggle row selection and double-click open View Details?
-- [ ] **Badges (Strictly Text-Only & `rounded-full`)**: Are all status, department, category, network, severity, platform, and scope badges strictly text-only and formatted as `rounded-full` pills (no `rounded-md` or `rounded-lg` on badges)?
+- [ ] **Table Action Button Affordance (The Subdued/Ghost Pattern)**: Are table action buttons visible with subtle affordance (`opacity: 0.6` / `.table-action-button`) by default rather than completely hidden (`opacity-0`), elevating smoothly to full opacity on row hover (`tr:hover`), focus-within, or open popover?
+- [ ] **Table Action Button Border Radius & Geometry**: Do all table action buttons use `rounded-lg` (`border-radius: var(--radius-lg, var(--radius, 0.75rem))` = 12px continuous squircle) matching the Departments & Stations grid view action button, standard `28×28px` (`h-7 w-7`) geometry, `active:scale-95`, and zero parent `opacity-40` multiplication wrappers?
+- [ ] **Table Action Click Isolation**: Does every table action button wrapper attach `onClick={(e) => e.stopPropagation()}` to prevent accidental row selection or opening detail sheets when interacting with the action button?
+- [ ] **Kebab Orientation Consistency**: Do horizontal table rows use `MoreHorizontalIcon` (`size={16}`) and vertical grid cards use `MoreVerticalIcon` (`size={16}`)?
+- [ ] **Pure Borderless Badges (`BADGE_BASE` & `BADGE_PALETTES`)**: Are all status, department, category, network, severity, platform, and scope badges strictly borderless (zero border line colors or border utility classes), uniform `px-2.5 py-0.5` padding, `text-[11px] font-semibold`, strictly text-only (no leading dots or icons, except micro avatar in narrative mentions), and formatted as `rounded-full` pills across tables, lists, sheets, and modals?
 - [ ] **Strict Button Affordance Policy**: Are all labeled buttons strictly text-only (no static leading icons), and are all icon buttons strictly icon-only without text labels?
 - [ ] **Secondary Button Styling**: Do secondary/outline buttons use the ultra-subtle translucent hairline border (`border-black/[0.06] dark:border-white/[0.08]` with `shadow-xs cursor-pointer active:scale-95`)?
 - [ ] **Input & Textarea Focus Ring**: Do all `<Input>`, `<Textarea>`, `<DashboardSearch>`, and custom form inputs use the unified 1px institutional maroon focus state (`focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none dark:focus:border-red-500/80 dark:focus:ring-red-500/80`)?
@@ -1195,3 +1470,4 @@ The **Narrative Typography System** (`@/components/shared/NarrativeText` and `@/
 - [ ] **Toast Apple Motion**: Do notifications use `360ms` spring drop-and-settle with physical overshoot, `200ms` retraction exit, 1:1 swipe-up dismissal with rubber-band resistance, and top-centered depth stacking?
 - [ ] **Interface Sound & Stepped Slider**: Do sound settings use text-only status/counter pills (`Active` / `Muted`, `Active: X of 6`), text-only `Preview Sound` buttons (`data-sound="none"`), and the light-mode stepped capsule slider (`h-8 rounded-lg bg-gray-100`) with internal ticks, vertical bar indicator, tabular percentage, and `<ReloadIcon size={14} />` reset button?
 - [ ] **Skeleton Parity & Action Centering**: Does the table skeleton mirror the exact column dimensions and center alignment (`w-12 min-w-12 max-w-12 px-2 text-center` with `mx-auto`) without right-aligned padding?
+- [ ] **Institutional PDF Table Full-Width Standard**: Do all PDF reports (`createReportDocument`) stretch tables to 100% of the usable content width (`tableWidth: usable = width - margin * 2`) with flexible title/details columns and zero right-side blank whitespace?

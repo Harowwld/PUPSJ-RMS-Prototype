@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -157,13 +159,13 @@ export default function OfficeDocumentsTable({
                     <td className="p-4 align-middle overflow-hidden whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       {officeLabel === "OSAS" ? (
                         <span
-                          className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full"
+                          className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 truncate inline-block max-w-full", BADGE_BASE)}
                           title={document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
                         >
                           {document.organization_name || document.verified_org_name || document.org_acronym || document.student_no || "N/A"}
                         </span>
                       ) : (
-                        <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                        <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                           {document.student_no || "N/A"}
                         </span>
                       )}
@@ -181,12 +183,9 @@ export default function OfficeDocumentsTable({
                       {getYear(document) || "N/A"}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                      <Badge variant="outline" className={cn(
-                        "rounded-full text-[10px] font-medium px-2.5 py-0.5",
-                        document.approval_status === "Approved"
+                      <Badge variant="outline" className={cn("rounded-full text-[10px] font-medium px-2.5 py-0.5", document.approval_status === "Approved"
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                          : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                      )}>{document.approval_status || "Pending"}</Badge>
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400", BADGE_BASE)}>{document.approval_status || "Pending"}</Badge>
                     </td>
                     <td className="p-4 pr-6 align-middle text-right">
                       <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>

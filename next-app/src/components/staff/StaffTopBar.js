@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
 import AppIcon from "@/components/ui/app-icon";
@@ -39,11 +41,11 @@ export default function StaffTopBar({ items, activeKey, onSelect }) {
               <span>{item.label}</span>
               
               {item.badge > 0 ? (
-                <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold  transition-all duration-normal ${
+                <span className={cn(`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold  transition-all duration-normal ${
  isActive 
  ? "bg-pup-maroon text-white dark:bg-red-500/20 dark:text-primary"
  : "bg-emerald-600 text-white dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
- }`}>
+ }`, BADGE_BASE)}>
                   {item.badge > 99 ? "99+" : item.badge}
                 </span>
               ) : null}

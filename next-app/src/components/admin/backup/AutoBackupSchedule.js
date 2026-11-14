@@ -8,7 +8,7 @@ import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Select } from "@/components/ui/select"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { Switch } from "@/components/ui/switch";
-import { ArrowDown01Icon, ArrowUp01Icon, Calendar01Icon, RefreshIcon } from "hugeicons-react";
+import { ArrowDown01Icon, ArrowUp01Icon, Calendar01Icon, Cancel01Icon, RefreshIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 
 
 const DAY_LABELS = [
@@ -274,9 +274,21 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               <h4 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-tight">
                 Automatic Backups
               </h4>
-              {schedule.enabled && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                  Active
+              {schedule.enabled ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                    <Tick01Icon size={8} className="stroke-[3]" />
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">Active</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <Cancel01Icon size={12} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">Inactive</span>
                 </span>
               )}
             </div>
@@ -421,8 +433,11 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
                 <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                   Smart Storage Retention (GFS 7/4/12)
                 </span>
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
-                  Recommended
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <Shield01Icon size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Policy</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">Recommended</span>
                 </span>
               </div>
               <span className="text-[11px] text-gray-600 dark:text-zinc-400 mt-0.5 leading-normal">
@@ -449,13 +464,21 @@ export default function AutoBackupSchedule({ showToast, scope = "system", embedd
               </span>
 
               {schedule.lastRunStatus === "success" && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                  Successful
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
+                    <Tick01Icon size={8} className="stroke-[3]" />
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">Successful</span>
                 </span>
               )}
               {schedule.lastRunStatus === "failed" && (
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.rose)}>
-                  Failed
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                  <Cancel01Icon size={12} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span className="font-semibold text-gray-900 dark:text-zinc-100">Status</span>
+                  <span className="h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0" aria-hidden="true" />
+                  <span className="font-medium text-gray-500 dark:text-zinc-400">Failed</span>
                 </span>
               )}
             </div>

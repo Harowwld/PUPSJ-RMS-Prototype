@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 
 
 import {
@@ -163,17 +165,14 @@ export default function HealthSidebar({
                 </span>
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      externalDrive?.connected
+                    className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", externalDrive?.connected
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                    )}
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300", BADGE_BASE)}
                   >
                     {externalDrive?.connected ? "Ready to Copy" : "Waiting for Drive"}
                   </span>
                   {externalDrive?.isEmulated && (
-                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300", BADGE_BASE)}>
                       Demo Mode
                     </span>
                   )}

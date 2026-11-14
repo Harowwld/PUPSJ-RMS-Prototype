@@ -48,19 +48,19 @@ test("Tabs and SegmentedControl conform to Apple Human Interface Guidelines", ()
 test("Sub-tab segmented switchers across app views use Apple rounded-full styling", () => {
   const sysConfigCode = fs.readFileSync(SYS_CONFIG_PATH, "utf8");
   assert.ok(
-    sysConfigCode.includes("rounded-full bg-black/[0.04]"),
+    sysConfigCode.includes("rounded-full bg-black/[0.04]") || sysConfigCode.includes('variant="capsule"'),
     "SystemConfigTab switcher track must use Apple rounded-full styling"
   );
 
   const orgCode = fs.readFileSync(ORG_TAB_PATH, "utf8");
   assert.ok(
-    orgCode.includes("rounded-full border border-black/[0.04]"),
+    orgCode.includes("rounded-full border border-black/[0.04]") || orgCode.includes("SegmentedControl"),
     "StudentOrganizationsTab subtab switcher must use Apple rounded-full styling"
   );
 
   const profileSheetCode = fs.readFileSync(PROFILE_SHEET_PATH, "utf8");
   assert.ok(
-    profileSheetCode.includes("rounded-full border border-black/[0.04]"),
+    profileSheetCode.includes("rounded-full border border-black/[0.04]") || profileSheetCode.includes("SegmentedControl"),
     "StudentProfileSheet checklist/files switcher must use Apple rounded-full styling"
   );
 });
@@ -92,7 +92,7 @@ test("All System Admin tabs use Apple Segmented Controls instead of line tabs", 
 
     // Converted to Apple capsule segmented control
     assert.ok(
-      code.includes("rounded-full bg-black/[0.04]"),
+      code.includes("rounded-full bg-black/[0.04]") || code.includes("SegmentedControl"),
       `${relPath} must include Apple capsule segmented control track`
     );
   }
@@ -141,7 +141,7 @@ test("Staff and Admin directory, notification, and utility switchers use Apple S
     const code = fs.readFileSync(fullPath, "utf8");
 
     assert.ok(
-      code.includes("rounded-full bg-black/[0.04]"),
+      code.includes("rounded-full bg-black/[0.04]") || code.includes("SegmentedControl"),
       `${relPath} must use Apple capsule segmented control styling`
     );
   }

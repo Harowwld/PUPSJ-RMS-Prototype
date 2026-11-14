@@ -1,4 +1,6 @@
 "use client"
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 
 import { useState, useEffect } from "react"
@@ -21,6 +23,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton"
 import useTableScroll from "@/hooks/useTableScroll"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
+import { SegmentedControl } from "@/components/ui/tabs"
 import {
   Tooltip,
   TooltipContent,
@@ -271,7 +274,7 @@ export default function RateLimitingTab() {
                         {violation.ip_address}
                       </td>
                       <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
-                        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
+                        <span className={cn("inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300", BADGE_BASE)}>
                           {violation.violation_count}
                         </span>
                       </td>
@@ -437,7 +440,7 @@ export default function RateLimitingTab() {
                     <td className="p-4 text-xs font-sans tabular-nums font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap border-r border-border/70 dark:border-border/70">{ip.ip}</td>
                     <td className="p-4 text-xs whitespace-nowrap border-r border-border/70 dark:border-border/70">
                       <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`}
+                        className={cn(`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getRiskLevelColor(ip.riskLevel)}`, BADGE_BASE)}
                       >
                         {ip.riskLevel}
                       </span>
@@ -481,28 +484,17 @@ export default function RateLimitingTab() {
         </div>
 
         {/* Apple Segmented Controls */}
-        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] w-fit select-none overflow-x-auto">
-          {[
-            { id: "overview", label: "Overview", icon: DashboardSpeed01Icon },
-            { id: "configs", label: "Configurations", icon: LockIcon },
-            { id: "suspicious", label: "Suspicious IPs", icon: AlertCircleIcon },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "inline-flex items-center gap-2 px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer border-0 select-none active:scale-[0.98]",
-                activeTab === tab.id
-                  ? "bg-white text-gray-950 dark:bg-zinc-800 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                  : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 bg-transparent"
-              )}
-            >
-              <tab.icon size="1em" className="text-sm shrink-0" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={activeTab}
+          onValueChange={setActiveTab}
+          variant="capsule"
+          className="inline-grid grid-flow-col auto-cols-fr w-fit shrink-0"
+          items={[
+            { value: "overview", label: "Overview", icon: <DashboardSpeed01Icon size="1em" className="text-sm" /> },
+            { value: "configs", label: "Configurations", icon: <LockIcon size="1em" className="text-sm" /> },
+            { value: "suspicious", label: "Suspicious IPs", icon: <AlertCircleIcon size="1em" className="text-sm" /> },
+          ]}
+        />
 
         {/* Tab Content */}
         {loading ? (

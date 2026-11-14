@@ -81,6 +81,13 @@ function normalizeCabinetId(cabinetIdRaw) {
   return id.length ? id : null;
 }
 
+function layoutHasLocation(layout, { room, cabinet, drawer }) {
+  const roomDef = layout.rooms.find((entry) => Number(entry.id) === Number(room));
+  const cabinetId = normalizeCabinetId(cabinet);
+  const cabinetDef = roomDef?.cabinets.find((entry) => normalizeCabinetId(entry.id) === cabinetId);
+  return Boolean(cabinetDef?.drawerIds.some((id) => String(id) === String(drawer)));
+}
+
 function normalizeRotation(rotationRaw) {
   if (rotationRaw === undefined || rotationRaw === null || rotationRaw === "") return 0;
   const n = typeof rotationRaw === "string" ? Number(rotationRaw) : rotationRaw;
@@ -216,6 +223,7 @@ export async function setStorageLayoutWithReassignments(layout, mappings = [], {
       !Number.isFinite(from.room) || !from.cabinet || !from.drawer ||
       !Number.isFinite(to.room) || !to.cabinet || !to.drawer
     ) throw new Error("Invalid reassignment location");
+    if (!layoutHasLocation(normalizedLayout, to)) throw new Error("Reassignment target is not part of the proposed layout");
 
     const key = `${from.room}|${from.cabinet}|${from.drawer}`;
     const existing = bySource.get(key);
@@ -228,6 +236,22 @@ export async function setStorageLayoutWithReassignments(layout, mappings = [], {
   const entries = [...bySource.values()];
   const settingsKey = scopedSettingsKey(STORAGE_LAYOUT_KEY, normalizedOfficeId);
   return transaction(async ({ query: run, queryOne: runOne }) => {
+    const linkedLocations = await run(
+      `SELECT s.storage_room AS room, s.storage_cabinet AS cabinet, s.storage_drawer AS drawer
+       FROM students s
+       WHERE s.storage_room IS NOT NULL AND s.storage_cabinet IS NOT NULL AND s.storage_drawer IS NOT NULL
+         AND EXISTS (SELECT 1 FROM student_office_memberships som
+                      WHERE som.student_no = s.student_no AND som.office_id = $1)
+       FOR UPDATE OF s`,
+      [normalizedOfficeId],
+    );
+    for (const location of linkedLocations.rows) {
+      const sourceKey = `${Number(location.room)}|${normalizeCabinetId(location.cabinet)}|${String(location.drawer).trim()}`;
+      if (!layoutHasLocation(normalizedLayout, location) && !bySource.has(sourceKey)) {
+        throw new Error(`Storage location Room ${location.room} / Cabinet ${location.cabinet} / Drawer ${location.drawer} is still assigned to student records`);
+      }
+    }
+
     let moved = 0;
     let breakdown = [];
     if (entries.length) {
@@ -247,11 +271,9 @@ export async function setStorageLayoutWithReassignments(layout, mappings = [], {
            ON s.storage_room = m.from_room
           AND s.storage_cabinet = m.from_cabinet
           AND s.storage_drawer = m.from_drawer
-          AND s.status = 'Active'
           AND EXISTS (SELECT 1 FROM student_office_memberships som
                        WHERE som.student_no = s.student_no
-                         AND som.office_id = $${values.length + 1}
-                         AND som.status = 'Active')
+                         AND som.office_id = $${values.length + 1})
          GROUP BY m.from_room, m.from_cabinet, m.from_drawer, m.to_room, m.to_cabinet, m.to_drawer
          ORDER BY m.from_room, m.from_cabinet, m.from_drawer`,
         [...values, normalizedOfficeId],
@@ -273,11 +295,9 @@ export async function setStorageLayoutWithReassignments(layout, mappings = [], {
           WHERE s.storage_room = m.from_room
             AND s.storage_cabinet = m.from_cabinet
             AND s.storage_drawer = m.from_drawer
-            AND s.status = 'Active'
             AND EXISTS (SELECT 1 FROM student_office_memberships som
                          WHERE som.student_no = s.student_no
-                           AND som.office_id = $${values.length + 1}
-                           AND som.status = 'Active')`,
+                           AND som.office_id = $${values.length + 1})`,
         [...values, normalizedOfficeId],
       );
     }

@@ -1,4 +1,6 @@
 "use client";
+import { BADGE_BASE } from "@/lib/badgeStyles";
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -535,9 +537,6 @@ export default function StudentDirectoryTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "Export Student Directory",
-          details: `exported ${filteredStudents.length} student directory records to CSV`,
-          severity: "WARNING",
-          entity_type: "StudentDirectory",
         }),
       });
     } catch {
@@ -1045,6 +1044,7 @@ export default function StudentDirectoryTab({
                 setPage(1);
               }}
               variant="capsule"
+              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
                 {
                   value: "active",
@@ -1137,9 +1137,10 @@ export default function StudentDirectoryTab({
                     <EmptyContent>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={handleResetFilters}
                         title="Reset Filters"
-                        className="flex h-10 items-center justify-center rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-5 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
+                        className="h-9 px-4 text-xs font-semibold rounded-xl"
                       >
                         Reset Filters
                       </Button>
@@ -1297,7 +1298,7 @@ export default function StudentDirectoryTab({
                               isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                             )}
                           >
-                            <span className="font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
+                            <span className={cn("font-sans tabular-nums text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200", BADGE_BASE)}>
                               {s.studentNo}
                             </span>
                           </td>
@@ -1312,7 +1313,7 @@ export default function StudentDirectoryTab({
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Badge
                                 variant="outline"
-                                className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border-border dark:border-border shrink-0"
+                                className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full border-border dark:border-border shrink-0", BADGE_BASE)}
                               >
                                 {s.courseCode || "N/A"}
                               </Badge>
@@ -1344,12 +1345,9 @@ export default function StudentDirectoryTab({
                           <td className="p-4 text-center align-middle border-r border-border/70 dark:border-border/70">
                             <Badge
                               variant="outline"
-                              className={cn(
-                                "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
-                                isStudentArchived
+                              className={cn("text-[10px] font-semibold px-2.5 py-0.5 rounded-full border", isStudentArchived
                                   ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                              )}
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20", BADGE_BASE)}
                             >
                               {s.status || "Active"}
                             </Badge>
@@ -1451,7 +1449,9 @@ export default function StudentDirectoryTab({
           </div>
 
           {/* 5. Apple HIG Pagination Footer */}
-          <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredStudents.length} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
+          {!loading && filteredStudents.length > 0 && (
+            <TablePagination label="Student directory pages" page={page} pageSize={itemsPerPage} totalCount={filteredStudents.length} displayedCount={paginatedStudents.length} onPageChange={setPage} onPageSizeChange={setItemsPerPage} loading={loading} />
+          )}
         </Card>
 
         {/* Floating Bulk Action Bar */}
