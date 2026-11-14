@@ -5,6 +5,7 @@ import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
 import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { getStaffByUsername } from "@/lib/staffRepo";
+import { findActiveStudentAccount } from "@/lib/studentAuth";
 import { isDemoAccount } from "@/lib/demoAccounts";
 import { assertAccountEmailConfigured, sendPasswordResetEmail } from "@/lib/accountEmail";
 import { createPasswordResetUrl, getPasswordRecoveryOrigin } from "@/lib/passwordRecovery";
@@ -74,26 +75,29 @@ export async function POST(req) {
     ));
   }
 
-  let staff = await getStaffByUsername(identifier);
-  if (staff && (staff.status !== "Active" || isDemoAccount(staff.email))) staff = null;
+  const staff = await getStaffByUsername(identifier);
+  const student = staff ? null : await findActiveStudentAccount(identifier);
+  const account = staff || student;
 
-  if (staff) {
+  if (account?.email && !isDemoAccount(account.email) && (!staff || staff.status === "Active")) {
+    const accountTable = staff ? "staff" : "student_accounts";
+    const accountColumn = staff ? "staff_id" : "student_account_id";
     const resetToken = crypto.randomBytes(32).toString("base64url");
     const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
     await transaction(async ({ query: txQuery }) => {
-      await txQuery("SELECT id FROM staff WHERE id = $1 FOR UPDATE", [staff.id]);
-      await txQuery("UPDATE password_reset_tokens SET used_at = NOW() WHERE staff_id = $1 AND used_at IS NULL", [staff.id]);
+      await txQuery(`SELECT id FROM ${accountTable} WHERE id = $1 FOR UPDATE`, [account.id]);
+      await txQuery(`UPDATE password_reset_tokens SET used_at = NOW() WHERE ${accountColumn} = $1 AND used_at IS NULL`, [account.id]);
       await txQuery(
-        `INSERT INTO password_reset_tokens (staff_id, token_hash, expires_at, requested_ip)
+        `INSERT INTO password_reset_tokens (${accountColumn}, token_hash, expires_at, requested_ip)
          VALUES ($1, $2, NOW() + INTERVAL '15 minutes', $3)`,
-        [staff.id, tokenHash, ipAddress],
+        [account.id, tokenHash, ipAddress],
       );
     });
     let delivered = false;
     try {
       await sendPasswordResetEmail({
-        to: staff.email,
-        fullName: [staff.fname, staff.lname].filter(Boolean).join(" "),
+        to: account.email,
+        fullName: (staff ? [staff.fname, staff.lname] : [student.first_name, student.last_name]).filter(Boolean).join(" "),
         resetUrl: createPasswordResetUrl(recoveryOrigin, resetToken),
       });
       delivered = true;
@@ -105,7 +109,7 @@ export async function POST(req) {
     if (delivered) await writeGlobalAuditLog(req, "Password reset requested", {
       actor: "System",
       role: "System",
-      details: "A password reset transaction was created for an active staff account.",
+      details: "A password reset transaction was created for an active account.",
       entity_type: "password_reset",
     });
   }

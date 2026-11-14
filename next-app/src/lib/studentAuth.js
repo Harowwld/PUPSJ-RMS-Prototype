@@ -91,8 +91,8 @@ export async function registerStudent(
   };
 }
 
-export async function authenticateStudent({ studentNo, username, email, identifier, password }) {
-  const rawId = studentNo || username || email || identifier || "";
+export async function findActiveStudentAccount(identifier) {
+  const rawId = identifier || "";
   const cleanNo = String(rawId).trim().toUpperCase();
   const cleanEmail = String(rawId).trim().toLowerCase();
   const select = `SELECT sa.id, sa.student_no, sa.password_hash, sa.status,
@@ -123,6 +123,15 @@ export async function authenticateStudent({ studentNo, username, email, identifi
   if (!row || String(row.status).toLowerCase() !== "active" ||
       (row.student_status && String(row.student_status).toLowerCase() !== "active") ||
       (row.has_archived_office && !row.has_active_office)) return null;
+  return row;
+}
+
+export async function authenticateStudent({ studentNo, username, email, identifier, password }) {
+  const rawId = studentNo || username || email || identifier || "";
+  const row = await findActiveStudentAccount(rawId);
+  if (!row) return null;
+  const cleanNo = String(rawId).trim().toUpperCase();
+  const cleanEmail = String(rawId).trim().toLowerCase();
   let verification = verifyPasswordHash(password, row.password_hash);
   const isDemoStudent = cleanEmail === "student@pup.com" ||
                         cleanEmail === "test.student@pup.com" ||

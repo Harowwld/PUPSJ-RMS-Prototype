@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import test from "node:test";
+import { isDemoAccount } from "../src/lib/demoAccounts.js";
 
 async function loadFunctions(path, bindings, exports) {
   const source = await readFile(new URL(path, import.meta.url), "utf8");
@@ -16,7 +18,7 @@ const request = (url = "http://localhost:3000/api/auth/forgot-password/identify"
 
 const recovery = await loadFunctions("../src/lib/passwordRecovery.js", {}, ["getPasswordRecoveryOrigin", "createPasswordResetUrl"]);
 
-async function route({ account = staff, configured = true, deliveryFailure = false, requestUrl } = {}) {
+async function route({ account = staff, student = null, configured = true, deliveryFailure = false, requestUrl } = {}) {
   const queries = [], emails = [], logs = [], audits = [];
   let lookups = 0;
   const query = async (sql, params) => { queries.push({ sql, params }); return []; };
@@ -26,6 +28,8 @@ async function route({ account = staff, configured = true, deliveryFailure = fal
     ForgotPasswordIdentifySchema: { safeParse: (data) => ({ success: true, data }) },
     checkAuthForgotPasswordRateLimit: async () => ({ allowed: true }),
     getStaffByUsername: async () => { lookups++; return account; },
+    findActiveStudentAccount: async () => student,
+    isDemoAccount,
     assertAccountEmailConfigured: () => { if (!configured) throw new Error("not configured"); },
     sendPasswordResetEmail: async (email) => { emails.push(email); if (deliveryFailure) throw new Error(`provider leaked ${new URL(email.resetUrl).hash.slice("#token=".length)}`); },
     writeGlobalAuditLog: async (...args) => audits.push(args),
@@ -35,6 +39,52 @@ async function route({ account = staff, configured = true, deliveryFailure = fal
   const response = await POST(request(requestUrl));
   return { response, body: await response.json(), queries, emails, logs, audits, lookups };
 }
+
+test("portal recovery emails the registered account address and stores a student-owned token", async () => {
+  const student = { id: 42, email: "student@example.test", first_name: "Portal", last_name: "User" };
+  const result = await route({ account: null, student });
+  assert.equal(result.emails[0].to, student.email);
+  assert.equal(result.emails[0].fullName, "Portal User");
+  const insert = result.queries.find(({ sql }) => sql.includes("INSERT INTO password_reset_tokens"));
+  assert.match(insert.sql, /student_account_id/);
+  assert.equal(insert.params[0], student.id);
+  assert.deepEqual(result.body, (await route({ account: null })).body);
+});
+
+test("student reset changes the portal password once and invalidates its sessions", async () => {
+  const updates = [], revoked = [];
+  let used = false;
+  const { POST } = await loadFunctions("../src/app/api/auth/forgot-password/reset/route.js", {
+    crypto, NextResponse: { json: Response.json },
+    ForgotPasswordResetSchema: { safeParse: (data) => ({ success: true, data }) },
+    checkAuthForgotPasswordRateLimit: async () => ({ allowed: true }),
+    resetAuthForgotPasswordRateLimit: async () => {},
+    writeGlobalAuditLog: async () => {},
+    validatePasswordPolicy: () => ({ valid: true }),
+    hashPassword: () => "new-password-hash",
+    bumpSessionVersion: async (id) => revoked.push(id),
+    transaction: async (callback) => callback({
+      queryOne: async (sql) => {
+        if (sql.includes("FROM student_accounts")) return { id: 42, status: "Active" };
+        return used ? null : { id: 17, staff_id: null, student_account_id: 42 };
+      },
+      query: async (sql, params) => {
+        updates.push([sql, params]);
+        if (sql.includes("UPDATE password_reset_tokens")) used = true;
+      },
+    }),
+  }, ["POST"]);
+  const reset = () => POST(new Request("http://localhost:3000/api/auth/forgot-password/reset", {
+    method: "POST",
+    body: JSON.stringify({ resetToken: "student-reset-token", newPassword: "new password" }),
+  }));
+  assert.equal((await reset()).status, 200);
+  assert.equal((await reset()).status, 400);
+  assert.equal(updates.length, 2);
+  assert.match(updates[0][0], /UPDATE student_accounts/);
+  assert.deepEqual(updates[0][1], ["new-password-hash", 42]);
+  assert.deepEqual(revoked, [42]);
+});
 
 test("recovery sends a private reset link to the registered email and stores only the token hash", async () => {
   const result = await route();
@@ -91,13 +141,15 @@ test("reset mail has a clickable button and plaintext link and rejects unaccepte
     const sent = [];
     let accepted = [staff.email];
     const { sendPasswordResetEmail } = await loadFunctions("../src/lib/accountEmail.js", {
-      nodemailer: { createTransport: () => ({ sendMail: async (mail) => { sent.push(mail); return { accepted, messageId: "test" }; } }) },
+      join, nodemailer: { createTransport: () => ({ sendMail: async (mail) => { sent.push(mail); return { accepted, messageId: "test" }; } }) },
     }, ["sendPasswordResetEmail"]);
     await sendPasswordResetEmail({ to: staff.email, fullName: "<Staff>", resetUrl: "https://emanage.example.test/forgot-password#token=private-test-token" });
     assert.equal(sent[0].to, staff.email);
     assert.ok(sent[0].text.includes("private-test-token"));
     assert.ok(sent[0].html.includes('href="https://emanage.example.test/forgot-password#token=private-test-token"'));
     assert.ok(sent[0].html.includes(">Reset Password</a>"));
+    assert.match(sent[0].html, /src="cid:emanage-logo@pupsj-rms"/);
+    assert.equal(sent[0].attachments[0].cid, "emanage-logo@pupsj-rms");
     assert.equal(sent[0].text.includes("Enter this token"), false);
     assert.ok(sent[0].html.includes("&lt;Staff&gt;"));
     assert.ok(sent[0].text.includes("15 minutes"));

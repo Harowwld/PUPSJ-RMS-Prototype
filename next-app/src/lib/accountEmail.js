@@ -71,7 +71,7 @@ function brandedAccountSender(from) {
 }
 
 function renderAccountEmail({ title, preview, headline, content, footer }) {
-  const logoCid = "emanage-signup-logo@pupsj-rms";
+  const logoCid = "emanage-logo@pupsj-rms";
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -133,12 +133,12 @@ function renderAccountEmail({ title, preview, headline, content, footer }) {
             </td>
           </tr>
 
-          <!-- Footer -->
+          ${footer ? `<!-- Footer -->
           <tr>
             <td class="text-sec" style="padding:20px 8px 0;color:#6e6e73;font-size:13px;line-height:1.5;text-align:left">
               ${escapeHtml(footer)}
             </td>
-          </tr>
+          </tr>` : ""}
 
         </table>
         <!--[if mso]></td></tr></table><![endif]-->
@@ -221,11 +221,19 @@ export async function sendSmtpTestEmail({ to }) {
     throw error;
   }
   const mailer = getTransporter();
+  const subject = "PUPSJ-RMS test email";
+  const description = "This is a test email from PUPSJ-RMS email setup. Receiving it confirms that this mailbox can receive messages from the configured SMTP server.";
   const result = await mailer.transporter.sendMail({
     from: mailer.from,
     to: recipient,
-    subject: "PUPSJ-RMS test email",
-    text: "This is a test email from PUPSJ-RMS email setup. Receiving it confirms that this mailbox can receive messages from the configured SMTP server.",
+    subject,
+    text: description,
+    ...renderAccountEmail({
+      title: subject,
+      preview: description,
+      headline: "Email delivery test",
+      content: `<p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47">${description}</p>`,
+    }),
   });
   if (!result.accepted?.length || result.rejected?.length) {
     const error = new Error("The SMTP server did not accept the test recipient.");
@@ -240,10 +248,13 @@ export async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
   if (!recipient || !resetUrl) throw new Error("A recipient and reset link are required.");
   const mailer = getTransporter();
   const name = String(fullName || "there").trim() || "there";
+  const subject = "Reset your eManage password";
+  const footer = "If you did not request this reset, you can ignore this email. Your password has not changed.";
+  const resetHref = escapeHtml(resetUrl);
   const result = await mailer.transporter.sendMail({
     from: mailer.from,
     to: recipient,
-    subject: "Reset your eManage password",
+    subject,
     text: [
       `Hello ${name},`,
       "",
@@ -251,16 +262,20 @@ export async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
       resetUrl,
       "",
       "This link expires in 15 minutes and can be used once. Do not share it.",
-      "If you did not request this reset, you can ignore this email. Your password has not changed.",
+      footer,
     ].join("\n"),
-    html: `<!doctype html><html><body style="font-family:'Plus Jakarta Sans',sans-serif;color:#1f2937;line-height:1.5">
-      <p>Hello ${escapeHtml(name)},</p>
-      <p>Choose a new password for your eManage account.</p>
-      <p><a href="${escapeHtml(resetUrl)}" style="display:inline-block;padding:12px 24px;background:#800000;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">Reset Password</a></p>
-      <p>If the button does not open, <a href="${escapeHtml(resetUrl)}">open the password reset page</a>.</p>
-      <p>This link expires in 15 minutes and can be used once. Do not share it.</p>
-      <p>If you did not request this reset, you can ignore this email. Your password has not changed.</p>
-    </body></html>`,
+    ...renderAccountEmail({
+      title: subject,
+      preview: "Use this link to reset your eManage password within 15 minutes.",
+      headline: "Reset your password",
+      content: `
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47">Hello ${escapeHtml(name)},</p>
+              <p class="text-sec" style="color:#6e6e73;line-height:1.5">Choose a new password for your eManage account.</p>
+              <p style="margin:24px 0"><a href="${resetHref}" style="display:inline-block;padding:12px 24px;background:#800000;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">Reset Password</a></p>
+              <p class="text-sec" style="color:#6e6e73;line-height:1.5">If the button does not open, <a class="text-pri" href="${resetHref}" style="color:#1d1d1f;text-decoration:underline">open the password reset page</a>.</p>
+              <p class="text-sec" style="margin:0;color:#6e6e73;line-height:1.5">This link expires in 15 minutes and can be used once. Do not share it.</p>`,
+      footer,
+    }),
   });
   if (!result.accepted?.length) throw new Error("Password reset email was not accepted.");
   return { messageId: result.messageId };

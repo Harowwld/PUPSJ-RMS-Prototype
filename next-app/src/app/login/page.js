@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/ui/motion";
@@ -806,7 +807,7 @@ export default function Home() {
 
                     {staffVerificationEmail && (
                       <div className="mt-5 space-y-2 text-left">
-                        <label htmlFor="staff-email-code" className="block text-sm font-medium">Email verification code</label>
+                        <label htmlFor="staff-email-code" className="text-xs font-semibold block">Email verification code</label>
                         <p className="text-xs text-muted-foreground">Enter the six-digit code for {staffVerificationEmail}.</p>
                         <Input
                           id="staff-email-code"
@@ -913,7 +914,7 @@ export default function Home() {
                         forgotError ? "has-error" : ""
                       }`}>
                         <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
-                          <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
+                          <label htmlFor="forgotIdentifier">{forgotMethod === "questions" ? "Email Address or Staff ID" : "Email Address, Student Number, or Staff ID"}</label>
                           <Input variant="floating"
                             type="text"
                             id="forgotIdentifier"
@@ -993,7 +994,7 @@ export default function Home() {
                   <form onSubmit={handleForgotQuestionReset} className="w-full flex-1 flex flex-col pb-24">
                     <div className="w-full text-left space-y-3">
                       <div>
-                        <label htmlFor="forgotQuestionId" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Question</label>
+                        <label htmlFor="forgotQuestionId" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Question</label>
                         <Select
                           id="forgotQuestionId"
                           aria-label="Security Question"
@@ -1006,16 +1007,16 @@ export default function Home() {
                         </Select>
                       </div>
                       <div>
-                        <label htmlFor="forgotAnswer" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Answer</label>
+                        <label htmlFor="forgotAnswer" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Answer</label>
                         <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       <div>
-                        <label htmlFor="forgotNewPassword" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">New Password</label>
-                        <Input id="forgotNewPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotNewPassword} onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <label htmlFor="forgotNewPassword" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">New Password</label>
+                        <PasswordInput id="forgotNewPassword" label="new password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotNewPassword} onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       <div>
-                        <label htmlFor="forgotConfirmPassword" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Confirm Password</label>
-                        <Input id="forgotConfirmPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotConfirmPassword} onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <label htmlFor="forgotConfirmPassword" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Confirm Password</label>
+                        <PasswordInput id="forgotConfirmPassword" label="password confirmation" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotConfirmPassword} onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       {forgotError && <p role="alert" className="text-[12px] text-[#E5484D]">{forgotError}</p>}
                     </div>
@@ -1066,7 +1067,7 @@ export default function Home() {
                   <strong className="break-all font-semibold text-foreground">{studentSignup.email.trim()}</strong>.
                 </p>
 
-                <label className="mt-6 block w-full">
+                <label className="text-xs font-semibold mt-6 block w-full">
                   <span className="sr-only">Email verification code</span>
                   <span data-otp-input className="relative grid grid-cols-6 gap-1.5 sm:gap-2">
                     <input
@@ -1090,7 +1091,8 @@ export default function Home() {
                       <span
                         key={index}
                         aria-hidden="true"
-                        className={`flex h-12 min-w-0 items-center justify-center rounded-xl border bg-muted/45 text-xl font-semibold tabular-nums text-foreground motion-safe:transition-colors sm:h-14 sm:text-2xl ${studentSignupError ? "border-destructive/60" : "border-border"} ${index === Math.min(signupCode.length, 5) ? "peer-focus:border-pup-maroon peer-focus:ring-1 peer-focus:ring-pup-maroon" : ""}`}
+                        data-otp-cell
+                        className={`flex h-12 min-w-0 items-center justify-center rounded-xl border bg-muted/45 text-xl font-semibold tabular-nums text-foreground motion-safe:transition-colors sm:h-14 sm:text-2xl border-border ${index === Math.min(signupCode.length, 5) ? "peer-focus:border-pup-maroon peer-focus:ring-1 peer-focus:ring-pup-maroon" : ""}`}
                       >
                         {signupCode[index] || <span className="size-1.5 rounded-full bg-muted-foreground/40" />}
                       </span>
@@ -1186,7 +1188,7 @@ export default function Home() {
 
                       {/* Middle Name (optional) */}
                       <div className={`field-wrapper border-b border-border dark:border-border/50 ${middleNameFocused || studentSignup.middleName.length > 0 ? "active" : ""}`}>
-                        <label>Middle Name (optional)</label>
+                        <label>Middle Name <span className="normal-case tracking-normal opacity-70">(optional)</span></label>
                         <Input variant="floating"
                           type="text"
                           placeholder=" "

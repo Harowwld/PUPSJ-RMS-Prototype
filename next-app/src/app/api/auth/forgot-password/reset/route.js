@@ -43,12 +43,12 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Too many password reset attempts. Please try again later." }, { status: 429 });
   }
 
-  let staff;
+  let accountId;
   try {
     await transaction(async ({ query: txQuery, queryOne: txQueryOne }) => {
       if (securityRecovery) {
         const { id, questionId, answer } = validation.data;
-        staff = await txQueryOne(
+        const staff = await txQueryOne(
           "SELECT id, fname, lname, role, status FROM staff WHERE id = $1 FOR UPDATE",
           [id],
         );
@@ -65,16 +65,39 @@ export async function POST(req) {
           [hashPassword(newPassword), staff.id],
         );
         await txQuery("UPDATE password_reset_tokens SET used_at = NOW() WHERE staff_id = $1 AND used_at IS NULL", [staff.id]);
+        accountId = staff.id;
         return;
       }
       const resetRow = await txQueryOne(
-        `SELECT id, staff_id FROM password_reset_tokens
+        `SELECT id, staff_id, student_account_id FROM password_reset_tokens
           WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()`,
         [tokenHash],
       );
       if (!resetRow) throw new Error("Invalid or expired password reset token.");
 
-      staff = await txQueryOne(
+      if (resetRow.student_account_id != null) {
+        const student = await txQueryOne(
+          "SELECT id, status FROM student_accounts WHERE id = $1 FOR UPDATE",
+          [resetRow.student_account_id],
+        );
+        if (!student || student.status !== "Active") throw new Error("Invalid or expired password reset token.");
+        const lockedResetRow = await txQueryOne(
+          `SELECT id FROM password_reset_tokens
+            WHERE id = $1 AND student_account_id = $2 AND used_at IS NULL AND expires_at > NOW()
+            FOR UPDATE`,
+          [resetRow.id, student.id],
+        );
+        if (!lockedResetRow) throw new Error("Invalid or expired password reset token.");
+        await txQuery(
+          "UPDATE student_accounts SET password_hash = $1, updated_at = NOW() WHERE id = $2",
+          [hashPassword(newPassword), student.id],
+        );
+        await txQuery("UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1", [lockedResetRow.id]);
+        accountId = student.id;
+        return;
+      }
+
+      const staff = await txQueryOne(
         "SELECT id, fname, lname, role, status FROM staff WHERE id = $1 FOR UPDATE",
         [resetRow.staff_id],
       );
@@ -97,6 +120,7 @@ export async function POST(req) {
         "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1 AND used_at IS NULL",
         [resetRow.id],
       );
+      accountId = staff.id;
     });
   } catch (error) {
     const recoveryError = securityRecovery ? "Invalid security question or answer." : "Invalid or expired password reset token.";
@@ -104,7 +128,7 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: recoveryError }, { status: 400 });
   }
 
-  await bumpSessionVersion(staff.id);
+  await bumpSessionVersion(accountId);
   await resetAuthForgotPasswordRateLimit(ipAddress, recoveryKey);
   await writeGlobalAuditLog(req, "Password reset completed", {
     actor: "System",
@@ -113,7 +137,7 @@ export async function POST(req) {
       ? "A security question answer was verified and the account password was changed."
       : "A password reset token was consumed and the account password was changed.",
     entity_type: "password_reset",
-    entity_id: staff.id,
+    entity_id: String(accountId),
   });
 
   return NextResponse.json({ ok: true, data: { success: true } });

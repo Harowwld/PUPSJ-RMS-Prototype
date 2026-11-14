@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Alert01Icon, Loading01Icon } from "hugeicons-react";
@@ -264,7 +265,7 @@ export default function ForgotPasswordPage() {
                     forgotError ? "has-error" : ""
                   }`}>
                     <div className={`field-wrapper ${forgotIdentifierFocused || forgotIdentifier.length > 0 ? "active" : ""}`}>
-                      <label htmlFor="forgotIdentifier">Email Address or Staff ID</label>
+                      <label htmlFor="forgotIdentifier">{forgotMethod === "questions" ? "Email Address or Staff ID" : "Email Address, Student Number, or Staff ID"}</label>
                       <Input variant="floating"
                         type="text"
                         id="forgotIdentifier"
@@ -362,7 +363,7 @@ export default function ForgotPasswordPage() {
                   {forgotStep === 4 && (
                     <div className="mb-3 space-y-3">
                       <div>
-                        <label htmlFor="forgotQuestionId" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Question</label>
+                        <label htmlFor="forgotQuestionId" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Question</label>
                         <Select
                           id="forgotQuestionId"
                           aria-label="Security Question"
@@ -375,7 +376,7 @@ export default function ForgotPasswordPage() {
                         </Select>
                       </div>
                       <div>
-                        <label htmlFor="forgotAnswer" className="block mb-1 text-[12px] text-gray-500 dark:text-zinc-400">Security Answer</label>
+                        <label htmlFor="forgotAnswer" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Answer</label>
                         <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                     </div>
@@ -391,11 +392,12 @@ export default function ForgotPasswordPage() {
                     {/* New Password input */}
                     <div className={`field-wrapper border-b border-border dark:border-border/50 ${newPassFocused || forgotNewPassword.length > 0 ? "active" : ""}`}>
                       <label htmlFor="forgotNewPassword">New Password</label>
-                      <Input variant="floating"
-                        type="password"
+                      <PasswordInput variant="floating"
+                        label="new password"
                         placeholder=" "
-                        className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="focus-visible:ring-0 focus-visible:ring-offset-0"
                         id="forgotNewPassword"
+                        disabled={forgotLoading}
                         autoComplete="new-password"
                         minLength={8}
                         value={forgotNewPassword}
@@ -412,11 +414,12 @@ export default function ForgotPasswordPage() {
                     {/* Confirm Password input */}
                     <div className={`field-wrapper ${confirmPassFocused || forgotConfirmPassword.length > 0 ? "active" : ""}`}>
                       <label htmlFor="forgotConfirmPassword">Confirm Password</label>
-                      <Input variant="floating"
-                        type="password"
+                      <PasswordInput variant="floating"
+                        label="password confirmation"
                         placeholder=" "
-                        className="pr-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="focus-visible:ring-0 focus-visible:ring-offset-0"
                         id="forgotConfirmPassword"
+                        disabled={forgotLoading}
                         autoComplete="new-password"
                         minLength={8}
                         value={forgotConfirmPassword}
