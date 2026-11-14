@@ -1,22 +1,23 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { cn, formatTitleCase } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   KanbanStatusIcon,
-  KanbanDotTag,
-  getTagDotColor,
+  KANBAN_CARD_CLASS,
+  KANBAN_CARD_DRAGGING_CLASS,
+  KANBAN_CARD_HEADER_CLASS,
+  KANBAN_CARD_TITLE_CLASS,
+  KANBAN_CARD_FOOTER_CLASS,
+  KANBAN_CARD_METADATA_CLASS,
+  KanbanCardTag,
 } from "@/components/shared/KanbanPrimitives";
 import { formatBytes, formatUploadedDate } from "./DigitalRecordsList";
 import {
-  Cancel01Icon,
   File02Icon,
   InboxIcon,
   Pdf01Icon,
-  RotateLeft01Icon,
-  Tick01Icon,
-  ViewIcon,
 } from "hugeicons-react";
 import { EmptyState } from "@/components/ui/empty";
 
@@ -45,9 +46,6 @@ export default function DigitalRecordsKanbanPipeline({
   records = [],
   isOsas = false,
   onPreview,
-  onApprove,
-  onDecline,
-  onSetStatus,
   onDropItem,
   scrollRef,
 }) {
@@ -173,21 +171,7 @@ export default function DigitalRecordsKanbanPipeline({
     if (!droppedData) return;
     if (droppedData.approval_status === targetStatus) return;
 
-    if (onDropItem) {
-      onDropItem(droppedData, targetStatus);
-    } else {
-      if (targetStatus === "Approved") {
-        onApprove?.(droppedData.id);
-      } else if (targetStatus === "Declined") {
-        onDecline?.(droppedData.id);
-      } else if (targetStatus === "Pending") {
-        onSetStatus?.(
-          droppedData.id,
-          "Pending",
-          "Moved back to review queue via Kanban"
-        );
-      }
-    }
+    onDropItem?.(droppedData, targetStatus);
   };
 
   return (
@@ -259,9 +243,8 @@ export default function DigitalRecordsKanbanPipeline({
                 {colItems.map((record) => {
                   const isPdf = /\.pdf$/i.test(record.original_filename || "");
                   const status = record.approval_status || "Pending";
-                  const isPending = status === "Pending";
                   const isDeclined = status === "Declined";
-                  const organizationName = record.organization_name || record.student_name;
+                  const organizationName = record.organization_name || "Organization not linked";
                   const { dateStr, timeStr } = formatUploadedDate(record.created_at);
 
                   return (
@@ -271,18 +254,26 @@ export default function DigitalRecordsKanbanPipeline({
                       onDragStart={(e) => handleDragStartCard(e, record)}
                       onDragEnd={handleDragEndCard}
                       onClick={() => onPreview?.(record)}
-                      onDoubleClick={() => onPreview?.(record)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onPreview?.(record);
+                        }
+                      }}
                       className={cn(
-                        "kanban-card group flex flex-col gap-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 cursor-grab active:cursor-grabbing relative select-none",
-                        draggingItem?.id === record.id && "opacity-40 scale-98"
+                        KANBAN_CARD_CLASS,
+                        "cursor-grab active:cursor-grabbing",
+                        draggingItem?.id === record.id && KANBAN_CARD_DRAGGING_CLASS
                       )}
                     >
                       {/* Row 1: Status Icon + Student Name (left) & Date (right) */}
-                      <div className="flex items-start justify-between gap-2.5">
+                      <div className={KANBAN_CARD_HEADER_CLASS}>
                         <div className="flex items-start gap-2 min-w-0 flex-1">
                           <KanbanStatusIcon status={status} className="mt-[3px]" />
                           <span
-                            className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-1"
+                            className={KANBAN_CARD_TITLE_CLASS}
                             title={isOsas ? organizationName : formatTitleCase(record.student_name)}
                           >
                             {isOsas ? organizationName : formatTitleCase(record.student_name)}
@@ -319,24 +310,17 @@ export default function DigitalRecordsKanbanPipeline({
                         </p>
                       ) : null}
 
-                      {/* Row 2: Dot-Pill Tag(s) */}
-                      <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
-                        <KanbanDotTag
-                          label={record.doc_type}
-                          dotColor={getTagDotColor(record.doc_type)}
-                        />
+                      {/* Row 2: Metadata */}
+                      <div className={KANBAN_CARD_METADATA_CLASS}>
+                        <KanbanCardTag label={record.doc_type} />
                         {record.course_code && (
-                          <KanbanDotTag
-                            label={record.course_code}
-                            dotColor="bg-sky-500"
-                          />
+                          <KanbanCardTag label={record.course_code} />
                         )}
                       </div>
 
-                      {/* Row 3: File Size / Hover Actions */}
+                      {/* Row 3: File Size */}
                       <div
-                        className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500"
-                        onClick={(e) => e.stopPropagation()}
+                        className={KANBAN_CARD_FOOTER_CLASS}
                       >
                         {!isOsas && (
                           <span className="inline-flex items-center gap-1.5 font-medium tabular-nums text-gray-400 dark:text-zinc-500">
@@ -345,85 +329,14 @@ export default function DigitalRecordsKanbanPipeline({
                             ) : (
                               <File02Icon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
                             )}
-                            <span>{record.student_no}</span>
+                            <Badge variant="gray" size="compact" className="rounded-lg">{record.student_no}</Badge>
                           </span>
                         )}
 
-                        {/* Resting state: File size */}
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500 tabular-nums group-hover:hidden group-focus-within:hidden">
+                        <span className="ml-auto shrink-0 font-medium tabular-nums">
                           {formatBytes(record.size_bytes)}
                         </span>
 
-                        {/* Hover state: Quick Actions */}
-                        <div className="hidden group-hover:flex group-focus-within:flex items-center gap-1 -my-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => onPreview?.(record)}
-                                onDoubleClick={() => onPreview?.(record)}
-                                className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-                              >
-                                <ViewIcon size="1em" className="text-xs" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Preview</TooltipContent>
-                          </Tooltip>
-
-                          {isPending && (
-                            <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => onApprove?.(record.id)}
-                                    className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
-                                  >
-                                    <Tick01Icon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Approve</TooltipContent>
-                              </Tooltip>
-
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={() => onDecline?.(record.id)}
-                                    className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
-                                  >
-                                    <Cancel01Icon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">Decline</TooltipContent>
-                              </Tooltip>
-                            </>
-                          )}
-
-                          {!isPending && onSetStatus && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    onSetStatus(
-                                      record.id,
-                                      "Pending",
-                                      "Moved back to review queue from Kanban"
-                                    )
-                                  }
-                                  aria-label="Move back to Pending Review"
-                                  className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/40 text-gray-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors cursor-pointer active:scale-95"
-                                >
-                                  <RotateLeft01Icon size="1em" className="text-xs" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                Move back to Pending Review
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
                       </div>
                     </div>
                   );

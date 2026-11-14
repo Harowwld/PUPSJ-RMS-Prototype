@@ -502,6 +502,7 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
             : "Citizen's Charter Processing Time Report"}
         description={"Reporting Coverage: " + (startDate || "Earliest Records") + " to " + (endDate || "Present")}
         pdfUrl={pdfBlobUrl}
+        preparedPdf
         isPreparing={isGeneratingPdf}
         onDownload={handleDownloadPdf}
         onPrint={() => onLogAction?.({ action: "Print Report", details: "opened print dialog for " + previewReportType + " report", entityType: "Report" })}

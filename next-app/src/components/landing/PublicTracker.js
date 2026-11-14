@@ -1,5 +1,6 @@
 "use client";
 
+import { formatLogDetails, formatRequestStatus } from "@/lib/auditLogFormatting";
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -154,11 +155,7 @@ export default function PublicTracker() {
                     <span className="text-gray-300 ">·</span>
                     <span className="text-sm font-semibold text-gray-900 ">{result.doc_type}</span>
                     <span className={cn(BADGE_BASE, getStatusBadge(result.status))}>
-                      {result.status === "InProgress" || result.status?.toLowerCase() === "inprogress"
-                        ? "In Progress"
-                        : result.status
-                        ? result.status.charAt(0).toUpperCase() + result.status.slice(1).toLowerCase()
-                        : "Pending"}
+                      {formatRequestStatus(result.status || "Pending")}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500  mt-1.5 font-normal">
@@ -216,14 +213,14 @@ export default function PublicTracker() {
                     {result.updates.map((up, idx) => {
                       const isConsecutiveSameStatus =
                         idx > 0 && up.status === result.updates[idx - 1].status;
-                      const formatStatus = (s) => (s === "InProgress" ? "In Progress" : s === "Ready" ? "Ready to Claim" : s);
+                      const formatStatus = (s) => (s === "Ready" ? "Ready to Claim" : formatRequestStatus(s));
                       return (
                         <div key={up.id || idx} className="p-3 rounded-xl bg-white  border border-border  flex items-start justify-between gap-3 text-xs">
                           <div>
                             <span className="font-semibold text-gray-900 mr-2">
                               {isConsecutiveSameStatus ? "Follow-Up Notice:" : `${formatStatus(up.status)}:`}
                             </span>
-                            <span className="text-gray-600 ">{up.message || "Status updated by Registrar."}</span>
+                            <span className="text-gray-600 ">{formatLogDetails(up.message) || "Status updated by Registrar."}</span>
                           </div>
                           <span className="text-[10px] text-gray-400 shrink-0 font-sans tabular-nums">
                             {new Date(up.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

@@ -112,11 +112,14 @@ export async function listNotifications({
   staffId = null,
   officeId = null,
   sortBy = "created_at",
+  groupBy,
   sortOrder = "DESC",
   tab = "unread", // "unread" or "read"
   search = "",
   type = "",
   decision = "",
+  excludedTypes = [],
+  excludedDecisions = [],
   severity = "",
   startDate = "",
   endDate = "",
@@ -170,28 +173,17 @@ export async function listNotifications({
     filters.push("COALESCE(nr.is_read, FALSE) = FALSE");
   }
 
-  // Type filter
-  const trimmedType = String(type || "").trim();
-  if (trimmedType && trimmedType !== "all") {
-    params.push(trimmedType);
-    filters.push(`n.type = $${params.length}`);
-  }
-
-  // Decision filter (for document reviews e.g. Approved / Declined)
-  const trimmedDecision = String(decision || "").trim();
-  if (trimmedDecision) {
-    const decisions = trimmedDecision.split(",").map((d) => d.trim()).filter(Boolean);
-    if (decisions.length === 1) {
-      params.push(decisions[0]);
-      filters.push(`(n.metadata->>'approval_status') = $${params.length}`);
-    } else if (decisions.length > 1) {
-      const placeholders = decisions.map((d) => {
-        params.push(d);
-        return `$${params.length}`;
-      }).join(", ");
-      filters.push(`(n.metadata->>'approval_status') IN (${placeholders})`);
-    }
-  }
+  const addValuesFilter = (column, values, exclude = false) => {
+    const tokens = values.map((value) => String(value).trim()).filter(Boolean);
+    if (!tokens.length) return;
+    params.push(tokens);
+    filters.push(`${exclude ? "NOT " : ""}(${column} = ANY($${params.length}::text[]))`);
+  };
+  const decisionColumn = "coalesce(nullif(n.metadata->>'approval_status', ''), nullif(n.metadata->>'status', ''), '')";
+  addValuesFilter("coalesce(n.type, 'system')", String(type || "").split(",").filter((value) => value.trim() !== "all"));
+  addValuesFilter(decisionColumn, String(decision || "").split(","));
+  addValuesFilter("coalesce(n.type, 'system')", excludedTypes, true);
+  addValuesFilter(decisionColumn, excludedDecisions, true);
 
   // Severity filter
   const trimmedSeverity = String(severity || "").trim();
@@ -240,8 +232,19 @@ export async function listNotifications({
     student_no: "(n.metadata->>'student_no')",
     reviewed_at: "n.created_at",
   };
-  const sortCol = allowedSortCols[sortBy] || "n.created_at";
+  const sortCol = Object.hasOwn(allowedSortCols, sortBy) ? allowedSortCols[sortBy] : "n.created_at";
   const order = sortOrder?.toUpperCase() === "ASC" ? "ASC" : "DESC";
+
+  const groupColumns = {
+    type: "CASE WHEN n.type IN ('document_review', 'document_request', 'scan_upload', 'student_record') THEN n.type ELSE 'system' END",
+    decision: "coalesce(nullif(n.metadata->>'approval_status', ''), nullif(n.metadata->>'status', ''), 'None')",
+    date: `CASE
+      WHEN (n.created_at AT TIME ZONE 'Asia/Manila')::date = (now() AT TIME ZONE 'Asia/Manila')::date THEN 1
+      WHEN (n.created_at AT TIME ZONE 'Asia/Manila')::date = (now() AT TIME ZONE 'Asia/Manila')::date - 1 THEN 2
+      WHEN n.created_at <= now() AND n.created_at > now() - interval '168 hours' THEN 3
+      ELSE 4 END`,
+  };
+  const groupColumn = Object.hasOwn(groupColumns, groupBy) ? groupColumns[groupBy] : null;
 
   // 5. Query items
   params.push(lim);
@@ -283,7 +286,7 @@ export async function listNotifications({
       LEFT JOIN staff actor_staff ON actor_staff.id = n.actor_id
       LEFT JOIN staff_notification_reads nr ON n.id = nr.notification_id AND nr.staff_id = $1
       ${whereClause}
-      ORDER BY ${sortCol} ${order}, n.id DESC
+      ORDER BY ${groupColumn ? `${groupColumn}, ` : ""}${sortCol} ${order}, n.id DESC
       LIMIT $${queryLimitIdx} OFFSET $${queryOffsetIdx}
     `,
     params

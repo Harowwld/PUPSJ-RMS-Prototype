@@ -68,10 +68,31 @@ export async function GET(req) {
     }
   }
 
+  for (const [field, column] of [["status", "review_status"], ["docType", "proposed_doc_type"]]) {
+    const excluded = searchParams.getAll(`exclude-${field}`).map((value) => value.trim()).filter(Boolean);
+    if (excluded.length) {
+      values.push(excluded);
+      filters.push(`NOT (coalesce(${column}, '') = ANY($${values.length}::text[]))`);
+    }
+  }
+
   if (batchId) { values.push(batchId); filters.push(`batch_id = $${values.length}`); }
   if (q) { values.push(`%${q}%`); filters.push(`(original_filename ILIKE $${values.length} OR COALESCE(ocr_name, '') ILIKE $${values.length} OR COALESCE(ocr_text, '') ILIKE $${values.length})`); }
   const where = filters.join(" AND ");
-  const rows = await query(`SELECT * FROM ingest_queue WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`, [...values, limit, offset]);
+  const sortColumns = {
+    original_filename: "lower(coalesce(original_filename, ''))",
+    review_status: "lower(coalesce(review_status, ''))",
+  };
+  const sortBy = searchParams.get("sortBy");
+  const sortColumn = Object.hasOwn(sortColumns, sortBy) ? sortColumns[sortBy] : "created_at";
+  const direction = searchParams.get("sortOrder") === "ASC" ? "ASC" : "DESC";
+  const groups = {
+    review_status: "coalesce(nullif(review_status, ''), 'Needs Review')",
+    proposed_doc_type: "coalesce(nullif(proposed_doc_type, ''), 'Unassigned')",
+  };
+  const groupBy = searchParams.get("groupBy");
+  const groupOrder = Object.hasOwn(groups, groupBy) ? `${groups[groupBy]}, ` : "";
+  const rows = await query(`SELECT * FROM ingest_queue WHERE ${where} ORDER BY ${groupOrder}${sortColumn} ${direction}, id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`, [...values, limit, offset]);
   const count = await query(
     `SELECT COUNT(*)::int AS total,
             COUNT(*) FILTER (WHERE lower(COALESCE(ocr_status, '')) = 'completed')::int AS succeeded,

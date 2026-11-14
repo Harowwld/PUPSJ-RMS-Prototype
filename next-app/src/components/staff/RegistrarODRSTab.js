@@ -1,4 +1,5 @@
 "use client";
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { Textarea } from "@/components/ui/textarea";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
@@ -109,7 +110,7 @@ export default function RegistrarODRSTab({ showToast }) {
       await load();
       showToast?.({
         title: "Request Updated",
-        description: `Request status has been set to ${status}.`,
+        description: `Request status has been set to ${formatRequestStatus(status)}.`,
       });
     } catch (err) {
       showToast?.(
@@ -190,7 +191,7 @@ export default function RegistrarODRSTab({ showToast }) {
       await load();
       showToast?.({
         title: "Request Reopened",
-        description: `Request status has been set to ${reopenTargetStatus}.`,
+        description: `Request status has been set to ${formatRequestStatus(reopenTargetStatus)}.`,
       });
     } catch (err) {
       showToast?.(
@@ -296,7 +297,7 @@ export default function RegistrarODRSTab({ showToast }) {
                             </span>
                           )}
                           <span className={cn(getStatusBadgeClass(item.status), BADGE_BASE)}>
-                            {item.status}
+                            {formatRequestStatus(item.status)}
                           </span>
                         </div>
                       </div>
@@ -508,7 +509,7 @@ export default function RegistrarODRSTab({ showToast }) {
                         <div className="flex-1 h-10 px-3 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/80 flex items-center justify-between text-sm font-semibold text-gray-800 dark:text-zinc-200">
                           <span className="flex items-center gap-1.5 truncate">
                             <LockIcon size="1em" className="text-gray-400 text-xs" />
-                            <span>{selected.status}</span>
+                            <span>{formatRequestStatus(selected.status)}</span>
                           </span>
                           <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                             Closed
@@ -530,20 +531,20 @@ export default function RegistrarODRSTab({ showToast }) {
                         </Button>
                       </div>
                     ) : (
-                      <Select
+                      <Select placeholder="Select status"
                         className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-sm font-normal text-gray-800 dark:text-zinc-100 shadow-none"
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
                       >
                         {((selected?.status && ALLOWED_STATUS_TRANSITIONS[selected.status]) || statuses).map((item) => (
-                          <option key={item} value={item}>{item === "PendingPayment" ? "Pending Payment" : item}</option>
+                          <option key={item} value={item}>{formatRequestStatus(item)}</option>
                         ))}
                       </Select>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
+                    <label className="text-xs font-semibold block uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
                       {status === "Deficient" ? "Deficiency Comment (required)" : status === "PendingPayment" ? "Payment Instructions" : "Student-Visible Update Note"}
                     </label>
                     <Textarea
@@ -600,14 +601,14 @@ export default function RegistrarODRSTab({ showToast }) {
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                 Target Reactivation Status
               </label>
-              <Select
+              <Select placeholder="Select status"
                 className="w-full h-10 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border rounded-xl cursor-pointer"
                 value={reopenTargetStatus}
                 onChange={(e) => setReopenTargetStatus(e.target.value)}
               >
                 {(ALLOWED_REOPEN_TRANSITIONS[selected?.status] || ["InProgress"]).map((st) => (
                   <option key={st} value={st}>
-                    {st === "InProgress" ? "In Progress" : st}
+                    {formatRequestStatus(st)}
                   </option>
                 ))}
               </Select>

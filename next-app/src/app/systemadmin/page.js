@@ -346,7 +346,7 @@ function SystemAdminPageContent() {
               {view === "branding" && <InstitutionalBrandingTab showToast={showToast} onDirtyChange={setBrandingDirty} />}
               {view === "modules" && <ModuleConfigTab showToast={showToast} initialOfficeId={selectedOfficeId} />}
               {view === "staff" && <GlobalStaffTab authUser={authUser} showToast={showToast} />}
-              {view === "portal_accounts" && <OdrsPortalAccountsTab />}
+              {view === "portal_accounts" && <OdrsPortalAccountsTab showToast={showToast} />}
               {view === "security" && <SecurityQuestionsTab showToast={showToast} onDirtyChange={setSecurityDirty} />}
               {view === "logs" && <GlobalAuditLogsTab showToast={showToast} />}
               {(view === "health" || view === "standards") && (

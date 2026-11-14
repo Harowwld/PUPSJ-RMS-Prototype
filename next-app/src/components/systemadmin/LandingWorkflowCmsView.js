@@ -494,7 +494,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-zinc-300">
                     <span>Curve Arc:</span>
                     <div className="w-[195px]">
-                      <Select
+                      <Select placeholder="Select curve"
                         value={workflowData.curveStyle}
                         aria-label="Curve arc"
                         onChange={(e) =>
@@ -685,7 +685,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                           {/* Tag Chips Manager */}
                           <div className="space-y-2 pt-1">
                             <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                              Requirement Tags &amp; Metadata Badges <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                              Requirement Tags &amp; Metadata Badges <span className="normal-case tracking-normal opacity-70">(optional)</span>
                             </label>
 
                             {/* Active tags pills */}

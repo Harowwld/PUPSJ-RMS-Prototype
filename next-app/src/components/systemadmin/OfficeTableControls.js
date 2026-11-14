@@ -119,19 +119,19 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
               <div key={filter.id} className="flex min-w-0 flex-wrap items-center gap-1.5 rounded-xl border border-border/80 bg-white p-1.5 dark:border-white/10 dark:bg-zinc-900">
                 <span className="w-8 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">{index === 0 ? "Where" : "And"}</span>
                 <div className="w-[110px] shrink-0">
-                  <Select value={filter.fieldKey} onChange={(event) => changeField(filter.id, event.target.value)} aria-label={`${index === 0 ? "Where" : "And"} field`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
+                  <Select placeholder="Select field" value={filter.fieldKey} onChange={(event) => changeField(filter.id, event.target.value)} aria-label={`${index === 0 ? "Where" : "And"} field`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
                     {fields.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                   </Select>
                 </div>
                 <div className="w-[88px] shrink-0">
-                  <Select value={filter.operator} onChange={(event) => updateFilter(filter.id, { operator: event.target.value })} aria-label={`${field.label} comparison`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
+                  <Select placeholder="Select comparison" value={filter.operator} onChange={(event) => updateFilter(filter.id, { operator: event.target.value })} aria-label={`${field.label} comparison`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
                     {operators.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </Select>
                 </div>
                 {field.type === "text" ? (
                   <Input type="text" value={filter.value || ""} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} placeholder={`Enter ${field.label.toLowerCase()}`} className="h-8 min-w-[110px] flex-1 rounded-lg px-2 text-xs" />
                 ) : field.type === "number" ? (
-                  <Input type="number" value={filter.value} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} className="h-8 min-w-[110px] flex-1 rounded-lg px-2 text-xs" />
+                  <Input placeholder="Enter a number" type="number" value={filter.value} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} className="h-8 min-w-[110px] flex-1 rounded-lg px-2 text-xs" />
                 ) : field.type === "multi" ? (
                   <div role="group" aria-label={`${field.label} values`} className="max-h-28 min-w-[110px] flex-1 space-y-0.5 overflow-y-auto rounded-lg border border-border/80 p-1 dark:border-white/10">
                     {valueOptions.map((option) => {
@@ -145,9 +145,8 @@ export function FilterPopover({ fields, filters, onFiltersChange, entityLabel = 
                   </div>
                 ) : (
                   <div className="min-w-[110px] flex-1">
-                    <Select value={filter.value} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
+                    <Select value={filter.value} placeholder={valueOptions.length ? "Select a value" : "No values available"} disabled={valueOptions.length === 0} onChange={(event) => updateFilter(filter.id, { value: event.target.value })} aria-label={`${field.label} value`} className="h-8 rounded-lg text-xs" buttonClassName="h-8 px-2 text-xs" menuClassName="rounded-xl" optionClassName="rounded-lg text-xs">
                       {valueOptions.map((option) => <option key={String(option.value)} value={String(option.value)}>{option.label}</option>)}
-                      {valueOptions.length === 0 && <option value="">No values available</option>}
                     </Select>
                   </div>
                 )}
@@ -235,7 +234,7 @@ export function GroupPopover({ options = [], groupBy, onGroupByChange }) {
             const Icon = option.icon
             const isSelected = optionKey === groupBy
             const OptionIcon = optionKey === "none" ? MinusSignIcon : Icon || Layers01Icon
-            return <button key={optionKey} type="button" onClick={() => { onGroupByChange(optionKey); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
+            return <button key={optionKey} type="button" onClick={() => { if (!isSelected) onGroupByChange(optionKey); setOpen(false) }} aria-pressed={isSelected} className={cn("flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer", isSelected ? "bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium" : "text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/70")}>
               {OptionIcon && <OptionIcon size={14} aria-hidden="true" className="shrink-0 text-gray-500 dark:text-zinc-400" />}
               <span className="min-w-0 flex-1 truncate">{label}</span>
               {isSelected && <Tick01Icon size={14} aria-hidden="true" className="shrink-0 text-gray-600 dark:text-zinc-300" />}
@@ -320,11 +319,9 @@ export default function OfficeTableControls({
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <FilterPopover fields={filterFields} filters={filters} onFiltersChange={onFiltersChange} />
-        {showTableControls && <>
-          <SortPopover options={sortOptions} sortBy={sortBy} onSortByChange={onSortByChange} sortOrder={sortOrder} onSortOrderChange={onSortOrderChange} />
-          <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={onGroupByChange} />
-          <ColumnsPopover columns={columns} visibleColumns={visibleColumns} defaultColumns={defaultColumns} onVisibleColumnsChange={onVisibleColumnsChange} minVisible={2} />
-        </>}
+        <SortPopover options={sortOptions} sortBy={sortBy} onSortByChange={onSortByChange} sortOrder={sortOrder} onSortOrderChange={onSortOrderChange} />
+        <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={onGroupByChange} />
+        {showTableControls && <ColumnsPopover columns={columns} visibleColumns={visibleColumns} defaultColumns={defaultColumns} onVisibleColumnsChange={onVisibleColumnsChange} minVisible={2} />}
       </div>
     </DataViewToolbar>
   )

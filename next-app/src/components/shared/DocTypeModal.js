@@ -41,7 +41,7 @@ export default function DocTypeModal({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+            <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
               Document Type Name
             </label>
             <Input

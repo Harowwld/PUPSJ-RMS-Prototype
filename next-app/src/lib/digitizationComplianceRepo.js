@@ -356,7 +356,11 @@ export async function getStudentComplianceReport(options = {}) {
     .trim()
     .toLowerCase()
   const missingTypes = normalizeList(options.missingDocTypes)
+  const excludedCourses = new Set(normalizeList(options.excludedCourseCodes).map((code) => code.toUpperCase()))
+  const excludedMissingTypes = new Set(normalizeList(options.excludedMissingDocTypes))
   let records = snapshot.records.filter((r) => {
+    if (excludedCourses.has(String(r.student.courseCode || "").toUpperCase())) return false
+    if (r.requirements.some((req) => !req.satisfied && excludedMissingTypes.has(req.docType))) return false
     if (!r.totalCount) return false
     if (options.complianceStatus === "compliant" && !r.isCompliant) return false
     if (
@@ -396,6 +400,12 @@ export async function getStudentComplianceReport(options = {}) {
   })
   const sortBy = options.sortBy || "student_no"
   records.sort((a, b) => {
+    if (options.groupBy === "course") {
+      const groupComparison = (a.student.courseCode || "Other Program").localeCompare(b.student.courseCode || "Other Program");
+      if (groupComparison) return groupComparison;
+    } else if (options.groupBy === "compliance" && a.isCompliant !== b.isCompliant) {
+      return Number(b.isCompliant) - Number(a.isCompliant);
+    }
     const value = (r) =>
       sortBy === "progress"
         ? r.completionPercent

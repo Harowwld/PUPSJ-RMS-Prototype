@@ -1,14 +1,18 @@
+import { isDemoAccount } from "./demoAccounts.js";
 import { decryptPII } from "./piiEncryption.js";
 import { query } from "./postgres.js";
 
-const accountFields = `sa.id, sa.student_no, sa.status, sa.created_at, sip.email,
-  sip.display_name, sip.first_name, sip.last_name, sip.client_type`;
+const accountFields = `sa.id, sa.student_no, sa.status, sa.created_at, sa.avatar_filename, sip.email,
+  sip.display_name, sip.first_name, sip.last_name, sip.client_type, sip.portal_email_verified_at`;
 
 function serializeAccount(row) {
+  const email = decryptPII(row.email);
   return {
     id: String(row.id),
     name: decryptPII(row.display_name) || [decryptPII(row.first_name), decryptPII(row.last_name)].filter(Boolean).join(" "),
-    email: decryptPII(row.email),
+    email,
+    canSendReset: row.status === "Active" && Boolean(email && row.portal_email_verified_at && !isDemoAccount(email)),
+    avatarFilename: row.avatar_filename || null,
     affiliation: row.client_type,
     status: row.status,
     studentNo: row.student_no,

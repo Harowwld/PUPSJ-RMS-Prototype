@@ -183,7 +183,7 @@ export default function StudentDirectoryTab({
   }, [browseVersion, showToast]);
 
   const browseParams = useMemo(() => {
-    const params = new URLSearchParams({ archived: String(activeTab === "archived"), page: String(page), pageSize: String(itemsPerPage), sortBy, sortOrder });
+    const params = new URLSearchParams({ archived: String(activeTab === "archived"), page: String(page), pageSize: String(itemsPerPage), sortBy, sortOrder, groupBy });
     if (debouncedSearch) params.set("q", debouncedSearch);
     const ruleCourses = filterRules.filter(r => r.fieldKey === "course" && r.operator === "is").map(r => r.value);
     const ruleYears = filterRules.filter(r => r.fieldKey === "year" && r.operator === "is").map(r => r.value);
@@ -191,10 +191,15 @@ export default function StudentDirectoryTab({
     [...new Set([...courseFilters, ...ruleCourses])].forEach((value) => params.append("course", value));
     [...new Set([...yearFilters, ...ruleYears])].forEach((value) => params.append("year", value));
     [...new Set([...sectionFilters, ...ruleSections])].forEach((value) => params.append("section", value));
+    for (const rule of filterRules) {
+      if (rule.operator === "is_not" && ["course", "year", "section"].includes(rule.fieldKey)) {
+        params.append(`exclude-${rule.fieldKey}`, rule.value);
+      }
+    }
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
     return params.toString();
-  }, [activeTab, page, itemsPerPage, sortBy, sortOrder, debouncedSearch, courseFilters, yearFilters, sectionFilters, filterRules, startDate, endDate]);
+  }, [activeTab, page, itemsPerPage, sortBy, sortOrder, groupBy, debouncedSearch, courseFilters, yearFilters, sectionFilters, filterRules, startDate, endDate]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -831,6 +836,7 @@ export default function StudentDirectoryTab({
               value={activeTab}
               onValueChange={(tab) => {
                 setActiveTab(tab);
+                setSelectedIds(new Set());
                 setPage(1);
               }}
               variant="capsule"
@@ -905,7 +911,7 @@ export default function StudentDirectoryTab({
               <GroupPopover
                 options={STUDENT_GROUP_OPTIONS}
                 groupBy={groupBy}
-                onGroupByChange={setGroupBy}
+                onGroupByChange={(value) => { setGroupBy(value); setPage(1); }}
               />
               <ColumnsPopover
                 columns={availableStudentColumns}
@@ -954,12 +960,12 @@ export default function StudentDirectoryTab({
                   <EmptyHeader>
                     <EmptyMedia><EmptyStudentIcon size="1em" /></EmptyMedia>
                     <EmptyTitle>
-                      No Student Records Found
+                      {activeTab === "archived" && !hasActiveFilters ? "No Archived Students" : "No Student Records Found"}
                     </EmptyTitle>
                     <EmptyDescription>
                       {hasActiveFilters
                         ? "Try clearing some filter options or changing your search criteria."
-                        : "There are currently no student records in this view. Enroll a student to get started."}
+                        : activeTab === "archived" ? "Archived students will appear here." : "There are currently no student records in this view. Enroll a student to get started."}
                     </EmptyDescription>
                   </EmptyHeader>
                   {hasActiveFilters && (
@@ -973,6 +979,11 @@ export default function StudentDirectoryTab({
                       >
                         Reset Filters
                       </Button>
+                    </EmptyContent>
+                  )}
+                  {activeTab === "archived" && !hasActiveFilters && (
+                    <EmptyContent>
+                      <Button type="button" variant="outline" size="sm" onClick={() => { setActiveTab("active"); setSelectedIds(new Set()); setPage(1); }}>View Active Students</Button>
                     </EmptyContent>
                   )}
                 </Empty>
@@ -1405,8 +1416,9 @@ export default function StudentDirectoryTab({
 
         {/* Student Profile Sheet */}
         {(() => {
+          const navigationStudents = groupedStudents.flatMap(({ students }) => students);
           const selectedIndex = activeStudent
-            ? paginatedStudents.findIndex((s) => s.studentNo === activeStudent.studentNo)
+            ? navigationStudents.findIndex((s) => s.studentNo === activeStudent.studentNo)
             : -1;
           return (
             <StudentProfileSheet
@@ -1414,15 +1426,15 @@ export default function StudentDirectoryTab({
               onOpenChange={setProfileOpen}
               student={activeStudent}
               currentIndex={selectedIndex}
-              totalCount={paginatedStudents.length}
+              totalCount={navigationStudents.length}
               onNavigatePrev={() => {
                 if (selectedIndex > 0) {
-                  setActiveStudent(paginatedStudents[selectedIndex - 1]);
+                  setActiveStudent(navigationStudents[selectedIndex - 1]);
                 }
               }}
               onNavigateNext={() => {
-                if (selectedIndex >= 0 && selectedIndex < paginatedStudents.length - 1) {
-                  setActiveStudent(paginatedStudents[selectedIndex + 1]);
+                if (selectedIndex >= 0 && selectedIndex < navigationStudents.length - 1) {
+                  setActiveStudent(navigationStudents[selectedIndex + 1]);
                 }
               }}
               courses={courses}

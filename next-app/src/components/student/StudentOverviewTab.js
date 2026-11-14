@@ -1,5 +1,6 @@
 "use client";
 
+import SheetPagination from "@/components/shared/SheetPagination";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import React, { useMemo, useState } from "react";
@@ -31,7 +32,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import StudentOverviewSkeleton from "@/components/student/skeletons/StudentOverviewSkeleton";
+import { StudentOverviewContentSkeleton } from "@/components/student/skeletons/StudentOverviewSkeleton";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, ArrowUpRight01Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
@@ -61,10 +62,11 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
-function OverviewBadge({ children, className }) {
+function OverviewBadge({ children, className, compact = false }) {
   return (
     <span className={cn(
-      SETTINGS_STATUS_PILL_SM,
+      compact ? COMPACT_BADGE_BASE : SETTINGS_STATUS_PILL_SM,
+      compact && "bg-black/[0.04] dark:bg-white/[0.06]",
       "max-w-full font-semibold text-gray-900 dark:text-zinc-100",
       className
     )}>
@@ -430,6 +432,9 @@ export default function StudentOverviewTab({
     return filteredMilestones.slice(0, 5);
   }, [filteredMilestones]);
 
+  const visiblePostEventReports = displayedMilestones.flatMap(({ report }) => report ? [report] : []);
+  const postEventIndex = visiblePostEventReports.findIndex((report) => report.id === selectedPostEventDetail?.id);
+
   const handleFilterChange = (tabId) => {
     setActivityFilter(tabId);
   };
@@ -458,11 +463,6 @@ export default function StudentOverviewTab({
       normalizeStatus(r.status)
     )
   ).length;
-
-  // Render skeleton during initial load before datasets arrive
-  if (loading && !hasLoaded) {
-    return <StudentOverviewSkeleton />;
-  }
 
   return (
     <div className="flex flex-col w-full flex-[1_0_auto] font-jakarta animate-fade-up">
@@ -521,7 +521,9 @@ export default function StudentOverviewTab({
           }
         />
 
-        {/* 2. Unified Content Body */}
+        {loading && !hasLoaded ? (
+          <StudentOverviewContentSkeleton portalCount={!isParent && !isAlumni && authUser?.portal_setup_complete !== false ? 3 : 1} />
+        ) : (
         <div className="p-6 flex flex-[1_0_auto] flex-col gap-6">
 
       {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
@@ -965,6 +967,7 @@ export default function StudentOverviewTab({
         </div>
       </div>
         </div>
+        )}
       </Card>
 
       {/* 2. Standardized Post-Event Report Details Sheet */}
@@ -979,7 +982,7 @@ export default function StudentOverviewTab({
           className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
         >
           <SheetHeader className="shrink-0 p-0">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <SheetTitle>Post-Event Liquidation Details</SheetTitle>
@@ -992,19 +995,33 @@ export default function StudentOverviewTab({
                 </SheetDescription>
               </div>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPostEventDetail(null)}
-                    className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                    aria-label="Close"
-                  >
-                    <Cancel01Icon size="1em" className="text-sm" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Close</TooltipContent>
-              </Tooltip>
+              <div className="ml-auto flex items-center gap-3">
+                {postEventIndex >= 0 && visiblePostEventReports.length > 1 && (
+                  <SheetPagination
+                    compact
+                    label="Record navigation"
+                    page={postEventIndex + 1}
+                    totalPages={visiblePostEventReports.length}
+                    onPrevious={() => setSelectedPostEventDetail(visiblePostEventReports[postEventIndex - 1])}
+                    onNext={() => setSelectedPostEventDetail(visiblePostEventReports[postEventIndex + 1])}
+                    previousLabel="Previous Report"
+                    nextLabel="Next Report"
+                  />
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPostEventDetail(null)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           </SheetHeader>
 
@@ -1033,7 +1050,7 @@ export default function StudentOverviewTab({
                 <ClipboardIcon size={16}  />
               </div>
               <div className="min-w-0 flex-1">
-                <OverviewBadge className="mb-1">
+                <OverviewBadge compact className="mb-1">
                   {selectedPostEventDetail?.organization_name || "Student Affairs"}
                 </OverviewBadge>
                 <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">

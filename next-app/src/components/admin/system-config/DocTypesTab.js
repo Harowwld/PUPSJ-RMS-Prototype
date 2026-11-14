@@ -390,16 +390,16 @@ export default function DocTypesTab({
                     >
                       Reset Filters
                     </Button>
+                  ) : showArchived ? (
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setShowArchived(false); setPageDoc(1) }}>View Active Document Types</Button>
                   ) : (
-                    !showArchived && (
-                      <Button
-                        size="sm"
-                        onClick={() => setIsAddDocTypeOpen(true)}
-                        className="flex h-9 px-4 cursor-pointer"
-                      >
-                        Add Document Type
-                      </Button>
-                    )
+                    <Button
+                      size="sm"
+                      onClick={() => setIsAddDocTypeOpen(true)}
+                      className="flex h-9 px-4 cursor-pointer"
+                    >
+                      Add Document Type
+                    </Button>
                   )}
                 </EmptyContent>
               </Empty>
@@ -629,7 +629,7 @@ export default function DocTypesTab({
           <form ref={attachForm} onSubmit={addDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1 block uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Document Name
                 </label>
                 <Input
@@ -733,10 +733,10 @@ export default function DocTypesTab({
           <form onSubmit={updDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1 block uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
                   Document Type Name
                 </label>
-                <Input
+                <Input placeholder="e.g. Certificate of Good Moral Character"
                   type="text"
                   className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={editDocType.name}

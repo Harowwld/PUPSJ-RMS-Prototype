@@ -1,7 +1,7 @@
 /**
  * Canonical default storage layout (v2).
  *
- * The layout is stored as JSON inside SQLite `settings.value`.
+ * The layout is stored as JSON in `settings.value`.
  * Rects are normalized to a 0..1 canvas for responsive rendering:
  * - x,y are top-left
  * - w,h are width/height
@@ -191,7 +191,32 @@ export function buildDefaultStorageLayout() {
 }
 
 export function buildDefaultOsasStorageLayout() {
-  return buildDefaultStorageLayout();
+  const cabinets = ["ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS"].map((id, index) => ({
+    id,
+    rect: { x: (12 + index * 12) * GX, y: 9 * GY, w: 3 * GX, h: 3 * GY },
+    rotation: 0,
+    drawerIds: [1, 2, 3, 4, 5, 6, 7],
+  }));
+
+  return {
+    version: 2,
+    rooms: [{ id: 1, name: "Room 1", cabinets, door: getDefaultDoor() }],
+  };
 }
 
+export function isLegacyOsasStorageLayout(layout) {
+  const room = layout?.rooms?.[0];
+  const defaultRoom = buildDefaultStorageLayout().rooms[0];
+  return layout?.rooms?.length === 1
+    && Number(room?.id) === defaultRoom.id
+    && room.cabinets?.length === defaultRoom.cabinets.length
+    && defaultRoom.cabinets.every(({ id }) => room.cabinets.some((cabinet) => String(cabinet?.id) === id));
+}
 
+export function getDefaultRoomTemplates(officeId) {
+  if (String(officeId || "").trim().toLowerCase() === "osas") {
+    const { cabinets, door } = buildDefaultOsasStorageLayout().rooms[0];
+    return [{ id: "osas-organizations", name: "Organization Cabinets", cabinets, door }];
+  }
+  return ROOM_TEMPLATES;
+}

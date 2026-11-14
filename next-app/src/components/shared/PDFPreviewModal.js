@@ -16,6 +16,7 @@ function PDFPreviewContent({
   onClose,
   preview,
   pdfUrl,
+  preparedPdf = false,
   pdfGenerator,
   title,
   description,
@@ -106,10 +107,12 @@ function PDFPreviewContent({
 
   const docId = preview?.docId || preview?.id
   const source = pdfUrl || preview?.url || preview?.fileUrl || generatedUrl || (docId ? "/api/documents/" + docId : null)
+  const isPreparedPdf = preparedPdf && source?.startsWith("blob:")
   const effectiveIsPreparing = isPreparing || generatorLoading
   const effectiveError = errorProp || generatorError
   const activeFile = preparedFile?.source === source ? preparedFile : null
-  const ready = !!activeFile && frameReady && fileState === "ready" && !effectiveIsPreparing && !effectiveError
+  const canDownload = !!activeFile && fileState === "ready" && !effectiveIsPreparing && !effectiveError
+  const ready = canDownload && frameReady
   const originalName = preview?.originalFilename || preview?.filename || filename || "document"
   const pdfName = downloadFilename || (/\.pdf$/i.test(originalName) ? originalName : originalName.replace(/\.[^./\\]+$/, "") + ".pdf")
   const heading = title || preview?.title || preview?.docType || preview?.originalFilename || "PDF Preview"
@@ -207,6 +210,7 @@ function PDFPreviewContent({
               <ResilientPDFViewer
                 key={source}
                 src={source}
+                preparedPdf={isPreparedPdf}
                 docId={docId}
                 preview={preview}
                 frameRef={frameRef}
@@ -286,10 +290,10 @@ function PDFPreviewContent({
               {PDF_ACTION_LABELS.print}
             </Button>
             {onDownload ? (
-              <Button size="sm" onClick={onDownload} disabled={!ready} className="h-9 px-4 text-xs font-semibold rounded-xl">
+              <Button size="sm" onClick={onDownload} disabled={!canDownload} className="h-9 px-4 text-xs font-semibold rounded-xl">
                 {PDF_ACTION_LABELS.download}
               </Button>
-            ) : ready ? (
+            ) : canDownload ? (
               <Button asChild size="sm" className="h-9 px-4 text-xs font-semibold rounded-xl">
                 <a href={activeFile.url} download={pdfName}>{PDF_ACTION_LABELS.download}</a>
               </Button>

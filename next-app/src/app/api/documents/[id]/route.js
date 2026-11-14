@@ -13,7 +13,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireAuth, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../lib/authHelpers";
 import { isSystemAdminRole } from "../../../../lib/roleUtils";
 import { canAccessResource } from "../../../../lib/resourceAuthorization";
-import { FILE_SECURITY_HEADERS } from "../../../../lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "../../../../lib/fileSecurityHeaders";
 import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL } from "../../../../lib/uploadLimits";
 
 export const runtime = "nodejs";
@@ -28,6 +28,15 @@ function parseOptionalBoolean(value) {
 
 function canAccessDocument(user, row) {
   return canAccessResource(user, "document", row);
+}
+
+function documentFileHeaders(row, size) {
+  return {
+    "Content-Type": row.mime_type || "application/pdf",
+    "Content-Length": String(size),
+    "Content-Disposition": inlineFileDisposition(row.original_filename || undefined),
+    ...FILE_SECURITY_HEADERS,
+  };
 }
 
 async function requireDocumentAccess(req, rawId) {
@@ -80,12 +89,7 @@ export async function HEAD(req, ctx) {
     const stat = fs.statSync(filePath);
     return new NextResponse(null, {
       status: 200,
-      headers: {
-        "Content-Type": row.mime_type || "application/pdf",
-        "Content-Length": String(stat.size),
-        "Content-Disposition": `inline; filename=\"${row.original_filename}\"`,
-        ...FILE_SECURITY_HEADERS,
-      },
+      headers: documentFileHeaders(row, stat.size),
     });
   } catch {
     return new NextResponse(null, {
@@ -130,12 +134,7 @@ export async function GET(req, ctx) {
 
   return new NextResponse(bytes, {
     status: 200,
-    headers: {
-      "Content-Type": row.mime_type || "application/pdf",
-      "Content-Length": String(bytes.length),
-      "Content-Disposition": `inline; filename=\"${row.original_filename}\"`,
-      ...FILE_SECURITY_HEADERS,
-    },
+    headers: documentFileHeaders(row, bytes.length),
   });
 }
 

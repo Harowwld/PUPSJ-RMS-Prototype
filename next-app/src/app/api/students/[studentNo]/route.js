@@ -165,7 +165,7 @@ export async function PATCH(req, ctx) {
     );
   }
   if (hasProfileFields && existingStudent.status !== "Active") {
-    return NextResponse.json({ ok: false, error: "Restore the student in this office before editing their record" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "This record is archived in your office. Open the Archived tab, restore the record, then try editing it again." }, { status: 400 });
   }
 
   if (body.room !== undefined || body.cabinet !== undefined || body.drawer !== undefined) {

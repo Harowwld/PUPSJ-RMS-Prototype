@@ -68,7 +68,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
         <div className="p-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-              Field Label <span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>
+              Field Label <span className="normal-case tracking-normal opacity-70">(optional)</span>
             </label>
             <Input
               type="text"
@@ -116,7 +116,7 @@ export default function StandardFeatureModal({ open, onClose, onSave, isLoading 
 ### 3.3 Modal & Sheet Golden Rules
 - **Title Case for Modal and Sheet Titles**: Modal titles (`<DialogTitle>`) and sheet titles (`<SheetTitle>`) must always use Title Case (e.g. `Dismiss Selected Files?`, `Bulk Action Results`, `Register Student Record`). Never use sentence case or all-lowercase titles.
 - **No Required Asterisks**: In accordance with Apple HIG, forms must not use noisy red asterisks (`*`) on required fields. Fields in administrative and institutional records workflows are assumed required by default.
-- **Explicit `(optional)` Labels**: Non-required fields must be explicitly labeled with `(optional)` in lowercase with secondary text styling (e.g., `Middle Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>`). Never capitalize as `(Optional)`.
+- **Explicit `(optional)` Labels**: Non-required fields must be explicitly labeled with `(optional)` in lowercase with secondary text styling (e.g., `Middle Name <span className="normal-case tracking-normal opacity-70">(optional)</span>`). Never capitalize as `(Optional)`.
 - **No Header or Footer Dividers**: Do not add separator borders, rules, or tinted bands between a modal/sheet header, body, and footer. Use spacing and typography to establish the sections. Keep functional borders inside forms, tables, notices, and previews where needed.
 - **Footer Layout**: `DialogFooter` has no default negative margins, border, background, or padding. A zero-padding shell supplies `p-6 pt-0` on the footer; a padded shell uses the neutral footer directly. Never compensate for footer layout with negative margins.
 - **NEVER** insert a decorative icon box or leading icon into `DialogHeader` or `SheetHeader`.
@@ -143,10 +143,12 @@ Keep related fields together in a responsive grid. On narrow screens, let the gr
 
 Use `SheetPagination` from `@/components/shared/SheetPagination` for every sheet pager. It matches the table controls: compact ghost `Prev` / `Next` buttons with a bordered current-page indicator. Keep the existing record callbacks, accessible entity-specific labels, and disabled conditions.
 
-- Record-detail sheets use `compact` with the current record index plus one and the record count. Header controls may wrap onto another line on narrow screens.
+- Record-detail sheets opened from a collection show `SheetPagination` in the header when there are at least two navigable records. Pass `compact`, the current record index plus one as `page`, and the record count as `totalPages`. Navigate in the order shown by the originating view, and disable Previous or Next at the ends. Header controls may wrap onto another line on narrow screens.
 - List sheets use the full layout with `Showing X–Y of Z`, `Rows: 10 / 20 / 50 / 100`, and page navigation. Pass `pageSize` to calculate the range accurately, including the last partial page. Reset to the first page when the row count changes.
 - Keep pagination outside the sheet's action footer. Do not copy table-container divider lines or tinted footer backgrounds into sheets.
 - Do not build separate arrow-button/zero-padded counters or outlined previous/next layouts for sheets.
+
+Use the shared `CopyButton` in icon-only mode beside copyable IDs, student numbers, and email addresses in sheets. It uses the ghost variant and an accessible field-specific label. Use a standard labeled button for copying an entire record from the sheet footer.
 
 ### 3.6 PDF Preview Modals
 
@@ -253,7 +255,9 @@ import { TableActions } from "@/components/shared/TableActions";
 ## 5. Form Controls, Inputs & Selectors
 
 ### 5.1 Labels & Text Inputs
-Use Title Case labels (`text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5`). Do not append red asterisks (`*`) to required fields; instead, mark only optional fields with `<span className="text-gray-400 dark:text-zinc-500 font-normal">(Optional)</span>`.
+Declare native constraints on form controls so the shared error highlight appears after validation. For custom rules and controls, set `aria-invalid` on the affected field after an attempt and clear it when the value becomes valid. Use the attachment dropzone’s `invalid` prop for missing or invalid uploads. Field highlights dismiss on a click outside the form controls and return on the next submit attempt. For a submission handled outside a native form, mark the containing surface with `data-form-validation-scope` and its submit control with `data-form-validation-submit`.
+
+Use Title Case labels (`text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5`). Do not append red asterisks (`*`) to required fields; instead, mark only optional fields with `<span className="normal-case tracking-normal opacity-70">(optional)</span>`.
 
 All `<Input>` and `<Textarea>` controls share a standardized 1px border + 1px ring focus style (`focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80`) inherited directly from the shared UI primitives. Never pass raw `focus-visible:ring-pup-maroon` without `ring-1` or introduce 3px thick focus rings.
 ```jsx
@@ -272,6 +276,8 @@ All `<Input>` and `<Textarea>` controls share a standardized 1px border + 1px ri
 ```
 
 ### 5.2 Dropdown `<Select>`
+
+Set field-specific prompts through the Select `placeholder` prop. Keep the menu for values the user can apply, including deliberate choices such as All Programs. Use a disabled trigger with a descriptive placeholder when no choices are available.
 Always use `@/components/ui/select`:
 
 The shared adapter uses Base UI Select for combobox/listbox semantics, keyboard navigation (arrows, Home/End, typeahead, Enter/Space, Escape), focus return, and viewport collision handling. Existing `options`, option children/fragments/groups, `onValueChange`, and `onChange({ target: { value, name } })` remain supported. Supply an associated label or accessible name. Default triggers are 40px with 13px text; compact callers may use `h-9 text-xs`. The options list owns the single scroll container.
@@ -597,6 +603,8 @@ Use `EmptyState` from `@/components/ui/empty` for empty collections and selectio
 | Description | `mt-2 max-w-xs text-sm font-normal text-gray-500 dark:text-zinc-400` | `mt-1 text-xs`, same width and colors |
 | Optional action area | `mt-6`; existing standard button variants | Same |
 
+Archive empty states include a small outline action. Use **Reset Filters** when filters or search prevent matches. For an empty archive, use **View Active [Records]** with the entity name and the same behavior as selecting the Active tab.
+
 ```jsx
 import { Search01Icon } from "hugeicons-react";
 import { EmptyState } from "@/components/ui/empty";
@@ -815,7 +823,7 @@ Desktop controls are 28×28px, `rounded-lg`, with explicit 16px Hugeicons. Coars
 
 ### 9.6.1 Row Selection
 
-Use `TableRow selected={isSelected}` when selection is managed separately from a checkbox. A row may also derive its selected state from a checked checkbox in a declared `selection` cell. Select All applies the existing page and eligibility scope in one state update. The selected surface covers every cell, including sticky identity and action cells, in the same render. Do not stagger cell backgrounds or leave sticky cells on the unselected surface.
+Use `TableRow selected={isSelected}` when selection is managed separately from a checkbox. A row may also derive its selected state from a checked checkbox in a declared `selection` cell. Select All applies the existing page and eligibility scope in one state update. The selected surface covers every cell, including sticky identity and action cells, in the same render. Do not stagger cell backgrounds or leave sticky cells on the unselected surface. When switching between record tabs or views, clear selected rows and the Shift-click anchor in the same transition so the floating action bar closes. Returning to a tab starts with no rows selected. Clear silently and keep unsaved form or import data available.
 
 ### 9.7 Pagination
 
@@ -881,7 +889,7 @@ import { ViewIcon } from "hugeicons-react";
 
 ### 9.9 Loading, Empty, Error, and Verification
 
-All dashboards use `InitialDashboardLoader` while resolving the route and checking the session. Account Settings → Preferences lets users choose the dashboard skeleton or “Loading workspace…” (default) for their account. Show placeholders in both the navigation and the main workspace. Use the requested view’s skeleton when one is available and use neutral workspace placeholders while the view is unknown. Mount the live dashboard as soon as the session is authorized. Admin and staff views mount directly. Each mounted page owns one initial data-loading state. Keep its real header, tabs, and toolbar mounted, and use content-only skeletons for tables, lists, cards, or charts. Never nest a full-page skeleton inside an existing page card. Reuse live column definitions and the selected view mode. Once data exists, retain it during refreshes with a busy indicator instead of replacing it with skeletons. Layout editors may use a single full-layout skeleton when their layout data is not yet available.
+All dashboards use `InitialDashboardLoader` while resolving the route and checking the session. Account Settings → Preferences lets users choose the dashboard skeleton or one of four eManage logo animations for their account. Logo Fill is the default, and all four animations display “Opening eManage…”. Show placeholders in both the navigation and the main workspace. Use the requested view’s skeleton when one is available and use neutral workspace placeholders while the view is unknown. Mount the live dashboard as soon as the session is authorized. Admin and staff views mount directly. Each mounted page owns one initial data-loading state. Keep its real header, tabs, and toolbar mounted, and use content-only skeletons for tables, lists, cards, or charts. Never nest a full-page skeleton inside an existing page card. Reuse live column definitions and the selected view mode. Once data exists, retain it during refreshes with a busy indicator instead of replacing it with skeletons. Layout editors may use a single full-layout skeleton when their layout data is not yet available.
 
 Skeletons use `Table` and the same semantic column order, control widths, minimum table width, sticky offsets, and inherited density as live data. Do not hardcode a separate skeleton row height or render multiple action placeholders in a 48px column.
 

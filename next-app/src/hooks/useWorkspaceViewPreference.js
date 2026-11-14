@@ -20,6 +20,7 @@ const allowedValues = {
   },
   digital_records_review: {
     viewMode: ["list", "table", "kanban"],
+    groupBy: ["status", "docType", "none"],
   },
   sla_analytics: {
     viewMode: ["all", "sla", "csm"],
@@ -53,6 +54,7 @@ const allowedValues = {
   },
   document_requests: {
     viewMode: ["list", "table", "kanban"],
+    groupBy: ["status", "doc_type", "client_type", "none"],
     sortOrder: ["ASC", "DESC"],
   },
   student_directory: {
@@ -99,7 +101,7 @@ function normalizePreference(value, fallback, page, field) {
     if (!Array.isArray(value) || value.length > 100) return fallback;
     if (fieldName === "visibleColumns") {
       if (!value.every((item) => typeof item === "string")) return fallback;
-      const selected = [...new Set(value)];
+      const selected = [...new Set(page === "document_requests" ? value.filter((key) => key !== "id") : value)];
       return selected.length >= 2 ? selected : fallback;
     }
     if (value.length === 0) return [];

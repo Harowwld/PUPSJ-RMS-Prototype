@@ -46,7 +46,7 @@ export default function EditUserModal({
             {/* Part 1: Full name */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   First Name
                 </label>
                 <Input
@@ -61,7 +61,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Last Name
                 </label>
                 <Input
@@ -115,7 +115,7 @@ export default function EditUserModal({
             {/* Part 3: System Identifiers */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Employee ID
                 </label>
                 <Input
@@ -127,7 +127,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Institutional Email
                 </label>
                 <Input

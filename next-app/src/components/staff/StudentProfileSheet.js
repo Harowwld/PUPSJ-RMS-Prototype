@@ -1,6 +1,7 @@
 "use client";
 
 
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import EditOdrsEmailDialog from "./EditOdrsEmailDialog";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
@@ -366,7 +367,7 @@ export default function StudentProfileSheet({
             </div>
 
             <div className="ml-auto flex items-center gap-3">
-              {typeof totalCount === "number" && totalCount > 1 && (
+              {totalCount > 1 && currentIndex >= 0 && (
                 <SheetPagination
                   compact
                   label="Record navigation"
@@ -500,7 +501,7 @@ export default function StudentProfileSheet({
                     label="Registry Status"
                   >
                     <span
-                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, BADGE_BASE)}
+                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, COMPACT_BADGE_BASE)}
                     >
                       {student.status || "Active"}
                     </span>
@@ -582,7 +583,7 @@ export default function StudentProfileSheet({
                     label="Registry Status"
                   >
                     <span
-                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, BADGE_BASE)}
+                      className={cn(isArchived ? BADGE_PALETTES.amber : BADGE_PALETTES.emerald, COMPACT_BADGE_BASE)}
                     >
                       {student.status || "Active"}
                     </span>
@@ -702,7 +703,7 @@ export default function StudentProfileSheet({
                               ? BADGE_PALETTES.purple
                               : BADGE_PALETTES.amber, COMPACT_BADGE_BASE)}
                         >
-                          {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
+                          {formatRequestStatus((req.status || "Pending"))}
                         </span>
                       </div>
                       <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1 font-sans tabular-nums">

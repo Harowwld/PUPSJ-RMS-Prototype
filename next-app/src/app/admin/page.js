@@ -168,8 +168,15 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const logExcludeRoleFilter = auditRoles(true)
   const [logSeverityFilter, setLogSeverityFilter] = useWorkspaceViewPreference("audit_logs", "logSeverityFilter", "All")
   const [logExcludeSeverityFilter, setLogExcludeSeverityFilter] = useWorkspaceViewPreference("audit_logs", "logExcludeSeverityFilter", "")
+  const severityRuleValues = (exclude) => logFilterRules
+    .filter((rule) => rule.fieldKey === "severity" && (rule.operator === "is_not") === exclude)
+    .flatMap((rule) => rule.value)
+    .filter(Boolean)
+  const effectiveLogSeverity = [...new Set([...(logSeverityFilter === "All" ? [] : [logSeverityFilter]), ...severityRuleValues(false)])].join(",")
+  const effectiveExcludedLogSeverity = [...new Set([logExcludeSeverityFilter, ...severityRuleValues(true)].filter(Boolean))].join(",")
   const [logStartDate, setLogStartDate] = useWorkspaceViewPreference("audit_logs", "logStartDate", "")
   const [logEndDate, setLogEndDate] = useWorkspaceViewPreference("audit_logs", "logEndDate", "")
+  const [logGroupBy, setLogGroupBy] = useWorkspaceViewPreference("audit_logs", "groupBy", "none")
   const [logSortBy, setLogSortBy] = useWorkspaceViewPreference("audit_logs", "sortBy", "created_at")
   const [logSortOrder, setLogSortOrder] = useWorkspaceViewPreference("audit_logs", "sortOrder", "DESC")
   const [logsMineOnly, setLogsMineOnly] = useState(false)
@@ -202,6 +209,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("All")
   const [selectedStaffIds, setSelectedStaffIds] = useState(new Set())
+  const [previousSelectionView, setPreviousSelectionView] = useState(view)
+  if (previousSelectionView !== view) {
+    setPreviousSelectionView(view)
+    if (selectedStaffIds.size > 0) setSelectedStaffIds(new Set())
+  }
   const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
@@ -550,11 +562,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         ? `&excludeRole=${encodeURIComponent(logExcludeRoleFilter)}`
         : ""
       const sevQuery =
-        logSeverityFilter !== "All"
-          ? `&severity=${encodeURIComponent(logSeverityFilter)}`
+        effectiveLogSeverity
+          ? `&severity=${encodeURIComponent(effectiveLogSeverity)}`
           : ""
-      const excludeSevQuery = logExcludeSeverityFilter
-        ? `&excludeSeverity=${encodeURIComponent(logExcludeSeverityFilter)}`
+      const excludeSevQuery = effectiveExcludedLogSeverity
+        ? `&excludeSeverity=${encodeURIComponent(effectiveExcludedLogSeverity)}`
         : ""
       const startQuery = logStartDate
         ? `&startDate=${encodeURIComponent(logStartDate)}`
@@ -566,7 +578,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       const [resLogs] = await Promise.all([
         fetch(
-          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}${sortQuery}`
+          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}${sortQuery}&groupBy=${encodeURIComponent(logGroupBy)}`
         ),
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
@@ -613,12 +625,13 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     logsMineOnly,
     logRoleFilter,
     logExcludeRoleFilter,
-    logSeverityFilter,
-    logExcludeSeverityFilter,
+    effectiveLogSeverity,
+    effectiveExcludedLogSeverity,
     logStartDate,
     logEndDate,
     logSortBy,
     logSortOrder,
+    logGroupBy,
   ])
 
   const refreshLogStats = useCallback(async () => {
@@ -775,6 +788,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         dateTo: reviewQuery.dateTo,
         sortBy: reviewQuery.sortBy,
         sortOrder: reviewQuery.sortOrder,
+        groupBy: reviewQuery.groupBy,
       })
       const [res] = await Promise.all([
         fetch(`/api/documents/review?${params}`, { cache: "no-store" }),
@@ -1998,6 +2012,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               setLogStartDate={setLogStartDate}
               logEndDate={logEndDate}
               setLogEndDate={setLogEndDate}
+              groupBy={logGroupBy}
+              setGroupBy={setLogGroupBy}
               logSortBy={logSortBy}
               setLogSortBy={setLogSortBy}
               logSortOrder={logSortOrder}

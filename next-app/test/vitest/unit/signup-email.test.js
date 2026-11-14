@@ -28,7 +28,7 @@ it("composes a branded verification email with a plain-text alternative and an i
   expect(message).toContain("Content-Type: multipart/alternative");
   expect(message).toContain("Content-Type: text/plain");
   expect(message).toContain("Content-Type: text/html");
-  expect(message).toContain("Content-ID: <emanage-signup-logo@pupsj-rms>");
+  expect(message).toContain("Content-ID: <emanage-logo@pupsj-rms>");
   expect(message).toContain("Content-Disposition: inline");
   expect(message).toContain("042816");
   expect(message).toContain("From: PUP eManage <no-reply@example.com>");
@@ -74,6 +74,7 @@ it("renders the account-ready template with credential rows, code tiles, and a s
   expect(message.html).toContain("https://portal.example.com/login");
   expect(message.text).toContain("An administrator must activate this account");
   expect(message.attachments).toHaveLength(1);
+  expect(message.html).toContain(`src="cid:${message.attachments[0].cid}"`);
 });
 
 it("omits unavailable sign-in details and uses the institution's sign-in instructions", async () => {

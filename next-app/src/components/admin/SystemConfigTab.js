@@ -4,7 +4,7 @@ import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 
 
 import useUrlPage from "@/hooks/useUrlPage"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useEffectEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -44,35 +44,17 @@ export default function SystemConfigTab({
   const isOsas = (authUser?.office_id || "").toLowerCase() === "osas";
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeSubTab, setActiveSubTabState] = useState(() => {
-    const requested = searchParams?.get("subtab")
-    return isAvailableSystemConfigSubTab(requested, isOsas)
-      ? requested
-      : "document-types"
-  })
+  const requestedTab = searchParams?.get("subtab")
+  const activeSubTab = isAvailableSystemConfigSubTab(requestedTab, isOsas) ? requestedTab : "document-types"
+
   const setActiveSubTab = (nextTab) => {
-    const tab = isAvailableSystemConfigSubTab(nextTab, isOsas)
-      ? nextTab
-      : "document-types"
-    setActiveSubTabState(tab)
+    const tab = isAvailableSystemConfigSubTab(nextTab, isOsas) ? nextTab : "document-types"
+    if (tab === activeSubTab) return
     const params = new URLSearchParams(window.location.search)
     params.set("subtab", tab)
     params.delete("page")
-    const queryString = params.toString()
-    router.push(queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname, { scroll: false })
+    router.push(`${window.location.pathname}?${params}`, { scroll: false })
   }
-  useEffect(() => {
-    const requested = searchParams?.get("subtab")
-    const nextTab = isAvailableSystemConfigSubTab(requested, isOsas)
-      ? requested
-      : isAvailableSystemConfigSubTab(activeSubTab, isOsas)
-        ? activeSubTab
-        : "document-types"
-    if (nextTab !== activeSubTab) {
-      const timer = setTimeout(() => setActiveSubTabState(nextTab), 0)
-      return () => clearTimeout(timer)
-    }
-  }, [searchParams, isOsas, activeSubTab])
   const [showArchived, setShowArchived] = useState(false)
 
   // Search States
@@ -129,6 +111,7 @@ export default function SystemConfigTab({
   const [selectedDocTypes, setSelectedDocTypes] = useState({})
   const [selectedCourses, setSelectedCourses] = useState({})
   const [selectedSections, setSelectedSections] = useState({})
+  const [importSelected, setImportSelected] = useState({}) // { [index]: boolean }
   const [itemsPerPage, setItemsPerPage] = useState(20)
 
   // Last Selected Trackers for Shift+Click
@@ -160,32 +143,23 @@ export default function SystemConfigTab({
     onConfirm: () => { },
   })
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-    // Reset selection states when view mode or sub-tab changes to avoid persisting
-    // batch actions between unrelated records or categories
-    const docCount = Object.values(selectedDocTypes).filter(Boolean).length;
-    const courseCount = Object.values(selectedCourses).filter(Boolean).length;
-    const sectionCount = Object.values(selectedSections).filter(Boolean).length;
-
-    if ((docCount > 0 || courseCount > 0 || sectionCount > 0) && showToast) {
-      showToast({
-        title: "Selections Reset",
-        description: "Category selections cleared to prevent accidental batch actions.",
-      });
-    }
-
+  const selectionScope = `${activeSubTab}:${showArchived}`
+  const [previousSelectionScope, setPreviousSelectionScope] = useState(selectionScope)
+  if (selectionScope !== previousSelectionScope) {
+    setPreviousSelectionScope(selectionScope)
     setSelectedDocTypes({})
     setSelectedCourses({})
     setSelectedSections({})
-    setPageDoc(1)
-    setPageCourse(1)
-    setPageSection(1)
+    setImportSelected({})
+    setLastSelectedDocId(null)
+    setLastSelectedCourseId(null)
+    setLastSelectedSectionId(null)
+  }
 
-    loadAll()
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [showArchived, activeSubTab, setPageCourse, setPageDoc, setPageSection])
+  const loadInitialConfiguration = useEffectEvent(() => { void loadAll() })
+  useEffect(() => {
+    loadInitialConfiguration()
+  }, [])
 
   // --- Transform Helpers ---
   const applySortAndPagination = (data, sort, page, perPage) => {
@@ -723,7 +697,6 @@ export default function SystemConfigTab({
   // --- ACTIONS: Bulk Import (Staged) ---
   const [importFile, setImportFile] = useState(null)
   const [importRows, setImportRows] = useState([]) // [{ category, name, code, error, index }]
-  const [importSelected, setImportSelected] = useState({}) // { [index]: boolean }
   const [importStatus, setImportStatus] = useState("idle") // idle, preview, importing, complete
   const [importResults, setImportResults] = useState(null)
   const [importDropActive, setImportDropActive] = useState(false)

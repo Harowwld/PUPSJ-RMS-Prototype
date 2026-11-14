@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 
 import React, { useState, useEffect } from "react";
@@ -389,7 +389,7 @@ export default function GoogleDrivePdfCard({
             onRescan={handleRescanClick}
             onLocate={handleLocateClick}
             onDownload={handleDownloadClick}
-            triggerClassName="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all shrink-0 cursor-pointer"
+            triggerClassName="table-action-button shrink-0"
           />
         </div>
       </div>
@@ -431,12 +431,15 @@ export default function GoogleDrivePdfCard({
           </div>
         )}
 
-        {/* Hover Quick Preview Pill Overlay */}
-        <div className="absolute inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center pointer-events-none">
-          <div className={cn("bg-slate-900/95 text-white dark:bg-white dark:text-slate-900 transform scale-95 group-hover:scale-100 transition-transform duration-150", BADGE_BASE)}>
-            Quick Preview
-          </div>
-        </div>
+        <button
+          type="button"
+          aria-label={`Preview ${docTitle}`}
+          title={PDF_ACTION_LABELS.preview}
+          className="table-action-button absolute bottom-2 right-2"
+          onClick={handlePreviewClick}
+        >
+          <ViewIcon size={16} aria-hidden="true" />
+        </button>
       </div>
 
       {/* 3. Footer: File Size, Date, Approval Status Pill */}
@@ -452,7 +455,7 @@ export default function GoogleDrivePdfCard({
               ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
               : approvalStatus === "Declined"
               ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", BADGE_BASE)}
+              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20", COMPACT_BADGE_BASE)}
         >
           {approvalStatus}
         </span>

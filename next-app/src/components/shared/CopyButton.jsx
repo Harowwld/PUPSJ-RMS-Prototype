@@ -25,7 +25,7 @@ export function CopyButton({
   onCopySuccess,
   onClick,
   className,
-  variant = "outline",
+  variant,
   size,
   iconOnly = false,
   children,
@@ -81,7 +81,7 @@ export function CopyButton({
   return (
     <Button
       type="button"
-      variant={variant}
+      variant={variant || (iconOnly ? "ghost" : "outline")}
       size={size || (iconOnly ? "icon-xs" : "sm")}
       aria-label={iconOnly ? resolvedIdleLabel : undefined}
       title={iconOnly ? (copied ? resolvedCopiedLabel : resolvedIdleLabel) : undefined}

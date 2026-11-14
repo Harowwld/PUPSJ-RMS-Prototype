@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
-import { Skeleton } from "@/components/ui/skeleton";
+import AccountSettingsContentSkeleton from "@/components/shared/AccountSettingsContentSkeleton";
 import { getClientSession } from "@/lib/clientAuth";
 import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars";
 import {
@@ -346,6 +346,7 @@ export default function AccountSettingsPanel() {
   // Password Form State
   const [pwCurrent, setPwCurrent] = useState("");
   const [pwNext, setPwNext] = useState("");
+  const [passwordAttempted, setPasswordAttempted] = useState(false);
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
@@ -1363,6 +1364,7 @@ export default function AccountSettingsPanel() {
   const submitPassword = async (e) => {
     e.preventDefault();
     if (pwLoading) return;
+    setPasswordAttempted(true);
 
     if (!pwCurrent || !pwNext || !pwConfirm) {
       toast.error("Required Fields Missing", {
@@ -1411,6 +1413,7 @@ export default function AccountSettingsPanel() {
       setPwCurrent("");
       setPwNext("");
       setPwConfirm("");
+      setPasswordAttempted(false);
     } catch (err) {
       const errInfo = formatErrorMessage(err, { title: "Password Change Failed", description: "Unable to update password." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
@@ -1799,15 +1802,7 @@ export default function AccountSettingsPanel() {
         {/* Content Area */}
         <div className="min-w-0 flex-1">
           {loading ? (
-            <div className="space-y-6 p-8" aria-busy="true" aria-label="Loading account settings">
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-4 w-72 max-w-full" />
-              </div>
-              <Skeleton className="h-28 w-full rounded-2xl" />
-              <Skeleton className="h-32 w-full rounded-xl" />
-              <Skeleton className="h-32 w-full rounded-xl" />
-            </div>
+            <AccountSettingsContentSkeleton tab={activeTab} />
           ) : <>
           <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
                   <div className="p-8">
@@ -2107,7 +2102,7 @@ export default function AccountSettingsPanel() {
                                 htmlFor="profileMiddleName"
                                 className="w-32 sm:w-40 shrink-0 text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none cursor-pointer"
                               >
-                                Middle Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+                                Middle Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                               </label>
                               <Input
                                 type="text"
@@ -2189,7 +2184,7 @@ export default function AccountSettingsPanel() {
                                 >
                                   Affiliation
                                 </label>
-                                <Select
+                                <Select placeholder="Select affiliation"
                                   id="profileClientType"
                                   value={clientType}
                                   onChange={(e) => setClientType(e.target.value)}
@@ -2361,6 +2356,7 @@ export default function AccountSettingsPanel() {
                         <Input
                           type={showPw.next ? "text" : "password"}
                           id="newPassword"
+                          aria-invalid={(passwordAttempted && Boolean(pwNext) && (pwNext === pwCurrent || pwNext.length < 8)) || undefined}
                           placeholder="At least 8 characters"
                           className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 px-1 font-jakarta flex-1"
                           value={pwNext}
@@ -2388,6 +2384,7 @@ export default function AccountSettingsPanel() {
                         <Input
                           type={showPw.confirm ? "text" : "password"}
                           id="confirmPassword"
+                          aria-invalid={(passwordAttempted && Boolean(pwConfirm) && pwNext !== pwConfirm) || undefined}
                           placeholder="Re-enter new password"
                           className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 px-1 font-jakarta flex-1"
                           value={pwConfirm}
@@ -2511,7 +2508,7 @@ export default function AccountSettingsPanel() {
                                 <label className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-1.5">
                                   <span>{q.question}</span>
                                   {!q.is_required && (
-                                    <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                    <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                   )}
                                 </label>
                                 {q.hasAnswer && (
@@ -3012,7 +3009,7 @@ export default function AccountSettingsPanel() {
                     </div>
 
                     <div className="w-full sm:w-72 shrink-0">
-                      <Select
+                      <Select placeholder="Select home view"
                         value={activeHomeView?.id}
                         onValueChange={(val) => handlePreferenceChange("default_home_view", val, "Start Page Updated")}
                         buttonClassName="h-10 text-[13px] font-medium"
@@ -3059,7 +3056,7 @@ export default function AccountSettingsPanel() {
                     </div>
 
                     <div className="w-full sm:w-72 shrink-0">
-                      <Select
+                      <Select placeholder="Select name format"
                         value={activeNameFormat?.id}
                         onValueChange={(val) => handlePreferenceChange("display_name_format", val, "Display Name Format Updated")}
                         buttonClassName="h-10 text-[13px] font-medium"

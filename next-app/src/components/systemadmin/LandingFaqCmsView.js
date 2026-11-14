@@ -650,7 +650,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-[155px] shrink-0">
-                                  <Select
+                                  <Select placeholder="Select category"
                                     id={`faq-category-${originalIdx}`}
                                     aria-label={`Question ${originalIdx + 1} category tag`}
                                     value={

@@ -326,6 +326,7 @@ export default function DigitalRecordsReviewTab({
     setCurrentPage(1)
   }
 
+  const queryGroupBy = viewMode === "kanban" ? "kanban" : groupBy
   const query = useMemo(() => ({
     page: currentPage,
     pageSize: itemsPerPage,
@@ -337,7 +338,8 @@ export default function DigitalRecordsReviewTab({
     dateTo,
     sortBy,
     sortOrder,
-  }), [currentPage, itemsPerPage, statusFilters, docTypeFilters, filterRules, searchQuery, dateFrom, dateTo, sortBy, sortOrder])
+    groupBy: queryGroupBy,
+  }), [currentPage, itemsPerPage, statusFilters, docTypeFilters, filterRules, searchQuery, dateFrom, dateTo, sortBy, sortOrder, queryGroupBy])
 
   useEffect(() => { onQueryChange?.(query) }, [onQueryChange, query])
 
@@ -473,7 +475,8 @@ export default function DigitalRecordsReviewTab({
       onPreviewDocument({
         docId: record.id,
         docType: record.doc_type,
-        studentName: (isOsas ? record.organization_name || record.student_name : record.student_name) || "Unknown",
+        originalFilename: record.original_filename,
+        studentName: (isOsas ? record.organization_name || "Organization not linked" : record.student_name) || "Unknown",
         studentNo: isOsas ? undefined : record.student_no,
         refId: record.id,
         reviewNote: !isOsas && record.approval_status === "Declined" ? record.review_note : undefined,
@@ -563,6 +566,8 @@ export default function DigitalRecordsReviewTab({
   }, [statusFilters])
 
   const handleScopeChange = (scope) => {
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
     if (scope === "All") {
       setStatusFilters([])
       setStatusFilter?.("All")
@@ -737,7 +742,7 @@ export default function DigitalRecordsReviewTab({
               <SegmentedControl
                 id="records-review-view-mode"
                 value={viewMode}
-                onValueChange={setViewMode}
+                onValueChange={(value) => { setViewMode(value); setCurrentPage(1); setSelectedIds(new Set()); setLastSelectedId(null); }}
                 variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0"
                 items={[
@@ -803,16 +808,19 @@ export default function DigitalRecordsReviewTab({
                 sortBy={sortBy}
                 onSortByChange={(val) => {
                   setSortBy(val)
-                  setSortOrder("DESC")
+                  setCurrentPage(1)
                 }}
                 sortOrder={sortOrder}
-                onSortOrderChange={setSortOrder}
+                onSortOrderChange={(value) => { setSortOrder(value); setCurrentPage(1) }}
               />
               {viewMode !== "kanban" && (
                 <GroupPopover
                   options={groupOptions}
                   groupBy={groupBy}
-                  onGroupByChange={setGroupBy}
+                  onGroupByChange={(value) => {
+                    setGroupBy(value)
+                    setCurrentPage(1)
+                  }}
                 />
               )}
               {viewMode === "table" && (
@@ -857,7 +865,7 @@ export default function DigitalRecordsReviewTab({
           {/* 5. Content Area */}
           <div className="relative flex flex-[1_0_auto] flex-col" aria-busy={isLoading || undefined}>
           {initialLoading && viewMode !== "table" ? (
-            <DataContentSkeleton columns={activeTableColumns} viewMode={viewMode} kanbanColumnCount={DIGITAL_RECORDS_KANBAN_COLUMNS.length} />
+            <DataContentSkeleton columns={activeTableColumns} viewMode={viewMode} kanbanColumnCount={DIGITAL_RECORDS_KANBAN_COLUMNS.length} kanbanViewportClassName="min-h-[calc(100vh-20rem)] pb-4 pt-3 px-4 sm:px-6" grouped={groupBy !== "none"} />
           ) : error && sortedRecords.length === 0 ? (
             <div className="flex flex-[1_0_auto] min-h-[420px] flex-col items-center justify-center border-t border-border dark:border-border bg-transparent text-center p-6 rounded-b-2xl">
               <Empty>
@@ -949,9 +957,6 @@ export default function DigitalRecordsReviewTab({
                 records={sortedRecords}
                 isOsas={isOsas}
                 onPreview={handlePreview}
-                onApprove={handleApprove}
-                onDecline={onDecline}
-                onSetStatus={onSetStatus}
                 onDropItem={async (item, targetStatus) => {
                   if (targetStatus === "Approved") {
                     await handleApprove(item.id)
@@ -1180,7 +1185,7 @@ export default function DigitalRecordsReviewTab({
                               )}
                               checked={isSelected}
                               onChange={(e) => toggleSelectRow(r.id, e)}
-                              aria-label={`Select record for ${(isOsas ? r.organization_name || r.student_name : r.student_name) || r.student_no}`}
+                              aria-label={`Select record for ${(isOsas ? r.organization_name || "Organization not linked" : r.student_name) || r.student_no}`}
                             />
                           </td>
 
@@ -1204,9 +1209,9 @@ export default function DigitalRecordsReviewTab({
                             <td className="p-4 w-[220px] min-w-[220px] max-w-[260px] overflow-hidden align-middle border-r border-border/70 dark:border-border/70">
                               <div
                                 className="font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate"
-                                title={formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
+                                title={isOsas ? r.organization_name || "Organization not linked" : formatTitleCase(r.student_name)}
                               >
-                                {formatTitleCase(isOsas ? r.organization_name || r.student_name : r.student_name)}
+                                {isOsas ? r.organization_name || "Organization not linked" : formatTitleCase(r.student_name)}
                               </div>
                             </td>
                           )}

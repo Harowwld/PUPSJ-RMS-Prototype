@@ -101,8 +101,7 @@ async function run() {
     assert.equal(data2.isDuplicate, true);
     assert.equal(data2.duplicateId, doc1Id);
     assert.equal(data2.existingStatus, "Pending");
-    assert.match(data2.error, /already registered/i);
-    assert.match(data2.error, /single digital twin/i);
+    assert.match(data2.error, /already on file/i);
     console.log(`✓ Duplicate upload correctly rejected with 409 Conflict: "${data2.error}"`);
 
     // --- Test 3: Uploading duplicate when first is 'Approved' is also rejected with 409 Conflict ---

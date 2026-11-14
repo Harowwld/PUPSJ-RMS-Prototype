@@ -145,7 +145,7 @@ export default function EditOrganizationModal({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                  Acronym <span className="normal-case tracking-normal opacity-70">(optional)</span>
                 </label>
                 <Input
                   type="text"
@@ -162,7 +162,7 @@ export default function EditOrganizationModal({
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                   Category
                 </label>
-                <Select
+                <Select placeholder="Select category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   usePortal={false}
@@ -177,7 +177,7 @@ export default function EditOrganizationModal({
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                   Status
                 </label>
-                <Select
+                <Select placeholder="Select status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   usePortal={false}
@@ -193,7 +193,7 @@ export default function EditOrganizationModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                  Faculty Adviser Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                 </label>
                 <Input
                   type="text"
@@ -206,7 +206,7 @@ export default function EditOrganizationModal({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                  Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                  Adviser Email <span className="normal-case tracking-normal opacity-70">(optional)</span>
                 </label>
                 <Input
                   type="email"
@@ -228,7 +228,7 @@ export default function EditOrganizationModal({
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                     Room
                   </label>
-                  <Input
+                  <Input placeholder="Room number"
                     type="number"
                     value={room}
                     onChange={(e) => setRoom(e.target.value)}
@@ -239,7 +239,7 @@ export default function EditOrganizationModal({
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                     Cabinet
                   </label>
-                  <Input
+                  <Input placeholder="Cabinet name"
                     type="text"
                     value={cabinet}
                     onChange={(e) => setCabinet(e.target.value)}
@@ -250,7 +250,7 @@ export default function EditOrganizationModal({
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                     Drawer
                   </label>
-                  <Input
+                  <Input placeholder="Drawer number"
                     type="number"
                     value={drawer}
                     onChange={(e) => setDrawer(e.target.value)}

@@ -1,4 +1,6 @@
 "use client";
+import { formatLogDetails } from "@/lib/auditLogFormatting";
+import CopyButton from "@/components/shared/CopyButton";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -78,7 +80,7 @@ function getNotificationVisuals(notif) {
       return {
         icon: "Tick01Icon",
         avatarClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/60",
-        badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60",
+        badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
         label: "Approved",
         category: "Document Review",
       };
@@ -87,7 +89,7 @@ function getNotificationVisuals(notif) {
       return {
         icon: "Cancel01Icon",
         avatarClass: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/70 dark:border-rose-800/60",
-        badgeClass: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60",
+        badgeClass: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
         label: "Declined",
         category: "Document Review",
       };
@@ -95,7 +97,7 @@ function getNotificationVisuals(notif) {
     return {
       icon: "Clock01Icon",
       avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60",
-      badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60",
+      badgeClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
       label: "Pending Review",
       category: "Document Review",
     };
@@ -122,7 +124,7 @@ function getNotificationVisuals(notif) {
     return {
       icon: "FingerPrintScanIcon",
       avatarClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60",
-      badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60",
+      badgeClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
       label: "Uploaded",
       category: "Ingestion",
     };
@@ -132,7 +134,7 @@ function getNotificationVisuals(notif) {
     return {
       icon: "UserIcon",
       avatarClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200/70 dark:border-purple-800/60",
-      badgeClass: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800/60",
+      badgeClass: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400",
       label: "Student",
       category: "Records",
     };
@@ -141,7 +143,7 @@ function getNotificationVisuals(notif) {
   return {
     icon: "Notification01Icon",
     avatarClass: "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
-    badgeClass: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+    badgeClass: "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300",
     label: notif.severity || "System",
     category: "System Alert",
   };
@@ -212,6 +214,7 @@ export default function NotificationsTab({
 
   // Side Sheet Details state
   const [selectedNotif, setSelectedNotif] = useState(null);
+  const selectedVisuals = selectedNotif ? getNotificationVisuals(selectedNotif) : null;
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [notifFrameStatus, setNotifFrameStatus] = useState("loading");
@@ -246,6 +249,7 @@ export default function NotificationsTab({
         qs.set("offset", String(offset));
         qs.set("tab", activeTab);
         qs.set("sortBy", sortBy);
+        qs.set("groupBy", groupBy);
         qs.set("sortOrder", sortOrder);
         if (debouncedSearch) qs.set("search", debouncedSearch);
         const effectiveTypes = [
@@ -258,6 +262,11 @@ export default function NotificationsTab({
           ...filterRules.filter((r) => r.fieldKey === "decision" && r.operator !== "is_not").map((r) => r.value),
         ];
         if (effectiveDecisions.length > 0) qs.set("decision", effectiveDecisions.join(","));
+        for (const rule of filterRules) {
+          if (rule.operator === "is_not" && rule.value && ["type", "decision"].includes(rule.fieldKey)) {
+            qs.append(`exclude-${rule.fieldKey}`, rule.value);
+          }
+        }
         if (startDate) qs.set("startDate", startDate);
         if (endDate) qs.set("endDate", endDate);
 
@@ -287,7 +296,7 @@ export default function NotificationsTab({
         }
       }
     },
-    [offset, itemsPerPage, activeTab, debouncedSearch, typeFilters, decisionFilters, filterRules, sortBy, sortOrder, startDate, endDate]
+    [offset, itemsPerPage, activeTab, debouncedSearch, typeFilters, decisionFilters, filterRules, groupBy, sortBy, sortOrder, startDate, endDate]
   );
 
   useEffect(() => {
@@ -409,7 +418,7 @@ export default function NotificationsTab({
         toggleReadState(notif.id, true);
       }
     },
-    [items, sheetOpen, toggleReadState]
+    [items, sheetOpen, toggleReadState, setSelectedNotif, setNavItems, setNotifFrameStatus, setSheetOpen]
   );
 
   const activeNavList = navItems.length > 0 ? navItems : items;
@@ -437,13 +446,7 @@ export default function NotificationsTab({
   }, [selectedNotifIndex, activeNavList, handleOpenDetailSheet]);
 
   // Copy helper for identifiers
-  const [copiedKey, setCopiedKey] = useState(null);
-  const handleCopyText = (text, key) => {
-    if (!text) return;
-    navigator.clipboard.writeText(String(text));
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 1500);
-  };
+
 
   // Filter fields configuration for FilterPopover
   const filterFields = useMemo(
@@ -768,7 +771,7 @@ export default function NotificationsTab({
               <GroupPopover
                 options={groupOptions}
                 groupBy={groupBy}
-                onGroupByChange={setGroupBy}
+                onGroupByChange={(value) => { setGroupBy(value); setPage(1); }}
               />
               <DateRangeFilterButton
                 startDate={startDate}
@@ -799,7 +802,7 @@ export default function NotificationsTab({
           {/* 4. Grouped Notification List / Skeletons / Empty State */}
           {initialLoading ? (
             <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-              <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} />
+              <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} flush />
             </div>
           ) : error && items.length === 0 ? (
             <div className="flex-[1_0_auto] flex flex-col items-center justify-center p-6 border-t border-border dark:border-border rounded-b-2xl">
@@ -851,14 +854,11 @@ export default function NotificationsTab({
             </div>
           ) : (
             /* Time-Grouped Notification Feed */
-            <div className="flex flex-[1_0_auto] flex-col gap-6 p-6 border-t border-border dark:border-border w-full">
+            <div className="flex flex-[1_0_auto] flex-col border-t border-border w-full">
               {groupedItems.map((group) => (
-                <div key={group.key} className="space-y-2.5">
-                  {/* Group Header matching user screenshot */}
-                  <DataGroupHeader label={group.key} count={group.items.length} />
-
-                  {/* Rounded Card Container containing notification rows */}
-                  <div className="rounded-2xl border border-border/80 bg-white dark:bg-card overflow-hidden shadow-xs divide-y divide-border/60 dark:divide-border/60">
+                <div key={group.key} className="border-b border-border last:border-b-0">
+                  {group.label && <DataGroupHeader label={group.label} count={group.items.length} />}
+                  <div className="divide-y divide-border/60">
                     {group.items.map((n) => {
                       const visuals = getNotificationVisuals(n);
                       const isUnread = !n.is_read;
@@ -869,7 +869,7 @@ export default function NotificationsTab({
                           key={n.id}
                           onClick={() => handleOpenDetailSheet(n)}
                           className={cn(
-                            "group flex items-center justify-between gap-4 p-4 transition-all duration-normal cursor-pointer select-none",
+                            "group flex items-center justify-between gap-4 px-5 py-4 transition-all duration-normal cursor-pointer select-none sm:px-6",
                             "hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 active:scale-[0.998]",
                             isUnread && "bg-amber-50/20 dark:bg-amber-950/10"
                           )}
@@ -897,9 +897,9 @@ export default function NotificationsTab({
                                       ? "font-semibold text-gray-900 dark:text-zinc-50"
                                       : "font-medium text-gray-700 dark:text-zinc-300"
                                   )}
-                                  title={n.title}
+                                  title={formatLogDetails(n.title)}
                                 >
-                                  {n.title}
+                                  {formatLogDetails(n.title)}
                                 </h4>
                                 {isUnread && (
                                   <span className={cn("inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400", BADGE_BASE)}>
@@ -1037,45 +1037,117 @@ export default function NotificationsTab({
             {/* Scrollable Sheet Body - 1 Column Standard Layout */}
             {selectedNotif ? (
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Event Summary Strip */}
-                {(() => {
-                  const ui = getNotificationVisuals(selectedNotif);
-                  return (
-                    <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={cn(
-                            "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 shadow-2xs",
-                            ui.avatarClass
-                          )}
-                        >
-                          <AppIcon className={cn("", ui.icon)} />
-                        </div>
-                        <div className="min-w-0">
-                          <h2
-                            className="text-sm font-bold text-gray-900 dark:text-zinc-50 truncate"
-                            title={selectedNotif.title}
-                          >
-                            {selectedNotif.title || "Notification"}
-                          </h2>
-                          <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
-                            {formatPHDateTime(selectedNotif.created_at)} • {formatNotificationTimeAgo(selectedNotif.created_at)}
-                          </p>
-                        </div>
-                      </div>
+                <div className="space-y-1.5">
+                  <SheetSectionHeading icon={CovidInfoIcon} title="Notification Specification" />
+                  <div className="py-1">
+                    <InfoRow icon=" Notification01Icon" label="Title" value={formatLogDetails(selectedNotif.title) || "Notification"} />
 
-                      <div className="flex items-center gap-2 shrink-0">
+                    <InfoRow icon=" Clock01Icon" label="Received" value={formatPHDateTime(selectedNotif.created_at)} />
+
+                    <InfoRow icon=" InformationCircleIcon" label="Severity">
+                      <span className={cn(selectedVisuals.badgeClass, COMPACT_BADGE_BASE)}>{selectedVisuals.label}</span>
+                    </InfoRow>
+
+                    <InfoRow icon=" Tag01Icon" label="Event Category">
+                      <span className="font-semibold text-gray-900 dark:text-zinc-100">
+                        {selectedVisuals.category}
+                      </span>
+                    </InfoRow>
+
+                    <InfoRow
+                      icon=" Building01Icon"
+                      label="Office Scope"
+                      value={formatTitleCase(selectedNotif.office_id) || "University General"}
+                    />
+
+                    <InfoRow
+                      icon="UserCircleIcon"
+                      label="Triggered By"
+                    >
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span>{formatTitleCase(selectedNotif.actor_name) || "System Automated"}</span>
+                        {selectedNotif.actor_id && (
+                          <span className={cn(COMPACT_BADGE_BASE, "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 tabular-nums")}>
+                            {selectedNotif.actor_id}
+                          </span>
+                        )}
+                      </div>
+                    </InfoRow>
+
+                    <InfoRow icon=" Mail01Icon" label="Read Status">
+                      <div className="flex items-center gap-2">
+                        <Badge size="compact" variant={selectedNotif.is_read ? "gray" : "info"}>
+                          {selectedNotif.is_read ? "Read" : "Unread"}
+                        </Badge>
+                        <button
+                          type="button"
+                          onClick={() => toggleReadState(selectedNotif.id, !selectedNotif.is_read)}
+                          className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 font-semibold underline cursor-pointer"
+                        >
+                          {selectedNotif.is_read ? "Mark Unread" : "Mark Read"}
+                        </button>
+                      </div>
+                    </InfoRow>
+
+                    {selectedNotif.student_no && (
+                      <InfoRow icon=" Contact01Icon" label="Student Number">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(COMPACT_BADGE_BASE, "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-200 tabular-nums")}>
+                            {selectedNotif.student_no}
+                          </span>
+                          <CopyButton iconOnly textToCopy={selectedNotif.student_no} entityName="Student Number" />
+                        </div>
+                      </InfoRow>
+                    )}
+
+                    {selectedNotif.student_name && (
+                      <InfoRow
+                        icon=" UserIcon"
+                        label="Student Name"
+                        value={formatTitleCase(selectedNotif.student_name)}
+                      />
+                    )}
+
+                    {selectedNotif.doc_type && (
+                      <InfoRow icon=" File01Icon" label="Document Category" value={selectedNotif.doc_type} />
+                    )}
+
+                    {selectedNotif.original_filename && (
+                      <InfoRow icon=" Attachment01Icon" label="Original File">
                         <span
-                          className={cn(ui.badgeClass, COMPACT_BADGE_BASE)}
+                          className="font-sans tabular-nums text-xs truncate block max-w-[240px]"
+                          title={selectedNotif.original_filename}
                         >
-                          {ui.label}
+                          {selectedNotif.original_filename}
                         </span>
-                      </div>
-                    </div>
-                  );
-                })()}
+                      </InfoRow>
+                    )}
 
-                {/* 1. Event Narrative / Message */}
+                    {selectedNotif.entity_type === "document_request" && (
+                      <InfoRow icon=" LinkSquare01Icon" label="Related Request">
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans tabular-nums text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                            REQ-{selectedNotif.entity_id || selectedNotif.metadata?.request_id}
+                          </span>
+                          {onNavigateTab && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => {
+                                setSheetOpen(false);
+                                onNavigateTab("requests");
+                              }}
+                              className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                            >
+                              View in Requests
+                            </Button>
+                          )}
+                        </div>
+                      </InfoRow>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
                   <SheetSectionHeading icon="Message01Icon" title="Event Summary" />
                   <div className="pt-2">
@@ -1089,135 +1161,6 @@ export default function NotificationsTab({
                         &ldquo;{selectedNotif.review_note}&rdquo;
                       </NoticeBanner>
                     )}
-                  </div>
-                </div>
-
-                {/* 2. Structured Information Section (InfoRow label : value) */}
-                <div className="space-y-1.5">
-                  <SheetSectionHeading icon={CovidInfoIcon} title="Notification Specification" />
-                  <div className="py-1">
-                    {(() => {
-                      const ui = getNotificationVisuals(selectedNotif);
-                      return (
-                        <>
-                          <InfoRow icon=" Tag01Icon" label="Event Category">
-                            <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                              {ui.category}
-                            </span>
-                          </InfoRow>
-
-                          <InfoRow
-                            icon=" Building01Icon"
-                            label="Office Scope"
-                            value={formatTitleCase(selectedNotif.office_id) || "University General"}
-                          />
-
-                          <InfoRow
-                            icon="UserCircleIcon"
-                            label="Triggered By"
-                          >
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span>{formatTitleCase(selectedNotif.actor_name) || "System Automated"}</span>
-                              {selectedNotif.actor_id && (
-                                <span className="font-sans text-[10px] text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 px-1 rounded tabular-nums">
-                                  {selectedNotif.actor_id}
-                                </span>
-                              )}
-                            </div>
-                          </InfoRow>
-
-                          <InfoRow icon=" Mail01Icon" label="Read Status">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold", selectedNotif.is_read
-                                    ? "bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300"
-                                    : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50", BADGE_BASE)}
-                              >
-                                {selectedNotif.is_read ? "Read" : "Unread"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => toggleReadState(selectedNotif.id, !selectedNotif.is_read)}
-                                className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 font-semibold underline cursor-pointer"
-                              >
-                                {selectedNotif.is_read ? "Mark Unread" : "Mark Read"}
-                              </button>
-                            </div>
-                          </InfoRow>
-
-                          {selectedNotif.student_no && (
-                            <InfoRow icon=" Contact01Icon" label="Student Number">
-                              <div className="flex items-center gap-2">
-                                <span className="font-sans tabular-nums text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200">
-                                  {selectedNotif.student_no}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopyText(selectedNotif.student_no, "student_no")}
-                                  className="text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-                                  title="Copy Student Number"
-                                >
-                                  <AppIcon
-                                    className={cn(
-                                      "text-xs",
-                                      copiedKey === "student_no"
-                                        ? " Tick01Icon text-gray-600 dark:text-zinc-300"
-                                        : " Copy01Icon"
-                                    )}
-                                  />
-                                </button>
-                              </div>
-                            </InfoRow>
-                          )}
-
-                          {selectedNotif.student_name && (
-                            <InfoRow
-                              icon=" UserIcon"
-                              label="Student Name"
-                              value={formatTitleCase(selectedNotif.student_name)}
-                            />
-                          )}
-
-                          {selectedNotif.doc_type && (
-                            <InfoRow icon=" File01Icon" label="Document Category" value={selectedNotif.doc_type} />
-                          )}
-
-                          {selectedNotif.original_filename && (
-                            <InfoRow icon=" Attachment01Icon" label="Original File">
-                              <span
-                                className="font-sans tabular-nums text-xs truncate block max-w-[240px]"
-                                title={selectedNotif.original_filename}
-                              >
-                                {selectedNotif.original_filename}
-                              </span>
-                            </InfoRow>
-                          )}
-
-                          {selectedNotif.entity_type === "document_request" && (
-                            <InfoRow icon=" LinkSquare01Icon" label="Related Request">
-                              <div className="flex items-center gap-2">
-                                <span className="font-sans tabular-nums text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                  REQ-{selectedNotif.entity_id || selectedNotif.metadata?.request_id}
-                                </span>
-                                {onNavigateTab && (
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSheetOpen(false);
-                                      onNavigateTab("requests");
-                                    }}
-                                    className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                                  >
-                                    View in Requests
-                                  </Button>
-                                )}
-                              </div>
-                            </InfoRow>
-                          )}
-                        </>
-                      );
-                    })()}
                   </div>
                 </div>
 

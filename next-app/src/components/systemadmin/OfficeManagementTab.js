@@ -1,4 +1,5 @@
 "use client"
+import { orderRowsByGroup } from "@/lib/groupRows";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useViewPreference from "@/hooks/useViewPreference"
 import { formatPHDateTime } from "@/lib/timeFormat"
@@ -656,9 +657,18 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const totalPages = Math.max(1, Math.ceil(filteredOffices.length / pageSize))
   const startIndex = (page - 1) * pageSize
   const endIndex = Math.min(startIndex + pageSize, filteredOffices.length)
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? filteredOffices
+    : orderRowsByGroup(filteredOffices, (office) => {
+      if (groupBy === "station") return office.station_name || "Unassigned station";
+      if (groupBy === "staff_count") return office.staff_count || 0;
+      return office.status === "Active";
+    }),
+  [filteredOffices, groupBy]);
+
   const paginatedOffices = useMemo(() => {
-    return filteredOffices.slice(startIndex, startIndex + pageSize)
-  }, [filteredOffices, startIndex, pageSize])
+    return orderedGroups.slice(startIndex, startIndex + pageSize)
+  }, [orderedGroups, startIndex, pageSize])
 
   const groupedOffices = useMemo(() => {
     if (groupBy === "none") return [{ key: "all", label: "", offices: paginatedOffices }]
@@ -949,7 +959,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         <div className="flex items-center justify-between gap-4 overflow-x-auto px-6 py-2.5 scrollbar-none border-b border-border bg-white dark:bg-card dark:border-white/10">
           <SegmentedControl
             value={statusFilter}
-            onValueChange={setStatusFilter}
+            onValueChange={(value) => { setStatusFilter(value); setSelectedIds(new Set()); setLastSelectedId(null); }}
             variant="capsule"
             className="inline-grid grid-flow-col auto-cols-fr"
             items={[
@@ -961,7 +971,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           <div className="ml-auto">
             <SegmentedControl
               value={layoutView}
-              onValueChange={setLayoutView}
+              onValueChange={(value) => { setLayoutView(value); setSelectedIds(new Set()); setLastSelectedId(null); }}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr"
               items={[
@@ -987,7 +997,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           onSortOrderChange={setSortOrder}
           groupOptions={groupOptions}
           groupBy={groupBy}
-          onGroupByChange={setGroupBy}
+          onGroupByChange={(value) => { setGroupBy(value); updatePage(1); }}
           columns={tableColumns}
           visibleColumns={visibleColumns}
           onVisibleColumnsChange={setVisibleColumns}
@@ -1061,7 +1071,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     >
                       Reset Filters
                     </Button>
-                  ) : statusFilter === "Inactive" && stats.active > 0 ? (
+                  ) : statusFilter === "Inactive" ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -1684,7 +1694,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               {/* Row 2: Description */}
               <div>
                 <label htmlFor="office-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                  Description <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                  Description <span className="normal-case tracking-normal opacity-70">(optional)</span>
                 </label>
                 <Textarea
                   id="office-description"
@@ -1767,7 +1777,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Workstation Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                    Workstation Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                   </label>
                   <Input
                     value={form.station_name}

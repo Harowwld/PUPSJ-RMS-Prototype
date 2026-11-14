@@ -6,7 +6,7 @@ import { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import useOsasViewPreference from "@/hooks/useOsasViewPreference"
 import { cn, formatTitleCase } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { BADGE_BASE } from "@/lib/badgeStyles"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -32,7 +32,6 @@ import { studentRecordNameParts } from "@/lib/studentRecordName"
 import { formatRegistrarStudentName } from "@/lib/validationSchemas"
 import ContinuousScanningPanel from "@/components/staff/ContinuousScanningPanel"
 import { AlertCircleIcon as EmptyAlertCircleIcon , ArrowDown01Icon, ArrowUp01Icon, CheckmarkCircle01Icon, Delete01Icon, FolderOpenIcon, Loading01Icon, ReloadIcon, Upload01Icon} from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
 import {
   DOCUMENT_MAX_SIZE_BYTES,
   DOCUMENT_PAGE_MAX_SIZE_BYTES,
@@ -88,6 +87,7 @@ export default function ScanUploadTab({
   courses,
   docTypes,
   processSubmission,
+  validateUpload,
   uploadFieldErrors = {},
   clearUploadFieldError,
   clearAllUploadFieldErrors,
@@ -157,14 +157,13 @@ export default function ScanUploadTab({
   })()
 
   const startUpload = (onSuccess) => {
-    mismatchSubmissionRef.current = { onSuccess }
     if (ocrMismatch) {
+      if (validateUpload && !validateUpload()) return
+      mismatchSubmissionRef.current = { onSuccess }
       setMismatchConfirmOpen(true)
       return
     }
-    const submission = mismatchSubmissionRef.current
-    mismatchSubmissionRef.current = null
-    processSubmission(submission)
+    processSubmission({ onSuccess })
   }
 
   const confirmMismatchUpload = () => {
@@ -246,8 +245,6 @@ export default function ScanUploadTab({
 
 
   const fe = uploadFieldErrors || {}
-  const ring = (key) =>
-    fe[key] ? "ring-2 ring-orange-400 border-orange-400" : ""
 
   const roomOptions = storageLayout?.rooms?.map((r) => r.id) || (isOsas ? [1] : [])
   const coerceRoomId = (v) => {
@@ -645,7 +642,7 @@ export default function ScanUploadTab({
         id="view-upload"
         className="font-jakarta w-full flex flex-[1_0_auto] flex-col h-auto focus:outline-none animate-fade-up"
       >
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card data-form-validation-scope className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="FingerPrintScanIcon"
             title={
@@ -756,8 +753,9 @@ export default function ScanUploadTab({
                         className={cn(
                           "group relative flex flex-1 min-h-[min(580px,50dvh)] w-full flex-col overflow-hidden rounded-2xl border transition-all duration-150 ease-out",
                           uploadedFile ? "bg-white border-border dark:bg-card dark:border-border" : "bg-gray-50/50 border-2 border-dashed border-border dark:bg-zinc-900/30 dark:border-border hover:border-pup-maroon/40 dark:hover:border-red-500/40",
-                          fe.pdfFile ? "border-amber-400 bg-amber-50/20" : ""
                         )}
+                        data-slot="attachment-field"
+                        aria-invalid={Boolean(fe.pdfFile) || undefined}
                         onDragOver={(e) => {
                           e.preventDefault()
                           setDropActive(true)
@@ -897,7 +895,7 @@ export default function ScanUploadTab({
                                         <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50">
                                           Page {idx + 1}
                                         </span>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-1">
                                           <button
                                             type="button"
                                             disabled={idx === 0}
@@ -1263,8 +1261,8 @@ export default function ScanUploadTab({
 
                                 <div>
                                   <div className="mb-2 flex items-center justify-between">
-                                    <label className="block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                      Select Recognized Organization
+                                    <label htmlFor="scan-recognized-organization" className="text-xs font-semibold block text-gray-900 dark:text-zinc-300">
+                                      Recognized Organization
                                     </label>
                                     {(newRec.organizationId || newRec.name || uploadedFile || hf.selected) && (
                                       <Button
@@ -1303,17 +1301,16 @@ export default function ScanUploadTab({
                                     )}
                                   </div>
                                   <Select
-                                    placeholder="Choose an organization..."
+                                    aria-invalid={Boolean(fe.organizationId) || undefined}
+                                    id="scan-recognized-organization"
+                                    placeholder="Select Recognized Organization"
                                     disabled={Boolean(rescanContext)}
                                     className={cn(
                                       SELECT_BASE_CLASS,
-                                      ring("organization"),
-                                      ring("organizationId"),
                                       Boolean(rescanContext) && lockedField
                                     )}
                                     value={newRec.organizationId || ""}
                                     onChange={(e) => {
-                                      clearUploadFieldError?.("organization")
                                       clearUploadFieldError?.("organizationId")
                                       const targetOrg = organizations.find((o) => o.id === e.target.value)
                                       if (targetOrg) {
@@ -1321,7 +1318,6 @@ export default function ScanUploadTab({
                                       }
                                     }}
                                   >
-                                    <option value="">Choose an organization...</option>
                                     {organizations.map((org) => (
                                       <option key={org.id} value={org.id}>
                                         {org.acronym ? `[${org.acronym}] ` : ""}{org.name} ({org.category || "Organization"})
@@ -1331,7 +1327,7 @@ export default function ScanUploadTab({
                                 </div>
 
                                 <div>
-                                  <label htmlFor="osas-event-name" className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">Event Name</label>
+                                  <label htmlFor="osas-event-name" className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">Event Name <span className="normal-case tracking-normal opacity-70">(optional)</span></label>
                                   <div className="relative">
                                     <Input id="osas-event-name" role="combobox" aria-autocomplete="list" aria-expanded={showEventNameSuggestions && eventNameSuggestions.length > 0} aria-controls="osas-event-name-options" value={newRec.eventName || ""} maxLength={200} placeholder="Enter event name" onFocus={() => setShowEventNameSuggestions(true)} onBlur={() => window.setTimeout(() => setShowEventNameSuggestions(false), 120)} onChange={(e) => { setNewRec((p) => ({ ...p, eventName: e.target.value })); setShowEventNameSuggestions(true); }} />
                                     {showEventNameSuggestions && eventNameSuggestions.length > 0 && (
@@ -1349,7 +1345,7 @@ export default function ScanUploadTab({
                                 {newRec.organizationId && (
                                   <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                      <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                      <label className={`text-xs font-semibold mb-2 block ${lockedLabel} dark:text-zinc-400`}>
                                         Acronym
                                       </label>
                                       <Input
@@ -1363,7 +1359,7 @@ export default function ScanUploadTab({
                                       />
                                     </div>
                                     <div>
-                                      <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                      <label className={`text-xs font-semibold mb-2 block ${lockedLabel} dark:text-zinc-400`}>
                                         Category
                                       </label>
                                       <Input
@@ -1378,7 +1374,7 @@ export default function ScanUploadTab({
                                     </div>
                                     {newRec.adviserName && (
                                       <div className="col-span-2">
-                                        <label className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}>
+                                        <label className={`text-xs font-semibold mb-2 block ${lockedLabel} dark:text-zinc-400`}>
                                           Faculty Adviser
                                         </label>
                                         <Input
@@ -1400,7 +1396,7 @@ export default function ScanUploadTab({
                               <div className="space-y-4">
                                 <div>
                                   <div className="mb-2 flex items-center justify-between">
-                                    <label className="block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                                    <label className="text-xs font-semibold block text-gray-900 dark:text-zinc-300">
                                       Organization Name
                                     </label>
                                     {(newRec.name || uploadedFile || hf.selected) && (
@@ -1437,11 +1433,9 @@ export default function ScanUploadTab({
                                     )}
                                   </div>
                                   <Input
+                                    aria-invalid={Boolean(fe.name) || undefined}
                                     type="text"
-                                    className={cn(
-                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                      ring("name")
-                                    )}
+                                    className={"h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"}
                                     placeholder="e.g. Junior Philippine Computer Society"
                                     value={newRec.name || ""}
                                     onChange={(e) => {
@@ -1453,37 +1447,33 @@ export default function ScanUploadTab({
 
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                      Acronym
+                                    <label className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
+                                      Acronym <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                     </label>
                                     <Input
                                       type="text"
-                                      className={cn(
-                                        "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                        ring("acronym")
-                                      )}
+                                      className="h-10 text-xs"
                                       placeholder="e.g. JPCS"
                                       value={newRec.acronym || ""}
                                       onChange={(e) => {
-                                        clearUploadFieldError?.("acronym")
                                         setNewRec((p) => ({ ...p, acronym: e.target.value.toUpperCase() }))
                                       }}
                                     />
                                   </div>
 
                                   <div>
-                                    <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                                    <label htmlFor="scan-category" className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
                                       Category
                                     </label>
                                     <Select
+                                      aria-invalid={Boolean(fe.category) || undefined}
+                                      id="scan-category"
                                       placeholder="Select Category"
-                                      className={cn(
-                                        SELECT_BASE_CLASS,
-                                        ring("category")
-                                      )}
+                                      className={SELECT_BASE_CLASS}
                                       value={newRec.category || ""}
                                       onChange={(e) => {
                                         clearUploadFieldError?.("category")
+                                        clearUploadFieldError?.("cabinet")
                                         const nextCategory = e.target.value
                                         setNewRec((p) => ({
                                           ...p,
@@ -1492,7 +1482,6 @@ export default function ScanUploadTab({
                                         }))
                                       }}
                                     >
-                                      <option value="">Select Category</option>
                                       <option value="Academic">Academic</option>
                                       <option value="Non-Academic">Non-Academic</option>
                                     </Select>
@@ -1500,19 +1489,15 @@ export default function ScanUploadTab({
                                 </div>
 
                                 <div>
-                                  <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                                    Faculty Adviser
+                                  <label className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
+                                    Faculty Adviser <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                   </label>
                                   <Input
                                     type="text"
-                                    className={cn(
-                                      "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                      ring("adviserName")
-                                    )}
+                                    className="h-10 text-xs"
                                     placeholder="e.g. Prof. Juan Dela Cruz"
                                     value={newRec.adviserName || ""}
                                     onChange={(e) => {
-                                      clearUploadFieldError?.("adviserName")
                                       setNewRec((p) => ({ ...p, adviserName: e.target.value }))
                                     }}
                                   />
@@ -1596,7 +1581,7 @@ export default function ScanUploadTab({
                               <div>
                                 <div className="mb-2 flex items-center justify-between">
                                   <label
-                                    className={`block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                                    className={`text-xs font-semibold block ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                                   >
                                     Student Number
                                   </label>
@@ -1648,10 +1633,10 @@ export default function ScanUploadTab({
                                     type="text"
                                     className={cn(
                                       "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all",
-                                      ring("studentNo"),
                                       lockIdentity && lockedField
                                     )}
                                     placeholder="202X-XXXXX-SJ-0"
+                                    aria-invalid={Boolean(fe.studentNo || fe.year) || undefined}
                                     ref={newStudentNoInputRef}
                                     value={newRec.studentNo}
                                     disabled={lockIdentity}
@@ -1662,13 +1647,12 @@ export default function ScanUploadTab({
                                     }}
                                     onChange={(e) => {
                                       clearUploadFieldError?.("studentNo")
-                                      clearUploadFieldError?.("year")
-                                      clearUploadFieldError?.("sectionPart")
                                       setNewRecStudentNoTouched(true)
                                       const masked = applyStudentNoMask(e.target.value)
                                       const derivedYear = deriveYearFromStudentNo(
                                         masked.value
                                       )
+                                      if (derivedYear) clearUploadFieldError?.("year")
                                       setNewRec((p) => ({
                                         ...p,
                                         studentNo: masked.value,
@@ -1701,16 +1685,16 @@ export default function ScanUploadTab({
                                     </div>
                                   )}
                                 </div>
-                                {newRecStudentNoHint ? (
+                                {newRecStudentNoHint || (fe.year && newRec.studentNo) ? (
                                   <div className="mt-2 text-xs font-semibold text-red-700">
-                                    {newRecStudentNoHint}
+                                    {newRecStudentNoHint || "Enter a student number with a valid year."}
                                   </div>
                                 ) : null}
                               </div>
                               {lockIdentity ? (
                                 <div>
                                   <label
-                                    className={`mb-2 block text-xs font-medium ${lockedLabel} dark:text-zinc-400`}
+                                    className={`text-xs font-semibold mb-2 block ${lockedLabel} dark:text-zinc-400`}
                                   >
                                     Full Name
                                   </label>
@@ -1738,9 +1722,12 @@ export default function ScanUploadTab({
                                     <StudentNameFields
                                       idPrefix="scan-student"
                                       value={studentRecordNameParts(newRec)}
-                                      invalid={Boolean(uploadFieldErrors.name)}
+                                      invalidFields={fe}
                                       onChange={(parts) => {
-                                        clearUploadFieldError?.("name")
+                                        const previousParts = studentRecordNameParts(newRec)
+                                        for (const key of ["firstName", "middleName", "lastName"]) {
+                                          if (parts[key] !== previousParts[key]) clearUploadFieldError?.(key)
+                                        }
                                         setNewRec((p) => ({ ...p, ...parts, name: formatRegistrarStudentName(parts) }))
                                       }}
                                     />
@@ -1774,16 +1761,17 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label
-                                className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                              <label htmlFor="scan-course"
+                                className={`text-xs font-semibold mb-2 block ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                               >
                                 Course / Program
                               </label>
                               <Select
+                                aria-invalid={Boolean(fe.course) || undefined}
+                                id="scan-course"
                                 placeholder="Select Course"
                                 className={cn(
                                   SELECT_BASE_CLASS,
-                                  ring("course"),
                                   lockIdentity && lockedField
                                 )}
                                 value={newRec.course}
@@ -1806,16 +1794,18 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label
-                                className={`mb-2 block text-xs font-medium ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                              <label htmlFor="scan-section"
+                                className={`text-xs font-semibold mb-2 block ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                               >
                                 Section
                               </label>
                               <Select
+                                aria-invalid={Boolean(fe.sectionPart) || undefined}
+                                id="scan-section"
+                                aria-describedby={!lockIdentity && !newRec.course ? "scan-section-help" : undefined}
                                 placeholder="Select Section"
                                 className={cn(
                                   SELECT_BASE_CLASS,
-                                  ring("sectionPart"),
                                   lockIdentity && lockedField
                                 )}
                                 value={newRec.sectionPart}
@@ -1834,21 +1824,25 @@ export default function ScanUploadTab({
                                   </option>
                                 ))}
                               </Select>
+                              {!lockIdentity && !newRec.course && (
+                                <p id="scan-section-help" className="mt-1 text-[11px] text-muted-foreground">
+                                  Choose a course or program before selecting a section.
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
 
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                              Room
+                            <label htmlFor="scan-room" className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
+                              Room{uploadStudentIsExisting && <> <span className="normal-case tracking-normal opacity-70">(optional)</span></>}
                             </label>
                             <Select
-                              placeholder=""
-                              className={cn(
-                                SELECT_BASE_CLASS,
-                                ring("room")
-                              )}
+                              aria-invalid={Boolean(fe.room) || undefined}
+                              id="scan-room"
+                              placeholder="Select Room"
+                              className={SELECT_BASE_CLASS}
                               value={String(newRec.room || "")}
                               onChange={(e) => {
                                 clearUploadFieldError?.("room")
@@ -1871,15 +1865,14 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                              Cabinet
+                            <label htmlFor="scan-cabinet" className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
+                              Cabinet{uploadStudentIsExisting && <> <span className="normal-case tracking-normal opacity-70">(optional)</span></>}
                             </label>
                             <Select
-                              placeholder=""
-                              className={cn(
-                                SELECT_BASE_CLASS,
-                                ring("cabinet")
-                              )}
+                              aria-invalid={Boolean(fe.cabinet) || undefined}
+                              id="scan-cabinet"
+                              placeholder="Select Cabinet"
+                              className={SELECT_BASE_CLASS}
                               value={newRec.cabinet}
                               onChange={(e) => {
                                 clearUploadFieldError?.("cabinet")
@@ -1901,15 +1894,14 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
-                              Drawer
+                            <label htmlFor="scan-drawer" className="text-xs font-semibold mb-2 block text-gray-900 dark:text-zinc-300">
+                              Drawer{uploadStudentIsExisting && <> <span className="normal-case tracking-normal opacity-70">(optional)</span></>}
                             </label>
                             <Select
-                              placeholder=""
-                              className={cn(
-                                SELECT_BASE_CLASS,
-                                ring("drawer")
-                              )}
+                              aria-invalid={Boolean(fe.drawer) || undefined}
+                              id="scan-drawer"
+                              placeholder="Select Drawer"
+                              className={SELECT_BASE_CLASS}
                               value={String(newRec.drawer || "")}
                               onChange={(e) => {
                                 clearUploadFieldError?.("drawer")
@@ -1930,15 +1922,16 @@ export default function ScanUploadTab({
                         </div>
 
                         <div className="border-t border-border pt-5 dark:border-border">
-                          <label className={`mb-2 block text-xs font-medium ${rescanContext?.docType ? lockedLabel : "text-gray-900 dark:text-zinc-300"}`}>
+                          <label htmlFor="scan-document-type" className={`text-xs font-semibold mb-2 block ${rescanContext?.docType ? lockedLabel : "text-gray-900 dark:text-zinc-300"}`}>
                             Document Type
                           </label>
                           <Select
-                            placeholder="Select Document type"
+                            aria-invalid={Boolean(fe.docType) || undefined}
+                            id="scan-document-type"
+                            placeholder="Select Document Type"
                             disabled={Boolean(rescanContext?.docType)}
                             className={cn(
                               SELECT_BASE_CLASS,
-                              ring("docType"),
                               Boolean(rescanContext?.docType) && lockedField
                             )}
                             value={newRec.docType}
@@ -1967,11 +1960,14 @@ export default function ScanUploadTab({
 
                         {/* Target Digitization Storage Destination */}
                         <div className="rounded-xl border border-border/80 bg-slate-50/60 p-3.5 dark:border-border dark:bg-white/5 text-xs space-y-1.5">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-200 text-xs">
                               <span>Digitization Destination</span>
                             </span>
-                            <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
+                            <span className="inline-flex shrink-0 select-none items-center gap-1.5 rounded-full bg-black/[0.04] px-2.5 py-0.5 text-xs font-semibold text-gray-900 dark:bg-white/[0.06] dark:text-zinc-100">
+                              <span className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full bg-gray-600 text-white dark:bg-zinc-600">
+                                <FolderOpenIcon size={9} aria-hidden="true" />
+                              </span>
                               Local Partition
                             </span>
                           </div>
@@ -1988,6 +1984,7 @@ export default function ScanUploadTab({
                           type="button"
                           size="sm"
                           disabled={Boolean(ocrLoading)}
+                          data-form-validation-submit
                           onClick={() => startUpload((ids) => {
                             if (Array.isArray(ids) && ids.length > 0) {
                               ids.forEach(id => hf.removeIngestItem(id));

@@ -20,16 +20,33 @@ export function studentRecordNameParts(record = {}) {
   };
 }
 
+const NAME_FIELDS = [["firstName", "First name"], ["middleName", "Middle name"], ["lastName", "Last name"]];
+
+function normalizeNameField(parts, key, label) {
+  const value = String(parts[key] ?? "").trim().replace(/\s+/g, " ").toUpperCase();
+  if (key === "middleName" && !value) return value;
+  const validation = PersonNameSchema(label).safeParse(key === "middleName" && value.length === 1 ? `${value}.` : value);
+  if (!validation.success) throw new Error(validation.error.issues[0]?.message || `Invalid ${label.toLowerCase()}`);
+  if (value.includes(",")) throw new Error(`${label} must not contain commas. Enter each name in its own field.`);
+  return value;
+}
+
+export function getStudentRecordNameErrors(parts) {
+  const errors = {};
+  for (const [key, label] of NAME_FIELDS) {
+    try {
+      normalizeNameField(parts, key, label);
+    } catch {
+      errors[key] = true;
+    }
+  }
+  return errors;
+}
+
 export function normalizeStudentRecordName(parts) {
   const normalized = {};
-  for (const [key, label] of [["firstName", "First name"], ["middleName", "Middle name"], ["lastName", "Last name"]]) {
-    const value = String(parts[key] ?? "").trim().replace(/\s+/g, " ").toUpperCase();
-    if (key !== "middleName" || value) {
-      const validation = PersonNameSchema(label).safeParse(key === "middleName" && value.length === 1 ? `${value}.` : value);
-      if (!validation.success) throw new Error(validation.error.issues[0]?.message || `Invalid ${label.toLowerCase()}`);
-      if (value.includes(",")) throw new Error(`${label} must not contain commas. Enter each name in its own field.`);
-    }
-    normalized[key] = value;
+  for (const [key, label] of NAME_FIELDS) {
+    normalized[key] = normalizeNameField(parts, key, label);
   }
   return { ...normalized, name: formatRegistrarStudentName(normalized) };
 }

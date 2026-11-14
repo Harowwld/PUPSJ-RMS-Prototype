@@ -9,7 +9,6 @@ import AppIcon from "@/components/ui/app-icon";
 import { SegmentedControl } from "@/components/ui/tabs";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import CampusStatusNotice from "./CampusStatusNotice";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
@@ -221,7 +220,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
               <FilterPopover fields={fields} filters={applicableFilters} onFiltersChange={setFilters} entityLabel="requirements" />
               <SortPopover options={availableSortOptions} sortBy={activeSort} sortOrder={sortOrder}
-                onSortByChange={(value) => { setSortBy(value); setSortOrder("asc"); }} onSortOrderChange={setSortOrder} />
+                onSortByChange={setSortBy} onSortOrderChange={setSortOrder} />
               <GroupPopover options={availableGroupOptions} groupBy={activeGroup} onGroupByChange={verified ? setGroupBy : setPublicGroupBy} />
               <SegmentedControl value={viewMode} onValueChange={setViewMode} variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0" items={[
@@ -238,11 +237,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
           }))} searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={clearFilters} className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5" />
           <div className="flex min-w-0 flex-[1_0_auto] flex-col border-t border-border dark:border-border">
             {initialLoading ? (
-              viewMode === "grid" ? (
-                <DataContentSkeleton viewMode="grid" />
-              ) : (
-                <StudentComplianceListSkeleton density={density} />
-              )
+              <StudentComplianceListSkeleton density={density} viewMode={viewMode} grouped={activeGroup !== "none"} />
             ) : error && filtered.length === 0 ? (
               <EmptyState
                 icon={AlertCircleIcon}

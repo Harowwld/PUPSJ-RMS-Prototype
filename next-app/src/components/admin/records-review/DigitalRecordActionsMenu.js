@@ -39,7 +39,7 @@ export default function DigitalRecordActionsMenu({
         <button
           type="button"
           onClick={(event) => event.stopPropagation()}
-          aria-label={`More actions for record ${record.organization_name || record.student_name || record.student_no || "document"}`}
+          aria-label={`More actions for record ${record.office_id === "osas" ? record.organization_name || "document" : record.student_name || record.student_no || "document"}`}
           aria-expanded={open}
           className="table-action-button rounded-lg active:scale-95 cursor-pointer"
         >

@@ -1,4 +1,5 @@
 "use client"
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -540,7 +541,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         const studentDisplay = formatStudentRequester(tx.studentName, tx.studentNo).toLowerCase()
         const matchStudent = (tx.studentNo || "").toLowerCase().includes(q) || studentDisplay.includes(q)
         const matchOrg = (tx.organizationName || "").toLowerCase().includes(q)
-        const matchStatus = (tx.status || "").toLowerCase().includes(q)
+        const matchStatus = (formatRequestStatus(tx.status) || "").toLowerCase().includes(q) || (tx.status || "").toLowerCase().includes(q)
         const matchNotes = (tx.notes || "").toLowerCase().includes(q)
         if (!matchId && !matchTitle && !matchStudent && !matchOrg && !matchStatus && !matchNotes) {
           return false
@@ -628,7 +629,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           formatStudentRequester(tx.studentName, tx.studentNo),
           tx.title || "Untitled",
           tx.organizationName || tx.notes || "None",
-          tx.status || "Pending",
+          formatRequestStatus(tx.status || "Pending"),
           charter.tier?.name || "Standard",
           charter.label || charter.status || "On Track",
           charter.deadlineFormatted || "N/A",
@@ -683,7 +684,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
     } finally {
       if (previewSession.isCurrent(request)) setIsGeneratingPdf(false)
     }
-  }, [filteredTransactions, isGeneratingPdf, previewSession, slaStandards, lifecycle, search, operationFilters, showToast])
+  }, [filteredTransactions, isGeneratingPdf, previewSession, slaStandards, lifecycle, search, operationFilters, showToast, setIsGeneratingPdf, setPdfPreviewData, setPdfPreviewOpen])
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedTransactions.length / pageSize) || 1
@@ -916,7 +917,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         {/* Cross-Department Activity Stream Table or List */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            viewMode === "list" ? <DataContentSkeleton viewMode="list" /> : <TransactionsTableSkeleton rowCount={6} visibleColumns={visibleTableColumns} groupBy={groupBy} />
+            viewMode === "list" ? <DataContentSkeleton viewMode="list" grouped={groupBy !== "none"} /> : <TransactionsTableSkeleton rowCount={6} visibleColumns={visibleTableColumns} groupBy={groupBy} />
           ) : operationsLoadFailed && sortedTransactions.length === 0 ? (
             <EmptyState
               icon={EmptyInboxIcon}
@@ -1222,7 +1223,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                         {/* Stage Status Badge */}
                         <td className="p-4 align-middle whitespace-nowrap border-b border-border dark:border-border border-r border-border/70 dark:border-border/70">
                           <span className={cn(BADGE_BASE, statusBadgeClass(tx.status))}>
-                            <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
+                            <span>{formatRequestStatus(tx.status)}</span>
                           </span>
                         </td>
                         </>}
@@ -1378,7 +1379,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                                       statusBadgeClass(sheetItem?.status)
                   )}
                 >
-                  {sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}
+                  {formatRequestStatus(sheetItem?.status)}
                 </span>
               </div>
             </div>
@@ -1396,18 +1397,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
                       {formatTransactionId(sheetItem)}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(formatTransactionId(sheetItem), "Transaction ID", "tx_id")}
-                      className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy Transaction ID"
-                    >
-                      {copiedField === "tx_id" ? (
-                        <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                      ) : (
-                        <Copy01Icon size="1em" className="text-[11px]" />
-                      )}
-                    </button>
+                    <CopyButton iconOnly textToCopy={formatTransactionId(sheetItem)} entityName="Transaction ID" />
                   </div>
                 </InfoRow>
 
@@ -1417,7 +1407,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 >
                   <span
                     className={cn(
-                      BADGE_BASE,
+                      COMPACT_BADGE_BASE,
                                           getDepartmentBadgeClass(sheetItem?.officeId === "registrar")
                     )}
                   >
@@ -1432,11 +1422,11 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        BADGE_BASE,
+                        COMPACT_BADGE_BASE,
                                               statusBadgeClass(sheetItem?.status)
                       )}
                     >
-                      <span>{sheetItem?.status === "InProgress" ? "In Progress" : sheetItem?.status}</span>
+                      <span>{formatRequestStatus(sheetItem?.status)}</span>
                     </span>
                     <span className="text-[11px] font-sans tabular-nums text-gray-400 font-normal">
                       {sheetItem?.createdAt ? formatRelativeTime(sheetItem.createdAt).relative : ""}
@@ -1451,7 +1441,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={cn(
-                        BADGE_BASE,
+                        COMPACT_BADGE_BASE,
                                               sheetItemCharter?.badgeClass
                       )}
                     >
@@ -1495,18 +1485,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       {sheetItem?.studentNo}
                     </span>
                     {sheetItem?.studentNo && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(sheetItem.studentNo, "Student Number", "student_no")}
-                        className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                        title="Copy Student Number"
-                      >
-                        {copiedField === "student_no" ? (
-                          <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                        ) : (
-                          <Copy01Icon size="1em" className="text-[11px]" />
-                        )}
-                      </button>
+                      <CopyButton iconOnly textToCopy={sheetItem.studentNo} entityName="Student Number" />
                     )}
                   </div>
                 </InfoRow>
@@ -1617,6 +1596,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
           setPdfPreviewData(null)
         }}
         preview={pdfPreviewData}
+        preparedPdf={pdfPreviewData?.url?.startsWith("blob:")}
       />
 
       {/* Service Standards Configuration Sheet */}

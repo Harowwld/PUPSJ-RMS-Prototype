@@ -76,8 +76,8 @@ async function main() {
   for (const [name, category] of ADDITIONAL_REGISTRAR_SCAN_TYPES) {
     await query(
       `INSERT INTO document_types (office_id, name, name_norm, status, is_compliance, is_requestable, compliance_category)
-       VALUES ('registrar', $1, $2, 'Active', false, false, $3)
-       ON CONFLICT (office_id, name_norm) DO NOTHING`,
+       VALUES ('registrar', $1, $2, 'Active', true, false, $3)
+       ON CONFLICT (office_id, name_norm) DO UPDATE SET is_compliance = true, is_requestable = false`,
       [name, name.toLowerCase(), category],
     );
   }
@@ -143,9 +143,14 @@ async function main() {
 
   // Remove individual student requirements from OSAS
   await query(`
-    UPDATE document_types
-    SET status = 'Archived', is_compliance = FALSE, is_requestable = FALSE
+    DELETE FROM document_types
     WHERE office_id = 'osas' AND name_norm IN ('good moral certificate', 'certificate of good moral', 'clearance form', 'student disciplinary clearance')
+  `);
+
+  await query(`
+    DELETE FROM document_types
+    WHERE (is_compliance = false AND is_requestable = false)
+       OR (is_compliance = true AND is_requestable = true)
   `);
 
   // Insert 64 Registrar Sections (1-1 to 4-2 for 8 degree programs)

@@ -41,7 +41,7 @@ it("previews checklist files from the row and keeps re-scan in the actions menu"
   expect(approvedBadge).toHaveAttribute("data-variant", "success");
   expect(approvedBadge).toHaveClass("h-5");
   const registryStatus = within(checklist).getByText("Registry Status").closest(".grid");
-  expect(within(registryStatus).getByText("Active")).toHaveClass("h-6");
+  expect(within(registryStatus).getByText("Active")).toHaveClass("h-5");
 
   await user.click(within(checklist).getByRole("button", { name: "Preview Report Card" }));
   expect(onPreviewDocument).toHaveBeenCalledWith(doc.doc_type, student.name, student.studentNo, doc.id);

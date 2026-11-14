@@ -401,16 +401,16 @@ export default function CoursesTab({
                     >
                       Reset Filters
                     </Button>
+                  ) : showArchived ? (
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setShowArchived(false); setPageCourse(1) }}>View Active Programs</Button>
                   ) : (
-                    !showArchived && (
-                      <Button
-                        size="sm"
-                        onClick={() => setIsAddCourseOpen(true)}
-                        className="flex h-9 px-4 cursor-pointer"
-                      >
-                        Add Program
-                      </Button>
-                    )
+                    <Button
+                      size="sm"
+                      onClick={() => setIsAddCourseOpen(true)}
+                      className="flex h-9 px-4 cursor-pointer"
+                    >
+                      Add Program
+                    </Button>
                   )}
                 </EmptyContent>
               </Empty>
@@ -646,7 +646,7 @@ export default function CoursesTab({
           <form ref={attachForm} onSubmit={addCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Code
                 </label>
                 <Input
@@ -661,7 +661,7 @@ export default function CoursesTab({
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Designation
                 </label>
                 <Input
@@ -677,7 +677,7 @@ export default function CoursesTab({
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Course Blocks <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+                    Course Blocks <span className="normal-case tracking-normal opacity-70">(optional)</span>
                   </label>
                   <Button
                     type="button"
@@ -782,10 +782,10 @@ export default function CoursesTab({
             <div className="max-h-[60vh] space-y-4 overflow-y-auto p-6 pb-4">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Code
                   </label>
-                  <Input
+                  <Input placeholder="e.g. BSIT"
                     type="text"
                     className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.code}
@@ -799,10 +799,10 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                     Program Designation
                   </label>
-                  <Input
+                  <Input placeholder="e.g. Bachelor of Science in Information Technology"
                     type="text"
                     className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.name}
@@ -820,7 +820,7 @@ export default function CoursesTab({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Manage Course Blocks <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+                    Manage Course Blocks <span className="normal-case tracking-normal opacity-70">(optional)</span>
                   </label>
                   <Button
                     type="button"

@@ -671,7 +671,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                             <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-bold shrink-0">
                               <Tick01Icon size={16}  />
                             </span>
-                            <Input
+                            <Input placeholder="Enter a filing requirement"
                               aria-label={`Filing requirement ${rIdx + 1}`}
                               value={req}
                               onChange={(e) => updateRequirement(rIdx, e.target.value)}

@@ -90,7 +90,7 @@ export default function RegisterAccountTab({
               {/* Row 1: Editable Full Name */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-500">
                     First Name
                   </label>
                   <Input
@@ -110,7 +110,7 @@ export default function RegisterAccountTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-500">
                     Last Name
                   </label>
                   <Input
@@ -189,7 +189,7 @@ export default function RegisterAccountTab({
                   </div>
 
                   <div>
-                    <label htmlFor="register-staff-email" className="mb-1 block text-[10px] font-semibold text-gray-500 dark:text-zinc-400">
+                    <label htmlFor="register-staff-email" className="text-xs font-semibold mb-1 block text-gray-500 dark:text-zinc-400">
                       Official Email Address
                     </label>
                     <Input

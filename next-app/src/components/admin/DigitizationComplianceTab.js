@@ -1,5 +1,6 @@
 "use client";
 
+import { orderRowsByGroup } from "@/lib/groupRows";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 
@@ -394,10 +395,15 @@ function DigitizationComplianceContent({
     setPage(1);
   }, [tableSearch, statusFilter, courseFilter, requireApproved, sortBy, sortOrder, pageSize, filterRules, setPage]);
 
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? sortedByCourse
+    : orderRowsByGroup(sortedByCourse, (course) => course.percent >= 80 ? 80 : course.percent >= 50 ? 50 : 0),
+  [sortedByCourse, groupBy]);
+
   const paginatedByCourse = useMemo(() => {
     const startIndex = (page - 1) * pageSize;
-    return sortedByCourse.slice(startIndex, startIndex + pageSize);
-  }, [sortedByCourse, page, pageSize]);
+    return orderedGroups.slice(startIndex, startIndex + pageSize);
+  }, [orderedGroups, page, pageSize]);
 
   const groupedCourses = useMemo(() => {
     if (groupBy === "none") {
@@ -968,6 +974,9 @@ function DigitizationComplianceContent({
                           Reset Filters
                         </Button>
                       )}
+                      {statusFilter === "Archived" && !(summary?.totalStudents === 0 && hasActiveFilters) && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => { setStatusFilter("Active"); setPage(1); }}>View Active Records</Button>
+                      )}
                     </EmptyState>
                   ) : (
                     <div className="divide-y divide-border rounded-xl border border-border dark:divide-border dark:border-border overflow-hidden">
@@ -1068,7 +1077,7 @@ function DigitizationComplianceContent({
             <GroupPopover
               options={COMPLIANCE_GROUP_OPTIONS}
               groupBy={groupBy}
-              onGroupByChange={setGroupBy}
+              onGroupByChange={(value) => { setGroupBy(value); setPage(1); }}
             />
 
             <ColumnsPopover
@@ -1413,6 +1422,7 @@ function DigitizationComplianceContent({
         title="Compliance Report Preview"
         description="Review the generated document before downloading. Ensure all records and rates are correctly captured."
         pdfUrl={pdfBlobUrl}
+        preparedPdf
         isPreparing={isGeneratingPdf}
         onDownload={handleDownloadPdf}
         onPrint={() =>

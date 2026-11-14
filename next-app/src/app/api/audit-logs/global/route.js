@@ -58,6 +58,7 @@ export async function GET(req) {
       endDate,
       sortBy,
       sortOrder,
+      groupBy: searchParams.get("groupBy"),
     };
 
     const isExport = format === "csv" || format === "pdf";

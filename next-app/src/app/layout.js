@@ -1,3 +1,4 @@
+import FormErrorHighlights from "@/components/shared/FormErrorHighlights";
 import SessionRefresh from "@/components/shared/SessionRefresh";
 import AccessibilitySync from "@/components/shared/AccessibilitySync";
 import SoundEffects from "@/components/shared/SoundEffects";
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }) {
         >
           <SessionRefresh />
           <AccessibilitySync />
+          <FormErrorHighlights />
           <SoundEffects />
           <DynamicFavicon />
           <ScrollIndicator />

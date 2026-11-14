@@ -4,7 +4,7 @@ import { getIngestById, getIngestFilePath } from "@/lib/ingestQueueRepo";
 import { getDocumentById, getDocumentFilePath } from "@/lib/documentsRepo";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "../../../../../../lib/authHelpers";
 import { canAccessResource } from "../../../../../../lib/resourceAuthorization";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -55,7 +55,7 @@ export async function HEAD(req, ctx) {
       headers: {
         "Content-Type": previewRow.mime_type || "application/octet-stream",
         "Content-Length": String(stat.size),
-        "Content-Disposition": `inline; filename="${previewRow.original_filename || "scan.bin"}"`,
+        "Content-Disposition": inlineFileDisposition(previewRow.original_filename || "scan.bin"),
         ...FILE_SECURITY_HEADERS,
       },
     });
@@ -91,7 +91,7 @@ export async function GET(req, ctx) {
     headers: {
       "Content-Type": previewRow.mime_type || "application/octet-stream",
       "Content-Length": String(bytes.length),
-      "Content-Disposition": `inline; filename="${previewRow.original_filename || "scan.bin"}"`,
+      "Content-Disposition": inlineFileDisposition(previewRow.original_filename || "scan.bin"),
       ...FILE_SECURITY_HEADERS,
     },
   });

@@ -107,6 +107,7 @@ export async function GET(req) {
     endDate,
     sortBy,
     sortOrder,
+    groupBy: searchParams.get("groupBy"),
   };
   const decorateRows = async (rows) => addAuditActorIds(rows.map((row) => ({
     ...row,

@@ -7,9 +7,9 @@ export default function BatchReviewSkeleton() {
     <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] grid-rows-1 animate-fade-up font-jakarta select-none" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }}>
       {/* Left: Review Queue Column */}
       <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
+        <div className="flex h-16 shrink-0 items-start justify-between gap-2 border-b border-border bg-gray-50/20 px-2 py-3 sm:px-5 dark:bg-zinc-900/20">
           <Skeleton className="h-4 w-28 rounded-md dark:bg-muted" />
-          <Skeleton className="h-3 w-16 rounded-md dark:bg-muted" />
+          <Skeleton className="h-3 w-16 self-center rounded-md dark:bg-muted" />
         </div>
         <div className="flex min-h-0 flex-col overflow-hidden p-2 sm:p-4 space-y-2 flex-1">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -37,11 +37,14 @@ export default function BatchReviewSkeleton() {
         </div>
       </div>
 
-      {/* Right: Inspector Column */}
+      {/* Right: Document Details Column */}
       <div className="flex min-h-0 min-w-0 flex-col flex-1">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
-          <Skeleton className="h-4 w-48 rounded-md dark:bg-muted" />
-          <Skeleton className="h-4 w-20 rounded-full dark:bg-muted" />
+        <div className="flex h-16 shrink-0 items-start justify-between gap-2 border-b border-border bg-gray-50/20 px-2 py-3 sm:px-5 dark:bg-zinc-900/20">
+          <div className="min-w-0 space-y-1">
+            <Skeleton className="h-4 w-32 max-w-full rounded-md dark:bg-muted" />
+            <Skeleton className="h-2.5 w-48 max-w-full rounded-md dark:bg-muted" />
+          </div>
+          <Skeleton className="h-4 w-20 self-center rounded-full dark:bg-muted" />
         </div>
         <div className="grid min-h-0 min-w-0 grid-rows-1 grid-cols-2 gap-3 p-3 sm:gap-5 sm:p-5 flex-1">
           {/* Left Sub-column: Scanned Document Preview Canvas */}

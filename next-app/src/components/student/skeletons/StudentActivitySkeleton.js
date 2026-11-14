@@ -6,17 +6,17 @@ import { cn } from "@/lib/utils";
 
 export function StudentActivityListSkeleton({ count = 5 }) {
   return (
-    <div className="space-y-6 select-none font-jakarta animate-fade-up">
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between px-1">
+    <div className="select-none font-jakarta animate-fade-up">
+      <div>
+        <div className="flex min-h-11 items-center gap-2 border-b border-border/70 bg-gray-50/80 px-5 sm:px-6 dark:bg-zinc-900/60">
           <Skeleton className="h-3 w-16 rounded dark:bg-muted" />
           <Skeleton className="h-3 w-14 rounded dark:bg-muted" />
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden divide-y divide-gray-100 dark:divide-zinc-800/80 shadow-2xs">
+        <div className="divide-y divide-border/60">
           {Array.from({ length: count }).map((_, i) => (
             <div
               key={i}
-              className="flex items-start gap-4 px-5 py-4"
+              className="flex items-start gap-4 px-5 py-4 sm:px-6"
             >
               <Skeleton className="mt-0.5 h-10 w-10 rounded-full dark:bg-muted shrink-0" />
               <div className="min-w-0 flex-1 space-y-1.5">
@@ -79,7 +79,7 @@ export default function StudentActivitySkeleton({ count = 5 }) {
         </div>
 
         {/* 3. Grouped Activity Feed Skeleton */}
-        <div className="border-t border-border dark:border-border flex-1 p-6">
+        <div className="border-t border-border flex-1">
           <StudentActivityListSkeleton count={count} />
         </div>
 

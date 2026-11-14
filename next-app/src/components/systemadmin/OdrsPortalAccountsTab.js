@@ -2,11 +2,14 @@
 
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { Fragment, useEffect, useState } from "react";
-import { Search01Icon, UserGroupIcon } from "hugeicons-react";
+import { Mail01Icon, Search01Icon, UserGroupIcon, UserStatusIcon } from "hugeicons-react";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import ConfirmModal from "@/components/shared/ConfirmModal";
+import { TableActions } from "@/components/shared/TableActions";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import TablePagination from "@/components/shared/TablePagination";
@@ -20,10 +23,29 @@ import useViewPreference from "@/hooks/useViewPreference";
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { formatPHDateTime } from "@/lib/timeFormat";
-import { cn } from "@/lib/utils";
+import { cn, formatTitleCase } from "@/lib/utils";
 
 const COLUMNS = [
-  { key: "name", label: "Name", schema: { kind: "text", maxWidth: 340 }, render: ({ name }) => <TableText constrained>{name || "—"}</TableText> },
+  {
+    key: "name",
+    label: "Name",
+    schema: { kind: "text", maxWidth: 340 },
+    render: ({ id, name, avatarFilename }) => {
+      const displayName = formatTitleCase(name);
+      return (
+        <div className="flex min-w-0 items-center gap-2.5">
+          <ProfileAvatar
+            accountId={id}
+            avatarFilename={avatarFilename || null}
+            name={displayName}
+            className="size-7 shrink-0"
+            fallbackClassName="text-[11px]"
+          />
+          <TableText constrained>{displayName || "—"}</TableText>
+        </div>
+      );
+    },
+  },
   { key: "email", label: "Email", schema: { kind: "text", maxWidth: 340 }, render: ({ email }) => <TableText constrained>{email || "—"}</TableText> },
   { key: "affiliation", label: "Affiliation", schema: "category", render: ({ affiliation }) => affiliationLabel(affiliation) || "—" },
   { key: "status", label: "Status", schema: "status", render: ({ status }) => (
@@ -51,7 +73,13 @@ function sortValue(account, key) {
   return account[key];
 }
 
-export default function OdrsPortalAccountsTab() {
+const ACCOUNT_ACTIONS = {
+  deactivate: { label: "Deactivate Account", message: "This account will be signed out and unable to sign in until it is reactivated.", success: "Portal Account Deactivated" },
+  reactivate: { label: "Reactivate Account", message: "This restores portal account access. Existing student record restrictions still apply.", success: "Portal Account Reactivated" },
+  "send-reset": { label: "Send Password Reset", message: "Email a password reset link to the account’s verified address. The link expires in 15 minutes.", success: "Password Reset Email Sent" },
+};
+
+export default function OdrsPortalAccountsTab({ showToast }) {
   const [accounts, setAccounts] = useState(null);
   const [search, setSearch] = useViewPreference("portal-accounts", "search", "");
   const [filters, setFilters] = useViewPreference("portal-accounts", "filterRules", []);
@@ -64,8 +92,12 @@ export default function OdrsPortalAccountsTab() {
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const actionDetails = pendingAction && ACCOUNT_ACTIONS[pendingAction.action];
   const displayedColumns = COLUMNS.filter(({ key }) => visibleColumns.includes(key));
-  const tableSchema = displayedColumns.map(({ schema }) => schema);
+  const tableSchema = [...displayedColumns.map(({ schema }) => schema), "actions"];
   const tableWidth = displayedColumns.length === COLUMNS.length ? "min-w-[850px]" : undefined;
 
   function refreshAccounts() {
@@ -91,6 +123,34 @@ export default function OdrsPortalAccountsTab() {
     load();
     return () => controller.abort();
   }, [refreshVersion]);
+
+  function selectAction(account, action) {
+    setActionError("");
+    setPendingAction({ account, action });
+  }
+
+  async function confirmAction() {
+    if (!pendingAction || saving) return;
+    const { account, action } = pendingAction;
+    setSaving(true);
+    setActionError("");
+    try {
+      const response = await fetch("/api/admin/odrs-portal-accounts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: account.id, action }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) throw new Error(payload?.error || "Could not complete the account action.");
+      setPendingAction(null);
+      showToast?.({ title: ACCOUNT_ACTIONS[action].success });
+      refreshAccounts();
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function clearFilters() {
     setSearch("");
@@ -129,7 +189,7 @@ export default function OdrsPortalAccountsTab() {
     <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
       <PageHeader
         title="ODRS Portal Accounts"
-        description="View accounts used to submit and track online document requests."
+        description="Manage accounts used to submit and track online document requests."
         actions={<RefreshButton title="Refresh Portal Accounts" isLoading={loading} onRefresh={refreshAccounts} />}
       />
       <DataViewToolbar label="Portal account search and table controls" className="gap-2 border-b border-border px-5 py-3">
@@ -180,16 +240,24 @@ export default function OdrsPortalAccountsTab() {
                 {displayedColumns.map(({ key, label }) => (
                   <TableHead key={key} aria-sort={sortBy === key ? (sortOrder === "ASC" ? "ascending" : "descending") : undefined}>{label}</TableHead>
                 ))}
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visibleAccounts.map(({ account, label }, index) => (
                 <Fragment key={account.id}>
                   {label && label !== visibleAccounts[index - 1]?.label && (
-                    <DataGroupHeader label={label} count={visibleAccounts.filter((item) => item.label === label).length} colSpan={displayedColumns.length} />
+                    <DataGroupHeader label={label} count={visibleAccounts.filter((item) => item.label === label).length} colSpan={tableSchema.length} />
                   )}
                   <TableRow>
                     {displayedColumns.map(({ key, render }) => <TableCell key={key}>{render(account)}</TableCell>)}
+                    <TableCell>
+                      <TableActions label={`Actions for ${formatTitleCase(account.name) || account.email || "portal account"}`} actions={[
+                        account.status === "Active" && { label: "Deactivate Account", icon: UserStatusIcon, onClick: () => selectAction(account, "deactivate") },
+                        account.status === "Inactive" && { label: "Reactivate Account", icon: UserStatusIcon, onClick: () => selectAction(account, "reactivate") },
+                        account.canSendReset && { label: "Send Password Reset", icon: Mail01Icon, onClick: () => selectAction(account, "send-reset") },
+                      ]} />
+                    </TableCell>
                   </TableRow>
                 </Fragment>
               ))}
@@ -210,6 +278,22 @@ export default function OdrsPortalAccountsTab() {
       <TablePagination label="Portal account pages" page={currentPage} pageSize={pageSize} totalCount={results.length}
         displayedCount={visibleAccounts.length} loading={loading} onPageChange={setPage}
         onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
+      {pendingAction && (
+        <ConfirmModal
+          open
+          title={actionDetails.label}
+          message={actionDetails.message}
+          selectedItems={[formatTitleCase(pendingAction.account.name) || pendingAction.account.email || "Portal account"]}
+          selectedItemsLabel="Portal account"
+          note={actionError || undefined}
+          confirmLabel={actionDetails.label}
+          variant={pendingAction.action === "deactivate" ? "warning" : "brand"}
+          isLoading={saving}
+          onConfirm={confirmAction}
+          onCancel={() => { if (!saving) setPendingAction(null); }}
+          onOpenChange={(open) => { if (!open && !saving) setPendingAction(null); }}
+        />
+      )}
     </section>
   );
 }

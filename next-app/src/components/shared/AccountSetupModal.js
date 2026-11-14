@@ -410,10 +410,10 @@ export default function AccountSetupModal({ authUser }) {
                   ) : (
                     questions.map((q) => (
                       <div key={q.id} className="space-y-1">
-                        <label className="text-[11px] font-medium text-gray-900 dark:text-zinc-300 block">
+                        <label className="text-xs font-semibold text-gray-900 dark:text-zinc-300 block">
                           {q.question.replace(/\?$/, "")}{" "}
                           {!q.is_required && (
-                            <span className="ml-1 text-[11px] font-normal text-gray-400 dark:text-zinc-500">
+                            <span className="normal-case tracking-normal opacity-70">
                               (optional)
                             </span>
                           )}

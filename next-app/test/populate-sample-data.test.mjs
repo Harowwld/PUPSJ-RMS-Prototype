@@ -31,7 +31,15 @@ test("sample seed completes twice on a populated database and preserves account 
         SELECT sa.identity_profile_id AS account_identity, s.identity_profile_id AS student_identity
         FROM student_accounts sa JOIN students s ON s.student_no = sa.student_no
       `);
-      assert.equal(accounts.length, 2);
+      assert.equal(accounts.length, 37);
+      assert.equal(summary.portalAccounts, 43);
+      const portalAccounts = await postgres.query(`
+        SELECT sip.client_type, sa.status, COUNT(*)::int AS total
+        FROM student_accounts sa JOIN student_identity_profiles sip ON sip.id=sa.identity_profile_id
+        GROUP BY sip.client_type, sa.status
+      `);
+      assert.deepEqual(new Set(portalAccounts.map(({ client_type }) => client_type)), new Set(["Student", "Alumni", "Parent"]));
+      assert.deepEqual(new Set(portalAccounts.map(({ status }) => status)), new Set(["Active", "Inactive", "Archived"]));
       for (const account of accounts) assert.equal(account.account_identity, account.student_identity);
       const documents = await postgres.query("SELECT office_id, storage_filename FROM documents");
       assert.equal(documents.length, summary.documents);

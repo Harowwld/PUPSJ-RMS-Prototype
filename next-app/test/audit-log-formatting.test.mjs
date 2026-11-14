@@ -92,3 +92,12 @@ describe("Audit Log Details Grammar Formatting", () => {
     assert.strictEqual(formatLogDetails("   "), "");
   });
 });
+
+test("uses readable request status labels in activity descriptions", () => {
+  assert.equal(
+    formatLogDetails('changed request 42 from "InProgress" to PendingPayment. payment is required.'),
+    'Changed request 42 from "In Progress" to Pending Payment. Payment is required.'
+  );
+  assert.equal(formatLogDetails("attached PendingPayment.pdf"), "Attached PendingPayment.pdf");
+  assert.equal(formatLogDetails('{"status":"PendingPayment"}'), '{"status":"PendingPayment"}');
+});

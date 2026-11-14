@@ -426,16 +426,16 @@ export default function SectionsTab({
                     >
                       Reset Filters
                     </Button>
+                  ) : showArchived ? (
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setShowArchived(false); setPageSection(1) }}>View Active Course Blocks</Button>
                   ) : (
-                    !showArchived && (
-                      <Button
-                        size="sm"
-                        onClick={() => setIsAddSectionOpen(true)}
-                        className="flex h-9 px-4 cursor-pointer"
-                      >
-                        Add Block
-                      </Button>
-                    )
+                    <Button
+                      size="sm"
+                      onClick={() => setIsAddSectionOpen(true)}
+                      className="flex h-9 px-4 cursor-pointer"
+                    >
+                      Add Block
+                    </Button>
                   )}
                 </EmptyContent>
               </Empty>
@@ -672,16 +672,15 @@ export default function SectionsTab({
           <form ref={attachForm} onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 flex flex-col gap-4">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Degree Program
                 </label>
-                <Select
+                <Select placeholder="Select a program"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
                 >
-                  <option value="" className="text-gray-400">Select a program...</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.code}>
                       {c.code} - {c.name}
@@ -690,7 +689,7 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Block Name
                 </label>
                 <Input
@@ -756,10 +755,10 @@ export default function SectionsTab({
           <form onSubmit={updSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 space-y-4">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Degree Program
                 </label>
-                <Select
+                <Select placeholder="Select a program"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
                   value={editSection.courseCode}
                   onChange={(e) =>
@@ -770,7 +769,6 @@ export default function SectionsTab({
                   }
                   required
                 >
-                  <option value="">Select a program...</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.code}>
                       {c.code} - {c.name}
@@ -779,10 +777,10 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div className="min-w-0">
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
                   Block Name
                 </label>
-                <Input
+                <Input placeholder="e.g. 1-1"
                   type="text"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
                   value={editSection.name}

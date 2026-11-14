@@ -319,7 +319,7 @@ export default function AccountSetupPreferences({ authUser, saving, error, onBac
           </div>
         </fieldset>
         <div>
-          <label id={labelId} className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+          <label id={labelId} className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
             Display Name Format
           </label>
           <Select

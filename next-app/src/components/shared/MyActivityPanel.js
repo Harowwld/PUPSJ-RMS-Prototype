@@ -27,7 +27,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import PageHeader from "@/components/shared/PageHeader";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { cn, formatLogDetails } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import TablePagination from "@/components/shared/TablePagination";
 import NotificationsListSkeleton from "@/components/staff/skeletons/NotificationsListSkeleton";
@@ -502,7 +502,7 @@ export default function MyActivityPanel() {
         {/* 5. Grouped Activity Feed / Skeleton / States */}
         {error && hasLoaded && <p role="status" className="px-6 py-2 text-xs text-muted-foreground">{error}</p>}
         {loading && !hasLoaded ? (
-          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} className="flex-[1_0_auto] border-t border-border dark:border-border rounded-b-2xl" />
+          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} activity flush className="flex-[1_0_auto] border-t border-border" />
         ) : error && !hasLoaded ? (
           <div className="flex-[1_0_auto] min-h-[320px] flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-zinc-400 border-t border-border dark:border-border rounded-b-2xl">
             <Empty>
@@ -557,17 +557,12 @@ export default function MyActivityPanel() {
             </Empty>
           </div>
         ) : (
-          <div
-            className={cn(
-              "flex flex-[1_0_auto] flex-col gap-6 px-6 py-5 border-t border-border dark:border-border bg-white dark:bg-card transition-all duration-slow",
-              "opacity-100"
-            )}
-          >
+          <div className="flex flex-[1_0_auto] flex-col border-t border-border bg-white dark:bg-card">
             {groupedRows.map((group) => (
-              <div key={group.key} className="space-y-2.5">
-                <DataGroupHeader label={group.key} count={group.items.length} />
+              <div key={group.key} className="border-b border-border last:border-b-0">
+                <DataGroupHeader label={group.label} count={group.items.length} />
 
-                <div className="rounded-2xl border border-border bg-white dark:bg-card overflow-hidden shadow-2xs divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+                <div className="divide-y divide-border/60">
                   {group.items.map((log) => {
                     const visuals = getActivityVisual(log);
                     const ActionIcon = visuals.Icon;
@@ -578,7 +573,7 @@ export default function MyActivityPanel() {
                       <div
                         key={log.id}
                         onClick={() => setSelectedLog(log)}
-                        className="group flex items-center justify-between gap-4 p-4 transition-all duration-normal cursor-pointer select-none hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 active:scale-[0.998]"
+                        className="group flex items-center justify-between gap-4 px-5 py-4 transition-all duration-normal sm:px-6 cursor-pointer select-none hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 active:scale-[0.998]"
                       >
                         <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                           <div
@@ -599,7 +594,7 @@ export default function MyActivityPanel() {
                                 {actionTitle}
                               </h4>
                               <span
-                                className={cn("tracking-wide select-none shrink-0", visuals.chipClass, BADGE_BASE)}
+                                className={cn("tracking-wide select-none shrink-0", visuals.chipClass, COMPACT_BADGE_BASE)}
                               >
                                 {visuals.label}
                               </span>

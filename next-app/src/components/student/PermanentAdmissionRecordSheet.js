@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { ArrowUpRight01Icon, Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import NarrativeText from "@/components/shared/NarrativeText";
@@ -253,7 +253,7 @@ export default function PermanentAdmissionRecordSheet({
               {showStatus && <InfoRow icon="PieChartIcon" label={statusOnly ? "Submission Status" : "Clearance Status"}>
                 <span
                   className={cn(
-                    statusOnly ? COMPACT_BADGE_BASE : BADGE_BASE,
+                    COMPACT_BADGE_BASE,
                     isSubmitted
                       ? BADGE_PALETTES.emerald
                       : BADGE_PALETTES.amber

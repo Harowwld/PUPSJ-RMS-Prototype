@@ -1,0 +1,136 @@
+/* Enable animation only in the dashboard or during tile interaction. */
+.logo {
+  display: grid;
+}
+
+.logo > span {
+  grid-area: 1 / 1;
+  background-color: currentColor;
+  mask: url("/assets/branding/black-icon.png") center / contain no-repeat;
+}
+
+.logo > :nth-child(1) {
+  clip-path: inset(0 0 66.6667% 0);
+  --offset: -8px;
+  --delay: 0ms;
+}
+
+.logo > :nth-child(2) {
+  clip-path: inset(33.3333% 0);
+  --offset: 8px;
+  --delay: 65ms;
+}
+
+.logo > :nth-child(3) {
+  clip-path: inset(66.6667% 0 0 0);
+  --offset: -8px;
+  --delay: 130ms;
+}
+
+.logo:is(
+  [data-variant="aperture"],
+  [data-variant="echo"],
+  [data-variant="fill"],
+  :global([data-initial-loader="aperture"]) .logo:not([data-variant]),
+  :global([data-initial-loader="echo"]) .logo:not([data-variant]),
+  :global([data-initial-loader="fill"]) .logo:not([data-variant])
+) > span {
+  clip-path: none;
+}
+
+.logo:is(
+  [data-variant="aperture"],
+  [data-variant="echo"],
+  [data-variant="fill"],
+  :global([data-initial-loader="aperture"]) .logo:not([data-variant]),
+  :global([data-initial-loader="echo"]) .logo:not([data-variant]),
+  :global([data-initial-loader="fill"]) .logo:not([data-variant])
+) > :not(:first-child) {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :global(html:not(.reduce-motion)) :is(.logo:not([data-variant]), .tile:is(:hover, :focus-visible, :active) .logo) {
+    & > span {
+      animation: assemble-logo 1.65s cubic-bezier(0.22, 1, 0.36, 1) var(--delay) both;
+    }
+
+    &:is(
+      [data-variant="aperture"],
+      [data-variant="echo"],
+      [data-variant="fill"],
+      :global([data-initial-loader="aperture"]) .logo:not([data-variant]),
+      :global([data-initial-loader="echo"]) .logo:not([data-variant]),
+      :global([data-initial-loader="fill"]) .logo:not([data-variant])
+    ) > span {
+      animation: none;
+    }
+
+    &:is([data-variant="aperture"], :global([data-initial-loader="aperture"]) .logo:not([data-variant])) > :first-child {
+      animation: reveal-aperture 1.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    &:is([data-variant="echo"], :global([data-initial-loader="echo"]) .logo:not([data-variant])) > :first-child {
+      animation: settle-logo 1.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    &:is([data-variant="echo"], :global([data-initial-loader="echo"]) .logo:not([data-variant])) > :nth-child(2) {
+      animation: expand-echo 1.45s ease-out both;
+    }
+
+    &:is([data-variant="fill"], :global([data-initial-loader="fill"]) .logo:not([data-variant])) > :first-child {
+      animation: dim-logo 1.8s infinite;
+    }
+
+    &:is([data-variant="fill"], :global([data-initial-loader="fill"]) .logo:not([data-variant])) > :nth-child(2) {
+      animation: fill-logo 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+  }
+
+  :global(html:not(.reduce-motion)) .tile:is(:hover, :focus-visible, :active) .skeleton {
+    animation: pulse-skeleton 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes assemble-logo {
+  from {
+    transform: translateX(var(--offset));
+    opacity: 0.35;
+  }
+
+  45%, to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes reveal-aperture {
+  from { clip-path: circle(9%); transform: scale(0.88); opacity: 0.5; }
+  68%, to { clip-path: circle(72%); transform: scale(1); opacity: 1; }
+}
+
+@keyframes settle-logo {
+  from { transform: scale(0.75); }
+  43% { transform: scale(1.08); }
+  65%, to { transform: scale(1); }
+}
+
+@keyframes expand-echo {
+  0%, 24% { opacity: 0; transform: scale(0.9); }
+  39% { opacity: 0.25; }
+  80%, to { opacity: 0; transform: scale(1.55); }
+}
+
+@keyframes dim-logo {
+  from, to { opacity: 0.26; }
+}
+
+@keyframes fill-logo {
+  from { clip-path: inset(0 100% 0 0); opacity: 1; }
+  55%, 75% { clip-path: inset(0); opacity: 1; }
+  to { clip-path: inset(0); opacity: 0; }
+}
+
+@keyframes pulse-skeleton {
+  50% { opacity: 0.45; }
+}

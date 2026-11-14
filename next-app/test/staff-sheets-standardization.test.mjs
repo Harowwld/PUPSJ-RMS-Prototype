@@ -21,14 +21,7 @@ test("StudentProfileSheet standardization & cognitive reduction", () => {
   assert.ok(code.includes("onNavigatePrev") && code.includes("onNavigateNext"), "Must support sequential navigation");
 
   // Edge-to-edge line-attached status notice (Archived Record vs Active Archive Profile)
-  assert.ok(
-    code.includes("Archived Record:") && code.includes("Active Archive Profile:"),
-    "Must feature edge-to-edge line-attached status notice"
-  );
-  assert.ok(
-    code.includes("border-amber-200") && code.includes("border-emerald-200"),
-    "Line-attached notice must have edge-to-edge border-b styling without outer card margins"
-  );
+  assert.match(code, /<NoticeBanner\b[^>]*title=\{isArchived \? "Archived Record" : "Active Archive Profile"\}/);
 
   // Card reduction: Unboxed profile summary strip
   assert.ok(
@@ -66,13 +59,11 @@ test("DocumentRequestDetailSheet standardization & cognitive reduction", () => {
   assert.ok(code.includes('className="sr-only"'), "Must feature sr-only description");
 
   // Edge-to-edge line-attached status notice
-  assert.ok(
-    code.includes("Ready for Claiming:") &&
-    code.includes("Payment Required:") &&
-    code.includes("Deficiency Notice:") &&
-    code.includes("Fulfillment In Progress:"),
-    "Must feature comprehensive line-attached status notices"
-  );
+  assert.match(code, /<NoticeBanner\b[^>]*title=/);
+  assert.ok(code.includes('"Ready for Claiming"'));
+  assert.ok(code.includes('"Payment Required"'));
+  assert.ok(code.includes('"Deficiency Notice"'));
+  assert.ok(code.includes('"Fulfillment In Progress"'));
 
   // Card reduction: Unboxed profile summary strip
   assert.ok(
@@ -101,13 +92,11 @@ test("OsasProposalReviewSheet standardization & cognitive reduction", () => {
   assert.ok(code.includes('className="sr-only"'), "Must feature sr-only description");
 
   // Edge-to-edge line-attached status notice
-  assert.ok(
-    code.includes("Proposal Sanctioned:") &&
-    code.includes("Revision Requested:") &&
-    code.includes("Proposal Declined:") &&
-    code.includes("Under Evaluation:"),
-    "Must feature edge-to-edge line-attached operational notices"
-  );
+  assert.match(code, /<CampusStatusNotice\b[^>]*title=/);
+  assert.ok(code.includes('"Proposal Approved"'));
+  assert.ok(code.includes('"Revision Required"'));
+  assert.ok(code.includes('"Proposal Declined"'));
+  assert.ok(code.includes('"Under Evaluation"'));
 
   // Card reduction: Unboxed narrative
   assert.ok(
@@ -136,13 +125,11 @@ test("OsasPostEventReviewSheet standardization & cognitive reduction", () => {
   assert.ok(code.includes('className="sr-only"'), "Must feature sr-only description");
 
   // Edge-to-edge line-attached status notice
-  assert.ok(
-    code.includes("Liquidation Cleared:") &&
-    code.includes("Revision Required:") &&
-    code.includes("Liquidation Rejected:") &&
-    code.includes("Under Financial Review:"),
-    "Must feature edge-to-edge line-attached operational notices"
-  );
+  assert.match(code, /<CampusStatusNotice\b[^>]*title=/);
+  assert.ok(code.includes('"Post-Event Report Cleared"'));
+  assert.ok(code.includes('"Revision Required"'));
+  assert.ok(code.includes('"Post-Event Report Declined"'));
+  assert.ok(code.includes('"Under Financial Review"'));
 
   // Card reduction: Unboxed narrative
   assert.ok(
@@ -170,10 +157,9 @@ test("StudentOrganizationsTab slide-over sheet standardization & card reduction"
   assert.ok(code.includes('className="sr-only"'), "Must feature sr-only description");
 
   // Line-attached notice for Archived or Inactive status
-  assert.ok(
-    code.includes("Archived Organization:") && code.includes("Inactive Accreditation:"),
-    "Must feature line-attached status notices for Archived and Inactive states"
-  );
+  assert.match(code, /<CampusStatusNotice\b[^>]*title=/);
+  assert.ok(code.includes('"Archived Organization"'));
+  assert.ok(code.includes('"Inactive Accreditation"'));
 
   // Card reduction: Unboxed info form and authorize officer section
   assert.ok(
@@ -187,7 +173,7 @@ test("StudentOrganizationsTab slide-over sheet standardization & card reduction"
 
   // Button standards: [Action Verb] + [Specific Noun]
   assert.ok(code.includes("Authorize Officer"), "Must use standard button label 'Authorize Officer'");
-  assert.ok(code.includes("Archive Charter"), "Must use standard button label 'Archive Charter'");
+  assert.match(code, /<Button\b[^>]*title="Archive Constitution & By-Laws"[^>]*>[\s\S]*?"Upload By-Laws"/);
 });
 
 test("NotificationsTab sliding sheet hygiene and unboxed layout", () => {
@@ -201,11 +187,10 @@ test("NotificationsTab sliding sheet hygiene and unboxed layout", () => {
   assert.ok(code.includes('className="sr-only"'), "Must feature sr-only description");
   assert.ok(code.includes("selectedNotifIndex"), "Must support sequential navigation");
 
-  // Unboxed layout
-  assert.ok(
-    code.includes("pb-4 border-b border-border/80"),
-    "Event summary strip must be unboxed with border-b divider"
-  );
-  assert.ok(code.includes("Notification Specification"), "Must contain specification section");
+  // Notification metadata belongs in the specification rows.
+  const specification = code.slice(code.indexOf('title="Notification Specification"'), code.indexOf('title="Event Summary"'));
+  for (const label of ["Title", "Received", "Severity", "Event Category", "Read Status"]) {
+    assert.ok(specification.includes(`label="${label}"`), `Must show ${label} in the notification specification`);
+  }
   assert.ok(code.includes("<SheetFooter"), "Must feature SheetFooter");
 });

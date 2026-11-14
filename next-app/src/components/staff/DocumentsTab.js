@@ -177,12 +177,18 @@ export default function DocumentsTab({
       requireApproved: "1",
       search: matrixSearch,
       sortBy: matrixSortBy,
+      groupBy: matrixGroupBy,
       sortOrder: matrixSortOrder,
       limit: String(matrixItemsPerPage),
       offset: String((matrixPage - 1) * matrixItemsPerPage),
     });
     activeCourseFilters.forEach((course) => params.append("courseCode", course));
     activeMissingDocFilters.forEach((type) => params.append("missingDocType", type));
+    for (const rule of matrixFilterRules) {
+      if (rule.operator !== "is_not" || !rule.value) continue;
+      if (rule.fieldKey === "course") params.append("excludeCourseCode", rule.value);
+      if (rule.fieldKey === "missingDoc") params.append("excludeMissingDocType", rule.value);
+    }
     if (matrixStartDate) params.append("startDate", matrixStartDate);
     if (matrixEndDate) params.append("endDate", matrixEndDate);
     return params.toString();
@@ -190,11 +196,13 @@ export default function DocumentsTab({
     matrixStatusFilter,
     matrixSearch,
     matrixSortBy,
+    matrixGroupBy,
     matrixSortOrder,
     matrixItemsPerPage,
     matrixPage,
     activeCourseFilters,
     activeMissingDocFilters,
+    matrixFilterRules,
     matrixStartDate,
     matrixEndDate,
   ]);

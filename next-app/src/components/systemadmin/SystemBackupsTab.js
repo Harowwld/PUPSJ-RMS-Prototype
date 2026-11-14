@@ -1,5 +1,6 @@
 "use client"
 
+import { orderRowsByGroup } from "@/lib/groupRows";
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
 
@@ -375,7 +376,12 @@ export default function SystemBackupsTab({ showToast }) {
     return (left < right ? -1 : left > right ? 1 : 0) * (sortOrder === "ASC" ? 1 : -1)
   }), [filteredBackups, sortBy, sortOrder])
   const totalPages = Math.max(1, Math.ceil(sortedBackups.length / itemsPerPage))
-  const sortedAndPaginatedBackups = sortedBackups.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? sortedBackups
+    : orderRowsByGroup(sortedBackups, (backup) => String(backup[groupBy] || "Unknown")),
+  [sortedBackups, groupBy]);
+
+  const sortedAndPaginatedBackups = orderedGroups.slice((page - 1) * itemsPerPage, page * itemsPerPage)
   const groups = useMemo(() => {
     if (groupBy === "none") return []
     const grouped = new Map()
@@ -396,7 +402,7 @@ export default function SystemBackupsTab({ showToast }) {
     link.click()
     showToast?.({
       title: "Download Initiated",
-      description: "Streaming governance backup package to your local workstation.",
+      description: "Your browser has started downloading the backup.",
     })
   }
 
@@ -532,16 +538,16 @@ export default function SystemBackupsTab({ showToast }) {
       invalidateDataCache("systemadmin_backups")
       await fetchData()
       showToast?.({
-        title: "Sync Successful",
-        description: "Governance archive mirrored to secondary hardware node.",
+        title: "Backup Copied to External Drive",
+        description: "The backup was copied to the connected external drive.",
       })
     } catch (err) {
       if (totpModalOpen) {
         throw err
       }
       showToast?.({
-        title: "Sync Failed",
-        description: err.message || "Unable to secure external copy.",
+        title: "Couldn’t Copy Backup to External Drive",
+        description: err.message || "Check that the external drive is connected and has enough space, then try again.",
       }, "error")
     } finally {
       setLocalLoading((prev) => ({ ...prev, syncingId: null, syncStatus: "" }))
@@ -828,6 +834,7 @@ export default function SystemBackupsTab({ showToast }) {
                   value={backupTypeFilter}
                   onValueChange={(val) => {
                     setBackupTypeFilter(val);
+                    setSelectedBackupIds([]);
                     setPage(1);
                   }}
                   variant="capsule"
@@ -859,7 +866,7 @@ export default function SystemBackupsTab({ showToast }) {
                 tableControls={<>
                   <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={(rules) => { setFilterRules(rules); setPage(1) }} entityLabel="backups" />
                   <SortPopover options={[{ key: "created_at", label: "Created" }, { key: "filename", label: "Archive name" }, { key: "size_bytes", label: "Size" }, { key: "backup_type", label: "Backup type" }, { key: "status_local", label: "Storage status" }]} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1) }} />
-                  <GroupPopover options={[{ key: "backup_type", label: "Backup type", icon: Database01Icon }, { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
+                  <GroupPopover options={[{ key: "backup_type", label: "Backup type", icon: Database01Icon }, { key: "status_local", label: "Storage status", icon: CheckmarkCircle01Icon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={(value) => { setGroupBy(value); setPage(1); }} />
                   <ColumnsPopover columns={SYSTEM_BACKUP_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
                 </>}
                 scrollControls={<TableScrollControls scrollContainerRef={tableScrollRef} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />}

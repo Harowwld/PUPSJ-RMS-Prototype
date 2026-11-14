@@ -1,6 +1,7 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import AccountSettingsContentSkeleton from "@/components/shared/AccountSettingsContentSkeleton"
 import { Card } from "@/components/ui/card"
 import StudentRequestsTableSkeleton from "./StudentRequestsTableSkeleton"
 import StudentOsasProposalsSkeleton from "./StudentOsasProposalsSkeleton"
@@ -28,15 +29,7 @@ function StudentSettingsSkeleton() {
             ))}
           </div>
         </div>
-        <div className="p-8 space-y-6">
-          <div className="space-y-1.5">
-            <Skeleton className="w-32 h-6 rounded dark:bg-muted" />
-            <Skeleton className="w-80 h-4 rounded dark:bg-muted" />
-          </div>
-          <Skeleton className="w-full h-36 rounded-2xl dark:bg-muted" />
-          <Skeleton className="w-full h-32 rounded-xl dark:bg-muted" />
-          <Skeleton className="w-full h-32 rounded-xl dark:bg-muted" />
-        </div>
+        <AccountSettingsContentSkeleton />
       </div>
     </Card>
   )

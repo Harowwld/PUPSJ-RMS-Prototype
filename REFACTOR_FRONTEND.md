@@ -13,7 +13,7 @@ This file is an agent-facing UI standard for the whole app. When a request refer
 - Use `SheetSectionHeading` for detail-sheet section headings across all roles. Pair a relevant icon with bold, uppercase text.
 
 - Use the shared `Button` with `variant="ghost"` for icon-only actions in sheets. Give every icon-only action an accessible name and a tooltip.
-- Use `<Badge size="compact">` for badges in sheet headers, metadata, and sheet content. Keep the normal badge size for badges that are values in label/value lists.
+- Use `<Badge size="compact">` for badges in sheet headers, metadata, and sheet content. Apply compact sizing to label/value badges too.
 - Put concise record context beneath a sheet title into a structured metadata treatment instead of leaving it as loose, repeated helper text.
 
 ### Banners
@@ -28,6 +28,8 @@ This file is an agent-facing UI standard for the whole app. When a request refer
 - Navbar actions must share the navbar's control height and center their content on both axes.
 
 ### Buttons
+
+- Keep card, list, and table icon actions visible at rest. Use hover and focus styling for feedback.
 
 - Use the shared `Button` for button actions and the project's standard `rounded-xl` control shape. Avoid one-off button geometry when the shared button already fits.
 

@@ -52,7 +52,7 @@ export async function getStudentBrowseSummary(officeId) {
   return { counts, facets, years, documents, docTypes };
 }
 
-export async function browseStudents({ officeId, archived = false, year, startDate = "", endDate = "", q = "", courses = [], years = [], sections = [], sortBy = "studentNo", sortOrder = "ASC", page = 1, pageSize = 10, exportAll = false }) {
+export async function browseStudents({ officeId, archived = false, year, startDate = "", endDate = "", q = "", courses = [], years = [], sections = [], excludedCourses = [], excludedYears = [], excludedSections = [], sortBy = "studentNo", sortOrder = "ASC", groupBy, page = 1, pageSize = 10, exportAll = false }) {
   const includeOdrsEmail = String(officeId || "").trim().toLowerCase() === "registrar";
   const selectedStudentColumns = includeOdrsEmail
     ? `${studentColumns}, odrs.email AS odrs_email`
@@ -69,6 +69,9 @@ export async function browseStudents({ officeId, archived = false, year, startDa
   if (courses.length) conditions.push(`upper(s.course_code) = ANY(${add(courses.map((v) => v.toUpperCase()))}::text[])`);
   if (years.length) conditions.push(`s.year_level = ANY(${add(years)}::int[])`);
   if (sections.length) conditions.push(`upper(s.section) = ANY(${add(sections.map((v) => v.toUpperCase()))}::text[])`);
+  if (excludedCourses.length) conditions.push(`NOT (upper(coalesce(s.course_code, '')) = ANY(${add(excludedCourses.map((v) => v.toUpperCase()))}::text[]))`);
+  if (excludedYears.length) conditions.push(`NOT (coalesce(s.year_level, 0) = ANY(${add(excludedYears)}::int[]))`);
+  if (excludedSections.length) conditions.push(`NOT (upper(coalesce(s.section, '')) = ANY(${add(excludedSections.map((v) => v.toUpperCase()))}::text[]))`);
   const search = String(q || "").trim();
   const needsDecrypt = Boolean(search && !/^[\d-]+$/.test(search)) || sortBy === "name" || sortBy === "odrsEmail";
   if (search && !needsDecrypt) {
@@ -82,25 +85,34 @@ export async function browseStudents({ officeId, archived = false, year, startDa
     section: "s.section", room: "s.storage_room", cabinet: "s.storage_cabinet",
     drawer: "s.storage_drawer", documents: "document_count",
   }[sortBy] || "s.student_no";
+  const groupColumns = {
+    courseCode: "coalesce(s.course_code, '')",
+    yearLevel: "coalesce(s.year_level, 0)",
+    section: "coalesce(s.section, '')",
+  };
+  const groupColumn = Object.hasOwn(groupColumns, groupBy) ? groupColumns[groupBy] : null;
   const direction = sortOrder === "DESC" ? "DESC" : "ASC";
   const offset = (page - 1) * pageSize;
 
   if (needsDecrypt) {
-    const rows = (await query(`SELECT ${selectedStudentColumns}, ${docCount} ${from}`, params)).map(normalize);
+    const rows = (await query(`SELECT ${selectedStudentColumns}, ${docCount}
+      ${groupColumn ? `, dense_rank() OVER (ORDER BY ${groupColumn}) AS group_rank` : ""} ${from}`, params))
+      .map((row) => ({ ...normalize(row), groupRank: Number(row.group_rank || 0) }));
     const matched = search ? rows.filter((s) => matchesSearchQuery([s.studentNo, s.name, s.courseCode, s.section, s.odrsEmail], search)) : rows;
     matched.sort((a, b) => {
+      if (a.groupRank !== b.groupRank) return a.groupRank - b.groupRank;
       const left = sortBy === "documents" ? a.documentCount : sortBy === "odrsEmail" ? a.odrsEmail : a[sortBy] ?? "";
       const right = sortBy === "documents" ? b.documentCount : sortBy === "odrsEmail" ? b.odrsEmail : b[sortBy] ?? "";
       const comparison = typeof left === "number" && typeof right === "number"
         ? left - right : String(left).localeCompare(String(right), undefined, { numeric: true });
       return (direction === "DESC" ? -comparison : comparison) || a.studentNo.localeCompare(b.studentNo);
     });
-    return { rows: exportAll ? matched : matched.slice(offset, offset + pageSize), total: matched.length };
+    return { rows: (exportAll ? matched : matched.slice(offset, offset + pageSize)).map(({ groupRank, ...row }) => row), total: matched.length };
   }
 
   const total = Number((await queryOne(`SELECT count(*)::int AS total ${from}`, params))?.total || 0);
   const rows = await query(`SELECT ${selectedStudentColumns}, ${docCount} ${from}
-    ORDER BY ${orderColumn} ${direction} NULLS LAST, s.student_no ASC
+    ORDER BY ${groupColumn ? `${groupColumn}, ` : ""}${orderColumn} ${direction} NULLS LAST, s.student_no ASC
     ${exportAll ? "" : `LIMIT ${add(pageSize)} OFFSET ${add(offset)}`}`, params);
   return { rows: rows.map(normalize), total };
 }

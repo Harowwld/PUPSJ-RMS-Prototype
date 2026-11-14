@@ -258,8 +258,6 @@ function getTableSortValue(item, column, stream) {
 }
 
 function sortTableRecords(items, stream, sortBy, sortOrder) {
-  if (!sortBy) return items;
-
   const direction = sortOrder === "ASC" ? 1 : -1;
   return [...items].sort((left, right) => {
     const leftValue = getTableSortValue(left, sortBy, stream);
@@ -267,7 +265,7 @@ function sortTableRecords(items, stream, sortBy, sortOrder) {
     const comparison = typeof leftValue === "number" && typeof rightValue === "number"
       ? leftValue - rightValue
       : String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: "base" });
-    return comparison * direction;
+    return (comparison || Number(left.id) - Number(right.id)) * direction;
   });
 }
 
@@ -326,7 +324,7 @@ export default function OsasMonitoringTab({ showToast }) {
   ]);
   const [searchQuery, setSearchQuery] = useOsasViewPreference("osas_monitoring", `${activeStream}.searchQuery`, "");
   const [tableSortBy, setTableSortBy] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortBy`, "");
-  const [tableSortOrder, setTableSortOrder] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortOrder`, "ASC");
+  const [tableSortOrder, setTableSortOrder] = useOsasViewPreference("osas_monitoring", `${activeStream}.tableSortOrder`, "DESC");
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [streamErrors, setStreamErrors] = useState({});
@@ -401,9 +399,9 @@ export default function OsasMonitoringTab({ showToast }) {
     setPage(1);
   };
 
-  const serverPaged = viewMode !== "kanban" && !searchQuery.trim() &&
+  const serverPaged = groupBy === "none" && viewMode !== "kanban" && !searchQuery.trim() &&
     !startDate && !endDate && filterRules.length === 0 && statusFilters.length === 0 &&
-    orgFilters.length === 0 && !tableSortBy;
+    orgFilters.length === 0 && (!tableSortBy || tableSortBy === "submitted") && tableSortOrder === "DESC";
 
   const load = useCallback(async (isManual = false) => {
     const request = ++loadRequestRef.current;
@@ -485,9 +483,10 @@ export default function OsasMonitoringTab({ showToast }) {
   };
 
   const save = async (overrideStatus) => {
-    if (!selected) return;
+    if (!selected || isSaving) return;
     const targetStatus = overrideStatus || status;
     const current = normalizeProposalStatus(selected.status);
+    if (targetStatus === current) return;
 
     const isRevoking = current === "Approved" && targetStatus !== "Approved";
     const isReopening = current === "Declined" && targetStatus !== "Declined";
@@ -525,7 +524,9 @@ export default function OsasMonitoringTab({ showToast }) {
           true
         );
       }
-      showToast?.({ title: "Proposal updated", description: `Status changed to ${targetStatus}.` });
+      if (json.statusChanged !== false) {
+        showToast?.({ title: "Proposal updated", description: `Status changed to ${targetStatus}.` });
+      }
       setNote("");
       await load();
       const detailRes = await fetch(`/api/osas/event-proposals/${selected.id}`, { cache: "no-store" });
@@ -569,9 +570,10 @@ export default function OsasMonitoringTab({ showToast }) {
     }
   };
 
-  const savePostEvent = async (overrideStatus) => {
-    if (!selectedPostEvent) return;
-    const targetStatus = overrideStatus || postEventStatus;
+  const savePostEvent = async () => {
+    if (!selectedPostEvent || isSavingPostEvent) return;
+    const targetStatus = postEventStatus;
+    if (targetStatus === currentPostEventStatus) return;
 
     if (isPostEventNoteRequired && postEventNote.trim().length < 5) {
       return showToast?.(
@@ -605,7 +607,9 @@ export default function OsasMonitoringTab({ showToast }) {
           true
         );
       }
-      showToast?.({ title: "Post-Event Clearance Updated", description: `Report marked as ${targetStatus}.` });
+      if (json.statusChanged !== false) {
+        showToast?.({ title: "Post-Event Clearance Updated", description: `Report marked as ${targetStatus}.` });
+      }
       postEventDetailRequest.current++;
       setSelectedPostEvent((prev) => prev?.id === selectedPostEvent.id ? { ...prev, ...json.data } : prev);
       setPostEventReports((prev) => prev.map((report) =>
@@ -1126,7 +1130,7 @@ export default function OsasMonitoringTab({ showToast }) {
           } else {
             actual = item[rule.fieldKey] || "";
           }
-          return matchesFilterRule(actual, rule);
+          return matchesFilterRule(actual, rule.fieldKey === "status" && rule.value ? { ...rule, value: normalizeProposalStatus(rule.value) } : rule);
         });
         if (!matchesRules) return false;
       }
@@ -1174,11 +1178,11 @@ export default function OsasMonitoringTab({ showToast }) {
   }, [postEventReports, statusFilters, orgFilters, searchQuery, filterRules, startDate, endDate]);
 
   const sortedRows = useMemo(
-    () => sortTableRecords(filteredRows, "proposals", tableSortBy, tableSortOrder),
+    () => sortTableRecords(filteredRows, "proposals", tableSortBy || "submitted", tableSortOrder),
     [filteredRows, tableSortBy, tableSortOrder]
   );
   const sortedPostEvents = useMemo(
-    () => sortTableRecords(filteredPostEvents, "post_events", tableSortBy, tableSortOrder),
+    () => sortTableRecords(filteredPostEvents, "post_events", tableSortBy || "submitted", tableSortOrder),
     [filteredPostEvents, tableSortBy, tableSortOrder]
   );
 
@@ -1196,14 +1200,14 @@ export default function OsasMonitoringTab({ showToast }) {
   const paginatedRows = useMemo(() => {
     if (serverPaged) return sortedRows;
     const start = (safePage - 1) * itemsPerPage;
-    return sortedRows.slice(start, start + itemsPerPage);
-  }, [sortedRows, safePage, itemsPerPage, serverPaged]);
+    return groupOsasRecords(sortedRows, groupBy, "proposals").flatMap(({ items }) => items).slice(start, start + itemsPerPage);
+  }, [sortedRows, safePage, itemsPerPage, serverPaged, groupBy]);
 
   const paginatedPostEvents = useMemo(() => {
     if (serverPaged) return sortedPostEvents;
     const start = (safePage - 1) * itemsPerPage;
-    return sortedPostEvents.slice(start, start + itemsPerPage);
-  }, [sortedPostEvents, safePage, itemsPerPage, serverPaged]);
+    return groupOsasRecords(sortedPostEvents, groupBy, "post_events").flatMap(({ items }) => items).slice(start, start + itemsPerPage);
+  }, [sortedPostEvents, safePage, itemsPerPage, serverPaged, groupBy]);
 
   const proposalTableGroups = groupOsasRecords(paginatedRows, groupBy, "proposals");
   const postEventTableGroups = groupOsasRecords(paginatedPostEvents, groupBy, "post_events");
@@ -1250,7 +1254,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const currentProposalStatus = normalizeProposalStatus(selected?.status);
   const isRevokingApproval = currentProposalStatus === "Approved" && status !== "Approved";
   const isReopeningDeclined = currentProposalStatus === "Declined" && status !== "Declined";
-  const isRequestingRevision = status === "Needs Revision";
+  const isRequestingRevision = status === "Needs Revision" && status !== currentProposalStatus;
   const isNoteRequired = isRevokingApproval || isReopeningDeclined || isRequestingRevision;
   const isNoteValid = !isNoteRequired || note.trim().length >= 5;
 
@@ -1283,7 +1287,7 @@ export default function OsasMonitoringTab({ showToast }) {
   const currentPostEventStatus = selectedPostEvent?.status || "Submitted";
   const isRevokingPostEventClearance = currentPostEventStatus === "Cleared" && postEventStatus !== "Cleared";
   const isReopeningPostEventDeclined = currentPostEventStatus === "Declined" && postEventStatus !== "Declined";
-  const isRequestingPostEventRevision = postEventStatus === "Needs Revision";
+  const isRequestingPostEventRevision = postEventStatus === "Needs Revision" && postEventStatus !== currentPostEventStatus;
   const isPostEventNoteRequired = isRevokingPostEventClearance || isReopeningPostEventDeclined || isRequestingPostEventRevision;
   const isPostEventNoteValid = !isPostEventNoteRequired || postEventNote.trim().length >= 5;
 
@@ -1465,13 +1469,13 @@ export default function OsasMonitoringTab({ showToast }) {
             />
             <SortPopover
               options={currentSortOptions}
-              sortBy={tableSortBy}
+              sortBy={tableSortBy || "submitted"}
               onSortByChange={(val) => {
                 setTableSortBy(val);
-                setTableSortOrder("ASC");
+                setPage(1);
               }}
               sortOrder={tableSortOrder}
-              onSortOrderChange={setTableSortOrder}
+              onSortOrderChange={(value) => { setTableSortOrder(value); setPage(1); }}
             />
             {viewMode !== "kanban" && (
               <GroupPopover
@@ -1526,8 +1530,8 @@ export default function OsasMonitoringTab({ showToast }) {
 
         {/* 5. Main Content Area */}
         <div className={cn("w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", activeFilteredList.length === 0 && "rounded-b-2xl overflow-hidden")}>
-          {loading && (!hasLoaded || activeFilteredList.length === 0) ? (
-            <DataContentSkeleton columns={activeStream === "proposals" ? proposalTableColumnsConfig : postEventTableColumnsConfig} viewMode={viewMode} />
+          {loading && !hasLoaded ? (
+            <DataContentSkeleton columns={activeStream === "proposals" ? proposalTableColumnsConfig : postEventTableColumnsConfig} viewMode={viewMode} grouped={groupBy !== "none"} kanbanColumnCount={(activeStream === "proposals" ? KANBAN_COLUMNS : POST_EVENT_KANBAN_COLUMNS).length} kanbanColumnClassName="w-[310px] sm:w-[325px]" kanbanViewportClassName="min-h-[calc(100vh-20rem)] p-4 pl-6 sm:p-5 sm:pl-6" />
           ) : streamErrors[activeStream] && activeFilteredList.length === 0 ? (
             <EmptyState
               icon={AlertCircleIcon}

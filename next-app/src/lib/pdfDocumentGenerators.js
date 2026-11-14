@@ -1166,13 +1166,13 @@ async function generateOrgCertPdf({ orgName, dateStr }) {
 // ----------------------------------------------------------------------------
 // 11. Generic / Fallback Official Document Generator
 // ----------------------------------------------------------------------------
-async function generateGenericDocumentPdf({ docType, studentNo, studentName, courseCode, dateStr }) {
+async function generateGenericDocumentPdf({ docType, studentNo, studentName, courseCode, dateStr, orgName, eventName }) {
   const { doc, fontRegular, fontBold, fontOblique } = await createBaseDoc();
   const page = doc.addPage([595.28, 841.89]);
   const fonts = { fontRegular, fontBold, fontOblique };
 
   drawInstitutionalHeader(page, fonts, {
-    office: "Office of the Campus Registrar",
+    office: orgName ? "Office of Student Affairs and Services" : "Office of the Campus Registrar",
     formCode: "PUP-RMS-DOC",
     refNo: `DOC-${studentNo || "2023-00000"}`,
     dateStr: dateStr || "Academic Year 2023-2024",
@@ -1180,7 +1180,7 @@ async function generateGenericDocumentPdf({ docType, studentNo, studentName, cou
 
   drawTitleBanner(page, fonts, {
     title: docType || "Official Academic Archive Record",
-    subtitle: "Certified Academic Repository Document · PUP San Juan Records Keeping System",
+    subtitle: orgName ? "Student Organization Archive · PUP San Juan" : "Certified Academic Repository Document · PUP San Juan Records Keeping System",
     formCode: "PUP-RMS-DOC",
   });
 
@@ -1190,7 +1190,10 @@ async function generateGenericDocumentPdf({ docType, studentNo, studentName, cou
     { label: "Document Classification:", value: docType || "Official Academic Credential", bold: true },
     { label: "Student / Subject Name:", value: studentName || "DELA CRUZ, JUAN A.", bold: true },
     { label: "Student Number:", value: studentNo || "2023-00001-SJ-0", bold: true },
-    { label: "Degree Program:", value: courseCode || "BSIT", bold: false },
+    ...(orgName
+      ? [{ label: "Student Organization:", value: orgName, bold: false },
+        ...(eventName ? [{ label: "Activity:", value: eventName, bold: false }] : [])]
+      : [{ label: "Degree Program:", value: courseCode || "BSIT", bold: false }]),
     { label: "Filing Archive Room:", value: "Archive Room 1 (PUP San Juan)", bold: false },
     { label: "Verification Status:", value: "VERIFIED & ARCHIVED IN ELECTRONIC RECORDS SYSTEM", bold: true },
   ]);
@@ -1249,6 +1252,7 @@ export async function generateDocumentPdfByType({
   courseCode = "BSIT",
   section = "1-1",
   orgName = "",
+  eventName = "",
   dateStr = "",
 } = {}) {
   const norm = String(docType || "").trim().toLowerCase();
@@ -1285,5 +1289,5 @@ export async function generateDocumentPdfByType({
   }
 
   // Fallback
-  return generateGenericDocumentPdf({ docType, studentNo, studentName, courseCode, dateStr });
+  return generateGenericDocumentPdf({ docType, studentNo, studentName, courseCode, dateStr, orgName, eventName });
 }

@@ -497,7 +497,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                       <Timer01Icon size="1em" className="text-gray-400 text-sm" />
                       <span>Slide Pace:</span>
                       <div className="w-[145px]">
-                        <Select
+                        <Select placeholder="Select slide pace"
                           value={heroData.autoRotateInterval}
                           aria-label="Slide pace"
                           onChange={(e) =>

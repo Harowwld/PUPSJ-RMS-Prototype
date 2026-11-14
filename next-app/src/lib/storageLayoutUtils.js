@@ -130,17 +130,22 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
   const endX = clamp(Math.floor((targetCab.rect.x + cabEff.w / 2) * GRID_SIZE_X), 0, GRID_SIZE_X - 1)
   const endY = clamp(Math.floor((targetCab.rect.y + cabEff.h / 2) * GRID_SIZE_Y), 0, GRID_SIZE_Y - 1)
 
-  // BFS for simplest path
+  const targetLeft = Math.floor((targetCab.rect.x + 0.001) * GRID_SIZE_X)
+  const targetRight = Math.ceil((targetCab.rect.x + cabEff.w - 0.001) * GRID_SIZE_X) - 1
+  const targetTop = Math.floor((targetCab.rect.y + 0.001) * GRID_SIZE_Y)
+  const targetBottom = Math.ceil((targetCab.rect.y + cabEff.h - 0.001) * GRID_SIZE_Y) - 1
+
+  // BFS to a walkable cell next to the cabinet footprint.
   const queue = [[startX, startY, []]]
   const visited = new Set([`${startX},${startY}`])
   
-  // Clear start/end grid cells to ensure path can start/end
   grid[startY][startX] = 0
-  grid[endY][endX] = 0
 
   while (queue.length > 0) {
     const [x, y, path] = queue.shift()
-    if (Math.abs(x - endX) <= 1 && Math.abs(y - endY) <= 1) {
+    const horizontalDistance = Math.max(targetLeft - x, x - targetRight, 0)
+    const verticalDistance = Math.max(targetTop - y, y - targetBottom, 0)
+    if (horizontalDistance + verticalDistance === 1) {
       return [...path, [x, y], [endX, endY]]
     }
 

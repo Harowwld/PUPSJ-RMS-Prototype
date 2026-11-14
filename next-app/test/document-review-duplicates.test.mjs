@@ -8,6 +8,7 @@ const schema = `review_duplicates_${crypto.randomBytes(8).toString("hex")}`;
 let adminPool;
 let pool;
 let reviewDocument;
+let listReviewDocuments;
 
 before(async () => {
   if (!enabled) return;
@@ -17,7 +18,7 @@ before(async () => {
   connection.searchParams.set("options", `-c search_path=${schema}`);
   process.env.DATABASE_URL = connection.toString();
   ({ pool } = await import("../src/lib/postgres.js"));
-  ({ reviewDocument } = await import("../src/lib/documentsRepo.js"));
+  ({ reviewDocument, listReviewDocuments } = await import("../src/lib/documentsRepo.js"));
   // A private schema exercises real repository SQL without changing application records.
   await pool.query(`
     CREATE TABLE student_organizations (id text, acronym text, name text);
@@ -140,4 +141,59 @@ test("organization records have the same approval protection without blocking ot
   await approve(first, "osas");
   await assert.rejects(approve(second, "osas"), { code: "DUPLICATE_DOCUMENT" });
   assert.equal((await approve(other, "osas")).approval_status, "Approved");
+});
+
+test("Records Review groups across pages and sorts OSAS records by organization", { skip: !enabled }, async () => {
+  await pool.query(`
+    INSERT INTO student_organizations (id, name) VALUES ('alpha', 'Alpha Club'), ('zeta', 'Zeta Club');
+    INSERT INTO documents (office_id, organization_id, student_name, doc_type, approval_status, created_at)
+    VALUES ('osas', 'alpha', 'Zara', 'Certificate', 'Pending', '2025-01-01'),
+           ('osas', 'zeta', 'Ava', 'Certificate', 'Approved', '2025-01-02'),
+           ('osas', 'zeta', 'Bea', 'Minutes', 'Pending', '2025-01-03');
+  `);
+
+  const options = { officeId: "osas", pageSize: 2, sortBy: "student_name", sortOrder: "ASC", groupBy: "status" };
+  const firstPage = await listReviewDocuments(options);
+  const secondPage = await listReviewDocuments({ ...options, page: 2 });
+  assert.equal(firstPage.total, 3);
+  assert.deepEqual(firstPage.rows.map(({ organization_name, approval_status }) => [organization_name, approval_status]), [
+    ["Alpha Club", "Pending"],
+    ["Zeta Club", "Pending"],
+  ]);
+  assert.equal(secondPage.rows[0].approval_status, "Approved");
+
+  const groupedByType = await listReviewDocuments({ ...options, groupBy: "docType", search: "Club" });
+  assert.deepEqual(groupedByType.rows.map(({ doc_type }) => doc_type), ["Certificate", "Certificate"]);
+
+  const ungrouped = await listReviewDocuments({ ...options, sortBy: "created_at", groupBy: "none" });
+  assert.deepEqual(ungrouped.rows.map(({ approval_status }) => approval_status), ["Approved", "Pending"]);
+});
+
+test("All Records Kanban fills each status lane before paging through remaining records", { skip: !enabled }, async () => {
+  await pool.query(`
+    INSERT INTO documents (office_id, student_name, doc_type, approval_status, created_at)
+    VALUES ('registrar', 'Zoe', 'Form 137', 'Pending', '2025-01-01'),
+           ('registrar', 'Ben', 'Form 137', 'Declined', '2025-01-02'),
+           ('registrar', 'Cal', 'Form 137', 'Approved', '2025-01-03'),
+           ('registrar', 'Dan', 'Form 137', 'Approved', '2025-01-04'),
+           ('registrar', 'Amy', 'Form 137', 'Approved', '2025-01-05'),
+           ('registrar', 'Eve', 'Transcript', 'Approved', '2025-01-06'),
+           ('osas', 'Other office', 'Form 137', 'Approved', '2025-01-07');
+  `);
+  const options = { officeId: "registrar", pageSize: 3, groupBy: "kanban" };
+  const statuses = (result) => result.rows.map((row) => row.approval_status);
+  const firstPage = await listReviewDocuments(options);
+  const secondPage = await listReviewDocuments({ ...options, page: 2 });
+  assert.equal(firstPage.total, 6);
+  assert.deepEqual(statuses(firstPage), ["Approved", "Declined", "Pending"]);
+  assert.deepEqual(secondPage.rows.map((row) => row.student_name), ["Amy", "Dan", "Cal"]);
+
+  const searched = await listReviewDocuments({ ...options, search: "Form 137" });
+  assert.deepEqual(searched.rows.map((row) => row.student_name), ["Amy", "Ben", "Zoe"]);
+
+  const sorted = await listReviewDocuments({ ...options, sortBy: "student_name", sortOrder: "ASC" });
+  assert.deepEqual(sorted.rows.map((row) => row.student_name), ["Amy", "Ben", "Zoe"]);
+
+  const declined = await listReviewDocuments({ ...options, statusFilters: ["Declined"] });
+  assert.deepEqual(statuses(declined), ["Declined"]);
 });

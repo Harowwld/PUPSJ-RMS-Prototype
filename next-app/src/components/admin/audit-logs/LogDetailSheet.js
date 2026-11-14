@@ -5,6 +5,7 @@ import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { useState } from "react";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import CopyButton from "@/components/shared/CopyButton";
 import {
   Sheet,
@@ -15,7 +16,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import NarrativeText from "@/components/shared/NarrativeText";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
@@ -122,6 +123,28 @@ export default function LogDetailSheet({
       setTimeout(() => setCopiedField((curr) => (curr === fieldKey ? null : curr)), 2000);
     }
   };
+  const logId = String(selectedLog?.rawId ?? selectedLog?.id ?? "");
+  const formattedLogId = `LOG-${logId}`;
+
+  function renderCopyField(text, label, fieldKey) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`Copy ${label}`}
+            onClick={() => handleCopyField(text, label, fieldKey)}
+          >
+            {copiedField === fieldKey ? <Tick01Icon size={14} aria-hidden="true" /> : <Copy01Icon size={14} aria-hidden="true" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{copiedField === fieldKey ? `${label} copied` : `Copy ${label}`}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
 
@@ -179,7 +202,7 @@ export default function LogDetailSheet({
         </SheetHeader>
 
         {/* Line-Attached Edge-to-Edge Severity & Integrity Notice */}
-        {selectedLog && (
+        {selectedLog && (!hideActor || severityInfo?.label !== "Info") && (
           <NoticeBanner tone={severityInfo?.label === "Critical" || severityInfo?.label === "Security" ? "danger" : severityInfo?.label === "Warning" ? "warning" : "info"} title={severityInfo?.label ? `${severityInfo.label} Audit Event` : "Activity Log"}>
             {severityInfo?.label === "Critical" || severityInfo?.label === "Security"
                 ? "High-priority security or administrative event recorded in activity history."
@@ -191,38 +214,39 @@ export default function LogDetailSheet({
 
         {selectedLog && (
           <div className="flex-1 space-y-6 overflow-y-auto p-6">
-            {/* Identity / Actor Summary Strip (Unboxed) */}
-            <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <AuditActorAvatar
-                  log={selectedLog}
-                  className="size-11 border-0"
-                  fallbackClassName="font-bold text-sm"
-                />
-                <div className="min-w-0">
-                  <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
-                    {hideActor ? "Account Activity" : (selectedLog.actor_display_name || selectedLog.user || selectedLog.actor || "System")}
+            {!hideActor && (
+              <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <AuditActorAvatar
+                    log={selectedLog}
+                    className="size-11 border-0"
+                    fallbackClassName="font-bold text-sm"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate block">
+                      {selectedLog.actor_display_name || selectedLog.user || selectedLog.actor || "System"}
+                    </span>
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
+                      {selectedLog.role || "System"}
+                      {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={cn(BADGE_PALETTES.gray, "tabular-nums", COMPACT_BADGE_BASE)}>
+                    {formattedLogId}
                   </span>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
-                    {hideActor ? (selectedLog.actor_display_name || selectedLog.user || selectedLog.actor) : (selectedLog.role || "System")}
-                    {selectedLog.officeName ? ` • ${selectedLog.officeName}` : selectedLog.scope ? ` • ${selectedLog.scope}` : ""}
-                  </p>
+                  {severityInfo && (
+                    <span
+                      className={cn(severityInfo.classes, COMPACT_BADGE_BASE)}
+                    >
+                      {severityInfo.label}
+                    </span>
+                  )}
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={cn(BADGE_PALETTES.gray, "font-sans tabular-nums text-xs", COMPACT_BADGE_BASE)}>
-                  #LOG-{selectedLog.rawId ?? selectedLog.id}
-                </span>
-                {severityInfo && (
-                  <span
-                    className={cn(severityInfo.classes, COMPACT_BADGE_BASE)}
-                  >
-                    {severityInfo.label}
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
 
             {/* 1. Event Specification (Standard Information Rows) */}
             <div className="space-y-2">
@@ -235,20 +259,9 @@ export default function LogDetailSheet({
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
-                      #{selectedLog.rawId ?? selectedLog.id}
+                      {formattedLogId}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyField(String(selectedLog.rawId ?? selectedLog.id), "Log ID", "log_id")}
-                      className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy Log ID"
-                    >
-                      {copiedField === "log_id" ? (
-                        <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                      ) : (
-                        <Copy01Icon size="1em" className="text-[11px]" />
-                      )}
-                    </button>
+                    {renderCopyField(logId, "Log ID", "log_id")}
                   </div>
                 </InfoRow>
 
@@ -264,7 +277,7 @@ export default function LogDetailSheet({
                 >
                   {severityInfo && (
                     <span
-                      className={cn(severityInfo.classes, BADGE_BASE)}
+                      className={cn(severityInfo.classes, COMPACT_BADGE_BASE)}
                     >
                       {severityInfo.label}
                     </span>
@@ -294,6 +307,15 @@ export default function LogDetailSheet({
                   </InfoRow>
                 )}
 
+                {hideActor && (selectedLog.actor_display_name || selectedLog.user || selectedLog.actor) && (
+                  <InfoRow icon=" UserIcon" label="Account">
+                    <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.zinc, "max-w-full")}>
+                      <AuditActorAvatar log={selectedLog} className="size-3.5 border-0" fallbackClassName="text-[8px]" />
+                      <span className="min-w-0 truncate">{selectedLog.actor_display_name || selectedLog.user || selectedLog.actor}</span>
+                    </span>
+                  </InfoRow>
+                )}
+
                 {(selectedLog.entityType || selectedLog.entityId) && (
                   <>
                     <InfoRow
@@ -311,18 +333,7 @@ export default function LogDetailSheet({
                           <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
                             {selectedLog.entityId}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyField(selectedLog.entityId, "Reference ID", "ref_id")}
-                            className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                            title="Copy Reference ID"
-                          >
-                            {copiedField === "ref_id" ? (
-                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                            ) : (
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            )}
-                          </button>
+                          {renderCopyField(selectedLog.entityId, "Reference ID", "ref_id")}
                         </div>
                       </InfoRow>
                     )}
@@ -348,6 +359,7 @@ export default function LogDetailSheet({
                     {selectedLog.details && (
                       <CopyButton
                         iconOnly
+                        variant="ghost"
                         textToCopy={() => formatLogDetails(selectedLog.details)}
                         entityName="Narrative"
                         idleLabel="Copy full narrative"
@@ -384,18 +396,7 @@ export default function LogDetailSheet({
                           Filter IP
                         </Button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => handleCopyField(selectedLog.ip, "IP Address", "ip")}
-                        className="w-5 h-5 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-                        title="Copy IP"
-                      >
-                        {copiedField === "ip" ? (
-                          <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                        ) : (
-                          <Copy01Icon size="1em" className="text-[11px]" />
-                        )}
-                      </button>
+                      {renderCopyField(selectedLog.ip, "IP Address", "ip")}
                     </div>
                   </div>
                 </InfoRow>
@@ -429,6 +430,7 @@ export default function LogDetailSheet({
             {selectedLog && (
               <CopyButton
                 iconOnly
+                variant="ghost"
                 textToCopy={() => JSON.stringify(selectedLog, null, 2)}
                 entityName="Record Data"
                 idleLabel="Copy Record Data"

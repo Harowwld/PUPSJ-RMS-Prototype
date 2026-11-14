@@ -146,7 +146,7 @@ export default function DigitalRecordsList({
                   const isDeclined = record.approval_status === "Declined";
                   const { dateStr, timeStr } = formatUploadedDate(record.created_at);
                   const isPdf = /\.pdf$/i.test(record.original_filename || "");
-                  const organizationName = record.organization_name || record.student_name;
+                  const organizationName = record.organization_name || "Organization not linked";
                   const secondaryContext = isOsas
                     ? [record.original_filename, record.size_bytes ? `(${formatBytes(record.size_bytes)})` : "", isDeclined && record.review_note ? `Decline note: "${record.review_note}"` : ""].filter(Boolean).join(" • ")
                     : [formatTitleCase(record.student_name), record.original_filename].filter(Boolean).join(" • ");

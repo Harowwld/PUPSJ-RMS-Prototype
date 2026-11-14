@@ -4,19 +4,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export function StudentOsasProposalsListSkeleton({ count = 3 }) {
+export function StudentOsasProposalsListSkeleton({ count = 3, stream = "proposals" }) {
   return (
-    <div className="space-y-3 select-none font-jakarta animate-in fade-in duration-200">
+    <div role="status" aria-busy="true" aria-label="Loading OSAS submissions" className="space-y-3 font-jakarta">
       {Array.from({ length: count }).map((_, i) => (
         <article
           key={i}
+          aria-hidden="true"
           className="rounded-xl border border-border bg-white p-4 shadow-2xs dark:border-border dark:bg-card"
         >
           {/* Row 1: Title + Status Badge + PDF Action Button */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Skeleton
               className={cn(
-                "h-4 rounded dark:bg-muted",
+                "h-4 max-w-full rounded dark:bg-muted",
                 i % 3 === 0 ? "w-56" : i % 2 === 0 ? "w-64" : "w-48"
               )}
             />
@@ -27,31 +28,31 @@ export function StudentOsasProposalsListSkeleton({ count = 3 }) {
           </div>
 
           {/* Row 2: Organization · Event Date + Post-Event status/link */}
-          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
-              <span className="text-gray-300 dark:text-zinc-700">·</span>
-              <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <Skeleton className="h-3.5 w-32 min-w-0 rounded dark:bg-muted" />
+              <Skeleton className="h-3.5 w-24 min-w-0 rounded dark:bg-muted" />
             </div>
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-5 w-32 rounded-full dark:bg-muted" />
-              <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
-            </div>
+            {stream === "proposals" && (
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-32 rounded-full dark:bg-muted" />
+                <Skeleton className="h-3.5 w-24 rounded dark:bg-muted" />
+              </div>
+            )}
           </div>
 
           {/* Row 3: Latest Update Metadata, Message Preview, and View Full Timeline CTA */}
           <div className="mt-3 border-t border-border/70 pt-3 dark:border-border/70">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Skeleton className="h-3.5 w-40 rounded dark:bg-muted" />
-              <Skeleton className="h-3 w-28 rounded dark:bg-muted tabular-nums" />
-            </div>
-            <Skeleton
-              className={cn(
-                "mt-1.5 h-3.5 rounded dark:bg-muted",
-                i % 2 === 0 ? "w-4/5" : "w-3/5"
-              )}
-            />
-            <div className="mt-2.5 flex justify-end">
+            {stream !== "cbl" && (
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Skeleton className="h-3.5 w-40 rounded dark:bg-muted" />
+                  <Skeleton className="h-3 w-28 rounded dark:bg-muted" />
+                </div>
+                <Skeleton className="h-3.5 w-4/5 rounded dark:bg-muted" />
+              </div>
+            )}
+            <div className={cn("flex justify-end", stream !== "cbl" && "mt-2.5")}>
               <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
             </div>
           </div>

@@ -19,7 +19,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_PALETTES } from "@/lib/badgeStyles";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { EmptyState } from "@/components/ui/empty";
 import { UserGroupIcon, LayoutGridIcon, Building01Icon, Cancel01Icon, CheckmarkCircle01Icon, ComputerIcon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
@@ -318,14 +318,7 @@ export default function OfficeDetailSheet({
                     <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
                       {displayOffice.id}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(displayOffice.id, "Department Code", "code")}
-                      title="Copy Department Code"
-                      className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                    >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "code" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
-                    </button>
+                    <CopyButton iconOnly textToCopy={displayOffice.id} entityName="Department Code" />
                   </div>
                 }
               />
@@ -352,17 +345,11 @@ export default function OfficeDetailSheet({
                     <span className="font-sans tabular-nums text-xs font-semibold text-gray-900 dark:text-zinc-100">
                       {defaultAdminId}
                     </span>
+                    {defaultAdminId && <CopyButton iconOnly textToCopy={defaultAdminId} entityName="Default Admin ID" />}
                     <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-sans tabular-nums">
                       ({defaultAdminEmail})
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(defaultAdminEmail, "Admin Email", "email")}
-                      title="Copy Default Admin Email"
-                      className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                    >
-                      <AppIcon className={cn("text-[11px] ", copiedField === "email" ? "Tick01Icon text-gray-700 dark:text-zinc-200" : "Copy01Icon")} />
-                    </button>
+                    <CopyButton iconOnly textToCopy={defaultAdminEmail} entityName="Default Admin Email" />
                   </div>
                 }
               />
@@ -388,7 +375,7 @@ export default function OfficeDetailSheet({
                         {displayOffice.station_name}
                       </span>
                       <span className={cn(
-                        BADGE_BASE,
+                        COMPACT_BADGE_BASE,
                         displayOffice.scanner_watching
                           ? BADGE_PALETTES.emerald
                           : BADGE_PALETTES.gray

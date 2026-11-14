@@ -441,6 +441,7 @@ export default function BackupTab({
                   value={backupTypeFilter}
                   onValueChange={(val) => {
                     setBackupTypeFilter(val);
+                    setSelectedBackupIds([]);
                     setPage(1);
                   }}
                   variant="capsule"

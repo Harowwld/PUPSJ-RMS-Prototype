@@ -4,6 +4,8 @@ import {
   buildDefaultStorageLayout,
   buildDefaultOsasStorageLayout,
   getDefaultDoor,
+  getDefaultRoomTemplates,
+  isLegacyOsasStorageLayout,
 } from "./storageLayoutDefaults.js";
 import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
@@ -178,7 +180,9 @@ export async function getStorageLayout({ officeId } = {}) {
   try {
     const parsed = JSON.parse(String(row.value));
     const normalized = normalizeStorageLayout(parsed);
-    if (!normalized) return getDefaultStorageLayout({ officeId });
+    if (!normalized || (key === "storage_layout:osas" && isLegacyOsasStorageLayout(normalized))) {
+      return getDefaultStorageLayout({ officeId });
+    }
     return normalized;
   } catch {
     return getDefaultStorageLayout({ officeId });
@@ -334,14 +338,13 @@ export async function getStorageTemplates({ officeId } = {}) {
     "SELECT value FROM settings WHERE key = ?",
     [key]
   );
-  const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
   if (!row?.value) {
-    return ROOM_TEMPLATES;
+    return getDefaultRoomTemplates(officeId);
   }
   try {
     return JSON.parse(String(row.value));
   } catch {
-    return ROOM_TEMPLATES;
+    return getDefaultRoomTemplates(officeId);
   }
 }
 
@@ -403,6 +406,5 @@ export async function setStorageTemplates(templates, { officeId } = {}) {
 export async function restoreDefaultStorageTemplates({ officeId } = {}) {
   const key = scopedSettingsKey(STORAGE_TEMPLATES_KEY, officeId);
   await dbRun("DELETE FROM settings WHERE key = ?", [key]);
-  const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
-  return ROOM_TEMPLATES;
+  return getDefaultRoomTemplates(officeId);
 }

@@ -2,50 +2,26 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { getListDensityClasses } from "@/lib/tablePresentation";
 import { cn } from "@/lib/utils";
 
-export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
+export function StudentRequestsTableRowsSkeleton({ rowCount = 6, density }) {
+  const { paddingX, paddingY, gap, minHeight } = getListDensityClasses(density);
   return (
-    <div role="list" className="w-full divide-y divide-gray-100 dark:divide-zinc-800/60 select-none font-jakarta">
-      {Array.from({ length: rowCount }).map((_, i) => (
-        <div
-          key={i}
-          role="listitem"
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-5 py-3 min-h-[52px]"
-        >
-          {/* Left: Ticket ID, Doc Type, and inline Purpose/Notes preview */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0 flex-1">
-            <div className="flex items-center gap-2.5 min-w-0 shrink-0">
-              <Skeleton className="h-4 w-12 rounded dark:bg-muted shrink-0 tabular-nums" />
-              <Skeleton
-                className={cn(
-                  "h-4 rounded dark:bg-muted",
-                  i % 3 === 0 ? "w-48" : i % 2 === 0 ? "w-36" : "w-44"
-                )}
-              />
-            </div>
-            <div className="hidden md:flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-gray-300 dark:text-zinc-700 shrink-0">—</span>
-              <Skeleton
-                className={cn(
-                  "h-3.5 rounded dark:bg-muted",
-                  i % 4 === 0 ? "w-56" : i % 3 === 0 ? "w-44" : i % 2 === 0 ? "w-64" : "w-40"
-                )}
-              />
-            </div>
+    <div role="list" aria-label="Loading document requests" aria-busy="true" className="w-full divide-y divide-gray-100 dark:divide-zinc-800/60">
+      {Array.from({ length: rowCount }, (_, index) => (
+        <div key={index} aria-hidden="true" className={cn("flex items-center justify-between", paddingX, paddingY, gap, minHeight)}>
+          <div className="mr-2 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+            <Skeleton className="h-4 w-[70px] shrink-0" />
+            <Skeleton className="h-4 w-40 min-w-0" />
+            <Skeleton className="hidden h-3.5 w-44 min-w-0 md:block" />
           </div>
-
-          {/* Right: Status badge, Relative Date, and Action Icons */}
-          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0">
-            <div className="flex items-center gap-2.5">
-              <Skeleton className="h-5 w-20 rounded-full dark:bg-muted" />
-              <Skeleton className="h-3.5 w-20 rounded dark:bg-muted tabular-nums" />
-            </div>
-            <div className="flex items-center gap-1 pl-1 border-l border-gray-100 dark:border-zinc-800">
-              {i % 2 === 0 && (
-                <Skeleton className="size-7 rounded-lg dark:bg-muted shrink-0" />
-              )}
-              <Skeleton className="size-7 rounded-lg dark:bg-muted shrink-0" />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Skeleton className="h-6 w-16 rounded-full sm:w-20" />
+            <Skeleton className="ml-1 hidden h-3.5 w-16 sm:block" />
+            <div className="flex items-center gap-1">
+              <Skeleton className="size-7 rounded-lg" />
+              <Skeleton className="size-7 rounded-lg" />
             </div>
           </div>
         </div>
@@ -56,8 +32,8 @@ export function StudentRequestsTableRowsSkeleton({ rowCount = 6 }) {
 
 export function StudentRequestsPaginationSkeleton() {
   return (
-    <div className="flex items-center justify-between border-t border-border dark:border-border bg-white dark:bg-card p-4 px-6 rounded-b-2xl mt-auto select-none font-jakarta">
-      <div className="flex items-center gap-6 text-xs text-gray-900 dark:text-zinc-300">
+    <div className="mt-auto flex min-w-0 shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border bg-white px-6 py-4 dark:bg-card select-none font-jakarta">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-6 gap-y-3 text-xs text-gray-900 dark:text-zinc-300">
         <Skeleton className="h-3.5 w-32 rounded dark:bg-muted" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-3.5 w-10 rounded dark:bg-muted" />
@@ -94,7 +70,7 @@ export default function StudentRequestsTableSkeleton({ rowCount = 6, showForm = 
             <Skeleton className="mt-[4px] h-3.5 w-72 sm:w-96 max-w-full rounded dark:bg-muted" />
           </div>
           <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted shrink-0" />
+            <Skeleton className="size-10 rounded-xl dark:bg-muted shrink-0" />
             {!showForm && <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted shrink-0" />}
           </div>
         </div>

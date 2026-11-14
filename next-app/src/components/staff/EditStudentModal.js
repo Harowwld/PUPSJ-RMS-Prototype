@@ -190,9 +190,9 @@ export default function EditStudentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-[22px] sm:rounded-[22px] border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
-        <form onSubmit={handleSubmit} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
-          <DialogHeader className="p-6 pb-0 text-left">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-2xl sm:rounded-2xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+          <DialogHeader className="p-6 pb-0 text-left shrink-0">
             <DialogTitle>
               Edit Student Profile
             </DialogTitle>
@@ -205,26 +205,20 @@ export default function EditStudentModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="p-6 pt-2 space-y-5">
+          <div className="min-h-0 overflow-y-auto p-6 pt-2 space-y-5">
 
           {/* Identification Section */}
           <div className="space-y-4">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Student Identification
             </h4>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-              <div className="md:col-span-8">
-                <StudentNameFields idPrefix="edit-student" value={nameParts} onChange={setNameParts} />
-                {student?.name && !student.first_name && !student.firstName && !student.name.includes(",") && (
-                  <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400">Existing recorded name: {student.name}. Enter its name parts above to confirm their order.</p>
-                )}
-              </div>
-
-              <div className="md:col-span-4">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={collectOdrsEmail ? undefined : "md:col-span-2"}>
+                <label htmlFor="edit-student-number" className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Student Number
                 </label>
                 <Input
+                  id="edit-student-number"
                   type="text"
                   disabled
                   value={student?.studentNo || ""}
@@ -232,9 +226,12 @@ export default function EditStudentModal({
                 />
               </div>
               {collectOdrsEmail && (
-                <label className="grid gap-1.5 text-xs font-medium text-gray-700 dark:text-zinc-300 md:col-span-8">
-                  Email for ODRS (optional)
+                <div>
+                  <label htmlFor="edit-student-odrs-email" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    Email for ODRS <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                  </label>
                   <Input
+                    id="edit-student-odrs-email"
                     type="email"
                     placeholder="name@example.com"
                     autoComplete="off"
@@ -243,8 +240,14 @@ export default function EditStudentModal({
                     disabled={isSubmitting}
                     onChange={(event) => setOdrsEmail(event.target.value)}
                   />
-                </label>
+                </div>
               )}
+              <div className="md:col-span-2">
+                <StudentNameFields idPrefix="edit-student" value={nameParts} onChange={setNameParts} />
+                {student?.name && !student.first_name && !student.firstName && !student.name.includes(",") && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400">Existing recorded name: {student.name}. Enter its name parts above to confirm their order.</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -255,10 +258,11 @@ export default function EditStudentModal({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-6">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Degree Program
                 </label>
                 <Select
+                  required={!courseCode || courses.some((course) => course.code === courseCode)}
                   value={courseCode}
                   onValueChange={(val) => {
                     setCourseCode(val);
@@ -274,10 +278,10 @@ export default function EditStudentModal({
               </div>
 
               <div className="md:col-span-3">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Entry Year
                 </label>
-                <Input
+                <Input placeholder="e.g. 2026"
                   type="number"
                   required
                   min={2000}
@@ -289,11 +293,12 @@ export default function EditStudentModal({
               </div>
 
               <div className="md:col-span-3">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Section
                 </label>
                 {availableSections.length > 0 ? (
                   <Select
+                    required={!section || availableSections.some((item) => item.name === section)}
                     value={section}
                     onValueChange={setSection}
                     options={availableSections.map((s) => ({
@@ -324,7 +329,7 @@ export default function EditStudentModal({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Archive Room
                 </label>
                 <Select
@@ -340,7 +345,7 @@ export default function EditStudentModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Cabinet Letter
                 </label>
                 <Select
@@ -356,7 +361,7 @@ export default function EditStudentModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Drawer Number
                 </label>
                 <Select
@@ -374,7 +379,7 @@ export default function EditStudentModal({
           </div>
           </div>
 
-          <DialogFooter className="p-6 pt-0 flex items-center justify-end gap-2.5">
+          <DialogFooter className="p-6 pt-0 flex flex-wrap flex-row items-center justify-end gap-2.5 shrink-0">
             <Button
               type="button"
               variant="outline"

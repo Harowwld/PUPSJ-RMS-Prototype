@@ -51,6 +51,7 @@ export function formatErrorMessage(error, fallbackContext = {}) {
     status = error.status || null;
   }
 
+  rawMessage = typeof rawMessage === "string" ? rawMessage.trim() : "";
   const lower = rawMessage.toLowerCase();
 
   // 1. Network / Connection drops
@@ -62,8 +63,8 @@ export function formatErrorMessage(error, fallbackContext = {}) {
     lower.includes("err_connection")
   ) {
     return {
-      title: "Network Disconnected",
-      description: "Unable to reach the server. Please verify your internet or local network connection and retry.",
+      title: "Couldn’t Reach the Server",
+      description: "Check your internet or campus network connection, then try again.",
     };
   }
 
@@ -78,7 +79,7 @@ export function formatErrorMessage(error, fallbackContext = {}) {
   ) {
     return {
       title: "Session Expired",
-      description: "Your session has timed out. Please refresh the page or sign in again to continue.",
+      description: "Sign in again to continue.",
       action: {
         label: "Sign In",
         onClick: () => {
@@ -99,7 +100,9 @@ export function formatErrorMessage(error, fallbackContext = {}) {
   ) {
     return {
       title: "Permission Denied",
-      description: "You do not have the required permissions for this action. Please check with an administrator.",
+      description: rawMessage && !/^(forbidden|access denied|permission denied)\.?$/i.test(rawMessage)
+        ? rawMessage
+        : "Your account doesn’t have access to this action. Contact your office administrator if you need access.",
     };
   }
 
@@ -129,15 +132,11 @@ export function formatErrorMessage(error, fallbackContext = {}) {
     };
   }
 
-  // 5b. Duplicate / Conflict / 409
-  if (
-    status === 409 ||
-    lower.includes("already registered") ||
-    lower.includes("digital twin")
-  ) {
+  // Conflicts can also mean a record changed while the user was editing.
+  if (status === 409) {
     return {
-      title: ctx.title || "Document Already on File",
-      description: rawMessage || "A document of this type already exists for this record.",
+      title: fallbackTitle,
+      description: rawMessage || ctx.description || "Refresh the record to see the latest changes, then try again.",
     };
   }
 
@@ -169,7 +168,7 @@ export function formatErrorMessage(error, fallbackContext = {}) {
 
   // 7. Internal Server Error / 500
   if (
-    status === 500 ||
+    status >= 500 ||
     lower.includes("internal server error") ||
     lower.includes("database error") ||
     lower.includes("unhandled exception")
@@ -192,7 +191,7 @@ export function formatErrorMessage(error, fallbackContext = {}) {
   }
 
   // 8. Meaningful custom error message from backend
-  if (rawMessage && rawMessage.length < 200) {
+  if (rawMessage && rawMessage.length <= 500) {
     return {
       title: fallbackTitle,
       description: rawMessage,

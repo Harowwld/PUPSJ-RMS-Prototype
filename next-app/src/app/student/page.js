@@ -1,9 +1,11 @@
 "use client";
 
+import { orderRowsByGroup } from "@/lib/groupRows";
 import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference";
 import TablePagination from "@/components/shared/TablePagination";
 import CopyButton from "@/components/shared/CopyButton";
+import DocumentRequestTimeline from "@/components/shared/DocumentRequestTimeline";
 import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -367,6 +369,7 @@ function StudentDashboard() {
   const [data, setData] = useState({ requests: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [requestAttempted, setRequestAttempted] = useState(false);
   const [requestForm, setRequestForm] = useState({
     studentNo: "",
     docType: "",
@@ -378,6 +381,9 @@ function StudentDashboard() {
     requesterContact: "",
     attachments: [],
   });
+  const [proposalAttempted, setProposalAttempted] = useState(false);
+  const [postEventAttempted, setPostEventAttempted] = useState(false);
+  const [cblAttempted, setCblAttempted] = useState(false);
   const [proposalForm, setProposalForm] = useState({ title: "", eventDate: "", file: null });
   const [eventDatePickerOpen, setEventDatePickerOpen] = useState(false);
   const proposalToday = formatManilaCalendarDate(new Date());
@@ -1299,10 +1305,15 @@ function StudentDashboard() {
   const totalPages = Math.ceil(sortedRequests.length / itemsPerPage) || 1;
   const displayPage = Math.min(currentPage, totalPages);
 
+  const orderedGroups = useMemo(() => requestGroupBy === "none"
+    ? sortedRequests
+    : orderRowsByGroup(sortedRequests, (item) => requestGroupBy === "status" ? item.status || "Unknown" : item.doc_type || "Other"),
+  [sortedRequests, requestGroupBy]);
+
   const paginatedRequests = useMemo(() => {
     const start = (displayPage - 1) * itemsPerPage;
-    return sortedRequests.slice(start, start + itemsPerPage);
-  }, [sortedRequests, displayPage, itemsPerPage]);
+    return orderedGroups.slice(start, start + itemsPerPage);
+  }, [orderedGroups, displayPage, itemsPerPage]);
 
   const groupedPaginatedRequests = useMemo(() => {
     if (requestGroupBy === "none") return [{ key: "all", label: null, items: paginatedRequests }];
@@ -1627,7 +1638,9 @@ function StudentDashboard() {
   }, [me, router]);
 
   async function createRequest(event) {
-    event.preventDefault(); setRequestSubmitting(true);
+    event.preventDefault();
+    setRequestAttempted(true);
+    setRequestSubmitting(true);
     try {
       const studentNo = String(requestForm.studentNo || "").trim().toUpperCase() || null;
       const docType = String(requestForm.docType || "").trim();
@@ -1722,7 +1735,7 @@ function StudentDashboard() {
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         showToast(
-          formatErrorMessage(json || json?.error || "Unable to submit request.", {
+          formatErrorMessage({ status: res.status, error: json?.error }, {
             title: "Request Submission Failed",
             description: "The Registrar portal was unable to save your request. Please check your entries and try again.",
           }),
@@ -1730,6 +1743,7 @@ function StudentDashboard() {
         );
         return;
       }
+      setRequestAttempted(false);
       setRequestForm((prev) => ({
         ...prev,
         docType: "",
@@ -1826,6 +1840,7 @@ function StudentDashboard() {
 
   async function submitProposal(event) {
     event.preventDefault();
+    setProposalAttempted(true);
     if (!proposalForm.eventDate) {
       showToast("Event Date Required", "Select the event date before submitting.", true);
       return;
@@ -1862,7 +1877,7 @@ function StudentDashboard() {
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         showToast(
-          formatErrorMessage(json || json?.error || "Unable to submit proposal.", {
+          formatErrorMessage({ status: res.status, error: json?.error }, {
             title: "Proposal Submission Failed",
             description: "OSAS could not accept the event proposal. Please check requirements and retry.",
           }),
@@ -1870,6 +1885,7 @@ function StudentDashboard() {
         );
         return;
       }
+      setProposalAttempted(false);
       setProposalForm({ title: "", eventDate: "", file: null });
       if (revisionTargetProposal) {
         setRevisionTargetProposal(null);
@@ -1911,6 +1927,7 @@ function StudentDashboard() {
       return;
     }
     handleOsasOrganizationChange(organizationId);
+    setProposalAttempted(false);
     setProposalForm({
       title: proposal.title || "",
       eventDate: proposal.event_date ? String(proposal.event_date).slice(0, 10) : "",
@@ -1928,6 +1945,7 @@ function StudentDashboard() {
     setIsFormOpen(false);
     if (revisionTargetProposal) {
       setRevisionTargetProposal(null);
+      setProposalAttempted(false);
       setProposalForm({ title: "", eventDate: "", file: null });
     }
   }
@@ -1935,6 +1953,7 @@ function StudentDashboard() {
   function startPostEventRevision(report) {
     osasRevisionFormTarget.current = "osas-post-event-form";
     setRevisionTargetReport(report);
+    setPostEventAttempted(false);
     setPostEventForm({
       eventProposalId: String(report.event_proposal_id),
       actualAttendance: String(report.actual_attendance ?? ""),
@@ -1951,12 +1970,14 @@ function StudentDashboard() {
     setIsFormOpen(false);
     if (revisionTargetReport) {
       setRevisionTargetReport(null);
+      setPostEventAttempted(false);
       setPostEventForm({ eventProposalId: "", actualAttendance: "", totalExpenses: "", narrativeFile: null, liquidationFile: null });
     }
   }
 
   async function submitPostEventReport(event) {
     event.preventDefault();
+    setPostEventAttempted(true);
     setPostEventSubmitting(true);
     try {
       const selectedOrg = selectedOsasOrganization;
@@ -1991,14 +2012,15 @@ function StudentDashboard() {
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         showToast(
-          formatErrorMessage(json || json?.error || "Unable to submit post-event report.", {
+          formatErrorMessage({ status: res.status, error: json?.error }, {
             title: "Report Submission Failed",
-            description: "OSAS was unable to save the report. Please check the uploaded files and try again.",
+            description: "Check that both required PDFs are attached, then try submitting the report again.",
           }),
           true
         );
         return;
       }
+      setPostEventAttempted(false);
       setPostEventForm({
         eventProposalId: "",
         actualAttendance: "",
@@ -2051,6 +2073,7 @@ function StudentDashboard() {
   }, [osasSubView, selectedOsasOrgId, loadCblData]);
 
   function startCblRevision(version) {
+    setCblAttempted(false);
     setCblForm({
       versionTag: version.version_tag || "",
       amendmentSummary: version.amendment_summary || "",
@@ -2064,6 +2087,7 @@ function StudentDashboard() {
 
   async function submitCbl(event) {
     event.preventDefault();
+    setCblAttempted(true);
     setCblSubmitting(true);
     try {
       const selectedOrg = selectedOsasOrganization;
@@ -2085,7 +2109,7 @@ function StudentDashboard() {
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         showToast(
-          formatErrorMessage(json || json?.error || "Unable to submit Constitution & By-Laws.", {
+          formatErrorMessage({ status: res.status, error: json?.error }, {
             title: "By-Laws Submission Failed",
             description: "OSAS could not record the new Constitution & By-Laws version. Please try again.",
           }),
@@ -2093,6 +2117,7 @@ function StudentDashboard() {
         );
         return;
       }
+      setCblAttempted(false);
       setCblForm({
         versionTag: "",
         amendmentSummary: "",
@@ -2343,7 +2368,7 @@ function StudentDashboard() {
                               </div>
                             </div>
 
-                          <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
+                          <form onInvalid={() => setRequestAttempted(true)} onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
                             {/* Parent / Legal Guardian Compliance Notice */}
                             {requestForm.clientType === "Parent" && (
                               <CampusStatusNotice tone="warning" title="What you need for this request" imageSizes="100vw">
@@ -2390,11 +2415,13 @@ function StudentDashboard() {
                               <div className="min-w-0">
                                 <div className="flex items-center justify-between mb-1.5">
                                   <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                    {requestForm.clientType === "Parent" ? "Student’s Student Number" : "Student Number"} {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
+                                    {requestForm.clientType === "Parent" ? "Student’s Student Number" : "Student Number"} {requestForm.clientType === "Alumni" ? <span className="normal-case tracking-normal opacity-70">(optional)</span> : ""}
                                   </label>
                                 </div>
                                 <Input
                                   id="student-id-input"
+                                  aria-invalid={(requestAttempted && Boolean(requestForm.studentNo?.trim()) && !StudentNoSchema.safeParse(requestForm.studentNo.trim()).success) || undefined}
+                                  required={requestForm.clientType !== "Alumni"}
                                   type="text"
                                   placeholder={
                                     requestForm.clientType === "Parent"
@@ -2416,13 +2443,13 @@ function StudentDashboard() {
                                   <label htmlFor="student-course-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                     Academic Program
                                   </label>
-                                  <Select
+                                  <Select placeholder="Select degree program"
                                     id="student-course-select"
+                                  required={!requestForm.studentNo?.trim()}
                                     value={requestForm.courseCode || ""}
                                     onChange={(e) => setRequestForm({ ...requestForm, courseCode: e.target.value })}
                                     className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                   >
-                                    <option value="">Select degree program...</option>
                                     {courses.map((c) => (
                                       <option key={c.code} value={c.code}>
                                         {c.code} - {c.name}
@@ -2439,6 +2466,7 @@ function StudentDashboard() {
                                 </label>
                                 <Select
                                   id="student-document-type"
+                                  required
                                   aria-describedby="student-document-type-help"
                                   disabled={docTypes.length === 0}
                                   value={requestForm.docType}
@@ -2487,13 +2515,13 @@ function StudentDashboard() {
                                   <label htmlFor="parent-relationship-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
                                     Relationship to Student
                                   </label>
-                                  <Select
+                                  <Select placeholder="Select a relationship"
                                     id="parent-relationship-select"
+                                    required
                                     value={requestForm.requesterRelationship}
                                     onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
                                     className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                   >
-                                    <option value="" disabled>Select a relationship</option>
                                     <option value="Mother">Mother</option>
                                     <option value="Father">Father</option>
                                     <option value="Legal Guardian">Legal Guardian</option>
@@ -2503,10 +2531,11 @@ function StudentDashboard() {
 
                                 <div className="min-w-0">
                                   <label htmlFor="parent-contact-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                    Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                    Contact / Mobile Number <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                   </label>
                                   <Input
                                     id="parent-contact-input"
+                                    aria-invalid={(requestAttempted && Boolean(requestForm.requesterContact?.trim()) && !PhoneSchema.safeParse(requestForm.requesterContact.trim()).success) || undefined}
                                     type="text"
                                     placeholder="e.g. 0917-123-4567"
                                     value={requestForm.requesterContact || ""}
@@ -2524,6 +2553,7 @@ function StudentDashboard() {
                               </label>
                               <Textarea
                                 id="student-request-description"
+                                aria-invalid={(requestAttempted && requestForm.notes.trim().length < 5) || undefined}
                                 required
                                 rows={2}
                                 className="min-h-[72px] resize-none"
@@ -2543,11 +2573,14 @@ function StudentDashboard() {
                                   {requestForm.clientType === "Parent" ? (
                                     <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">(SPA & Valid ID required)</span>
                                   ) : (
-                                    <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                    <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                   )}
                                 </div>
                               }
                               animateCards={false}
+                              invalid={requestAttempted && requestForm.clientType === "Parent" && ["spa", "valid_id"].some(
+                                (type) => !requestForm.attachments.some((item) => item.file && item.attachmentType === type)
+                              )}
                               value={requestForm.attachments}
                               onChange={(val) => {
                                 if (typeof val === "function") {
@@ -2593,7 +2626,7 @@ function StudentDashboard() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setIsFormOpen(false)}
+                                  onClick={() => { setRequestAttempted(false); setIsFormOpen(false); }}
                                   className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                                 >
                                   Hide
@@ -2701,7 +2734,7 @@ function StudentDashboard() {
                     {/* 5. Request History List / Empty State */}
                     {loading && !hasLoaded ? (
                       <div className="w-full flex-1 border-t border-border">
-                        <StudentRequestsTableRowsSkeleton rowCount={Math.min(itemsPerPage || 6, 6)} />
+                        <StudentRequestsTableRowsSkeleton rowCount={Math.min(itemsPerPage || 6, 6)} density={density} />
                       </div>
                     ) : requestLoadFailed && sortedRequests.length === 0 ? (
                       <EmptyState
@@ -3018,7 +3051,7 @@ function StudentDashboard() {
                             </div>
                           </div>
 
-                          <form onSubmit={submitProposal} className="flex flex-col gap-4 mt-4">
+                          <form onInvalid={() => setProposalAttempted(true)} onSubmit={submitProposal} className="flex flex-col gap-4 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="min-w-0">
                                 <label htmlFor="osas-event-title" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
@@ -3046,7 +3079,7 @@ function StudentDashboard() {
                                       variant="outline"
                                       aria-label="Event date"
                                       aria-describedby="osas-event-date-help"
-                                      aria-invalid={proposalDateInvalid || undefined}
+                                      aria-invalid={proposalDateInvalid || (proposalAttempted && !proposalForm.eventDate) || undefined}
                                       aria-required="true"
                                       aria-haspopup="dialog"
                                       className="h-10 w-full justify-start gap-2 rounded-xl border border-border bg-white px-3 text-left text-xs font-normal text-gray-900 shadow-none hover:bg-gray-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
@@ -3075,7 +3108,7 @@ function StudentDashboard() {
                                     />
                                   </PopoverContent>
                                 </Popover>
-                                <p id="osas-event-date-help" className={cn("mt-1.5 text-[11px]", proposalDateInvalid ? "text-destructive" : "text-muted-foreground")}>
+                                <p id="osas-event-date-help" className={cn("mt-1.5 text-[11px]", (proposalDateInvalid || (proposalAttempted && !proposalForm.eventDate)) ? "text-destructive" : "text-muted-foreground")}>
                                   Select a date after today (Manila time).
                                 </p>
                               </div>
@@ -3087,6 +3120,7 @@ function StudentDashboard() {
                               </label>
                               <FileAttachmentDropzone
                                 animateCards={false}
+                                invalid={proposalAttempted && Boolean(revisionTargetProposal) && !proposalForm.file}
                                 value={proposalForm.file ? { file: proposalForm.file, original_filename: proposalForm.file.name, size_bytes: proposalForm.file.size } : null}
                                 onChange={(item) => setProposalForm({ ...proposalForm, file: item?.file || null })}
                                 mode="single"
@@ -3114,7 +3148,7 @@ function StudentDashboard() {
                                 <Button
                                   type="submit"
                                   size="sm"
-                                  disabled={proposalSubmitting || (Boolean(revisionTargetProposal) && !proposalForm.file)}
+                                  disabled={proposalSubmitting}
                                   title={revisionTargetProposal ? "Submit Revised Proposal" : "Submit Proposal"}
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
@@ -3449,7 +3483,7 @@ function StudentDashboard() {
                             </div>
                           )}
 
-                          <form onSubmit={submitPostEventReport} className="flex flex-col gap-4 mt-4">
+                          <form onInvalid={() => setPostEventAttempted(true)} onSubmit={submitPostEventReport} className="flex flex-col gap-4 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="min-w-0">
                                 <label htmlFor="post-event-proposal" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
@@ -3457,7 +3491,8 @@ function StudentDashboard() {
                                 </label>
                                 <Select
                                   id="post-event-proposal"
-                                  aria-describedby={!revisionTargetReport && !hasApprovedPostEventProposals ? "post-event-proposal-help" : undefined}
+                                  aria-invalid={(postEventAttempted && !revisionTargetReport && !hasSelectedApprovedProposal) || undefined}
+                                  aria-describedby={revisionTargetReport || !hasApprovedPostEventProposals ? "post-event-proposal-help" : undefined}
                                   disabled={Boolean(revisionTargetReport) || !hasApprovedPostEventProposals}
                                   placeholder="Select an approved event…"
                                   value={revisionTargetReport || hasSelectedApprovedProposal ? postEventForm.eventProposalId : ""}
@@ -3475,16 +3510,18 @@ function StudentDashboard() {
                                     </option>
                                   ))}
                                 </Select>
-                                {!revisionTargetReport && !hasApprovedPostEventProposals && (
-                                  <p id="post-event-proposal-help" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                                    No approved event proposals are available for this organization.
+                                {(revisionTargetReport || !hasApprovedPostEventProposals) && (
+                                  <p id="post-event-proposal-help" className="mt-1 text-[11px] text-muted-foreground">
+                                    {revisionTargetReport
+                                      ? "This revision stays linked to the original event proposal."
+                                      : "OSAS must approve an event proposal for this organization before you can select it here."}
                                   </p>
                                 )}
                               </div>
 
                               <div className="min-w-0">
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Actual Attendees Count <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  Actual Attendees Count <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                 </label>
                                 <Input
                                   type="number"
@@ -3500,7 +3537,7 @@ function StudentDashboard() {
 
                               <div className="min-w-0">
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Total Expenses Liquidated (PHP) <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  Total Expenses Liquidated (PHP) <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                 </label>
                                 <Input
                                   type="number"
@@ -3522,6 +3559,7 @@ function StudentDashboard() {
                                 </label>
                                 <FileAttachmentDropzone
                                   animateCards={false}
+                                  invalid={postEventAttempted && !postEventForm.narrativeFile}
                                   value={postEventForm.narrativeFile ? { file: postEventForm.narrativeFile, original_filename: postEventForm.narrativeFile.name, size_bytes: postEventForm.narrativeFile.size } : null}
                                   onChange={(item) => setPostEventForm({ ...postEventForm, narrativeFile: item?.file || null })}
                                   mode="single"
@@ -3534,7 +3572,7 @@ function StudentDashboard() {
 
                               <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Financial Liquidation & Receipts (PDF) <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  Financial Liquidation & Receipts (PDF) <span className="normal-case tracking-normal opacity-70">(optional)</span>
                                 </label>
                                 <FileAttachmentDropzone
                                   animateCards={false}
@@ -3567,7 +3605,7 @@ function StudentDashboard() {
                                 <Button
                                   type="submit"
                                   size="sm"
-                                  disabled={postEventSubmitting || (!revisionTargetReport && !hasSelectedApprovedProposal) || !postEventForm.narrativeFile}
+                                  disabled={postEventSubmitting || (!revisionTargetReport && !hasApprovedPostEventProposals)}
                                   title={revisionTargetReport ? "Resubmit Post-Event Report" : "Submit Post-Event Report"}
                                   className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
                                 >
@@ -3651,7 +3689,7 @@ function StudentDashboard() {
                       <div className="border-t border-border dark:border-border flex-1">
                         {loading && !hasLoaded ? (
                           <div className="p-5">
-                            <StudentOsasProposalsListSkeleton count={3} />
+                            <StudentOsasProposalsListSkeleton count={3} stream="post_events" />
                           </div>
                         ) : postEventLoadFailed && organizationPostEventReports.length === 0 ? (
                           <StudentHistoryLoadError title="Could Not Load Post-Event Reports" onRetry={() => load()} loading={loading} />
@@ -3881,7 +3919,7 @@ function StudentDashboard() {
                             </div>
                           </div>
 
-                          <form onSubmit={submitCbl} className="flex flex-col gap-4 mt-4">
+                          <form onInvalid={() => setCblAttempted(true)} onSubmit={submitCbl} className="flex flex-col gap-4 mt-4">
                             {/* 1. Version Title / Tag */}
                             <div className="min-w-0">
                               <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
@@ -3899,7 +3937,7 @@ function StudentDashboard() {
                             {/* 2. Summary of Amendments / Notes for OSAS */}
                             <div className="min-w-0">
                               <label htmlFor="cbl-amendment-summary" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Summary of Amendments / Notes for OSAS <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                Summary of Amendments / Notes for OSAS <span className="normal-case tracking-normal opacity-70">(optional)</span>
                               </label>
                               <Textarea
                                 id="cbl-amendment-summary"
@@ -3918,6 +3956,7 @@ function StudentDashboard() {
                               </label>
                               <FileAttachmentDropzone
                                 animateCards={false}
+                                invalid={cblAttempted && !cblForm.file}
                                 value={cblForm.file ? { file: cblForm.file, original_filename: cblForm.file.name, size_bytes: cblForm.file.size } : null}
                                 onChange={(item) => setCblForm({ ...cblForm, file: item?.file || null })}
                                 mode="single"
@@ -3973,7 +4012,7 @@ function StudentDashboard() {
                               <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100">
                                 Current Active Charter
                               </h3>
-                              {cblLoading ? (
+                              {cblLoading && !cblOrgData ? (
                                 <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>Checking Status</span>
                               ) : cblLoadFailed ? (
                                 <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>Status Unavailable</span>
@@ -3988,7 +4027,7 @@ function StudentDashboard() {
                               )}
                             </div>
                             <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-                              {cblLoading
+                              {cblLoading && !cblOrgData
                                 ? `Checking the charter on file for ${selectedOsasOrganization?.organization_name || "this organization"}.`
                                 : cblLoadFailed
                                 ? "Could not check the charter on file."
@@ -3996,15 +4035,24 @@ function StudentDashboard() {
                                 ? `Official Constitution & By-Laws on file for ${cblOrgData.name}.`
                                 : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || selectedOsasOrganization?.organization_name || "this organization"}.`}
                             </p>
-                            {!cblLoading && cblOrgData?.hasBylaws && cblOrgData.updatedAt && (
+                            {cblOrgData?.hasBylaws && cblOrgData.updatedAt && (
                               <p className="mt-3 text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                                 Last updated <span className="tabular-nums text-gray-700 dark:text-zinc-300">{formatPHDateTime(cblOrgData.updatedAt)}</span>
                               </p>
                             )}
                           </div>
 
-                          {cblLoading ? (
-                            <Skeleton className="h-[88px] w-full rounded-xl" />
+                          {cblLoading && !cblOrgData ? (
+                            <div aria-hidden="true" className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/80 bg-white p-4 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                                <div className="min-w-0 space-y-1">
+                                  <Skeleton className="h-3 w-28 max-w-full" />
+                                  <Skeleton className="h-4 w-44 max-w-full" />
+                                </div>
+                              </div>
+                              <Skeleton className="h-8 w-28 shrink-0 rounded-xl" />
+                            </div>
                           ) : cblOrgData?.hasBylaws && selectedOsasOrgId ? (
                             <div className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/80 bg-white p-4 dark:border-border dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex min-w-0 items-center gap-3">
@@ -4134,11 +4182,11 @@ function StudentDashboard() {
 
                       {/* Submissions & Versions History */}
                       <div className={cn("border-t border-border dark:border-border flex-1", !selectedOsasOrganization && "hidden")}>
-                        {cblLoading ? (
+                        {cblLoading && !cblOrgData && cblVersions.length === 0 ? (
                           <div className="p-5">
-                            <StudentOsasProposalsListSkeleton count={3} />
+                            <StudentOsasProposalsListSkeleton count={3} stream="cbl" />
                           </div>
-                        ) : cblLoadFailed ? (
+                        ) : cblLoadFailed && cblVersions.length === 0 ? (
                           <StudentHistoryLoadError
                             title="Could Not Load Charter History"
                             onRetry={() => loadCblData(selectedOsasOrgId)}
@@ -4394,7 +4442,7 @@ function StudentDashboard() {
                     <InfoRow icon="Contact01Icon" label="Relationship" value={selectedRequestForDetail.requester_relationship || "Legal Guardian"} />
                     <InfoRow icon="CallIcon" label="Contact" value={selectedRequestForDetail.requester_contact || "N/A"} />
                     <InfoRow icon="Shield01Icon" label="Authorization">
-                      <span className={cn(BADGE_BASE, selectedRequestForDetail.spa_verified ? BADGE_PALETTES.emerald : BADGE_PALETTES.amber)}>
+                      <span className={cn(COMPACT_BADGE_BASE, selectedRequestForDetail.spa_verified ? BADGE_PALETTES.emerald : BADGE_PALETTES.amber)}>
                         {selectedRequestForDetail.spa_verified ? "SPA Verified" : "SPA Pending"}
                       </span>
                     </InfoRow>
@@ -4534,107 +4582,7 @@ function StudentDashboard() {
               </section>
             )}
 
-            <section className="space-y-3">
-              <SheetSectionHeading icon="Clock01Icon" title="Processing Timeline & Updates">
-                <SheetUpdateCount count={selectedRequestForDetail?.updates?.length ?? 0} />
-              </SheetSectionHeading>
-
-              {selectedRequestForDetail?.updates && selectedRequestForDetail.updates.length > 0 ? (
-                <div className="relative space-y-4">
-                  {selectedRequestForDetail.updates.length > 1 && (
-                    <div className="absolute left-2.5 top-2.5 bottom-2.5 w-0.5 -translate-x-1/2 bg-gray-200 dark:bg-zinc-800" />
-                  )}
-                  {selectedRequestForDetail.updates.map((upd, idx) => {
-                    const isConsecutiveSameStatus =
-                      idx > 0 && upd.status === selectedRequestForDetail.updates[idx - 1].status;
-                    const formatStatusLabel = (st) => {
-                      if (st === "InProgress") return "In Progress";
-                      if (st === "Deficient") return "Action Required";
-                      if (st === "PendingPayment") return "Pending Payment";
-                      if (st === "Ready") return "Ready for Claiming";
-                      return st;
-                    };
-
-                    return (
-                      <div key={upd.id || idx} className="relative pl-7">
-                        <div
-                          className={cn(
-                            "absolute left-2.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-border shadow-xs",
-                            isConsecutiveSameStatus
-                              ? "top-1.5 h-2.5 w-2.5 bg-gray-400 dark:bg-zinc-500"
-                              : "top-1 h-3.5 w-3.5 bg-pup-maroon ring-2 ring-pup-maroon/20"
-                          )}
-                        />
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={cn(
-                                "text-xs",
-                                isConsecutiveSameStatus
-                                  ? "font-semibold text-gray-700 dark:text-zinc-300"
-                                  : "font-bold text-gray-900 dark:text-zinc-100"
-                              )}
-                            >
-                              {isConsecutiveSameStatus ? "Follow-Up Notice" : formatStatusLabel(upd.status)}
-                            </span>
-                            {isConsecutiveSameStatus && (
-                              <StatusBadge compact status={upd.status} />
-                            )}
-                          </div>
-                          {upd.created_at && (
-                            <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                              {formatPHDateTime(upd.created_at)}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          <NarrativeText text={upd.message || "Status updated by Registrar"} mode="full" />
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Fallback active indicator if ticket status is ahead of logged updates */}
-                  {selectedRequestForDetail?.status &&
-                    selectedRequestForDetail.status !== "Pending" &&
-                    !selectedRequestForDetail.updates?.some((u) => u.status === selectedRequestForDetail.status) && (
-                      <div className="relative pl-7">
-                        <div className="absolute left-2.5 top-1 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white dark:border-border bg-emerald-600 shadow-xs ring-2 ring-emerald-600/20" />
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                              {selectedRequestForDetail.status === "InProgress"
-                                ? "In Progress"
-                                : selectedRequestForDetail.status === "Deficient"
-                                ? "Action Required"
-                                : selectedRequestForDetail.status === "PendingPayment"
-                                ? "Pending Payment"
-                                : selectedRequestForDetail.status === "Ready"
-                                ? "Ready for Claiming"
-                                : selectedRequestForDetail.status}
-                            </span>
-                            <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>
-                              Current Active Status
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-1 text-xs text-gray-600 dark:text-zinc-400 leading-normal">
-                          <NarrativeText
-                            text={`Your document request has been updated to ${selectedRequestForDetail.status === "InProgress" ? "In Progress" : selectedRequestForDetail.status === "Deficient" ? "Action Required" : selectedRequestForDetail.status === "PendingPayment" ? "Pending Payment" : selectedRequestForDetail.status === "Ready" ? "Ready for Claiming" : selectedRequestForDetail.status} by the Registrar.`}
-                            mode="full"
-                          />
-                        </div>
-                      </div>
-                    )}
-                </div>
-              ) : (
-                <EmptyState
-                  variant="compact"
-                  title="No Updates Posted Yet"
-                  description="Your request is queued for review by the Registrar."
-                />
-              )}
-            </section>
+            <DocumentRequestTimeline request={selectedRequestForDetail} />
 
             {canRateSelectedRequest && (
               <RequestFeedbackCard
@@ -5229,7 +5177,7 @@ function StudentDashboard() {
                     )}
                     <InfoRow icon="UserIcon" label="Submitted By" value={selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"} />
                     {selectedCblVersionForDetail.submitted_by_student_no && (
-                      <InfoRow icon="IdIcon" label="Student Number" value={selectedCblVersionForDetail.submitted_by_student_no} />
+                      <SheetReferenceRow label="Student Number" reference={selectedCblVersionForDetail.submitted_by_student_no} />
                     )}
                     {selectedCblVersionForDetail.size_bytes && (
                       <InfoRow icon="File02Icon" label="File Size" value={`${(selectedCblVersionForDetail.size_bytes / 1024).toFixed(1)} KB`} />

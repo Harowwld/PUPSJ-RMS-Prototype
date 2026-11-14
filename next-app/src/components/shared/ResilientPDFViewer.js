@@ -13,6 +13,7 @@ import { DOCUMENT_MAX_SIZE_BYTES, DOCUMENT_MAX_SIZE_LABEL, formatBytes } from "@
 
 export default function ResilientPDFViewer({
   src,
+  preparedPdf = false,
   docId,
   preview,
   className = "absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700",
@@ -43,11 +44,19 @@ export default function ResilientPDFViewer({
       onReadyChange?.(false);
       onPreviewReady?.(null);
       onStatusChange?.("loading");
-      let exists = false;
       try {
         if (!resolvedSrc) {
           setLoadState("missing");
           onStatusChange?.("missing");
+          return;
+        }
+        // Generated reports already came from a successful PDF response.
+        // Load their object URL in the frame without probing it via fetch.
+        if (preparedPdf && resolvedSrc.startsWith("blob:")) {
+          setFrameSrc(resolvedSrc);
+          onPreviewReady?.({ url: resolvedSrc, source: resolvedSrc, isConverted: false });
+          setLoadState("ready");
+          onStatusChange?.("ready");
           return;
         }
         const response = await fetch(resolvedSrc, {
@@ -56,12 +65,16 @@ export default function ResilientPDFViewer({
           cache: "no-store",
           signal: controller.signal,
         });
-        if (!response.ok || response.headers.get("X-File-Missing") === "true") {
+        if (response.headers.get("X-File-Missing") === "true" || (!docId && response.status === 404 && !resolvedSrc.startsWith("blob:"))) {
           setLoadState("missing");
           onStatusChange?.("missing");
           return;
         }
-        exists = true;
+        if (!response.ok) {
+          throw new Error(response.status === 401 || response.status === 403
+            ? "You do not have access to preview this file."
+            : `Unable to load the preview (HTTP ${response.status}).`);
+        }
         const mime = (response.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
         const isImage = mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp)$/i.test(originalFilename);
         if (isImage) {
@@ -85,8 +98,8 @@ export default function ResilientPDFViewer({
       } catch (failure) {
         if (controller.signal.aborted) return;
         setError(failure.message || "Unable to prepare the PDF preview.");
-        setLoadState(exists ? "error" : "missing");
-        onStatusChange?.(exists ? "ready" : "missing");
+        setLoadState("error");
+        onStatusChange?.("error");
       }
     }, 0);
     return () => {
@@ -94,7 +107,7 @@ export default function ResilientPDFViewer({
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [resolvedSrc, originalFilename, onStatusChange, onReadyChange, onPreviewReady, attempt]);
+  }, [resolvedSrc, docId, originalFilename, preparedPdf, onStatusChange, onReadyChange, onPreviewReady, attempt]);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files?.[0];

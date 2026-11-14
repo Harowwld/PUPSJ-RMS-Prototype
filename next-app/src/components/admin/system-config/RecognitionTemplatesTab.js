@@ -107,7 +107,6 @@ export default function RecognitionTemplatesTab({ showToast }) {
   useEffect(() => () => { if (sampleUrl) URL.revokeObjectURL(sampleUrl) }, [sampleUrl])
 
   const docTypeOptions = useMemo(() => [
-    { value: "", label: "Select document type" },
     ...docTypes.map((type) => ({ value: String(type.id), label: type.name }))
   ], [docTypes])
 
@@ -657,7 +656,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                 Version
               </label>
-              <Input
+              <Input placeholder="Version number"
                 type="number"
                 min="1"
                 value={version}
@@ -671,7 +670,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                   Page Index
                 </label>
-                <Select
+                <Select placeholder="Select page"
                   options={pageOptions}
                   value={String(pageIndex)}
                   onValueChange={(val) => handlePageChange(val)}
@@ -883,6 +882,11 @@ export default function RecognitionTemplatesTab({ showToast }) {
                       : "Calibrate and save field coordinates to create your first template."}
                   </EmptyDescription>
                 </EmptyHeader>
+                {templateFilter === "Archived" && (
+                  <EmptyContent>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setTemplateFilter("Active")}>View Active Templates</Button>
+                  </EmptyContent>
+                )}
               </Empty>
             ) : (
               <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">

@@ -218,7 +218,7 @@ export default function StudentFeedbackModal({
             {/* Quick Feedback Aspect Chips */}
             <div>
               <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                What Went Well? <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+                What Went Well? <span className="normal-case tracking-normal opacity-70">(optional)</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {SUGGESTED_ASPECTS.map((aspect) => {
@@ -244,8 +244,8 @@ export default function StudentFeedbackModal({
 
             {/* Suggestions / Comments Textarea */}
             <div>
-              <label htmlFor="student-feedback-comments" className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                Comments or Suggestions <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">(optional)</span>
+              <label htmlFor="student-feedback-comments" className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                Comments or Suggestions <span className="opacity-70">(optional)</span>
               </label>
               <Textarea
                 id="student-feedback-comments"

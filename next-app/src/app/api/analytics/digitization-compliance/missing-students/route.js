@@ -72,8 +72,11 @@ export async function GET(req) {
       offset: Number.isFinite(rawOffset) ? rawOffset : 0,
       complianceStatus: searchParams.get("complianceStatus") || "incomplete",
       search: searchParams.get("search") || "",
+      excludedCourseCodes: searchParams.getAll("excludeCourseCode"),
+      excludedMissingDocTypes: searchParams.getAll("excludeMissingDocType"),
       missingDocTypes: searchParams.getAll("missingDocType"),
       sortBy: searchParams.get("sortBy"),
+      groupBy: searchParams.get("groupBy"),
       sortOrder: searchParams.get("sortOrder"),
       exportAll: searchParams.get("export") === "1" || searchParams.get("format") === "csv",
     });

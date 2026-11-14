@@ -547,7 +547,9 @@ export default function StorageExplorerTab({
                                                         className="h-auto min-h-9 w-full justify-start gap-2 rounded-none px-2.5 py-1 text-left focus-visible:ring-inset"
                                                       >
                                                         <File02Icon size={16} className="text-muted-foreground" aria-hidden="true" />
-                                                        <span className="min-w-0 flex-1 truncate" title={doc.filename}>{doc.docType}</span>
+                                                        <span className="min-w-0 flex-1 truncate" title={doc.filename}>
+                                                          {doc.eventName ? `${doc.docType} · ${doc.eventName}` : doc.docType}
+                                                        </span>
                                                         <TableStatus value={doc.approvalStatus} className="h-5 min-h-5 px-2 py-0 text-[11px] leading-none" />
                                                       </Button>
                                                     ))}

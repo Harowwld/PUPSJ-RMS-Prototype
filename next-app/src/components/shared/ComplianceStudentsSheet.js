@@ -367,6 +367,7 @@ function ComplianceStudentsSheetContent({
         title="Incomplete Records Report Preview"
         description={preview ? `${preview.total} students · ${formatPHDateTime(preview.generatedAt)}` : ""}
         pdfUrl={preview?.url}
+        preparedPdf
         downloadFilename={generateExportFilename("COMPLIANCE", "INCOMPLETE", "pdf")}
       />
     </>

@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE, BADGE_PALETTES, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
 
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -163,6 +163,7 @@ export function AttachedFileCard({
   onCategoryChange = null,
   className = "",
   animateLayout = true,
+  compactBadge = false,
 }) {
   const file = item?.file || item;
   const filename = item?.original_filename || file?.name || "Attached File";
@@ -323,13 +324,13 @@ export function AttachedFileCard({
 
         {/* Extension Pill Badge at Bottom-Right */}
         <span
-          className={cn("absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-2xs tracking-wider select-none z-10", formatConfig.badgeBg, BADGE_BASE)}
+          className={cn("absolute bottom-2 right-2 z-10 select-none", formatConfig.badgeBg, compactBadge ? COMPACT_BADGE_BASE : BADGE_BASE)}
         >
           {formatConfig.extLabel}
         </span>
 
-        {/* Interactive Hover Action Overlay */}
-        <div className="absolute inset-0 bg-gray-900/40 dark:bg-black/50 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 z-20">
+        {/* Attachment Actions */}
+        <div className="absolute inset-x-2 top-2 z-20 flex items-center justify-end gap-1.5">
           {onPreview && (
             <button
               type="button"
@@ -391,7 +392,7 @@ export function AttachedFileCard({
         {/* Optional Category Dropdown or Tag */}
         {categories && categories.length > 0 && !readOnly ? (
           <div className="mt-2 w-full" onClick={(e) => e.stopPropagation()}>
-            <Select
+            <Select placeholder="Select category"
               value={item?.attachmentType || categories[0]?.value || ""}
               onChange={(e) => onCategoryChange && onCategoryChange(item, e.target.value)}
               className="h-7 w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/80 hover:bg-gray-100/70 dark:bg-zinc-800 text-[11px] font-medium text-gray-700 dark:text-zinc-200 px-2 py-0 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
@@ -507,6 +508,7 @@ export default function FileAttachmentDropzone({
   categories = null,
   onPreview = null,
   readOnly = false,
+  invalid = false,
   animateCards = true,
   simulateProgress = true,
   isUploading = false,
@@ -554,7 +556,7 @@ export default function FileAttachmentDropzone({
         notify(
           "Attachment Limit Reached",
           `You have reached the maximum limit of ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`,
-          false
+          true
         );
         return;
       }
@@ -628,7 +630,7 @@ export default function FileAttachmentDropzone({
         notify(
           "Attachment Limit Exceeded",
           `Only ${remainingSlots} of the ${validFiles.length} valid file${validFiles.length === 1 ? "" : "s"} could be attached (maximum ${maxFiles} allowed).`,
-          false
+          true
         );
       }
 
@@ -764,7 +766,7 @@ export default function FileAttachmentDropzone({
         notify(
           "Attachment Limit Reached",
           `You have reached the maximum limit of ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`,
-          false
+          true
         );
         return;
       }
@@ -864,7 +866,7 @@ export default function FileAttachmentDropzone({
   const hasContent = items.length > 0 || uploadingFiles.length > 0;
 
   return (
-    <div className={cn(heading ? "space-y-2" : "space-y-3", className)}>
+    <div data-slot="attachment-field" aria-invalid={invalid || undefined} className={cn(heading ? "space-y-2" : "space-y-3", invalid && "rounded-2xl", className)}>
       {attachmentHeader}
       {/* Hidden File Input */}
       {!readOnly && (

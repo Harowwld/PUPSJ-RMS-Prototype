@@ -24,7 +24,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton"
 import {
   Popover,
@@ -172,7 +171,7 @@ function InteractiveMacFolder({ it, theme, updateFolderColor, folderColors }) {
     >
       {/* Paint Palette Color Picker Button */}
       <div 
-        className="absolute bottom-2.5 right-2.5 z-40 opacity-0 group-hover:opacity-100 transition-opacity duration-fast" 
+        className="absolute bottom-2.5 right-2.5 z-40"
         onClick={(e) => e.stopPropagation()}
         style={{ transform: "translateZ(30px)" }}
       >
@@ -360,6 +359,8 @@ export default function RecordsArchiveTab({
   const [browseLoading, setBrowseLoading] = useState(false)
   const [browseSortPending, setBrowseSortPending] = useState(false)
   const searchInputRef = useRef(null)
+  const searchAreaRef = useRef(null)
+  const [searchDismissed, setSearchDismissed] = useState(false)
   const searchTerm = quickQuery.trim()
   const [browseVersion, setBrowseVersion] = useState(0)
   const searchKey = JSON.stringify([searchTerm, isOsas, showArchived, browseVersion, refreshVersion])
@@ -427,6 +428,18 @@ export default function RecordsArchiveTab({
       })
     return () => { clearTimeout(loadingTimer); controller.abort() }
   }, [isOsas, selectedYear, archiveCategory, showArchived, browseFolder, page, itemsPerPage, recordSortBy, recordSortOrder, browseVersion, refreshVersion])
+
+  const searchOpen = searchTerm.length >= 2 && !searchDismissed
+
+  useEffect(() => {
+    if (!searchOpen) return
+
+    const dismissOutsideSearch = (event) => {
+      if (!searchAreaRef.current?.contains(event.target)) setSearchDismissed(true)
+    }
+    document.addEventListener("pointerdown", dismissOutsideSearch, true)
+    return () => document.removeEventListener("pointerdown", dismissOutsideSearch, true)
+  }, [searchOpen])
 
   useEffect(() => {
     if (searchTerm.length < 2) {
@@ -826,7 +839,7 @@ export default function RecordsArchiveTab({
           actions={
             <SegmentedControl
               value={archiveViewMode}
-              onValueChange={setArchiveViewMode}
+              onValueChange={(value) => { setArchiveViewMode(value); onSelectionChange(new Set()); }}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
@@ -862,7 +875,7 @@ export default function RecordsArchiveTab({
           {/* Left: Active / Archived Tabs */}
           <SegmentedControl
             value={showArchived ? "archived" : "active"}
-            onValueChange={(val) => setShowArchived(val === "archived")}
+            onValueChange={(value) => { setShowArchived(value === "archived"); onSelectionChange(new Set()); }}
             variant="capsule"
             className="inline-grid grid-flow-col auto-cols-fr shrink-0"
             items={[
@@ -882,7 +895,16 @@ export default function RecordsArchiveTab({
           {/* Right: Filter Controls (Search FIRST, then Sort, Select All, Card/Table Toggle) */}
           <div className="flex flex-wrap items-center gap-2.5 flex-1 lg:justify-end">
             {/* 1. Search Input Box (First) */}
-            <div className="relative w-full min-w-0 group sm:w-96 xl:w-[28rem]">
+            <div
+              ref={searchAreaRef}
+              className="relative w-full min-w-0 group sm:w-96 xl:w-[28rem]"
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && searchOpen) {
+                  searchInputRef.current?.focus()
+                  setSearchDismissed(true)
+                }
+              }}
+            >
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center">
                   <Search01Icon size="1em" className="text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400 text-sm" />
@@ -894,10 +916,14 @@ export default function RecordsArchiveTab({
                   placeholder={isOsas ? "Search Organization" : "Search Student"}
                   className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 pl-8 pr-20 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                   value={quickQuery}
-                  onChange={(e) => setQuickQuery(e.target.value)}
+                  onFocus={() => setSearchDismissed(false)}
+                  onClick={() => setSearchDismissed(false)}
+                  onChange={(event) => {
+                    setQuickQuery(event.target.value)
+                    setSearchDismissed(false)
+                  }}
                 />
                 <div className="absolute inset-y-0 right-1.5 flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
-                  <span className="px-1">{quickMatchCount.toLocaleString()}</span>
                   {quickQuery && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -918,11 +944,12 @@ export default function RecordsArchiveTab({
                       <TooltipContent>Clear search</TooltipContent>
                     </Tooltip>
                   )}
+                  <span className="px-1">{quickMatchCount.toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Quick Search Results Dropdown Overlay */}
-              {searchTerm.length >= 2 && (
+              {searchOpen && (
                 <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-border bg-white shadow-lg p-2 dark:border-border dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
                   {quickSearchLoading ? (
                     <div className="p-2 space-y-2">
@@ -1141,6 +1168,11 @@ export default function RecordsArchiveTab({
                           : "There are currently no archived records found in the system."}
                       </EmptyDescription>
                     </EmptyHeader>
+                    {showArchived && (
+                      <EmptyContent>
+                        <Button type="button" variant="outline" size="sm" onClick={() => { setShowArchived(false); onSelectionChange(new Set()); }}>{isOsas ? "View Active Organizations" : "View Active Students"}</Button>
+                      </EmptyContent>
+                    )}
                   </Empty>
                 </div>
               ) : !isLeafLevel ? (
@@ -1167,7 +1199,7 @@ export default function RecordsArchiveTab({
                   })}
                 </div>
               ) : leafPending ? (
-                <DataContentSkeleton viewMode="cards" />
+                <RecordsArchiveSkeleton leaf />
               ) : browsePage.error ? (
                 <div className="flex min-h-[420px] flex-col items-center justify-center gap-3">
                   <p role="status" className="text-sm text-muted-foreground">{browsePage.error}</p>
@@ -1193,6 +1225,11 @@ export default function RecordsArchiveTab({
                               : "There are no student records filed under this year yet.")}
                       </EmptyDescription>
                     </EmptyHeader>
+                    {showArchived && (
+                      <EmptyContent>
+                        <Button type="button" variant="outline" size="sm" onClick={() => { setShowArchived(false); onSelectionChange(new Set()); }}>{isOsas ? "View Active Organizations" : "View Active Students"}</Button>
+                      </EmptyContent>
+                    )}
                   </Empty>
                 </div>
               ) : (

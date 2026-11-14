@@ -298,10 +298,10 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                           Card Heading Title
                         </label>
-                        <Input
+                        <Input placeholder="Enter a title"
                           value={bentoData.card1?.title || ""}
                           onChange={(e) =>
                             setBentoData((prev) => ({
@@ -313,7 +313,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                           Success Overlay Text
                         </label>
                         <Input
@@ -331,10 +331,10 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <Textarea
+                      <Textarea placeholder="Enter a description"
                         value={bentoData.card1?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -354,7 +354,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Step 1 Label
                           </label>
                           <Input
@@ -370,7 +370,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Step 2 Label
                           </label>
                           <Input
@@ -386,7 +386,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Action Button Label
                           </label>
                           <Input
@@ -457,10 +457,10 @@ export default function LandingBentoCmsView({ showToast }) {
                 {activeCardTab === 2 && (
                   <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
                       </label>
-                      <Input
+                      <Input placeholder="Enter a title"
                         value={bentoData.card2?.title || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -473,10 +473,10 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <Textarea
+                      <Textarea placeholder="Enter a description"
                         value={bentoData.card2?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -628,10 +628,10 @@ export default function LandingBentoCmsView({ showToast }) {
                 {activeCardTab === 3 && (
                   <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
                       </label>
-                      <Input
+                      <Input placeholder="Enter a title"
                         value={bentoData.card3?.title || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -644,10 +644,10 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <Textarea
+                      <Textarea placeholder="Enter a description"
                         value={bentoData.card3?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -666,7 +666,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Node 1 (Online Request)
                           </label>
                           <Input
@@ -682,7 +682,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Node 2 (Archive Location)
                           </label>
                           <Input
@@ -698,7 +698,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Node 3 (Personnel)
                           </label>
                           <Input
@@ -769,10 +769,10 @@ export default function LandingBentoCmsView({ showToast }) {
                 {activeCardTab === 4 && (
                   <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Heading Title
                       </label>
-                      <Input
+                      <Input placeholder="Enter a title"
                         value={bentoData.card4?.title || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -785,10 +785,10 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <Textarea
+                      <Textarea placeholder="Enter a description"
                         value={bentoData.card4?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -807,7 +807,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Checklist Item 1
                           </label>
                           <Input
@@ -823,7 +823,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Checklist Item 2
                           </label>
                           <Input
@@ -839,7 +839,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Checklist Item 3
                           </label>
                           <Input
@@ -911,10 +911,10 @@ export default function LandingBentoCmsView({ showToast }) {
                   <div className="px-5 pb-5 pt-2 space-y-5 border-t border-border dark:border-border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                           Card Heading Title
                         </label>
-                        <Input
+                        <Input placeholder="Enter a title"
                           value={bentoData.card5?.title || ""}
                           onChange={(e) =>
                             setBentoData((prev) => ({
@@ -926,7 +926,7 @@ export default function LandingBentoCmsView({ showToast }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                        <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                           Shield Badge Label
                         </label>
                         <Input
@@ -944,10 +944,10 @@ export default function LandingBentoCmsView({ showToast }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                      <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                         Card Explanatory Description
                       </label>
-                      <Textarea
+                      <Textarea placeholder="Enter a description"
                         value={bentoData.card5?.description || ""}
                         onChange={(e) =>
                           setBentoData((prev) => ({
@@ -966,7 +966,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Guarantee 1
                           </label>
                           <Input
@@ -982,7 +982,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Guarantee 2
                           </label>
                           <Input
@@ -998,7 +998,7 @@ export default function LandingBentoCmsView({ showToast }) {
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600 dark:text-zinc-400 mb-1">
+                          <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                             Guarantee 3
                           </label>
                           <Input
@@ -1036,7 +1036,7 @@ export default function LandingBentoCmsView({ showToast }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                       Main Heading (Line 1 - Bold Dark)
                     </label>
                     <Input
@@ -1050,7 +1050,7 @@ export default function LandingBentoCmsView({ showToast }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                    <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                       Secondary Heading (Line 2 - Muted Gray)
                     </label>
                     <Input
@@ -1065,7 +1065,7 @@ export default function LandingBentoCmsView({ showToast }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                  <label className="text-xs font-semibold block text-gray-700 dark:text-zinc-300 mb-1.5">
                     Section Description / Intro Paragraph
                   </label>
                   <Textarea

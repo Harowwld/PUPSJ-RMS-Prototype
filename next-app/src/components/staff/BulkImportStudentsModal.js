@@ -642,12 +642,11 @@ export default function BulkImportStudentsModal({
               <DataViewToolbar label="Bulk location assignment and table controls" className="gap-4 p-1.5">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Room:</span>
-                  <Select
+                  <Select placeholder="Select room"
                     className="h-9 w-24 rounded-xl px-2 text-xs"
                     value={csvBulkRoom}
                     onChange={(e) => setCsvBulkRoom(e.target.value)}
                   >
-                    <option value="">Select...</option>
                     {roomOptions.map((rm) => (
                       <option key={rm} value={rm}>
                         Room {rm}
@@ -658,12 +657,11 @@ export default function BulkImportStudentsModal({
 
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Cabinet:</span>
-                  <Select
+                  <Select placeholder="Select cabinet"
                     className="h-9 w-32 rounded-xl px-2.5 text-xs"
                     value={csvBulkCabinet}
                     onChange={(e) => setCsvBulkCabinet(e.target.value)}
                   >
-                    <option value="">Select...</option>
                     {mergeSelectedCabinetId(csvBulkRoom, csvBulkCabinet).map((c) => (
                       <option key={c} value={c}>
                         Cabinet {c}
@@ -674,12 +672,11 @@ export default function BulkImportStudentsModal({
 
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Drawer:</span>
-                  <Select
+                  <Select placeholder="Select drawer"
                     className="h-9 w-28 rounded-xl px-2.5 text-xs"
                     value={csvBulkDrawer}
                     onChange={(e) => setCsvBulkDrawer(e.target.value)}
                   >
-                    <option value="">Select...</option>
                     {mergeSelectedDrawerId(csvBulkRoom, csvBulkCabinet, csvBulkDrawer).map((d) => (
                       <option key={d} value={d}>
                         Drawer {d}
@@ -808,7 +805,7 @@ export default function BulkImportStudentsModal({
                           {r.student.section}
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select room"
                             aria-label="Room"
                             className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
                             containerClassName="py-0.5"
@@ -826,7 +823,7 @@ export default function BulkImportStudentsModal({
                           </Select>
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select cabinet"
                             aria-label="Cabinet"
                             className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
                             containerClassName="py-0.5"
@@ -844,7 +841,7 @@ export default function BulkImportStudentsModal({
                           </Select>
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select drawer"
                             aria-label="Drawer"
                             className="h-9 w-full gap-1 rounded-xl pl-7 pr-2 text-xs"
                             containerClassName="py-0.5"

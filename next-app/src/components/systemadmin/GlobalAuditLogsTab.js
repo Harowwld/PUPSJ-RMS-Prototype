@@ -107,12 +107,12 @@ function formatActionLabel(actionStr) {
 }
 
 const AUDIT_COLUMNS = [
-  { key: "created_at", label: "Timestamp", kind: "date", maxWidth: 205 },
+  { key: "created_at", label: "Timestamp", kind: "date", width: 205 },
   { key: "severity", label: "Level", kind: "status", maxWidth: 120 },
   { key: "actor", label: "Actor", kind: "text", maxWidth: 240 },
   { key: "office_id", label: "Scope", kind: "status", maxWidth: 180 },
   { key: "action", label: "Action", kind: "text", maxWidth: 300 },
-  { key: "details", label: "Description", kind: "text", maxWidth: 340 },
+  { key: "details", label: "Description", kind: "text", maxWidth: 300 },
   { key: "ip", label: "IP Address", kind: "text", maxWidth: 200, defaultHidden: true },
 ]
 const SORT_OPTIONS = [
@@ -146,8 +146,8 @@ export default function GlobalAuditLogsTab({ showToast }) {
 
   const tableColumns = [
     { kind: "selection" },
-    ...AUDIT_COLUMNS.filter(({ key }) => showColumn(key)).map(({ kind, maxWidth }) => ({
-      kind, maxWidth, ...(kind === "date" || kind === "status" ? { growthWeight: 0 } : {}),
+    ...AUDIT_COLUMNS.filter(({ key }) => showColumn(key)).map(({ kind, maxWidth, width }) => ({
+      kind, maxWidth, width, ...(kind === "date" || kind === "status" ? { growthWeight: 0 } : {}),
     })),
     { kind: "actions" },
   ]
@@ -376,7 +376,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     async (isManual = false, currentOffices = null) => {
       const request = ++logsRequest.current
       const { officeStr, excludeOfficeStr, roleStr, excludeRoleStr, sevStr, excludeSevStr } = buildFilterQueryParams()
-      const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${excludeOfficeStr}_${roleStr}_${excludeRoleStr}_${sevStr}_${excludeSevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}`
+      const logsKey = `audit_logs_${page}_${limit}_${officeStr}_${excludeOfficeStr}_${roleStr}_${excludeRoleStr}_${sevStr}_${excludeSevStr}_${search}_${startDate}_${endDate}_${sortBy}_${sortOrder}_${groupBy}`
       if (!isManual) {
         const cached = getCachedData(logsKey)
         if (cached) {
@@ -406,7 +406,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         const sortQuery = `&sortBy=${sortBy}&sortOrder=${sortOrder}`
 
         const res = await fetch(
-          `/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${severityQuery}${excludeSeverityQuery}${searchQuery}${startQuery}${endQuery}${sortQuery}`
+          `/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${excludeOfficeQuery}${roleQuery}${excludeRoleQuery}${severityQuery}${excludeSeverityQuery}${searchQuery}${startQuery}${endQuery}${sortQuery}&groupBy=${encodeURIComponent(groupBy)}`
         )
         const json = await res.json()
         if (request !== logsRequest.current) return
@@ -473,7 +473,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
         }
       }
     },
-    [page, limit, buildFilterQueryParams, search, startDate, endDate, sortBy, sortOrder, showToast, updateUrl]
+    [page, limit, buildFilterQueryParams, search, startDate, endDate, sortBy, sortOrder, groupBy, showToast, updateUrl]
   )
 
   const fetchLogStats = useCallback(async () => {
@@ -615,6 +615,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
     const request = previewSession.begin();
     try {
       const blob = await fetchExportFile("pdf")
+      if (blob.type !== "application/pdf" || blob.size === 0) {
+        throw new Error("The report service did not return a PDF.")
+      }
       const url = previewSession.createUrl(blob, request)
       if (!url) return;
       setPdfPreviewUrl(url)
@@ -701,6 +704,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
   }, [totalPages, search, updateUrl])
   const hasActiveFilters =
     localSearch !== "" ||
+    search !== "" ||
     (logFilters.office?.length > 0) ||
     filterRules.filter((r) => r.fieldKey !== "severity").length > 0 ||
     startDate !== "" ||
@@ -811,7 +815,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 entityLabel="activity"
               />
               <SortPopover options={SORT_OPTIONS} sortBy={sortBy} onSortByChange={(key) => { setSortBy(key); setSortOrder("ASC"); setPage(1); updateUrl(1, search) }} sortOrder={sortOrder} onSortOrderChange={(order) => { setSortOrder(order); setPage(1); updateUrl(1, search) }} />
-              <GroupPopover options={AUDIT_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={setGroupBy} />
+              <GroupPopover options={AUDIT_GROUP_OPTIONS} groupBy={groupBy} onGroupByChange={(value) => { setGroupBy(value); updatePage(1); }} />
               <ColumnsPopover columns={AUDIT_COLUMNS} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
 
               <DateRangeFilterButton
@@ -944,10 +948,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
                       variant="outline"
                       size="sm"
                       onClick={handleClearFilters}
-                      title="Reset Filters"
                       className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >
-                      Reset Filters
+                      Clear Filters
                     </Button>
                   </EmptyContent>
                 )}
@@ -1251,6 +1254,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
           title="Activity History Report Preview"
           description="Review the recorded actions and details before printing or downloading."
           pdfUrl={pdfBlobUrl}
+          preparedPdf
           onDownload={handleDownloadFromPreview}
         />
       </div>

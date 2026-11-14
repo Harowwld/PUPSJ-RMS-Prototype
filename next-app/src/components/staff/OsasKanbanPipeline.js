@@ -8,6 +8,12 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { EmptyState } from "@/components/ui/empty";
 import {
   KanbanStatusIcon,
+  KanbanCardTag,
+  KANBAN_CARD_CLASS,
+  KANBAN_CARD_DRAGGING_CLASS,
+  KANBAN_CARD_HEADER_CLASS,
+  KANBAN_CARD_TITLE_CLASS,
+  KANBAN_CARD_FOOTER_CLASS,
   KanbanMiniAvatar,
 } from "@/components/shared/KanbanPrimitives";
 import {
@@ -305,22 +311,22 @@ export default function OsasKanbanPipeline({
                             onSelectItem?.(item);
                           }}
                           className={cn(
-                            "kanban-card group relative rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 flex h-42 shrink-0 flex-col gap-1.5 select-none",
+                            KANBAN_CARD_CLASS,
                             locked
                               ? "cursor-pointer"
                               : "cursor-grab active:cursor-grabbing",
                             isDragging &&
-                              "opacity-35 scale-[0.98] border-dashed border-gray-400"
+                              KANBAN_CARD_DRAGGING_CLASS
                           )}
                         >
                           {/* Row 1: Status Icon + Proposal/Event Title (left) & Date (right) */}
-                          <div className="flex h-9 shrink-0 items-start justify-between gap-2.5">
+                          <div className={KANBAN_CARD_HEADER_CLASS}>
                             <div className="flex items-start gap-2 min-w-0 flex-1">
                               <KanbanStatusIcon
                                 status={itemStatus}
                                 className="mt-[3px]"
                               />
-                              <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-2 wrap-anywhere" title={title}>
+                              <h4 className={KANBAN_CARD_TITLE_CLASS} title={title}>
                                 {title}
                               </h4>
                             </div>
@@ -349,51 +355,41 @@ export default function OsasKanbanPipeline({
 
                             <div className="flex min-w-0 items-center gap-1.5">
                               {isProposal && item.event_date && (
-                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
-                                  <span className="truncate">{new Date(
+                                <KanbanCardTag label={new Date(
                                     item.event_date
                                   ).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
-                                  })}</span>
-                                </Badge>
+                                  })} />
                               )}
 
                               {isProposal && item.estimated_budget && (
-                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
-                                  <span className="truncate">{`₱${Number(
+                                <KanbanCardTag label={`₱${Number(
                                     item.estimated_budget
                                   ).toLocaleString(undefined, {
                                     minimumFractionDigits: 0,
-                                  })}`}</span>
-                                </Badge>
+                                  })}`} />
                               )}
 
                               {isProposal &&
                                 !item.estimated_budget &&
                                 item.target_attendance && (
-                                  <Badge variant="gray" size="compact" className="min-w-0 shrink">
-                                  <span className="truncate">{`${Number(
+                                  <KanbanCardTag label={`${Number(
                                       item.target_attendance
-                                    ).toLocaleString()} target`}</span>
-                                </Badge>
+                                    ).toLocaleString()} target`} />
                                 )}
 
                               {!isProposal && attendees !== null && (
-                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
-                                  <span className="truncate">{`${Number(
+                                <KanbanCardTag label={`${Number(
                                     attendees
-                                  ).toLocaleString()} attendees`}</span>
-                                </Badge>
+                                  ).toLocaleString()} attendees`} />
                               )}
 
                               {!isProposal && expenses !== null && (
-                                <Badge variant="gray" size="compact" className="min-w-0 shrink">
-                                  <span className="truncate">{`₱${Number(expenses).toLocaleString(
+                                <KanbanCardTag label={`₱${Number(expenses).toLocaleString(
                                     undefined,
                                     { minimumFractionDigits: 2 }
-                                  )}`}</span>
-                                </Badge>
+                                  )}`} />
                               )}
                             </div>
                           </div>
@@ -459,7 +455,7 @@ export default function OsasKanbanPipeline({
                             )}
 
                           {/* Row 3: Footer — Reference ID (bottom-left) + Proponent Avatar & Name (bottom-right) */}
-                          <div className="flex items-center justify-between gap-2 mt-auto text-[11px] text-gray-400 dark:text-zinc-500">
+                          <div className={KANBAN_CARD_FOOTER_CLASS}>
                             <div className="flex items-center gap-1.5 font-medium tabular-nums">
                               <Badge variant="gray" size="compact" className="rounded-lg">
                                 {getOsasRecordReference(item, stream)}

@@ -20,7 +20,7 @@ describe("Student Dashboard Skeletons match data-populated views", () => {
     assert.match(src, /h-\[38px\]/);
     assert.match(src, /rounded-2xl border border-gray-200\/90/);
     assert.match(src, /rounded-full border border-black\/\[0\.06\]/);
-    assert.match(src, /bg-slate-50\/50 dark:bg-zinc-950\/50/);
+    assert.match(src, /bg-white dark:bg-zinc-950\/50/);
 
     // Supports overview (fallback), odrs, compliance, osas, activity, and settings
     assert.match(src, /<StudentOverviewSkeleton \/>/);
@@ -57,7 +57,7 @@ describe("Student Dashboard Skeletons match data-populated views", () => {
 
     // Standardized DataViewToolbar search width and h-9 controls
     assert.match(src, /h-9 w-72 sm:w-80 shrink-0 rounded-xl/);
-    assert.match(src, /h-9 w-9 rounded-xl/);
+    assert.match(src, /size-10 rounded-xl/);
 
     // student/page.js uses StudentRequestsTableRowsSkeleton for inline loading
     assert.match(pageSrc, /<StudentRequestsTableRowsSkeleton/);

@@ -225,7 +225,7 @@ export async function createDocument({
     const entityLabel = effectiveOrgId ? "organization" : "student";
     const statusLabel = existingActiveDoc.approval_status || "Pending";
     const err = new Error(
-      `A document of type '${docType}' is already registered for this ${entityLabel} (${statusLabel}). Each record maintains a single digital twin of the original physical document.`
+      `A ${docType} document is already on file for this ${entityLabel} (${statusLabel}). Review the existing document before uploading another copy.`
     );
     err.code = "DUPLICATE_DOCUMENT";
     err.isDuplicate = true;
@@ -376,7 +376,61 @@ export async function listDocuments({
   return (rows || []).map(decryptDocumentRow);
 }
 
-export async function listArchiveDocuments({ officeId, q = "", year, page = 1, pageSize = 10 }) {
+function getArchiveOrder(groupBy, alias, sortBy, sortOrder) {
+  const groupColumns = {
+    status: `coalesce(nullif(${alias}.approval_status, ''), 'Pending')`,
+    doc_type: `coalesce(nullif(${alias}.doc_type, ''), 'Unknown')`,
+    year: `CASE WHEN split_part(${alias}.student_no, '-', 1) ~ '^[0-9]{4}$'
+      THEN CASE WHEN split_part(${alias}.student_no, '-', 1)::int BETWEEN 1900 AND 2200
+      THEN split_part(${alias}.student_no, '-', 1)::int END END`,
+  };
+  const groupColumn = Object.hasOwn(groupColumns, groupBy) ? groupColumns[groupBy] : null;
+  const sortColumns = {
+    identifier: alias === "archive_docs" ? "lower(coalesce(archive_docs.organization_name, archive_docs.student_no, ''))" : "d.student_no",
+    doc_type: `lower(${alias}.doc_type)`,
+    status: `${alias}.approval_status`,
+  };
+  const sortColumn = Object.hasOwn(sortColumns, sortBy) ? sortColumns[sortBy] : `${alias}.created_at`;
+  const direction = String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
+  return {
+    order: `${groupColumn ? `${groupColumn}, ` : ""}${sortColumn} ${direction}, ${alias}.id ${direction}`,
+    rank: sortBy === "name" && groupColumn ? `, dense_rank() OVER (ORDER BY ${groupColumn}) AS archive_group_rank` : "",
+  };
+}
+
+function addArchiveFilters(conditions, params, alias, { filterRules = [], startDate, endDate }) {
+  const add = (value) => { params.push(value); return `$${params.length}`; };
+  if (startDate) conditions.push(`${alias}.created_at >= (${add(startDate)}::date::timestamp AT TIME ZONE 'Asia/Manila')`);
+  if (endDate) conditions.push(`${alias}.created_at < ((${add(endDate)}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`);
+  for (const rule of filterRules) {
+    const value = String(rule?.value ?? "").toLowerCase();
+    if (!value) continue;
+    const negate = rule.operator === "is_not" || rule.operator === "does_not_contain";
+    if (rule.fieldKey === "status") {
+      conditions.push(`lower(coalesce(nullif(${alias}.approval_status, ''), 'Pending')) ${negate ? "<>" : "="} ${add(value)}`);
+    } else if (rule.fieldKey === "doc_type") {
+      const field = `lower(coalesce(${alias}.doc_type, ''))`;
+      const contains = rule.operator === "contains" || rule.operator === "does_not_contain";
+      const comparison = contains ? `strpos(${field}, ${add(value)}) > 0` : `${field} = ${add(value)}`;
+      conditions.push(negate ? `NOT (${comparison})` : comparison);
+    }
+  }
+}
+
+function pageArchiveMatches(rows, { search, sortBy, sortOrder, page, pageSize, all }) {
+  const matched = search ? rows.filter((doc) => matchesSearchQuery([
+    doc.student_no, doc.student_name, doc.organization_name, doc.org_acronym, doc.doc_type, doc.original_filename,
+  ], search)) : rows;
+  if (sortBy === "name") {
+    const direction = String(sortOrder).toUpperCase() === "ASC" ? 1 : -1;
+    matched.sort((a, b) => Number(a.archive_group_rank || 0) - Number(b.archive_group_rank || 0) ||
+      String(a.student_name || "").localeCompare(String(b.student_name || ""), undefined, { numeric: true, sensitivity: "base" }) * direction);
+  }
+  const visible = all ? matched : matched.slice((page - 1) * pageSize, page * pageSize);
+  return { rows: visible.map(({ archive_group_rank, ...row }) => row), total: matched.length };
+}
+
+export async function listArchiveDocuments({ officeId, q = "", year, groupBy, sortBy, sortOrder, page = 1, pageSize = 10, ...filters }) {
   await ensureReviewColumns();
   const params = [officeId];
   const conditions = ["d.office_id = $1", "d.approval_status <> 'Declined'"];
@@ -384,26 +438,32 @@ export async function listArchiveDocuments({ officeId, q = "", year, page = 1, p
     params.push(String(year));
     conditions.push(`split_part(d.student_no, '-', 1) = $${params.length}`);
   }
+  addArchiveFilters(conditions, params, "d", filters);
   const where = `WHERE ${conditions.join(" AND ")}`;
   const search = String(q || "").trim();
-  if (search) {
-    const rows = (await query(`SELECT d.* FROM documents d ${where} ORDER BY d.created_at DESC, d.id DESC`, params)).map(decryptDocumentRow);
-    const matched = rows.filter((doc) => matchesSearchQuery([doc.student_no, doc.student_name, doc.doc_type, doc.original_filename], search));
-    return { rows: matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length };
+  const { order, rank } = getArchiveOrder(groupBy, "d", sortBy, sortOrder);
+  if (search || sortBy === "name") {
+    const rows = (await query(`SELECT d.*${rank} FROM documents d ${where} ORDER BY ${order}`, params)).map(decryptDocumentRow);
+    return pageArchiveMatches(rows, { search, sortBy, sortOrder, page, pageSize });
   }
   const total = Number((await queryOne(`SELECT count(*)::int AS total FROM documents d ${where}`, params))?.total || 0);
   params.push(pageSize, (page - 1) * pageSize);
-  const rows = await query(`SELECT d.* FROM documents d ${where} ORDER BY d.created_at DESC, d.id DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
+  const rows = await query(`SELECT d.* FROM documents d ${where} ORDER BY ${order} LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
   return { rows: rows.map(decryptDocumentRow), total };
 }
 
-export async function listOsasArchiveDocuments({ q = "", organizationId, page = 1, pageSize = 10, allForOrganization = false }) {
+export async function listOsasArchiveDocuments({ q = "", organizationId, groupBy, sortBy, sortOrder, year, page = 1, pageSize = 10, allForOrganization = false, ...filters }) {
   const params = [];
   const conditions = [];
   if (organizationId) {
     params.push(organizationId);
     conditions.push(`archive_docs.organization_id = $${params.length}`);
   }
+  if (year) {
+    params.push(String(year));
+    conditions.push(`split_part(archive_docs.student_no, '-', 1) = $${params.length}`);
+  }
+  addArchiveFilters(conditions, params, "archive_docs", filters);
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const cte = `WITH archive_docs AS (
     SELECT d.id::text AS id, d.office_id, d.student_no, d.student_name, d.organization_id,
@@ -431,19 +491,19 @@ export async function listOsasArchiveDocuments({ q = "", organizationId, page = 
     ...decryptDocumentRow(row),
     file_url: row.source_type === "event_proposal" ? `/api/osas/event-proposals/${row.source_id}?file=1` : undefined,
   });
-  if (search) {
-    const rows = (await query(`${cte} SELECT * ${from} ORDER BY archive_docs.created_at DESC, archive_docs.id DESC`, params)).map(normalize);
-    const matched = rows.filter((doc) => matchesSearchQuery([doc.student_no, doc.student_name, doc.organization_name, doc.org_acronym, doc.doc_type, doc.original_filename], search));
-    return { rows: allForOrganization ? matched : matched.slice((page - 1) * pageSize, page * pageSize), total: matched.length };
+  const { order, rank } = getArchiveOrder(groupBy, "archive_docs", sortBy, sortOrder);
+  if (search || sortBy === "name") {
+    const rows = (await query(`${cte} SELECT archive_docs.*${rank} ${from} ORDER BY ${order}`, params)).map(normalize);
+    return pageArchiveMatches(rows, { search, sortBy, sortOrder, page, pageSize, all: allForOrganization });
   }
   const total = Number((await queryOne(`${cte} SELECT count(*)::int AS total ${from}`, params))?.total || 0);
   const paging = allForOrganization ? "" : `LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-  const rows = await query(`${cte} SELECT * ${from} ORDER BY archive_docs.created_at DESC, archive_docs.id DESC ${paging}`,
+  const rows = await query(`${cte} SELECT * ${from} ORDER BY ${order} ${paging}`,
     allForOrganization ? params : [...params, pageSize, (page - 1) * pageSize]);
   return { rows: rows.map(normalize), total };
 }
 
-export async function listReviewDocuments({ officeId, page = 1, pageSize = 20, statusFilters = [], docTypeFilters = [], dateFrom, dateTo, filterRules = [], search = "", sortBy = "created_at", sortOrder = "DESC" }) {
+export async function listReviewDocuments({ officeId, page = 1, pageSize = 20, statusFilters = [], docTypeFilters = [], dateFrom, dateTo, filterRules = [], search = "", sortBy = "created_at", sortOrder = "DESC", groupBy = "none" }) {
   const conditions = [];
   const params = [];
   const add = (value) => { params.push(value); return `$${params.length}`; };
@@ -471,27 +531,57 @@ export async function listReviewDocuments({ officeId, page = 1, pageSize = 20, s
   const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
   const currentPage = Math.max(1, Number(page) || 1);
   const sortColumns = { created_at: "d.created_at", student_no: "d.student_no", doc_type: "d.doc_type", approval_status: "d.approval_status" };
+  const groupOrders = {
+    status: "CASE lower(coalesce(nullif(d.approval_status, ''), 'Pending')) WHEN 'pending' THEN 1 WHEN 'approved' THEN 2 WHEN 'declined' THEN 3 ELSE 4 END",
+    docType: "coalesce(nullif(d.doc_type, ''), 'Uncategorized')",
+  };
+  const groupColumn = Object.hasOwn(groupOrders, groupBy) ? groupOrders[groupBy] : null;
   const order = sortOrder === "ASC" ? "ASC" : "DESC";
-  const queryRows = `SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name ${from}`;
+  const sortByStudentName = sortBy === "student_name" && officeId !== "osas";
+  const sortColumn = sortBy === "student_name" && officeId === "osas"
+    ? "lower(coalesce(so.name, ''))"
+    : Object.hasOwn(sortColumns, sortBy) ? sortColumns[sortBy] : sortColumns.created_at;
+  const boardOrder = groupBy === "kanban";
+  const hasSearch = Boolean(search.trim());
+  const lane = "CASE WHEN d.approval_status IN ('Approved', 'Declined') THEN d.approval_status ELSE 'Pending' END";
+  const recordOrder = `${sortColumn} ${order}, d.id ${order}`;
+  const rowOrder = boardOrder && !hasSearch && !sortByStudentName
+    ? `row_number() OVER (PARTITION BY ${lane} ORDER BY ${recordOrder}), ${recordOrder}`
+    : `${groupColumn ? `${groupColumn}, ` : ""}${recordOrder}`;
+  const queryRows = `SELECT d.*, so.acronym AS org_acronym, so.name AS organization_name
+    ${sortByStudentName && groupColumn ? `, dense_rank() OVER (ORDER BY ${groupColumn}) AS review_group_rank` : ""}
+    ${from} ORDER BY ${rowOrder}`;
   let rows;
   let total;
-  if (search.trim() || sortBy === "student_name") {
+  if (hasSearch || sortByStudentName) {
     rows = (await query(queryRows, params)).map(decryptDocumentRow);
-    if (search.trim()) rows = rows.filter((row) => matchesSearchQuery([row.student_no, row.student_name, row.organization_name, row.org_acronym, row.doc_type, row.original_filename], search));
-    const field = sortColumns[sortBy] ? sortBy : "student_name";
-    rows.sort((a, b) => {
-      const result = String(a[field] || "").toLowerCase().localeCompare(String(b[field] || "").toLowerCase());
-      return order === "ASC" ? result : -result;
-    });
+    if (hasSearch) rows = rows.filter((row) => matchesSearchQuery([row.student_no, row.student_name, row.organization_name, row.org_acronym, row.doc_type, row.original_filename], search));
+    if (sortByStudentName) {
+      rows.sort((a, b) => {
+        const groupOrder = Number(a.review_group_rank || 0) - Number(b.review_group_rank || 0);
+        if (groupOrder) return groupOrder;
+        const result = (a.student_name || "").localeCompare(b.student_name || "", undefined, { sensitivity: "base" });
+        return order === "ASC" ? result : -result;
+      });
+    }
+    if (boardOrder) {
+      // Search must run before assigning lane positions so non-matching rows leave no gaps.
+      const lanePositions = { Pending: 0, Approved: 0, Declined: 0 };
+      rows = rows.map((row) => {
+        const status = row.approval_status;
+        const laneKey = status === "Approved" || status === "Declined" ? status : "Pending";
+        return { row, position: lanePositions[laneKey]++ };
+      }).sort((a, b) => a.position - b.position).map(({ row }) => row);
+    }
     total = rows.length;
     rows = rows.slice((currentPage - 1) * size, currentPage * size);
   } else {
     total = Number((await queryOne(`SELECT count(*)::int AS count ${from}`, params))?.count || 0);
     const offset = add((currentPage - 1) * size);
     const limit = add(size);
-    rows = (await query(`${queryRows} ORDER BY ${sortColumns[sortBy] || sortColumns.created_at} ${order}, d.id ${order} OFFSET ${offset} LIMIT ${limit}`, params)).map(decryptDocumentRow);
+    rows = (await query(`${queryRows} OFFSET ${offset} LIMIT ${limit}`, params)).map(decryptDocumentRow);
   }
-  return { rows, total, stats: {
+  return { rows: rows.map(({ review_group_rank, ...row }) => row), total, stats: {
     total: Number(stats?.total || 0), pending: Number(stats?.pending || 0), totalApproved: Number(stats?.approved || 0), totalDeclined: Number(stats?.declined || 0),
     pendingToday: Number(stats?.pending_today || 0), approvedToday: Number(stats?.approved_today || 0), declinedToday: Number(stats?.declined_today || 0),
   } };

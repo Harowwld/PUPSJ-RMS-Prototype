@@ -538,7 +538,7 @@ export default function BulkImportOrganizationsModal({
               <DataViewToolbar label="Bulk location assignment and table controls" className="gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Room:</span>
-                  <Select
+                  <Select placeholder="Select room"
                     className="h-8.5 w-24 rounded-lg border border-border px-2 text-xs bg-white dark:bg-zinc-800"
                     value={csvBulkRoom}
                     onChange={(e) => setCsvBulkRoom(e.target.value)}
@@ -550,7 +550,7 @@ export default function BulkImportOrganizationsModal({
 
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Cabinet:</span>
-                  <Select
+                  <Select placeholder="Select cabinet"
                     className="h-8.5 w-64 rounded-lg border border-border px-2.5 text-xs bg-white dark:bg-zinc-800"
                     value={csvBulkCabinet}
                     onChange={(e) => setCsvBulkCabinet(e.target.value)}
@@ -565,7 +565,7 @@ export default function BulkImportOrganizationsModal({
 
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Drawer:</span>
-                  <Select
+                  <Select placeholder="Select drawer"
                     className="h-8.5 w-28 rounded-lg border border-border px-2.5 text-xs bg-white dark:bg-zinc-800"
                     value={csvBulkDrawer}
                     onChange={(e) => setCsvBulkDrawer(e.target.value)}
@@ -685,7 +685,7 @@ export default function BulkImportOrganizationsModal({
                           {r.organization?.adviserName || "N/A"}
                         </td>
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select room"
                             aria-label="Room"
                             className="h-8 w-full rounded-xl px-2 text-[11px]"
                             valueClassName="text-center"
@@ -699,7 +699,7 @@ export default function BulkImportOrganizationsModal({
                           </Select>
                         </td>
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select cabinet"
                             aria-label="Cabinet"
                             className="h-8 w-full rounded-xl px-2 text-[11px]"
                             valueClassName="text-center"
@@ -716,7 +716,7 @@ export default function BulkImportOrganizationsModal({
                           </Select>
                         </td>
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70" onClick={(e) => e.stopPropagation()}>
-                          <Select
+                          <Select placeholder="Select drawer"
                             aria-label="Drawer"
                             className="h-8 w-full rounded-xl px-2 text-[11px]"
                             valueClassName="text-center"

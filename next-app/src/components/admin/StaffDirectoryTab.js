@@ -1,5 +1,7 @@
 "use client"
 
+import StaffPasswordResetAction from "@/components/shared/StaffPasswordResetAction";
+import { orderRowsByGroup } from "@/lib/groupRows";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -276,8 +278,8 @@ const StaffGridCard = React.memo(({
               {isCurrentUser && (
                 <span
                   className={cn(
-                    BADGE_BASE,
-                    "h-4.5 min-h-4.5 bg-blue-100/90 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0"
+                    COMPACT_BADGE_BASE,
+                    "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
                   )}
                 >
                   You
@@ -382,7 +384,7 @@ const StaffGridCard = React.memo(({
         <span
           className={cn(
             BADGE_BASE,
-            "h-5.5 min-h-5.5 px-2.5 text-[10.5px] font-semibold tracking-[-0.01em] truncate",
+            "h-5.5 min-h-5.5 min-w-0 px-2.5 text-[10.5px] font-semibold",
             s.role === "SystemAdmin" || s.role === "SuperAdmin"
               ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
               : s.role === "Admin"
@@ -481,7 +483,7 @@ const StaffTableRow = React.memo(({
                   {getStaffCleanName(s)}
                 </span>
                 {isCurrentUser && (
-                  <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0")}>
+                  <span className={cn(COMPACT_BADGE_BASE, "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
                     You
                   </span>
                 )}
@@ -501,7 +503,7 @@ const StaffTableRow = React.memo(({
               : s.role === "Admin"
                 ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
                 : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400", BADGE_BASE)}>
-            {s.role === "SuperAdmin" || s.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(s.role, s, offices)}
+            <span className="truncate" title={getOfficeRoleLabel(s.role, s, offices)}>{getOfficeRoleLabel(s.role, s, offices)}</span>
           </div>
         </td>
       )}
@@ -636,18 +638,6 @@ export default function StaffDirectoryTab({
   })
 
   const [inspectMember, setInspectMember] = useState(null)
-  const [copiedField, setCopiedField] = useState(null)
-
-  const handleCopyField = (text, fieldKey, fieldLabel) => {
-    if (!text) return
-    navigator.clipboard?.writeText(text)
-    setCopiedField(fieldKey)
-    toast.success(`Copied ${fieldLabel} to clipboard`)
-    setTimeout(() => {
-      setCopiedField((curr) => (curr === fieldKey ? null : curr))
-    }, 2000)
-  }
-
   const [localSearch, setLocalSearch] = useState(() => {
     if (search) return search
     if (typeof window !== "undefined") {
@@ -864,10 +854,19 @@ export default function StaffDirectoryTab({
     })
   }, [filteredStaff, sortBy, sortOrder])
 
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? sortedStaff
+    : orderRowsByGroup(sortedStaff, (member) => {
+      if (groupBy === "role") return member.role === "Admin" ? `${officePrefix} Admin` : `${officePrefix} Staff`;
+      if (groupBy === "section") return member.section || "General / Unassigned";
+      return Boolean(member.totp_enabled);
+    }),
+  [sortedStaff, groupBy, officePrefix]);
+
   const paginatedStaff = useMemo(() => {
     const start = (displayPage - 1) * itemsPerPage
-    return sortedStaff.slice(start, start + itemsPerPage)
-  }, [sortedStaff, displayPage, itemsPerPage])
+    return orderedGroups.slice(start, start + itemsPerPage)
+  }, [orderedGroups, displayPage, itemsPerPage])
 
   const groupedStaff = useMemo(() => {
     if (groupBy === "none") {
@@ -893,7 +892,9 @@ export default function StaffDirectoryTab({
     "selection",
     ...STAFF_COLUMNS.filter((c) => visibleColumns.includes(c.key)).map((c) => {
       if (c.key === "id") return "identifier"
-      if (c.key === "name" || c.key === "email") return { kind: "text", maxWidth: 360 }
+      if (c.key === "name") return { kind: "text", maxWidth: 360 }
+      if (c.key === "email") return { kind: "text", minWidth: 150, maxWidth: 285 }
+      if (c.key === "role") return { kind: "category", minWidth: 150, maxWidth: 240 }
       if (c.key === "section") return { kind: "text", maxWidth: 200 }
       if (c.key === "last_active" || c.key === "created_at") return { kind: "date" }
       if (c.key === "totp_enabled") return { kind: "status" }
@@ -1109,7 +1110,7 @@ export default function StaffDirectoryTab({
           <div className="ml-auto">
             <SegmentedControl
               value={viewMode}
-              onValueChange={setViewMode}
+              onValueChange={(value) => { setViewMode(value); onSelectionChange(new Set()); setLastSelectedId(null); }}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
@@ -1187,7 +1188,7 @@ export default function StaffDirectoryTab({
             <GroupPopover
               options={groupOptions}
               groupBy={groupBy}
-              onGroupByChange={setGroupBy}
+              onGroupByChange={(value) => { setGroupBy(value); setCurrentPage(1); }}
             />
 
             {viewMode === "table" && (
@@ -1325,6 +1326,8 @@ export default function StaffDirectoryTab({
                   >
                     Reset Filters
                   </Button>
+                ) : activeTab === "archived" ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleTabChange("active")}>View Active Personnel</Button>
                 ) : (
                   activeTab === "active" && officeStaff.filter(s => s.status !== "Archived").length === 0 && (
                     <Button
@@ -1759,7 +1762,7 @@ export default function StaffDirectoryTab({
                           {getStaffCleanName(inspectMember)}
                         </span>
                         {isSelf && (
-                          <span className={cn(COMPACT_BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
+                          <span className={cn(COMPACT_BADGE_BASE, "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
                             You
                           </span>
                         )}
@@ -1787,18 +1790,7 @@ export default function StaffDirectoryTab({
                           <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
                             {inspectMember.id}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyField(inspectMember.id, "id", "Employee ID")}
-                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                            title="Copy Employee ID"
-                          >
-                            {copiedField === "id" ? (
-                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                            ) : (
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            )}
-                          </button>
+                          <CopyButton iconOnly textToCopy={inspectMember.id} entityName="Employee ID" disabled={!inspectMember.id} />
                         </div>
                       </InfoRow>
 
@@ -1807,18 +1799,7 @@ export default function StaffDirectoryTab({
                           <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 truncate text-xs font-medium" title={inspectMember.email}>
                             {getStaffCleanEmail(inspectMember)}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyField(getStaffCleanEmail(inspectMember), "email", "Official email")}
-                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-                            title="Copy Email"
-                          >
-                            {copiedField === "email" ? (
-                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                            ) : (
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            )}
-                          </button>
+                          <CopyButton iconOnly textToCopy={getStaffCleanEmail(inspectMember)} entityName="Official Email" disabled={!getStaffCleanEmail(inspectMember)} />
                         </div>
                       </InfoRow>
 
@@ -1839,7 +1820,7 @@ export default function StaffDirectoryTab({
                       <InfoRow icon="Shield01Icon" label="Two-step Verification">
                         <span
                           className={cn(
-                            BADGE_BASE,
+                            COMPACT_BADGE_BASE,
                             "select-none",
                             inspectMember.totp_enabled
                               ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
@@ -1890,7 +1871,6 @@ export default function StaffDirectoryTab({
                       Close
                     </Button>
                     <CopyButton
-                      iconOnly
                       textToCopy={() => JSON.stringify(inspectMember, null, 2)}
                       entityName="Staff Data"
                       idleLabel="Copy Staff Data"
@@ -1915,6 +1895,7 @@ export default function StaffDirectoryTab({
                     </Button>
                   ) : (
                     <div className="flex items-center gap-2">
+                      <StaffPasswordResetAction key={inspectMember.id} account={inspectMember} email={getStaffCleanEmail(inspectMember)} />
                       {inspectMember.status !== "Archived" ? (
                         <>
                           <Button

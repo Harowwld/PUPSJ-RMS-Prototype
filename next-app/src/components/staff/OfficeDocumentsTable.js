@@ -7,6 +7,7 @@ import { BADGE_BASE } from "@/lib/badgeStyles";
 
 import { IdentifierBadge, Table } from "@/components/ui/table";
 import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
+import { orderRowsByGroup } from "@/lib/groupRows";
 import TablePagination from "@/components/shared/TablePagination";
 
 import useUrlPage from "@/hooks/useUrlPage";
@@ -98,21 +99,25 @@ export default function OfficeDocumentsTable({
   useEffect(() => {
     if (!serverPaged) return;
     const controller = new AbortController();
-    setIsLoading(true);
-    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    const loadingTimer = setTimeout(() => setIsLoading(true), 0);
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), groupBy, sortBy, sortOrder, startDate, endDate, rules: JSON.stringify(filterRules) });
     if (selectedYear) params.set("year", String(selectedYear));
     if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
     fetch(`/api/documents/browse?${params}`, { cache: "no-store", signal: controller.signal })
       .then((res) => res.json())
       .then((json) => {
-        if (json?.ok) setServerPage(json.data);
+        if (!controller.signal.aborted && json?.ok) setServerPage(json.data);
       })
       .catch(() => {})
       .finally(() => {
+        clearTimeout(loadingTimer);
         if (!controller.signal.aborted) { setIsLoading(false); setHasLoaded(true); }
       });
-    return () => controller.abort();
-  }, [serverPaged, page, pageSize, debouncedQuery, selectedYear]);
+    return () => {
+      clearTimeout(loadingTimer);
+      controller.abort();
+    };
+  }, [serverPaged, page, pageSize, debouncedQuery, selectedYear, groupBy, sortBy, sortOrder, startDate, endDate, filterRules]);
 
   const rawRows = serverPaged ? serverPage.rows : documents;
 
@@ -179,10 +184,10 @@ export default function OfficeDocumentsTable({
 
   // Client filtering
   const filteredRows = useMemo(() => {
+    if (serverPaged) return rawRows;
     return rawRows
       .filter((document) => selectedYear == null || getYear(document) === selectedYear)
       .filter((document) => {
-        if (serverPaged) return true; // server already searched query
         return matchesSearchQuery(
           [document.student_no, document.student_name, document.doc_type, document.original_filename],
           query
@@ -194,8 +199,13 @@ export default function OfficeDocumentsTable({
             const match = String(document.approval_status || "Pending").toLowerCase() === String(rule.value || "").toLowerCase();
             if (rule.operator === "is_not" ? match : !match) return false;
           } else if (rule.fieldKey === "doc_type") {
-            const match = String(document.doc_type || "").toLowerCase().includes(String(rule.value || "").toLowerCase());
-            if (rule.operator === "is_not" ? match : !match) return false;
+            const expected = String(rule.value ?? "").toLowerCase();
+            if (!expected) continue;
+            const actual = String(document.doc_type || "").toLowerCase();
+            const contains = rule.operator === "contains" || rule.operator === "does_not_contain";
+            const matches = contains ? actual.includes(expected) : actual === expected;
+            const negate = rule.operator === "is_not" || rule.operator === "does_not_contain";
+            if (negate ? matches : !matches) return false;
           }
         }
         return isInManilaDateRange(document.created_at, startDate, endDate);
@@ -204,6 +214,7 @@ export default function OfficeDocumentsTable({
 
   // Client sorting
   const sortedRows = useMemo(() => {
+    if (serverPaged) return filteredRows;
     return [...filteredRows].sort((a, b) => {
       let valA = "";
       let valB = "";
@@ -226,10 +237,16 @@ export default function OfficeDocumentsTable({
       const comp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: "base" });
       return sortOrder === "desc" ? -comp : comp;
     });
-  }, [filteredRows, sortBy, sortOrder]);
+  }, [filteredRows, sortBy, sortOrder, serverPaged]);
 
   const totalCount = serverPaged ? serverPage.total : sortedRows.length;
-  const visibleRows = serverPaged ? sortedRows : sortedRows.slice((page - 1) * pageSize, page * pageSize);
+  const getGroup = (doc) => {
+    if (groupBy === "status") return doc.approval_status || "Pending";
+    if (groupBy === "doc_type") return doc.doc_type || "Unknown";
+    return String(getYear(doc) || "N/A");
+  };
+  const orderedRows = serverPaged || groupBy === "none" ? sortedRows : orderRowsByGroup(sortedRows, getGroup);
+  const visibleRows = serverPaged ? orderedRows : orderedRows.slice((page - 1) * pageSize, page * pageSize);
 
   // Grouped rows for display
   const groupedDisplayRows = useMemo(() => {

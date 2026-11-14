@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeStudentRecordName, studentRecordNameParts } from "../../../src/lib/studentRecordName.js";
+import { getStudentRecordNameErrors, normalizeStudentRecordName, studentRecordNameParts } from "../../../src/lib/studentRecordName.js";
 
 describe("student record names", () => {
   it("retains the full middle name while formatting the registrar display", () => {
@@ -13,6 +13,14 @@ describe("student record names", () => {
     expect(() => normalizeStudentRecordName({ firstName: "Maria" })).toThrow("Last name");
     expect(() => normalizeStudentRecordName({ lastName: "Santos" })).toThrow("First name");
     expect(() => normalizeStudentRecordName({ firstName: "Maria, Ana", lastName: "Santos" })).toThrow("commas");
+  });
+
+  it("reports all missing required name parts and allows an empty middle name", () => {
+    expect(getStudentRecordNameErrors({ firstName: " ", middleName: "", lastName: "" })).toEqual({
+      firstName: true,
+      lastName: true,
+    });
+    expect(getStudentRecordNameErrors({ firstName: "Maria", middleName: "", lastName: "Santos" })).toEqual({});
   });
 
   it("prefers stored full parts over the abbreviated display name", () => {

@@ -367,7 +367,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta select-none">
       {/* Main Container Card */}
-      <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <Card data-form-validation-scope className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
         <PageHeader
           icon=" Certificate01Icon"
           title={
@@ -420,6 +420,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
               <Button
                 type="button"
+                data-form-validation-submit
                 onClick={handleSave}
                 disabled={loading || Boolean(loadError) || saving || !isDirty}
                 className="h-9 px-4"
@@ -624,7 +625,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label htmlFor="identity-jurisdiction" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Super-Header / Jurisdiction Line <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                        Super-Header / Jurisdiction Line <span className="normal-case tracking-normal opacity-70">(optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         CHED / SUC Standard
@@ -671,7 +672,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="identity-campus" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Campus / Branch <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                        Campus / Branch <span className="normal-case tracking-normal opacity-70">(optional)</span>
                       </label>
                       <Input
                         id="identity-campus"
@@ -690,7 +691,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
 
                     <div>
                       <label htmlFor="identity-office-header" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                        Administrative Office Subheader <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                        Administrative Office Subheader <span className="normal-case tracking-normal opacity-70">(optional)</span>
                       </label>
                       <Input
                         id="identity-office-header"
@@ -740,7 +741,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   <div className="pt-3 border-t border-border dark:border-border space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                        Signatory Titles <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                        Signatory Titles <span className="normal-case tracking-normal opacity-70">(optional)</span>
                       </label>
                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">
                         Leave blank for intelligent auto-defaults
@@ -870,7 +871,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                   </div>
                   <div>
                     <label htmlFor="report-font" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Report font</label>
-                    <Select id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
+                    <Select placeholder="Select report font" id="report-font" value={branding.reportFont || "jakarta"} onChange={(event) => setBranding((previous) => ({ ...previous, reportFont: event.target.value }))} className="h-11 w-full sm:h-10" aria-describedby="report-font-help">
                       {REPORT_FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}
                     </Select>
                     <p id="report-font-help" className="mt-2 text-xs text-gray-500 dark:text-zinc-400">All options embed standard institutional TrueType fonts (Plus Jakarta Sans, Arial/Liberation Sans, Times/Liberation Serif, Noto Sans, Noto Serif, Inter, Open Sans, DejaVu Serif, DejaVu Sans). The app interface keeps its current font.</p>
@@ -924,6 +925,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
         title="Institutional Document Style Sample"
         description="Review the current branding and font before saving."
         pdfUrl={sampleReady ? sample.url : null}
+        preparedPdf
         isPreparing={!sampleReady && !sampleError}
         error={sampleError}
         onRetry={() => setSampleAttempt((value) => value + 1)}

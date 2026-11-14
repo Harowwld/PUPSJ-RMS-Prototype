@@ -199,8 +199,24 @@ describe("Scan & Upload OCR student mismatch warning", () => {
     await user.click(screen.getByRole("button", { name: "Upload to Selected Student" }));
     expect(processSubmission).toHaveBeenCalledOnce();
   });
-});
 
+  it("marks only invalid student name parts and shows a derived year error on Student Number", () => {
+    const props = scanUploadProps();
+    render(React.createElement(ScanUploadTab, {
+      ...props,
+      uploadStudentIsExisting: false,
+      newRec: { ...props.newRec, studentNo: "1999-10001-SJ-0", firstName: "", lastName: "Santos", year: "" },
+      uploadFieldErrors: { firstName: true, year: true, room: true },
+    }));
+
+    expect(screen.getByLabelText("First Name")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Middle Name (optional)")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByLabelText("Last Name")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByPlaceholderText("202X-XXXXX-SJ-0")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("combobox", { name: "Room" })).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Enter a student number with a valid year.")).toBeVisible();
+  });
+});
 
 describe("Scan & Upload replacement and re-scan actions", () => {
   it("replaces the selected page through a separate single-file picker", async () => {
@@ -231,7 +247,6 @@ describe("Scan & Upload replacement and re-scan actions", () => {
     expect(screen.getByRole("button", { name: "Re-scan" })).toBeDisabled();
   });
 });
-
 
 describe("current OCR suggestions alongside a selected student", () => {
   const suggestionFor = (student) => ({

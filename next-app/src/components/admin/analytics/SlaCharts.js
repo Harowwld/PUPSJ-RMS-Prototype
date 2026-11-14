@@ -1,5 +1,6 @@
 "use client"
 
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import React, { useState } from "react"
 import {
   Tooltip as ChartTooltip,
@@ -36,7 +37,7 @@ const CustomBarTooltip = ({ active, payload, label }) => {
             return (
               <div key={index} className="flex items-center gap-2">
                 <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={indicatorColor} style={{ backgroundColor: indicatorColor }} />
-                <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{formatRequestStatus(entry.name)}:</span>
                 <span className="text-xs font-semibold text-gray-900 ml-auto dark:text-zinc-50">{entry.value}</span>
               </div>
             )
@@ -55,7 +56,7 @@ const CustomPieTooltip = ({ active, payload }) => {
       <div className="rounded-lg border border-border bg-white p-3 shadow-xl dark:border-border dark:bg-card dark:shadow-none">
         <div className="flex items-center gap-2">
           <div className="rms-style-background-color h-2 w-2 rounded-full" data-background-color={entry.payload.fill} style={{ backgroundColor: entry.payload.fill }} />
-          <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{entry.name}:</span>
+          <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">{formatRequestStatus(entry.name)}:</span>
           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">{entry.value} requests</span>
         </div>
       </div>
@@ -450,7 +451,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
             <div className="mt-4 flex flex-col pt-3 border-t border-border dark:border-border">
               {pieData.map((d, index) => {
                 const percent = totalSlaRequests > 0 ? Math.round((d.value / totalSlaRequests) * 100) : 0
-                const displayName = d.name === "InProgress" ? "In Progress" : d.name
+                const displayName = formatRequestStatus(d.name)
                 const color = APPLE_STATUS_COLORS[d.name] || "#ccc"
                 const isHovered = activePieIndex === index
                 return (
@@ -571,7 +572,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
 
             {data?.feedback?.totalResponses > 0 && (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-200">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200">
                   <span className="text-amber-500 text-sm">★</span>
                   <span className="text-sm font-bold">{data.feedback.averageRating}</span>
                   <span className="text-xs text-amber-700 dark:text-amber-400">/ 5.0</span>

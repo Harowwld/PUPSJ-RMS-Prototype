@@ -2927,3 +2927,15 @@ html {
 [data-initial-loader="skeleton"] .initial-loader-skeleton {
   display: block;
 }
+
+
+/* Show field validation styling only for the current submit attempt. */
+[data-show-form-errors] :is(
+  :is(input, textarea, select):user-invalid:not([aria-hidden="true"]),
+  :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="attachment-field"], button)[aria-invalid="true"],
+  [data-slot="select-control"]:has(+ input:user-invalid) > [data-slot="select-trigger"],
+  [data-otp-input]:has(input[aria-invalid="true"]) [data-otp-cell]
+) {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 1px var(--destructive);
+}

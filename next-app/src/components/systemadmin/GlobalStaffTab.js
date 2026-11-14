@@ -1,4 +1,6 @@
 "use client"
+import StaffPasswordResetAction from "@/components/shared/StaffPasswordResetAction";
+import { orderRowsByGroup } from "@/lib/groupRows";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -18,6 +20,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
+import { GlobalStaffGridSkeleton } from "@/components/systemadmin/skeletons/GlobalStaffSkeleton"
 import PersonnelActionsMenu from "@/components/systemadmin/PersonnelActionsMenu"
 import { Card } from "@/components/ui/card"
 import {
@@ -213,8 +216,8 @@ function GlobalStaffGridCard({
               {isSelf && (
                 <span
                   className={cn(
-                    BADGE_BASE,
-                    "h-4.5 min-h-4.5 bg-blue-100/90 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] px-1.5 py-0"
+                    COMPACT_BADGE_BASE,
+                    "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
                   )}
                 >
                   You
@@ -235,6 +238,7 @@ function GlobalStaffGridCard({
             member={member}
             name={cleanName}
             isSelf={isSelf}
+            allowGlobalPasswordReset
             onViewProfile={onInspect}
             onEdit={onEdit}
             onSettings={() =>
@@ -329,7 +333,7 @@ function GlobalStaffGridCard({
         <span
           className={cn(
             BADGE_BASE,
-            "h-5.5 min-h-5.5 px-2.5 text-[10.5px] font-semibold tracking-[-0.01em] truncate",
+            "h-5.5 min-h-5.5 min-w-0 px-2.5 text-[10.5px] font-semibold",
             member.role === "SystemAdmin" || member.role === "SuperAdmin"
               ? "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
               : member.role === "Admin"
@@ -434,14 +438,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       isMounted = false
     }
   }, [inspectMember?.id])
-  const [copiedInspectField, setCopiedInspectField] = useState(null)
-  const handleCopyInspectField = (text, fieldKey, toastLabel) => {
-    if (!text) return
-    navigator.clipboard.writeText(String(text))
-    showToast(`${toastLabel} copied to clipboard`)
-    setCopiedInspectField(fieldKey)
-    setTimeout(() => setCopiedInspectField((current) => current === fieldKey ? null : current), 2000)
-  }
   const [formOpen, setFormOpen] = useState(false)
   const { attachForm, ...repeat } = useCreateAnother(formOpen)
   const [isEditing, setIsEditing] = useState(false)
@@ -887,9 +883,19 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return list
   }, [staff, search, staffFilters, statusFilter, sortBy, sortOrder, offices, filterRules])
 
+  const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
-  const paginatedStaff = filteredStaff.slice(startIndex, endIndex)
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? filteredStaff
+    : orderRowsByGroup(filteredStaff, (member) => {
+      const office = offices.find((item) => item.id === member.office_id);
+      return groupBy === "office" ? office?.short_name || office?.name || "Platform Level"
+        : isSystemAdminRole(member.role) ? "System Admin" : member.role === "Admin" ? "Administrator" : "Regular Staff";
+    }, (left, right) => left.localeCompare(right)),
+  [filteredStaff, groupBy, offices]);
+
+  const paginatedStaff = orderedGroups.slice(startIndex, endIndex)
 
   // Horizontal table scrolling hook
   const {
@@ -1130,7 +1136,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   }
 
   const [layoutView, setLayoutView] = useViewPreference("staff", "layoutView", "table")
-  const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
   const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["id", "name", "email", "office", "role", "section", "totp_enabled"])
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize))
   const optionalColumns = [
@@ -1159,12 +1164,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       if (!groups.has(label)) groups.set(label, [])
       groups.get(label).push(member)
     }
-    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
+    return [...groups.entries()]
   })()
 
   const staffTableColumns = ["selection", ...orderedVisibleColumns.map(({ key }) => {
     if (key === "id") return { kind: "identifier", maxWidth: 200, growthWeight: 0 }
-    if (key === "name" || key === "email") return { kind: "text", maxWidth: 340 }
+    if (key === "name") return { kind: "text", maxWidth: 340 }
+    if (key === "email") return { kind: "text", minWidth: 150, maxWidth: 265 }
+    if (key === "role") return { kind: "category", minWidth: 150, maxWidth: 240 }
     if (key === "section") return { kind: "text", maxWidth: 240 }
     if (key === "last_active" || key === "created_at" || key === "updated_at") return { kind: "date", maxWidth: 205, growthWeight: 0 }
     if (key === "totp_enabled") return { kind: "status", maxWidth: 200, growthWeight: 0 }
@@ -1193,7 +1200,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         <div role="group" aria-label="Personnel status and view mode" className="flex flex-wrap items-center justify-between gap-3 px-6 py-2.5 border-b border-border dark:border-white/10 bg-white dark:bg-card overflow-x-auto scrollbar-none">
           <SegmentedControl
             value={statusFilter}
-            onValueChange={setStatusFilter}
+            onValueChange={(value) => { setStatusFilter(value); setSelectedIds(new Set()); setLastSelectedId(null); }}
             variant="capsule"
             className="inline-grid grid-flow-col auto-cols-fr shrink-0"
             items={[
@@ -1205,7 +1212,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="ml-auto">
             <SegmentedControl
               value={layoutView}
-              onValueChange={setLayoutView}
+              onValueChange={(value) => { setLayoutView(value); setSelectedIds(new Set()); setLastSelectedId(null); }}
               variant="capsule"
               className="inline-grid grid-flow-col auto-cols-fr shrink-0"
               items={[
@@ -1227,7 +1234,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <FilterPopover fields={filterFields} filters={filterRules} onFiltersChange={setFilterRules} entityLabel="personnel" />
             <SortPopover options={[{ key: "name", label: "Name" }, { key: "id", label: "Employee ID" }, { key: "email", label: "Email" }, { key: "office", label: "Office" }, { key: "role", label: "Role" }, { key: "section", label: "Section" }, { key: "last_active", label: "Last Sign-in" }, { key: "totp_enabled", label: "Two-step Verification" }, { key: "created_at", label: "Date Added" }, { key: "updated_at", label: "Last Updated" }]} sortBy={sortBy} onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
-            <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
+            <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={(value) => { setGroupBy(value); setPage(1); }} />
             {layoutView === "table" && (
               <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
             )}
@@ -1263,7 +1270,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         {/* Content Section: Directory Table inside the single Card */}
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
-            <DataContentSkeleton columns={staffTableColumns} viewMode={layoutView} />
+            layoutView === "grid" ? <GlobalStaffGridSkeleton showRegisterCard={statusFilter !== "Inactive"} /> : <DataContentSkeleton columns={staffTableColumns} className={visibleColumns.length >= 3 ? "min-w-[960px]" : "min-w-[560px]"} />
           ) : filteredStaff.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -1293,7 +1300,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     >
                       Reset Filters
                     </Button>
-                  ) : statusFilter === "Inactive" && stats.active > 0 ? (
+                  ) : statusFilter === "Inactive" ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -1561,9 +1568,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   />
                                   <div className="flex flex-col min-w-0">
                                     <span className={cn("text-[13px] font-semibold text-gray-900 dark:text-zinc-100 truncate", isSelf && "font-bold")} title={`${getStaffCleanName(member)}${isSelf ? " (You)" : ""}`}>
-                                      {getStaffCleanName(member)} {isSelf && "(You)"}
+                                      {getStaffCleanName(member)}
                                     </span>
                                   </div>
+                                  {isSelf && (
+                                    <span className={cn(COMPACT_BADGE_BASE, "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
+                                      You
+                                    </span>
+                                  )}
                                 </div>
                               </td>
                             )}
@@ -1599,7 +1611,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                         : BADGE_PALETTES.amber
                                   )}
                                 >
-                                  <span>{member.role === "SuperAdmin" || member.role === "SystemAdmin" ? "System Admin" : getOfficeRoleLabel(member.role, member, offices)}</span>
+                                  <span className="truncate" title={getOfficeRoleLabel(member.role, member, offices)}>{getOfficeRoleLabel(member.role, member, offices)}</span>
                                 </div>
                               </td>
                             )}
@@ -1639,7 +1651,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             )}
                             <td className="w-12 p-0 align-middle text-center whitespace-nowrap">
                               <div className="flex items-center justify-center" onClick={(event) => event.stopPropagation()}>
-                                <PersonnelActionsMenu member={member} name={getStaffCleanName(member)} isSelf={isSelf}
+                                <PersonnelActionsMenu member={member} name={getStaffCleanName(member)} isSelf={isSelf} allowGlobalPasswordReset
                                   onViewProfile={setInspectMember} onEdit={handleOpenEdit}
                                   onSettings={() => window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: "settings" } }))}
                                   onArchive={setArchiveTarget} onRestore={setRestoreTarget} />
@@ -1718,7 +1730,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Assigned Office / Department {form.role === "SystemAdmin" && <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>}
+                    Assigned Office / Department {form.role === "SystemAdmin" && <span className="normal-case tracking-normal opacity-70">(optional)</span>}
                   </label>
                   <Select
                     value={form.office_id}
@@ -1796,7 +1808,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {/* Official Email Address */}
                   <div>
-                    <label htmlFor="personnel-email" className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                    <label htmlFor="personnel-email" className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
                       Official Email Address
                     </label>
                     <Input
@@ -2057,7 +2069,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {getStaffCleanName(inspectMember)}
                         </span>
                         {isSelf && (
-                          <span className={cn(COMPACT_BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
+                          <span className={cn(COMPACT_BADGE_BASE, "h-4.5 min-h-4.5 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
                             You
                           </span>
                         )}
@@ -2129,18 +2141,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           <span className="font-sans tabular-nums text-xs font-bold text-gray-900 dark:text-zinc-100">
                             {inspectMember.id}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyInspectField(inspectMember.id, "id", "Employee ID")}
-                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                            title="Copy Employee ID"
-                          >
-                            {copiedInspectField === "id" ? (
-                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                            ) : (
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            )}
-                          </button>
+                          <CopyButton iconOnly textToCopy={inspectMember.id} entityName="Employee ID" disabled={!inspectMember.id} />
                         </div>
                       </InfoRow>
                       <InfoRow
@@ -2151,18 +2152,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 truncate text-xs font-medium" title={inspectMember.email}>
                             {getStaffCleanEmail(inspectMember)}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyInspectField(getStaffCleanEmail(inspectMember), "email", "Email address")}
-                            className="w-5 h-5 rounded flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-                            title="Copy Email"
-                          >
-                            {copiedInspectField === "email" ? (
-                              <Tick01Icon size="1em" className="text-[11px] text-gray-700 dark:text-zinc-200" />
-                            ) : (
-                              <Copy01Icon size="1em" className="text-[11px]" />
-                            )}
-                          </button>
+                          <CopyButton iconOnly textToCopy={getStaffCleanEmail(inspectMember)} entityName="Official Email" disabled={!getStaffCleanEmail(inspectMember)} />
                         </div>
                       </InfoRow>
                       <InfoRow
@@ -2190,7 +2180,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                         value={
                           <span
                             className={cn(
-                              BADGE_BASE,
+                              COMPACT_BADGE_BASE,
                               "select-none",
                               inspectMember.totp_enabled
                                 ? BADGE_PALETTES.emerald
@@ -2309,7 +2299,6 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       Close
                     </Button>
                     <CopyButton
-                      iconOnly
                       textToCopy={() => JSON.stringify(inspectMember, null, 2)}
                       entityName="Personnel Data"
                       idleLabel="Copy Personnel Data"
@@ -2319,6 +2308,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {!isSelf && (
                     <div className="flex items-center gap-2">
+                      <StaffPasswordResetAction key={inspectMember.id} account={inspectMember} email={getStaffCleanEmail(inspectMember)} global />
                       {inspectMember.status === "Active" ? (
                         <>
                           <Button

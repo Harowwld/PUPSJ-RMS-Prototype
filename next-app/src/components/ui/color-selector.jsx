@@ -124,7 +124,7 @@ export function ColorSelector({
           {label && (
             <label
               htmlFor={inputId}
-              className="text-[13px] font-medium text-gray-700 dark:text-zinc-300"
+              className="text-xs font-semibold text-gray-700 dark:text-zinc-300"
             >
               {label}
             </label>

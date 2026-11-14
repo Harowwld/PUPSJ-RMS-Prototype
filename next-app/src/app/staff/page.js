@@ -1,5 +1,5 @@
 "use client";
-import { normalizeStudentRecordName, studentRecordNameParts } from "@/lib/studentRecordName";
+import { getStudentRecordNameErrors, normalizeStudentRecordName, studentRecordNameParts } from "@/lib/studentRecordName";
 import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, useReducer, Suspense } from "react";
@@ -18,6 +18,7 @@ import { ContentSwap } from "@/components/ui/motion";
 import { canonicalizeCabinetId, findStorageDrawer } from "@/lib/storageLayoutUtils";
 import { matchesSearchQuery, getDocTypeSearchAliases } from "@/lib/searchUtils";
 import { fetchAllPages } from "@/lib/fetchAllPages";
+import { indexOrganizationStorageDocuments } from "@/lib/organizationStorageDocuments";
 import { cn } from "@/lib/utils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import {
@@ -275,6 +276,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   const [activeStudent, setActiveStudent] = useState(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
+  const [previousSelectionView, setPreviousSelectionView] = useState(view);
+  if (previousSelectionView !== view) {
+    setPreviousSelectionView(view);
+    if (selectedStudentIds.size > 0) setSelectedStudentIds(new Set());
+  }
   const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
@@ -501,6 +507,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             organization_name: proposal.organization_name || proposal.verified_org_name,
             org_acronym: proposal.org_acronym,
             doc_type: "Event Proposal",
+            event_name: proposal.title,
             original_filename: proposal.original_filename,
             storage_filename: proposal.storage_filename,
             mime_type: proposal.mime_type,
@@ -679,10 +686,27 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     [allDocs],
   );
 
+  const organizationStorage = useMemo(() => {
+    if (!isOsas || view !== "storage") return null;
+    const occupants = [...organizations, ...archivedOrganizations];
+    return {
+      occupants: occupants.map((organization) => ({
+        ...organization,
+        location: findStorageDrawer(storageLayout, {
+          room: organization.storage_room ?? 1,
+          cabinet: organization.storage_cabinet,
+          drawer: organization.storage_drawer,
+        }),
+      })),
+      documentsByOrganization: indexOrganizationStorageDocuments(occupants, staffDocs),
+    };
+  }, [isOsas, view, organizations, archivedOrganizations, storageLayout, staffDocs]);
+
   const locatorModel = useMemo(() => {
     if (!storageLayout?.rooms?.length) return { kind: "none" };
 
     const isOsas = authUser?.office_id === "osas";
+    const locatedOrganizations = organizationStorage?.occupants || [];
 
     if (currentLocatorLevel === "rooms") {
       return {
@@ -692,7 +716,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           room: r.id,
           name: r.name || `Room ${r.id}`,
           occupiedCount: isOsas
-            ? organizations.filter((o) => String(o.storage_room || 1) === String(r.id)).length
+            ? locatedOrganizations.filter((o) => String(o.location?.room) === String(r.id)).length
             : students.filter((s) => String(s.room) === String(r.id)).length,
           cabinetsCount: r.cabinets?.length || 0,
           isTarget: String(activeStudent?.room) === String(r.id),
@@ -712,8 +736,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
           const occupiedCount = isOsas
-            ? organizations.filter(
-                (o) => String(o.storage_room || 1) === String(selectedRoom) && String(o.storage_cabinet) === normCab,
+            ? locatedOrganizations.filter(
+                (o) => String(o.location?.room) === String(selectedRoom) && o.location?.cabinet === normCab,
               ).length
             : students.filter(
                 (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
@@ -753,8 +777,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         cabinets: roomDef.cabinets.map((c) => {
           const normCab = String(c.id);
           const occupiedCount = isOsas
-            ? organizations.filter(
-                (o) => String(o.storage_room || 1) === String(selectedRoom) && String(o.storage_cabinet) === normCab,
+            ? locatedOrganizations.filter(
+                (o) => String(o.location?.room) === String(selectedRoom) && o.location?.cabinet === normCab,
               ).length
             : students.filter(
                 (s) => String(s.room) === String(selectedRoom) && String(s.cabinet) === normCab,
@@ -772,11 +796,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }),
         drawers: (cabinetDef.drawerIds || []).map((d) => {
           if (isOsas) {
-            const drawerOrgs = organizations.filter(
+            const drawerOrgs = locatedOrganizations.filter(
               (o) =>
-                String(o.storage_room || 1) === String(selectedRoom) &&
-                String(o.storage_cabinet) === String(selectedCabinet) &&
-                String(o.storage_drawer) === String(d)
+                String(o.location?.room) === String(selectedRoom) &&
+                o.location?.cabinet === String(selectedCabinet) &&
+                String(o.location?.drawer) === String(d)
             );
             return {
               drawer: d,
@@ -792,29 +816,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                     file_url: `/api/osas/organizations/${encodeURIComponent(o.id)}/bylaws?file=1`,
                   });
                 }
-                const propDocs = staffDocs
-                  .filter((doc) =>
-                    doc.source_id && (
-                      doc.organization_id === o.id ||
-                      doc.student_no === o.id ||
-                      (doc.org_acronym && o.acronym && doc.org_acronym.toLowerCase() === o.acronym.toLowerCase()) ||
-                      (doc.organization_name && o.name && doc.organization_name.toLowerCase().includes(o.name.toLowerCase())) ||
-                      (doc.original_filename && doc.original_filename.toLowerCase().includes(o.id.toLowerCase())) ||
-                      (o.acronym && doc.original_filename && doc.original_filename.toLowerCase().includes(o.acronym.toLowerCase()))
-                    )
-                  )
-                  .map((doc) => ({
-                    id: doc.id,
-                    docType: doc.doc_type,
-                    filename: doc.original_filename,
-                    approvalStatus: doc.approval_status,
-                    file_url: doc.file_url,
-                  }));
                 return {
                   studentNo: o.acronym || o.id,
                   name: o.name,
                   category: o.category,
-                  documents: [...docs, ...propDocs],
+                  documents: [...docs, ...(organizationStorage.documentsByOrganization.get(o.id) || [])],
                 };
               }),
               isTarget:
@@ -859,7 +865,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     selectedRoom,
     selectedCabinet,
     students,
-    organizations,
+    organizationStorage,
     activeStudent,
     storageLayout,
     staffDocs,
@@ -941,7 +947,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         } else if (strId.startsWith("event-proposal-")) {
           const propId = strId.replace(/^event-proposal-/, "");
           fileUrl = `/api/osas/event-proposals/${encodeURIComponent(propId)}?file=1`;
-        } else if (docType === "Constitution and By-Laws" || docType === "Constitution & By-Laws (CBL)") {
+        } else if (!id && (docType === "Constitution and By-Laws" || docType === "Constitution & By-Laws (CBL)")) {
           const org = organizations.find((o) => o.id === no || o.acronym === no || o.name === name);
           if (org) {
             fileUrl = `/api/osas/organizations/${encodeURIComponent(org.id)}/bylaws?file=1`;
@@ -1349,71 +1355,45 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
   }, [staffDocs, isReplaceMode, rescanContext, authUser?.office_id, newRec.eventName]);
 
-  const processSubmission = async ({ onSuccess } = {}) => {
-    if (!uploadedFile) {
-      setUploadFieldErrors({ pdfFile: true });
-      showToast({ title: "No File Selected", description: "Attach a document before submitting." }, true);
-      return;
-    }
-
+  const validateUpload = () => {
     const isOsas = authUser?.office_id === "osas";
+    const requiredFields = ["docType"];
 
-    // Validation first to ensure we have meaningful metadata for renaming
-    const err = {};
     if (isOsas) {
-      if (uploadStudentIsExisting) {
-        if (!String(newRec.organizationId || newRec.name || "").trim()) {
-          err.organization = true;
-        }
-        if (!newRec.docType) err.docType = true;
-      } else {
-        if (!String(newRec.name || "").trim()) err.name = true;
-        if (!newRec.category) err.category = true;
-        if (!newRec.room) err.room = true;
-        if (!newRec.cabinet) err.cabinet = true;
-        if (!newRec.drawer) err.drawer = true;
-        if (!newRec.docType) err.docType = true;
-      }
+      requiredFields.push(...(uploadStudentIsExisting ? ["organizationId"] : ["name", "category"]));
     } else {
-      if (uploadStudentIsExisting) {
-        if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-        if (!newRec.docType) err.docType = true;
-      } else {
-        if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-        if (!String(newRec.name || "").trim()) err.name = true;
-        try {
-          normalizeStudentRecordName(studentRecordNameParts(newRec));
-        } catch {
-          err.name = true;
-        }
-        if (!newRec.course) err.course = true;
-        if (!newRec.year) err.year = true;
-        if (!newRec.sectionPart) err.sectionPart = true;
-        if (!newRec.room) err.room = true;
-        if (!newRec.cabinet) err.cabinet = true;
-        if (!newRec.drawer) err.drawer = true;
-        if (!newRec.docType) err.docType = true;
-      }
+      requiredFields.push("studentNo");
+      if (!uploadStudentIsExisting) requiredFields.push("course", "year", "sectionPart");
+    }
+    if (!uploadStudentIsExisting) requiredFields.push("room", "cabinet", "drawer");
+
+    const errors = {};
+    if (!uploadedFile) errors.pdfFile = true;
+    for (const field of requiredFields) {
+      if (!String(newRec[field] ?? "").trim()) errors[field] = true;
+    }
+    if (!isOsas && !uploadStudentIsExisting) {
+      Object.assign(errors, getStudentRecordNameErrors(studentRecordNameParts(newRec)));
     }
 
-    if (Object.keys(err).length) {
-      setUploadFieldErrors(err);
-      if (isOsas) {
-        showToast({
-          title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form",
-          description: uploadStudentIsExisting
-            ? "Select an organization and choose a document type."
-            : "Organization name, category, storage location, and document type are required.",
-        }, true);
-      } else {
-        showToast({ 
-          title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form", 
-          description: uploadStudentIsExisting ? "Provide the student number and document type." : "All student detail fields are required." 
-        }, true);
-      }
-      return;
-    }
-    setUploadFieldErrors({});
+    setUploadFieldErrors(errors);
+    if (!Object.keys(errors).length) return true;
+
+    const hasFieldErrors = Object.keys(errors).some((field) => field !== "pdfFile");
+    showToast({
+      title: hasFieldErrors ? "Incomplete Form" : "No File Selected",
+      description: hasFieldErrors
+        ? errors.pdfFile
+          ? "Attach a document and complete the highlighted fields."
+          : "Check the highlighted fields before uploading."
+        : "Attach a document before submitting.",
+    }, true);
+    return false;
+  };
+
+  const processSubmission = async ({ onSuccess } = {}) => {
+    if (!validateUpload()) return;
+    const isOsas = authUser?.office_id === "osas";
 
     // Convert queued pages to one PDF in their displayed order.
     const { imageToPdf, needsConversion, mergeFilesToPdf } = await import("@/lib/imageToPdf");
@@ -1757,10 +1737,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }
       }
 
+      const recordCount = (count) => `${count} ${isOsas
+        ? (count === 1 ? "organization" : "organizations")
+        : (count === 1 ? "student record" : "student records")}`;
       showToast({
-        title: "Bulk Archival Complete",
-        description: `Successfully moved ${successCount} ${isOsas ? "organization(s)" : "student record(s)"} to the archive. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
-      });
+        title: failCount === 0 ? "Records Archived" : successCount === 0 ? "No Records Archived" : "Some Records Could Not Be Archived",
+        description: failCount > 0
+          ? `${recordCount(successCount)} archived. ${recordCount(failCount)} could not be archived. Refresh the list before retrying.`
+          : `${recordCount(successCount)} moved to Archive.`,
+      }, failCount === 0 ? "success" : successCount === 0 ? "error" : "warning");
       setBulkArchiveOpen(false);
       setSelectedStudentIds(new Set());
       fetchData();
@@ -1769,7 +1754,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       showToast(
         formatErrorMessage(err, {
           title: "Bulk Archival Failed",
-          description: "Failed to process bulk archival. Please verify records and retry.",
+          description: "Refresh the list to see which records were archived before retrying.",
         }),
         true
       );
@@ -1806,10 +1791,15 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
         }
       }
 
+      const recordCount = (count) => `${count} ${isOsas
+        ? (count === 1 ? "organization" : "organizations")
+        : (count === 1 ? "student record" : "student records")}`;
       showToast({
-        title: "Bulk Restoration Complete",
-        description: `Successfully restored ${successCount} ${isOsas ? "organization(s)" : "student record(s)"} to active status. ${failCount > 0 ? `${failCount} records could not be restored.` : ""}`,
-      });
+        title: failCount === 0 ? "Records Restored" : successCount === 0 ? "No Records Restored" : "Some Records Could Not Be Restored",
+        description: failCount > 0
+          ? `${recordCount(successCount)} restored. ${recordCount(failCount)} could not be restored. Refresh the list before retrying.`
+          : `${recordCount(successCount)} moved to Active.`,
+      }, failCount === 0 ? "success" : successCount === 0 ? "error" : "warning");
       setBulkRestoreOpen(false);
       setSelectedStudentIds(new Set());
       fetchData();
@@ -1818,7 +1808,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       showToast(
         formatErrorMessage(err, {
           title: "Bulk Restoration Failed",
-          description: "Failed to process bulk restoration. Please verify records and retry.",
+          description: "Refresh the list to see which records were restored before retrying.",
         }),
         true
       );
@@ -2070,6 +2060,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               courses={courses}
               docTypes={docTypes}
               processSubmission={processSubmission}
+              validateUpload={validateUpload}
               uploadFieldErrors={uploadFieldErrors}
               clearUploadFieldError={clearUploadFieldError}
               clearAllUploadFieldErrors={clearAllUploadFieldErrors}

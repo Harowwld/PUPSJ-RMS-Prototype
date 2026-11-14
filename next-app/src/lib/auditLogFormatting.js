@@ -1,3 +1,13 @@
+const REQUEST_STATUS_LABELS = {
+  pendingpayment: "Pending Payment",
+  inprogress: "In Progress",
+};
+
+export function formatRequestStatus(status) {
+  const key = typeof status === "string" ? status.toLowerCase() : "";
+  return Object.hasOwn(REQUEST_STATUS_LABELS, key) ? REQUEST_STATUS_LABELS[key] : status;
+}
+
 /**
  * Audit log details formatting utility.
  * Formats audit log details into correct grammar styling:
@@ -39,5 +49,9 @@ export function formatLogDetails(text) {
     }
   );
 
-  return formatted;
+  // Expand known workflow codes in prose while preserving filenames, URLs, and identifiers.
+  return formatted.replace(
+    /(?<![\w@/=?&#%.-])(?:PendingPayment|InProgress)(?![\w@/=?&#%-]|\.[\w])/g,
+    formatRequestStatus
+  );
 }

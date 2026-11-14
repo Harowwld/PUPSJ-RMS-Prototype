@@ -317,7 +317,7 @@ export default function BulkImportTab({
                         ref={tableContainerRef}
                         className="w-full flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 select-none"
                       >
-              <Table columns={["selection", "number", "category", { kind: "text", minWidth: 260, maxWidth: 1000, growthWeight: 6 }, { kind: "text", minWidth: 100, maxWidth: 160, growthWeight: 0 }, "status"]} className="min-w-[850px]">
+              <Table columns={["selection", "number", "category", { kind: "text", minWidth: 260, maxWidth: 1000, growthWeight: 6 }, { kind: "text", minWidth: 100, maxWidth: 160, growthWeight: 0 }, { kind: "status", minWidth: 200, maxWidth: 240 }]} className="min-w-[900px]">
                           <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card select-none">
                             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                               <th className="w-12 min-w-[48px] p-4 text-center">
@@ -335,7 +335,7 @@ export default function BulkImportTab({
                               <th className="w-[16%] min-w-[140px] p-4">Category</th>
                               <th className="w-[46%] min-w-[260px] p-4">Name / Label</th>
                               <th className="w-[16%] min-w-[120px] p-4">Identifier</th>
-                              <th className="w-[14%] min-w-[110px] p-4 pr-6 text-right">Validation</th>
+                              <th className="p-4 pr-6 text-right">Validation</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border dark:border-border">
@@ -351,7 +351,7 @@ export default function BulkImportTab({
                                 </span>
                               </td>
                               <td className="p-4 border-r border-border/70 dark:border-border/70">
-                      <Select
+                      <Select placeholder="Select category"
                         className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                         value={quickAdd.category}
                         onChange={(e) => {
@@ -386,7 +386,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4 border-r border-border/70 dark:border-border/70">
                       {quickAdd.category.toLowerCase() === "section" ? (
-                        <Select
+                        <Select placeholder="Select degree program"
                           className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                           value={quickAdd.code}
                           onChange={(e) =>
@@ -396,7 +396,6 @@ export default function BulkImportTab({
                             }))
                           }
                         >
-                          <option value="">Select Program...</option>
                           {courses.map((c) => (
                             <option key={c.code} value={c.code}>
                               {c.code}
@@ -404,7 +403,7 @@ export default function BulkImportTab({
                           ))}
                         </Select>
                       ) : (quickAdd.category || "").toLowerCase().replace(/\s+/g, "") === "documenttype" ? (
-                        <Select
+                        <Select placeholder="Select document purpose"
                           className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                           value={quickAddDocPurpose}
                           onChange={(e) => setQuickAddDocPurpose(e.target.value)}
@@ -479,7 +478,7 @@ export default function BulkImportTab({
                         </td>
                         <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
-                            <Select
+                            <Select placeholder="Select category"
                               className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                               value={editData.category}
                               onChange={(e) =>
@@ -553,7 +552,7 @@ export default function BulkImportTab({
                         <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
-                              <Select
+                              <Select placeholder="Select degree program"
                                 className="h-9 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-700 dark:text-zinc-200 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 cursor-pointer"
                                 value={editData.code}
                                 onChange={(e) =>
@@ -563,7 +562,6 @@ export default function BulkImportTab({
                                   }))
                                 }
                               >
-                                <option value="">Select Program...</option>
                                 {courses.map((c) => (
                                   <option key={c.code} value={c.code}>
                                     {c.code}
@@ -629,9 +627,9 @@ export default function BulkImportTab({
                             <div className="flex items-center justify-end gap-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className={cn("inline-flex cursor-help items-center gap-1 rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-[10px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", BADGE_BASE)}>
-                                    <Alert01Icon size="1em"  className="text-xs"></Alert01Icon>
-                                    <span>{row.error}</span>
+                                  <div className={cn(BADGE_BASE, "min-w-0 shrink cursor-help bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400")}>
+                                    <Alert01Icon size="1em" className="shrink-0 text-xs" />
+                                    <span className="min-w-0 truncate">{row.error}</span>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="left" className="bg-red-950 text-white border-red-900">
@@ -644,7 +642,8 @@ export default function BulkImportTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => startEdit(row)}
-                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+                                    aria-label="Fix Entry"
+                                    className="table-action-button shrink-0 rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>
@@ -662,7 +661,8 @@ export default function BulkImportTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => startEdit(row)}
-                                    className="table-action-button rounded-lg active:scale-95 cursor-pointer"
+                                    aria-label="Edit Entry"
+                                    className="table-action-button shrink-0 rounded-lg active:scale-95 cursor-pointer"
                                   >
                                     <PencilEdit01Icon size="1em"  className="text-sm"></PencilEdit01Icon>
                                   </button>

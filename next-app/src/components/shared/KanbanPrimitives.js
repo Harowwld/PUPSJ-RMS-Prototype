@@ -2,16 +2,24 @@
 
 import { cn } from "@/lib/utils";
 
-const DOT_PALETTE = [
-  "bg-emerald-500",
-  "bg-sky-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-blue-500",
-  "bg-orange-500",
-  "bg-cyan-500",
-];
+import { Badge } from "@/components/ui/badge";
+
+export const KANBAN_CARD_CLASS =
+  "kanban-card group relative flex h-42 shrink-0 flex-col gap-1.5 select-none rounded-xl border border-gray-200/80 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:-translate-y-px hover:border-gray-300 hover:shadow-md active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:border-white/10 dark:bg-zinc-900 dark:hover:border-zinc-700 motion-reduce:transform-none motion-reduce:transition-none";
+export const KANBAN_CARD_DRAGGING_CLASS = "opacity-35 scale-[0.98] border-dashed border-gray-400";
+export const KANBAN_CARD_HEADER_CLASS = "flex h-9 shrink-0 items-start justify-between gap-2.5";
+export const KANBAN_CARD_TITLE_CLASS = "line-clamp-2 wrap-anywhere text-[13px] font-semibold leading-snug text-gray-900 dark:text-zinc-100";
+export const KANBAN_CARD_METADATA_CLASS = "flex min-w-0 items-center gap-1.5 pl-5.5";
+export const KANBAN_CARD_FOOTER_CLASS = "mt-auto flex min-w-0 items-center justify-between gap-2 text-[11px] text-gray-400 dark:text-zinc-500";
+
+export function KanbanCardTag({ label }) {
+  if (!label) return null;
+  return (
+    <Badge variant="gray" size="compact" className="min-w-0 shrink" title={label}>
+      <span className="truncate">{label}</span>
+    </Badge>
+  );
+}
 
 const AVATAR_PALETTE = [
   "bg-emerald-600 text-white dark:bg-emerald-500/90 dark:text-zinc-950",
@@ -29,11 +37,6 @@ function hashLabel(str = "") {
     hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
   }
   return hash;
-}
-
-export function getTagDotColor(label = "") {
-  if (!label) return DOT_PALETTE[0];
-  return DOT_PALETTE[hashLabel(label) % DOT_PALETTE.length];
 }
 
 export function getMiniAvatarColor(label = "") {
@@ -201,26 +204,6 @@ export function KanbanStatusIcon({ status = "Pending", className }) {
     >
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
     </svg>
-  );
-}
-
-/**
- * Inspiration-matched tag pill with a small colored dot on the left.
- */
-export function KanbanDotTag({ label, dotColor, className, title }) {
-  if (!label) return null;
-  const resolvedDot = dotColor || getTagDotColor(label);
-  return (
-    <span
-      title={title || label}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-zinc-800/70 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-zinc-300 max-w-full",
-        className
-      )}
-    >
-      <span className={cn("size-1.5 rounded-full shrink-0", resolvedDot)} aria-hidden="true" />
-      <span className="truncate">{label}</span>
-    </span>
   );
 }
 

@@ -51,30 +51,29 @@ export default function MissingDocumentsInquiryDialog({ user, courses, onClose, 
             <DialogTitle>Check for Missing Documents</DialogTitle>
             <DialogDescription>The Registrar will verify your identity or authorization and share the result in Document Requests.</DialogDescription>
           </DialogHeader>
-          <label className="grid gap-1 text-sm font-medium">
+          <label className="text-xs font-semibold grid gap-1">
             {parent ? "Student’s Student Number" : "Student Number (if known)"}
-            <Input name="studentNo" defaultValue={parent ? "" : user.student_no || ""} required={parent} maxLength={31} />
+            <Input placeholder="e.g. 2026-00001-SJ-0" name="studentNo" defaultValue={parent ? "" : user.student_no || ""} required={parent} maxLength={31} />
           </label>
           {parent ? (
-            <label className="grid gap-1 text-sm font-medium">
+            <label className="text-xs font-semibold grid gap-1">
               Relationship to Student
-              <Input name="requesterRelationship" defaultValue="" maxLength={100} required />
+              <Input placeholder="e.g. Mother" name="requesterRelationship" defaultValue="" maxLength={100} required />
             </label>
           ) : (
-            <label className="grid gap-1 text-sm font-medium">
+            <label className="text-xs font-semibold grid gap-1">
               Academic Program (required if you omit your student number)
-              <Select name="courseCode">
-                <option value="">Choose a program</option>
+              <Select placeholder="Select degree program" name="courseCode">
                 {courses.map(({ code, name }) => <option key={code} value={code}>{name || code}</option>)}
               </Select>
             </label>
           )}
-          <label className="grid gap-1 text-sm font-medium">
+          <label className="text-xs font-semibold grid gap-1">
             Government-issued ID
             <Input type="file" defaultValue="" name="identification" accept=".pdf,.png,.jpg,.jpeg" required />
           </label>
           {parent && (
-            <label className="grid gap-1 text-sm font-medium">
+            <label className="text-xs font-semibold grid gap-1">
               Authorization Letter or SPA
               <Input type="file" defaultValue="" name="authorization" accept=".pdf,.png,.jpg,.jpeg" required />
             </label>

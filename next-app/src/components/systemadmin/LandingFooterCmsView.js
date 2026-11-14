@@ -479,13 +479,14 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                   </div>
 
                   <div>
-                        <label htmlFor="footer-maps" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                          Google Maps Destination URL
+                    <label htmlFor="footer-maps" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Google Maps Destination URL
                     </label>
                     <div className="relative">
                       <Link01Icon size="1em"  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 text-sm" />
                       <Input
                         id="footer-maps"
+                        aria-describedby={!footerData.mapsEnabled ? "footer-maps-help" : undefined}
                         value={footerData.mapsUrl}
                         disabled={!footerData.mapsEnabled}
                         onChange={(e) =>
@@ -498,6 +499,11 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                         className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-sans tabular-nums dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:opacity-50 transition-all"
                       />
                     </div>
+                    {!footerData.mapsEnabled && (
+                      <p id="footer-maps-help" className="mt-1 text-[11px] text-muted-foreground">
+                        Turn on Show map directions link to enter a destination URL.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -527,12 +533,13 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                   </div>
 
                   <div>
-                        <label htmlFor="footer-watermark" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                          Watermark Typography
+                    <label htmlFor="footer-watermark" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Watermark Typography
                     </label>
                     <Input
-                        id="footer-watermark"
-                        value={footerData.watermarkText}
+                      id="footer-watermark"
+                      aria-describedby={!footerData.watermarkEnabled ? "footer-watermark-help" : undefined}
+                      value={footerData.watermarkText}
                       disabled={!footerData.watermarkEnabled}
                       onChange={(e) =>
                         setFooterData((prev) => ({
@@ -544,6 +551,11 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                       maxLength={20}
                       className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums font-bold uppercase tracking-wider dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:opacity-50 transition-all"
                     />
+                    {!footerData.watermarkEnabled && (
+                      <p id="footer-watermark-help" className="mt-1 text-[11px] text-muted-foreground">
+                        Turn on Show footer watermark to edit the watermark text.
+                      </p>
+                    )}
                   </div>
 
                   <div className="h-28 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center overflow-hidden relative select-none">
@@ -709,7 +721,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                             <label htmlFor={`footer-schedule-status-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Status Highlight
                             </label>
-                            <Select
+                            <Select placeholder="Select highlight"
                               id={`footer-schedule-status-${idx}`}
                               value={item.status}
                               aria-label={`Schedule ${idx + 1} status highlight`}
@@ -853,7 +865,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                             <label htmlFor={`footer-contact-type-${idx}`} className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
                               Channel Type
                             </label>
-                            <Select
+                            <Select placeholder="Select channel type"
                               id={`footer-contact-type-${idx}`}
                               value={contact.type}
                               aria-label={`Contact ${idx + 1} channel type`}

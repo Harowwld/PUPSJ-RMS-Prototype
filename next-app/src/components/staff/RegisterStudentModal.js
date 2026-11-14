@@ -19,7 +19,7 @@ import { StudentRegistrationSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Loading01Icon } from "hugeicons-react";
 import StudentNameFields from "@/components/shared/StudentNameFields";
-import { normalizeStudentRecordName } from "@/lib/studentRecordName";
+import { getStudentRecordNameErrors, normalizeStudentRecordName } from "@/lib/studentRecordName";
 import { formatRegistrarStudentName } from "@/lib/validationSchemas";
 
 
@@ -46,12 +46,14 @@ export default function RegisterStudentModal({
   const [room, setRoom] = useState("");
   const [cabinet, setCabinet] = useState("");
   const [drawer, setDrawer] = useState("1");
+  const [validationAttempted, setValidationAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Default room and cabinet when layout is loaded
   useEffect(() => {
     const timer = setTimeout(() => {
     if (open) {
+      setValidationAttempted(false);
       const firstRoom = storageLayout?.rooms?.[0];
       if (firstRoom) {
         setRoom(String(firstRoom.id));
@@ -124,6 +126,7 @@ export default function RegisterStudentModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setValidationAttempted(true);
 
     const cleanNo = studentNo.trim().toUpperCase();
     const cleanName = name.trim().replace(/\s+/g, " ").toUpperCase();
@@ -195,6 +198,7 @@ export default function RegisterStudentModal({
         description: `Student ${cleanNo} (${cleanName}) has been enrolled in the registry.`,
       });
 
+      setValidationAttempted(false);
       repeat.complete(() => {
         setStudentNo("");
         setStudentNo("");
@@ -223,7 +227,7 @@ export default function RegisterStudentModal({
   return (
     <Dialog open={open} onOpenChange={(value) => { if (!isSubmitting) onOpenChange(value); }}>
       <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[92dvh] flex flex-col gap-0 overflow-hidden rounded-[22px] sm:rounded-[22px] border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
-        <form ref={attachForm} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+        <form ref={attachForm} onInvalid={() => setValidationAttempted(true)} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
           <DialogHeader className="p-6 pb-0 text-left shrink-0">
             <DialogTitle>
               Register Student Record
@@ -240,33 +244,44 @@ export default function RegisterStudentModal({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               Student Identification
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className={collectOdrsEmail ? undefined : "md:col-span-2"}>
+                <label htmlFor="register-student-number" className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Student Number
                 </label>
                 <Input
+                  id="register-student-number"
                   type="text"
                   required
                   placeholder="e.g. 2024-00123-SJ-0"
+                  aria-invalid={(validationAttempted && !StudentRegistrationSchema.shape.studentNo.safeParse(studentNo).success) || undefined}
                   value={studentNo}
                   onChange={(e) => handleStudentNoChange(e.target.value)}
                   className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-xs"
                 />
               </div>
-
+              {collectOdrsEmail && (
+                <div>
+                  <label htmlFor="register-student-odrs-email" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    Email for ODRS <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                  </label>
+                  <Input
+                    id="register-student-odrs-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="off"
+                    maxLength={100}
+                    value={odrsEmail}
+                    disabled={isSubmitting}
+                    onChange={(event) => setOdrsEmail(event.target.value)}
+                  />
+                </div>
+              )}
               <div className="md:col-span-2">
-                <StudentNameFields idPrefix="register-student" value={nameParts} onChange={setNameParts} />
+                <StudentNameFields idPrefix="register-student" value={nameParts} onChange={setNameParts} invalidFields={validationAttempted ? getStudentRecordNameErrors(nameParts) : undefined} />
               </div>
             </div>
           </div>
-
-          {collectOdrsEmail && (
-            <label className="grid gap-1.5 text-xs font-medium">
-              Email for ODRS (optional)
-              <Input type="email" placeholder="name@example.com" autoComplete="off" maxLength={100} value={odrsEmail} onChange={(event) => setOdrsEmail(event.target.value)} />
-            </label>
-          )}
 
           {/* Academic Profile */}
           <div className="space-y-4 pt-1 border-t border-border dark:border-border">
@@ -275,10 +290,11 @@ export default function RegisterStudentModal({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-6">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Degree Program
                 </label>
                 <Select
+                  required
                   value={courseCode}
                   onValueChange={(val) => {
                     setCourseCode(val);
@@ -294,7 +310,7 @@ export default function RegisterStudentModal({
               </div>
 
               <div className="md:col-span-3">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Entry Year
                 </label>
                 <Input
@@ -310,11 +326,12 @@ export default function RegisterStudentModal({
               </div>
 
               <div className="md:col-span-3">
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Section
                 </label>
                 {availableSections.length > 0 ? (
                   <Select
+                    required
                     value={section}
                     onValueChange={setSection}
                     options={availableSections.map((s) => ({
@@ -345,10 +362,11 @@ export default function RegisterStudentModal({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Archive Room
                 </label>
                 <Select
+                  required
                   value={String(room)}
                   onValueChange={handleRoomChange}
                   options={(storageLayout?.rooms || []).map((r) => ({
@@ -361,10 +379,11 @@ export default function RegisterStudentModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Cabinet Letter
                 </label>
                 <Select
+                  required
                   value={canonicalizeCabinetId(cabinet)}
                   onValueChange={handleCabinetChange}
                   options={availableCabinets.map((c) => ({
@@ -377,10 +396,11 @@ export default function RegisterStudentModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
                   Drawer Number
                 </label>
                 <Select
+                  required
                   value={String(drawer)}
                   onValueChange={setDrawer}
                   options={availableDrawers.map((d) => ({

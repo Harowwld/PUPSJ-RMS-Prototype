@@ -52,6 +52,7 @@ function StudentRecordsReportSession({ onClose, studentNo, officeId }) {
       title="Student Records Report Preview"
       description={preview?.subtitle || "Review the generated document before printing or downloading."}
       pdfUrl={preview?.url}
+      preparedPdf
       isPreparing={!preview && !error}
       error={error}
       onRetry={() => {

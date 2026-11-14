@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { DEFAULT_INITIAL_LOADER } from "@/lib/initialLoaderPreference";
+import { DEFAULT_INITIAL_LOADER, isInitialLoader } from "@/lib/initialLoaderPreference";
 import { getStaffById, parseStaffPreferences, updateStaffPreferences } from "@/lib/staffRepo";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
 import { queryOne } from "@/lib/postgres";
@@ -36,7 +36,7 @@ const PREFERENCE_VALIDATORS = {
   high_contrast: (value) => typeof value === "boolean",
   reduce_motion: (value) => typeof value === "boolean",
   zoom_node: (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 6,
-  initial_loader: (value) => ["skeleton", "workspace"].includes(value),
+  initial_loader: isInitialLoader,
   default_home_view: (value) => typeof value === "string" && value.length <= 50,
   display_name_format: (value) => ["full_name", "first_only", "last_only", "last_first"].includes(value),
   font_size: (value) => ["smaller", "small", "default", "large", "larger"].includes(value),

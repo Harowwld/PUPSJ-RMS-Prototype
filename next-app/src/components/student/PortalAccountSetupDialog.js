@@ -155,7 +155,7 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
 
                   <div className="space-y-4">
                     <div>
-                      <label id="portal-affiliation-label" className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
+                      <label id="portal-affiliation-label" className="text-xs font-semibold mb-1.5 block uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
                         Affiliation
                       </label>
                       <Select
@@ -175,9 +175,9 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
 
                     {needsStudentNumber && (
                       <div>
-                        <label htmlFor="portal-student-number" className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
+                        <label htmlFor="portal-student-number" className="text-xs font-semibold mb-1.5 block uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
                           Student Number
-                          {!required && <span className="ml-1 font-normal normal-case tracking-normal text-gray-400 dark:text-zinc-500">(optional)</span>}
+                          {!required && <span className="normal-case tracking-normal opacity-70">(optional)</span>}
                         </label>
                         <Input
                           id="portal-student-number"
@@ -204,7 +204,7 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
                   {questions.map((question) => (
                     <div key={question.id}>
                       <label htmlFor={`portal-answer-${question.id}`} className={LABEL_CLASS}>
-                        {question.question}{!question.is_required && " (optional)"}
+                        {question.question}{!question.is_required && <> <span className="normal-case tracking-normal opacity-70">(optional)</span></>}
                       </label>
                       <Input
                         id={`portal-answer-${question.id}`}

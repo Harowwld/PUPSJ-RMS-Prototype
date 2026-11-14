@@ -1,5 +1,7 @@
 "use client";
 
+import { orderRowsByGroup } from "@/lib/groupRows";
+import FacultyAdviserDetails from "@/components/shared/FacultyAdviserDetails";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -61,7 +63,7 @@ import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib
 import { cn } from "@/lib/utils";
 import CopyButton from "@/components/shared/CopyButton";
 import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, File02Icon, Loading01Icon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon } from "hugeicons-react";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, File02Icon, Loading01Icon, Search01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function formatChipDate(dateStr) {
   if (!dateStr) return "";
@@ -641,10 +643,19 @@ export default function OSASOrganizationComplianceView({
 
   // Total pages and paginated organizations
   const totalPages = Math.max(1, Math.ceil(sortedOrganizations.length / pageSize));
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? sortedOrganizations
+    : orderRowsByGroup(sortedOrganizations, (org) => {
+      if (groupBy === "category") return org.category || "General";
+      if (groupBy === "compliance") return org.complianceStatus || org.compliance_status || "Other";
+      return org.status || "Active";
+    }),
+  [sortedOrganizations, groupBy]);
+
   const paginatedOrganizations = useMemo(() => {
     const startIndex = (page - 1) * pageSize;
-    return sortedOrganizations.slice(startIndex, startIndex + pageSize);
-  }, [sortedOrganizations, page, pageSize]);
+    return orderedGroups.slice(startIndex, startIndex + pageSize);
+  }, [orderedGroups, page, pageSize]);
 
   const groupedPaginatedOrganizations = useMemo(() => {
     if (groupBy === "none") return [{ groupKey: null, label: null, items: paginatedOrganizations }];
@@ -1079,10 +1090,10 @@ export default function OSASOrganizationComplianceView({
                 <Table
                   columns={tableColumns.filter(({ key }) => visibleColumns.includes(key)).map(({ key: colKey }) => {
                     if (colKey === "name") return { kind: "text", minWidth: 260, maxWidth: 380 };
-                    if (colKey === "adviser") return { kind: "text", maxWidth: 350 };
+                    if (colKey === "adviser") return { kind: "text", minWidth: 150, maxWidth: 230 };
                     if (colKey === "cbl") return { kind: "status", width: 180 };
                     if (colKey === "officers") return { kind: "status", width: 180 };
-                    return { kind: "number", width: 220 };
+                    return { kind: "number", width: 300 };
                   })}
                 >
                   <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
@@ -1232,28 +1243,11 @@ export default function OSASOrganizationComplianceView({
 
                               {/* Column 2: Faculty Adviser */}
                               {visibleColumns.includes("adviser") && (
-                                <td className="py-3.5 px-6 border-r border-border/70 dark:border-border/70">
-                                  {org.adviserName ? (
-                                    <div className="min-w-0 max-w-[400px]">
-                                      <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                                        {org.adviserName}
-                                      </div>
-                                      {org.adviserEmail ? (
-                                        <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate mt-0.5">
-                                          {org.adviserEmail}
-                                        </div>
-                                      ) : (
-                                        <div className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">
-                                          No email listed
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-100/70 dark:bg-zinc-800/60 dark:text-zinc-400 rounded-lg border border-border/60 dark:border-border">
-                                      <UserMinus01Icon size="1em" className="text-[11px] text-gray-400 dark:text-zinc-500" />
-                                      <span>Unassigned</span>
-                                    </span>
-                                  )}
+                                <td className="overflow-hidden py-3.5 px-6 border-r border-border/70 dark:border-border/70">
+                                  <FacultyAdviserDetails
+                                    name={org.adviserName || org.adviser_name}
+                                    email={org.adviserEmail || org.adviser_email}
+                                  />
                                 </td>
                               )}
 
@@ -1515,7 +1509,7 @@ export default function OSASOrganizationComplianceView({
                           : selectedOrgForOfficers?.status === "Probationary"
                           ? BADGE_PALETTES.amber
                           : BADGE_PALETTES.slate || BADGE_PALETTES.rose,
-                        BADGE_BASE
+                        COMPACT_BADGE_BASE
                       )}
                     >
                       {selectedOrgForOfficers?.status || "Active"}
@@ -1526,7 +1520,10 @@ export default function OSASOrganizationComplianceView({
                     <span>
                       {selectedOrgForOfficers?.adviserName || "Unassigned"}
                       {selectedOrgForOfficers?.adviserEmail && (
-                        <span className="text-gray-400 font-normal ml-1">({selectedOrgForOfficers.adviserEmail})</span>
+                        <span className="ml-1 inline-flex max-w-full items-center gap-1 font-normal text-gray-500">
+                          <span className="break-all">{selectedOrgForOfficers.adviserEmail}</span>
+                          <CopyButton iconOnly textToCopy={selectedOrgForOfficers.adviserEmail} entityName="Faculty Adviser Email" />
+                        </span>
                       )}
                     </span>
                   </InfoRow>
@@ -1542,13 +1539,17 @@ export default function OSASOrganizationComplianceView({
                             filename: selectedOrgForOfficers.cblFilename,
                           })
                         }
-                        className="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 transition-all cursor-pointer active:scale-95"
+                        className={cn(
+                          COMPACT_BADGE_BASE,
+                          BADGE_PALETTES.emerald,
+                          "cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-900/60 active:scale-95",
+                        )}
                         title={PDF_ACTION_LABELS.preview}
                       >
                         Archived PDF
                       </button>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded-md dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+                      <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.amber)}>
                         Pending PDF
                       </span>
                     )}
@@ -1566,7 +1567,7 @@ export default function OSASOrganizationComplianceView({
                             : (selectedOrgForOfficers?.complianceScore ?? 0) >= 50
                             ? BADGE_PALETTES.amber
                             : BADGE_PALETTES.rose,
-                          BADGE_BASE
+                          COMPACT_BADGE_BASE
                         )}
                       >
                         {selectedOrgForOfficers?.complianceStatus || "Action Required"}
@@ -1580,7 +1581,12 @@ export default function OSASOrganizationComplianceView({
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <SheetSectionHeading icon="UserGroupIcon" title="Accredited Officer Roster" />
-                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                  <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.zinc, "pl-1 tabular-nums")}>
+                    <Avatar className="size-3.5 after:hidden" aria-hidden="true">
+                      <AvatarFallback className="border-0">
+                        <UserGroupIcon size={10} />
+                      </AvatarFallback>
+                    </Avatar>
                     {selectedOrgForOfficers?.officers?.length || 0} registered
                   </span>
                 </div>
@@ -1679,7 +1685,7 @@ export default function OSASOrganizationComplianceView({
                                     {officer.studentNo}
                                   </span>
                                 )}
-                                {officer.studentNo && <span className="text-gray-300 dark:text-zinc-600">·</span>}
+                                {officer.studentNo && <CopyButton iconOnly textToCopy={officer.studentNo} entityName="Student Number" />}
                                 {officer.email && (
                                   <>
                                     <span className="max-w-[160px] truncate select-text">{officer.email}</span>
@@ -1747,6 +1753,7 @@ export default function OSASOrganizationComplianceView({
           title="Official OSAS Student Organization Compliance Report"
           description="Student organization compliance and accreditation records."
           pdfUrl={pdfBlobUrl}
+          preparedPdf
           isPreparing={isGeneratingPdf}
           onDownload={handleDownloadPdf}
           onPrintError={(error) => showToast?.(formatErrorMessage(error, { defaultTitle: "Report Printing Failed" }), true)}

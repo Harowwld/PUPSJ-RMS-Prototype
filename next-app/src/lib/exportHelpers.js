@@ -1,5 +1,6 @@
 import { formatPHDateTime } from "./timeFormat.js"
 import { getOfficePrefix } from "./roleUtils.js"
+import { formatRequestStatus } from "./auditLogFormatting.js"
 
 export function formatReportOffice(officeId, officeName) {
   const id = String(officeId ?? "").trim()
@@ -67,7 +68,7 @@ export const downloadSlaComplianceCsv = (data, total, complianceRate, onLogActio
   ];
 
   for (const [st, val] of Object.entries(data.statusCounts || {})) {
-    if (val > 0) lines.push(row([st, val ?? 0]));
+    if (val > 0) lines.push(row([formatRequestStatus(st), val ?? 0]));
   }
 
   const tierStats = data?.sla?.tierStats || {};
@@ -207,7 +208,7 @@ export const downloadComprehensiveSlaCsv = (data, total, completionRate, onLogAc
   ];
 
   for (const [st, val] of Object.entries(data.statusCounts || {})) {
-    if (val > 0) lines.push(row([st, val ?? 0]));
+    if (val > 0) lines.push(row([formatRequestStatus(st), val ?? 0]));
   }
 
   lines.push("");

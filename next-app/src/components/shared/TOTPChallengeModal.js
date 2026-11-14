@@ -77,7 +77,7 @@ export function TOTPChallengeModal({
           <div className="space-y-4 p-6">
 
             <div className="space-y-3">
-              <label className="ml-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
+              <label className="text-xs font-semibold ml-1 tracking-widest text-gray-400 dark:text-zinc-500">
                 Security Verification Code
               </label>
               <Input

@@ -258,17 +258,7 @@ export default function LogTable({
   handleSort,
   logSortBy,
   logSortOrder,
-  localSearch,
-  logRoleFilter,
-  logSeverityFilter,
-  logStartDate,
-  logEndDate,
-  setLocalSearch,
-  setLogSearch,
-  setLogRoleFilter,
-  setLogSeverityFilter,
-  setLogStartDate,
-  setLogEndDate,
+  hasActiveFilters,
   handleCopy,
   embedded = false,
   visibleColumns = DEFAULT_VISIBLE_COLUMNS,
@@ -295,11 +285,11 @@ export default function LogTable({
 
   const tableColumns = [
     { kind: "selection" },
-    ...(showColumn("created_at") ? [{ kind: "date", maxWidth: 205 }] : []),
+    ...(showColumn("created_at") ? [{ kind: "date", width: 205 }] : []),
     ...(showColumn("severity") ? [{ kind: "status", maxWidth: 120 }] : []),
     ...(showColumn("actor") ? [{ kind: "text", maxWidth: 240 }] : []),
     ...(showColumn("action") ? [{ kind: "text", maxWidth: 300 }] : []),
-    ...(showColumn("details") ? [{ kind: "text" }] : []),
+    ...(showColumn("details") ? [{ kind: "text", maxWidth: 300 }] : []),
     ...(showColumn("ip") ? [{ kind: "text", maxWidth: 200 }] : []),
     { kind: "actions" },
   ];
@@ -378,36 +368,13 @@ export default function LogTable({
               icon={EmptySearch01Icon}
               title="No Activity Found"
               description="Try adjusting your search filters to find what you're looking for."
-              action={
-                (localSearch !== "" ||
-                  logRoleFilter !== "All" ||
-                  logSeverityFilter !== "All" ||
-                  logStartDate !== "" ||
-                  logEndDate !== "") && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (onClearFilters) {
-                        onClearFilters();
-                      } else {
-                        setLocalSearch?.("")
-                        setLogSearch?.("")
-                        setLogRoleFilter?.("All")
-                        setLogSeverityFilter?.("All")
-                        setLogStartDate?.("")
-                        setLogEndDate?.("")
-                        setLogPage?.(1)
-                      }
-                    }}
-                    size="sm"
-                    title="Reset Filters"
-                    className="h-9 px-4 text-xs font-semibold rounded-xl"
-                  >
-                    Reset Filters
-                  </Button>
-                )
-              }
-            />
+            >
+              {hasActiveFilters && onClearFilters && (
+                <Button variant="outline" size="sm" onClick={onClearFilters}>
+                  Clear Filters
+                </Button>
+              )}
+            </EmptyState>
           </div>
         ) : (
           <div className="w-full flex-[1_0_auto] flex flex-col">

@@ -44,7 +44,7 @@ export default function NotificationsTabSkeleton() {
 
         {/* 3. Grouped Notifications List */}
         <div className="flex-[1_0_auto] flex flex-col border-t border-border dark:border-border">
-          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} />
+          <NotificationsListSkeleton groupCount={2} itemsPerGroup={3} flush />
         </div>
       </Card>
     </div>

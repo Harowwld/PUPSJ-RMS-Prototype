@@ -259,7 +259,7 @@ const CabinetSidebar = memo(({
                 {/* Position Coordinates */}
                 <div className="grid grid-cols-2 gap-2.5 pt-1">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-zinc-400">
+                    <label className="text-xs font-semibold mb-1.5 block text-gray-600 dark:text-zinc-400">
                       X Position
                     </label>
                     <Input
@@ -280,7 +280,7 @@ const CabinetSidebar = memo(({
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-zinc-400">
+                    <label className="text-xs font-semibold mb-1.5 block text-gray-600 dark:text-zinc-400">
                       Y Position
                     </label>
                     <Input

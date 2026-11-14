@@ -33,20 +33,20 @@ async function runTests() {
   assert.ok(requestableDocs.includes("Certified True Copy of Records"), "Should include Certified True Copy of Records");
   assert.ok(requestableDocs.includes("Diploma"), "Should include Diploma");
   assert.ok(requestableDocs.includes("Transcript of Records"), "Should include Transcript of Records");
-  assert.ok(!requestableDocs.includes("Health and Information Sheet"), "Must NOT include Health and Information Sheet in requestable docs");
-  assert.ok(!requestableDocs.includes("PSA Birth Certificate (circled)"), "Must NOT include PSA Birth Certificate (circled) in requestable docs");
-  assert.ok(!requestableDocs.includes("SAR Form (circled)"), "Must NOT include SAR Form (circled) in requestable docs");
+  assert.ok(!requestableDocs.includes("Student Health Information Form") && !requestableDocs.includes("Health and Information Sheet"), "Must NOT include health forms in requestable docs");
+  assert.ok(!requestableDocs.includes("Certificate of Live Birth") && !requestableDocs.includes("PSA Birth Certificate (circled)"), "Must NOT include birth cert in requestable docs");
+  assert.ok(!requestableDocs.includes("Confirmation Slip") && !requestableDocs.includes("SAR Form (circled)"), "Must NOT include confirmation slip in requestable docs");
   console.log("✓ listDocTypes({ scope: 'requestable' }) returned only requestable credentials.");
 
   // 2. Direct Repo Call - compliance scope filtering
   console.log("\n[Test 2] Testing listDocTypes compliance scope filtering...");
   const complianceDocs = await listDocTypes({ officeId: "registrar", scope: "compliance" });
   console.log("Compliance Registrar docs:", complianceDocs);
-  assert.ok(complianceDocs.includes("Health and Information Sheet"), "Should include Health and Information Sheet");
-  assert.ok(complianceDocs.includes("PSA Birth Certificate (circled)"), "Should include PSA Birth Certificate (circled)");
-  assert.ok(complianceDocs.includes("SAR Form (circled)"), "Should include SAR Form (circled)");
-  assert.ok(complianceDocs.includes("CAEPUP 2023 Application Form"), "Should include CAEPUP 2023 Application Form");
-  assert.ok(complianceDocs.includes("Photocopy of ID"), "Should include Photocopy of ID");
+  assert.ok(complianceDocs.includes("Student Health Information Form") || complianceDocs.includes("Health and Information Sheet"), "Should include health form");
+  assert.ok(complianceDocs.includes("Certificate of Live Birth") || complianceDocs.includes("PSA Birth Certificate (circled)"), "Should include birth certificate");
+  assert.ok(complianceDocs.includes("Confirmation Slip") || complianceDocs.includes("SAR Form (circled)"), "Should include confirmation slip / SAR form");
+  assert.ok(complianceDocs.includes("CAEPUP Application Form") || complianceDocs.includes("CAEPUP 2023 Application Form"), "Should include CAEPUP form");
+  assert.ok(complianceDocs.includes("Student ID Front and Back") || complianceDocs.includes("Photocopy of ID"), "Should include ID form");
   assert.ok(!complianceDocs.includes("Diploma"), "Must NOT include Diploma in compliance docs");
   assert.ok(!complianceDocs.includes("Transcript of Records"), "Must NOT include Transcript of Records in compliance docs");
   console.log("✓ listDocTypes({ scope: 'compliance' }) returned only compliance requirements.");
@@ -54,8 +54,8 @@ async function runTests() {
   // 3. Direct Repo Call - listAllDocTypes metadata
   console.log("\n[Test 3] Testing listAllDocTypes returns purpose metadata...");
   const allDocRows = await listAllDocTypes({ officeId: "registrar" });
-  const healthSheet = allDocRows.find((d) => d.name === "Health and Information Sheet");
-  assert.ok(healthSheet, "Health and Information Sheet should exist in Registrar taxonomy");
+  const healthSheet = allDocRows.find((d) => d.name === "Student Health Information Form" || d.name === "Health and Information Sheet");
+  assert.ok(healthSheet, "Health sheet should exist in Registrar taxonomy");
   assert.equal(healthSheet.is_compliance, true, "Health sheet is_compliance must be true");
   assert.equal(healthSheet.is_requestable, false, "Health sheet is_requestable must be false");
 
@@ -83,12 +83,12 @@ async function runTests() {
   const reqJson = await reqRes.json();
   assert.equal(reqJson.ok, true);
   assert.ok(reqJson.data.includes("Transcript of Records"), "Must include Transcript of Records");
-  assert.ok(!reqJson.data.includes("Health and Information Sheet"), "Must NOT include Health and Information Sheet");
-  assert.ok(!reqJson.data.includes("PSA Birth Certificate (circled)"), "Must NOT include PSA Birth Certificate (circled)");
+  assert.ok(!reqJson.data.includes(healthSheet.name), "Must NOT include compliance document in requestable");
+  assert.ok(!reqJson.data.includes("Certificate of Live Birth") && !reqJson.data.includes("PSA Birth Certificate (circled)"), "Must NOT include Birth Certificate");
   console.log("✓ Student receives strictly requestable credentials from /api/doc-types?scope=requestable.");
 
   // 5. Test Student Request Rejection for Compliance-only document
-  console.log("\n[Test 6] Attempting to submit request for 'Health and Information Sheet' (should be rejected)...");
+  console.log(`\n[Test 6] Attempting to submit request for '${healthSheet.name}' (should be rejected)...`);
   const badReqRes = await fetch(`${BASE_URL}/api/student/document-requests`, {
     method: "POST",
     headers: {
@@ -97,7 +97,7 @@ async function runTests() {
     },
     body: JSON.stringify({
       studentNo: "2022-10001-SJ-0",
-      docType: "Health and Information Sheet",
+      docType: healthSheet.name,
       clientType: "Student",
       notes: "Need for enrollment",
     }),
@@ -109,9 +109,10 @@ async function runTests() {
     badReqJson.error.includes("inward compliance requirement"),
     `Error message should explain it is a compliance requirement: ${badReqJson.error}`
   );
-  console.log("✓ Request for 'Health and Information Sheet' correctly rejected with HTTP 400.");
+  console.log(`✓ Request for '${healthSheet.name}' correctly rejected with HTTP 400.`);
 
-  console.log("\n[Test 6b] Attempting to submit request for 'PSA Birth Certificate (circled)' (should be rejected)...");
+  const testBirthCert = complianceDocs.find((d) => d.includes("Birth")) || "Certificate of Live Birth";
+  console.log(`\n[Test 6b] Attempting to submit request for '${testBirthCert}' (should be rejected)...`);
   const badClearanceRes = await fetch(`${BASE_URL}/api/student/document-requests`, {
     method: "POST",
     headers: {
@@ -120,19 +121,19 @@ async function runTests() {
     },
     body: JSON.stringify({
       studentNo: "2022-10001-SJ-0",
-      docType: "PSA Birth Certificate (circled)",
+      docType: testBirthCert,
       clientType: "Student",
       notes: "Need birth cert",
     }),
   });
-  assert.equal(badClearanceRes.status, 400, "Should reject request for PSA Birth Certificate (circled) with 400");
+  assert.equal(badClearanceRes.status, 400, `Should reject request for ${testBirthCert} with 400`);
   const badClearanceJson = await badClearanceRes.json();
   assert.equal(badClearanceJson.ok, false);
   assert.ok(
     badClearanceJson.error.includes("inward compliance requirement"),
     `Error message should explain it is a compliance requirement: ${badClearanceJson.error}`
   );
-  console.log("✓ Request for 'PSA Birth Certificate (circled)' correctly rejected with HTTP 400.");
+  console.log(`✓ Request for '${testBirthCert}' correctly rejected with HTTP 400.`);
 
   // 6. Test Student Request Success for Requestable document
   console.log("\n[Test 7] Submitting request for 'Transcript of Records' (should succeed)...");
@@ -170,7 +171,7 @@ async function runTests() {
   assert.equal(staffReqRes.status, 200);
   const staffReqJson = await staffReqRes.json();
   assert.equal(staffReqJson.ok, true);
-  assert.ok(!staffReqJson.data.includes("Health Information Sheet"), "Staff requestable scope must NOT include Health Information Sheet");
+  assert.ok(!staffReqJson.data.includes(healthSheet.name), "Staff requestable scope must NOT include compliance document");
   assert.ok(!staffReqJson.data.includes("Clearance Form"), "Staff requestable scope must NOT include Clearance Form");
   assert.ok(staffReqJson.data.includes("Transcript of Records"), "Staff requestable scope must include Transcript of Records");
 
@@ -183,7 +184,7 @@ async function runTests() {
     },
     body: JSON.stringify({
       studentNo: "2022-10001-SJ-0",
-      docType: "Health and Information Sheet",
+      docType: healthSheet.name,
       clientType: "Student",
       notes: "Counter request",
     }),
@@ -192,7 +193,7 @@ async function runTests() {
   const badStaffJson = await badStaffReqRes.json();
   assert.equal(badStaffJson.ok, false);
   assert.ok(badStaffJson.error.includes("inward compliance document"));
-  console.log("✓ Staff request for 'Health and Information Sheet' correctly rejected with HTTP 400.");
+  console.log(`✓ Staff request for '${healthSheet.name}' correctly rejected with HTTP 400.`);
 
   // 7. Test Student Compliance Checklist endpoint
   console.log("\n[Test 8] Fetching /api/student/compliance...");
@@ -205,7 +206,7 @@ async function runTests() {
   const reqNames = (compJson.data.requirements || []).map((r) => r.docType);
   console.log("Student compliance requirements:", reqNames);
   assert.ok(reqNames.some((n) => n.includes("Health")), "Requirements should include Health Information Sheet");
-  assert.ok(reqNames.some((n) => n.includes("Birth Certificate")), "Requirements should include Birth Certificate");
+  assert.ok(reqNames.some((n) => n.includes("Birth")), "Requirements should include Birth Certificate");
   assert.ok(!reqNames.includes("Diploma"), "Requirements must NOT include Diploma for enrolled student");
   assert.ok(!reqNames.includes("Copy of Grades"), "Requirements must NOT include Copy of Grades");
   console.log("✓ Student compliance requirements checklist includes only compliance documents.");

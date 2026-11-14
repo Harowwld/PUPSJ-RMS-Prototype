@@ -1,3 +1,4 @@
+import { formatRequestStatus } from "./auditLogFormatting.js";
 import { createReportDocument } from "./reportDocument.js"
 import { formatPHDateTime } from "./timeFormat.js"
 import { formatLogDetails } from "./auditLogFormatting.js"
@@ -333,7 +334,7 @@ export async function generateCampusOperationsPdf(transactions = [], options = {
       dept,
       requester,
       tx.title || "Untitled",
-      tx.status || "Pending",
+      formatRequestStatus(tx.status || "Pending"),
       charter.label || charter.status || "Standard",
       tx.createdAt ? formatPHDateTime(tx.createdAt) : "Not recorded",
     ]

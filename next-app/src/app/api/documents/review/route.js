@@ -40,6 +40,7 @@ export async function GET(req) {
     dateTo,
     sortBy: params.get("sortBy") || "created_at",
     sortOrder: params.get("sortOrder") || "DESC",
+    groupBy: params.get("groupBy"),
   });
   return NextResponse.json({ ok: true, data });
 }

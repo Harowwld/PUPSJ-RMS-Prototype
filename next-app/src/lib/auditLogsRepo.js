@@ -147,6 +147,12 @@ export async function countAuditLogs(options) {
   return row ? (Number(row.count) || 0) : 0;
 }
 
+function getAuditGroupColumn(groupBy) {
+  if (groupBy === "role") return "coalesce(nullif(role, ''), 'Unspecified Role')";
+  if (groupBy === "severity") return "upper(coalesce(nullif(severity, ''), 'INFO'))";
+  return null;
+}
+
 export async function listAuditLogs(options) {
   const opt = options || {};
   const limit = opt.limit !== undefined ? opt.limit : 20;
@@ -254,10 +260,12 @@ export async function listAuditLogs(options) {
   const validSortCols = ["id", "created_at", "actor", "role", "action", "severity", "ip"];
   const sortCol = validSortCols.includes(sortBy) ? sortBy : "created_at";
 
+  const groupColumn = getAuditGroupColumn(opt.groupBy);
+  const groupOrder = groupColumn ? `${groupColumn}, ` : "";
   if (sortCol === "created_at") {
-    query += ` ORDER BY created_at ${sortOrder}, id ${sortOrder}`;
+    query += ` ORDER BY ${groupOrder}created_at ${sortOrder}, id ${sortOrder}`;
   } else {
-    query += ` ORDER BY ${sortCol} ${sortOrder}, id DESC`;
+    query += ` ORDER BY ${groupOrder}${sortCol} ${sortOrder}, id DESC`;
   }
 
   query += " LIMIT ? OFFSET ?";
@@ -481,17 +489,6 @@ function applyGlobalAuditWhereClauses(whereClauses, params, { officeId, excludeO
     }
   }
 
-  if (excludeSeverity) {
-    const sevList = Array.isArray(excludeSeverity) ? excludeSeverity : String(excludeSeverity).split(",").map((s) => s.trim()).filter(Boolean);
-    if (sevList.length === 1) {
-      whereClauses.push("(severity IS NULL OR severity <> ?)");
-      params.push(sevList[0]);
-    } else if (sevList.length > 1) {
-      whereClauses.push(`(severity IS NULL OR severity NOT IN (${sevList.map(() => "?").join(", ")}))`);
-      params.push(...sevList);
-    }
-  }
-
   if (role && role !== "All") {
     const roleList = expandAuditRoleList(role);
     if (roleList.length === 1) {
@@ -568,7 +565,10 @@ export async function listGlobalAuditLogs(options = {}) {
   };
   const sortCol = allowedSortColumns[sortBy] || "created_at";
 
-  query += ` ORDER BY ${sortCol} ${sortOrder}, id DESC LIMIT ? OFFSET ?`;
+  const groupColumn = options.groupBy === "office_id"
+    ? "upper(coalesce(nullif(office_id, ''), 'Platform Level'))"
+    : getAuditGroupColumn(options.groupBy);
+  query += ` ORDER BY ${groupColumn ? `${groupColumn}, ` : ""}${sortCol} ${sortOrder}, id DESC LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   return await sysDbAll(query, params);

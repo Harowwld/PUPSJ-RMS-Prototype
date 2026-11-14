@@ -168,11 +168,9 @@ test("DigitalRecordsKanbanPipeline component design and features", () => {
     "Kanban board must provide drag-to-scroll canvas panning"
   );
 
-  // Quick actions
-  assert.ok(
-    kanbanCode.includes("onApprove") &&
-      kanbanCode.includes("onDecline") &&
-      kanbanCode.includes("onPreview"),
-    "Kanban cards must provide quick Approve, Decline, and Preview actions"
-  );
+  // Card activation opens the preview, while status changes use drag and drop.
+  assert.match(kanbanCode, /onClick=\{\(\) => onPreview\?\.\(record\)\}/);
+  assert.match(kanbanCode, /onKeyDown=/);
+  assert.match(kanbanCode, /onDropItem\?\.\(droppedData, targetStatus\)/);
+  assert.doesNotMatch(kanbanCode, /group-hover:flex|Move back to Pending Review/);
 });

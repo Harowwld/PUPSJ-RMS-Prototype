@@ -152,6 +152,14 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       const currentStatuses = statusFilterOverride ?? effectiveStatuses;
       if (currentStatuses.length > 0) params.set("status", currentStatuses.join(","));
       if (effectiveDocTypes.length > 0) params.set("docType", effectiveDocTypes.join(","));
+      params.set("sortBy", sortBy);
+      params.set("sortOrder", sortOrder);
+      params.set("groupBy", groupBy);
+      for (const rule of filterRules) {
+        if (rule.operator === "is_not" && rule.value && ["status", "docType"].includes(rule.fieldKey)) {
+          params.append(`exclude-${rule.fieldKey}`, rule.value);
+        }
+      }
       if (query.trim()) params.set("q", query.trim());
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
@@ -192,7 +200,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         setLoadingMore(false);
       }
     }
-  }, [query, showToast, effectiveStatuses, effectiveDocTypes, startDate, endDate]);
+  }, [query, showToast, effectiveStatuses, effectiveDocTypes, filterRules, sortBy, sortOrder, groupBy, startDate, endDate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -362,25 +370,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     { value: "none", label: "No grouping" },
   ], []);
 
-  const sortedRows = useMemo(() => {
-    return [...rows].sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-
-      if (sortBy === "created_at") {
-        const timeA = new Date(a.created_at || a.uploaded_at || 0).getTime();
-        const timeB = new Date(b.created_at || b.uploaded_at || 0).getTime();
-        return sortOrder === "ASC" ? timeA - timeB : timeB - timeA;
-      } else if (typeof valA === "string") {
-        valA = valA.toLowerCase();
-        valB = (valB || "").toLowerCase();
-      }
-
-      if (valA < valB) return sortOrder === "ASC" ? -1 : 1;
-      if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
-      return 0;
-    });
-  }, [rows, sortBy, sortOrder]);
+  const sortedRows = rows;
 
   const groupedRows = useMemo(() => {
     if (groupBy === "none") return [{ key: "all", label: null, items: sortedRows }];
@@ -743,12 +733,17 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
             )} style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)" }} aria-busy={loading}>
               {/* Left Column: Review Queue */}
               <div className="flex min-h-0 min-w-0 flex-col border-r border-border dark:border-border">
-                <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
-                  <div>
+                <div className="flex h-16 shrink-0 items-start justify-between gap-2 border-b border-border bg-gray-50/20 px-2 py-3 sm:px-5 dark:bg-zinc-900/20">
+                  <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Review Queue</h3>
-                    <p className="mt-1 text-[10px] text-gray-500 dark:text-zinc-400 max-md:hidden">↑/↓ move · Shift-click or Shift+↑/↓ range · ⌘/Ctrl-click toggle · ⌘/Ctrl+A select loaded · Esc clear</p>
+                    <p
+                      className="mt-0.5 truncate text-[10px] text-gray-500 max-md:hidden dark:text-zinc-400"
+                      title="↑/↓ move · Shift-click or Shift+↑/↓ range · ⌘/Ctrl-click toggle · ⌘/Ctrl+A select loaded · Esc clear"
+                    >
+                      ↑/↓ move · Shift-click or Shift+↑/↓ range · ⌘/Ctrl-click toggle · ⌘/Ctrl+A select loaded · Esc clear
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2 self-center">
                     {statusFilters.length === 1 && statusFilters[0] === "Failed" && rows.length > 0 && (
                       <Button
                         type="button"
@@ -897,14 +892,17 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               </div>
             </div>
 
-            {/* Right Column: Document Inspector */}
+            {/* Right Column: Document Details */}
             <div className="flex min-h-0 min-w-0 flex-col flex-1">
-              <div className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 max-sm:px-2 max-sm:py-1.5 dark:border-border bg-gray-50/20 dark:bg-zinc-900/20">
-                <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                  {selected?.original_filename || "Document Inspector"}
-                </h3>
+              <div className="flex h-16 shrink-0 items-start justify-between gap-2 border-b border-border bg-gray-50/20 px-2 py-3 sm:px-5 dark:bg-zinc-900/20">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Document Details</h3>
+                  <p className="mt-0.5 truncate text-[10px] text-gray-500 dark:text-zinc-400">
+                    Review the scan and verify the extracted fields.
+                  </p>
+                </div>
                 {selected && (
-                  <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-semibold", selected.review_status === "Confirmed"
+                  <span className={cn("shrink-0 self-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold", selected.review_status === "Confirmed"
                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
                       : selected.review_status === "Failed"
                       ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
@@ -926,7 +924,12 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       )}
 
                       {/* Scanned Document Preview Frame with OCR Overlay Opacity Control */}
-                      <div className="flex flex-col gap-2">
+                      <div className="flex min-w-0 flex-col gap-2">
+                        {selected.original_filename && (
+                          <p className="truncate text-xs font-medium text-gray-700 dark:text-zinc-300" title={selected.original_filename}>
+                            {selected.original_filename}
+                          </p>
+                        )}
                         {isImage && Object.keys(ocrRegions).length > 0 && (
                           <div className="flex items-center justify-between gap-2 px-1">
                             <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -1147,7 +1150,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         <label className="mb-0.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300 sm:mb-1.5">
                           Document Type
                         </label>
-                        <Select
+                        <Select placeholder="Select document type"
                           className="h-9 rounded-xl px-3 bg-white dark:bg-zinc-800 border border-border dark:border-border w-full text-xs text-gray-900 dark:text-zinc-200 shadow-none hover:bg-gray-50 dark:hover:bg-zinc-800/80 transition-all focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                           value={selected.proposed_doc_type || ""}
                           onChange={(event) =>
@@ -1162,7 +1165,6 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             )
                           }
                         >
-                          <option value="">Select type</option>
                           {docTypes.map((type) => (
                             <option key={type} value={type}>
                               {type}

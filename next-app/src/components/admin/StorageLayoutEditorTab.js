@@ -11,7 +11,7 @@ import {
   Card,
 } from "@/components/ui/card"
 import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
-import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
+import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
 
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -57,7 +57,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
   const [studentRoomUsage, setStudentRoomUsage] = useState(new Map())
   const [studentDrawerUsage, setStudentDrawerUsage] = useState(new Map())
 
-  const [activeRoomId, setActiveRoomId] = useState(null)
+  const [activeRoomId, setActiveRoomId] = useWorkspaceViewPreference("storage_layout_editor", "activeRoomId", null)
   const [selectedCabinetIds, setSelectedCabinetIds] = useState(new Set())
   const [templates, setTemplates] = useState([])
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
@@ -925,10 +925,25 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     return () => clearTimeout(timer)
   }, [activeRoom, selectedCabinetIds])
 
-  const [testCabinetRoutes, setTestCabinetRoutes] = useState(false)
-  const routeTarget = selectedCabinetIds.size === 1 && selectedCabinet && !selectedCabinet.isDoor
+  const [testCabinetRoutes, setTestCabinetRoutes] = useWorkspaceViewPreference("storage_layout_editor", "testCabinetRoutes", false)
+  const [savedRouteTarget, setSavedRouteTarget] = useWorkspaceViewPreference("storage_layout_editor", "testRouteTarget", null)
+  const selectedRouteCabinet = selectedCabinetIds.size === 1 && selectedCabinet && !selectedCabinet.isDoor
     ? selectedCabinet
     : null
+
+  const selectedRouteKey = activeRoom && selectedRouteCabinet
+    ? JSON.stringify([activeRoom.id, selectedRouteCabinet.id])
+    : null
+
+  useEffect(() => {
+    if (testCabinetRoutes && selectedRouteKey && selectedRouteKey !== savedRouteTarget) {
+      setSavedRouteTarget(selectedRouteKey)
+    }
+  }, [testCabinetRoutes, selectedRouteKey, savedRouteTarget, setSavedRouteTarget])
+
+  const routeTarget = selectedCabinetIds.size > 0
+    ? selectedRouteCabinet
+    : activeRoom?.cabinets.find((cabinet) => JSON.stringify([activeRoom.id, cabinet.id]) === savedRouteTarget) || null
   const isRouteVisible = testCabinetRoutes && routeTarget != null
   const activePath = useMemo(() => (
     isRouteVisible ? getStorageRoute(activeRoom.cabinets, routeTarget, activeRoom.door || getDefaultDoor()) : null
@@ -1000,7 +1015,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       const rooms = Array.isArray(json.data?.rooms) ? json.data.rooms : []
       if (rooms.length > 0) {
         setActiveRoomId(prev => {
-          if (prev && rooms.some(r => r.id === prev)) return prev
+          if (prev != null && rooms.some(r => String(r.id) === String(prev))) return prev
           return rooms[0].id
         })
       } else {
@@ -1033,7 +1048,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     } finally {
       setLoading(false)
     }
-  }, [showToast, setIsDirty, fetchStudentUsage])
+  }, [showToast, setIsDirty, fetchStudentUsage, setActiveRoomId])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1477,7 +1492,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
 
   async function applyTemplateWithMappings() {
     if (!layout || !templateApplyPayload) return
-    const tpl = ROOM_TEMPLATES.find(t => t.id === templateApplyPayload.templateId)
+    const tpl = templates.find(t => t.id === templateApplyPayload.templateId)
     if (!tpl) return
 
     const nextRooms = layout.rooms.map(r => {

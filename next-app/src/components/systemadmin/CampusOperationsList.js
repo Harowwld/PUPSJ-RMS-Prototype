@@ -1,5 +1,6 @@
 "use client"
 
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import React, { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
@@ -200,7 +201,7 @@ export default function CampusOperationsList({
                                                       statusBadgeClass ? statusBadgeClass(tx.status) : getStatusBadgeClass(tx.status)
                           )}
                         >
-                          <span>{tx.status === "InProgress" ? "In Progress" : tx.status}</span>
+                          <span>{formatRequestStatus(tx.status)}</span>
                         </span>
 
                         {/* Department Pill (Text-only pill) */}

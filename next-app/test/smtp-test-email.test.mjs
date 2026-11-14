@@ -42,6 +42,13 @@ test("installer test validates recipients, excludes secrets, and rejects partial
     assert.equal(messages[0].from, mailEnv.SMTP_FROM);
     assert.equal(messages[0].to, "recipient@example.test");
     assert.equal(/password|token|credentials/i.test(messages[0].text), false);
+    const stream = originalCreateTransport({ streamTransport: true, buffer: true });
+    const { message } = await stream.sendMail(messages[0]);
+    const mime = message.toString("utf8");
+    assert.match(mime, /Content-Type: text\/plain/);
+    assert.match(mime, /Content-Type: text\/html/);
+    assert.match(mime, /Content-ID: <emanage-logo@pupsj-rms>/);
+    assert.match(mime, /Content-Disposition: inline/);
     response = { accepted: [], rejected: ["recipient@example.test"] };
     await assert.rejects(sendSmtpTestEmail({ to: "recipient@example.test" }), { code: "MAIL_RECIPIENT_REJECTED" });
     response = { accepted: ["recipient@example.test"], rejected: ["recipient@example.test"] };

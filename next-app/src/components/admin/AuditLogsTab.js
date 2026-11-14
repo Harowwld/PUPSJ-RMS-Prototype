@@ -60,6 +60,8 @@ export default function AuditLogsTab({
   setLogStartDate,
   logEndDate,
   setLogEndDate,
+  groupBy,
+  setGroupBy,
   logSortBy,
   setLogSortBy,
   logSortOrder,
@@ -104,7 +106,6 @@ export default function AuditLogsTab({
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const previewSession = usePdfPreviewSession();
-  const [groupBy, setGroupBy] = useWorkspaceViewPreference("audit_logs", "groupBy", "none")
 
   // Debounced Search
   useEffect(() => {
@@ -138,8 +139,14 @@ export default function AuditLogsTab({
   const buildExportUrl = (formatType) => {
     const roleQuery = logRoleFilter && logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : ""
     const excludeRoleQuery = logExcludeRoleFilter ? `&excludeRole=${encodeURIComponent(logExcludeRoleFilter)}` : ""
-    const sevQuery = logSeverityFilter && logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : ""
-    const excludeSevQuery = logExcludeSeverityFilter ? `&excludeSeverity=${encodeURIComponent(logExcludeSeverityFilter)}` : ""
+    const getSeverities = (exclude) => [...new Set([
+      exclude ? logExcludeSeverityFilter : logSeverityFilter === "All" ? "" : logSeverityFilter,
+      ...filterRules.filter((rule) => rule.fieldKey === "severity" && (rule.operator === "is_not") === exclude).flatMap((rule) => rule.value),
+    ].filter(Boolean))].join(",");
+    const severities = getSeverities(false);
+    const excludedSeverities = getSeverities(true);
+    const sevQuery = severities ? `&severity=${encodeURIComponent(severities)}` : "";
+    const excludeSevQuery = excludedSeverities ? `&excludeSeverity=${encodeURIComponent(excludedSeverities)}` : "";
     const startQuery = logStartDate ? `&startDate=${encodeURIComponent(logStartDate)}` : ""
     const endQuery = logEndDate ? `&endDate=${encodeURIComponent(logEndDate)}` : ""
     return `/api/audit-logs?format=${formatType}&search=${encodeURIComponent(logSearch)}${roleQuery}${excludeRoleQuery}${sevQuery}${excludeSevQuery}${startQuery}${endQuery}&sortBy=${logSortBy}&sortOrder=${logSortOrder}`
@@ -187,6 +194,9 @@ export default function AuditLogsTab({
     const request = previewSession.begin();
     try {
       const blob = await fetchExportFile("pdf")
+      if (blob.type !== "application/pdf" || blob.size === 0) {
+        throw new Error("The report service did not return a PDF.")
+      }
       const url = previewSession.createUrl(blob, request)
       if (!url) return;
       setPdfPreviewUrl(url)
@@ -241,11 +251,22 @@ export default function AuditLogsTab({
 
   const hasActiveFilters =
     localSearch !== "" ||
+    logSearch !== "" ||
     (logRoleFilter && logRoleFilter !== "All") ||
     Boolean(logExcludeRoleFilter) ||
     logStartDate !== "" ||
     logEndDate !== "" ||
     filterRules.filter((r) => r.fieldKey !== "severity").length > 0;
+
+  const handleClearFilters = () => {
+    setLocalSearch("");
+    setLogSearch("");
+    handleFiltersChange([]);
+    setLogSeverityFilter("All");
+    setLogExcludeSeverityFilter("");
+    setLogStartDate("");
+    setLogEndDate("");
+  };
 
   return (
     <TooltipProvider delay={200}>
@@ -351,7 +372,7 @@ export default function AuditLogsTab({
             visibleColumns={visibleColumns}
             setVisibleColumns={setVisibleColumns}
             groupBy={groupBy}
-            onGroupByChange={setGroupBy}
+            onGroupByChange={(value) => { setGroupBy(value); setLogPage(1); }}
             filterRules={filterRules}
             onFiltersChange={handleFiltersChange}
             tableContainerRef={tableContainerRef}
@@ -367,7 +388,6 @@ export default function AuditLogsTab({
           {hasActiveFilters && (
             <ActiveFilterChips
               chips={filterRules
-                .filter((rule) => rule.fieldKey !== "severity")
                 .map((rule) => {
                   const field = AUDIT_FILTER_FIELDS.find((f) => f.key === rule.fieldKey);
                   const opt = field?.options?.find((o) => String(o.value) === String(rule.value));
@@ -403,14 +423,7 @@ export default function AuditLogsTab({
                     ]
                   : []),
               ]}
-              onClearAll={() => {
-                setLocalSearch("");
-                setLogSearch("");
-                handleFiltersChange([]);
-                setLogStartDate("");
-                setLogEndDate("");
-                setLogPage(1);
-              }}
+              onClearAll={handleClearFilters}
               className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
             />
           )}
@@ -433,30 +446,14 @@ export default function AuditLogsTab({
             handleSort={handleSort}
             logSortBy={logSortBy}
             logSortOrder={logSortOrder}
-            localSearch={localSearch}
-            logRoleFilter={logRoleFilter}
-            logSeverityFilter={logSeverityFilter}
-            logStartDate={logStartDate}
-            logEndDate={logEndDate}
-            setLocalSearch={setLocalSearch}
-            setLogSearch={setLogSearch}
-            setLogSeverityFilter={setLogSeverityFilter}
-            setLogStartDate={setLogStartDate}
-            setLogEndDate={setLogEndDate}
+            hasActiveFilters={hasActiveFilters}
             handleCopy={handleCopy}
             embedded={true}
             cn={cn}
             visibleColumns={visibleColumns}
             tableContainerRef={tableContainerRef}
             isScrolledX={isScrolled}
-            onClearFilters={() => {
-              setLocalSearch("");
-              setLogSearch("");
-              handleFiltersChange([]);
-              setLogStartDate("");
-              setLogEndDate("");
-              setLogPage(1);
-            }}
+            onClearFilters={handleClearFilters}
           />
           {isLoading && !isManualLoading && displayLogs !== null && (
             <span role="status" className="sr-only">Loading activity…</span>
@@ -494,6 +491,7 @@ export default function AuditLogsTab({
           title="Activity History Report Preview"
           description="Review the recorded actions and details before printing or downloading."
           pdfUrl={pdfBlobUrl}
+          preparedPdf
           onDownload={handleDownloadFromPreview}
         />
       </div>
