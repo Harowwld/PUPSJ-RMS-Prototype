@@ -210,6 +210,23 @@ async function runPostEventKanbanGuardsTest() {
     assert.equal(toCleared.json.data.status, "Cleared");
     console.log("  ✓ Post-event clearance granted ('Cleared')");
 
+    const fetchReport = async () => {
+      const res = await fetch(`${BASE_URL}/api/osas/post-event-reports/${testReportId}`, {
+        headers: { cookie: osasAuth.cookieHeader },
+      });
+      assert.equal(res.status, 200);
+      return (await res.json()).data;
+    };
+
+    const beforeRepeat = await fetchReport();
+    const repeatedClearance = await patchReport("Cleared", "This repeated update must not be recorded.");
+    assert.equal(repeatedClearance.status, 200);
+    assert.equal(repeatedClearance.json.statusChanged, false);
+    const afterRepeat = await fetchReport();
+    assert.equal(afterRepeat.review_note, beforeRepeat.review_note);
+    assert.equal(afterRepeat.reviewed_at, beforeRepeat.reviewed_at);
+    assert.deepEqual(afterRepeat.updates, beforeRepeat.updates);
+
     // 15. Test Revocation Guard: Cleared -> Under Review WITHOUT note
     console.log("\n[Step 15] Testing revocation guard: 'Cleared' -> 'Under Review' without justification note...");
     const badRevokeWithoutNote = await patchReport("Under Review", "");

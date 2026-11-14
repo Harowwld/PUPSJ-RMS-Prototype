@@ -7,7 +7,7 @@ import { query, queryOne, transaction } from "@/lib/postgres";
 import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 import { isStudentOfficerForOrg } from "@/lib/organizationsRepo";
 
 export const runtime = "nodejs";
@@ -113,7 +113,7 @@ export async function GET(req, ctx) {
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": fileProposal.mime_type || "application/pdf",
-        "Content-Disposition": `inline; filename="${fileProposal.original_filename || "proposal.pdf"}"`,
+        "Content-Disposition": inlineFileDisposition(fileProposal.original_filename || "proposal.pdf"),
         ...FILE_SECURITY_HEADERS,
       },
     });

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { getPostEventReportById, listPostEventReportUpdates, updatePostEventReportStatus } from "@/lib/osasPostEventRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -50,7 +50,7 @@ export async function HEAD(req, ctx) {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Length": String(stat.size),
-          "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+          "Content-Disposition": inlineFileDisposition(origName || "report.pdf"),
           ...FILE_SECURITY_HEADERS,
         },
       });
@@ -98,7 +98,7 @@ export async function GET(req, ctx) {
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+        "Content-Disposition": inlineFileDisposition(origName || "report.pdf"),
         ...FILE_SECURITY_HEADERS,
       },
     });
@@ -136,33 +136,8 @@ export async function PATCH(req, ctx) {
 
   const currentStatus = existingReport.status || "Submitted";
 
-  // No-op if status is unchanged
   if (status === currentStatus) {
-    if (note) {
-      let updated;
-      try {
-        updated = await updatePostEventReportStatus(id, {
-          status: currentStatus,
-          note,
-          staffId: access.userId,
-          expectedStatus: currentStatus,
-        });
-      } catch (error) {
-        if (error?.code === "POST_EVENT_STATUS_CONFLICT") {
-          return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
-        }
-        throw error;
-      }
-      if (!updated) return NextResponse.json({ ok: false, error: "Report not found" }, { status: 404 });
-      await writeGlobalAuditLog(req, "Added note to OSAS post-event report", {
-        officeId: "osas",
-        details: `Added note to post-event report #${id}: ${note}`,
-        entity_type: "post_event_report",
-        entity_id: String(id),
-      });
-      return NextResponse.json({ ok: true, data: updated });
-    }
-    return NextResponse.json({ ok: true, data: existingReport });
+    return NextResponse.json({ ok: true, data: existingReport, statusChanged: false });
   }
 
   // 1. Validate State Machine Transition

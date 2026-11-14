@@ -1,4 +1,7 @@
 "use client";
+import CopyButton from "@/components/shared/CopyButton";
+import { orderRowsByGroup } from "@/lib/groupRows";
+import FacultyAdviserDetails from "@/components/shared/FacultyAdviserDetails";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { formatPHDateTime, isInManilaDateRange } from "@/lib/timeFormat";
 import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
@@ -885,7 +888,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     0
   );
   const safeOrgPage = Math.min(orgPage, Math.max(1, Math.ceil(filteredOrganizations.length / orgPageSize)));
-  const paginatedOrganizations = filteredOrganizations.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
+  const orderedGroups = useMemo(() => groupBy === "none"
+    ? filteredOrganizations
+    : orderRowsByGroup(filteredOrganizations, (org) => groupBy === "category" ? org.category || "Unassigned Category" : org.status || "Unknown Status"),
+  [filteredOrganizations, groupBy]);
+
+  const paginatedOrganizations = orderedGroups.slice((safeOrgPage - 1) * orgPageSize, safeOrgPage * orgPageSize);
 
   const currentOrgIndex = selectedOrgForOfficers
     ? filteredOrganizations.findIndex((o) => o.id === selectedOrgForOfficers.id)
@@ -1254,18 +1262,16 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 sortBy={sortBy}
                 onSortByChange={(val) => {
                   setSortBy(val);
-                  setSortOrder("ASC");
+                  setOrgPage(1);
                 }}
                 sortOrder={sortOrder}
-                onSortOrderChange={setSortOrder}
+                onSortOrderChange={(value) => { setSortOrder(value); setOrgPage(1); }}
               />
-              {viewMode === "table" && (
-                <GroupPopover
-                  options={ORG_GROUP_OPTIONS}
-                  groupBy={groupBy}
-                  onGroupByChange={setGroupBy}
-                />
-              )}
+              <GroupPopover
+                options={ORG_GROUP_OPTIONS}
+                groupBy={groupBy}
+                onGroupByChange={(value) => { setGroupBy(value); setOrgPage(1); }}
+              />
               {viewMode === "table" && (
                 <ColumnsPopover
                   columns={ORG_TABLE_COLUMNS}
@@ -1354,7 +1360,9 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       >
                         Register Organization
                       </Button>
-                    ) : null}
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" onClick={() => { setOrganizationScope("active"); setOrgPage(1); }}>View Active Organizations</Button>
+                    )}
                   </EmptyContent>
                 </Empty>
               </div>
@@ -1448,16 +1456,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               {/* Faculty Adviser */}
                               {visibleColumns.includes("adviser") && (
                                 <td className="p-4 overflow-hidden border-r border-border/70 dark:border-border/70">
-                                  <div className="text-xs font-medium text-gray-900 dark:text-zinc-100 truncate" title={org.adviser_name}>
-                                    {org.adviser_name || (
-                                      <span className="text-gray-400 italic">Not assigned</span>
-                                    )}
-                                  </div>
-                                  {org.adviser_email && (
-                                    <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums mt-0.5 truncate" title={org.adviser_email}>
-                                      {org.adviser_email}
-                                    </div>
-                                  )}
+                                  <FacultyAdviserDetails name={org.adviser_name} email={org.adviser_email} />
                                 </td>
                               )}
 
@@ -1602,136 +1601,143 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               </div>
             ) : (
               /* Grid View Mode */
-              <div className="p-6 flex-[1_0_auto] content-start grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {paginatedOrganizations.map((org) => {
-                  const pendingCharterCount = Number(org.pending_cbl_count) || 0;
-                  const officerCount = parseInt(org.active_officer_count, 10) || 0;
-                  const proposalCount = parseInt(org.proposal_count, 10) || 0;
+              <div className="flex-[1_0_auto]">
+                {groupedOrganizations.map(({ key, label, orgs }) => (
+                  <section key={key}>
+                    {label && <DataGroupHeader label={label} count={orgs.length} />}
+                    <div className="grid grid-cols-1 content-start gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
+                      {orgs.map((org) => {
+                        const pendingCharterCount = Number(org.pending_cbl_count) || 0;
+                        const officerCount = parseInt(org.active_officer_count, 10) || 0;
+                        const proposalCount = parseInt(org.proposal_count, 10) || 0;
 
-                  return (
-                    <div
-                      key={org.id}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md transition-all duration-200"
-                    >
-                      {/* Institutional Header Banner */}
-                      <div
-                        className={cn(
-                          "relative overflow-hidden rounded-t-[15px] bg-gradient-to-br p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] border-b border-black/10 dark:border-white/10",
-                          getOrgBannerGradientClasses(org.banner_gradient)
-                        )}
-                      >
-                        {/* Top Meta Chips */}
-                        <div className="relative z-10 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {org.acronym && (
-                              <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs">
-                                {org.acronym}
-                              </span>
-                            )}
-                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/25 text-white/90 backdrop-blur-xs">
-                              {org.category}
-                            </span>
-                          </div>
-                          <span
-                            className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border backdrop-blur-xs shrink-0", getBannerStatusClass(org.status), BADGE_BASE)}
+                        return (
+                          <div
+                            key={org.id}
+                            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 dark:border-border bg-white dark:bg-card shadow-xs hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md transition-all duration-200"
                           >
-                            {org.status}
-                          </span>
-                        </div>
-
-                        {/* Organization Title */}
-                        <div className="relative z-10 mt-3">
-                          <h3
-                            className="text-[15px] font-semibold text-white! tracking-tight leading-snug line-clamp-2 min-h-[44px] flex items-center"
-                            style={{ color: "#ffffff" }}
-                            title={org.name}
-                          >
-                            {org.name}
-                          </h3>
-                        </div>
-                      </div>
-
-                      {/* Card Body - Clean, Crisp Spacing */}
-                      <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
-                        <div className="space-y-3">
-                          {/* Faculty Adviser Row */}
-                          <div className="flex items-center justify-between gap-2 text-xs py-0.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
-                                <AppIcon className=" TeacherIcon text-xs" />
-                              </span>
-                              <div className="min-w-0">
-                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider block leading-tight">
-                                  Adviser
-                                </span>
-                                <span className="truncate font-medium text-gray-900 dark:text-zinc-100 block leading-tight">
-                                  {org.adviser_name || (
-                                    <span className="text-gray-400 dark:text-zinc-500 italic font-normal">
-                                      No adviser assigned
+                            {/* Institutional Header Banner */}
+                            <div
+                              className={cn(
+                                "relative overflow-hidden rounded-t-[15px] bg-gradient-to-br p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] border-b border-black/10 dark:border-white/10",
+                                getOrgBannerGradientClasses(org.banner_gradient)
+                              )}
+                            >
+                              {/* Top Meta Chips */}
+                              <div className="relative z-10 flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {org.acronym && (
+                                    <span className="px-2 py-0.5 text-[10px] font-bold font-sans tabular-nums uppercase tracking-wider rounded-md bg-white/20 text-white backdrop-blur-xs">
+                                      {org.acronym}
                                     </span>
                                   )}
+                                  <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-black/25 text-white/90 backdrop-blur-xs">
+                                    {org.category}
+                                  </span>
+                                </div>
+                                <span
+                                  className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border backdrop-blur-xs shrink-0", getBannerStatusClass(org.status), BADGE_BASE)}
+                                >
+                                  {org.status}
                                 </span>
                               </div>
-                            </div>
-                          </div>
 
-                          {/* Key Metrics - Unified Segmented Tile */}
-                          <div className="grid grid-cols-2 divide-x divide-border dark:divide-border rounded-xl bg-gray-50/80 dark:bg-zinc-800/40 border border-border/80 dark:border-border p-2">
-                            <div className="flex items-center gap-2 px-2 min-w-0">
-                              <span className="w-7 h-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
-                                <Shield01Icon size="1em" className="text-sm" />
-                              </span>
-                              <div className="min-w-0">
-                                <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
-                                  Officers
-                                </div>
-                                <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 font-sans tabular-nums">
-                                  {officerCount} active
-                                </div>
+                              {/* Organization Title */}
+                              <div className="relative z-10 mt-3">
+                                <h3
+                                  className="text-[15px] font-semibold text-white! tracking-tight leading-snug line-clamp-2 min-h-[44px] flex items-center"
+                                  style={{ color: "#ffffff" }}
+                                  title={org.name}
+                                >
+                                  {org.name}
+                                </h3>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 px-2 min-w-0">
-                              <span className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 flex items-center justify-center shrink-0">
-                                <CalendarCheckIn01Icon size="1em" className="text-sm" />
-                              </span>
-                              <div className="min-w-0">
-                                <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
-                                  Proposals
+                            {/* Card Body - Clean, Crisp Spacing */}
+                            <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
+                              <div className="space-y-3">
+                                {/* Faculty Adviser Row */}
+                                <div className="flex items-center justify-between gap-2 text-xs py-0.5">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-pup-maroon dark:text-red-400 shrink-0">
+                                      <AppIcon className=" TeacherIcon text-xs" />
+                                    </span>
+                                    <div className="min-w-0">
+                                      <span className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider block leading-tight">
+                                        Adviser
+                                      </span>
+                                      <span className="truncate font-medium text-gray-900 dark:text-zinc-100 block leading-tight">
+                                        {org.adviser_name || (
+                                          <span className="text-gray-400 dark:text-zinc-500 italic font-normal">
+                                            No adviser assigned
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 font-sans tabular-nums">
-                                  {proposalCount} filed
+
+                                {/* Key Metrics - Unified Segmented Tile */}
+                                <div className="grid grid-cols-2 divide-x divide-border dark:divide-border rounded-xl bg-gray-50/80 dark:bg-zinc-800/40 border border-border/80 dark:border-border p-2">
+                                  <div className="flex items-center gap-2 px-2 min-w-0">
+                                    <span className="w-7 h-7 rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
+                                      <Shield01Icon size="1em" className="text-sm" />
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
+                                        Officers
+                                      </div>
+                                      <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 font-sans tabular-nums">
+                                        {officerCount} active
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 px-2 min-w-0">
+                                    <span className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 flex items-center justify-center shrink-0">
+                                      <CalendarCheckIn01Icon size="1em" className="text-sm" />
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="text-[10px] text-gray-400 dark:text-zinc-500 uppercase font-semibold tracking-wider">
+                                        Proposals
+                                      </div>
+                                      <div className="text-xs font-bold text-gray-900 dark:text-zinc-100 font-sans tabular-nums">
+                                        {proposalCount} filed
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
+
+                                {pendingCharterCount > 0 && (
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                                      {pendingCharterCount} {pendingCharterCount === 1 ? "charter" : "charters"} pending review
+                                    </span>
+                                    <Button variant="outline" size="xs" onClick={() => openManageOrgSheet(org, "cbl")}>
+                                      Review Charters
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Card Actions */}
+                              <div className="pt-3 border-t border-border dark:border-border">
+                                <Button
+                                  onClick={() => openManageOrgSheet(org, "info")}
+                                  title="Manage Organization"
+                                  className="w-full h-9 px-4 cursor-pointer"
+                                >
+                                  Manage Organization
+                                </Button>
                               </div>
                             </div>
                           </div>
-
-                          {pendingCharterCount > 0 && (
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
-                                {pendingCharterCount} {pendingCharterCount === 1 ? "charter" : "charters"} pending review
-                              </span>
-                              <Button variant="outline" size="xs" onClick={() => openManageOrgSheet(org, "cbl")}>
-                                Review Charters
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Card Actions */}
-                        <div className="pt-3 border-t border-border dark:border-border">
-                          <Button
-                            onClick={() => openManageOrgSheet(org, "info")}
-                            title="Manage Organization"
-                            className="w-full h-9 px-4 cursor-pointer"
-                          >
-                            Manage Organization
-                          </Button>
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </section>
+                ))}
               </div>
             )}
           </div>
@@ -1881,7 +1887,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                          Acronym <span className="normal-case tracking-normal opacity-70">(optional)</span>
                         </label>
                         <Input
                           type="text"
@@ -1898,7 +1904,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                           Category
                         </label>
-                        <Select
+                        <Select placeholder="Select category"
                           value={orgForm.category}
                           onChange={(e) => setOrgForm({ ...orgForm, category: e.target.value })}
                           usePortal={false}
@@ -1913,7 +1919,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                           Accreditation Status
                         </label>
-                        <Select
+                        <Select placeholder="Select status"
                           value={orgForm.status}
                           onChange={(e) => setOrgForm({ ...orgForm, status: e.target.value })}
                           usePortal={false}
@@ -1929,7 +1935,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                          Faculty Adviser Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                         </label>
                         <Input
                           type="text"
@@ -1942,7 +1948,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                          Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                          Adviser Email <span className="normal-case tracking-normal opacity-70">(optional)</span>
                         </label>
                         <Input
                           type="email"
@@ -2030,7 +2036,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                           <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                             Officer Position
                           </label>
-                          <Select
+                          <Select placeholder="Select officer position"
                             value={officerForm.position}
                             onChange={(e) =>
                               setOfficerForm({ ...officerForm, position: e.target.value })
@@ -2048,7 +2054,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                         <div>
                           <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Student Full Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                            Student Full Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                           </label>
                           <Input
                             type="text"
@@ -2063,7 +2069,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                         <div>
                           <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                            Student Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                            Student Number <span className="normal-case tracking-normal opacity-70">(optional)</span>
                           </label>
                           <Input
                             type="text"
@@ -2168,12 +2174,13 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                       {officer.position}
                                     </span>
                                   </div>
-                                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums truncate">
-                                    <span>{officer.email}</span>
+                                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-[11px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
+                                    <span className="min-w-0 truncate">{officer.email}</span>
+                                    {officer.email && <CopyButton iconOnly textToCopy={officer.email} entityName="Officer Email" />}
                                     {(officer.student_no || officer.studentNo) && (
                                       <>
-                                        <span className="text-gray-300 dark:text-zinc-600">·</span>
                                         <span>{officer.student_no || officer.studentNo}</span>
+                                        <CopyButton iconOnly textToCopy={officer.student_no || officer.studentNo} entityName="Student Number" />
                                       </>
                                     )}
                                   </div>
@@ -2255,7 +2262,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               variant="outline"
                               onClick={() =>
                                 setPreviewPdf({
-                                  url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1`,
+                                  url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1&versionId=${encodeURIComponent(ver.id)}`,
                                   title: `${selectedOrgForOfficers?.name}: ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
                                   filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
                                 })
@@ -2404,7 +2411,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Acronym <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                      Acronym <span className="normal-case tracking-normal opacity-70">(optional)</span>
                     </label>
                     <Input
                       type="text"
@@ -2421,7 +2428,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                       Category
                     </label>
-                    <Select
+                    <Select placeholder="Select category"
                       value={orgForm.category}
                       onChange={(e) => setOrgForm({ ...orgForm, category: e.target.value })}
                       usePortal={false}
@@ -2436,7 +2443,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
                       Status
                     </label>
-                    <Select
+                    <Select placeholder="Select status"
                       value={orgForm.status}
                       onChange={(e) => setOrgForm({ ...orgForm, status: e.target.value })}
                       usePortal={false}
@@ -2451,7 +2458,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                 <div>
                   <label htmlFor="org-modal-description" className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                    Description & Mission <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                    Description & Mission <span className="normal-case tracking-normal opacity-70">(optional)</span>
                   </label>
                   <Textarea
                     id="org-modal-description"
@@ -2467,7 +2474,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Faculty Adviser Name <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                      Faculty Adviser Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
                     </label>
                     <Input
                       type="text"
@@ -2480,7 +2487,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">
-                      Adviser Email <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                      Adviser Email <span className="normal-case tracking-normal opacity-70">(optional)</span>
                     </label>
                     <Input
                       type="email"
@@ -2641,7 +2648,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                     {cblReviewAction === "Approved" ? (
-                      <>Approval Remarks / Notes <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span></>
+                      <>Approval Remarks / Notes <span className="normal-case tracking-normal opacity-70">(optional)</span></>
                     ) : (
                       "Review Feedback & Instructions"
                     )}

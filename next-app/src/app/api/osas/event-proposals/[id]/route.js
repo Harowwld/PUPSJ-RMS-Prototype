@@ -6,7 +6,7 @@ import { requireOfficeModule } from "@/lib/moduleAccess";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { decryptPII } from "@/lib/piiEncryption";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 const validStatuses = new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]);
@@ -164,7 +164,7 @@ export async function GET(req, ctx) {
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": fileProposal.mime_type || "application/pdf",
-        "Content-Disposition": `inline; filename="${fileProposal.original_filename || "proposal.pdf"}"`,
+        "Content-Disposition": inlineFileDisposition(fileProposal.original_filename || "proposal.pdf"),
         ...FILE_SECURITY_HEADERS,
       },
     });
@@ -262,12 +262,13 @@ export async function PATCH(req, ctx) {
 
   const currentStatus = existingProposal.status || "Submitted";
 
-  // No-op if status is unchanged and no note was supplied.
-  if (status === currentStatus && !note) return NextResponse.json({ ok: true, data: existingProposal });
+  if (status === currentStatus) {
+    return NextResponse.json({ ok: true, data: existingProposal, statusChanged: false });
+  }
 
   // 1. Validate State Machine Transition
   const allowedNext = ALLOWED_TRANSITIONS[currentStatus] || [];
-  if (status !== currentStatus && !allowedNext.includes(status)) {
+  if (!allowedNext.includes(status)) {
     return NextResponse.json(
       {
         ok: false,
@@ -278,7 +279,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 2. Guard: Revoking an Approved proposal requires a written justification note
-  if (status !== currentStatus && currentStatus === "Approved" && (!note || note.length < 5)) {
+  if (currentStatus === "Approved" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -289,7 +290,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 3. Guard: Reopening a Declined proposal requires an appeal/reconsideration note
-  if (status !== currentStatus && currentStatus === "Declined" && (!note || note.length < 5)) {
+  if (currentStatus === "Declined" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -300,7 +301,7 @@ export async function PATCH(req, ctx) {
   }
 
   // 4. Guard: Requesting revisions requires instructions for the student organization
-  if (status !== currentStatus && status === "Needs Revision" && (!note || note.length < 5)) {
+  if (status === "Needs Revision" && (!note || note.length < 5)) {
     return NextResponse.json(
       {
         ok: false,
@@ -326,39 +327,36 @@ export async function PATCH(req, ctx) {
         throw error;
       }
 
-      let updated = locked;
-      if (status !== currentStatus) {
-        updated = await tx.queryOne(
-          `UPDATE event_proposals
-              SET status = $1,
-                  archived_at = NULL,
-                  updated_at = NOW(),
-                  post_event_status = CASE
-                    WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission'
-                    WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN 'Not Applicable'
-                    ELSE post_event_status
-                  END,
-                  post_event_due_date = CASE
-                    WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
-                    WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN NULL
-                    ELSE post_event_due_date
-                  END
-            WHERE id = $2 AND office_id = 'osas'
-            RETURNING *`,
-          [status, id],
+      const updated = await tx.queryOne(
+        `UPDATE event_proposals
+            SET status = $1,
+                archived_at = NULL,
+                updated_at = NOW(),
+                post_event_status = CASE
+                  WHEN $1 = 'Approved' AND post_event_status = 'Not Applicable' THEN 'Pending Submission'
+                  WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN 'Not Applicable'
+                  ELSE post_event_status
+                END,
+                post_event_due_date = CASE
+                  WHEN $1 = 'Approved' AND post_event_due_date IS NULL THEN COALESCE(event_date + INTERVAL '10 days', (NOW() + INTERVAL '10 days')::DATE)
+                  WHEN $1 != 'Approved' AND post_event_status = 'Pending Submission' THEN NULL
+                  ELSE post_event_due_date
+                END
+          WHERE id = $2 AND office_id = 'osas'
+          RETURNING *`,
+        [status, id],
+      );
+      if (status === "Approved") {
+        const pruned = await tx.query(
+          `UPDATE event_proposal_versions
+              SET file_pruned_at = NOW()
+            WHERE event_proposal_id = $1
+              AND storage_filename <> $2
+              AND file_pruned_at IS NULL
+            RETURNING storage_filename`,
+          [id, updated.storage_filename]
         );
-        if (status === "Approved") {
-          const pruned = await tx.query(
-            `UPDATE event_proposal_versions
-                SET file_pruned_at = NOW()
-              WHERE event_proposal_id = $1
-                AND storage_filename <> $2
-                AND file_pruned_at IS NULL
-              RETURNING storage_filename`,
-            [id, updated.storage_filename]
-          );
-          supersededFilenames = pruned.rows.map((row) => row.storage_filename).filter(Boolean);
-        }
+        supersededFilenames = pruned.rows.map((row) => row.storage_filename).filter(Boolean);
       }
       await tx.query(
         `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
@@ -375,20 +373,18 @@ export async function PATCH(req, ctx) {
   }
   if (!proposal) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   let removedFileCount = 0;
-  if (status === "Approved" && status !== currentStatus && supersededFilenames.length) {
+  if (status === "Approved" && supersededFilenames.length) {
     try {
       removedFileCount = (await pruneSupersededProposalFiles(id, supersededFilenames, proposal.storage_filename)).length;
     } catch (error) {
       console.warn("Could not finish pruning superseded proposal PDFs:", error?.message);
     }
   }
-  await writeGlobalAuditLog(req, status === currentStatus ? "Added note to OSAS proposal" : "Updated OSAS proposal status", {
+  await writeGlobalAuditLog(req, "Updated OSAS proposal status", {
     officeId: "osas",
-    details: status === currentStatus
-      ? `Added note to ${proposal.title}: ${note}`
-      : `Changed ${proposal.title} to ${status}. ${studentNote}${removedFileCount ? ` Removed ${removedFileCount} superseded PDF file${removedFileCount === 1 ? "" : "s"} from active storage.` : ""}`,
+    details: `Changed ${proposal.title} to ${status}. ${studentNote}${removedFileCount ? ` Removed ${removedFileCount} superseded PDF file${removedFileCount === 1 ? "" : "s"} from active storage.` : ""}`,
     entity_type: "event_proposal",
     entity_id: String(id),
   });
-  return NextResponse.json({ ok: true, data: status === currentStatus ? existingProposal : proposal });
+  return NextResponse.json({ ok: true, data: proposal });
 }

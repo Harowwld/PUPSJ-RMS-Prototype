@@ -32,21 +32,23 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
     }
   });
 
-  await t.test("3. OSAS storage layout matches Registrar cabinet dimensions (0.075 x 0.12) and Room 1 naming", async () => {
+  await t.test("3. OSAS storage has one room with organization cabinets", async () => {
     const layout = await getStorageLayout({ officeId: "osas" });
     assert.ok(layout, "Layout must be returned");
     assert.equal(layout.version, 2, "Layout version must be 2");
     assert.ok(Array.isArray(layout.rooms), "Rooms must be an array");
-    assert.ok(layout.rooms.length >= 1, "Must have at least 1 room");
+    assert.equal(layout.rooms.length, 1);
 
     const room = layout.rooms[0];
     assert.equal(room.name, "Room 1", "Default room name should match Registrar standard 'Room 1'");
-    assert.ok(room.cabinets.length >= 2, "Must have cabinets installed");
+    assert.deepEqual(room.cabinets.map(({ id }) => id).sort(), [
+      "ACADEMIC ORGANIZATIONS", "NON-ACADEMIC ORGANIZATIONS",
+    ]);
 
     for (const cab of room.cabinets) {
       assert.ok(Math.abs(cab.rect.w - 0.075) < 1e-9, `Cabinet ${cab.id} width must match Registrar 0.075`);
       assert.ok(Math.abs(cab.rect.h - 0.12) < 1e-9, `Cabinet ${cab.id} height must match Registrar 0.12`);
-      assert.ok(Array.isArray(cab.drawerIds), `Cabinet ${cab.id} must have drawerIds`);
+      assert.deepEqual(cab.drawerIds, [1, 2, 3, 4, 5, 6, 7]);
     }
   });
 

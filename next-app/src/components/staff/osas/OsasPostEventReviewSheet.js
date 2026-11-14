@@ -1,4 +1,5 @@
 "use client";
+import CopyButton from "@/components/shared/CopyButton";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
@@ -110,16 +111,19 @@ export default function OsasPostEventReviewSheet({
       })
     : "N/A";
 
+  const currentStatus = selectedPostEvent.status || "Submitted";
+  const hasStatusChange = postEventStatus !== currentStatus;
+
   const handleSelectStatusPill = (val) => {
     setPostEventStatus(val);
-    if (val !== "Needs Revision" && !postEventNote.trim()) {
+    if (val !== currentStatus && val !== "Needs Revision" && !postEventNote.trim()) {
       setPostEventNote(`Status updated to ${val} by OSAS clearance review.`);
     }
   };
 
   const isRevokingClearance =
-    selectedPostEvent.status === "Cleared" && postEventStatus !== "Cleared";
-  const isRequestingRevision = postEventStatus === "Needs Revision";
+    currentStatus === "Cleared" && hasStatusChange;
+  const isRequestingRevision = hasStatusChange && postEventStatus === "Needs Revision";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -191,17 +195,26 @@ export default function OsasPostEventReviewSheet({
                   avatarId={selectedPostEvent.student_no || selectedPostEvent.student_account_id}
                 />
               </InfoRow>
-              <InfoRow icon={Mail01Icon} label="Email Address" value={selectedPostEvent.submitted_by_email} />
+              <InfoRow icon={Mail01Icon} label="Email Address">
+                {selectedPostEvent.submitted_by_email ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="break-all">{selectedPostEvent.submitted_by_email}</span>
+                    <CopyButton iconOnly textToCopy={selectedPostEvent.submitted_by_email} entityName="Email Address" />
+                  </div>
+                ) : "N/A"}
+              </InfoRow>
               <InfoRow icon={Tag01Icon} label="Report ID">
                 <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
                   {getOsasRecordReference(selectedPostEvent, "post_events")}
                 </Badge>
+                <CopyButton iconOnly textToCopy={getOsasRecordReference(selectedPostEvent, "post_events")} entityName="Report ID" />
               </InfoRow>
               {trackingNo && (
                 <InfoRow icon={Tag01Icon} label="Proposal ID">
                   <Badge variant="gray" size="compact" className="rounded-lg tabular-nums">
                     {trackingNo}
                   </Badge>
+                  <CopyButton iconOnly textToCopy={trackingNo} entityName="Proposal ID" />
                 </InfoRow>
               )}
               <InfoRow icon={ClipboardIcon} label="Clearance Status">
@@ -339,9 +352,7 @@ export default function OsasPostEventReviewSheet({
           <div className="space-y-3.5 pt-2 border-t border-border/80 dark:border-border">
             <SheetSectionHeading icon={Calendar01Icon} title="Clearance Evaluation">
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
-                {postEventStatus !== selectedPostEvent.status
-                  ? `Move to: ${postEventStatus}`
-                  : `Current: ${selectedPostEvent.status}`}
+                {hasStatusChange ? `Move to: ${postEventStatus}` : `Current: ${currentStatus}`}
               </OsasSheetSummaryBadge>
             </SheetSectionHeading>
 
@@ -371,16 +382,17 @@ export default function OsasPostEventReviewSheet({
 
             {/* Full Stage Select Picker */}
             <div className="space-y-1">
-              <Select
+              <Select placeholder="Select clearance action"
                 value={postEventStatus}
                 onValueChange={(val) => handleSelectStatusPill(val)}
                 usePortal={false}
+                aria-label="Clearance action"
                 className="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-slate-900 dark:text-zinc-100 shadow-none cursor-pointer"
                 buttonClassName="h-9 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 border-border text-slate-900 dark:text-zinc-100"
               >
                 {availablePostEventStatusOptions.map((opt) => (
                   <option key={opt} value={opt}>
-                    Move to: {opt}
+                    {opt === currentStatus ? `Current: ${opt}` : `Move to: ${opt}`}
                   </option>
                 ))}
               </Select>
@@ -450,13 +462,15 @@ export default function OsasPostEventReviewSheet({
             size="sm"
             className="h-9 px-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => savePostEvent?.()}
-            disabled={isSavingPostEvent || !isPostEventNoteValid}
+            disabled={isSavingPostEvent || !hasStatusChange || !isPostEventNoteValid}
           >
             {isSavingPostEvent ? (
               <>
                 <Loading01Icon size={16} className="animate-spin mr-2" />
                 Saving...
               </>
+            ) : !hasStatusChange ? (
+              "Update Evaluation"
             ) : postEventStatus === "Cleared" ? (
               "Clear Event Report"
             ) : postEventStatus === "Needs Revision" ? (

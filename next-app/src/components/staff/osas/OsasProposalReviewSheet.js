@@ -1,4 +1,5 @@
 "use client";
+import CopyButton from "@/components/shared/CopyButton";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
 import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
@@ -97,8 +98,12 @@ export default function OsasProposalReviewSheet({
       })
     : "N/A";
 
+  const currentStatus = normalizeProposalStatus(selected.status);
+  const hasStatusChange = status !== currentStatus;
+
   const handleSelectStatusPill = (val) => {
     setStatus(val);
+    if (val === currentStatus) return;
     if (val === "Needs Revision") {
       if (!note.trim() || note.startsWith("Status updated")) {
         setNote("");
@@ -195,8 +200,22 @@ export default function OsasProposalReviewSheet({
                 </div>
               </InfoRow>
               {selected.officer_position && <InfoRow icon={UserCircleIcon} label="Officer Position" value={selected.officer_position} />}
-              <InfoRow icon={Tag01Icon} label="Student Number" value={selected.student_no} />
-              <InfoRow icon={Mail01Icon} label="Email Address" value={selected.submitted_by_email} />
+              <InfoRow icon={Tag01Icon} label="Student Number">
+                {selected.student_no ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="break-all">{selected.student_no}</span>
+                    <CopyButton iconOnly textToCopy={selected.student_no} entityName="Student Number" />
+                  </div>
+                ) : "N/A"}
+              </InfoRow>
+              <InfoRow icon={Mail01Icon} label="Email Address">
+                {selected.submitted_by_email ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="break-all">{selected.submitted_by_email}</span>
+                    <CopyButton iconOnly textToCopy={selected.submitted_by_email} entityName="Email Address" />
+                  </div>
+                ) : "N/A"}
+              </InfoRow>
             </dl>
 
             <Card variant="flat" size="sm">
@@ -441,7 +460,7 @@ export default function OsasProposalReviewSheet({
 
             {/* Full Stage Select Picker */}
             <div className="space-y-1">
-              <Select
+              <Select placeholder="Select status"
                 value={status}
                 onValueChange={(val) => handleSelectStatusPill(val)}
                 usePortal={false}
@@ -531,13 +550,15 @@ export default function OsasProposalReviewSheet({
             size="sm"
             className="h-9 px-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => save?.()}
-            disabled={isSaving || !isNoteValid}
+            disabled={isSaving || !hasStatusChange || !isNoteValid}
           >
             {isSaving ? (
               <>
                 <Loading01Icon size={16} className="animate-spin mr-2" />
                 Saving...
               </>
+            ) : !hasStatusChange ? (
+              "Update Evaluation"
             ) : isRevokingApproval ? (
               "Revoke Approval"
             ) : isReopeningDeclined ? (

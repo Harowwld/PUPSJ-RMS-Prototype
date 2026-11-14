@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { getPostEventReportById, listPostEventReportUpdates } from "@/lib/osasPostEventRepo";
 import { isStudentOfficerForOrg } from "@/lib/organizationsRepo";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -52,7 +52,7 @@ export async function GET(req, ctx) {
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${origName || "report.pdf"}"`,
+        "Content-Disposition": inlineFileDisposition(origName || "report.pdf"),
         ...FILE_SECURITY_HEADERS,
       },
     });
