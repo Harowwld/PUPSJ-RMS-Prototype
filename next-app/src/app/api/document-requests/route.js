@@ -71,6 +71,7 @@ export async function GET(req) {
       limit,
       offset,
       sortBy,
+      groupBy: searchParams.get("groupBy"),
       sortOrder,
     }),
     countDocumentRequests({

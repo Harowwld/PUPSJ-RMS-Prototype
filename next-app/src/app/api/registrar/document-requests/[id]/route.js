@@ -1,3 +1,4 @@
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { NextResponse } from "next/server";
 import { transaction } from "@/lib/postgres";
@@ -41,17 +42,18 @@ export async function PATCH(req, ctx) {
     if (!existing || !canAccessResource(access, "request", existing)) return { error: "Not found", status: 404 };
 
     const nextStatus = status ?? existing.status;
+    const statusChanged = existing.status !== nextStatus;
     if (existing.doc_type === MISSING_DOCUMENTS_INQUIRY && ["Ready", "Completed"].includes(nextStatus)
         && !(hasSpaVerified ? spaVerified : existing.spa_verified) && status !== null) {
       return { error: "Verify the requester before completing a missing-documents inquiry.", status: 400 };
     }
     const isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(nextStatus);
 
-    if (nextStatus === "Deficient" && !rawMessage) {
+    if (statusChanged && nextStatus === "Deficient" && !rawMessage) {
       return { error: "Add a comment explaining what the student needs to provide.", status: 400 };
     }
     if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus, { allowReopen })) {
-      return { error: `Cannot change status from "${existing.status}" to "${nextStatus}". Completed and finalized requests cannot be reverted without reopening authorization.`, status: 400 };
+      return { error: `Cannot change status from "${formatRequestStatus(existing.status)}" to "${formatRequestStatus(nextStatus)}". Completed and finalized requests cannot be reverted without reopening authorization.`, status: 400 };
     }
     if (isReopen) {
       if (reopenReason.length < 5) {
@@ -59,16 +61,15 @@ export async function PATCH(req, ctx) {
       }
     }
 
-    const statusChanged = existing.status !== nextStatus;
     let defaultMsg = "";
     if (isReopen) {
-      defaultMsg = `Request reopened to ${nextStatus}. Reason: ${reopenReason}`;
+      defaultMsg = `Request reopened to ${formatRequestStatus(nextStatus)}. Reason: ${reopenReason}`;
     } else if (hasSpaVerified) {
       defaultMsg = existing.doc_type === MISSING_DOCUMENTS_INQUIRY
         ? (spaVerified ? "Requester identity and authorization verified by the Registrar." : "Requester verification revoked.")
         : (spaVerified ? "Special Power of Attorney (SPA) and identity verified by Registrar." : "Special Power of Attorney (SPA) verification revoked.");
     } else if (statusChanged) {
-      defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+      defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${formatRequestStatus(nextStatus)}.`;
     }
     const finalMessage = rawMessage || defaultMsg;
     if (!statusChanged && !rawMessage && !hasSpaVerified) return { data: existing, changed: false };
@@ -109,7 +110,7 @@ export async function PATCH(req, ctx) {
   if (outcome.isReopen) {
     await writeGlobalAuditLog(req, "Reopen Document Request", {
       officeId: "registrar",
-      details: `Reopened request #${requestId} (${outcome.prevStatus} → ${outcome.nextStatus}). Reason: ${outcome.reopenReason}`,
+      details: `Reopened request #${requestId} (${formatRequestStatus(outcome.prevStatus)} → ${formatRequestStatus(outcome.nextStatus)}). Reason: ${outcome.reopenReason}`,
       entity_type: "document_request",
       entity_id: String(requestId),
       severity: "WARN",
@@ -117,7 +118,7 @@ export async function PATCH(req, ctx) {
   } else {
     await writeGlobalAuditLog(req, "Updated Registrar document request", {
       officeId: "registrar",
-      details: `Changed request ${requestId} to ${outcome.nextStatus}.${outcome.finalMessage ? ` Update: "${outcome.finalMessage}"` : ""}`,
+      details: `Changed request ${requestId} to ${formatRequestStatus(outcome.nextStatus)}.${outcome.finalMessage ? ` Update: "${outcome.finalMessage}"` : ""}`,
       entity_type: "document_request",
       entity_id: String(requestId),
     });

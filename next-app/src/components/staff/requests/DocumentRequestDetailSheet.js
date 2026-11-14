@@ -1,4 +1,7 @@
 "use client";
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
+import DocumentRequestTimeline from "@/components/shared/DocumentRequestTimeline";
+import CopyButton from "@/components/shared/CopyButton";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
@@ -21,13 +24,13 @@ import {
 import { cn, formatTitleCase } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
-import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
 import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { EmptyState } from "@/components/ui/empty";
-import { Attachment01Icon, Clock01Icon, Alert02Icon, Calendar01Icon, Cancel01Icon, CheckmarkCircle01Icon, File02Icon, LockIcon, Time01Icon } from "hugeicons-react";
+import { Attachment01Icon, Calendar01Icon, Cancel01Icon, CheckmarkCircle01Icon, File02Icon, LockIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 export function getRequestStatusBadgeClass(status) {
   return getStatusBadgeClass(status);
@@ -109,11 +112,7 @@ export default function DocumentRequestDetailSheet({
   const isParent = detail?.client_type === "Parent";
   const attachments = Array.isArray(detail?.attachments) ? detail.attachments : [];
 
-  const displayName = formatTitleCase(detail?.student_name || detail?.requester_name) || "Requester";
-  const nameParts = displayName ? displayName.trim().split(/\s+/) : [];
-  const initials = nameParts.length >= 2
-    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-    : displayName.slice(0, 2).toUpperCase() || "RQ";
+  const displayName = formatTitleCase(isParent ? detail?.requester_name : detail?.student_name || detail?.requester_name) || "Requester";
 
   const handleLocateCoordinates = () => {
     const target = studentForRequest || (detail?.room ? {
@@ -225,14 +224,12 @@ export default function DocumentRequestDetailSheet({
               <div className="flex items-center justify-between gap-3 pb-4 border-b border-border/80 dark:border-border">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <ProfileAvatar
-                    id={studentForRequest?.id || studentForRequest?.account_id || studentForRequest?.accountId || studentForRequest?.studentNo || detail.student_no}
-                    studentNo={studentForRequest?.studentNo || detail.student_no}
-                    accountId={studentForRequest?.account_id || studentForRequest?.accountId}
-                    avatarFilename={studentForRequest?.avatar_filename || studentForRequest?.avatarFilename}
+                    studentNo={isParent ? undefined : studentForRequest?.studentNo || detail.student_no}
+                    accountId={isParent ? undefined : studentForRequest?.account_id || studentForRequest?.accountId}
+                    avatarFilename={isParent ? null : studentForRequest?.avatar_filename || studentForRequest?.avatarFilename}
                     name={displayName}
-                    initials={initials}
-                    className="size-11 rounded-full border border-pup-maroon/20 shadow-2xs"
-                    fallbackClassName="bg-pup-maroon/10 font-bold text-sm text-pup-maroon dark:bg-red-950/40 dark:text-red-400"
+                    className="size-11"
+                    fallbackClassName="text-sm"
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -247,7 +244,7 @@ export default function DocumentRequestDetailSheet({
                   <span
                     className={cn(getRequestStatusBadgeClass(detail.status), COMPACT_BADGE_BASE)}
                   >
-                    {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
+                    {formatRequestStatus(detail.status)}
                   </span>
                 </div>
               </div>
@@ -263,12 +260,9 @@ export default function DocumentRequestDetailSheet({
                   >
                     <span
                       className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border",
-                        isParent
-                          ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/40"
-                          : detail.client_type === "Alumni"
-                          ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200/50 dark:border-purple-800/30"
-                          : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200/50 dark:border-blue-800/30"
+                        COMPACT_BADGE_BASE,
+                        isParent ? BADGE_PALETTES.amber
+                          : detail.client_type === "Alumni" ? BADGE_PALETTES.purple : BADGE_PALETTES.blue,
                       )}
                     >
                       {isParent ? "Parent / Guardian" : detail.client_type === "Alumni" ? "Alumni" : "Enrolled Student"}
@@ -280,9 +274,10 @@ export default function DocumentRequestDetailSheet({
                       icon=" Tag01Icon"
                       label="Student Number"
                     >
-                      <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
-                        {detail.student_no}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="tabular-nums font-semibold">{detail.student_no}</span>
+                        <CopyButton iconOnly textToCopy={detail.student_no} entityName="Student Number" />
+                      </div>
                     </InfoRow>
                   )}
 
@@ -305,16 +300,22 @@ export default function DocumentRequestDetailSheet({
                   <InfoRow
                     icon=" Mail01Icon"
                     label="Email Address"
-                    value={detail.requester_email || detail.email || "N/A"}
-                  />
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="break-all">{detail.requester_email || detail.email || "N/A"}</span>
+                      {(detail.requester_email || detail.email) && (
+                        <CopyButton iconOnly textToCopy={detail.requester_email || detail.email} entityName="Email Address" />
+                      )}
+                    </div>
+                  </InfoRow>
 
                   {/* Parent / Guardian specifics */}
                   {(isParent || isInquiry) && (
                     <>
                       <InfoRow
                         icon=" UserCircleIcon"
-                        label="Representative"
-                        value={detail.requester_name || "N/A"}
+                        label={isParent ? "Student Name" : "Representative"}
+                        value={(isParent ? detail.student_name : detail.requester_name) || "N/A"}
                       />
                       {isParent && <InfoRow
                         icon=" UserSearch01Icon"
@@ -327,11 +328,11 @@ export default function DocumentRequestDetailSheet({
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           {detail.spa_verified ? (
-                            <span className={cn(BADGE_PALETTES.emerald, BADGE_BASE)}>
+                            <span className={cn(BADGE_PALETTES.emerald, COMPACT_BADGE_BASE)}>
                               {isInquiry ? "Requester Verified" : "SPA Verified"}
                             </span>
                           ) : (
-                            <span className={cn(BADGE_PALETTES.amber, BADGE_BASE)}>
+                            <span className={cn(BADGE_PALETTES.amber, COMPACT_BADGE_BASE)}>
                               Verification Pending
                             </span>
                           )}
@@ -389,7 +390,7 @@ export default function DocumentRequestDetailSheet({
                           <span className="font-semibold text-gray-900 dark:text-zinc-100">
                             {charter.deadlineFormatted}
                           </span>
-                          <span className={cn(charter.badgeClass, BADGE_BASE)}>
+                          <span className={cn(charter.badgeClass, COMPACT_BADGE_BASE)}>
                             {charter.label}
                           </span>
                         </div>
@@ -399,7 +400,7 @@ export default function DocumentRequestDetailSheet({
                         icon=" DashboardSpeed01Icon"
                         label="Service Standard"
                       >
-                        <span className={cn(charter.tier.badgeClass, BADGE_BASE)}>
+                        <span className={cn(charter.tier.badgeClass, COMPACT_BADGE_BASE)}>
                           {charter.tier.name} ({charter.tier.days} {slaStandards?.workingDaysOnly !== false ? "working days" : "calendar days"})
                         </span>
                       </InfoRow>
@@ -437,9 +438,9 @@ export default function DocumentRequestDetailSheet({
                     label="Current Status"
                   >
                     <span
-                      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold", getRequestStatusBadgeClass(detail.status), BADGE_BASE)}
+                      className={cn(getRequestStatusBadgeClass(detail.status), COMPACT_BADGE_BASE)}
                     >
-                      {detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}
+                      {formatRequestStatus(detail.status)}
                     </span>
                   </InfoRow>
                 </div>
@@ -478,7 +479,8 @@ export default function DocumentRequestDetailSheet({
                         <AttachedFileCard
                           key={att.id}
                           item={{ ...att, url: fileUrl }}
-                          readOnly={true}
+                          readOnly
+                          compactBadge
                           onPreview={() => {
                               setPdfPreviewData?.({
                                 url: fileUrl,
@@ -506,7 +508,7 @@ export default function DocumentRequestDetailSheet({
                     <div className="flex items-center justify-between gap-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-200">
                       <span className="flex items-center gap-1.5">
                         <LockIcon size="1em" className="text-gray-400 text-xs" />
-                        <span>{detail.status === "InProgress" ? "In Progress" : detail.status === "PendingPayment" ? "Pending Payment" : detail.status}</span>
+                        <span>{formatRequestStatus(detail.status)}</span>
                       </span>
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                         Fulfilled / Closed
@@ -532,7 +534,7 @@ export default function DocumentRequestDetailSheet({
                 ) : (
                   <div className="space-y-2.5">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">
                         Advance Request Stage
                       </label>
                       <Select
@@ -549,7 +551,7 @@ export default function DocumentRequestDetailSheet({
                       >
                         {availableStatuses.map((s) => (
                           <option key={s} value={s}>
-                            {s === "InProgress" ? "In Progress" : s}
+                            {formatRequestStatus(s)}
                           </option>
                         ))}
                       </Select>
@@ -579,72 +581,40 @@ export default function DocumentRequestDetailSheet({
 
               {/* 5. 90-Day Retention Notice */}
               {detail.status === "Ready" && retentionExpiryDate && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/15">
-                  <div className="flex gap-2.5">
-                    <Calendar01Icon size="1em" className="text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5" />
-                    <div className="text-xs">
-                      <span className="font-bold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px] uppercase">
+                <section aria-labelledby="request-retention-heading" className="rounded-xl bg-amber-50/70 p-4 dark:bg-amber-950/25">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                      <Calendar01Icon size={16} aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 id="request-retention-heading" className="text-sm font-semibold text-foreground">
                         PUP ODRS Retention Policy
-                      </span>
-                      <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
-                        Unclaimed documents are shredded after 90 days according to ODRS policy.
-                      </span>
-                      <span className="text-amber-800 dark:text-amber-400 font-bold block mt-1 flex items-center gap-1.5">
-                        <Alert02Icon size={16}  />
-                        Shred Schedule: {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        {daysRemaining !== null && (
-                          <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
-                        )}
-                      </span>
+                      </h3>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        PUP shreds documents that remain unclaimed after 90 days.
+                      </p>
                     </div>
                   </div>
-                </div>
+                  <dl className="mt-3 flex flex-wrap items-end justify-between gap-2 text-xs">
+                    <div>
+                      <dt className="text-[11px] text-muted-foreground">Scheduled shredding date</dt>
+                      <dd className="mt-0.5 font-semibold tabular-nums">
+                        {retentionExpiryDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </dd>
+                    </div>
+                    {daysRemaining !== null && (
+                      <div>
+                        <dt className="sr-only">Retention time remaining</dt>
+                        <dd className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.amber)}>
+                          {daysRemaining > 0 ? `${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} left` : "Expired"}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </section>
               )}
 
-              {/* 6. Activity History / Timeline */}
-              <div className="space-y-2 pt-2">
-                <SheetSectionHeading icon={Time01Icon} title={`Activity History (${detail.updates?.length || 0})`} />
-
-                {Array.isArray(detail.updates) && detail.updates.length > 0 ? (
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {detail.updates.map((u, idx) => (
-                      <div
-                        key={u.id || idx}
-                        className="p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60 text-xs space-y-1"
-                      >
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-gray-800 dark:text-zinc-200">
-                            {u.status === "InProgress" ? "In Progress" : u.status}
-                          </span>
-                          <span className="text-gray-400 dark:text-zinc-500 font-sans tabular-nums text-[10px]">
-                            {formatPHDateTime(u.created_at)}
-                          </span>
-                        </div>
-                        {u.message && (
-                          <div className="text-gray-600 dark:text-zinc-300 text-xs leading-relaxed">
-                            <NarrativeText text={u.message} mode="full" />
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
-                          <span>By {u.actor_name || "Staff"}</span>
-                          {u.actor_id && (
-                            <span className="font-sans tabular-nums text-[9px] px-1.5 py-0.2 rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400">
-                              {u.actor_id}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    variant="compact"
-                    icon={Clock01Icon}
-                    title="No Activity Recorded Yet"
-                    description="Updates to this request will appear here."
-                  />
-                )}
-              </div>
+              <DocumentRequestTimeline request={detail} showActor />
             </div>
           ) : null}
         </div>

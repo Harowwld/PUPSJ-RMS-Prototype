@@ -1,4 +1,5 @@
 "use client";
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
@@ -252,11 +253,7 @@ export default function DocumentRequestRecordList({
                           <span
                             className={cn("inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap select-none", badgeStyle, BADGE_BASE)}
                           >
-                            {item.status === "InProgress"
-                              ? "In Progress"
-                              : item.status === "PendingPayment"
-                              ? "Pending Payment"
-                              : item.status}
+                            {formatRequestStatus(item.status)}
                           </span>
                         </div>
 

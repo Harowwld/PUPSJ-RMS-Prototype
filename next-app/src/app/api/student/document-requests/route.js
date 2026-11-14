@@ -394,7 +394,7 @@ export async function POST(req) {
           [effectiveStudentNo],
         );
         if (!activeMembership) {
-          const error = new Error("Restore the student in the Registrar office before submitting a request.");
+          const error = new Error("Check that you entered the student number correctly, then try again. If the number is correct and you still can’t submit your request, contact the Registrar’s Office to verify your student record.");
           error.code = "STUDENT_NOT_ACTIVE_IN_OFFICE";
           throw error;
         }

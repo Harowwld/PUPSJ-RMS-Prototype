@@ -1,3 +1,4 @@
+import { formatRequestStatus } from "./auditLogFormatting.js";
 import { dbAll, dbGet, dbRun, postgresSql } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
 import { canTransitionRequestStatus, DEFAULT_REQUEST_STATUS_MESSAGES, isTerminalRequestStatus } from "./constants.js";
@@ -70,6 +71,7 @@ export async function listDocumentRequests({
   limit = 50,
   offset = 0,
   sortBy = "created_at",
+  groupBy,
   sortOrder = "DESC",
 } = {}) {
   const filters = [];
@@ -144,18 +146,26 @@ export async function listDocumentRequests({
   const validSortCols = {
     id: "dr.id",
     student_no: "dr.student_no",
-    student: "COALESCE(dr.requester_name, s.name, sip.last_name, sip.first_name, sip.email)",
     doc_type: "dr.doc_type",
     status: "dr.status",
     created_at: "dr.created_at",
+    updated_at: "dr.updated_at",
   };
-  const sortCol = validSortCols[sortBy] || "dr.created_at";
+  const sortByRequester = sortBy === "student" || sortBy === "student_name";
+  const sortCol = Object.hasOwn(validSortCols, sortBy) ? validSortCols[sortBy] : "dr.created_at";
+  const groupColumns = {
+    status: "CASE coalesce(nullif(dr.status, ''), 'Pending') WHEN 'Pending' THEN 1 WHEN 'PendingPayment' THEN 2 WHEN 'InProgress' THEN 3 WHEN 'Ready' THEN 4 WHEN 'Completed' THEN 5 WHEN 'Deficient' THEN 6 WHEN 'Cancelled' THEN 7 WHEN 'Shredded' THEN 8 ELSE 9 END",
+    doc_type: "coalesce(nullif(dr.doc_type, ''), 'Unknown Document')",
+    client_type: "CASE lower(coalesce(nullif(dr.client_type, ''), 'Student')) WHEN 'student' THEN 1 WHEN 'alumni' THEN 2 WHEN 'parent' THEN 3 ELSE 4 END",
+  };
+  const groupColumn = Object.hasOwn(groupColumns, groupBy) ? groupColumns[groupBy] : null;
   const order = String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
 
   const rows = await dbAll(
     `
     SELECT
       dr.*,
+      ${sortByRequester && groupColumn ? `dense_rank() OVER (ORDER BY ${groupColumn}) AS request_group_rank,` : ""}
       dr.requester_name AS raw_requester_name,
       s.name AS s_name,
       sip.first_name AS sa_first_name,
@@ -173,13 +183,24 @@ export async function listDocumentRequests({
     LEFT JOIN student_identity_profiles sip ON sip.id = dr.identity_profile_id
     LEFT JOIN courses c ON c.code = COALESCE(dr.course_code, s.course_code)
     ${where}
-    ORDER BY ${sortCol} ${order}, dr.id DESC
-    LIMIT ? OFFSET ?
+    ORDER BY ${groupColumn ? `${groupColumn}, ` : ""}${sortCol} ${order}, dr.id DESC
+    ${sortByRequester ? "" : "LIMIT ? OFFSET ?"}
     `,
-    [...params, lim, off]
+    sortByRequester ? params : [...params, lim, off]
   );
 
-  return (rows || []).map(formatDocumentRequestRow);
+  const formatted = (rows || []).map(formatDocumentRequestRow);
+  if (!sortByRequester) return formatted;
+
+  const direction = order === "ASC" ? 1 : -1;
+  return formatted.sort((a, b) => {
+    const groupOrder = Number(a.request_group_rank || 0) - Number(b.request_group_rank || 0);
+    if (groupOrder) return groupOrder;
+    return String(a.requester_name || "").localeCompare(String(b.requester_name || ""), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    }) * direction;
+  }).slice(off, off + lim).map(({ request_group_rank, ...row }) => row);
 }
 
 export async function countDocumentRequests({
@@ -494,7 +515,7 @@ export async function updateDocumentRequest(id, fields) {
     isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(s);
     const allowReopen = Boolean(fields.allowReopen || fields.reopenReason);
     if (existing.status && existing.status !== s && !canTransitionRequestStatus(existing.status, s, { allowReopen })) {
-      throw new Error(`Cannot transition document request from status "${existing.status}" to "${s}". Terminal and progressed requests cannot be reverted.`);
+      throw new Error(`Cannot transition document request from status "${formatRequestStatus(existing.status)}" to "${formatRequestStatus(s)}". Terminal and progressed requests cannot be reverted.`);
     }
     if (isReopen) {
       const justification = String(fields.reopenReason || fields.message || "").trim();
@@ -505,9 +526,9 @@ export async function updateDocumentRequest(id, fields) {
     if (existing.status !== s) {
       statusChanged = true;
       nextStatus = s;
+      cols.push("status = ?");
+      vals.push(s);
     }
-    cols.push("status = ?");
-    vals.push(s);
   }
   if (fields.notes !== undefined) {
     cols.push("notes = ?");
@@ -560,9 +581,9 @@ export async function updateDocumentRequest(id, fields) {
   if (statusChanged) {
     // When status changes, ALWAYS guarantee a timeline entry is recorded
     const justification = String(fields.reopenReason || fields.message || "").trim();
-    let finalMessage = rawMessage || DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${nextStatus}.`;
+    let finalMessage = rawMessage || DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${formatRequestStatus(nextStatus)}.`;
     if (isReopen) {
-      finalMessage = `Request reopened to ${nextStatus}. Reason: ${justification}`;
+      finalMessage = `Request reopened to ${formatRequestStatus(nextStatus)}. Reason: ${justification}`;
     }
 
     // Deduplication check against rapid duplicate/double-click submissions
@@ -597,11 +618,11 @@ export async function updateDocumentRequest(id, fields) {
     }
   }
 
-  return true;
+  return { statusChanged };
   });
   if (!updated) return null;
   const result = await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
-  if (result && fields.status) {
+  if (result && updated.statusChanged) {
     try {
       let updaterDisplayName = fields.updatedBy || "Staff";
       if (fields.updatedBy) {
@@ -619,8 +640,8 @@ export async function updateDocumentRequest(id, fields) {
       await createNotification({
         officeId: result.office_id || fields.officeId,
         type: "document_request",
-        title: `Request ${result.status}: ${result.doc_type}`,
-        message: `Request #${id} for ${result.doc_type} (${result.requester_name || result.student_no || "Student"}) updated to ${result.status}`,
+        title: `Request ${formatRequestStatus(result.status)}: ${result.doc_type}`,
+        message: `Request #${id} for ${result.doc_type} (${result.requester_name || result.student_no || "Student"}) was updated to ${formatRequestStatus(result.status)}.`,
         severity: sev,
         actorName: updaterDisplayName,
         actorId: fields.updatedBy || null,

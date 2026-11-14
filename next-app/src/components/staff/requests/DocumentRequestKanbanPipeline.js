@@ -1,13 +1,19 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   KanbanStatusIcon,
-  KanbanDotTag,
+  KANBAN_CARD_CLASS,
+  KANBAN_CARD_DRAGGING_CLASS,
+  KANBAN_CARD_HEADER_CLASS,
+  KANBAN_CARD_TITLE_CLASS,
+  KANBAN_CARD_FOOTER_CLASS,
+  KANBAN_CARD_METADATA_CLASS,
+  KanbanCardTag,
   KanbanMiniAvatar,
-  getTagDotColor,
 } from "@/components/shared/KanbanPrimitives";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
@@ -289,20 +295,13 @@ export default function DocumentRequestKanbanPipeline({
                     ? formatPHDateTime(item.created_at)
                     : "Date unavailable";
                   const shortDate = formatShortRequestDate(item.created_at);
-                  const studentName = item.student_name || "Unknown Student";
+                  const requesterName = item.requester_name || item.student_name || "Unknown Requester";
                   const clientLabel =
                     item.client_type === "Parent"
                       ? "Parent"
                       : item.client_type === "Alumni" || item.is_alumni
                       ? "Alumni"
                       : "Student";
-                  const clientDotColor =
-                    clientLabel === "Parent"
-                      ? "bg-amber-500"
-                      : clientLabel === "Alumni"
-                      ? "bg-teal-500"
-                      : "bg-sky-500";
-
                   const topRightText = isLocked
                     ? shortDate || charter.label
                     : charter.label || shortDate;
@@ -315,17 +314,17 @@ export default function DocumentRequestKanbanPipeline({
                       onDragEnd={handleDragEnd}
                       onClick={() => onSelectItem?.(item.id)}
                       className={cn(
-                        "kanban-card group flex flex-col gap-2.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-zinc-900 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 hover:-translate-y-[1px] active:scale-[0.99] transition-all duration-150 cursor-pointer relative select-none",
-                        isDraggingThis && "opacity-40 scale-98 border-dashed border-gray-400",
-                        isLocked && "cursor-pointer opacity-90"
+                        KANBAN_CARD_CLASS,
+                        isLocked ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+                        isDraggingThis && KANBAN_CARD_DRAGGING_CLASS
                       )}
                     >
                       {/* Row 1: Status Icon + Student Name (left) & SLA / Date (right) */}
-                      <div className="flex items-start justify-between gap-2.5">
+                      <div className={KANBAN_CARD_HEADER_CLASS}>
                         <div className="flex items-start gap-2 min-w-0 flex-1">
                           <KanbanStatusIcon status={status} className="mt-[3px]" />
-                          <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-100 leading-snug line-clamp-1">
-                            {studentName}
+                          <h4 className={KANBAN_CARD_TITLE_CLASS} title={requesterName}>
+                            {requesterName}
                           </h4>
                         </div>
 
@@ -344,22 +343,16 @@ export default function DocumentRequestKanbanPipeline({
                         </span>
                       </div>
 
-                      {/* Row 2: Dot-Pill Tags (Doc Type + Client Type) */}
-                      <div className="flex flex-wrap items-center gap-1.5 pl-5.5">
-                        <KanbanDotTag
-                          label={item.doc_type}
-                          dotColor={getTagDotColor(item.doc_type)}
-                        />
-                        <KanbanDotTag
-                          label={clientLabel}
-                          dotColor={clientDotColor}
-                        />
+                      {/* Row 2: Metadata (Doc Type + Client Type) */}
+                      <div className={KANBAN_CARD_METADATA_CLASS}>
+                        <KanbanCardTag label={item.doc_type} />
+                        <KanbanCardTag label={clientLabel} />
                       </div>
 
                       {/* Row 3: Footer — Request ID & Student No (bottom-left) + Course / Avatar (bottom-right) */}
-                      <div className="flex items-center justify-between gap-2 pt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                      <div className={KANBAN_CARD_FOOTER_CLASS}>
                         <div className="flex items-center gap-1.5 min-w-0 tabular-nums font-medium">
-                          <span>#{item.id}</span>
+                          <Badge variant="gray" size="compact" className="rounded-lg">#{item.id}</Badge>
                           {item.student_no && (
                             <>
                               <span>·</span>
@@ -390,7 +383,7 @@ export default function DocumentRequestKanbanPipeline({
                         <div className="flex items-center gap-1.5 shrink-0 max-w-[130px]">
                           <KanbanMiniAvatar
                             code={item.course_code}
-                            name={studentName}
+                            name={requesterName}
                           />
                           <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 truncate">
                             {item.course_code || clientLabel}

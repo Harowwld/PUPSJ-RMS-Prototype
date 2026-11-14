@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedPrincipal } from "@/lib/authHelpers";
 import { queryOne } from "@/lib/postgres";
 import { isSystemAdminRole } from "@/lib/roleUtils";
-import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
+import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 
 export const runtime = "nodejs";
 
@@ -90,13 +90,12 @@ export async function HEAD(req, ctx) {
 
   try {
     const stat = fs.statSync(filePath);
-    const safeFilename = encodeURIComponent(attachment.original_filename);
     return new NextResponse(null, {
       status: 200,
       headers: {
         "Content-Type": attachment.mime_type || "application/octet-stream",
         "Content-Length": String(stat.size),
-        "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+        "Content-Disposition": inlineFileDisposition(attachment.original_filename || undefined),
         "Cache-Control": "private, max-age=3600",
         ...FILE_SECURITY_HEADERS,
       },
@@ -129,14 +128,13 @@ export async function GET(req, ctx) {
   }
 
   const fileBytes = fs.readFileSync(filePath);
-  const safeFilename = encodeURIComponent(attachment.original_filename);
 
   return new NextResponse(fileBytes, {
     status: 200,
     headers: {
       "Content-Type": attachment.mime_type || "application/octet-stream",
       "Content-Length": String(attachment.size_bytes || fileBytes.length),
-      "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+      "Content-Disposition": inlineFileDisposition(attachment.original_filename || undefined),
       "Cache-Control": "private, max-age=3600",
       ...FILE_SECURITY_HEADERS,
     },

@@ -1,6 +1,8 @@
 "use client";
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 import { Table, IdentifierBadge } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
@@ -28,6 +30,7 @@ import {
 } from "@/components/systemadmin/OfficeTableControls";
 import DashboardSearch from "@/components/systemadmin/DashboardSearch";
 import DocumentRequestRecordList, { groupDocumentRequests } from "@/components/staff/requests/DocumentRequestRecordList";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 import DocumentRequestKanbanPipeline, { ODRS_KANBAN_COLUMNS } from "@/components/staff/requests/DocumentRequestKanbanPipeline";
 import {
   Dialog,
@@ -73,8 +76,7 @@ import {
 import {
   getRequestCharterStatus,
 } from "@/lib/citizenCharter";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , Archive01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, Cancel01Icon, Clock01Icon, GraduationScrollIcon, Loading01Icon, StudentIcon, UserSearch01Icon, UserStatusIcon, ViewIcon, Search01Icon} from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon , ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Attachment01Icon, Cancel01Icon, Clock01Icon, File02Icon, GraduationScrollIcon, IdentityCardIcon, Loading01Icon, StudentIcon, UserSearch01Icon, UserStatusIcon, ViewIcon, Search01Icon, Tick01Icon} from "hugeicons-react";
 const STATUS_OPTIONS = [
   "Pending",
   "Deficient",
@@ -189,8 +191,8 @@ export default function DocumentRequestsTab({
   const [startDate, setStartDate] = useOsasViewPreference("document_requests", "startDate", "");
   const [endDate, setEndDate] = useOsasViewPreference("document_requests", "endDate", "");
   const [groupBy, setGroupBy] = useOsasViewPreference("document_requests", "groupBy", "status");
+  const activeGroupBy = isKanbanView ? "none" : groupBy;
   const [visibleColumns, setVisibleColumns] = useOsasViewPreference("document_requests", "visibleColumns", [
-    "id",
     "student_no",
     "student",
     "docType",
@@ -252,12 +254,11 @@ export default function DocumentRequestsTab({
   const groupOptions = useMemo(() => [
     { key: "status", label: "Status", icon: UserStatusIcon },
     { key: "doc_type", label: "Document Type", icon: GraduationScrollIcon },
-    { key: "none", label: "No grouping" },
     { key: "client_type", label: "Client Type", icon: StudentIcon },
+    { key: "none", label: "No grouping" },
   ], []);
 
   const tableColumns = useMemo(() => [
-    { key: "id", label: "Request ID" },
     { key: "student_no", label: "Requester ID" },
     { key: "student", label: "Requester" },
     { key: "docType", label: "Document Type" },
@@ -269,7 +270,6 @@ export default function DocumentRequestsTab({
 
   const dynamicTableColumns = useMemo(() => {
     const columnMap = {
-      id: { kind: "identifier", width: 80 },
       student_no: { kind: "identifier", width: 170 },
       student: { kind: "text", minWidth: 280, maxWidth: 460, growthWeight: 2 },
       docType: { kind: "category", minWidth: 190, maxWidth: 300, growthWeight: 2 },
@@ -279,17 +279,17 @@ export default function DocumentRequestsTab({
       createdAt: { kind: "date", width: 150 },
     };
     return [
+      { kind: "identifier", width: 90 },
       ...tableColumns.filter((c) => visibleColumns.includes(c.key)).map((c) => columnMap[c.key] || "text"),
       "actions",
     ];
   }, [tableColumns, visibleColumns]);
 
-  const dynamicTableMinWidthClass = useMemo(() => {
-    if (visibleColumns.length >= 7) return "min-w-[1360px]";
-    if (visibleColumns.length >= 6) return "min-w-[1080px]";
-    return "min-w-[900px]";
-  }, [visibleColumns.length]);
+  const tableColumnCount = dynamicTableColumns.length - 1;
+  const dynamicTableMinWidthClass = tableColumnCount >= 7 ? "min-w-[1360px]"
+    : tableColumnCount >= 6 ? "min-w-[1080px]" : "min-w-[900px]";
 
+  const [createAttempted, setCreateAttempted] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const { attachForm, ...repeat } = useCreateAnother(createOpen);
   const [createClientType, setCreateClientType] = useState("Student");
@@ -351,6 +351,7 @@ export default function DocumentRequestsTab({
   }, [loadSlaStandards]);
 
   const resetCreateForm = (keepClientType = false) => {
+    setCreateAttempted(false);
     if (!keepClientType) setCreateClientType("Student");
     setCreateStudentNo("");
     setCreateCourseCode("");
@@ -427,7 +428,7 @@ export default function DocumentRequestsTab({
       }
       const startTime = Date.now();
       try {
-        const effectiveLimit = isKanbanView ? 100 : itemsPerPage;
+        const effectiveLimit = itemsPerPage;
         const offset = isKanbanView ? 0 : (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
         qs.set("limit", String(effectiveLimit));
@@ -448,14 +449,16 @@ export default function DocumentRequestsTab({
         if (combinedDocTypes.length > 0) qs.set("docType", combinedDocTypes.join(","));
         if (startDate) qs.set("startDate", startDate);
         if (endDate) qs.set("endDate", endDate);
+        if (activeGroupBy !== "none") qs.set("groupBy", activeGroupBy);
         qs.set("sortBy", sortBy);
         qs.set("sortOrder", sortOrder);
-        const res = await fetch(`/api/document-requests?${qs}`, {
-          cache: "no-store",
-        });
-        const json = await res.json().catch(() => null);
+        const requestUrl = `/api/document-requests?${qs}`;
+        const res = isKanbanView ? null : await fetch(requestUrl, { cache: "no-store" });
+        const json = isKanbanView
+          ? { ok: true, data: await fetchAllPages(requestUrl, 200) }
+          : await res.json().catch(() => null);
         if (request !== listRequest.current) return;
-        if (!res.ok || !json?.ok || !Array.isArray(json.data)) {
+        if (res?.ok === false || !json?.ok || !Array.isArray(json.data)) {
           throw new Error(json?.error || "Unable to load document requests.");
         }
 
@@ -469,7 +472,7 @@ export default function DocumentRequestsTab({
 
         if (request !== listRequest.current) return;
         setRows(json.data);
-        setTotal(Number(json.total) || 0);
+        setTotal(isKanbanView ? json.data.length : Number(json.total) || 0);
         setHasLoaded(true);
         setListError("");
       } catch (e) {
@@ -491,7 +494,7 @@ export default function DocumentRequestsTab({
         }
       }
     },
-    [isKanbanView, page, itemsPerPage, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
+    [isKanbanView, page, itemsPerPage, activeGroupBy, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
   );
 
   const handleSort = (column) => {
@@ -688,7 +691,7 @@ export default function DocumentRequestsTab({
 
   const handleManualSave = () => {
     patchDetail({
-      status: isTerminalStatus ? undefined : editStatus,
+      status: !isTerminalStatus && editStatus !== detail.status ? editStatus : undefined,
       notes: editNotes || null,
       message: editUpdateMessage.trim() || undefined,
     });
@@ -723,6 +726,7 @@ export default function DocumentRequestsTab({
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    setCreateAttempted(true);
     if (createClientType !== "Alumni" && !createStudentNo.trim()) {
       showToast?.({ title: "Missing Student Number", description: "Please provide the student number for this request." }, true);
       return;
@@ -747,7 +751,7 @@ export default function DocumentRequestsTab({
         return;
       }
     }
-    if (!createDocType) {
+    if (!requestableTypes.includes(createDocType)) {
       showToast?.({ title: "Missing Document Type", description: "Please select a document type to request." }, true);
       return;
     }
@@ -778,7 +782,7 @@ export default function DocumentRequestsTab({
       formData.append("clientType", createClientType);
       if (createStudentNo.trim()) formData.append("studentNo", createStudentNo.trim());
       if (createRequesterName.trim()) formData.append("requesterName", createRequesterName.trim());
-      if (createRequesterRelationship) formData.append("requesterRelationship", createRequesterRelationship);
+      if (createClientType === "Parent" && createRequesterRelationship) formData.append("requesterRelationship", createRequesterRelationship);
       if (createRequesterContact.trim()) formData.append("requesterContact", createRequesterContact.trim());
       if (createCourseCode) formData.append("courseCode", createCourseCode);
       formData.append("docType", createDocType);
@@ -839,9 +843,9 @@ export default function DocumentRequestsTab({
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
               {required ? (
-                "Authorization Files (SPA & Valid ID)"
+                "Required authorization documents"
               ) : (
-                <>Supporting Documents & Attachments <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span></>
+                <>Supporting Documents & Attachments <span className="normal-case tracking-normal opacity-70">(optional)</span></>
               )}
             </label>
             <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
@@ -851,20 +855,12 @@ export default function DocumentRequestsTab({
 
           {required && (
             <div className="flex items-center gap-2 text-[11px] font-medium">
-              <span
-                className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]", hasSpa
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800", BADGE_BASE)}
-              >
-                <AppIcon className={cn("text-[10px]", hasSpa ? " Tick01Icon" : " CircleIcon")} />
+              <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.zinc)}>
+                {hasSpa ? <Tick01Icon size={12} aria-label="Attached" /> : <File02Icon size={12} aria-hidden="true" />}
                 SPA Letter
               </span>
-              <span
-                className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px]", hasValidId
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                    : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800", BADGE_BASE)}
-              >
-                <AppIcon className={cn("text-[10px]", hasValidId ? " Tick01Icon" : " CircleIcon")} />
+              <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.zinc)}>
+                {hasValidId ? <Tick01Icon size={12} aria-label="Attached" /> : <IdentityCardIcon size={12} aria-hidden="true" />}
                 Government ID
               </span>
             </div>
@@ -873,6 +869,7 @@ export default function DocumentRequestsTab({
 
         <FileAttachmentDropzone
           animateCards={false}
+          invalid={createAttempted && required && (!hasSpa || !hasValidId)}
           value={createAttachments}
           onChange={(val) => {
             if (typeof val === "function") {
@@ -898,9 +895,42 @@ export default function DocumentRequestsTab({
     );
   };
 
+  const requestableTypes = docTypes.filter((type) => typeof type === "string" && type.trim());
+  const needsStudentNumber = createClientType !== "Alumni" && !createStudentNo.trim();
+  const documentTypeHint = needsStudentNumber
+    ? createClientType === "Student"
+      ? "Select a student from the search results to choose a document type."
+      : "Select a student from the search results or enter a student number to choose a document type."
+    : requestableTypes.length === 0 ? "No requestable document types are available for this office." : "";
+  const documentTypeField = (
+    <div>
+      <label htmlFor="staff-request-document-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+        Document Type
+      </label>
+      <Select
+        id="staff-request-document-type"
+        placeholder={requestableTypes.length ? "Select document type" : "No document types available"}
+        aria-describedby={documentTypeHint ? "staff-request-document-type-help" : undefined}
+        disabled={needsStudentNumber || requestableTypes.length === 0}
+        value={needsStudentNumber ? "" : createDocType}
+        onChange={(event) => setCreateDocType(event.target.value)}
+        required
+      >
+        {requestableTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+      </Select>
+      {documentTypeHint && (
+        <p id="staff-request-document-type-help" className="mt-1 text-[11px] text-muted-foreground">
+          {documentTypeHint}
+        </p>
+      )}
+    </div>
+  );
+
   const selectCreateClientType = (clientType) => {
     setCreateClientType(clientType);
     setCreateStudentNo("");
+    setStudentSearch("");
+    setStudentSuggestions([]);
     setCreateCourseCode("");
     setCreateRequesterName("");
     setCreateRequesterRelationship("Mother");
@@ -944,6 +974,12 @@ export default function DocumentRequestsTab({
     });
   }, [rows, filterRules, charterFilters, slaStandards]);
 
+  const requestGroups = useMemo(
+    () => groupDocumentRequests(displayedRows, activeGroupBy),
+    [displayedRows, activeGroupBy],
+  );
+  const orderedRequests = useMemo(() => requestGroups.flatMap(({ items }) => items), [requestGroups]);
+
   const clientTypeValue = clientTypeFilters.length === 1 ? clientTypeFilters[0] : "";
   const handleClientTypeChange = (val) => {
     setClientTypeFilters(val ? [val] : []);
@@ -955,7 +991,7 @@ export default function DocumentRequestsTab({
     if (!canTransitionRequestStatus(item.status, targetStatus)) {
       showToast?.({
         title: "Transition Not Allowed",
-        description: `Cannot move request #${item.id} from ${item.status} to ${targetStatus}.`,
+        description: `Cannot move request #${item.id} from ${formatRequestStatus(item.status)} to ${formatRequestStatus(targetStatus)}.`,
         variant: "destructive",
       });
       return;
@@ -971,14 +1007,14 @@ export default function DocumentRequestsTab({
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Status update failed");
       showToast?.({
         title: "Status Updated",
-        description: `Request #${item.id} moved to ${targetStatus}.`,
+        description: `Request #${item.id} moved to ${formatRequestStatus(targetStatus)}.`,
       });
       loadList({ showLoading: false });
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
           title: "Status Update Failed",
-          actionContext: `Moving request #${item.id} to ${targetStatus}`,
+          actionContext: `Moving request #${item.id} to ${formatRequestStatus(targetStatus)}`,
         }),
         true
       );
@@ -1096,7 +1132,7 @@ export default function DocumentRequestsTab({
     statusFilters.forEach((st) => {
       chips.push({
         id: `status-${st}`,
-        label: `Status: ${st === "InProgress" ? "In Progress" : st}`,
+        label: `Status: ${formatRequestStatus(st)}`,
         onRemove: () => { setStatusFilters((prev) => prev.filter((s) => s !== st)); setPage(1); },
       });
     });
@@ -1255,16 +1291,16 @@ export default function DocumentRequestsTab({
                   sortBy={sortBy}
                   onSortByChange={(val) => {
                     setSortBy(val);
-                    setSortOrder("DESC");
+                    setPage(1);
                   }}
                   sortOrder={sortOrder}
-                  onSortOrderChange={setSortOrder}
+                  onSortOrderChange={(value) => { setSortOrder(value); setPage(1); }}
                 />
                 {viewMode !== "kanban" && (
                   <GroupPopover
                     options={groupOptions}
                     groupBy={groupBy}
-                    onGroupByChange={setGroupBy}
+                    onGroupByChange={(value) => { setGroupBy(value); setPage(1); }}
                   />
                 )}
                 {viewMode === "table" && (
@@ -1310,7 +1346,7 @@ export default function DocumentRequestsTab({
           {/* 4. Full-Width Table Body */}
           <div className={cn("relative w-full flex flex-col flex-[1_0_auto] border-t border-border dark:border-border", total === 0 && "rounded-b-2xl overflow-hidden")} aria-busy={loading}>
             {(loading && !hasLoaded) ? (
-              <DataContentSkeleton columns={dynamicTableColumns} viewMode={viewMode} kanbanColumnCount={ODRS_KANBAN_COLUMNS.length} className={dynamicTableMinWidthClass} />
+              <DataContentSkeleton columns={dynamicTableColumns} viewMode={viewMode} kanbanColumnCount={ODRS_KANBAN_COLUMNS.length} kanbanColumnClassName="w-[300px]" kanbanViewportClassName="min-h-[calc(100vh-19rem)] p-4 sm:p-5" grouped={activeGroupBy !== "none"} className={dynamicTableMinWidthClass} />
             ) : (listError || error) && displayedRows.length === 0 ? (
               <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center">
                 <Empty>
@@ -1392,28 +1428,26 @@ export default function DocumentRequestsTab({
                 <Table columns={dynamicTableColumns} className={dynamicTableMinWidthClass}>
                   <thead className="sticky top-0 z-10 border-b border-border bg-white dark:bg-card backdrop-blur-xs select-none">
                     <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
-                      {visibleColumns.includes("id") && (
-                        <th
-                          className={cn(
-                            "py-2.5 px-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-white dark:bg-card transition-shadow",
-                            isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleSort("id")}
-                              className={cn(
-                                "group flex items-center transition-colors focus:outline-none cursor-pointer",
-                                sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
-                              )}
-                            >
-                              <span>ID</span>
-                              <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
-                            </button>
-                          </div>
-                        </th>
-                      )}
+                      <th
+                        className={cn(
+                          "py-2.5 px-4 w-[90px] min-w-[90px] sticky left-0 z-20 bg-white dark:bg-card transition-shadow",
+                          isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("id")}
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer",
+                              sortBy === "id" ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                            )}
+                          >
+                            <span>ID</span>
+                            <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
+                          </button>
+                        </div>
+                      </th>
                       {visibleColumns.includes("student_no") && (
                         <th className="py-2.5 px-4 w-[170px] min-w-[170px]">
                           <button
@@ -1505,8 +1539,15 @@ export default function DocumentRequestsTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                    {groupDocumentRequests(displayedRows, groupBy).flatMap((group) => [
-                      ...(groupBy !== "none" ? [<DataGroupHeader key={`group-${group.key}`} label={group.label} count={group.items.length} colSpan={dynamicTableColumns.length} />] : []),
+                    {requestGroups.flatMap((group) => [
+                      ...(activeGroupBy === "none" ? [] : [
+                        <DataGroupHeader
+                          key={`group-${group.key}`}
+                          label={group.label}
+                          count={group.items.length}
+                          colSpan={dynamicTableColumns.length}
+                        />,
+                      ]),
                       ...group.items.map((r) => {
                         const isAlumni = r.client_type === "Alumni";
                         const isParent = r.client_type === "Parent";
@@ -1522,17 +1563,15 @@ export default function DocumentRequestsTab({
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            {visibleColumns.includes("id") && (
-                              <td
-                                className={cn(
-                                  "py-2.5 px-4 align-middle text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
-                                  selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
-                                  isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
-                                )}
-                              >
-                                {r.id}
-                              </td>
-                            )}
+                            <td
+                              className={cn(
+                                "py-2.5 px-4 align-middle text-xs font-sans tabular-nums text-gray-500 dark:text-zinc-400 whitespace-nowrap sticky left-0 z-10 bg-white group-hover:bg-gray-50/70 dark:bg-card dark:group-hover:bg-zinc-800/40 transition-shadow border-r border-border/70",
+                                selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20",
+                                isScrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
+                              )}
+                            >
+                              {r.id}
+                            </td>
                             {visibleColumns.includes("student_no") && (
                               <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 {r.student_no ? (
@@ -1590,7 +1629,7 @@ export default function DocumentRequestsTab({
                             {visibleColumns.includes("status") && (
                               <td className="py-2.5 px-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                                 <div className={cn("inline-flex w-fit items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status), BADGE_BASE)}>
-                                  {r.status === "InProgress" ? "In Progress" : r.status === "PendingPayment" ? "Pending Payment" : r.status}
+                                  {formatRequestStatus(r.status)}
                                 </div>
                               </td>
                             )}
@@ -1654,7 +1693,7 @@ export default function DocumentRequestsTab({
 
         {/* 6. Request Detail Sheet Slide-Over Drawer */}
         {(() => {
-          const selectedIndex = rows.findIndex((r) => r.id === selectedId);
+          const selectedIndex = orderedRequests.findIndex((r) => r.id === selectedId);
           return (
             <DocumentRequestDetailSheet
               open={Boolean(selectedId)}
@@ -1667,15 +1706,15 @@ export default function DocumentRequestsTab({
               }}
               selectedId={selectedId}
               currentIndex={selectedIndex}
-              totalCount={rows.length}
+              totalCount={orderedRequests.length}
               onNavigatePrev={() => {
                 if (selectedIndex > 0) {
-                  openDetail(rows[selectedIndex - 1].id);
+                  openDetail(orderedRequests[selectedIndex - 1].id);
                 }
               }}
               onNavigateNext={() => {
-                if (selectedIndex >= 0 && selectedIndex < rows.length - 1) {
-                  openDetail(rows[selectedIndex + 1].id);
+                if (selectedIndex >= 0 && selectedIndex < orderedRequests.length - 1) {
+                  openDetail(orderedRequests[selectedIndex + 1].id);
                 }
               }}
               detail={detail}
@@ -1723,7 +1762,7 @@ export default function DocumentRequestsTab({
               </div>
             </DialogHeader>
 
-            <form ref={attachForm} onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <form ref={attachForm} onInvalid={() => setCreateAttempted(true)} onSubmit={handleCreate} className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(92vh-140px)]">
                 {/* Client Type Selector */}
                 <div>
@@ -1778,53 +1817,78 @@ export default function DocumentRequestsTab({
                 {/* Form fields for Student vs Alumni */}
                 {createClientType !== "Alumni" ? (
                   selectedStudent ? (
-                    <div className="rounded-xl border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-fast dark:border-border dark:bg-red-950/20">
-                      <button
-                        type="button"
-                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-border rounded-full w-6 h-6 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-border dark:text-zinc-300 cursor-pointer"
-                        onClick={() => {
-                          setSelectedStudent(null);
-                          setCreateStudentNo("");
-                        }}
-                        title="Change student"
-                      >
-                        <Cancel01Icon size="1em" className="text-xs" />
-                      </button>
-                      <div className="flex items-start gap-3.5">
-                        <div className="w-11 h-11 rounded-xl bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
-                          <UserStatusIcon size="1em" className="text-xl" />
-                        </div>
-                        <div className="min-w-0 flex-1 pr-6">
-                          <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
-                          <div className="text-xs text-gray-500 font-sans tabular-nums mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
-                          <div className="text-xs text-gray-600 mt-1.5 flex flex-wrap gap-x-4 gap-y-1 dark:text-zinc-300">
-                            <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "N/A"}</strong></span>
-                            <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "N/A"}</strong></span>
-                            <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "N/A"}</strong></span>
-                          </div>
-                          <div className="text-xs text-pup-maroon dark:text-red-400 font-semibold mt-2 flex items-center gap-1.5">
-                            <Archive01Icon size="1em" className="text-sm" />
-                            <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
+                    <div className="rounded-xl bg-gray-50 p-4 animate-in fade-in zoom-in-95 duration-fast dark:bg-zinc-800/60">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <ProfileAvatar
+                            studentNo={createStudentNo}
+                            accountId={selectedStudent.accountId || selectedStudent.account_id}
+                            avatarFilename={selectedStudent.avatarFilename || selectedStudent.avatar_filename}
+                            name={formatTitleCase(selectedStudent.name)}
+                            className="size-11"
+                            fallbackClassName="text-sm"
+                          />
+                          <div className="min-w-0">
+                            <div className="break-words text-sm font-semibold text-gray-900 dark:text-zinc-50">
+                              {formatTitleCase(selectedStudent.name) || "Selected student"}
+                            </div>
+                            <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">{createStudentNo}</div>
                           </div>
                         </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label="Change student"
+                          title="Change student"
+                          onClick={() => {
+                            setSelectedStudent(null);
+                            setCreateStudentNo("");
+                          }}
+                        >
+                          <Cancel01Icon size={14} aria-hidden="true" />
+                        </Button>
                       </div>
+                      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-xs sm:grid-cols-4">
+                        <div className="min-w-0">
+                          <dt className="text-[11px] text-muted-foreground">Academic program</dt>
+                          <dd className="mt-0.5 break-words font-semibold">{selectedStudent.courseCode || selectedStudent.course_code || "Not recorded"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Section</dt>
+                          <dd className="mt-0.5 font-semibold">{selectedStudent.section || "Not recorded"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Year level</dt>
+                          <dd className="mt-0.5 font-semibold">{selectedStudent.yearLevel || selectedStudent.year_level || "Not recorded"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Storage location</dt>
+                          <dd className="mt-0.5 break-words font-semibold">
+                            {selectedStudent.room && selectedStudent.cabinet && selectedStudent.drawer
+                              ? `Room ${selectedStudent.room}, cabinet ${selectedStudent.cabinet}, drawer ${selectedStudent.drawer}`
+                              : "Not assigned"}
+                          </dd>
+                        </div>
+                      </dl>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className={cn("grid gap-4", createClientType === "Parent" && "md:grid-cols-2")}>
                       <div className="relative">
-                        <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Search Student (Name or Number)
+                        <label htmlFor="staff-request-student-search" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                          Find a student
                         </label>
                         <div className="relative group">
                           <Search01Icon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 dark:text-zinc-500 transition-colors group-focus-within:text-pup-maroon dark:group-focus-within:text-red-400" />
                           <Input
                             className="pl-9 h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                            id="staff-request-student-search"
                             value={studentSearch}
                             onChange={(e) => {
                               setStudentSearch(e.target.value);
                               setStudentSuggestions([]);
                             }}
-                            placeholder="Type to search by name or number..."
+                            placeholder="Search by name or student number"
                           />
                         </div>
                         {studentSuggestions.length > 0 && (
@@ -1858,25 +1922,28 @@ export default function DocumentRequestsTab({
                         )}
                       </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                            {createClientType === "Parent" ? "Student Number" : "Or Enter Student Number"}
-                          </label>
-                          <span className="text-[10px] text-gray-400 font-medium">Use a registered student number</span>
+                      {createClientType === "Parent" && (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                              Student Number
+                            </label>
+                            <span className="text-[10px] text-gray-400 font-medium">Use a registered student number</span>
+                          </div>
+                          <Input
+                            className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                            required
+                            value={createStudentNo}
+                            onChange={(e) => setCreateStudentNo(e.target.value)}
+                            placeholder="202X-XXXXX-SJ-0"
+                          />
                         </div>
-                        <Input
-                          className="h-10 bg-white dark:bg-zinc-800 border border-border dark:border-border rounded-xl text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                          value={createStudentNo}
-                          onChange={(e) => setCreateStudentNo(e.target.value)}
-                          placeholder="202X-XXXXX-SJ-0"
-                        />
-                      </div>
+                      )}
                     </div>
                   )
                 ) : (
                   /* Alumni Fields */
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-up">
+                  <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 animate-fade-up">
                     <div>
                       <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                         Alumni Full Name
@@ -1894,13 +1961,12 @@ export default function DocumentRequestsTab({
                       <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
                         Academic Program / Degree
                       </label>
-                      <Select
+                      <Select placeholder="Select degree program"
                         className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
                         value={createCourseCode}
                         onChange={(e) => setCreateCourseCode(e.target.value)}
                         required={!createStudentNo.trim()}
                       >
-                        <option value="">Select Degree Program…</option>
                         {courses.map((c) => (
                           <option key={c.code || c.id} value={c.code}>
                             {c.code} {c.name ? `: ${c.name}` : ""}
@@ -1915,7 +1981,7 @@ export default function DocumentRequestsTab({
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                          Student Number {createCourseCode ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
+                          Student Number {createCourseCode ? <span className="normal-case tracking-normal opacity-70">(optional)</span> : ""}
                         </label>
                         <span className="text-[10px] text-gray-400 font-medium">If remembered</span>
                       </div>
@@ -1926,22 +1992,31 @@ export default function DocumentRequestsTab({
                         placeholder="e.g. 2018-01234-SJ-0"
                       />
                     </div>
+
+                    {documentTypeField}
                   </div>
                 )}
 
                 {/* Parent Notice & Information */}
                 {createClientType === "Parent" && String(officeId).toLowerCase() === "registrar" && (
-                  <div className="space-y-3.5 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
-                    <div className="flex items-center gap-2">
-                      <AppIcon className=" Alert01Icon text-amber-700 dark:text-amber-400 text-base" />
-                      <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
-                        Parent or guardian requests require the requester&apos;s details and both an SPA / authorization letter and a valid government ID.
-                      </p>
+                  <section aria-labelledby="staff-requester-heading" className="space-y-4 rounded-xl bg-gray-50 p-4 dark:bg-zinc-800/60">
+                    <div className="flex items-start gap-3 border-b border-border pb-3">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-muted-foreground dark:bg-zinc-700">
+                        <IdentityCardIcon size={16} aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 id="staff-requester-heading" className="text-sm font-semibold text-foreground">
+                          Parent or guardian details
+                        </h3>
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                          Enter the requester&apos;s details. Attach a special power of attorney (SPA) or authorization letter and a valid government ID below.
+                        </p>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
                         <label htmlFor="staff-requester-name" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Parent / Guardian Full Name
+                          Full name
                         </label>
                         <Input
                           id="staff-requester-name"
@@ -1954,9 +2029,9 @@ export default function DocumentRequestsTab({
                       </div>
                       <div>
                         <label htmlFor="staff-requester-relationship" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Relationship to Student
+                          Relationship to the student
                         </label>
-                        <Select
+                        <Select placeholder="Select relationship"
                           id="staff-requester-relationship"
                           className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs dark:bg-zinc-800"
                           value={createRequesterRelationship}
@@ -1971,7 +2046,7 @@ export default function DocumentRequestsTab({
                       </div>
                       <div>
                         <label htmlFor="staff-requester-contact" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                          Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                          Mobile number <span className="normal-case tracking-normal opacity-70">(optional)</span>
                         </label>
                         <Input
                           id="staff-requester-contact"
@@ -1983,46 +2058,28 @@ export default function DocumentRequestsTab({
                         />
                       </div>
                     </div>
-                  </div>
+                  </section>
                 )}
 
-                {/* Document Type & Purpose */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-1">
-                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                      Document Type
-                    </label>
-                    <Select
-                      className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-normal shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-800 dark:border-border"
-                      value={createDocType}
-                      onChange={(e) => setCreateDocType(e.target.value)}
-                      required
-                    >
-                      <option value="">Select document type…</option>
-                      {docTypes.map((dt) => (
-                        <option key={dt} value={dt}>
-                          {dt}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
+                {createClientType !== "Alumni" && documentTypeField}
 
-                  <div className="md:col-span-2">
-                    <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
-                      Description / Purpose
-                    </label>
-                    <Textarea
-                      id="staff-request-description"
-                      className="w-full h-10 min-h-[40px] max-h-[100px] resize-none"
-                      value={createNotes}
-                      onChange={(e) => setCreateNotes(e.target.value)}
-                      placeholder="Provide the purpose of this request (at least 5 characters)…"
-                      minLength={5}
-                      maxLength={1000}
-                      required
-                    />
-                    <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">Explain how the requested document will be used.</p>
-                  </div>
+                <div>
+                  <label htmlFor="staff-request-description" className="text-xs font-semibold text-gray-700 dark:text-zinc-200 block mb-1.5">
+                    Description / Purpose
+                  </label>
+                  <Textarea
+                    id="staff-request-description"
+                    aria-invalid={(createAttempted && createNotes.trim().length < 5) || undefined}
+                    className="w-full min-h-24 resize-y"
+                    rows={3}
+                    value={createNotes}
+                    onChange={(e) => setCreateNotes(e.target.value)}
+                    placeholder="Provide the purpose of this request (at least 5 characters)…"
+                    minLength={5}
+                    maxLength={1000}
+                    required
+                  />
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400">Explain how the requested document will be used.</p>
                 </div>
 
                 {/* Supporting Documents & Attachments (Drag & Drop) */}
@@ -2151,14 +2208,14 @@ export default function DocumentRequestsTab({
                 <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
                   Target Reactivation Status
                 </label>
-                <Select
+                <Select placeholder="Select status"
                   className="w-full h-10 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border border-border rounded-xl cursor-pointer"
                   value={reopenTargetStatus}
                   onChange={(e) => setReopenTargetStatus(e.target.value)}
                 >
                   {(ALLOWED_REOPEN_TRANSITIONS[detail?.status] || ["InProgress"]).map((st) => (
                     <option key={st} value={st}>
-                      {st === "InProgress" ? "In Progress" : st}
+                      {formatRequestStatus(st)}
                     </option>
                   ))}
                 </Select>

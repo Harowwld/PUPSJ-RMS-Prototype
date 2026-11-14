@@ -1,3 +1,4 @@
+import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { NextResponse } from "next/server";
 
@@ -108,7 +109,7 @@ export async function PATCH(req, ctx) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Cannot change status from "${existing.status}" to "${s}". Completed and finalized requests cannot be reverted without reopening authorization.`,
+          error: `Cannot change status from "${formatRequestStatus(existing.status)}" to "${formatRequestStatus(s)}". Completed and finalized requests cannot be reverted without reopening authorization.`,
         },
         { status: 400 }
       );
@@ -129,10 +130,10 @@ export async function PATCH(req, ctx) {
         patch.message = reopenReason;
       }
     }
-    if (s === "Deficient" && !String(body.message || "").trim()) {
+    if (existing.status !== s && s === "Deficient" && !String(body.message || "").trim()) {
       return NextResponse.json({ ok: false, error: "Add a comment explaining what the student needs to provide." }, { status: 400 });
     }
-    patch.status = s;
+    if (existing.status !== s) patch.status = s;
   }
 
   if (body.notes !== undefined) {
@@ -209,7 +210,7 @@ export async function PATCH(req, ctx) {
   }
 
   const parts = [];
-  if (patch.status !== undefined) parts.push(`status → ${patch.status}`);
+  if (patch.status !== undefined) parts.push(`status → ${formatRequestStatus(patch.status)}`);
   if (patch.message !== undefined) parts.push(`update posted: "${patch.message}"`);
   if (patch.linkedDocumentId !== undefined)
     parts.push(`linked document ${patch.linkedDocumentId ?? "cleared"}`);
@@ -221,7 +222,7 @@ export async function PATCH(req, ctx) {
       {
         entity_type: "document_request",
         entity_id: String(id),
-        details: `Reopened request #${id} (${existing.status} → ${patch.status}). Reason: ${reopenReason}`,
+        details: `Reopened request #${id} (${formatRequestStatus(existing.status)} → ${formatRequestStatus(patch.status)}). Reason: ${reopenReason}`,
         severity: "WARN",
       }
     );
