@@ -137,10 +137,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const locateTimeoutRef = useRef(null);
   const processedLocateRef = useRef(null);
 
-  const initialView = resolveStaffView(searchParams?.get("view") || searchParams?.get("tab"), initialAuthUser);
-
-  const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(initialAuthUser);
+  const [authUserSource, setAuthUserSource] = useState(initialAuthUser);
+  if (authUserSource !== initialAuthUser) {
+    setAuthUserSource(initialAuthUser);
+    setAuthUser(initialAuthUser);
+  }
+  const view = resolveStaffView(searchParams?.get("view") || searchParams?.get("tab"), authUser);
   const isOsas = (authUser?.office_id || "").toLowerCase() === "osas";
   const { zoomNode, setZoomNode, handleZoomMouseDown, zoomStyle } = useLayoutZoom(authUser);
 
@@ -168,21 +171,17 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    setView(nextView);
     const params = new URLSearchParams();
     params.set("view", nextView);
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
   }, [router]);
 
-  useEffect(() => {
-    const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    setView(resolveStaffView(tab, authUser))
-  }, [searchParams, authUser])
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
+  const enabledModules = authUser?.enabled_modules;
   const sidebarItems = useMemo(() => {
-    if (!authUser?.enabled_modules) return []
-    const enabled = new Set(authUser.enabled_modules)
+    if (!enabledModules) return []
+    const enabled = new Set(enabledModules)
     
     const MODULE_KEY_MAP = {
       requests: "document_requests",
@@ -254,7 +253,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       }
     }
     return result
-  }, [authUser?.enabled_modules, isOsas, notificationsUnread])
+  }, [enabledModules, isOsas, notificationsUnread])
 
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
@@ -280,31 +279,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false);
-
-  // Prune any stale selectedStudentIds when students or organizations datasets update
-  useEffect(() => {
-    setSelectedStudentIds((prev) => {
-      if (prev.size === 0) return prev;
-      const isOsas = authUser?.office_id === "osas";
-      const allAvailable = isOsas
-        ? [...organizations, ...archivedOrganizations].map((o) => o.id)
-        : [...students, ...archivedStudents].map((s) => s.studentNo);
-      const validIds = new Set(allAvailable);
-      let needsPruning = false;
-      for (const id of prev) {
-        if (!validIds.has(id)) {
-          needsPruning = true;
-          break;
-        }
-      }
-      if (!needsPruning) return prev;
-      const next = new Set();
-      for (const id of prev) {
-        if (validIds.has(id)) next.add(id);
-      }
-      return next;
-    });
-  }, [students, archivedStudents, organizations, archivedOrganizations, authUser?.office_id]);
 
   const [currentLocatorLevel, setCurrentLocatorLevel] = useOsasViewPreference("storage_explorer", "currentLocatorLevel", "rooms");
   const [selectedRoom, setSelectedRoom] = useOsasViewPreference("storage_explorer", "selectedRoom", null);
@@ -471,6 +445,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       const allOrgs = Array.isArray(orgsData?.data) ? orgsData.data : [];
       setOrganizations(allOrgs.filter(o => o.status !== "Archived"));
       setArchivedOrganizations(allOrgs.filter(o => o.status === "Archived"));
+      const validIds = new Set(isOsas
+        ? allOrgs.map((org) => org.id)
+        : studentRows.map((student) => student.studentNo || student.student_no));
+      setSelectedStudentIds((previous) => {
+        const next = new Set([...previous].filter((id) => validIds.has(id)));
+        return next.size === previous.size ? previous : next;
+      });
 
       setDocTypes(dData.data || []);
       setRequestableDocTypes(reqDData?.data || []);
@@ -555,7 +536,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
   useEffect(() => {
     if (!initialAuthUser) return undefined;
-    setAuthUser(initialAuthUser);
     const timer = setTimeout(() => {
       fetchNotificationsUnread();
     }, 0);
@@ -1348,30 +1328,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rotation, uploadedFile]);
 
-  useEffect(() => {
-    if (!authUser) return
-    const enabled = new Set(authUser.enabled_modules || [])
-    const MODULE_KEY_MAP = {
-      requests: "document_requests",
-      osas_monitoring: "osas_monitoring",
-      students: "student_directory",
-      upload: "scan_upload",
-      batch_review: "scan_upload",
-      documents: "documents",
-      notifications: "notifications",
-      search: "records_archive",
-      storage: "storage_explorer",
-    }
-    const requiredModule = MODULE_KEY_MAP[view]
-    const isAllowed = !requiredModule || enabled.has(requiredModule)
-    if (!isAllowed) {
-      const firstEnabled = sidebarItems.find(item => item.key)
-      if (firstEnabled) {
-        switchView(firstEnabled.key)
-      }
-    }
-  }, [authUser, view, sidebarItems, switchView])
-
   const checkDuplicate = useCallback((targetId, docType) => {
     if (!targetId || !docType) return;
     if (isReplaceMode || rescanContext) return;
@@ -1772,8 +1728,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     setUploadedFiles([]);
     setSelectedQueuedFileIndex(0);
     setRotation(0);
-    setView("upload");
-  }, [students, archivedStudents, organizations, archivedOrganizations, allDocs, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors, setNewRec, setUploadStudentIsExisting]);
+    switchView("upload");
+  }, [students, archivedStudents, organizations, archivedOrganizations, allDocs, authUser?.office_id, applyStudentToPdfForm, clearAllUploadFieldErrors, setNewRec, setUploadStudentIsExisting, switchView]);
 
   const confirmBulkArchive = async () => {
     if (bulkArchiveLoading) return;
@@ -1959,10 +1915,10 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             className={cn(
               "p-2 flex flex-col w-full",
               authUser?.preferences?.navigation_layout !== "topbar" && "md:pl-1",
-              (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "flex-1 h-full min-h-0 [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] min-h-full min-w-0 [&>*]:flex-[1_0_auto]"
+              (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "flex-1 h-full min-h-0 *:flex-1 *:min-h-0" : "flex-[1_0_auto] min-h-full min-w-0 *:flex-[1_0_auto]"
             )}
           >
-            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "h-full flex-1 min-h-0 [&>*]:h-full [&>*]:flex-1 [&>*]:min-h-0" : "flex-[1_0_auto] [&>*]:flex-[1_0_auto]")}>
+            <ContentSwap id={view} className={cn("w-full min-w-0 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "h-full flex-1 min-h-0 *:h-full *:flex-1 *:min-h-0" : "flex-[1_0_auto] *:flex-[1_0_auto]")}>
             {view === "students" && (
             <StudentDirectoryTab
               authUser={authUser}
@@ -2000,7 +1956,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                 }
               }}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
-              onSwitchView={setView}
+              onSwitchView={switchView}
               onPreviewDocument={handlePreviewDocument}
               onRestoreStudent={async (targetId) => {
                 try {
@@ -2067,7 +2023,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
               onUnfocusStudent={handleUnfocusStudent}
               onLocateStudent={locateStudent}
               onPreviewDocument={handlePreviewDocument}
-              onSwitchView={setView}
+              onSwitchView={switchView}
               officeLabel={authUser?.office_id === "osas" ? "OSAS" : "Registrar"}
             />
           )}

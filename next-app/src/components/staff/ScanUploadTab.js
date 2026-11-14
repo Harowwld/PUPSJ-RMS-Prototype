@@ -867,7 +867,7 @@ export default function ScanUploadTab({
                         </div>
                         <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
                           {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && showPagesSidebar && (
-                            <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-border bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-border dark:bg-card/95 shrink-0 z-10">
+                            <div className="w-1/3 min-w-50 max-w-70 border-r border-border bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-border dark:bg-card/95 shrink-0 z-10">
                               <div className="flex items-center justify-between pb-2 border-b border-border dark:border-border">
                                 <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                                   Scan Pages ({uploadedFiles.length})
@@ -965,6 +965,8 @@ export default function ScanUploadTab({
                               if (isImg || pdfPreviewDataUrl) {
                                 return (
                                   <div className="relative flex max-h-full max-w-full" style={{ transform: `rotate(${rotation}deg)` }}>
+                                    {/* Local blob/data previews retain intrinsic dimensions and cannot benefit from image optimization. */}
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                       src={isImg ? url : pdfPreviewDataUrl}
                                       alt="Preview"
@@ -1127,8 +1129,8 @@ export default function ScanUploadTab({
                   {(ocrLoading || hf.ocrLoading) ? (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white/95 backdrop-blur-sm dark:bg-card/90">
                       <div className="w-full max-w-xs px-6">
-                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-[26px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-border dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
-                          <div className="h-[34px] w-[34px] rounded-full border-[2.5px] border-[#E5E5EA] border-t-pup-maroon dark:border-border dark:border-t-pup-maroon animate-spin mb-[12px]"></div>
+                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-6.5 shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-border dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
+                          <div className="h-8.5 w-8.5 rounded-full border-[2.5px] border-[#E5E5EA] border-t-pup-maroon dark:border-border dark:border-t-pup-maroon animate-spin mb-3"></div>
                           <div className="text-center text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
                             Processing scanned information...
                           </div>
