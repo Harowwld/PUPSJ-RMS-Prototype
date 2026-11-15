@@ -16,3 +16,8 @@ export function hasLinkedStudentRecord(account) {
 export function getRequestAffiliation(accountAffiliation, requestedAffiliation) {
   return accountAffiliation === "Parent" ? "Parent" : requestedAffiliation || accountAffiliation;
 }
+
+export function normalizeChecklistStudentNo(value) {
+  const number = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return /^[A-Z0-9][A-Z0-9_./-]{1,30}$/.test(number) ? number : null;
+}
