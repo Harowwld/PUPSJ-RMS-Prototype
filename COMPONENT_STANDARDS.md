@@ -22,8 +22,8 @@ Follow this strict sizing hierarchy across all pages and components:
 | Scope | Class Token | Typical Usage |
 |---|---|---|
 | **Outer Containers** | `rounded-2xl` | Standalone cards, sheets, dialog popups, main page containers |
-| **Controls & Tiles** | `rounded-xl` | Buttons, text inputs, `<Select>` dropdown triggers, squircle icon tiles |
-| **Segmented Items & Badges** | `rounded-lg` | Segmented control buttons, dropdown menu items, table action buttons (`w-7 h-7`), active filter chips, stepper buttons |
+| **Controls & Tiles** | `rounded-xl` | Standard buttons (`default`, `sm`, `lg`, `icon`, `icon-lg`), text inputs, `<Select>` dropdown triggers, squircle icon tiles |
+| **Compact Controls & Badges** | `rounded-lg` | Compact buttons (`xs`, `icon-xs`, `icon-sm`), segmented control buttons, dropdown menu items, table action buttons (`w-7 h-7`), active filter chips, stepper buttons (do not override `icon-xs`/`icon-sm` with `rounded-xl`) |
 | **Pills & Indicators** | `rounded-full` | Apple toggle switches, status pill badges, presence dot indicators |
 
 ---
@@ -721,7 +721,7 @@ Before finalizing any new page, tab, or modal, verify the following:
 - [ ] **Explicit (optional) Designation**: Are non-required fields explicitly marked with lowercase `(optional)` using secondary text styling?
 - [ ] **Clear Button Labels**: Do primary actions use a verb plus specific noun (`Save Changes`, `Submit Request`) while dismissal/navigation use concise labels (`Cancel`, `Close`, `Back`, `Done`)?
 - [ ] **No Static Icons on Primary Buttons**: Does the main action button have clean text without leading plus/trash icons?
-- [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, inputs & buttons are `rounded-xl`, small items are `rounded-lg`.
+- [ ] **Border Radius Standards**: Outer cards are `rounded-2xl`, standard inputs & buttons (`default`/`sm`/`lg`/`icon`/`icon-lg`) are `rounded-xl`, compact controls (`xs`/`icon-xs`/`icon-sm`) & small items are `rounded-lg`.
 - [ ] **Secondary Button Outlines**: Dismissal buttons use `variant="outline"` with a crisp border, not borderless ghost.
 - [ ] **Selective Refresh**: Does this screen need to reload data changed by other people or background work? If yes, use `<RefreshButton />`; otherwise omit a refresh control.
 - [ ] **Standard Search Input with Live Count**: Does the search bar include a leading Hugeicons magnifying glass with focus color transition, generous padding (`pl-8 pr-16`), a trailing live count badge (`text-[11px] font-sans tabular-nums pointer-events-none`), and an inline Hugeicons clear button?
@@ -905,12 +905,14 @@ All in-app alerts and notifications displayed via `@/components/ui/sonner` must 
 
 ### 10.1 Desktop Max-Width & Responsive Bounds
 - **Standard Width**: Constrained to `max-width: min(620px, calc(100vw - 32px))`.
-- **Purpose**: Provides ~510px of readable horizontal text width, allowing 2–3 sentence phrases in Plus Jakarta Sans to comfortably fit in 2 to at most 3 clean lines without awkward word breaks.
 - **Mobile Viewports**: Safely constrained by `calc(100vw - 32px)` with 16px margins on each side.
 
-### 10.2 Capsule Pill Geometry (`rounded-full`)
-- All in-app toasts strictly maintain the signature sleek horizontal capsule pill with `border-radius: 999px` (`rounded-full`) and centered vertical alignment (`items-center`) across all stages and notification types.
-- Combined with the expanded `620px` max-width and delimiter line-breaking (`<wbr />`), multi-sentence descriptions and technical filenames sit comfortably across 2–3 lines without awkward text fragmentation or breaking the canonical pill shape.
+### 10.2 Toast Geometry
+- Title-only toasts use a capsule with vertically centered content.
+- Toasts with descriptions use a rounded rectangle with a 20px corner radius. Align the status icon with the title and place the description beneath the title in muted text.
+- Light mode uses a white surface and a soft shadow. Dark mode uses the same geometry with a dark surface and theme-appropriate contrast.
+- Status icons use emerald for success, red for errors, amber for warnings, and blue for information. Default messages and loading use neutral colors.
+- Expanded stacks space toasts by their rendered heights so longer messages stay readable.
 
 ### 10.3 Long Technical Identifiers & Delimiter Line-Breaking
 - **The Issue**: Under Unicode Line Breaking Algorithm (UAX #14) rules, browsers treat a hyphen followed by a digit (e.g. `-2026-11-07`) as an unbreakable negative number prefix. Long compound tokens (e.g. backup package filenames like `PUP-SYSTEM-GOVERNANCE-BACKUP-2026-11-07...`, UUIDs, hashes) fail to wrap after digits, causing the layout engine to push the entire 50+ character block to the next line and leaving a large empty void on the line before it.
