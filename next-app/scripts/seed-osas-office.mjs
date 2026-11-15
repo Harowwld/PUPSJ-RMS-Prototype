@@ -457,7 +457,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Academic student organization for Hospitality Management students at PUP San Juan.",
     storageRoom: 1,
     storageCabinet: "ACADEMIC ORGANIZATIONS",
-    storageDrawer: "5",
+    storageDrawer: "1",
   },
   {
     id: "glitch",
@@ -469,7 +469,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Academic student organization representing Information Technology (BSIT) students at PUP San Juan.",
     storageRoom: 1,
     storageCabinet: "ACADEMIC ORGANIZATIONS",
-    storageDrawer: "6",
+    storageDrawer: "2",
   },
   {
     id: "psysoc",
@@ -481,7 +481,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Academic student organization for Psychology (BSPSYCH) students at PUP San Juan.",
     storageRoom: 1,
     storageCabinet: "ACADEMIC ORGANIZATIONS",
-    storageDrawer: "7",
+    storageDrawer: "3",
   },
   {
     id: "pylon-esports",
@@ -541,7 +541,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Official student publication and independent campus journalism organization of PUP San Juan.",
     storageRoom: 1,
     storageCabinet: "NON-ACADEMIC ORGANIZATIONS",
-    storageDrawer: "5",
+    storageDrawer: "1",
   },
   {
     id: "sa",
@@ -553,7 +553,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Campus student assembly and student representation body under OSAS.",
     storageRoom: 1,
     storageCabinet: "NON-ACADEMIC ORGANIZATIONS",
-    storageDrawer: "6",
+    storageDrawer: "2",
   },
   {
     id: "lente-filikulas",
@@ -565,7 +565,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "Creative arts and cinematography guild fostering student talent in photography and film production.",
     storageRoom: 1,
     storageCabinet: "NON-ACADEMIC ORGANIZATIONS",
-    storageDrawer: "7",
+    storageDrawer: "3",
   },
 
   // Test & Legacy Compatibility Fixtures (Ensures test suites pass smoothly)
@@ -603,7 +603,7 @@ export const OSAS_ORGANIZATIONS = [
     description: "The apex student governing body representing all student councils and organizations of PUP San Juan.",
     storageRoom: 1,
     storageCabinet: "NON-ACADEMIC ORGANIZATIONS",
-    storageDrawer: "6",
+    storageDrawer: "2",
   },
   {
     id: "rcy",

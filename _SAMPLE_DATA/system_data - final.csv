@@ -7,17 +7,24 @@ DocumentType,CTC Grade 10 Report Card,,true,false,Academic Records
 DocumentType,CTC Grade 11 Report Card,,true,false,Academic Records
 DocumentType,Grade 12 Report Card (1st and 2nd Semester),,true,false,Academic Records
 DocumentType,SHS Diploma or Certificate of Graduation,,true,false,Academic Records
-DocumentType,Certificate of Good Moral Character,,true,false,Certificates & Clearances
+DocumentType,Graduation and Good Moral Certification,,true,false,Certificates & Clearances
 DocumentType,PSA Birth Certificate (circled),,true,false,Admission & Identity
 DocumentType,Photocopy of ID,,true,false,Admission & Identity
-DocumentType,Transcript of Records,,false,true,Academic Records
-DocumentType,Certified True Copy of Records,,false,true,Academic Records
-DocumentType,Certification of Grades (Cross-Enrollee),,false,true,Academic Records
-DocumentType,Diploma,,false,true,Graduation & Exit Records
+DocumentType,Transcript of Records (TOR) – 1st Copy,,false,true,Academic Records
+DocumentType,Transcript of Records (TOR) – 2nd / Subsequent Copy,,false,true,Academic Records
+DocumentType,Diploma (1st Copy),,false,true,Graduation & Exit Records
+DocumentType,Diploma (Replacement or Certified True Copy),,false,true,Graduation & Exit Records
 DocumentType,Certificate of Graduation,,false,true,Graduation & Exit Records
-DocumentType,Certificate of Transfer Credentials (Honorable Dismissal),,false,true,Graduation & Exit Records
+DocumentType,Informative Copy of Grades (ICG),,false,true,Academic Records
+DocumentType,Certificate of Grades,,false,true,Academic Records
 DocumentType,Certificate of Enrollment,,false,true,Certificates & Clearances
-DocumentType,Certificate of Registration,,false,true,Certificates & Clearances
+DocumentType,Certificate of Candidacy,,false,true,Graduation & Exit Records
+DocumentType,Certificate of English as Medium of Instruction,,false,true,Certificates & Clearances
+DocumentType,Honorable Dismissal (Transfer Credential),,false,true,Graduation & Exit Records
+DocumentType,General Clearance,,false,true,Certificates & Clearances
+DocumentType,"Certification, Authentication, and Verification (CAV)",,false,true,Graduation & Exit Records
+DocumentType,Certificate of Good Moral Character,,false,true,Certificates & Clearances
+DocumentType,Certified True Copy (CTC),,false,true,Academic Records
 Course,Bachelor of Science in Accountancy,BSA,,,
 Course,Bachelor in Secondary Education major in English,BSEDEN,,,
 Course,Bachelor of Science in Entrepreneurship,BSENT,,,

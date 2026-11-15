@@ -7,16 +7,21 @@ import {
 const dayMs = 24 * 60 * 60 * 1000;
 const weeklyVolumes = [24, 21, 28, 19, 16, 23, 30, 25, 17, 22, 15, 20];
 const requestTypes = [
-  "Certificate of Enrollment",
-  "Transcript of Records",
-  "Certificate of Registration",
-  "Certificate of Good Moral",
-  "Diploma",
-  "Transcript of Records",
-  "Certified True Copy of Records",
-  "Certificate of Transfer Credentials (Honorable Dismissal)",
+  "Transcript of Records (TOR) – 1st Copy",
+  "Transcript of Records (TOR) – 2nd / Subsequent Copy",
+  "Diploma (1st Copy)",
+  "Diploma (Replacement or Certified True Copy)",
   "Certificate of Graduation",
-  "Certification of Grades (Cross-Enrollee)",
+  "Informative Copy of Grades (ICG)",
+  "Certificate of Grades",
+  "Certificate of Enrollment",
+  "Certificate of Candidacy",
+  "Certificate of English as Medium of Instruction",
+  "Honorable Dismissal (Transfer Credential)",
+  "General Clearance",
+  "Certification, Authentication, and Verification (CAV)",
+  "Certificate of Good Moral Character",
+  "Certified True Copy (CTC)",
 ];
 
 const statusNotes = {

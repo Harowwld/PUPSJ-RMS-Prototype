@@ -36,6 +36,25 @@ function normalizeCourseCode(raw) {
   return c;
 }
 
+function parseCsvLine(line) {
+  const fields = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+}
+
 async function main() {
   console.log("Starting real data population...");
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -82,9 +101,9 @@ async function main() {
     );
   }
 
-  // Insert Registrar document types (strictly the 11 compliance docs)
+  // Insert Registrar document types
   for (const line of taxLines.slice(1)) {
-    const parts = line.split(",").map(p => p.trim());
+    const parts = parseCsvLine(line);
     const category = parts[0];
     const name = parts[1];
     const isCompliance = parts[3] === "true";

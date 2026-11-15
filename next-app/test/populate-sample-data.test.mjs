@@ -54,15 +54,22 @@ test("sample seed completes twice on a populated database and preserves account 
         new Set(["Pending", "InProgress", "Ready", "Cancelled", "Completed"]));
       assert.ok(requests.every(({ linked }) => linked));
       const proposals = await postgres.query(`
-        SELECT ep.status, sa.id IS NOT NULL AND oo.id IS NOT NULL AS linked
+        SELECT ep.status, ep.organization_id, sa.id IS NOT NULL AND oo.id IS NOT NULL AS linked
         FROM event_proposals ep
-        LEFT JOIN student_accounts sa ON sa.id = ep.student_account_id AND sa.identity_profile_id = ep.identity_profile_id
+        LEFT JOIN student_accounts sa ON sa.identity_profile_id = ep.identity_profile_id
         LEFT JOIN organization_officers oo ON oo.organization_id = ep.organization_id
           AND oo.email = ep.submitted_by_email AND oo.student_no = ep.student_no AND oo.status = 'Active'
       `);
       assert.deepEqual(new Set(proposals.map(({ status }) => status)),
         new Set(["Submitted", "Under Review", "Needs Revision", "Approved", "Declined"]));
       assert.ok(proposals.every(({ linked }) => linked));
+      const organizations = await postgres.query("SELECT id, storage_drawer FROM student_organizations");
+      assert.equal(organizations.length, 14);
+      for (const organization of organizations) {
+        assert.match(String(organization.storage_drawer), /^[1-4]$/);
+        assert.ok(proposals.filter(({ organization_id }) => organization_id === organization.id).length >= 2);
+      }
+      assert.equal(proposals.length, 32);
       const reports = await postgres.query(`
         SELECT r.status, ep.status = 'Approved' AND ep.organization_id = r.organization_id
           AND ep.submitted_by_email = r.submitted_by_email AS linked

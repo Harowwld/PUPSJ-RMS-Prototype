@@ -56,7 +56,7 @@ const demoComplianceTypes = [
   ["Form 137 SHS Permanent Record", "Academic Records"],
   ["SF9 Progress Report Card", "Academic Records", "Grade 12 Report Card (1st and 2nd Semester)"],
   ["Senior High School Diploma", "Academic Records", "SHS Diploma or Certificate of Graduation"],
-  ["Graduation and Good Moral Certification", "Certificates & Clearances", "Certificate of Good Moral Character"],
+  ["Graduation and Good Moral Certification", "Certificates & Clearances"],
   ["Certificate of Live Birth", "Admission & Identity", "PSA Birth Certificate (circled)"],
   ["Student ID Front and Back", "Admission & Identity", "Photocopy of ID"],
 ];
@@ -64,13 +64,39 @@ const retiredDemoTypes = [
   ...demoComplianceTypes.flatMap(([, , previousName]) => previousName ? [previousName] : []),
   "CTC Grade 10 Report Card",
   "CTC Grade 11 Report Card",
+  "Transcript of Records",
+  "Diploma",
+  "Certified True Copy of Records",
+  "Certification of Grades (Cross-Enrollee)",
+  "Certificate of Transfer Credentials (Honorable Dismissal)",
+  "Certificate of Registration",
+  "Certificate of Good Moral",
 ];
 const specimenStudentNo = "2025-10001-SJ-0";
+
+function parseCsvLine(line) {
+  const fields = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+}
 
 const registrarTaxonomyPath = path.join(repoRoot, "_SAMPLE_DATA", "registrar_system_data - final.csv");
 const registrarRequestableDocTypes = fs.readFileSync(registrarTaxonomyPath, "utf8")
   .split(/\r?\n/)
-  .map((line) => line.split(",").map((value) => value.trim()))
+  .map((line) => parseCsvLine(line))
   .filter(([kind, , , compliance, requestable]) => kind === "DocumentType" && compliance === "false" && requestable === "true")
   .map(([, name, , , , category]) => [name, category]);
 const studentRosterPath = path.join(repoRoot, "_SAMPLE_DATA", "cleaned_student_data.csv");
@@ -123,14 +149,14 @@ const rosterSections = [...new Set(rosterStudents.map(([, , courseCode, , sectio
   .map((entry) => entry.split("\t"));
 
 const requests = [
-  [1, "2023-20003-SJ-0", "Diploma", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
-  [2, "2024-40005-SJ-0", "Transcript of Records", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
+  [1, "2023-20003-SJ-0", "Diploma (1st Copy)", "Pending", "Alumni document request for employment verification", "PUPREGISTRAR-002"],
+  [2, "2024-40005-SJ-0", "Transcript of Records (TOR) – 1st Copy", "InProgress", "Under processing by records evaluation section", "PUPREGISTRAR-003"],
   [3, "2022-10001-SJ-0", "Certificate of Enrollment", "Ready", "Ready for campus registrar counter pickup", "PUPREGISTRAR-002"],
-  [4, "2022-10002-SJ-0", "Certified True Copy of Records", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
-  [5, "2020-50006-SJ-0", "Certificate of Good Moral", "Pending", "Requested for a scholarship application.", "PUPREGISTRAR-002"],
-  [6, "2023-00001-SJ-0", "Certificate of Transfer Credentials (Honorable Dismissal)", "Cancelled", "Registrar declined processing because the applicant already had transfer credentials issued for this enrollment.", "PUPREGISTRAR-003"],
-  [7, "2023-00001-SJ-0", "Certificate of Registration", "InProgress", "Registrar is checking the enrollment record for the requested term.", "PUPREGISTRAR-002"],
-  [8, "2022-10001-SJ-0", "Transcript of Records", "Completed", "Sealed transcript released to the requester at the Registrar counter.", "PUPREGISTRAR-003"],
+  [4, "2022-10002-SJ-0", "Certified True Copy (CTC)", "Completed", "Released and acknowledged by student", "PUPREGISTRAR-003"],
+  [5, "2020-50006-SJ-0", "Certificate of Good Moral Character", "Pending", "Requested for a scholarship application.", "PUPREGISTRAR-002"],
+  [6, "2023-00001-SJ-0", "Honorable Dismissal (Transfer Credential)", "Cancelled", "Registrar declined processing because the applicant already had transfer credentials issued for this enrollment.", "PUPREGISTRAR-003"],
+  [7, "2023-00001-SJ-0", "Informative Copy of Grades (ICG)", "InProgress", "Registrar is checking the enrollment record for the requested term.", "PUPREGISTRAR-002"],
+  [8, "2022-10001-SJ-0", "Transcript of Records (TOR) – 2nd / Subsequent Copy", "Completed", "Sealed transcript released to the requester at the Registrar counter.", "PUPREGISTRAR-003"],
 ];
 
 async function generateProposalPdf({ title, orgName, eventDate, venue, desc, studentNo, studentName, status }) {
@@ -495,6 +521,36 @@ const proposals = [
     ...proposal, "Submitted", null, null,
     [["Submitted", "Activity proposal submitted for OSAS evaluation."]],
   ]),
+  ...[
+    ["jpia", "Accounting Career Panel", "jpia-career-panel"],
+    ["ceo", "Student Enterprise Pitch Day", "ceo-pitch-day"],
+    ["ceo", "Campus Microbusiness Showcase", "ceo-microbusiness-showcase"],
+    ["hm-society", "Food Safety and Service Workshop", "hm-food-safety"],
+    ["hm-society", "Hospitality Skills Exhibition", "hm-skills-exhibition"],
+    ["psysoc", "Peer Support Skills Workshop", "psysoc-peer-support"],
+    ["psysoc", "Psychology Research Poster Day", "psysoc-poster-day"],
+    ["rotaract", "Community Tutoring Orientation", "rotaract-tutoring"],
+    ["rotaract", "Campus Donation Sorting Day", "rotaract-donation"],
+    ["adc", "Beginner Dance Workshop", "adc-dance-workshop"],
+    ["adc", "Student Choreography Showcase", "adc-choreography"],
+    ["paraseist", "Campus News Writing Clinic", "paraseist-writing-clinic"],
+    ["paraseist", "Student Press Photography Walk", "paraseist-photo-walk"],
+    ["lente-filikulas", "Short Film Storyboarding Workshop", "lente-storyboarding"],
+    ["lente-filikulas", "Campus Short Film Screening", "lente-short-film-screening"],
+  ].map(([orgId, title, filename], index) => {
+    const underReview = index % 2 === 1;
+    const reviewNote = underReview ? "OSAS is checking venue availability and the activity plan." : null;
+    return [
+      demoStudentAccounts[index % demoStudentAccounts.length][0], title, orgId,
+      `2026-12-${String(index + 5).padStart(2, "0")}`, "PUP San Juan Campus",
+      `${title} for PUP San Juan students.`, `${filename}.pdf`,
+      underReview ? "Under Review" : "Submitted", reviewNote, null,
+      [
+        ["Submitted", "Activity proposal submitted for OSAS evaluation."],
+        ...(underReview ? [["Under Review", reviewNote]] : []),
+      ],
+    ];
+  }),
   ...postEventExamples.map(([orgId, title], index) => [
     demoStudentAccounts[index % demoStudentAccounts.length][0],
     title,
@@ -629,16 +685,16 @@ export async function seed({ force: forceOverride } = {}) {
       ["yes", "Young Educators Society (YES)", "YES", "Academic", "ACADEMIC ORGANIZATIONS", "2", "Prof. Maria Montessori", "mmontessori@pup.edu.ph"],
       ["jpia", "Junior Philippine Institute of Accountants (JPIA)", "JPIA", "Academic", "ACADEMIC ORGANIZATIONS", "3", "Prof. Pacioli Luca", "pluca@pup.edu.ph"],
       ["ceo", "Collegiate Entrepreneurs' Organization (CEO)", "CEO", "Academic", "ACADEMIC ORGANIZATIONS", "4", "Prof. Joseph Schumpeter", "jschumpeter@pup.edu.ph"],
-      ["hm-society", "Hospitality Management Society (HM Society)", "HM SOCIETY", "Academic", "ACADEMIC ORGANIZATIONS", "5", "Prof. Cesar Ritz", "critz@pup.edu.ph"],
-      ["glitch", "Governing League of I.T. Challengers (GLITCH)", "GLITCH", "Academic", "ACADEMIC ORGANIZATIONS", "6", "Prof. Alan Turing", "aturing@pup.edu.ph"],
-      ["psysoc", "Psychological Society (PSYSOC)", "PSYSOC", "Academic", "ACADEMIC ORGANIZATIONS", "7", "Dr. Carl Rogers", "crogers@pup.edu.ph"],
+      ["hm-society", "Hospitality Management Society (HM Society)", "HM SOCIETY", "Academic", "ACADEMIC ORGANIZATIONS", "1", "Prof. Cesar Ritz", "critz@pup.edu.ph"],
+      ["glitch", "Governing League of I.T. Challengers (GLITCH)", "GLITCH", "Academic", "ACADEMIC ORGANIZATIONS", "2", "Prof. Alan Turing", "aturing@pup.edu.ph"],
+      ["psysoc", "Psychological Society (PSYSOC)", "PSYSOC", "Academic", "ACADEMIC ORGANIZATIONS", "3", "Dr. Carl Rogers", "crogers@pup.edu.ph"],
       ["pylon-esports", "PYLON E-Sports", "PYLON", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "1", "Engr. Kevin Lim", "klim@pup.edu.ph"],
       ["rotaract", "Rotaract Club of PUP San Juan", "ROTARACT", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "2", "Dr. Clara Barton", "cbarton@pup.edu.ph"],
       ["hhc", "Helping Hands Community (HHC)", "HHC", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "3", "Dr. Maria Santos", "msantos@pup.edu.ph"],
       ["adc", "Alab Danse Club (ADC)", "ADC", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "4", "Prof. Francisca Reyes-Aquino", "faquino@pup.edu.ph"],
-      ["paraseist", "The Paraseist", "PARASEIST", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "5", "Prof. Marcelo H. Del Pilar", "mdelpilar@pup.edu.ph"],
-      ["sa", "Student Assembly (SA)", "SA", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "6", "Dr. Jose Rizal", "jrizal@pup.edu.ph"],
-      ["lente-filikulas", "PUP Lente Filikulas", "LENTE FILIKULAS", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "7", "Prof. Ishmael Bernal", "ibernal@pup.edu.ph"],
+      ["paraseist", "The Paraseist", "PARASEIST", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "1", "Prof. Marcelo H. Del Pilar", "mdelpilar@pup.edu.ph"],
+      ["sa", "Student Assembly (SA)", "SA", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "2", "Dr. Jose Rizal", "jrizal@pup.edu.ph"],
+      ["lente-filikulas", "PUP Lente Filikulas", "LENTE FILIKULAS", "Non-Academic", "NON-ACADEMIC ORGANIZATIONS", "3", "Prof. Ishmael Bernal", "ibernal@pup.edu.ph"],
     ];
     for (const [id, name, acronym, category, cabinet, drawer, adviserName, adviserEmail] of organizations) {
       await run(
@@ -1322,7 +1378,7 @@ export async function seed({ force: forceOverride } = {}) {
     // 4. Seed OSAS Event Proposal Notifications
     const { rows: seededProposals } = await run(`
       SELECT ep.id, ep.title, ep.organization_id, ep.organization_name, ep.status, ep.review_note,
-             ep.reviewed_at, ep.event_date, ep.venue, ep.reviewed_by, ep.created_at, ep.student_no
+             ep.reviewed_at, ep.event_date, ep.venue, ep.reviewed_by, ep.created_at, ep.student_no, ep.original_filename
       FROM event_proposals ep
       WHERE ep.office_id = 'osas'
       ORDER BY ep.id ASC
@@ -1362,7 +1418,7 @@ export async function seed({ force: forceOverride } = {}) {
            actor_name, actor_id, entity_type, entity_id,
            metadata, created_at
          )
-         VALUES ('osas', 'document_review', $1, $2, $3, $4, $5, 'document', $6, $7, $8)`,
+         VALUES ('osas', 'document_review', $1, $2, $3, $4, $5, 'event_proposal', $6, $7, $8)`,
         [
           title,
           message,
@@ -1372,6 +1428,7 @@ export async function seed({ force: forceOverride } = {}) {
           String(prop.id),
           JSON.stringify({
             proposal_id: prop.id,
+            original_filename: prop.original_filename,
             title: prop.title,
             organization_id: prop.organization_id,
             organization_name: prop.organization_name,
@@ -1390,7 +1447,8 @@ export async function seed({ force: forceOverride } = {}) {
     // 5. Seed OSAS Post-Event Compliance Notifications
     const { rows: seededReports } = await run(`
       SELECT r.id, r.event_proposal_id, r.organization_id, r.status, r.review_note, r.reviewed_by,
-             r.reviewed_at, r.created_at, ep.title as event_title, so.name as organization_name
+             r.reviewed_at, r.created_at, r.narrative_original_filename, r.liquidation_original_filename,
+             ep.title as event_title, so.name as organization_name
       FROM osas_post_event_reports r
       JOIN event_proposals ep ON ep.id = r.event_proposal_id
       LEFT JOIN student_organizations so ON so.id = r.organization_id
@@ -1419,14 +1477,17 @@ export async function seed({ force: forceOverride } = {}) {
            actor_name, actor_id, entity_type, entity_id,
            metadata, created_at
          )
-         VALUES ('osas', 'document_review', $1, $2, $3, 'Dr. Sandra Gomez', 'PUPOSAS-001', 'document', $4, $5, $6)`,
+         VALUES ('osas', 'document_review', $1, $2, $3, 'Dr. Sandra Gomez', 'PUPOSAS-001', 'post_event_report', $4, $5, $6)`,
         [
           title,
           message,
           sev,
-          String(rep.event_proposal_id),
+          String(rep.id),
           JSON.stringify({
+            report_id: rep.id,
             proposal_id: rep.event_proposal_id,
+            narrative_original_filename: rep.narrative_original_filename,
+            liquidation_original_filename: rep.liquidation_original_filename,
             title: rep.event_title,
             organization_id: rep.organization_id,
             status: rep.status,
