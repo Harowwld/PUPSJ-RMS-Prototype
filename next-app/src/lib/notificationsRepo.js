@@ -106,6 +106,13 @@ export async function markAllNotificationsReadState(staffId, officeId, isRead = 
  * Lists unified notifications with office scoping, Read/Unread tab segmentation,
  * full-text search, and type/decision filters.
  */
+const officeQueuePreferenceFilter = `NOT EXISTS (
+  SELECT 1 FROM workflow_notification_preferences preference
+  WHERE preference.principal_type = 'staff' AND preference.principal_id = $1
+    AND preference.event_key = n.metadata->>'queue_event'
+    AND preference.channel = 'in_app' AND NOT preference.enabled
+)`;
+
 export async function listNotifications({
   limit = 50,
   offset = 0,
@@ -139,7 +146,7 @@ export async function listNotifications({
         COUNT(1) AS total_count
       FROM notifications n
       LEFT JOIN staff_notification_reads nr ON n.id = nr.notification_id AND nr.staff_id = $1
-      WHERE 1=1 ${countOfficeFilter}
+      WHERE ${officeQueuePreferenceFilter} ${countOfficeFilter}
     `,
     countParams
   );
@@ -149,7 +156,7 @@ export async function listNotifications({
 
   // 2. Active filters for current tab view
   const params = [staffId]; // $1 = staffId
-  const filters = [];
+  const filters = [officeQueuePreferenceFilter];
 
   if (officeId) {
     params.push(officeId);
@@ -268,6 +275,9 @@ export async function listNotifications({
         n.entity_type,
         n.entity_id,
         n.metadata,
+        report_attachment.id AS report_attachment_id,
+        report_attachment.narrative_original_filename,
+        report_attachment.liquidation_original_filename,
         n.created_at,
         COALESCE(nr.is_read, FALSE) AS is_read,
         nr.read_at,
@@ -283,6 +293,23 @@ export async function listNotifications({
         COALESCE(n.metadata->>'mime_type', 'application/pdf') AS mime_type,
         CASE WHEN (n.metadata->>'is_previewed')::boolean THEN 1 ELSE 0 END AS is_previewed
       FROM notifications n
+      LEFT JOIN LATERAL (
+        -- Legacy sample alerts stored the proposal ID and the report's event timestamp.
+        SELECT r.id, r.narrative_original_filename, r.liquidation_original_filename,
+               COUNT(*) OVER () AS matching_reports
+        FROM osas_post_event_reports r
+        WHERE n.office_id = 'osas' AND (
+          (n.entity_type = 'post_event_report' AND r.id::text = n.entity_id)
+          OR (
+            n.entity_type = 'document' AND n.metadata ? 'proposal_id'
+            AND NOT (n.metadata ? 'event_date') AND NOT (n.metadata ? 'document_id')
+            AND r.event_proposal_id::text = n.metadata->>'proposal_id'
+            AND r.organization_id = n.metadata->>'organization_id'
+            AND n.created_at IN (r.reviewed_at, r.created_at)
+          )
+        )
+        LIMIT 1
+      ) report_attachment ON report_attachment.matching_reports = 1
       LEFT JOIN staff actor_staff ON actor_staff.id = n.actor_id
       LEFT JOIN staff_notification_reads nr ON n.id = nr.notification_id AND nr.staff_id = $1
       ${whereClause}
