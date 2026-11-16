@@ -2,7 +2,7 @@
 import CopyButton from "@/components/shared/CopyButton";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
-import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
 import {
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import {
   Sheet,
@@ -31,7 +31,7 @@ import {
   getPostEventStatusBadgeClass,
 } from "@/components/staff/OsasMonitoringTab";
 import { NarrativePersonBadge } from "@/components/shared/NarrativeText";
-import PDFPreview from "@/components/shared/PDFPreview";
+import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import {
   ArrowRight02Icon, BookOpen01Icon, Building01Icon, Calendar01Icon,
   Cancel01Icon, Clock01Icon, Coins01Icon, CovidInfoIcon, File02Icon, HourglassIcon,
@@ -131,7 +131,7 @@ export default function OsasProposalReviewSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Event Proposal Details
+                Event proposal details
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed information and evaluation for event proposal
@@ -183,7 +183,7 @@ export default function OsasProposalReviewSheet({
           </div>
 
           <section className="space-y-2">
-            <SheetSectionHeading icon={Building01Icon} title="Organization Information" />
+            <SheetSectionHeading icon={Building01Icon} title="Organization information" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Building01Icon} label="Organization" value={selected.verified_org_name || selected.organization_name} />
               <InfoRow icon={UserIcon} label="Proponent">
@@ -232,11 +232,6 @@ export default function OsasProposalReviewSheet({
                       <Badge variant="success" size="compact">Active</Badge>
                     )}
                   </div>
-                  {selected.bylaws_filename && (
-                    <CardDescription className="wrap-anywhere">
-                      {selected.bylaws_original_filename || selected.bylaws_filename}
-                    </CardDescription>
-                  )}
                 </div>
 
                 {!selected.bylaws_filename && (
@@ -248,27 +243,30 @@ export default function OsasProposalReviewSheet({
                   />
                 )}
 
-                {selected.bylaws_filename && selected.organization_id && (
-                  <SheetPreviewButton
-                    label="Preview Constitution & By-Laws"
-                    onClick={() => {
-                      setPdfPreviewData?.({
-                        url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
-                        title: `${selected.organization_name || "Organization"}: Constitution & By-Laws`,
-                        subtitle: "Active ratified charter for this student organization.",
-                        docType: "Constitution & By-Laws",
-                        originalFilename: selected.bylaws_original_filename || "CBL.pdf",
-                      });
-                      setPdfPreviewOpen?.(true);
-                    }}
-                  />
+                {selected.bylaws_filename && (
+                  <div className="w-full">
+                    <SheetAttachmentRow
+                      filename={selected.bylaws_original_filename || selected.bylaws_filename}
+                      fileUrl={selected.organization_id ? `/api/osas/organizations/${selected.organization_id}/bylaws?file=1` : undefined}
+                      onPreview={selected.organization_id ? () => {
+                        setPdfPreviewData?.({
+                          url: `/api/osas/organizations/${selected.organization_id}/bylaws?file=1`,
+                          title: `${selected.organization_name || "Organization"}: Constitution & By-Laws`,
+                          subtitle: "Active ratified charter for this student organization.",
+                          docType: "Constitution & By-Laws",
+                          originalFilename: selected.bylaws_original_filename || "CBL.pdf",
+                        });
+                        setPdfPreviewOpen?.(true);
+                      } : undefined}
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>
           </section>
 
           <section className="space-y-2">
-            <SheetSectionHeading icon={BookOpen01Icon} title="Proposal Specification" />
+            <SheetSectionHeading icon={BookOpen01Icon} title="Proposal specification" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Tag01Icon} label="Proposal Status">
                 <Badge variant="gray" size="compact" className={getProposalStatusBadgeClass(selected.status)}>
@@ -301,12 +299,12 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 2: Objectives & Charter Compliance */}
           <div className="space-y-3 pt-2">
-            <SheetSectionHeading icon={CovidInfoIcon} title="Overview & Compliance" />
+            <SheetSectionHeading icon={CovidInfoIcon} title="Overview and compliance" />
 
             {/* Description / Summary if available */}
             {selected.description && (
               <div className="space-y-1.5 pt-1">
-                <SheetSectionHeading icon={File02Icon} title="Event Description & Objectives" />
+                <SheetSectionHeading icon={File02Icon} title="Event description and objectives" />
                 <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                   {selected.description}
                 </p>
@@ -360,18 +358,19 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 3: Official Proposal Document Preview */}
           <div className="space-y-2.5 pt-2">
-            <SheetSectionHeading icon={File02Icon} title="Official Proposal Document">
-              {(selected.id || selected.url) && (
-                <SheetPreviewButton
-                  label="Preview Proposal PDF"
-                  onClick={() => handleOpenPdfPreview?.(selected)}
-                />
-              )}
-            </SheetSectionHeading>
+            <SheetSectionHeading icon={File02Icon} title="Official proposal document" />
+            {(selected.id || selected.url || selected.original_filename) && (
+              <SheetAttachmentRow
+                filename={selected.original_filename || "Proposal.pdf"}
+                size={selected.size_bytes}
+                fileUrl={selected.url || (selected.id ? `/api/osas/event-proposals/${selected.id}?file=1` : undefined)}
+                onPreview={(selected.id || selected.url) && handleOpenPdfPreview ? () => handleOpenPdfPreview(selected) : undefined}
+              />
+            )}
 
             {selected.id ? (
               <div className="relative h-[clamp(480px,65dvh,640px)] w-full overflow-hidden rounded-xl border border-border bg-gray-50 dark:bg-zinc-900">
-                <PDFPreview src={`/api/osas/event-proposals/${selected.id}?file=1`} title={selected.title || "Official submission PDF"} />
+                <ResilientPDFViewer src={`/api/osas/event-proposals/${selected.id}?file=1`} title={selected.title || "Official submission PDF"} />
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">No inline document preview available.</p>
@@ -391,33 +390,23 @@ export default function OsasProposalReviewSheet({
               </summary>
               <div className="space-y-2 px-3 pb-3">
                 {[...selected.versions].reverse().map((version, index) => (
-                  <div key={version.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 dark:bg-zinc-900/40">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-800 dark:text-zinc-100">
-                        Revision {version.revision_number}{index === 0 ? " · Current" : ""}
-                      </p>
-                      <p className="truncate text-[11px] text-gray-500 dark:text-zinc-400" title={version.original_filename}>
-                        {version.original_filename} · {version.created_at ? new Date(version.created_at).toLocaleDateString() : "Date unavailable"}
-                      </p>
-                    </div>
-                    {version.file_pruned_at ? (
-                      <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
-                    ) : (
-                      <SheetPreviewButton
-                        label={`Preview Proposal Revision ${version.revision_number}`}
-                        onClick={() => {
-                          setPdfPreviewData?.({
-                            url: `/api/osas/event-proposals/${selected.id}?file=1&revisionId=${version.id}`,
-                            title: `${selected.title} · Revision ${version.revision_number}`,
-                            subtitle: `Submitted for ${selected.organization_name || "OSAS"}.`,
-                            docType: "Event Proposal",
-                            originalFilename: version.original_filename || "Proposal.pdf",
-                          });
-                          setPdfPreviewOpen?.(true);
-                        }}
-                      />
-                    )}
-                  </div>
+                  <SheetAttachmentRow
+                    key={version.id}
+                    filename={version.original_filename || "Proposal.pdf"}
+                    size={version.size_bytes}
+                    fileUrl={!version.file_pruned_at ? `/api/osas/event-proposals/${selected.id}?file=1&revisionId=${version.id}` : undefined}
+                    description={`Revision ${version.revision_number}${index === 0 ? " · Current" : ""} · ${version.created_at ? new Date(version.created_at).toLocaleDateString() : "Date unavailable"}${version.file_pruned_at ? " · PDF removed after approval" : ""}`}
+                    onPreview={version.file_pruned_at ? undefined : () => {
+                      setPdfPreviewData?.({
+                        url: `/api/osas/event-proposals/${selected.id}?file=1&revisionId=${version.id}`,
+                        title: `${selected.title} · Revision ${version.revision_number}`,
+                        subtitle: `Submitted for ${selected.organization_name || "OSAS"}.`,
+                        docType: "Event Proposal",
+                        originalFilename: version.original_filename || "Proposal.pdf",
+                      });
+                      setPdfPreviewOpen?.(true);
+                    }}
+                  />
                 ))}
               </div>
             </details>
@@ -425,7 +414,7 @@ export default function OsasProposalReviewSheet({
 
           {/* SECTION 4: Evaluation & Stage Decision */}
           <div className="space-y-3.5 pt-2">
-            <SheetSectionHeading icon={Calendar01Icon} title="Evaluation & Decision">
+            <SheetSectionHeading icon={Calendar01Icon} title="Evaluation and decision">
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
                 Stage: {selected.status}
               </OsasSheetSummaryBadge>
@@ -513,8 +502,8 @@ export default function OsasProposalReviewSheet({
                 )}
                 placeholder={
                   isNoteRequired
-                    ? "Enter required justification or revision instructions for the organization..."
-                    : "Enter student-visible evaluation remarks (optional, default note applied if blank)..."
+                    ? "Enter required justification or revision instructions for the organization"
+                    : "Enter student-visible evaluation remarks (optional)"
                 }
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -523,7 +512,7 @@ export default function OsasProposalReviewSheet({
           </div>
 
           <section className="space-y-3">
-            <SheetSectionHeading icon={Clock01Icon} title="Evaluation Timeline & Updates">
+            <SheetSectionHeading icon={Clock01Icon} title="Evaluation timeline and updates">
               <OsasSheetSummaryBadge icon={Clock01Icon}>
                 {eventCount} {eventCount === 1 ? "update" : "updates"}
               </OsasSheetSummaryBadge>

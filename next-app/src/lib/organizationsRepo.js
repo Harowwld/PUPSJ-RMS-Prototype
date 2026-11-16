@@ -1,3 +1,4 @@
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "./workflowNotificationsRepo.js";
 import { query, queryOne, transaction } from "./postgres.js";
 import { decryptPII, encryptPII } from "./piiEncryption.js";
 
@@ -442,29 +443,43 @@ export async function createOrganizationBylawsSubmission({
   originalFilename,
   amendmentSummary,
   submittedByEmail,
+  submittedByAccountId = null,
   sizeBytes,
   mimeType = "application/pdf",
 }) {
   if (!organizationId) throw new Error("Organization ID is required.");
   if (!storageFilename || !originalFilename) throw new Error("File details are required.");
 
-  return queryOne(
-    `INSERT INTO organization_bylaws_versions (
-       organization_id, version_tag, storage_filename, original_filename,
-       size_bytes, mime_type, amendment_summary, submitted_by_email, status, created_at, updated_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', NOW(), NOW())
-     RETURNING *`,
-    [
-      organizationId,
-      versionTag || `Amendment ${new Date().getFullYear()}`,
-      storageFilename,
-      originalFilename,
-      sizeBytes ?? null,
-      mimeType,
-      amendmentSummary || null,
-      submittedByEmail ? String(submittedByEmail).trim().toLowerCase() : null,
-    ]
-  );
+  return transaction(async (tx) => {
+    const submission = await tx.queryOne(
+      `INSERT INTO organization_bylaws_versions (
+         organization_id, version_tag, storage_filename, original_filename,
+         size_bytes, mime_type, amendment_summary, submitted_by_email, status,
+         portal_submitter_account_id, created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, NOW(), NOW())
+       RETURNING *`,
+      [
+        organizationId,
+        versionTag || `Amendment ${new Date().getFullYear()}`,
+        storageFilename,
+        originalFilename,
+        sizeBytes ?? null,
+        mimeType,
+        amendmentSummary || null,
+        submittedByEmail ? String(submittedByEmail).trim().toLowerCase() : null,
+        submittedByAccountId,
+      ],
+    );
+    await queuePortalWorkflowNotification(tx, {
+      accountId: submittedByAccountId, eventKey: "osas_bylaws_received",
+      targetPath: `/student?view=osas&bylaws=${submission.id}&org=${encodeURIComponent(organizationId)}`,
+    });
+    await queueOfficeWorkflowNotification(tx, {
+      officeId: "osas", eventKey: "queue_osas_bylaws", title: "Constitution & By-Laws submission awaiting review",
+      entityType: "organization_bylaws", entityId: submission.id,
+    });
+    return submission;
+  });
 }
 
 /**
@@ -481,51 +496,37 @@ export async function reviewOrganizationBylawsVersion(versionId, {
     throw new Error(`Invalid status "${status}". Must be one of: ${allowed.join(", ")}`);
   }
 
-  const existing = await queryOne(
-    `SELECT * FROM organization_bylaws_versions WHERE id = $1`,
-    [versionId]
-  );
-  if (!existing) {
-    throw new Error("Bylaws version record not found.");
-  }
-
   if ((status === "Needs Revision" || status === "Declined") && (!reviewNote || reviewNote.trim().length < 5)) {
     throw new Error("A detailed review note (at least 5 characters) is required when requesting revisions or declining.");
   }
 
-  if (status === "Approved") {
-    return transaction(async (tx) => {
+  return transaction(async (tx) => {
+    const existing = await tx.queryOne(
+      "SELECT * FROM organization_bylaws_versions WHERE id = $1 FOR UPDATE", [versionId],
+    );
+    if (!existing) throw new Error("Bylaws version record not found.");
+    if (existing.status === status) return existing;
+    if (status === "Approved") {
       await tx.query(
-        `UPDATE organization_bylaws_versions
-         SET status = 'Superseded', updated_at = NOW()
-         WHERE organization_id = $1 AND id != $2 AND status = 'Approved'`,
-        [existing.organization_id, versionId]
+        `UPDATE organization_bylaws_versions SET status = 'Superseded', updated_at = NOW()
+          WHERE organization_id = $1 AND id != $2 AND status = 'Approved'`,
+        [existing.organization_id, versionId],
       );
-      return tx.queryOne(
-        `UPDATE organization_bylaws_versions
-         SET status = 'Approved',
-             approved_by = $2,
-             review_note = $3,
-             effective_date = COALESCE($4::DATE, CURRENT_DATE),
-             updated_at = NOW()
-         WHERE id = $1
-         RETURNING *`,
-        [versionId, staffId || null, reviewNote ? reviewNote.trim() : null, effectiveDate || null]
-      );
+    }
+    const updated = await tx.queryOne(
+      `UPDATE organization_bylaws_versions
+          SET status = $2, approved_by = $3, review_note = $4, updated_at = NOW(),
+              effective_date = CASE WHEN $2 = 'Approved' THEN COALESCE($5::date, CURRENT_DATE) ELSE effective_date END
+        WHERE id = $1 RETURNING *`,
+      [versionId, status, staffId || null, reviewNote?.trim() || null, effectiveDate || null],
+    );
+    await queuePortalWorkflowNotification(tx, {
+      accountId: existing.portal_submitter_account_id,
+      eventKey: status === "Needs Revision" ? "osas_bylaws_revision" : "osas_bylaws_decision",
+      targetPath: `/student?view=osas&bylaws=${versionId}&org=${encodeURIComponent(existing.organization_id)}`,
     });
-  }
-
-  // Needs Revision or Declined
-  return queryOne(
-    `UPDATE organization_bylaws_versions
-     SET status = $2,
-         approved_by = $3,
-         review_note = $4,
-         updated_at = NOW()
-     WHERE id = $1
-     RETURNING *`,
-    [versionId, status, staffId || null, reviewNote ? reviewNote.trim() : null]
-  );
+    return updated;
+  });
 }
 
 /**

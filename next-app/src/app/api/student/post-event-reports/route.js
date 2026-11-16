@@ -168,6 +168,7 @@ export async function POST(req) {
       revisionReportId,
       organizationId,
       submittedByEmail: studentEmail,
+      submittedByAccountId: access.user.accountId || null,
       actualAttendance,
       totalExpenses,
       narrativeStorageFilename,

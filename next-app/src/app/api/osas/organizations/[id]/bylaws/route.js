@@ -10,7 +10,6 @@ import {
   getOrganizationBylawsVersionByStorageFilename,
   reviewOrganizationBylawsVersion,
   archiveOrganizationBylawsDirectly,
-  updateOrganizationBylaws,
 } from "@/lib/organizationsRepo";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
@@ -35,50 +34,6 @@ function resolveBylawsFilePath(storageFilename) {
     path.resolve(process.cwd(), "..", ".local", "storage", "osas", "bylaws", storageFilename),
   ];
   return candidates.find((p) => fs.existsSync(/*turbopackIgnore: true*/ p)) || null;
-}
-
-async function synthesizeFallbackBylawsPdf(org) {
-  try {
-    const { PDFDocument, rgb, StandardFonts } = await import("pdf-lib");
-    const doc = await PDFDocument.create();
-    const page = doc.addPage([612, 792]);
-    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
-    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
-    const maroon = rgb(0.5, 0, 0);
-    const darkGray = rgb(0.2, 0.2, 0.2);
-
-    // Header
-    page.drawText("POLYTECHNIC UNIVERSITY OF THE PHILIPPINES", { x: 50, y: 740, size: 13, font: fontBold, color: maroon });
-    page.drawText("SAN JUAN CAMPUS - OFFICE OF STUDENT AFFAIRS AND SERVICES", { x: 50, y: 724, size: 9, font: fontBold, color: darkGray });
-    page.drawText("CONSTITUTION AND BY-LAWS (CBL) ARCHIVE", { x: 50, y: 706, size: 11, font: fontBold, color: maroon });
-    page.drawLine({ start: { x: 50, y: 696 }, end: { x: 562, y: 696 }, thickness: 1, color: maroon });
-
-    // Org details
-    page.drawText(`Organization: ${org.name || "Recognized Student Organization"}`, { x: 50, y: 660, size: 11, font: fontBold, color: darkGray });
-    page.drawText(`Acronym: ${org.acronym || "N/A"}`, { x: 50, y: 642, size: 9.5, font: fontRegular, color: darkGray });
-    page.drawText(`Classification: ${org.category || "Academic"}`, { x: 50, y: 624, size: 9.5, font: fontRegular, color: darkGray });
-    page.drawText(`Faculty Adviser: ${org.adviser_name || "N/A"} (${org.adviser_email || "N/A"})`, { x: 50, y: 606, size: 9.5, font: fontRegular, color: darkGray });
-    page.drawText(`Accreditation Status: ${org.status || "Active"}`, { x: 50, y: 588, size: 9.5, font: fontBold, color: maroon });
-
-    if (org.description) {
-      page.drawText("Mission & Purpose:", { x: 50, y: 555, size: 9.5, font: fontBold, color: darkGray });
-      page.drawText(String(org.description).slice(0, 300), { x: 50, y: 539, size: 8.5, font: fontRegular, color: darkGray });
-    }
-
-    // Archival note
-    page.drawText("Article I: Name and Objectives", { x: 50, y: 490, size: 10, font: fontBold, color: maroon });
-    page.drawText("This official archival copy certifies that this student organization is officially recognized and", { x: 50, y: 472, size: 8.5, font: fontRegular, color: darkGray });
-    page.drawText("accredited under the guidelines of the Office of Student Affairs and Services (OSAS).", { x: 50, y: 458, size: 8.5, font: fontRegular, color: darkGray });
-
-    page.drawText("Article II: Officer Governance and Accountability", { x: 50, y: 425, size: 10, font: fontBold, color: maroon });
-    page.drawText("Student officers approved by OSAS are authorized to", { x: 50, y: 407, size: 8.5, font: fontRegular, color: darkGray });
-    page.drawText("submit official activity proposals and administer organizational correspondence.", { x: 50, y: 393, size: 8.5, font: fontRegular, color: darkGray });
-
-    page.drawText("Verified Archival Record: PUPSJ Records Keeping System", { x: 50, y: 80, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
-    return Buffer.from(await doc.save());
-  } catch {
-    return Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000010 00000 n \n0000000053 00000 n \n0000000102 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n171\n%%EOF");
-  }
 }
 
 export async function GET(req, ctx) {
@@ -107,30 +62,14 @@ export async function GET(req, ctx) {
       targetMimeType = ver.mime_type || targetMimeType;
     }
 
-    let filePath = resolveBylawsFilePath(targetFilename);
-    let bytes;
-
-    if (filePath && fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
-      bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
-    } else {
-      bytes = await synthesizeFallbackBylawsPdf(org);
-      try {
-        const storageFilename = targetFilename || `${crypto.randomUUID()}-cbl.pdf`;
-        const savePath = path.join(bylawsStorageDir(), storageFilename);
-        fs.writeFileSync(savePath, bytes);
-        if (!org.bylaws_storage_filename && !versionId) {
-          await updateOrganizationBylaws(id, {
-            storageFilename,
-            originalFilename: `${org.acronym || org.name}-CBL.pdf`,
-            sizeBytes: bytes.length,
-            mimeType: "application/pdf",
-          });
-        }
-      } catch (err) {
-        console.warn("Could not cache synthesized CBL to disk:", err?.message);
-      }
+    const filePath = resolveBylawsFilePath(targetFilename);
+    if (!filePath) {
+      return NextResponse.json(
+        { ok: false, error: "The original bylaws PDF could not be found." },
+        { status: 404, headers: { "X-File-Missing": "true" } }
+      );
     }
-
+    const bytes = fs.readFileSync(/*turbopackIgnore: true*/ filePath);
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": targetMimeType,

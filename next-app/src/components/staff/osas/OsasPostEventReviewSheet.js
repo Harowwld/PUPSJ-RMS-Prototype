@@ -2,7 +2,7 @@
 import CopyButton from "@/components/shared/CopyButton";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetEvaluationTimeline from "@/components/shared/SheetEvaluationTimeline";
-import SheetPreviewButton from "@/components/shared/SheetPreviewButton";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import SheetPagination from "@/components/shared/SheetPagination";
 import CampusStatusNotice from "@/components/student/CampusStatusNotice";
 import {
@@ -137,7 +137,7 @@ export default function OsasPostEventReviewSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Post-Event Clearance Details
+                Post-event clearance details
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed information and evaluation for post-event clearance
@@ -186,7 +186,7 @@ export default function OsasPostEventReviewSheet({
           </div>
 
           <section className="space-y-2">
-            <SheetSectionHeading icon={ClipboardIcon} title="Clearance Specification" />
+            <SheetSectionHeading icon={ClipboardIcon} title="Clearance specification" />
             <dl className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow icon={Building01Icon} label="Organization" value={selectedPostEvent.organization_name} />
               <InfoRow icon={UserIcon} label="Submitter">
@@ -238,12 +238,12 @@ export default function OsasPostEventReviewSheet({
 
           {/* SECTION 2: Accomplishment Narrative & Previous Remarks */}
           <div className="space-y-3 pt-2">
-            <SheetSectionHeading icon={ClipboardIcon} title="Narrative & Evaluation History" />
+            <SheetSectionHeading icon={ClipboardIcon} title="Narrative and evaluation history" />
 
             {/* Narrative summary */}
             {selectedPostEvent.narrative_summary && (
               <div className="space-y-1.5 pt-1">
-                <SheetSectionHeading icon={File02Icon} title="Accomplishment & Narrative Summary" />
+                <SheetSectionHeading icon={File02Icon} title="Accomplishment and narrative summary" />
                 <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                   {selectedPostEvent.narrative_summary}
                 </p>
@@ -275,82 +275,43 @@ export default function OsasPostEventReviewSheet({
 
           {/* SECTION 3: Official Compliance Documents */}
           <div className="space-y-2.5 pt-2">
-            <SheetSectionHeading icon={File02Icon} title="Compliance Attachments">
+            <SheetSectionHeading icon={File02Icon} title="Compliance attachments">
               <span className="text-[11px] text-slate-400 dark:text-zinc-500">
                 Official files submitted for clearance
               </span>
             </SheetSectionHeading>
 
             <div className="space-y-2">
-              {/* Narrative Report Row */}
-              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-pup-maroon dark:text-red-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-red-100 dark:border-red-900/30">
-                    <File02Icon size={16}  />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
-                      Narrative Report
-                    </p>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 truncate max-w-[220px]">
-                      {selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
-                    </p>
-                  </div>
-                </div>
-
-                <SheetPreviewButton
-                  label="Preview Narrative Report"
-                  onClick={() => {
-                    handleOpenPdfPreview?.({
-                      url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
-                      title: `${selectedPostEvent.event_title}: Narrative Report`,
-                      subtitle: "Official post-event narrative & accomplishment report.",
-                      docType: "Post-Event Narrative",
-                      originalFilename: selectedPostEvent.narrative_original_filename || "Narrative.pdf",
-                    });
-                  }}
-                />
-              </div>
-
-              {/* Financial Liquidation Row */}
-              <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-3.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 shadow-2xs border border-emerald-100 dark:border-emerald-900/30">
-                    <AppIcon className=" Invoice01Icon" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-900 dark:text-zinc-100 truncate max-w-[220px]">
-                      Financial Liquidation
-                    </p>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 truncate max-w-[220px]">
-                      {selectedPostEvent.liquidation_original_filename || "Liquidation-Vouchers.pdf"}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedPostEvent.liquidation_storage_filename ? (
-                  <SheetPreviewButton
-                    label="Preview Financial Liquidation"
-                    onClick={() => {
-                      handleOpenPdfPreview?.({
-                        url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
-                        title: `${selectedPostEvent.event_title}: Financial Liquidation`,
-                        subtitle: "Official receipts, disbursement summary, and vouchers.",
-                        docType: "Financial Liquidation",
-                        originalFilename: selectedPostEvent.liquidation_original_filename || "Liquidation.pdf",
-                      });
-                    }}
-                  />
-                ) : (
-                  <span className="text-[11px] text-gray-400 italic">No file attached</span>
-                )}
-              </div>
+              <SheetAttachmentRow
+                filename={selectedPostEvent.narrative_original_filename || "Narrative-Report.pdf"}
+                description="Narrative Report"
+                fileUrl={`/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`}
+                onPreview={handleOpenPdfPreview && (() => handleOpenPdfPreview({
+                  url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=narrative`,
+                  title: `${selectedPostEvent.event_title}: Narrative Report`,
+                  subtitle: "Official post-event narrative & accomplishment report.",
+                  docType: "Post-Event Narrative",
+                  originalFilename: selectedPostEvent.narrative_original_filename || "Narrative.pdf",
+                }))}
+              />
+              <SheetAttachmentRow
+                filename={selectedPostEvent.liquidation_original_filename || (selectedPostEvent.liquidation_storage_filename ? "Liquidation-Vouchers.pdf" : "No file attached")}
+                description="Financial Liquidation"
+                fileUrl={selectedPostEvent.liquidation_storage_filename ? `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation` : undefined}
+                onPreview={selectedPostEvent.liquidation_storage_filename && handleOpenPdfPreview ? () => handleOpenPdfPreview({
+                  url: `/api/osas/post-event-reports/${selectedPostEvent.id}?file=liquidation`,
+                  title: `${selectedPostEvent.event_title}: Financial Liquidation`,
+                  subtitle: "Official receipts, disbursement summary, and vouchers.",
+                  docType: "Financial Liquidation",
+                  originalFilename: selectedPostEvent.liquidation_original_filename || "Liquidation.pdf",
+                }) : undefined}
+              />
             </div>
           </div>
 
           {/* SECTION 4: Clearance Evaluation & Decision */}
           <div className="space-y-3.5 pt-2 border-t border-border/80 dark:border-border">
-            <SheetSectionHeading icon={Calendar01Icon} title="Clearance Evaluation">
+            <SheetSectionHeading icon={Calendar01Icon} title="Clearance evaluation">
               <OsasSheetSummaryBadge icon={Calendar01Icon}>
                 {hasStatusChange ? `Move to: ${postEventStatus}` : `Current: ${currentStatus}`}
               </OsasSheetSummaryBadge>
@@ -430,8 +391,8 @@ export default function OsasPostEventReviewSheet({
                 )}
                 placeholder={
                   isPostEventNoteRequired
-                    ? "Enter required justification or revision instructions for student officers..."
-                    : "Enter feedback or clearance remarks for student officers..."
+                    ? "Enter required justification or revision instructions for student officers"
+                    : "Enter feedback or clearance remarks for student officers"
                 }
                 value={postEventNote}
                 onChange={(e) => setPostEventNote(e.target.value)}
@@ -439,7 +400,7 @@ export default function OsasPostEventReviewSheet({
             </div>
           </div>
           <section className="space-y-3">
-            <SheetSectionHeading icon={Clock01Icon} title="Evaluation Timeline & Updates">
+            <SheetSectionHeading icon={Clock01Icon} title="Evaluation timeline and updates">
               <OsasSheetSummaryBadge icon={Clock01Icon}>
                 {selectedPostEvent.updates?.length ?? 0} {selectedPostEvent.updates?.length === 1 ? "update" : "updates"}
               </OsasSheetSummaryBadge>

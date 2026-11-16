@@ -1,3 +1,5 @@
+import { agingPostEventReports } from "./workflowQueueFilters.js";
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "./workflowNotificationsRepo.js";
 import { query, queryOne, transaction } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
 import { getStaffFullName } from "./staffRepo.js";
@@ -10,6 +12,7 @@ export async function createPostEventReport({
   revisionReportId = null,
   organizationId,
   submittedByEmail,
+  submittedByAccountId = null,
   actualAttendance = 0,
   totalExpenses = 0.0,
   narrativeStorageFilename,
@@ -57,23 +60,23 @@ export async function createPostEventReport({
               narrative_storage_filename = $5, narrative_original_filename = $6,
               liquidation_storage_filename = COALESCE($7, liquidation_storage_filename),
               liquidation_original_filename = COALESCE($8, liquidation_original_filename),
-              status = 'Submitted', review_note = NULL, reviewed_by = NULL,
+              status = 'Submitted', portal_submitter_account_id = $9, review_note = NULL, reviewed_by = NULL,
               reviewed_at = NULL, updated_at = NOW()
         WHERE id = $1
         RETURNING *`,
       [revision.id, submittedByEmail.toLowerCase(), actualAttendance, totalExpenses,
-        narrativeStorageFilename, narrativeOriginalFilename, liquidationStorageFilename, liquidationOriginalFilename],
+        narrativeStorageFilename, narrativeOriginalFilename, liquidationStorageFilename, liquidationOriginalFilename, submittedByAccountId],
     ) : await tx.queryOne(
       `INSERT INTO osas_post_event_reports (
         event_proposal_id, organization_id, submitted_by_email,
         actual_attendance, total_expenses,
         narrative_storage_filename, narrative_original_filename,
         liquidation_storage_filename, liquidation_original_filename,
-        status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Submitted')
+        status, portal_submitter_account_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Submitted', $10)
       RETURNING *`,
       [eventProposalId, organizationId, submittedByEmail.toLowerCase(), actualAttendance, totalExpenses,
-        narrativeStorageFilename, narrativeOriginalFilename, liquidationStorageFilename, liquidationOriginalFilename],
+        narrativeStorageFilename, narrativeOriginalFilename, liquidationStorageFilename, liquidationOriginalFilename, submittedByAccountId],
     );
 
     await tx.query(
@@ -87,6 +90,13 @@ export async function createPostEventReport({
       [eventProposalId, revision ? "Post-Event Resubmitted" : "Post-Event Submitted",
         `Official Post-Event Narrative Report and Liquidation package ${revision ? "resubmitted" : "submitted"} by ${submittedByEmail}.`, actorIdentifier],
     );
+    await queuePortalWorkflowNotification(tx, {
+      accountId: submittedByAccountId, eventKey: "osas_report_update", targetPath: `/student?view=osas&report=${report.id}`,
+    });
+    await queueOfficeWorkflowNotification(tx, {
+      officeId: "osas", eventKey: revision ? "queue_osas_returned" : "queue_osas_new",
+      title: `Post-event report #${report.id} awaiting review`, entityType: "post_event_report", entityId: report.id,
+    });
     return report;
   });
 }
@@ -94,8 +104,8 @@ export async function createPostEventReport({
 /**
  * Lists post-event reports for OSAS staff review
  */
-export async function listPostEventReports({ status, organizationId, organizationIds, search, limit, offset = 0 } = {}) {
-  const conditions = [];
+export async function listPostEventReports({ aging = false, status, organizationId, organizationIds, search, limit, offset = 0 } = {}) {
+  const conditions = aging ? [agingPostEventReports] : [];
   const params = [];
 
   if (organizationIds) {
@@ -288,6 +298,14 @@ export async function updatePostEventReportStatus(id, { status, note, staffId, e
        VALUES ($1, $2, $3, $4)`,
       [existing.event_proposal_id, `Post-Event ${status}`, note || `Post-event report evaluation completed with status: ${status}.`, staffId || null],
     );
+    if (existing.status !== status) {
+      await queuePortalWorkflowNotification(tx, {
+        accountId: updated.portal_submitter_account_id,
+        eventKey: status === "Needs Revision" || status === "Declined" ? "osas_report_action"
+          : status === "Cleared" ? "osas_report_decision" : "osas_report_update",
+        targetPath: `/student?view=osas&report=${id}`,
+      });
+    }
     return updated;
   });
 }

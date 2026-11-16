@@ -1,3 +1,4 @@
+import { agingPostEventReports } from "@/lib/workflowQueueFilters";
 import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
 import { listPostEventReports } from "@/lib/osasPostEventRepo";
@@ -17,7 +18,7 @@ export async function GET(req) {
   const paged = searchParams.has("limit");
   const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get("limit") || "20", 10) || 20));
   const offset = Math.max(0, Number.parseInt(searchParams.get("offset") || "0", 10) || 0);
-  const conditions = [];
+  const conditions = searchParams.get("aging") === "1" ? [agingPostEventReports] : [];
   const params = [];
   if (status && status !== "All") {
     params.push(status);
@@ -43,6 +44,7 @@ export async function GET(req) {
   ]);
 
   const reports = await listPostEventReports({
+    aging: searchParams.get("aging") === "1",
     status: status || undefined,
     organizationId: organizationId || undefined,
     search: search || undefined,

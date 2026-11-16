@@ -48,7 +48,7 @@ test("OSAS Storage Suite & Workflow Specialization", async (t) => {
     for (const cab of room.cabinets) {
       assert.ok(Math.abs(cab.rect.w - 0.075) < 1e-9, `Cabinet ${cab.id} width must match Registrar 0.075`);
       assert.ok(Math.abs(cab.rect.h - 0.12) < 1e-9, `Cabinet ${cab.id} height must match Registrar 0.12`);
-      assert.deepEqual(cab.drawerIds, [1, 2, 3, 4, 5, 6, 7]);
+      assert.deepEqual(cab.drawerIds, [1, 2, 3, 4]);
     }
   });
 

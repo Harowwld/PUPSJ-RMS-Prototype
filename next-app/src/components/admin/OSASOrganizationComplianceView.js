@@ -1,5 +1,6 @@
 "use client";
 
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import { orderRowsByGroup } from "@/lib/groupRows";
 import FacultyAdviserDetails from "@/components/shared/FacultyAdviserDetails";
 import NoticeBanner from "@/components/shared/NoticeBanner";
@@ -1023,7 +1024,7 @@ export default function OSASOrganizationComplianceView({
                 onChange={(val) => { setSearch(val); setPage(1); resetScroll(); }}
                 count={filteredOrganizations.length}
                 loading={loading}
-                placeholder="Search org, acronym, adviser..."
+                placeholder="Search org, acronym, or adviser"
                 label="Search organization compliance"
               />
               <TableScrollControls
@@ -1362,7 +1363,7 @@ export default function OSASOrganizationComplianceView({
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia><EmptyBuilding03Icon size="1em" /></EmptyMedia>
-                      <EmptyTitle>No Student Organizations Found</EmptyTitle>
+                      <EmptyTitle>No student organizations found</EmptyTitle>
                       <EmptyDescription>
                         {activeChips.length > 0
                           ? "No organizations match the selected filter criteria. Try clearing filters."
@@ -1415,7 +1416,7 @@ export default function OSASOrganizationComplianceView({
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle>
-                    Organization Leadership Roster
+                    Organization leadership roster
                   </SheetTitle>
                   <SheetDescription className="sr-only">
                     Accredited Student Leadership Roster & Authorized Event Signatories
@@ -1497,7 +1498,7 @@ export default function OSASOrganizationComplianceView({
 
               {/* SECTION 1: Organization & Compliance Summary (Unboxed InfoRow) */}
               <div className="space-y-2">
-                <SheetSectionHeading icon="Building01Icon" title="Organization & Compliance Summary" />
+                <SheetSectionHeading icon="Building01Icon" title="Organization and compliance summary" />
                 <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                   <InfoRow icon="Tag01Icon" label="Category" value={selectedOrgForOfficers?.category || "Student Org"} />
 
@@ -1530,24 +1531,15 @@ export default function OSASOrganizationComplianceView({
 
                   <InfoRow icon="File02Icon" label="Archival CBL">
                     {selectedOrgForOfficers?.hasCbl ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPreviewCbl({
-                            url: `/api/osas/organizations/${selectedOrgForOfficers.id}/bylaws?file=1`,
-                            title: `${selectedOrgForOfficers.name}: Constitution & By-Laws (CBL)`,
-                            filename: selectedOrgForOfficers.cblFilename,
-                          })
-                        }
-                        className={cn(
-                          COMPACT_BADGE_BASE,
-                          BADGE_PALETTES.emerald,
-                          "cursor-pointer transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-900/60 active:scale-95",
-                        )}
-                        title={PDF_ACTION_LABELS.preview}
-                      >
-                        Archived PDF
-                      </button>
+                      <SheetAttachmentRow
+                        filename={selectedOrgForOfficers.cblFilename || "Constitution-and-By-Laws.pdf"}
+                        fileUrl={`/api/osas/organizations/${selectedOrgForOfficers.id}/bylaws?file=1`}
+                        onPreview={() => setPreviewCbl({
+                          url: `/api/osas/organizations/${selectedOrgForOfficers.id}/bylaws?file=1`,
+                          title: `${selectedOrgForOfficers.name}: Constitution & By-Laws (CBL)`,
+                          filename: selectedOrgForOfficers.cblFilename,
+                        })}
+                      />
                     ) : (
                       <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.amber)}>
                         Pending PDF
@@ -1580,7 +1572,7 @@ export default function OSASOrganizationComplianceView({
               {/* SECTION 2: Accredited Officers Roster */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <SheetSectionHeading icon="UserGroupIcon" title="Accredited Officer Roster" />
+                  <SheetSectionHeading icon="UserGroupIcon" title="Accredited officer roster" />
                   <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.zinc, "pl-1 tabular-nums")}>
                     <Avatar className="size-3.5 after:hidden" aria-hidden="true">
                       <AvatarFallback className="border-0">
@@ -1598,7 +1590,7 @@ export default function OSASOrganizationComplianceView({
                     <Input
                       value={officerSearch}
                       onChange={(e) => setOfficerSearch(e.target.value)}
-                      placeholder="Search by name, position, or email..."
+                      placeholder="Search by name, position, or email"
                       className="h-9 pl-8 pr-8 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border dark:border-border shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500 dark:focus-visible:ring-red-500"
                     />
                   </div>

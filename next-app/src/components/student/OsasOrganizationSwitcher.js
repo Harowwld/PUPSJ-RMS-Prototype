@@ -12,7 +12,7 @@ import {
 import { BANNER_GRADIENT_PRESETS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const triggerClassName = "flex min-h-10 max-w-72 min-w-0 items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1 pl-1.5 pr-3 text-left text-xs font-semibold text-gray-900 shadow-xs";
+const triggerClassName = "flex h-10 w-full sm:w-[340px] max-w-full min-w-0 items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1 pl-1.5 pr-3 text-center text-xs font-semibold text-gray-900 shadow-xs";
 
 export function OrganizationAvatar({ organization, className }) {
   const gradient = BANNER_GRADIENT_PRESETS.find(({ id }) => id === organization?.banner_gradient)
@@ -52,7 +52,7 @@ export default function OsasOrganizationSwitcher({ organizations, selectedOrgani
           className={`${triggerClassName} group cursor-pointer transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-pup-maroon`}
         >
           <OrganizationAvatar organization={currentOrganization} />
-          <span className="min-w-0 flex-1 break-words">{currentName || "Choose organization"}</span>
+          <span className="min-w-0 flex-1 truncate" title={currentName || "Choose organization"}>{currentName || "Choose organization"}</span>
           <ArrowDown01Icon
             size={14}
             aria-hidden="true"
@@ -65,9 +65,9 @@ export default function OsasOrganizationSwitcher({ organizations, selectedOrgani
         align="end"
         sideOffset={6}
         aria-label="Authorized organizations"
-        className="w-72 max-w-[calc(100vw-2rem)] border-gray-200 bg-white text-gray-900 dark:border-gray-200 dark:bg-white dark:shadow-[0_16px_36px_rgba(0,0,0,0.2)]"
+        className="w-[340px] max-w-[calc(100vw-2rem)] border-gray-200 bg-white text-gray-900 dark:border-gray-200 dark:bg-white dark:shadow-[0_16px_36px_rgba(0,0,0,0.2)]"
       >
-        <DropdownMenuLabel className="px-2.5 py-2 uppercase text-gray-600">Authorized Organizations</DropdownMenuLabel>
+        <DropdownMenuLabel className="px-2.5 py-2 text-gray-600">Authorized organizations</DropdownMenuLabel>
         <DropdownMenuRadioGroup
           value={selectedId}
           onValueChange={(value) => {

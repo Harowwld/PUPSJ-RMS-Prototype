@@ -176,6 +176,7 @@ export async function POST(req, ctx) {
       originalFilename: file.name || "Constitution-and-Bylaws.pdf",
       amendmentSummary: cleanSummary,
       submittedByEmail: studentEmail,
+      submittedByAccountId: access.user.accountId || null,
       sizeBytes: file.size,
       mimeType: file.type,
     });

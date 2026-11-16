@@ -1,3 +1,4 @@
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "@/lib/workflowNotificationsRepo";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -228,8 +229,8 @@ export async function POST(req) {
         `INSERT INTO event_proposal_versions (
           event_proposal_id, revision_number, title, event_date,
           original_filename, storage_filename, mime_type, size_bytes,
-          submitted_by_email, submitted_by_student_no, created_at
-        ) VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          submitted_by_email, submitted_by_student_no, created_at, portal_submitter_account_id
+        ) VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           saved.id,
           saved.title,
@@ -241,6 +242,7 @@ export async function POST(req) {
           studentEmail.toLowerCase(),
           access.user.studentNo || officerRecord.student_no || null,
           saved.created_at,
+          access.user.accountId || null,
         ],
       );
       await tx.query(
@@ -248,6 +250,13 @@ export async function POST(req) {
          VALUES ($1, 'Submitted', $2, $3)`,
         [saved.id, `Event proposal submitted by ${officerPosition} (${studentEmail}).`, access.user.student_no || access.user.id || null],
       );
+      await queuePortalWorkflowNotification(tx, {
+        accountId: access.user.accountId, eventKey: "osas_received", targetPath: `/student?view=osas&proposal=${saved.id}`,
+      });
+      await queueOfficeWorkflowNotification(tx, {
+        officeId: "osas", eventKey: "queue_osas_new", title: `New event proposal #${saved.id} awaiting review`,
+        entityType: "event_proposal", entityId: saved.id,
+      });
       return saved;
     });
 

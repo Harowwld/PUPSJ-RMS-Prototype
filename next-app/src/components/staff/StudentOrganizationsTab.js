@@ -55,6 +55,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import BulkImportOrganizationsModal from "./BulkImportOrganizationsModal";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
 import {
   Empty,
@@ -341,7 +342,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         });
         const json = await res.json();
         if (!res.ok || !json?.ok || !Array.isArray(json.data)) {
-          throw new Error(json?.error || "Failed to load student organizations.");
+          throw new Error(json?.error || "Could not load student organizations.");
         }
         if (request !== fetchRequestRef.current) return;
         setOrganizations(json.data);
@@ -382,7 +383,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load officers.");
+          throw new Error(json.error || "Could not load officers.");
         }
         setOfficersList(json.data || []);
       } catch (err) {
@@ -414,7 +415,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load CBL history.");
+          throw new Error(json.error || "Could not load CBL history.");
         }
         if (Array.isArray(json.data)) {
           setBylawsHistory(json.data);
@@ -571,10 +572,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       );
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to remove officer.");
+        throw new Error(json.error || "Could not remove officer.");
       }
       showToast({
-        title: "Officer Revoked",
+        title: "Officer revoked",
         description: "Officer access has been removed.",
       });
       setOfficerToRemove(null);
@@ -634,11 +635,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to save organization.");
+        throw new Error(json.error || "Could not save organization.");
       }
 
       showToast({
-        title: targetOrg ? "Organization Updated" : "Organization Created",
+        title: targetOrg ? "Organization updated" : "Organization created",
         description: `${orgForm.name} saved successfully.`,
       });
       if (!targetOrg) {
@@ -690,11 +691,11 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to upload CBL.");
+        throw new Error(json.error || "Could not upload CBL.");
       }
 
       showToast({
-        title: "CBL Uploaded",
+        title: "CBL uploaded",
         description: `Constitution & By-Laws archived for ${cblUploadOrg.name}.`,
       });
       const uploadedOrgId = cblUploadOrg.id;
@@ -738,7 +739,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (!cblReviewVersion || !selectedOrgForOfficers) return;
 
     if ((cblReviewAction === "Needs Revision" || cblReviewAction === "Declined") && cblReviewNote.trim().length < 5) {
-      toast.error("Review Note Required", {
+      toast.error("Review note required", {
         description: "Please provide at least 5 characters explaining what needs revision or the reason for declining.",
       });
       return;
@@ -757,12 +758,12 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to update review status.");
+        throw new Error(json.error || "Could not update review status.");
       }
 
       toast.success(
         cblReviewAction === "Approved"
-          ? "Constitution & By-Laws Approved & Ratified"
+          ? "Constitution & By-Laws approved & ratified"
           : cblReviewAction === "Needs Revision"
           ? "Revision requested from student officers"
           : "CBL submission declined"
@@ -964,7 +965,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
     if (startDate || endDate) {
       chips.push({
         id: "dateRange",
-        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        label: `Range: ${startDate || "…"} to ${endDate || "…"}`,
         onRemove: () => { setStartDate(""); setEndDate(""); },
       });
     }
@@ -1232,7 +1233,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 onChange={setSearch}
                 onClear={() => setSearch("")}
                 resultCount={filteredOrganizations.length}
-                placeholder="Search org name, acronym, adviser..."
+                placeholder="Search org name, acronym, or adviser"
               />
               {viewMode === "table" && (
                 <TableScrollControls
@@ -1725,10 +1726,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                               <div className="pt-3 border-t border-border dark:border-border">
                                 <Button
                                   onClick={() => openManageOrgSheet(org, "info")}
-                                  title="Manage Organization"
+                                  title="Manage organization"
                                   className="w-full h-9 px-4 cursor-pointer"
                                 >
-                                  Manage Organization
+                                  Manage organization
                                 </Button>
                               </div>
                             </div>
@@ -1768,7 +1769,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle>
-                    Manage Organization
+                    Manage organization
                   </SheetTitle>
                   <SheetDescription className="sr-only">
                     Manage organization profile, accredited student officers, and official Constitution & By-Laws records
@@ -1786,8 +1787,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       onNext={handleNextOrg}
                       previousDisabled={currentOrgIndex <= 0}
                       nextDisabled={currentOrgIndex >= filteredOrganizations.length - 1}
-                      previousLabel="Previous Organization"
-                      nextLabel="Next Organization"
+                      previousLabel="Previous organization"
+                      nextLabel="Next organization"
                     />
                   )}
 
@@ -1864,7 +1865,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 /* Organization Info Form */
                 <form id="org-info-form" onSubmit={handleSaveOrg} className="space-y-5">
                   <div className="space-y-4 pb-2">
-                    <SheetSectionHeading icon="Contact01Icon" title="Organization Profile">
+                    <SheetSectionHeading icon="Contact01Icon" title="Organization profile">
                       <span className={cn(getOrgStatusBadgeClass(orgForm.status), COMPACT_BADGE_BASE)}>
                         {orgForm.status}
                       </span>
@@ -2001,7 +2002,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                       <Textarea
                         id="org-sheet-description"
                         rows={3}
-                        placeholder="Brief description of the organization's goals, objectives, and scope..."
+                        placeholder="Goals, objectives, and scope of the organization"
                         value={orgForm.description}
                         onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
                         className="w-full resize-none"
@@ -2013,7 +2014,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                 <>
                   {/* Authorize Student Officer Section */}
                   <div className="space-y-3 pb-5 border-b border-border/80 dark:border-border">
-                    <SheetSectionHeading icon="UserAdd01Icon" title="Authorize Student Officer" />
+                    <SheetSectionHeading icon="UserAdd01Icon" title="Authorize student officer" />
                     <form onSubmit={handleAddOfficer} className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -2097,7 +2098,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
 
                   {/* Officer Roster Table */}
                   <section className="flex flex-1 flex-col gap-3">
-                    <SheetSectionHeading icon="UserGroupIcon" title="Active Authorized Officers" />
+                    <SheetSectionHeading icon="UserGroupIcon" title="Active authorized officers" />
                     {officersLoading ? (
                       <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-xl" />
@@ -2204,7 +2205,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
               ) : (
                 /* CBL Version History View */
                 <section className="flex flex-1 flex-col gap-3">
-                  <SheetSectionHeading icon="BookBookmark01Icon" title="Constitution & By-Laws Versions">
+                  <SheetSectionHeading icon="BookBookmark01Icon" title="Constitution and By-Laws versions">
                     <Button
                       type="button"
                       size="sm"
@@ -2256,21 +2257,18 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                                 </span>
                               )}
                             </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                setPreviewPdf({
-                                  url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1&versionId=${encodeURIComponent(ver.id)}`,
-                                  title: `${selectedOrgForOfficers?.name}: ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
-                                  filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
-                                })
-                              }
-                            >
-                              Preview Charter
-                            </Button>
                           </div>
+
+                          <SheetAttachmentRow
+                            filename={ver.original_filename || "Constitution-and-By-Laws.pdf"}
+                            size={ver.size_bytes}
+                            fileUrl={ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1&versionId=${encodeURIComponent(ver.id)}`}
+                            onPreview={() => setPreviewPdf({
+                              url: ver.file_url || `/api/osas/organizations/${selectedOrgForOfficers?.id}/bylaws?file=1&versionId=${encodeURIComponent(ver.id)}`,
+                              title: `${selectedOrgForOfficers?.name}: ${ver.version_tag || `CBL v${ver.version_number || "1.0"}`}`,
+                              filename: ver.original_filename || "Constitution-and-By-Laws.pdf",
+                            })}
+                          />
 
                           <p className="whitespace-pre-wrap wrap-anywhere text-xs font-medium text-gray-800 dark:text-zinc-200">
                             {ver.amendment_summary || "Constitution & By-Laws official document"}
@@ -2383,7 +2381,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           <DialogContent className="sm:max-w-xl w-full max-h-[92dvh] rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
             <DialogHeader className="p-6 pb-0 text-left">
               <DialogTitle>
-                {editingOrg ? "Edit Organization" : "Register Student Organization"}
+                {editingOrg ? "Edit organization" : "Register student organization"}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 {editingOrg
@@ -2463,7 +2461,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                   <Textarea
                     id="org-modal-description"
                     rows={3}
-                    placeholder="Brief description of the organization's goals and scope..."
+                    placeholder="Goals and scope of the organization"
                     value={orgForm.description}
                     onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
                     className="w-full resize-none"
@@ -2573,7 +2571,7 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
           <DialogContent className="sm:max-w-md w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0">
             <DialogHeader className="p-6 pb-0 text-left">
               <DialogTitle>
-                Upload Constitution & By-Laws (CBL)
+                Upload Constitution and By-Laws (CBL)
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Archive the official approved Constitution and By-Laws document for{" "}
@@ -2629,10 +2627,10 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
             <DialogHeader className="p-6 pb-0 text-left">
               <DialogTitle>
                 {cblReviewAction === "Approved"
-                  ? "Approve Constitution & By-Laws"
+                  ? "Approve Constitution and By-Laws"
                   : cblReviewAction === "Needs Revision"
-                  ? "Request Revision on CBL"
-                  : "Decline CBL Submission"}
+                  ? "Request revision on CBL"
+                  : "Decline CBL submission"}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 {cblReviewAction === "Approved"
@@ -2658,8 +2656,8 @@ export default function StudentOrganizationsTab({ showToast = () => {} }) {
                     required={cblReviewAction !== "Approved"}
                     placeholder={
                       cblReviewAction === "Approved"
-                        ? "Optional remarks for organizational record..."
-                        : "Provide detailed instructions for the student officers (minimum 5 characters)..."
+                        ? "Remarks for the organization record (optional)"
+                        : "Enter instructions for student officers (at least 5 characters)"
                     }
                     value={cblReviewNote}
                     onChange={(e) => setCblReviewNote(e.target.value)}

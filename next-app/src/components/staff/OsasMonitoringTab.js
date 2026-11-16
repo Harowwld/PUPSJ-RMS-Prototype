@@ -25,6 +25,7 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import SavedViewsPopover from "@/components/shared/SavedViewsPopover";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import ViewModeIcon from "@/components/shared/ViewModeIcon";
 import { SegmentedControl } from "@/components/ui/tabs";
@@ -277,7 +278,7 @@ function matchesFilterRule(actual, rule) {
   return rule.operator === "is_not" ? actualValue !== ruleValue : actualValue === ruleValue;
 }
 
-export default function OsasMonitoringTab({ showToast }) {
+export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
   const [rows, setRows] = useState([]);
   const [proposalTotal, setProposalTotal] = useState(0);
   const [proposalOrganizations, setProposalOrganizations] = useState([]);
@@ -418,6 +419,7 @@ export default function OsasMonitoringTab({ showToast }) {
         ? `?limit=${activeStream === "post_events" ? itemsPerPage : 1}&offset=${activeStream === "post_events" ? (page - 1) * itemsPerPage : 0}`
         : "";
       const fetchStream = async (path, query, getOrganization) => {
+        if (agingOnly) query = query ? `${query}&aging=1` : "?aging=1";
         if (serverPaged) {
           const response = await fetch(`${path}${query}`, { cache: "no-store" });
           const payload = await response.json().catch(() => null);
@@ -427,7 +429,7 @@ export default function OsasMonitoringTab({ showToast }) {
           return payload;
         }
 
-        const data = await fetchAllPages(path, 100);
+        const data = await fetchAllPages(`${path}${query}`, 100);
         const organizations = [...new Set(data.map(getOrganization).filter(Boolean))].sort();
         return { data, total: data.length, organizations };
       };
@@ -459,7 +461,7 @@ export default function OsasMonitoringTab({ showToast }) {
         setIsRefreshing(false);
       }
     }
-  }, [serverPaged, activeStream, page, itemsPerPage]);
+  }, [serverPaged, activeStream, page, itemsPerPage, agingOnly]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(), 0);
@@ -658,7 +660,7 @@ export default function OsasMonitoringTab({ showToast }) {
     if (!allowed.includes(targetStatus)) {
       showToast?.(
         {
-          title: "Invalid Transition",
+          title: "Cannot update status",
           description: `Cannot move post-event report from "${currentStatus}" to "${targetStatus}".`,
         },
         true
@@ -761,7 +763,7 @@ export default function OsasMonitoringTab({ showToast }) {
     if (!allowed.includes(targetStatus)) {
       showToast?.(
         {
-          title: "Invalid Transition",
+          title: "Cannot update status",
           description: `Cannot move proposal from "${currentStatus}" to "${targetStatus}".`,
         },
         true
@@ -1054,7 +1056,7 @@ export default function OsasMonitoringTab({ showToast }) {
     if (startDate || endDate) {
       chips.push({
         id: "dateRange",
-        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        label: `Range: ${startDate || "…"} to ${endDate || "…"}`,
         onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
@@ -1440,8 +1442,8 @@ export default function OsasMonitoringTab({ showToast }) {
               label="Search submissions"
               placeholder={
                 activeStream === "proposals"
-                  ? "Search proposals, students, orgs..."
-                  : "Search event reports, orgs..."
+                  ? "Search proposals, students, or orgs"
+                  : "Search event reports or orgs"
               }
             />
             {viewMode === "table" && (
@@ -1512,6 +1514,37 @@ export default function OsasMonitoringTab({ showToast }) {
               }}
               disableFutureDates={true}
             />
+            <SavedViewsPopover
+              page="osas_monitoring"
+              placeholder="e.g. Needs Revision"
+              currentState={{
+                filterRules,
+                statusFilters,
+                orgFilters,
+                startDate,
+                endDate,
+                tableSortBy,
+                tableSortOrder,
+                groupBy,
+                visibleColumns,
+                viewMode,
+                pageSize: itemsPerPage,
+              }}
+              onApplyState={(state) => {
+                if (Array.isArray(state.filterRules)) setFilterRules(state.filterRules);
+                if (Array.isArray(state.statusFilters)) setStatusFilters(state.statusFilters);
+                if (Array.isArray(state.orgFilters)) setOrgFilters(state.orgFilters);
+                if (typeof state.startDate === "string") setStartDate(state.startDate);
+                if (typeof state.endDate === "string") setEndDate(state.endDate);
+                if (typeof state.tableSortBy === "string") setTableSortBy(state.tableSortBy);
+                if (typeof state.tableSortOrder === "string") setTableSortOrder(state.tableSortOrder);
+                if (typeof state.groupBy === "string") setGroupBy(state.groupBy);
+                if (Array.isArray(state.visibleColumns)) setVisibleColumns(state.visibleColumns);
+                if (typeof state.viewMode === "string") setViewMode(state.viewMode);
+                if (typeof state.pageSize === "number") setItemsPerPage(state.pageSize);
+                setPage(1);
+              }}
+            />
           </div>
         </DataViewToolbar>
 
@@ -1552,7 +1585,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     <Empty>
                       <EmptyHeader>
                         <EmptyMedia><EmptyCalendarCheckIn01Icon size="1em" /></EmptyMedia>
-                        <EmptyTitle>No Event Proposals Found</EmptyTitle>
+                        <EmptyTitle>No event proposals found</EmptyTitle>
                         <EmptyDescription>
                           {hasActiveFilters
                             ? "Try adjusting your search criteria or resetting active filters."
@@ -1769,7 +1802,7 @@ export default function OsasMonitoringTab({ showToast }) {
                   <Empty>
                     <EmptyHeader>
                       <EmptyMedia><ViewModeIcon mode="kanban" /></EmptyMedia>
-                      <EmptyTitle>No Proposals in Pipeline</EmptyTitle>
+                      <EmptyTitle>No proposals in pipeline</EmptyTitle>
                       <EmptyDescription>
                         {hasActiveFilters
                           ? "No proposals match your active search terms or filters."
@@ -1783,10 +1816,10 @@ export default function OsasMonitoringTab({ showToast }) {
                           variant="outline"
                           size="sm"
                           onClick={handleClearFilters}
-                          title="Reset Filters"
+                          title="Reset filters"
                           className="h-9 px-4 text-xs font-semibold rounded-xl"
                         >
-                          Reset Filters
+                          Reset filters
                         </Button>
                       </EmptyContent>
                     )}
@@ -1826,7 +1859,7 @@ export default function OsasMonitoringTab({ showToast }) {
                     <Empty>
                       <EmptyHeader>
                         <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
-                        <EmptyTitle>No Post-Event Reports Found</EmptyTitle>
+                        <EmptyTitle>No post-event reports found</EmptyTitle>
                         <EmptyDescription>
                           {hasActiveFilters
                             ? "No reports match your active search or filter criteria."
@@ -2044,7 +2077,7 @@ export default function OsasMonitoringTab({ showToast }) {
                       <Empty>
                         <EmptyHeader>
                           <EmptyMedia><EmptyClipboardIcon size="1em" /></EmptyMedia>
-                          <EmptyTitle>No Post-Event Reports Found</EmptyTitle>
+                          <EmptyTitle>No post-event reports found</EmptyTitle>
                           <EmptyDescription>
                             {hasActiveFilters
                               ? "No reports match your active search or filter criteria."
