@@ -190,7 +190,7 @@ export default function DocumentRequestRecordList({
                           {Number(item.attachment_count) > 0 && (
                             <span
                               className={cn("inline-flex items-center gap-1 rounded-md bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:text-zinc-400 shrink-0 tabular-nums select-none", BADGE_BASE)}
-                              title={`${item.attachment_count} attachment(s)`}
+                              title={`${item.attachment_count} ${Number(item.attachment_count) === 1 ? "attachment" : "attachments"}`}
                             >
                               <Attachment01Icon size="1em" className="text-[11px]" />
                               {item.attachment_count}
@@ -264,7 +264,7 @@ export default function DocumentRequestRecordList({
                               <button
                                 type="button"
                                 onClick={() => onSelect?.(item.id)}
-                                aria-label="Inspect Request Details"
+                                aria-label="Inspect request details"
                                 className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                               >
                                 <ViewIcon size="1em" className="text-[16px]" />

@@ -21,7 +21,7 @@ export default function DocumentRequestTimeline({ request, showActor = false }) 
 
   return (
     <section className="space-y-3">
-      <SheetSectionHeading icon={Clock01Icon} title="Processing Timeline & Updates">
+      <SheetSectionHeading icon={Clock01Icon} title="Processing timeline and updates">
         <Badge variant="gray" size="compact" className="tabular-nums">
           <Time01Icon size={12} aria-hidden="true" />
           {entries.length} {entries.length === 1 ? "update" : "updates"}

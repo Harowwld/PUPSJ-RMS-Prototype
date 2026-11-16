@@ -1,3 +1,4 @@
+import { queueRequestUpdate, resolveReadyRequest } from "@/lib/workflowNotificationsRepo";
 import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { NextResponse } from "next/server";
@@ -31,8 +32,12 @@ export async function PATCH(req, ctx) {
   const reopenReason = String(body?.reopenReason || body?.message || "").trim();
 
   if (status !== null && !statuses.has(status)) return NextResponse.json({ ok: false, error: "Invalid status." }, { status: 400 });
-  if (status === null && !hasSpaVerified) return NextResponse.json({ ok: false, error: "A valid status or update is required." }, { status: 400 });
+  if (status === null && !hasSpaVerified && body?.pickupInstructions === undefined) return NextResponse.json({ ok: false, error: "A valid status or update is required." }, { status: 400 });
   if (hasSpaVerified && typeof body.spaVerified !== "boolean") return NextResponse.json({ ok: false, error: "spaVerified must be a boolean." }, { status: 400 });
+
+  if (body?.pickupInstructions !== undefined && typeof body.pickupInstructions !== "string") {
+    return NextResponse.json({ ok: false, error: "Pickup instructions must be text." }, { status: 400 });
+  }
 
   const outcome = await transaction(async ({ query, queryOne }) => {
     const existing = await queryOne(
@@ -61,6 +66,11 @@ export async function PATCH(req, ctx) {
       }
     }
 
+    const ready = await resolveReadyRequest({ queryOne }, {
+      request: existing, nextStatus, pickupInstructions: body?.pickupInstructions, message: rawMessage,
+    });
+    if (ready.error) return { error: ready.error, status: 400 };
+
     let defaultMsg = "";
     if (isReopen) {
       defaultMsg = `Request reopened to ${formatRequestStatus(nextStatus)}. Reason: ${reopenReason}`;
@@ -72,7 +82,7 @@ export async function PATCH(req, ctx) {
       defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${formatRequestStatus(nextStatus)}.`;
     }
     const finalMessage = rawMessage || defaultMsg;
-    if (!statusChanged && !rawMessage && !hasSpaVerified) return { data: existing, changed: false };
+    if (!statusChanged && !rawMessage && !hasSpaVerified && !ready.pickupChanged) return { data: existing, changed: false };
 
     const updated = await queryOne(
       `UPDATE document_requests
@@ -82,12 +92,14 @@ export async function PATCH(req, ctx) {
            spa_verified_by = CASE WHEN $3::boolean IS NOT NULL THEN (CASE WHEN $3 THEN $4 ELSE NULL END) ELSE spa_verified_by END,
            spa_verified_at = CASE WHEN $3::boolean IS NOT NULL THEN (CASE WHEN $3 THEN NOW() ELSE NULL END) ELSE spa_verified_at END,
            updated_at = NOW(),
+           pickup_instructions = COALESCE($6, pickup_instructions),
            updated_by = $4
        WHERE id = $5 AND office_id = 'registrar' RETURNING *`,
-      [nextStatus, rawMessage || null, hasSpaVerified ? spaVerified : null, access.userId || null, requestId]
+      [nextStatus, rawMessage || null, hasSpaVerified ? spaVerified : null, access.userId || null, requestId, ready.instructions ?? null]
     );
     if (!updated || !canAccessResource(access, "request", updated)) return { error: "Not found", status: 404 };
 
+    let postedMessage = false;
     if (finalMessage) {
       const latestUpdate = await queryOne(
         "SELECT status, message FROM transaction_updates WHERE document_request_id = $1 ORDER BY created_at DESC, id DESC LIMIT 1",
@@ -95,12 +107,14 @@ export async function PATCH(req, ctx) {
       );
       const isDuplicate = latestUpdate && latestUpdate.status === nextStatus && latestUpdate.message === finalMessage;
       if (!isDuplicate) {
+        postedMessage = Boolean(rawMessage);
         await query(
           "INSERT INTO transaction_updates (document_request_id, status, message, created_by) VALUES ($1, $2, $3, $4)",
           [requestId, nextStatus, finalMessage, access.userId || null]
         );
       }
     }
+    await queueRequestUpdate({ query }, { request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage });
     return { data: updated, changed: true, prevStatus: existing.status, nextStatus, isReopen, reopenReason, finalMessage };
   });
 

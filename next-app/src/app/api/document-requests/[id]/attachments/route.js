@@ -1,3 +1,4 @@
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "@/lib/workflowNotificationsRepo";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -11,11 +12,32 @@ export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Map([
-  ["application/pdf", ".pdf"],
-  ["image/png", ".png"],
-  ["image/jpeg", ".jpg"],
-  ["image/webp", ".webp"],
+  ["application/pdf", { ext: ".pdf", mime: "application/pdf" }],
+  ["image/png", { ext: ".png", mime: "image/png" }],
+  ["image/jpeg", { ext: ".jpg", mime: "image/jpeg" }],
+  ["image/jpg", { ext: ".jpg", mime: "image/jpeg" }],
+  ["image/webp", { ext: ".webp", mime: "image/webp" }],
 ]);
+
+const ALLOWED_EXTENSIONS = new Map([
+  [".pdf", { ext: ".pdf", mime: "application/pdf" }],
+  [".png", { ext: ".png", mime: "image/png" }],
+  [".jpg", { ext: ".jpg", mime: "image/jpeg" }],
+  [".jpeg", { ext: ".jpg", mime: "image/jpeg" }],
+  [".webp", { ext: ".webp", mime: "image/webp" }],
+]);
+
+function resolveAllowedFileType(file) {
+  const rawMime = String(file?.type || "").split(";")[0].trim().toLowerCase();
+  if (rawMime && rawMime !== "application/octet-stream" && ALLOWED_TYPES.has(rawMime)) {
+    return ALLOWED_TYPES.get(rawMime);
+  }
+  const nameExt = path.extname(String(file?.name || "")).toLowerCase();
+  if (ALLOWED_EXTENSIONS.has(nameExt)) {
+    return ALLOWED_EXTENSIONS.get(nameExt);
+  }
+  return null;
+}
 
 function requestAttachmentsDir() {
   const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
@@ -53,11 +75,11 @@ export async function POST(req, ctx) {
   if (!file.size || file.size > MAX_FILE_SIZE) {
     return NextResponse.json({ ok: false, error: "The file must be between 1 byte and 10 MB." }, { status: 400 });
   }
-  const mimeType = String(file.type || "").toLowerCase();
-  const extension = ALLOWED_TYPES.get(mimeType);
-  if (!extension) {
+  const resolvedType = resolveAllowedFileType(file);
+  if (!resolvedType) {
     return NextResponse.json({ ok: false, error: "Upload a PDF, PNG, JPG, or WEBP image." }, { status: 415 });
   }
+  const { ext: extension, mime: mimeType } = resolvedType;
 
   const originalFilename = path.basename(String(file.name || `payment-proof${extension}`)).slice(0, 255);
   const storageFilename = `${crypto.randomUUID()}${extension}`;
@@ -90,6 +112,14 @@ export async function POST(req, ctx) {
          VALUES ($1, 'PendingPayment', $2, $3)`,
         [requestId, "Student uploaded payment proof: " + originalFilename, access.user.id || access.user.studentNo || null]
       );
+      await queuePortalWorkflowNotification({ query: run }, {
+        accountId: access.user.accountId, eventKey: "request_receipt_received",
+        targetPath: `/student?view=odrs&request=${requestId}`,
+      });
+      await queueOfficeWorkflowNotification({ query: run }, {
+        officeId: "registrar", eventKey: "queue_registrar_returned", title: `Payment proof for request #${requestId} awaiting review`,
+        entityType: "document_request", entityId: requestId,
+      });
       return { attachment };
     });
     if (result.error) {

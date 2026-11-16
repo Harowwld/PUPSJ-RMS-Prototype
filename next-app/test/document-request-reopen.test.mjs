@@ -152,6 +152,7 @@ test("Edge Case #7: Reopening Closed/Terminal Document Requests Test Suite", asy
     // InProgress -> Ready -> Completed
     await updateDocumentRequest(createdReq.id, {
       status: "Ready",
+      pickupInstructions: "Registrar service counter. Bring a valid ID.",
       officeId: "registrar",
       updatedBy: testStaff.id,
     });
@@ -182,6 +183,7 @@ test("Edge Case #7: Reopening Closed/Terminal Document Requests Test Suite", asy
     const justification = "Student reported dry seal was missing; re-staging for immediate seal application";
     const reopened = await updateDocumentRequest(createdReq.id, {
       status: "Ready",
+      pickupInstructions: "Registrar service counter. Bring a valid ID.",
       allowReopen: true,
       reopenReason: justification,
       officeId: "registrar",
@@ -352,6 +354,7 @@ test("Edge Case #7: Reopening Closed/Terminal Document Requests Test Suite", asy
     // Advance httpApiReq to Completed: InProgress -> Ready -> Completed
     await updateDocumentRequest(httpApiReq.id, {
       status: "Ready",
+      pickupInstructions: "Registrar service counter. Bring a valid ID.",
       officeId: "registrar",
       updatedBy: testStaff.id,
     });
@@ -386,6 +389,7 @@ test("Edge Case #7: Reopening Closed/Terminal Document Requests Test Suite", asy
       },
       body: JSON.stringify({
         status: "Ready",
+        pickupInstructions: "Registrar service counter. Bring a valid ID.",
         allowReopen: true,
         reopenReason: justification,
       }),

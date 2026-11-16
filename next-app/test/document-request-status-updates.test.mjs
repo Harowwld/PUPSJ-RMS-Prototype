@@ -50,9 +50,10 @@ test("Document Request Status Transition Auto-Logging & Deduplication Suite", as
     assert.equal(createdReq.updates[0].status, "Pending");
   });
 
-  await t.test("2. Changing status to 'Ready' without a custom message auto-generates a 'Ready' timeline update", async () => {
+  await t.test("2. Changing status to 'Ready' with pickup instructions and no custom milestone message auto-generates a 'Ready' timeline update", async () => {
     const updated = await updateDocumentRequest(createdReq.id, {
       status: "Ready",
+      pickupInstructions: "Registrar service counter. Bring a valid ID.",
       officeId: "registrar",
       updatedBy: testStaff.id,
     });

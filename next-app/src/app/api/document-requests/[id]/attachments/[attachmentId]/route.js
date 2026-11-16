@@ -1,10 +1,12 @@
 import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { getAuthenticatedPrincipal } from "@/lib/authHelpers";
-import { queryOne } from "@/lib/postgres";
+import { queryOne, query } from "@/lib/postgres";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
+import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -29,7 +31,7 @@ async function resolveAttachmentTarget(req, ctx) {
 
   // 1. Fetch document request
   const request = await queryOne(
-    "SELECT id, student_no, identity_profile_id, office_id FROM document_requests WHERE id = $1",
+    "SELECT id, student_no, identity_profile_id, office_id, status FROM document_requests WHERE id = $1",
     [requestId]
   );
   if (!request || String(request.office_id || "").trim().toLowerCase() !== "registrar") {
@@ -57,7 +59,7 @@ async function resolveAttachmentTarget(req, ctx) {
 
   // 3. Fetch attachment record
   const attachment = await queryOne(
-    "SELECT id, original_filename, storage_filename, mime_type, size_bytes FROM document_request_attachments WHERE id = $1 AND document_request_id = $2",
+    "SELECT id, original_filename, storage_filename, mime_type, size_bytes, attachment_type FROM document_request_attachments WHERE id = $1 AND document_request_id = $2",
     [attachmentId, requestId]
   );
   if (!attachment) {
@@ -71,7 +73,7 @@ async function resolveAttachmentTarget(req, ctx) {
   }
   const filePath = path.join(requestAttachmentsDir(), storageFilename);
 
-  return { attachment, filePath };
+  return { user, request, attachment, filePath };
 }
 
 export async function HEAD(req, ctx) {
@@ -139,4 +141,45 @@ export async function GET(req, ctx) {
       ...FILE_SECURITY_HEADERS,
     },
   });
+}
+
+export async function DELETE(req, ctx) {
+  const resolved = await resolveAttachmentTarget(req, ctx);
+  if (resolved.response) return resolved.response;
+  const { user, request, attachment, filePath } = resolved;
+
+  if (user.principalType !== "student") {
+    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+  if (request.status !== "PendingPayment") {
+    return NextResponse.json(
+      { ok: false, error: "Payment receipts can only be removed while this request is pending payment." },
+      { status: 409 }
+    );
+  }
+  if (attachment.attachment_type !== "receipt") {
+    return NextResponse.json(
+      { ok: false, error: "Only uploaded payment receipts can be removed here." },
+      { status: 403 }
+    );
+  }
+
+  await query(
+    "DELETE FROM document_request_attachments WHERE id = $1 AND document_request_id = $2",
+    [attachment.id, request.id]
+  );
+  await fsPromises.unlink(filePath).catch(() => {});
+
+  try {
+    await writeGlobalAuditLog(req, "Payment proof removed", {
+      officeId: "registrar",
+      details: `Student removed payment proof (${attachment.original_filename}) from document request ${request.id}.`,
+      entity_type: "document_request",
+      entity_id: String(request.id),
+    });
+  } catch (auditError) {
+    console.error("Payment proof removal audit log failed:", auditError);
+  }
+
+  return NextResponse.json({ ok: true });
 }

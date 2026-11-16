@@ -94,7 +94,13 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: "Verify the requester before completing a missing-documents inquiry." }, { status: 400 });
   }
 
-  const patch = { updatedBy: staff.id, officeId };
+  if (body.pickupInstructions !== undefined && typeof body.pickupInstructions !== "string") {
+    return NextResponse.json({ ok: false, error: "Pickup instructions must be text." }, { status: 400 });
+  }
+  const patch = {
+    updatedBy: staff.id, officeId, pickupInstructions: body.pickupInstructions,
+    notifyPostedMessage: typeof body.message === "string" && Boolean(body.message.trim()),
+  };
 
   if (body.status !== undefined) {
     const s = String(body.status || "");
@@ -195,13 +201,20 @@ export async function PATCH(req, ctx) {
     patch.linkedDocumentId !== undefined ||
     patch.message !== undefined ||
     patch.courseCode !== undefined ||
-    patch.spaVerified !== undefined;
+    patch.spaVerified !== undefined ||
+    patch.pickupInstructions !== undefined;
 
   if (!hasFieldUpdates) {
     return NextResponse.json({ ok: true, data: existing });
   }
 
-  const row = await updateDocumentRequest(id, patch);
+  let row;
+  try {
+    row = await updateDocumentRequest(id, patch);
+  } catch (error) {
+    if (error.code !== "REQUEST_UPDATE_INVALID") throw error;
+    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+  }
   if (!row) {
     return NextResponse.json(
       { ok: false, error: "Update failed" },

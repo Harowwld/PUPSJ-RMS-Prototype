@@ -372,7 +372,7 @@ export default function DocumentRequestKanbanPipeline({
                           {Number(item.attachment_count) > 0 && (
                             <span
                               className="inline-flex items-center gap-0.5 text-[11px] text-gray-400 dark:text-zinc-500"
-                              title={`${item.attachment_count} attachment(s)`}
+                              title={`${item.attachment_count} ${Number(item.attachment_count) === 1 ? "attachment" : "attachments"}`}
                             >
                               <Attachment01Icon size={12} />
                               {item.attachment_count}

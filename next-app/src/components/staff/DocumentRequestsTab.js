@@ -1,4 +1,6 @@
 "use client";
+
+import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
@@ -63,6 +65,7 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import TableScrollControls from "@/components/shared/TableScrollControls";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import SavedViewsPopover from "@/components/shared/SavedViewsPopover";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
 import useTableScroll from "@/hooks/useTableScroll";
 import FileAttachmentDropzone from "@/components/shared/FileAttachmentDropzone";
@@ -162,6 +165,7 @@ export default function DocumentRequestsTab({
   showToast,
   error = null,
   officeId = "registrar",
+  agingOnly = false,
 }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -321,12 +325,29 @@ export default function DocumentRequestsTab({
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editUpdateMessage, setEditUpdateMessage] = useState("");
+  const [pickupDraft, setPickupDraft] = useState(null);
+  const [defaultPickup, setDefaultPickup] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    if (officeId === "registrar") fetch("/api/registrar/pickup-instructions", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((result) => { if (result.ok) setDefaultPickup(result.data.instructions); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [officeId]);
 
   // Reopen Request state
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [reopenTargetStatus, setReopenTargetStatus] = useState("InProgress");
   const [reopenReason, setReopenReason] = useState("");
   const [reopenSubmitting, setReopenSubmitting] = useState(false);
+  const [reopenPickupDraft, setReopenPickupDraft] = useState(null);
+  const reopenNeedsPickup = officeId === "registrar" && reopenTargetStatus === "Ready" && detail?.doc_type !== MISSING_DOCUMENTS_INQUIRY;
+  const reopenPickup = reopenPickupDraft ?? (detail?.pickup_instructions || defaultPickup);
+  const handleReopenOpenChange = (open) => {
+    setReopenPickupDraft(null);
+    setReopenModalOpen(open);
+  };
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
@@ -431,6 +452,7 @@ export default function DocumentRequestsTab({
         const effectiveLimit = itemsPerPage;
         const offset = isKanbanView ? 0 : (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
+        if (agingOnly) qs.set("aging", "1");
         qs.set("limit", String(effectiveLimit));
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
@@ -494,7 +516,7 @@ export default function DocumentRequestsTab({
         }
       }
     },
-    [isKanbanView, page, itemsPerPage, activeGroupBy, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
+    [agingOnly, isKanbanView, page, itemsPerPage, activeGroupBy, debouncedQ, statusFilters, clientTypeFilters, docTypeFilters, filterRules, startDate, endDate, sortBy, sortOrder, showToast, loadSlaStandards]
   );
 
   const handleSort = (column) => {
@@ -536,7 +558,7 @@ export default function DocumentRequestsTab({
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [loadList]);
 
-  const openDetail = async (target) => {
+  const openDetail = async (target, { nextStatus } = {}) => {
     const id = typeof target === "object" && target !== null ? target.id : target;
     if (!id || isNaN(Number(id))) return;
     setSelectedId(id);
@@ -549,9 +571,10 @@ export default function DocumentRequestsTab({
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Not found");
       setDetail(json.data);
-      setEditStatus(json.data.status || "Pending");
+      setEditStatus(nextStatus || json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
       setEditUpdateMessage("");
+      setPickupDraft(null);
     } catch (e) {
       showToast?.(
         formatErrorMessage(e, {
@@ -607,11 +630,8 @@ export default function DocumentRequestsTab({
   }, [availability]);
 
   const retentionExpiryDate = useMemo(() => {
-    if (!detail || detail.status !== "Ready") return null;
-    const baseDate = new Date(detail.updated_at || detail.created_at);
-    if (isNaN(baseDate.getTime())) return null;
-    baseDate.setDate(baseDate.getDate() + 90);
-    return baseDate;
+    if (!detail?.pickup_claim_by || detail.status !== "Ready") return null;
+    return new Date(detail.pickup_claim_by);
   }, [detail]);
 
   const daysRemaining = useMemo(() => {
@@ -638,6 +658,7 @@ export default function DocumentRequestsTab({
       setEditStatus(json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
       setEditUpdateMessage("");
+      setPickupDraft(null);
       if (!silent) {
         showToast?.({ title: "Request Updated", description: "Status and updates have been saved." });
       }
@@ -661,7 +682,7 @@ export default function DocumentRequestsTab({
   };
 
   const handleConfirmReopen = async () => {
-    if (!detail?.id || reopenReason.trim().length < 5) return;
+    if (!detail?.id || reopenReason.trim().length < 5 || (reopenNeedsPickup && !reopenPickup.trim())) return;
     setReopenSubmitting(true);
     try {
       const ok = await patchDetail({
@@ -669,6 +690,7 @@ export default function DocumentRequestsTab({
         allowReopen: true,
         reopenReason: reopenReason.trim(),
         message: reopenReason.trim(),
+        pickupInstructions: reopenNeedsPickup ? reopenPickup : undefined,
       });
       if (ok) {
         setReopenModalOpen(false);
@@ -694,6 +716,7 @@ export default function DocumentRequestsTab({
       status: !isTerminalStatus && editStatus !== detail.status ? editStatus : undefined,
       notes: editNotes || null,
       message: editUpdateMessage.trim() || undefined,
+      pickupInstructions: editStatus === "Ready" ? pickupDraft ?? undefined : undefined,
     });
   };
 
@@ -702,6 +725,7 @@ export default function DocumentRequestsTab({
     setEditStatus(detail.status || "Pending");
     setEditNotes(detail.notes || "");
     setEditUpdateMessage("");
+    setPickupDraft(null);
   };
 
   const hasEdits = useMemo(() => {
@@ -710,9 +734,9 @@ export default function DocumentRequestsTab({
     return (
       (!isTerminalStatus && norm(editStatus) !== norm(detail.status)) ||
       norm(editNotes) !== norm(detail.notes) ||
-      Boolean(editUpdateMessage.trim())
+      Boolean(editUpdateMessage.trim()) || (editStatus === "Ready" && pickupDraft !== null && pickupDraft.trim() !== (detail.pickup_instructions || "").trim())
     );
-  }, [detail, editStatus, editNotes, editUpdateMessage, isTerminalStatus]);
+  }, [detail, editStatus, editNotes, editUpdateMessage, isTerminalStatus, pickupDraft]);
 
   useEffect(() => {
     if (!detail?.id || detail.linked_document_id) return;
@@ -796,8 +820,8 @@ export default function DocumentRequestsTab({
         body: formData,
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create request");
-      showToast?.({ title: "Request Created", description: "Request added successfully." });
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not create request");
+      showToast?.({ title: "Request created", description: "Document request added." });
       repeat.complete(() => resetCreateForm(repeat.createAnother), () => setCreateOpen(false));
       setPage(1);
       Promise.resolve().then(() => loadList({ showLoading: true })).catch(() => {
@@ -997,6 +1021,11 @@ export default function DocumentRequestsTab({
       return;
     }
 
+    if (officeId === "registrar" && targetStatus === "Ready") {
+      await openDetail(item, { nextStatus: "Ready" });
+      return;
+    }
+
     try {
       const res = await fetch(`/api/document-requests/${item.id}`, {
         method: "PATCH",
@@ -1112,7 +1141,7 @@ export default function DocumentRequestsTab({
     if (startDate || endDate) {
       chips.push({
         id: "dateRange",
-        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        label: `Range: ${startDate || "…"} to ${endDate || "…"}`,
         onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
@@ -1261,7 +1290,7 @@ export default function DocumentRequestsTab({
                   count={total}
                   loading={loading}
                   label="Search requests"
-                  placeholder="Search student, name, program..."
+                  placeholder="Search student, name, or program"
                 />
                 {viewMode === "table" && (
                   <TableScrollControls
@@ -1326,6 +1355,41 @@ export default function DocumentRequestsTab({
                   }}
                   disableFutureDates={true}
                 />
+                <SavedViewsPopover
+                  page="document_requests"
+                  placeholder="e.g. Awaiting Payment"
+                  currentState={{
+                    filterRules,
+                    statusFilters,
+                    clientTypeFilters,
+                    docTypeFilters,
+                    charterFilters,
+                    startDate,
+                    endDate,
+                    sortBy,
+                    sortOrder,
+                    groupBy,
+                    visibleColumns,
+                    viewMode,
+                    pageSize: itemsPerPage,
+                  }}
+                  onApplyState={(state) => {
+                    if (Array.isArray(state.filterRules)) setFilterRules(state.filterRules);
+                    if (Array.isArray(state.statusFilters)) setStatusFilters(state.statusFilters);
+                    if (Array.isArray(state.clientTypeFilters)) setClientTypeFilters(state.clientTypeFilters);
+                    if (Array.isArray(state.docTypeFilters)) setDocTypeFilters(state.docTypeFilters);
+                    if (Array.isArray(state.charterFilters)) setCharterFilters(state.charterFilters);
+                    if (typeof state.startDate === "string") setStartDate(state.startDate);
+                    if (typeof state.endDate === "string") setEndDate(state.endDate);
+                    if (typeof state.sortBy === "string") setSortBy(state.sortBy);
+                    if (typeof state.sortOrder === "string") setSortOrder(state.sortOrder);
+                    if (typeof state.groupBy === "string") setGroupBy(state.groupBy);
+                    if (Array.isArray(state.visibleColumns)) setVisibleColumns(state.visibleColumns);
+                    if (typeof state.viewMode === "string") setViewMode(state.viewMode);
+                    if (typeof state.pageSize === "number") setItemsPerPage(state.pageSize);
+                    setPage(1);
+                  }}
+                />
               </div>
             </DataViewToolbar>
           )}
@@ -1352,14 +1416,14 @@ export default function DocumentRequestsTab({
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
-                    <EmptyTitle>Could Not Load Requests</EmptyTitle>
+                    <EmptyTitle>Could not load requests</EmptyTitle>
                     <EmptyDescription>
                       {listError || error}
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
                     <Button variant="outline" size="sm" disabled={loading || isManualLoading} onClick={() => loadList()}>
-                      Try Again
+                      Try again
                     </Button>
                   </EmptyContent>
                 </Empty>
@@ -1369,7 +1433,7 @@ export default function DocumentRequestsTab({
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia><EmptySearch01Icon size="1em" /></EmptyMedia>
-                    <EmptyTitle>No Document Requests Found</EmptyTitle>
+                    <EmptyTitle>No document requests found</EmptyTitle>
                     <EmptyDescription>
                       {activeChips.length > 0
                         ? "No document requests match your active filters or search terms."
@@ -1609,7 +1673,7 @@ export default function DocumentRequestsTab({
                                   {Number(r.attachment_count) > 0 && (
                                     <span
                                       className={cn("inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 shrink-0 tabular-nums", BADGE_BASE)}
-                                      title={`${r.attachment_count} attachment(s)`}
+                                      title={`${r.attachment_count} ${Number(r.attachment_count) === 1 ? "attachment" : "attachments"}`}
                                     >
                                       {r.attachment_count} att.
                                     </span>
@@ -1662,7 +1726,7 @@ export default function DocumentRequestsTab({
                                     <button
                                       type="button"
                                       onClick={() => openDetail(r.id)}
-                                      aria-label="Inspect Request Details"
+                                      aria-label="Inspect request details"
                                       className="table-action-button rounded-lg active:scale-95 cursor-pointer"
                                     >
                                       <ViewIcon size="1em" className="text-[16px]" />
@@ -1702,6 +1766,7 @@ export default function DocumentRequestsTab({
                   setSelectedId(null);
                   setDetail(null);
                   setEditUpdateMessage("");
+                  setPickupDraft(null);
                 }
               }}
               selectedId={selectedId}
@@ -1722,6 +1787,8 @@ export default function DocumentRequestsTab({
               editStatus={editStatus}
               setEditStatus={setEditStatus}
               editUpdateMessage={editUpdateMessage}
+              pickupInstructions={pickupDraft ?? (detail?.status === "Ready" ? detail.pickup_instructions || "" : defaultPickup)}
+              onPickupInstructionsChange={setPickupDraft}
               setEditUpdateMessage={setEditUpdateMessage}
               availableStatuses={availableStatuses}
               isTerminalStatus={isTerminalStatus}
@@ -1739,7 +1806,7 @@ export default function DocumentRequestsTab({
               slaStandards={slaStandards}
               setReopenTargetStatus={setReopenTargetStatus}
               setReopenReason={setReopenReason}
-              setReopenModalOpen={setReopenModalOpen}
+              setReopenModalOpen={handleReopenOpenChange}
               retentionExpiryDate={retentionExpiryDate}
               daysRemaining={daysRemaining}
             />
@@ -1753,7 +1820,7 @@ export default function DocumentRequestsTab({
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-8">
                   <DialogTitle>
-                    New Document Request
+                    New document request
                   </DialogTitle>
                   <DialogDescription className="mt-1">
                     Initiate an official document issuance request for a current student, alumnus, or parent/guardian.
@@ -2125,7 +2192,7 @@ export default function DocumentRequestsTab({
             <DialogHeader className="p-6 pb-0">
               <div className="min-w-0">
                 <DialogTitle>
-                  No Digital Copy
+                  No digital copy
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Document not yet scanned. Check physical storage.
@@ -2143,7 +2210,7 @@ export default function DocumentRequestsTab({
                   <Empty variant="compact">
                     <EmptyHeader>
                       <EmptyMedia className="text-red-600 dark:text-red-400"><EmptyAlertCircleIcon size="1em" /></EmptyMedia>
-                      <EmptyTitle>No Mapped Storage Location</EmptyTitle>
+                      <EmptyTitle>No mapped storage location</EmptyTitle>
                       <EmptyDescription>
                         This requester has no physical drawer assignment.
                       </EmptyDescription>
@@ -2188,13 +2255,13 @@ export default function DocumentRequestsTab({
         </Dialog>
 
         {/* Reopen Request Dialog Modal */}
-        <Dialog open={reopenModalOpen} onOpenChange={setReopenModalOpen}>
+        <Dialog open={reopenModalOpen} onOpenChange={handleReopenOpenChange}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border">
             <DialogHeader className="p-6 pb-0 text-left">
               <div className="flex items-center gap-3">
                 <div>
                   <DialogTitle>
-                    Reopen Document Request
+                    Reopen document request
                   </DialogTitle>
                   <DialogDescription className="mt-1">
                     Reopen closed request #{detail?.id} to reactivate workflow and notify the requester.
@@ -2221,6 +2288,14 @@ export default function DocumentRequestsTab({
                 </Select>
               </div>
 
+              {reopenNeedsPickup && (
+                <div className="space-y-1">
+                  <label htmlFor="reopen-pickup" className="text-xs font-semibold">Pickup Instructions</label>
+                  <Textarea id="reopen-pickup" value={reopenPickup} maxLength={2000}
+                    onChange={(event) => setReopenPickupDraft(event.target.value)}
+                    placeholder="Enter the pickup location, hours, and what to bring" />
+                </div>
+              )}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -2232,7 +2307,7 @@ export default function DocumentRequestsTab({
                 </div>
                 <Textarea
                   className="w-full min-h-[90px] resize-none"
-                  placeholder="State the official reason for reopening (e.g., student appeal granted, payment verified, clerical error correction)..."
+                  placeholder="Reason for reopening, such as student appeal granted or clerical error correction"
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}
                 />
@@ -2260,7 +2335,7 @@ export default function DocumentRequestsTab({
                 size="sm"
                 className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 onClick={handleConfirmReopen}
-                disabled={reopenSubmitting || reopenReason.trim().length < 5}
+                disabled={reopenSubmitting || reopenReason.trim().length < 5 || (reopenNeedsPickup && !reopenPickup.trim())}
               >
                 {reopenSubmitting ? "Reopening Request…" : "Reopen Request"}
               </Button>

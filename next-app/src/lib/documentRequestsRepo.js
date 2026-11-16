@@ -1,3 +1,6 @@
+import { agingRegistrarQueue } from "./workflowQueueFilters.js";
+import { queueRequestUpdate, resolveReadyRequest } from "./workflowNotificationsRepo.js";
+import { MISSING_DOCUMENTS_INQUIRY } from "./missingDocumentsInquiry.js";
 import { formatRequestStatus } from "./auditLogFormatting.js";
 import { dbAll, dbGet, dbRun, postgresSql } from "./postgresCompat.js";
 import { transaction } from "./postgres.js";
@@ -61,6 +64,7 @@ export function formatDocumentRequestRow(row) {
 
 export async function listDocumentRequests({
   q = "",
+  aging = false,
   status = "",
   studentNo = "",
   clientType = "",
@@ -74,7 +78,7 @@ export async function listDocumentRequests({
   groupBy,
   sortOrder = "DESC",
 } = {}) {
-  const filters = [];
+  const filters = aging ? [agingRegistrarQueue] : [];
   const params = [];
 
   if (startDate) {
@@ -205,6 +209,7 @@ export async function listDocumentRequests({
 
 export async function countDocumentRequests({
   q = "",
+  aging = false,
   status = "",
   studentNo = "",
   clientType = "",
@@ -213,7 +218,7 @@ export async function countDocumentRequests({
   endDate = "",
   officeId = "",
 } = {}) {
-  const filters = [];
+  const filters = aging ? [agingRegistrarQueue] : [];
   const params = [];
 
   if (startDate) {
@@ -497,7 +502,7 @@ export async function updateDocumentRequest(id, fields) {
   };
   const scope = fields.officeId ? " AND office_id = ?" : "";
   const existing = await dbGet(
-    `SELECT id, office_id, status, notes FROM document_requests WHERE id = ?${scope} FOR UPDATE`,
+    `SELECT * FROM document_requests WHERE id = ?${scope} FOR UPDATE`,
     fields.officeId ? [id, fields.officeId] : [id]
   );
   if (!existing) return false;
@@ -529,6 +534,19 @@ export async function updateDocumentRequest(id, fields) {
       cols.push("status = ?");
       vals.push(s);
     }
+  }
+  const rawMessage = String(fields.message ?? "").trim();
+  if (existing.doc_type === MISSING_DOCUMENTS_INQUIRY && statusChanged &&
+      ["Ready", "Completed"].includes(nextStatus) && !(fields.spaVerified ?? existing.spa_verified)) {
+    return { error: "Verify the requester before completing a missing-documents inquiry." };
+  }
+  const ready = await resolveReadyRequest({ queryOne }, {
+    request: existing, nextStatus, pickupInstructions: fields.pickupInstructions, message: rawMessage,
+  });
+  if (ready.error) return { error: ready.error };
+  if (ready.pickupChanged) {
+    cols.push("pickup_instructions = ?");
+    vals.push(ready.instructions);
   }
   if (fields.notes !== undefined) {
     cols.push("notes = ?");
@@ -575,7 +593,7 @@ export async function updateDocumentRequest(id, fields) {
     );
   }
 
-  const rawMessage = fields.message !== undefined && fields.message !== null ? String(fields.message).trim() : "";
+  let postedMessage = false;
 
   // Timeline update handling & deduplication:
   if (statusChanged) {
@@ -594,6 +612,7 @@ export async function updateDocumentRequest(id, fields) {
 
     const isDuplicate = latestUpdate && latestUpdate.status === nextStatus && latestUpdate.message === finalMessage;
     if (!isDuplicate) {
+      postedMessage = true;
       await dbRun(
         `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
          VALUES (?, ?, ?, ?)`,
@@ -610,6 +629,7 @@ export async function updateDocumentRequest(id, fields) {
 
     const isDuplicate = latestUpdate && latestUpdate.status === nextStatus && latestUpdate.message === rawMessage;
     if (!isDuplicate) {
+      postedMessage = true;
       await dbRun(
         `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
          VALUES (?, ?, ?, ?)`,
@@ -618,11 +638,15 @@ export async function updateDocumentRequest(id, fields) {
     }
   }
 
-  return { statusChanged };
+  await queueRequestUpdate({ query }, {
+    request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage: postedMessage && fields.notifyPostedMessage,
+  });
+  return { statusChanged, queuedReturn: existing.office_id === "registrar" && (isReopen || (statusChanged && nextStatus === "Pending")) };
   });
   if (!updated) return null;
+  if (updated.error) throw Object.assign(new Error(updated.error), { code: "REQUEST_UPDATE_INVALID" });
   const result = await getDocumentRequestById(id, fields.officeId ? { officeId: fields.officeId } : {});
-  if (result && updated.statusChanged) {
+  if (result && updated.statusChanged && !updated.queuedReturn) {
     try {
       let updaterDisplayName = fields.updatedBy || "Staff";
       if (fields.updatedBy) {

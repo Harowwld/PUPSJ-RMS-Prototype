@@ -1,3 +1,4 @@
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "@/lib/workflowNotificationsRepo";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -54,8 +55,9 @@ export async function GET(req) {
      LEFT JOIN document_request_feedback rf ON rf.document_request_id = dr.id
      WHERE dr.office_id = 'registrar'
        AND dr.identity_profile_id = $1
+       AND (dr.portal_submitter_account_id IS NULL OR dr.portal_submitter_account_id = $2)
      ORDER BY dr.created_at DESC`,
-    [access.user.identityProfileId]
+    [access.user.identityProfileId, access.user.accountId]
   );
   const authorizedRequests = requests.filter((item) => canAccessResource(access.user, "request", item));
 
@@ -401,12 +403,12 @@ export async function POST(req) {
       }
       const createdRequest = await runOne(
         `INSERT INTO document_requests (
-           office_id, student_no, doc_type, status, notes, client_type, course_code, requester_name, requester_relationship, requester_contact, identity_profile_id
+           office_id, student_no, doc_type, status, notes, client_type, course_code, requester_name, requester_relationship, requester_contact, identity_profile_id, portal_submitter_account_id
          ) VALUES ('registrar', $1, $2, 'Pending', $3, $4, $6, $7, $8, $9,
            COALESCE(
              (SELECT identity_profile_id FROM student_accounts WHERE id = $5),
              (SELECT identity_profile_id FROM students WHERE student_no = $1)
-           )) RETURNING *`,
+           ), $10) RETURNING *`,
         [
           effectiveStudentNo,
           docType,
@@ -417,6 +419,7 @@ export async function POST(req) {
           finalRequesterName,
           requesterRelationship,
           requesterContact,
+          access.user.accountId || null,
         ],
       );
       if (!createdRequest || !canAccessResource(access.user, "request", createdRequest)) {
@@ -450,6 +453,15 @@ export async function POST(req) {
          VALUES ($1, 'Pending', $2, $3)`,
         [createdRequest.id, initialMessage, access.user.student_no || access.user.id || null],
       );
+      await queuePortalWorkflowNotification({ query: run }, {
+        accountId: createdRequest.portal_submitter_account_id,
+        eventKey: "request_submitted",
+        targetPath: `/student?view=odrs&request=${createdRequest.id}`,
+      });
+      await queueOfficeWorkflowNotification({ query: run }, {
+        officeId: "registrar", eventKey: "queue_registrar_new", title: `New online request #${createdRequest.id} awaiting review`,
+        entityType: "document_request", entityId: createdRequest.id,
+      });
       return { request: createdRequest, attachments };
     });
     request = result.request;

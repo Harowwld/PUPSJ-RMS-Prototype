@@ -61,6 +61,7 @@ export async function GET(req) {
   const [rows, total] = await Promise.all([
     listDocumentRequests({
       q: q || undefined,
+      aging: searchParams.get("aging") === "1",
       status: status || undefined,
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,
@@ -76,6 +77,7 @@ export async function GET(req) {
     }),
     countDocumentRequests({
       q: q || undefined,
+      aging: searchParams.get("aging") === "1",
       status: status || undefined,
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,

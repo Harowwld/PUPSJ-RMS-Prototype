@@ -26,7 +26,7 @@ import { formatPHDateTime } from "@/lib/timeFormat";
 import { getRequestCharterStatus } from "@/lib/citizenCharter";
 import { COMPACT_BADGE_BASE, BADGE_PALETTES, getStatusBadgeClass } from "@/lib/badgeStyles";
 import { ALLOWED_REOPEN_TRANSITIONS } from "@/lib/constants";
-import { AttachedFileCard } from "@/components/shared/FileAttachmentDropzone";
+import { AttachmentViews } from "@/components/shared/FileAttachmentDropzone";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import NarrativeText from "@/components/shared/NarrativeText";
 import { EmptyState } from "@/components/ui/empty";
@@ -85,6 +85,8 @@ export default function DocumentRequestDetailSheet({
   setEditStatus,
   editUpdateMessage,
   setEditUpdateMessage,
+  pickupInstructions,
+  onPickupInstructionsChange,
   availableStatuses = [],
   isTerminalStatus,
   saving,
@@ -147,7 +149,7 @@ export default function DocumentRequestDetailSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Request Details
+                Request details
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed information and actions for document request
@@ -186,7 +188,7 @@ export default function DocumentRequestDetailSheet({
         {/* Line-Attached Edge-to-Edge Status Notice */}
         {detail && (
           <NoticeBanner tone={["Ready", "Completed"].includes(detail.status) ? "success" : ["PendingPayment", "Deficient"].includes(detail.status) ? "warning" : ["Cancelled", "Declined"].includes(detail.status) ? "danger" : "info"} title={detail.status === "Ready"
-                  ? "Ready for Claiming"
+                  ? (isInquiry ? "Inquiry Response Available" : "Ready for Pickup")
                   : detail.status === "PendingPayment"
                   ? "Payment Required"
                   : detail.status === "Deficient"
@@ -197,7 +199,7 @@ export default function DocumentRequestDetailSheet({
                   ? "Fulfillment In Progress"
                   : "Pending Review"}>
             {detail.status === "Ready"
-                ? "Document printed, certified, and ready for release at Registrar Window 1."
+                ? (isInquiry ? "The Registrar’s response is available in the request timeline." : detail.pickup_instructions || "This request is ready for release.")
                 : detail.status === "PendingPayment"
                 ? "Awaiting proof of payment receipt upload from the student/client."
                 : detail.status === "Deficient"
@@ -251,7 +253,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 1. Candidate / Requester Information (Standard Info List) */}
               <div className="space-y-2">
-                <SheetSectionHeading icon="Contact01Icon" title="Requester Information" />
+                <SheetSectionHeading icon="Contact01Icon" title="Requester information" />
 
                 <div className="divide-y-0">
                   <InfoRow
@@ -286,7 +288,7 @@ export default function DocumentRequestDetailSheet({
                     label="Academic Program"
                     value={
                       detail.course_code
-                        ? `${detail.course_code}${detail.course_name ? ` — ${detail.course_name}` : ""}`
+                        ? `${detail.course_code}${detail.course_name ? `: ${detail.course_name}` : ""}`
                         : studentForRequest?.courseCode || "N/A"
                     }
                   />
@@ -365,7 +367,7 @@ export default function DocumentRequestDetailSheet({
 
               {/* 2. Document & Archival Information (Standard Info List) */}
               <div className="space-y-2">
-                <SheetSectionHeading icon={File02Icon} title="Request & Archival Details" />
+                <SheetSectionHeading icon={File02Icon} title="Request and archival details" />
 
                 <div className="divide-y-0">
                   <InfoRow
@@ -449,7 +451,7 @@ export default function DocumentRequestDetailSheet({
               {/* 3. Supporting Attachments */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                  <SheetSectionHeading icon={Attachment01Icon} title={`Supporting Attachments (${attachments.length})`} divider={false} />
+                  <SheetSectionHeading icon={Attachment01Icon} title={`Supporting attachments (${attachments.length})`} divider={false} />
                   <span className="text-[11px] text-gray-400">Official uploads</span>
                 </div>
 
@@ -461,8 +463,8 @@ export default function DocumentRequestDetailSheet({
                     description="No supporting attachments uploaded for this request."
                   />
                 ) : (
-                  <div className="flex flex-wrap items-start gap-3 pt-1">
-                    {attachments.map((att) => {
+                  <AttachmentViews>
+                    {(Attachment) => attachments.map((att) => {
                       const fileUrl = att.url || `/api/document-requests/${detail.id}/attachments/${att.id}`;
                       const typeLabel =
                         att.attachment_type === "spa"
@@ -476,11 +478,11 @@ export default function DocumentRequestDetailSheet({
                           : "Supporting Document";
 
                       return (
-                        <AttachedFileCard
+                        <Attachment
                           key={att.id}
-                          item={{ ...att, url: fileUrl }}
                           readOnly
                           compactBadge
+                          item={{ ...att, url: fileUrl }}
                           onPreview={() => {
                               setPdfPreviewData?.({
                                 url: fileUrl,
@@ -495,13 +497,13 @@ export default function DocumentRequestDetailSheet({
                         />
                       );
                     })}
-                  </div>
+                  </AttachmentViews>
                 )}
               </div>
 
               {/* 4. Workflow Stage Progression & Action */}
               <div className="space-y-3 pt-2">
-                <SheetSectionHeading icon="SlidersHorizontalIcon" title={isTerminalStatus ? "Request Lifecycle State" : "Workflow Stage Progression"} />
+                <SheetSectionHeading icon="SlidersHorizontalIcon" title={isTerminalStatus ? "Request lifecycle state" : "Workflow stage progression"} />
 
                 {isTerminalStatus ? (
                   <div className="space-y-2 p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
@@ -557,10 +559,18 @@ export default function DocumentRequestDetailSheet({
                       </Select>
                     </div>
 
+                    {detail.office_id === "registrar" && editStatus === "Ready" && !isInquiry && (
+                      <div className="space-y-1">
+                        <label htmlFor="request-pickup-instructions" className="text-xs font-semibold">Pickup Instructions</label>
+                        <Textarea id="request-pickup-instructions" value={pickupInstructions} maxLength={2000}
+                          onChange={(event) => onPickupInstructionsChange(event.target.value)}
+                          placeholder="Enter the pickup location, hours, and what to bring" />
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                          Milestone Notice to Requester
+                          {isInquiry && editStatus === "Ready" ? "Inquiry Response" : "Milestone Notice to Requester"}
                         </label>
                         <span className="text-[10px] text-gray-400">Visible in tracking portal</span>
                       </div>
@@ -569,9 +579,9 @@ export default function DocumentRequestDetailSheet({
                         value={editUpdateMessage}
                         onChange={(e) => setEditUpdateMessage?.(e.target.value)}
                         placeholder={
-                          editStatus !== detail.status
-                            ? "Optional: Add custom instructions (or leave empty to post standard milestone notification)..."
-                            : "e.g. Document printed and certified, awaiting dry seal..."
+                          isInquiry && editStatus === "Ready" ? "Enter the Registrar’s response and any next steps" : editStatus !== detail.status
+                            ? "Add custom instructions, or leave empty for the standard milestone note"
+                            : "Document printed and certified, awaiting dry seal"
                         }
                       />
                     </div>
@@ -641,7 +651,7 @@ export default function DocumentRequestDetailSheet({
                 disabled={saving}
                 className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
-                Reset Changes
+                Reset changes
               </Button>
               <Button
                 type="button"
@@ -650,7 +660,7 @@ export default function DocumentRequestDetailSheet({
                 onClick={handleManualSave}
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? "Saving…" : "Save changes"}
               </Button>
             </div>
           )}
