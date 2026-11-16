@@ -1,14 +1,15 @@
 "use client";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import { formatLogDetails } from "@/lib/auditLogFormatting";
 import CopyButton from "@/components/shared/CopyButton";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
-import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE } from "@/lib/badgeStyles";
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import { getNotificationAttachments, isLegacyPostEventNotification } from "@/lib/notificationAttachments";
 import useUrlPage from "@/hooks/useUrlPage";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
@@ -217,7 +218,9 @@ export default function NotificationsTab({
   const selectedVisuals = selectedNotif ? getNotificationVisuals(selectedNotif) : null;
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [notifFrameStatus, setNotifFrameStatus] = useState("loading");
+  const attachments = getNotificationAttachments(selectedNotif);
+  const legacyReportUnavailable = !attachments.length && isLegacyPostEventNotification(selectedNotif);
+  const documentAttachment = attachments.find((attachment) => attachment.docId);
   const [pdfPreview, setPdfPreview] = useState(null);
 
   const isLoading = propLoading || initialLoading;
@@ -276,7 +279,7 @@ export default function NotificationsTab({
         ]);
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Failed to load notifications");
+          throw new Error(json?.error || "Could not load notifications");
         }
         if (request !== loadRequestRef.current) return;
         const data = json.data || {};
@@ -288,7 +291,7 @@ export default function NotificationsTab({
         onUnreadChangeRef.current?.(Number(data.unreadCount || 0));
       } catch (e) {
         if (request !== loadRequestRef.current) return;
-        setError(e?.message || "Failed to load notifications");
+        setError(e?.message || "Could not load notifications");
       } finally {
         if (request === loadRequestRef.current) {
           setInitialLoading(false);
@@ -339,7 +342,7 @@ export default function NotificationsTab({
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update notification state");
+        throw new Error(json?.error || "Could not update notification");
       }
 
       // Optimistically update item read state in UI
@@ -356,7 +359,7 @@ export default function NotificationsTab({
       // In unread/read tab views, refresh list so item relocates cleanly
       await load();
     } catch (e) {
-      setError(e?.message || "Failed to update notification");
+      setError(e?.message || "Could not update notification");
     }
   }, [selectedNotif, load]);
 
@@ -369,7 +372,7 @@ export default function NotificationsTab({
         body: JSON.stringify({ action: "markAllRead" }),
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to mark all as read");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not mark all as read");
       const nextUnread = Number(json?.data?.unreadCount || 0);
       const nextRead = Number(json?.data?.readCount || 0);
       setUnreadCount(nextUnread);
@@ -390,7 +393,7 @@ export default function NotificationsTab({
         body: JSON.stringify({ action: "markAllUnread" }),
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to mark all as unread");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not mark all as unread");
       const nextUnread = Number(json?.data?.unreadCount || 0);
       const nextRead = Number(json?.data?.readCount || 0);
       setUnreadCount(nextUnread);
@@ -411,14 +414,13 @@ export default function NotificationsTab({
       setSelectedNotif(notif);
       setNavItems((prev) => (prev.length > 0 && sheetOpen ? prev : sourceList));
       setSheetOpen(true);
-      setNotifFrameStatus("loading");
 
       // Automatically mark as read if it is unread
       if (!notif.is_read) {
         toggleReadState(notif.id, true);
       }
     },
-    [items, sheetOpen, toggleReadState, setSelectedNotif, setNavItems, setNotifFrameStatus, setSheetOpen]
+    [items, sheetOpen, toggleReadState, setSelectedNotif, setNavItems, setSheetOpen]
   );
 
   const activeNavList = navItems.length > 0 ? navItems : items;
@@ -748,7 +750,7 @@ export default function NotificationsTab({
                 onChange={(val) => setSearchQuery(val)}
                 count={total}
                 loading={isLoading}
-                placeholder="Search notifications, student..."
+                placeholder="Search notifications or student"
                 label="Search notifications"
               />
             </div>
@@ -902,7 +904,7 @@ export default function NotificationsTab({
                                   {formatLogDetails(n.title)}
                                 </h4>
                                 {isUnread && (
-                                  <span className={cn("inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400", BADGE_BASE)}>
+                                  <span className={cn(COMPACT_BADGE_BASE, "bg-pup-maroon/10 text-pup-maroon dark:bg-red-400/10 dark:text-red-400")}>
                                     New
                                   </span>
                                 )}
@@ -998,7 +1000,7 @@ export default function NotificationsTab({
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                 <div>
                   <SheetTitle className="text-base font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100">
-                    Notification Details
+                    Notification details
                   </SheetTitle>
                   <SheetDescription className="sr-only">
                     Detailed notification event information and attached records.
@@ -1038,7 +1040,7 @@ export default function NotificationsTab({
             {selectedNotif ? (
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="space-y-1.5">
-                  <SheetSectionHeading icon={CovidInfoIcon} title="Notification Specification" />
+                  <SheetSectionHeading icon={CovidInfoIcon} title="Notification specification" />
                   <div className="py-1">
                     <InfoRow icon=" Notification01Icon" label="Title" value={formatLogDetails(selectedNotif.title) || "Notification"} />
 
@@ -1112,14 +1114,9 @@ export default function NotificationsTab({
                       <InfoRow icon=" File01Icon" label="Document Category" value={selectedNotif.doc_type} />
                     )}
 
-                    {selectedNotif.original_filename && (
-                      <InfoRow icon=" Attachment01Icon" label="Original File">
-                        <span
-                          className="font-sans tabular-nums text-xs truncate block max-w-[240px]"
-                          title={selectedNotif.original_filename}
-                        >
-                          {selectedNotif.original_filename}
-                        </span>
+                    {selectedNotif.original_filename && !attachments.length && (
+                      <InfoRow icon="Attachment01Icon" label="Original File">
+                        <SheetAttachmentRow filename={selectedNotif.original_filename} />
                       </InfoRow>
                     )}
 
@@ -1149,7 +1146,7 @@ export default function NotificationsTab({
                 </div>
 
                 <div className="space-y-1.5">
-                  <SheetSectionHeading icon="Message01Icon" title="Event Summary" />
+                  <SheetSectionHeading icon="Message01Icon" title="Event summary" />
                   <div className="pt-2">
                     <p className="text-xs text-gray-700 dark:text-zinc-200 leading-relaxed font-medium">
                       <NarrativeText text={selectedNotif.message} mode="full" />
@@ -1164,39 +1161,38 @@ export default function NotificationsTab({
                   </div>
                 </div>
 
-                {/* 3. Document PDF Preview (if notification is a document or has linked document) */}
-                {(selectedNotif.entity_type === "document" || selectedNotif.metadata?.document_id) && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                      <SheetSectionHeading icon={File02Icon} title="Document Preview" divider={false} />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPdfPreview({
-                          url: `/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`,
-                          title: selectedNotif.doc_type || "Document",
-                          studentName: selectedNotif.student_name,
-                        })}
-                      >
-                        {PDF_ACTION_LABELS.preview}
-                      </Button>
-                    </div>
+                {legacyReportUnavailable && (
+                  <NoticeBanner tone="warning" title="Original Report Preview Unavailable">
+                    This older notification does not identify a specific report. Find the event under Post-Event Reports in OSAS Monitoring.
+                  </NoticeBanner>
+                )}
 
-                    <div className="pt-2">
-                      <div className="rounded-xl border border-border overflow-hidden h-[clamp(480px,65dvh,640px)] bg-white dark:bg-zinc-900 relative">
-                        <ResilientPDFViewer
-                          src={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
-                          docId={selectedNotif.entity_id || selectedNotif.metadata?.document_id}
-                          preview={{
-                            studentName: selectedNotif.student_name,
-                            docType: selectedNotif.doc_type,
-                          }}
-                          className="w-full h-full border-0"
-                          title="PDF Preview"
-                          onStatusChange={setNotifFrameStatus}
+                {attachments.length > 0 && (
+                  <div className="space-y-1.5">
+                    <SheetSectionHeading icon={File02Icon} title="Document preview" />
+                    {attachments.map((attachment) => (
+                      <div key={attachment.url} className="space-y-2">
+                        <SheetAttachmentRow
+                          filename={attachment.originalFilename}
+                          size={attachment.size}
+                          mimeType={attachment.mimeType}
+                          fileUrl={attachment.url}
+                          downloadUrl={attachment.url}
+                          onPreview={() => setPdfPreview(attachment)}
                         />
+                        {attachments.length === 1 && (
+                          <div className="relative h-[clamp(480px,65dvh,640px)] overflow-hidden rounded-xl border border-border bg-white dark:bg-zinc-900">
+                            <ResilientPDFViewer
+                              src={attachment.url}
+                              docId={attachment.docId}
+                              preview={attachment}
+                              className="h-full w-full border-0"
+                              title="PDF Preview"
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1215,7 +1211,22 @@ export default function NotificationsTab({
               </Button>
 
               <div className="flex items-center gap-2.5">
-                {selectedNotif?.entity_type === "document_request" && onNavigateTab ? (
+                {onNavigateTab && selectedNotif?.entity_type === "office_queue" ? (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSheetOpen(false);
+                    onNavigateTab(selectedNotif.entity_id === "osas_monitoring" ? "osas_monitoring" : "requests", { aging: "1" });
+                  }}>Open Review Queue</Button>
+                ) : onNavigateTab && selectedNotif?.entity_type === "ingest_batch" ? (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSheetOpen(false);
+                    onNavigateTab("batch_review", { notificationBatch: selectedNotif.entity_id });
+                  }}>Open Batch Review</Button>
+                ) : legacyReportUnavailable && onNavigateTab ? (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSheetOpen(false);
+                    onNavigateTab("osas_monitoring");
+                  }}>Open OSAS Monitoring</Button>
+                ) : selectedNotif?.entity_type === "document_request" && onNavigateTab ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -1228,7 +1239,7 @@ export default function NotificationsTab({
                   >
                     Open in Requests
                   </Button>
-                ) : selectedNotif?.approval_status === "Declined" && onRescan ? (
+                ) : selectedNotif?.approval_status === "Declined" && documentAttachment && onRescan ? (
                   <Button
                     type="button"
                     size="sm"
@@ -1237,7 +1248,7 @@ export default function NotificationsTab({
                       onRescan(
                         selectedNotif.student_no,
                         selectedNotif.doc_type,
-                        selectedNotif.entity_id || selectedNotif.metadata?.document_id,
+                        documentAttachment.docId,
                         selectedNotif.original_filename,
                         selectedNotif.mime_type
                       );
@@ -1247,23 +1258,6 @@ export default function NotificationsTab({
                     Rescan Document
                   </Button>
                 ) : null}
-
-                {(selectedNotif?.entity_type === "document" || selectedNotif?.metadata?.document_id) && (
-                  <Button
-                    asChild
-                    variant="default"
-                    size="sm"
-                    className="h-9 px-4 text-xs font-semibold rounded-xl shadow-xs active:scale-95 cursor-pointer"
-                  >
-                    <a
-                      href={`/api/documents/${selectedNotif.entity_id || selectedNotif.metadata?.document_id}`}
-                      download={selectedNotif.original_filename || "document.pdf"}
-                      rel="noreferrer"
-                    >
-                      {selectedNotif?.mime_type?.startsWith("image/") ? PDF_ACTION_LABELS.original : PDF_ACTION_LABELS.download}
-                    </a>
-                  </Button>
-                )}
               </div>
             </SheetFooter>
           </SheetContent>
@@ -1273,16 +1267,16 @@ export default function NotificationsTab({
           onClose={() => setPdfPreview(null)}
           preview={pdfPreview}
           onUpdate={
-            selectedNotif && onRescan && !selectedNotif.source_type
+            pdfPreview?.docId && onRescan && !selectedNotif?.source_type
               ? () => {
                   setPdfPreview(null);
                   setSheetOpen(false);
                   onRescan(
-                    selectedNotif.student_no,
-                    selectedNotif.doc_type,
-                    selectedNotif.entity_id || selectedNotif.metadata?.document_id,
-                    selectedNotif.original_filename,
-                    selectedNotif.mime_type
+                    pdfPreview.studentNo,
+                    pdfPreview.title,
+                    pdfPreview.docId,
+                    pdfPreview.originalFilename,
+                    pdfPreview.mimeType
                   );
                 }
               : undefined

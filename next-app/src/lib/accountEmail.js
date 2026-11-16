@@ -408,3 +408,24 @@ export async function sendAccountCredentialsNotice(details) {
     };
   }
 }
+
+export async function sendWorkflowNotificationEmail({ to, subject, link, messageId, detail }) {
+  const mailer = getTransporter();
+  const description = [detail, "Sign in to eManage to see the update and any next steps."].filter(Boolean).join(" ");
+  const result = await mailer.transporter.sendMail({
+    from: mailer.from,
+    to,
+    subject,
+    messageId,
+    text: `${subject}\n\n${description}\n${link}`,
+    ...renderAccountEmail({
+      title: subject,
+      preview: description,
+      headline: subject,
+      content: `<p class="text-sec">${escapeHtml(description)}</p>
+        <p><a href="${escapeHtml(link)}">View Update</a></p>`,
+      footer: "You can manage workflow email alerts in Account Settings.",
+    }),
+  });
+  if (!result.accepted?.length) throw new Error("Workflow email was not accepted.");
+}
