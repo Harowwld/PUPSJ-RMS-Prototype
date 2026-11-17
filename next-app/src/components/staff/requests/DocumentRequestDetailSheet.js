@@ -6,6 +6,7 @@ import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
 import SheetPagination from "@/components/shared/SheetPagination";
+import { correctionRequirements, maxCorrectionItems } from "@/lib/requestCorrections";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useMemo } from "react";
@@ -91,6 +92,10 @@ export default function DocumentRequestDetailSheet({
   isTerminalStatus,
   saving,
   hasEdits,
+  correctionDraft = [],
+  onCorrectionDraftChange,
+  requestingCorrections,
+  correctionDraftInvalid,
   handleResetEdits,
   handleManualSave,
   patchDetail,
@@ -109,6 +114,7 @@ export default function DocumentRequestDetailSheet({
 }) {
   if (!open) return null;
 
+  const requiresDeficiencyMessage = editStatus === "Deficient" && detail?.status !== "Deficient" && !requestingCorrections;
   const charter = detail ? getRequestCharterStatus(detail, slaStandards) : null;
   const isInquiry = detail?.doc_type === MISSING_DOCUMENTS_INQUIRY;
   const isParent = detail?.client_type === "Parent";
@@ -475,6 +481,8 @@ export default function DocumentRequestDetailSheet({
                           ? "Proof of Payment"
                           : att.attachment_type === "clearance"
                           ? "Clearance Slip"
+                          : att.attachment_type === "correction"
+                          ? "Correction File"
                           : "Supporting Document";
 
                       return (
@@ -553,11 +561,65 @@ export default function DocumentRequestDetailSheet({
                       >
                         {availableStatuses.map((s) => (
                           <option key={s} value={s}>
-                            {formatRequestStatus(s)}
+                            {s === "Deficient" ? "Action Required" : formatRequestStatus(s)}
                           </option>
                         ))}
                       </Select>
                     </div>
+
+                    {detail.correction_items?.length > 0 && (
+                      <div className="space-y-2">
+                        <SheetSectionHeading icon="Attachment01Icon" title="Requested Corrections" />
+                        {detail.correction_items.map((item) => (
+                          <div key={item.id} className="rounded-xl bg-muted p-3 text-xs">
+                            <p className="font-semibold">{correctionRequirements[item.type]}</p>
+                            {item.note && <p className="mt-1 whitespace-pre-wrap">{item.note}</p>}
+                            <p className="mt-1 text-muted-foreground">
+                              {item.attachmentId
+                                ? attachments.find((attachment) => String(attachment.id) === String(item.attachmentId))?.original_filename || "File submitted"
+                                : detail.status === "Deficient" ? "Waiting for file" : "Closed without a file"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {requestingCorrections && (
+                      <div className="space-y-2 rounded-xl bg-muted/60 p-3">
+                        <p className="text-xs font-semibold">Requirements to Correct</p>
+                        <p className="text-xs text-muted-foreground">The request returns to the queue when the requester submits a file for every item.</p>
+                        {correctionDraft.map((item, index) => {
+                          const updateItem = (fields) => onCorrectionDraftChange((items) =>
+                            items.map((original) => original.key === item.key ? { ...original, ...fields } : original));
+                          return (
+                            <div key={item.key} className="space-y-2 rounded-xl bg-background p-3">
+                              <div className="flex items-center gap-2">
+                                <Select containerClassName="flex-1" usePortal={false} aria-label={`Requirement ${index + 1}`}
+                                  value={item.type || null} placeholder="Select a requirement"
+                                  onChange={(event) => updateItem({ type: event.target.value })}>
+                                  {Object.entries(correctionRequirements).map(([type, label]) => (
+                                    <option key={type} value={type}>{label}</option>
+                                  ))}
+                                </Select>
+                                <Button type="button" size="sm" variant="outline"
+                                  onClick={() => onCorrectionDraftChange((items) => items.filter(({ key }) => key !== item.key))}>
+                                  Remove
+                                </Button>
+                              </div>
+                              <Textarea aria-label={`Instructions for requirement ${index + 1}`} maxLength={500} value={item.note}
+                                placeholder={item.type === "other" ? "Describe the file the requester should provide" : "Add instructions (optional)"}
+                                onChange={(event) => updateItem({ note: event.target.value })} />
+                            </div>
+                          );
+                        })}
+                        {correctionDraft.length < maxCorrectionItems && (
+                          <Button type="button" size="sm" variant="outline" onClick={() => onCorrectionDraftChange((items) =>
+                            [...items, { key: crypto.randomUUID(), type: "", note: "" }])}>
+                            Add Requirement
+                          </Button>
+                        )}
+                      </div>
+                    )}
 
                     {detail.office_id === "registrar" && editStatus === "Ready" && !isInquiry && (
                       <div className="space-y-1">
@@ -570,7 +632,7 @@ export default function DocumentRequestDetailSheet({
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                          {isInquiry && editStatus === "Ready" ? "Inquiry Response" : "Milestone Notice to Requester"}
+                          {requestingCorrections ? "Additional Message (Optional)" : requiresDeficiencyMessage ? "Correction Instructions" : isInquiry && editStatus === "Ready" ? "Inquiry Response" : "Milestone Notice to Requester"}
                         </label>
                         <span className="text-[10px] text-gray-400">Visible in tracking portal</span>
                       </div>
@@ -579,7 +641,7 @@ export default function DocumentRequestDetailSheet({
                         value={editUpdateMessage}
                         onChange={(e) => setEditUpdateMessage?.(e.target.value)}
                         placeholder={
-                          isInquiry && editStatus === "Ready" ? "Enter the Registrar’s response and any next steps" : editStatus !== detail.status
+                          requestingCorrections ? "Add a message that applies to all requested corrections" : requiresDeficiencyMessage ? "Explain what the requester needs to provide" : isInquiry && editStatus === "Ready" ? "Enter the Registrar’s response and any next steps" : editStatus !== detail.status
                             ? "Add custom instructions, or leave empty for the standard milestone note"
                             : "Document printed and certified, awaiting dry seal"
                         }
@@ -658,9 +720,9 @@ export default function DocumentRequestDetailSheet({
                 size="sm"
                 className="h-9 px-4 cursor-pointer disabled:opacity-50"
                 onClick={handleManualSave}
-                disabled={saving}
+                disabled={saving || correctionDraftInvalid || (requiresDeficiencyMessage && !editUpdateMessage.trim())}
               >
-                {saving ? "Saving…" : "Save changes"}
+                {saving ? "Saving…" : requestingCorrections ? "Request Corrections" : "Save Changes"}
               </Button>
             </div>
           )}

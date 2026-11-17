@@ -1,3 +1,4 @@
+import { prepareRequestCorrections } from "@/lib/requestCorrections";
 import { queueRequestUpdate, resolveReadyRequest } from "@/lib/workflowNotificationsRepo";
 import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import { MISSING_DOCUMENTS_INQUIRY } from "@/lib/missingDocumentsInquiry";
@@ -54,7 +55,9 @@ export async function PATCH(req, ctx) {
     }
     const isReopen = isTerminalRequestStatus(existing.status) && !isTerminalRequestStatus(nextStatus);
 
-    if (statusChanged && nextStatus === "Deficient" && !rawMessage) {
+    const correction = prepareRequestCorrections(existing, nextStatus, body?.correctionItems);
+    if (correction.error) return { error: correction.error, status: 400 };
+    if (statusChanged && nextStatus === "Deficient" && !rawMessage && !correction.corrections) {
       return { error: "Add a comment explaining what the student needs to provide.", status: 400 };
     }
     if (existing.status && existing.status !== nextStatus && !canTransitionRequestStatus(existing.status, nextStatus, { allowReopen })) {
@@ -81,8 +84,8 @@ export async function PATCH(req, ctx) {
     } else if (statusChanged) {
       defaultMsg = DEFAULT_REQUEST_STATUS_MESSAGES[nextStatus] || `Status updated to ${formatRequestStatus(nextStatus)}.`;
     }
-    const finalMessage = rawMessage || defaultMsg;
-    if (!statusChanged && !rawMessage && !hasSpaVerified && !ready.pickupChanged) return { data: existing, changed: false };
+    const finalMessage = [correction.message, rawMessage].filter(Boolean).join(" ") || defaultMsg;
+    if (!statusChanged && !rawMessage && !hasSpaVerified && !ready.pickupChanged && !correction.corrections) return { data: existing, changed: false };
 
     const updated = await queryOne(
       `UPDATE document_requests
@@ -93,9 +96,10 @@ export async function PATCH(req, ctx) {
            spa_verified_at = CASE WHEN $3::boolean IS NOT NULL THEN (CASE WHEN $3 THEN NOW() ELSE NULL END) ELSE spa_verified_at END,
            updated_at = NOW(),
            pickup_instructions = COALESCE($6, pickup_instructions),
+           correction_items = COALESCE($7::jsonb, correction_items),
            updated_by = $4
        WHERE id = $5 AND office_id = 'registrar' RETURNING *`,
-      [nextStatus, rawMessage || null, hasSpaVerified ? spaVerified : null, access.userId || null, requestId, ready.instructions ?? null]
+      [nextStatus, rawMessage || null, hasSpaVerified ? spaVerified : null, access.userId || null, requestId, ready.instructions ?? null, correction.corrections ? JSON.stringify(correction.corrections) : null]
     );
     if (!updated || !canAccessResource(access, "request", updated)) return { error: "Not found", status: 404 };
 
@@ -114,7 +118,7 @@ export async function PATCH(req, ctx) {
         );
       }
     }
-    await queueRequestUpdate({ query }, { request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage });
+    await queueRequestUpdate({ query }, { request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage, correctionsRequested: Boolean(correction.corrections) });
     return { data: updated, changed: true, prevStatus: existing.status, nextStatus, isReopen, reopenReason, finalMessage };
   });
 

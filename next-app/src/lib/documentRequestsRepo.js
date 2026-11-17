@@ -1,3 +1,4 @@
+import { prepareRequestCorrections } from "./requestCorrections.js";
 import { agingRegistrarQueue } from "./workflowQueueFilters.js";
 import { queueRequestUpdate, resolveReadyRequest } from "./workflowNotificationsRepo.js";
 import { MISSING_DOCUMENTS_INQUIRY } from "./missingDocumentsInquiry.js";
@@ -535,7 +536,13 @@ export async function updateDocumentRequest(id, fields) {
       vals.push(s);
     }
   }
-  const rawMessage = String(fields.message ?? "").trim();
+  const correction = prepareRequestCorrections(existing, nextStatus, fields.correctionItems);
+  if (correction.error) return correction;
+  if (correction.corrections) {
+    cols.push("correction_items = ?::jsonb");
+    vals.push(JSON.stringify(correction.corrections));
+  }
+  const rawMessage = [correction.message, String(fields.message ?? "").trim()].filter(Boolean).join(" ");
   if (existing.doc_type === MISSING_DOCUMENTS_INQUIRY && statusChanged &&
       ["Ready", "Completed"].includes(nextStatus) && !(fields.spaVerified ?? existing.spa_verified)) {
     return { error: "Verify the requester before completing a missing-documents inquiry." };
@@ -639,7 +646,7 @@ export async function updateDocumentRequest(id, fields) {
   }
 
   await queueRequestUpdate({ query }, {
-    request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage: postedMessage && fields.notifyPostedMessage,
+    request: existing, nextStatus, isReopen, pickupChanged: ready.pickupChanged, postedMessage: postedMessage && fields.notifyPostedMessage, correctionsRequested: Boolean(correction.corrections),
   });
   return { statusChanged, queuedReturn: existing.office_id === "registrar" && (isReopen || (statusChanged && nextStatus === "Pending")) };
   });

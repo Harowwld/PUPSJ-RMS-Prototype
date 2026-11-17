@@ -1,9 +1,9 @@
 import fs from "node:fs";
-import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { getAuthenticatedPrincipal } from "@/lib/authHelpers";
-import { queryOne, query } from "@/lib/postgres";
+import { queryOne, transaction } from "@/lib/postgres";
+import { cleanReceiptFile, queueReceiptFileCleanup } from "@/lib/receiptFileCleanup";
 import { isSystemAdminRole } from "@/lib/roleUtils";
 import { FILE_SECURITY_HEADERS, inlineFileDisposition } from "@/lib/fileSecurityHeaders";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
@@ -31,7 +31,7 @@ async function resolveAttachmentTarget(req, ctx) {
 
   // 1. Fetch document request
   const request = await queryOne(
-    "SELECT id, student_no, identity_profile_id, office_id, status FROM document_requests WHERE id = $1",
+    "SELECT id, student_no, identity_profile_id, portal_submitter_account_id, office_id, status FROM document_requests WHERE id = $1",
     [requestId]
   );
   if (!request || String(request.office_id || "").trim().toLowerCase() !== "registrar") {
@@ -47,7 +47,8 @@ async function resolveAttachmentTarget(req, ctx) {
     }
   } else if (user.principalType === "student") {
     if (
-      (request.identity_profile_id && String(request.identity_profile_id) === String(user.identityProfileId))
+      request.identity_profile_id && String(request.identity_profile_id) === String(user.identityProfileId) &&
+      (!request.portal_submitter_account_id || String(request.portal_submitter_account_id) === String(user.accountId))
     ) {
       authorized = true;
     }
@@ -146,7 +147,7 @@ export async function GET(req, ctx) {
 export async function DELETE(req, ctx) {
   const resolved = await resolveAttachmentTarget(req, ctx);
   if (resolved.response) return resolved.response;
-  const { user, request, attachment, filePath } = resolved;
+  const { user, request, attachment } = resolved;
 
   if (user.principalType !== "student") {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
@@ -164,11 +165,22 @@ export async function DELETE(req, ctx) {
     );
   }
 
-  await query(
-    "DELETE FROM document_request_attachments WHERE id = $1 AND document_request_id = $2",
-    [attachment.id, request.id]
-  );
-  await fsPromises.unlink(filePath).catch(() => {});
+  const removed = await transaction(async (db) => {
+    const current = await db.queryOne("SELECT status FROM document_requests WHERE id = $1 FOR UPDATE", [request.id]);
+    if (current?.status !== "PendingPayment") return null;
+    const row = await db.queryOne(
+      "DELETE FROM document_request_attachments WHERE id = $1 AND document_request_id = $2 AND attachment_type = 'receipt' RETURNING storage_filename",
+      [attachment.id, request.id],
+    );
+    if (row) await queueReceiptFileCleanup(db, row.storage_filename);
+    return row;
+  });
+  if (!removed) {
+    return NextResponse.json({ ok: false, error: "This receipt is no longer available for removal." }, { status: 409 });
+  }
+  await cleanReceiptFile(removed.storage_filename).catch((error) => {
+    console.error("[receipt cleanup] Could not process the queued deletion:", error);
+  });
 
   try {
     await writeGlobalAuditLog(req, "Payment proof removed", {

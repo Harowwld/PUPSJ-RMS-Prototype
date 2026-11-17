@@ -146,6 +146,7 @@ const ATTACHMENT_CATEGORY_LABELS = {
   receipt: "Proof of Payment",
   clearance: "Clearance Slip",
   evidence: "Supporting Evidence",
+  correction: "Correction File",
 };
 
 function getAttachmentCategoryLabel(type, categories) {

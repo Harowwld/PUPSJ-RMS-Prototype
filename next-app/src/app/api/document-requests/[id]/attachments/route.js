@@ -1,4 +1,5 @@
-import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "@/lib/workflowNotificationsRepo";
+import { pendingRequestCorrection, recordRequestCorrection, correctionRequirements } from "@/lib/requestCorrections";
+import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification, queueRequestUpdate } from "@/lib/workflowNotificationsRepo";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -63,14 +64,20 @@ export async function POST(req, ctx) {
   if (!request || !canAccessResource(access.user, "request", request)) {
     return NextResponse.json({ ok: false, error: "Document request not found." }, { status: 404 });
   }
-  if (request.status !== "PendingPayment") {
+  const formData = await req.formData().catch(() => null);
+  if (!formData) return NextResponse.json({ ok: false, error: "Choose a file to upload." }, { status: 400 });
+  const correctionId = formData.get("correctionId");
+  const isCorrection = correctionId !== null;
+  if (isCorrection && (typeof correctionId !== "string" || !pendingRequestCorrection(request, access.user.accountId, correctionId))) {
+    return NextResponse.json({ ok: false, error: "This correction is no longer accepting files. Refresh the request." }, { status: 409 });
+  }
+  if (!isCorrection && request.status !== "PendingPayment") {
     return NextResponse.json({ ok: false, error: "Payment proof can only be uploaded while this request is pending payment." }, { status: 409 });
   }
 
-  const formData = await req.formData();
   const file = formData.get("file");
   if (!file || typeof file.arrayBuffer !== "function") {
-    return NextResponse.json({ ok: false, error: "Choose a receipt or payment proof file." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: isCorrection ? "Choose a correction file." : "Choose a receipt or payment proof file." }, { status: 400 });
   }
   if (!file.size || file.size > MAX_FILE_SIZE) {
     return NextResponse.json({ ok: false, error: "The file must be between 1 byte and 10 MB." }, { status: 400 });
@@ -81,7 +88,7 @@ export async function POST(req, ctx) {
   }
   const { ext: extension, mime: mimeType } = resolvedType;
 
-  const originalFilename = path.basename(String(file.name || `payment-proof${extension}`)).slice(0, 255);
+  const originalFilename = path.basename(String(file.name || `${isCorrection ? "correction" : "payment-proof"}${extension}`)).slice(0, 255);
   const storageFilename = `${crypto.randomUUID()}${extension}`;
   const directory = requestAttachmentsDir();
   const filePath = path.join(directory, storageFilename);
@@ -92,21 +99,41 @@ export async function POST(req, ctx) {
     await fs.writeFile(filePath, Buffer.from(await file.arrayBuffer()), { flag: "wx" });
     const result = await transaction(async ({ query: run, queryOne: runOne }) => {
       const current = await runOne(
-        "SELECT status FROM document_requests WHERE id = $1 AND office_id = 'registrar' FOR UPDATE",
+        "SELECT * FROM document_requests WHERE id = $1 AND office_id = 'registrar' FOR UPDATE",
         [requestId]
       );
-      if (!current) return { error: "Document request not found.", status: 404 };
-      if (current.status !== "PendingPayment") {
+      if (!current || !canAccessResource(access.user, "request", current)) {
+        return { error: "Document request not found.", status: 404 };
+      }
+      const correction = isCorrection && pendingRequestCorrection(current, access.user.accountId, correctionId);
+      if (isCorrection && !correction) {
+        return { error: "This correction is no longer accepting files. Refresh the request.", status: 409 };
+      }
+      if (!isCorrection && current.status !== "PendingPayment") {
         return { error: "Payment proof can only be uploaded while this request is pending payment.", status: 409 };
       }
       const attachment = await runOne(
         `INSERT INTO document_request_attachments (
            document_request_id, original_filename, storage_filename, mime_type,
            size_bytes, attachment_type, uploaded_by
-         ) VALUES ($1, $2, $3, $4, $5, 'receipt', $6)
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [requestId, originalFilename, storageFilename, mimeType, file.size, access.user.id]
+        [requestId, originalFilename, storageFilename, mimeType, file.size, isCorrection ? "correction" : "receipt", access.user.id]
       );
+      if (correction) {
+        const { corrections, status, completed } = recordRequestCorrection(current.correction_items, correctionId, attachment.id);
+        await run(
+          "UPDATE document_requests SET correction_items = $1::jsonb, status = $2, updated_at = NOW() WHERE id = $3",
+          [JSON.stringify(corrections), status, requestId],
+        );
+        const message = `Correction submitted for ${correctionRequirements[correction.type]}: ${originalFilename}.`;
+        await run(
+          "INSERT INTO transaction_updates (document_request_id, status, message, created_by) VALUES ($1, $2, $3, $4)",
+          [requestId, status, message + (completed ? " All requested corrections were submitted. Request returned to the Registrar queue." : ""), access.user.id || null],
+        );
+        if (completed) await queueRequestUpdate({ query: run }, { request: current, nextStatus: status, correctionsSubmitted: true });
+        return { attachment, status, corrections, completed };
+      }
       await run(
         `INSERT INTO transaction_updates (document_request_id, status, message, created_by)
          VALUES ($1, 'PendingPayment', $2, $3)`,
@@ -128,9 +155,9 @@ export async function POST(req, ctx) {
     }
     persisted = true;
     try {
-      await writeGlobalAuditLog(req, "Payment proof uploaded", {
+      await writeGlobalAuditLog(req, isCorrection ? "Request correction uploaded" : "Payment proof uploaded", {
         officeId: "registrar",
-        details: `Student uploaded payment proof for document request ${requestId}.`,
+        details: `Requester uploaded ${isCorrection ? "a correction" : "payment proof"} for document request ${requestId}.`,
         entity_type: "document_request",
         entity_id: String(requestId),
       });
@@ -139,6 +166,7 @@ export async function POST(req, ctx) {
     }
     return NextResponse.json({
       ok: true,
+      ...(isCorrection ? { status: result.status, corrections: result.corrections, completed: result.completed } : {}),
       data: {
         ...result.attachment,
         url: `/api/document-requests/${requestId}/attachments/${result.attachment.id}`,
@@ -147,6 +175,6 @@ export async function POST(req, ctx) {
   } catch (error) {
     if (!persisted) await fs.unlink(filePath).catch(() => {});
     console.error("Payment proof upload failed:", error);
-    return NextResponse.json({ ok: false, error: "Unable to save payment proof." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: isCorrection ? "Unable to save the correction file." : "Unable to save payment proof." }, { status: 500 });
   }
 }

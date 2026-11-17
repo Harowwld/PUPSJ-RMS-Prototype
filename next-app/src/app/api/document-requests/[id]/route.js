@@ -98,7 +98,7 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: false, error: "Pickup instructions must be text." }, { status: 400 });
   }
   const patch = {
-    updatedBy: staff.id, officeId, pickupInstructions: body.pickupInstructions,
+    updatedBy: staff.id, officeId, pickupInstructions: body.pickupInstructions, correctionItems: body.correctionItems,
     notifyPostedMessage: typeof body.message === "string" && Boolean(body.message.trim()),
   };
 
@@ -136,10 +136,10 @@ export async function PATCH(req, ctx) {
         patch.message = reopenReason;
       }
     }
-    if (existing.status !== s && s === "Deficient" && !String(body.message || "").trim()) {
+    if (existing.status !== s && s === "Deficient" && !existing.portal_submitter_account_id && !String(body.message || "").trim()) {
       return NextResponse.json({ ok: false, error: "Add a comment explaining what the student needs to provide." }, { status: 400 });
     }
-    if (existing.status !== s) patch.status = s;
+    if (existing.status !== s || body.correctionItems !== undefined) patch.status = s;
   }
 
   if (body.notes !== undefined) {
@@ -202,7 +202,8 @@ export async function PATCH(req, ctx) {
     patch.message !== undefined ||
     patch.courseCode !== undefined ||
     patch.spaVerified !== undefined ||
-    patch.pickupInstructions !== undefined;
+    patch.pickupInstructions !== undefined ||
+    patch.correctionItems !== undefined;
 
   if (!hasFieldUpdates) {
     return NextResponse.json({ ok: true, data: existing });

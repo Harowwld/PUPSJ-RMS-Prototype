@@ -36,6 +36,12 @@ export const ODRS_KANBAN_COLUMNS = [
       "border-amber-500/50 bg-amber-50/60 dark:bg-amber-950/25 text-amber-700 dark:text-amber-300",
   },
   {
+    key: "Deficient",
+    label: "Action Required",
+    dropZone:
+      "border-orange-500/50 bg-orange-50/60 dark:bg-orange-950/25 text-orange-700 dark:text-orange-300",
+  },
+  {
     key: "PendingPayment",
     label: "Pending Payment",
     dropZone:
@@ -108,8 +114,6 @@ export default function DocumentRequestKanbanPipeline({
       const status = item.status || "Pending";
       if (map[status]) {
         map[status].push(item);
-      } else if (status === "Deficient") {
-        if (map.Pending) map.Pending.push(item);
       } else if (status === "Shredded") {
         if (map.Cancelled) map.Cancelled.push(item);
       } else {
@@ -269,7 +273,7 @@ export default function DocumentRequestKanbanPipeline({
                   )}
                 >
                   {isValidTransition
-                    ? `Drop to move to ${col.label}`
+                    ? (col.key === "Deficient" ? "Drop to choose what needs correction" : `Drop to move to ${col.label}`)
                     : "Transition not allowed"}
                 </div>
               )}

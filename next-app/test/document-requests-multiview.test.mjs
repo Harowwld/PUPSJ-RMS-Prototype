@@ -122,6 +122,10 @@ test("DocumentRequestKanbanPipeline implements columns and validates transitions
 
   // Verify ODRS_KANBAN_COLUMNS contains primary progressive workflow stages
   assert.match(kanbanContent, /key:\s*["']Pending["']/);
+  assert.match(kanbanContent, /key:\s*"Deficient",\s*label:\s*"Action Required"/);
+  assert.doesNotMatch(kanbanContent, /status === "Deficient"[\s\S]{0,80}map\.Pending/);
+  const tabContent = fs.readFileSync(path.resolve(__dirname, "../src/components/staff/DocumentRequestsTab.js"), "utf-8");
+  assert.match(tabContent, /if \(targetStatus === "Deficient"[^\n]*\) \{\s*await openDetail\(item, \{ nextStatus: targetStatus \}\)/);
   assert.match(kanbanContent, /key:\s*["']PendingPayment["']/);
   assert.match(kanbanContent, /key:\s*["']InProgress["']/);
   assert.match(kanbanContent, /key:\s*["']Ready["']/);

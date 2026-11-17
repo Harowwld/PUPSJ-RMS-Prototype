@@ -214,7 +214,7 @@ export default function DocumentRequestsTab({
         { value: "InProgress", label: "In Progress" },
         { value: "Ready", label: "Ready" },
         { value: "Completed", label: "Completed" },
-        { value: "Deficient", label: "Deficient" },
+        { value: "Deficient", label: "Action Required" },
         { value: "Cancelled", label: "Cancelled" },
         { value: "Shredded", label: "Shredded" },
       ],
@@ -325,6 +325,7 @@ export default function DocumentRequestsTab({
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editUpdateMessage, setEditUpdateMessage] = useState("");
+  const [correctionDraft, setCorrectionDraft] = useState([]);
   const [pickupDraft, setPickupDraft] = useState(null);
   const [defaultPickup, setDefaultPickup] = useState("");
   useEffect(() => {
@@ -574,6 +575,7 @@ export default function DocumentRequestsTab({
       setEditStatus(nextStatus || json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
       setEditUpdateMessage("");
+      setCorrectionDraft([]);
       setPickupDraft(null);
     } catch (e) {
       showToast?.(
@@ -654,12 +656,13 @@ export default function DocumentRequestsTab({
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Update failed");
-      setDetail(json.data);
-      setEditStatus(json.data.status || "Pending");
-      setEditNotes(json.data.notes || "");
-      setEditUpdateMessage("");
-      setPickupDraft(null);
+      setDetail((current) => current?.id === reqId ? json.data : current);
       if (!silent) {
+        setEditStatus(json.data.status || "Pending");
+        setEditNotes(json.data.notes || "");
+        setEditUpdateMessage("");
+        setCorrectionDraft([]);
+        setPickupDraft(null);
         showToast?.({ title: "Request Updated", description: "Status and updates have been saved." });
       }
       loadList({ showLoading: false });
@@ -711,9 +714,18 @@ export default function DocumentRequestsTab({
     return ALLOWED_STATUS_TRANSITIONS[detailStatus] || [detailStatus];
   }, [detailStatus]);
 
+  const requestingCorrections = Boolean(detail?.office_id === "registrar" && detail.portal_submitter_account_id
+    && editStatus === "Deficient"
+    && (detail.status !== "Deficient" || !detail.correction_items?.some((item) => !item.attachmentId)));
+  const correctionDraftInvalid = requestingCorrections && (
+    correctionDraft.length === 0 || correctionDraft.some(({ type, note }) => !type || (type === "other" && !note.trim()))
+  );
+
   const handleManualSave = () => {
+    if (correctionDraftInvalid) return;
     patchDetail({
-      status: !isTerminalStatus && editStatus !== detail.status ? editStatus : undefined,
+      status: requestingCorrections || (!isTerminalStatus && editStatus !== detail.status) ? editStatus : undefined,
+      correctionItems: requestingCorrections ? correctionDraft : undefined,
       notes: editNotes || null,
       message: editUpdateMessage.trim() || undefined,
       pickupInstructions: editStatus === "Ready" ? pickupDraft ?? undefined : undefined,
@@ -725,6 +737,7 @@ export default function DocumentRequestsTab({
     setEditStatus(detail.status || "Pending");
     setEditNotes(detail.notes || "");
     setEditUpdateMessage("");
+    setCorrectionDraft([]);
     setPickupDraft(null);
   };
 
@@ -734,9 +747,9 @@ export default function DocumentRequestsTab({
     return (
       (!isTerminalStatus && norm(editStatus) !== norm(detail.status)) ||
       norm(editNotes) !== norm(detail.notes) ||
-      Boolean(editUpdateMessage.trim()) || (editStatus === "Ready" && pickupDraft !== null && pickupDraft.trim() !== (detail.pickup_instructions || "").trim())
+      Boolean(editUpdateMessage.trim()) || (requestingCorrections && correctionDraft.length > 0) || (editStatus === "Ready" && pickupDraft !== null && pickupDraft.trim() !== (detail.pickup_instructions || "").trim())
     );
-  }, [detail, editStatus, editNotes, editUpdateMessage, isTerminalStatus, pickupDraft]);
+  }, [detail, editStatus, editNotes, editUpdateMessage, isTerminalStatus, pickupDraft, requestingCorrections, correctionDraft]);
 
   useEffect(() => {
     if (!detail?.id || detail.linked_document_id) return;
@@ -1021,8 +1034,8 @@ export default function DocumentRequestsTab({
       return;
     }
 
-    if (officeId === "registrar" && targetStatus === "Ready") {
-      await openDetail(item, { nextStatus: "Ready" });
+    if (targetStatus === "Deficient" || (officeId === "registrar" && targetStatus === "Ready")) {
+      await openDetail(item, { nextStatus: targetStatus });
       return;
     }
 
@@ -1766,6 +1779,7 @@ export default function DocumentRequestsTab({
                   setSelectedId(null);
                   setDetail(null);
                   setEditUpdateMessage("");
+                  setCorrectionDraft([]);
                   setPickupDraft(null);
                 }
               }}
@@ -1793,6 +1807,10 @@ export default function DocumentRequestsTab({
               availableStatuses={availableStatuses}
               isTerminalStatus={isTerminalStatus}
               saving={saving}
+              correctionDraft={correctionDraft}
+              onCorrectionDraftChange={setCorrectionDraft}
+              requestingCorrections={requestingCorrections}
+              correctionDraftInvalid={correctionDraftInvalid}
               hasEdits={hasEdits}
               handleResetEdits={handleResetEdits}
               handleManualSave={handleManualSave}
