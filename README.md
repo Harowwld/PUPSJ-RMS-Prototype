@@ -47,7 +47,7 @@ The runnable Next.js application and its setup instructions are in [`next-app/`]
 - **PostgreSQL 16** — Containerized via Docker Compose, queried via native `pg` driver.
 
 ### Notable Libraries & Packages
-- **UI & Styling:** Tailwind CSS v4, shadcn/ui, Hugeicons, Phosphor Icons
+- **UI & Styling:** Tailwind CSS v4, Base UI, shadcn/ui, and Hugeicons
 - **Animation:** Framer Motion, GSAP
 - **Auth & Security:** jose (JWT), speakeasy / otpauth (TOTP 2FA), qrcode, Node.js crypto (AES-256 PII/backup encryption)
 - **Real-Time & System:** Socket.io, Chokidar (hot-folder scanner watcher)

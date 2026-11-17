@@ -46,6 +46,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
   const { isDirty, savedData, markSaved } = useCmsDraft(heroData)
   const [sectionDirty, setSectionDirty] = useState(false)
   const [pendingSection, setPendingSection] = useState(null)
+  const heroUploadInProgress = uploadingIndex !== null || isAddingPhoto
   const activeDirty = currentSection === "hero" ? isDirty : sectionDirty
   const activeDirtyRef = useRef(activeDirty)
   const currentSectionRef = useRef(currentSection)
@@ -64,6 +65,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
 
   // File input refs
   const newPhotoInputRef = useRef(null)
+  const draftUploadsRef = useRef(new Map())
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -125,7 +127,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
 
   // Handle Save
   const handleSave = async () => {
-    if (!isDirty || saving) return
+    if (!isDirty || saving || heroUploadInProgress) return
     if (!heroData.headlineLine1.trim() || !heroData.headlineLine2.trim()) {
       notify("Headline lines cannot be blank", true)
       return
@@ -146,6 +148,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       if (res.ok && json.ok) {
         setHeroData(json.data)
         markSaved(json.data)
+        void cleanupDraftUploads(json.data.slides)
         notify("Landing page configuration saved successfully")
       } else {
         notify(json.error || "Failed to update landing hero", true)
@@ -160,6 +163,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
 
   // Handle Reset to Default
   const handleReset = async () => {
+    if (heroUploadInProgress) return
     try {
       setSaving(true)
       const res = await fetch("/api/landing/hero", {
@@ -171,6 +175,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       if (res.ok && json.ok) {
         setHeroData(json.data)
         markSaved(json.data)
+        void cleanupDraftUploads(json.data.slides)
         notify("Landing page hero reverted to institutional defaults")
       } else {
         notify(json.error || "Failed to reset landing hero", true)
@@ -210,7 +215,12 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       const json = await res.json()
 
       if (res.ok && json.ok && json.data?.url) {
+        draftUploadsRef.current.set(json.data.url, json.data.filename)
+        const previousSrc = heroData.slides[slideIdx]?.src
         updateSlide(slideIdx, "src", json.data.url)
+        if (previousSrc && !heroData.slides.some((slide, index) => index !== slideIdx && slide.src === previousSrc)) {
+          void cleanupDraftUploads(savedData?.slides ?? [], previousSrc)
+        }
         notify(`Updated photo with "${file.name}"`)
       } else {
         notify(json.error || "Failed to upload image", true)
@@ -249,6 +259,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       const json = await res.json()
 
       if (res.ok && json.ok && json.data?.url) {
+        draftUploadsRef.current.set(json.data.url, json.data.filename)
         const cleanName = file.name.replace(/\.[^/.]+$/, "")
         setHeroData((prev) => ({
           ...prev,
@@ -281,6 +292,26 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
     })
   }
 
+  async function cleanupDraftUploads(retainedSlides, removedSrc) {
+    const retained = new Set(retainedSlides.map((slide) => slide.src))
+    const unused = [...draftUploadsRef.current].filter(([src]) =>
+      !retained.has(src) && (removedSrc === undefined || src === removedSrc)
+    )
+    const results = await Promise.allSettled(unused.map(async ([src, filename]) => {
+      const response = await fetch(`/api/landing/upload?filename=${encodeURIComponent(filename)}`, { method: "DELETE" })
+      if (!response.ok && response.status !== 409) throw new Error("Unable to delete draft upload")
+      draftUploadsRef.current.delete(src)
+    }))
+    if (results.some((result) => result.status === "rejected")) {
+      notify("Some unused draft photos could not be deleted.", true)
+    }
+  }
+
+  const discardHeroDraft = () => {
+    setHeroData(savedData)
+    void cleanupDraftUploads(savedData?.slides ?? [])
+  }
+
   const removeSlide = (idx) => {
     if (heroData.slides.length <= 1) {
       notify("You must maintain at least one background photo", true)
@@ -292,6 +323,10 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
     }))
     setDeleteSlideIndex(null)
     notify("Photo removed")
+    const src = heroData.slides[idx]?.src
+    if (src && !heroData.slides.some((slide, index) => index !== idx && slide.src === src)) {
+      void cleanupDraftUploads(savedData?.slides ?? [], src)
+    }
   }
 
   const moveSlide = (idx, direction) => {
@@ -362,7 +397,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                 <Button
                   type="button"
                   onClick={handleSave}
-                  disabled={loading || saving || !isDirty}
+                  disabled={loading || saving || heroUploadInProgress || !isDirty}
                   className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "Saving Changes..." : "Save Landing Content"}
@@ -371,8 +406,8 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
             }
             secondaryActions={
               <>
-                <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
-                {isDirty && <Button type="button" variant="outline" onClick={() => { setHeroData(savedData); notify("Draft changes discarded. Reverted to saved hero content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
+                <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving || heroUploadInProgress} className="h-9 px-4">Restore Defaults</Button>
+                {isDirty && <Button type="button" variant="outline" onClick={() => { discardHeroDraft(); notify("Draft changes discarded. Reverted to saved hero content.") }} disabled={loading || saving || heroUploadInProgress} className="h-9 px-4">Discard Draft</Button>}
               </>
             }
           />
@@ -643,7 +678,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
         onConfirm={() => {
           const nextSection = pendingSection
           setPendingSection(null)
-          if (currentSection === "hero") setHeroData(savedData)
+          if (currentSection === "hero") discardHeroDraft()
           setSectionDirty(false)
           setCurrentSection(nextSection)
           const params = new URLSearchParams(window.location.search)
@@ -679,7 +714,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
         }}
         isAppleStyled={true}
         title="Remove Background Photo"
-        message="Are you sure you want to remove this background photo from the hero carousel?"
+        message="Remove this photo from the hero carousel? A published photo is deleted from storage after you save the change."
         confirmLabel="Remove Photo"
         cancelLabel="Cancel"
         variant="danger"

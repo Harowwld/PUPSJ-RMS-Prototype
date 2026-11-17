@@ -5,7 +5,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { collectProcessTree, findOrphanedRmsLaunchers, parseProcessTable, RMS_LAUNCHER_MARKERS } from "./orphanProcesses.mjs";
 
 if (!new Set(["darwin", "linux"]).has(process.platform)) {
-  console.error("[stop:orphans] This command currently supports macOS and Linux.");
+  console.error("[dev:stop-orphans] This command currently supports macOS and Linux.");
   process.exit(1);
 }
 
@@ -33,13 +33,13 @@ for (const entry of possibleLaunchers) entry.cwd = await getCwd(entry.pid);
 
 const launchers = findOrphanedRmsLaunchers(possibleLaunchers, { uid, workspacePath });
 if (launchers.length === 0) {
-  console.log("[stop:orphans] No orphaned RMS server processes found.");
+  console.log("[dev:stop-orphans] No orphaned RMS server processes found.");
   process.exit(0);
 }
 
 const targets = launchers.flatMap(({ pid }) => collectProcessTree(processes, pid));
 const uniqueTargets = [...new Map(targets.map((entry) => [entry.pid, entry])).values()];
-console.log(`[stop:orphans] Stopping ${uniqueTargets.length} orphaned RMS process(es)...`);
+console.log(`[dev:stop-orphans] Stopping ${uniqueTargets.length} orphaned RMS process(es)...`);
 
 function isSameProcess(target) {
   try {
@@ -55,7 +55,7 @@ for (const target of uniqueTargets) {
   try {
     process.kill(target.pid, "SIGTERM");
   } catch (error) {
-    if (error.code !== "ESRCH") console.warn(`[stop:orphans] Could not stop PID ${target.pid}: ${error.message}`);
+    if (error.code !== "ESRCH") console.warn(`[dev:stop-orphans] Could not stop PID ${target.pid}: ${error.message}`);
   }
 }
 
@@ -66,8 +66,8 @@ for (const target of uniqueTargets) {
     process.kill(target.pid, 0);
     process.kill(target.pid, "SIGKILL");
   } catch (error) {
-    if (error.code !== "ESRCH") console.warn(`[stop:orphans] Could not force-stop PID ${target.pid}: ${error.message}`);
+    if (error.code !== "ESRCH") console.warn(`[dev:stop-orphans] Could not force-stop PID ${target.pid}: ${error.message}`);
   }
 }
 
-console.log("[stop:orphans] Orphaned RMS processes stopped.");
+console.log("[dev:stop-orphans] Orphaned RMS processes stopped.");

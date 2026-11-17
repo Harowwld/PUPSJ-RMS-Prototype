@@ -149,10 +149,11 @@ test("landing CMS content and media support authorized CRUD and reject invalid s
   });
   assert.equal(unlinkImage.status, 200);
 
-  const deletedMedia = await fetch(mediaUrl, { method: "DELETE", headers });
-  assert.equal(deletedMedia.status, 200);
   const missingImage = await fetch(`${BASE_URL}${uploadBody.data.url}`);
-  assert.equal(missingImage.status, 404, "Deleted media should no longer be publicly readable");
+  assert.equal(missingImage.status, 404, "Saving the hero without the slide should delete the uploaded file");
+
+  const deletedMedia = await fetch(mediaUrl, { method: "DELETE", headers });
+  assert.equal(deletedMedia.status, 200, "Deleting an already removed upload is safe to retry");
 
   const logout = await fetch(`${BASE_URL}/api/auth/logout`, {
     method: "POST",

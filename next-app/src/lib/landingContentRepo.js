@@ -1,3 +1,6 @@
+import { lstat } from "node:fs/promises";
+import { transaction } from "./postgres.js";
+import { heroMediaFilename, heroMediaPath, lockHeroMedia, removeUnusedHeroMedia } from "./landingHeroMedia.js";
 import { systemConfigRepo } from "./systemConfigRepo.js";
 import { DEFAULT_FAQ_CONTENT, DEFAULT_WORKFLOW_CONTENT } from "./landingRequestContent.js";
 
@@ -442,6 +445,48 @@ function sanitizeWorkflowContent(raw) {
   };
 }
 
+async function saveHeroContent(content) {
+  const updated = sanitizeHeroContent(content);
+  const filenames = (slides) => new Set(slides.map(({ src }) => heroMediaFilename(src)).filter(Boolean));
+  const nextFiles = filenames(updated.slides);
+
+  const removedFiles = await transaction(async (db) => {
+    await lockHeroMedia(db);
+    const row = await db.queryOne("SELECT value FROM settings WHERE key = $1", [SETTINGS_KEY]);
+    const previous = row?.value ? sanitizeHeroContent(JSON.parse(row.value)) : DEFAULT_HERO_CONTENT;
+    const previousFiles = filenames(previous.slides);
+
+    for (const filename of nextFiles) {
+      if (previousFiles.has(filename)) continue;
+      const file = await lstat(heroMediaPath(filename)).catch((error) => {
+        if (error.code === "ENOENT") return null;
+        throw error;
+      });
+      if (!file?.isFile()) throw new Error("A hero photo is no longer available. Remove it from the draft or upload it again.");
+    }
+
+    await db.query(
+      "INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP",
+      [SETTINGS_KEY, JSON.stringify(updated)],
+    );
+    return [...previousFiles].filter((filename) => !nextFiles.has(filename));
+  });
+
+  // Check references again after committing so a failed save cannot delete a live image.
+  for (const filename of removedFiles) {
+    try {
+      await transaction(async (db) => {
+        await lockHeroMedia(db);
+        await removeUnusedHeroMedia(db, filename);
+      });
+    } catch (error) {
+      console.error("[landingContentRepo] Could not clean up hero photo:", filename, error);
+    }
+  }
+
+  return updated;
+}
+
 export const landingContentRepo = {
   getHeroContent: async () => {
     try {
@@ -457,16 +502,9 @@ export const landingContentRepo = {
     }
   },
 
-  updateHeroContent: async (content) => {
-    const sanitized = sanitizeHeroContent(content);
-    await systemConfigRepo.setSetting(SETTINGS_KEY, JSON.stringify(sanitized));
-    return sanitized;
-  },
+  updateHeroContent: saveHeroContent,
 
-  resetHeroContent: async () => {
-    await systemConfigRepo.setSetting(SETTINGS_KEY, JSON.stringify(DEFAULT_HERO_CONTENT));
-    return { ...DEFAULT_HERO_CONTENT };
-  },
+  resetHeroContent: () => saveHeroContent(DEFAULT_HERO_CONTENT),
 
   getBentoContent: async () => {
     try {

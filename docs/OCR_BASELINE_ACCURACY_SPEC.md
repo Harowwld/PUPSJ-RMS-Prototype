@@ -183,7 +183,7 @@ Measures the percentage of test documents where the full institutional student n
   2. **Live Native OCR Mode:** Executes against live `/api/ingest/ocr` endpoint when native Apple Vision, Windows Media, or Tesseract runtimes are available.
 
 ### Step 3: Baseline Report Generator
-* **Path:** `next-app/scripts/run-ocr-baseline.mjs`
+* **Command:** `pnpm ocr:baseline` from `next-app`.
 * Runs the test matrix across all 5 tiers and compiles a quantitative Markdown report:
   * Breakdown table by Document Type and Quality Tier
   * Mean CER, WER, and Student Number Match %

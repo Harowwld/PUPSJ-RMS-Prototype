@@ -3,7 +3,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireSystemAdmin, createAuthErrorResponse } from "@/lib/authHelpers";
-import { queryOne } from "@/lib/postgres";
+import { transaction } from "@/lib/postgres";
+import { heroMediaFilename, heroMediaPath, lockHeroMedia, removeUnusedHeroMedia } from "@/lib/landingHeroMedia";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -90,7 +91,7 @@ export async function POST(req) {
     const ext = EXTENSION_MAP[file.type] || "jpg";
     const uniqueId = crypto.randomBytes(6).toString("hex");
     const filename = `hero-${Date.now()}-${uniqueId}.${ext}`;
-    const targetPath = path.join(uploadDir, filename);
+    const targetPath = heroMediaPath(filename);
 
     fs.writeFileSync(targetPath, buffer);
 
@@ -126,35 +127,19 @@ export async function DELETE(req) {
   if (access.error || !access.user) return createAuthErrorResponse(access.error || "System administrator access required", 403);
 
   const filename = new URL(req.url).searchParams.get("filename")?.trim() || "";
-  if (
-    !filename ||
-    path.basename(filename) !== filename ||
-    !/^hero-\d+-[a-f0-9]{12}\.(?:jpg|png|webp|avif)$/i.test(filename)
-  ) {
+  if (!heroMediaFilename(`/assets/landing/${filename}`)) {
     return NextResponse.json({ ok: false, error: "Invalid landing media filename." }, { status: 400 });
   }
 
-  let reference;
   try {
-    reference = await queryOne(
-      "SELECT key FROM settings WHERE value LIKE $1 LIMIT 1",
-      [`%/assets/landing/${filename}%`],
-    );
-  } catch (err) {
-    console.error("[api/landing/upload] Reference check failed:", err);
-    return NextResponse.json({ ok: false, error: "Unable to verify whether this image is in use." }, { status: 500 });
-  }
-  if (reference) {
-    return NextResponse.json({ ok: false, error: "Remove this image from the hero slides before deleting it." }, { status: 409 });
-  }
-
-  const filePath = path.join(process.cwd(), "public", "assets", "landing", filename);
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    return NextResponse.json({ ok: false, error: "Landing media file not found." }, { status: 404 });
-  }
-
-  try {
-    fs.unlinkSync(filePath);
+    const result = await transaction(async (db) => {
+      await lockHeroMedia(db);
+      return removeUnusedHeroMedia(db, filename);
+    });
+    if (result === "in-use") {
+      return NextResponse.json({ ok: false, error: "Remove this image from the hero slides before deleting it." }, { status: 409 });
+    }
+    if (result === "missing") return NextResponse.json({ ok: true });
     await writeGlobalAuditLog(req, "Delete Landing Page Media", {
       entity_type: "LandingMedia",
       entity_id: filename,

@@ -388,6 +388,14 @@ export async function syncBackupExternally(id) {
   return syncPromise;
 }
 
+function removeTemporaryBackupDump(filePath) {
+  try {
+    fs.unlinkSync(filePath);
+  } catch (error) {
+    if (error.code !== "ENOENT") console.error("[BACKUP] Could not remove temporary SQL dump:", error);
+  }
+}
+
 function dumpPostgresTables(tables, targetSqlPath, officeRules = null) {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to create a PostgreSQL backup");
@@ -522,7 +530,7 @@ export async function executeSystemBackup({ actorId = null, backupType = "Govern
   const backupPath = getBackupFilePath(backupFilename, backupsDir);
 
   const localDir = getLocalDir();
-  const tempDbPath = path.join(localDir, `system-backup-temp-${Date.now()}.sql`);
+  const tempDbPath = path.join(localDir, `system-backup-temp-${crypto.randomUUID()}.sql`);
 
   // Governance tables only - NO student records or office files
   const governanceTables = [
@@ -537,21 +545,12 @@ export async function executeSystemBackup({ actorId = null, backupType = "Govern
     "settings",
   ];
 
-  dumpPostgresTables(governanceTables, tempDbPath);
-
-  // Create ZIP archive containing only db.sql
   const zip = new AdmZip();
-  if (fs.existsSync(tempDbPath)) {
-    zip.addLocalFile(tempDbPath, "", "db.sql");
-  }
-
-  // Clean up temp SQL dump
   try {
-    if (fs.existsSync(tempDbPath)) {
-      fs.unlinkSync(tempDbPath);
-    }
-  } catch (e) {
-    console.error("[BACKUP] Failed to cleanup temp db backup file:", e);
+    dumpPostgresTables(governanceTables, tempDbPath);
+    zip.addLocalFile(tempDbPath, "", "db.sql");
+  } finally {
+    removeTemporaryBackupDump(tempDbPath);
   }
 
   // Encrypt with AES-256-GCM
@@ -849,28 +848,16 @@ export async function executeOfficeBackup({ officeId, actorId = null, backupType
   const backupPath = getBackupFilePath(backupFilename, backupsDir);
 
   const localDir = getLocalDir();
-  const tempDbPath = path.join(localDir, `${normOffice}-backup-temp-${Date.now()}.sql`);
+  const tempDbPath = path.join(localDir, `${normOffice}-backup-temp-${crypto.randomUUID()}.sql`);
 
   const { tables: officeTables, rules } = await officeBackupTablesAndRules(normOffice);
-  dumpPostgresTables(officeTables, tempDbPath, rules);
-
-  // Create ZIP archive
   const zip = new AdmZip();
-
-  if (fs.existsSync(tempDbPath)) {
-    zip.addLocalFile(tempDbPath, "", "db.sql");
-  }
-
-  // Package records into structured archival hierarchy combining academic anchors and physical markers
-  await packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType);
-
-  // Clean up temp SQL dump
   try {
-    if (fs.existsSync(tempDbPath)) {
-      fs.unlinkSync(tempDbPath);
-    }
-  } catch (e) {
-    console.error("[BACKUP] Failed to cleanup temp db backup file:", e);
+    dumpPostgresTables(officeTables, tempDbPath, rules);
+    zip.addLocalFile(tempDbPath, "", "db.sql");
+    await packageOfficeRecordsIntoZip(zip, normOffice, localDir, backupType);
+  } finally {
+    removeTemporaryBackupDump(tempDbPath);
   }
 
   // Encrypt with AES-256-GCM

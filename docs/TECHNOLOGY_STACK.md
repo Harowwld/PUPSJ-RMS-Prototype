@@ -8,7 +8,7 @@
 
 ## 1. Core Framework & Runtime
 
-### **Next.js 16.3.5** (React 19.2.3)
+### **Next.js 16.4.6** (React 19.3.1)
 - **Architecture**: Next.js App Router (`next-app/src/app/`)
 - **Runtime**: Node.js 20+ server-side runtime
 - **Package Manager**: `pnpm`
@@ -36,7 +36,7 @@
 - **Brand Colors**: PUP Maroon (`#800000`), Dark Maroon (`#5a0000`)
 - **Typography**: Plus Jakarta Sans (self-hosted variable font)
 - **Component Primitives**: Base UI (`@base-ui/react`), Radix / shadcn/ui primitives
-- **Icons**: Hugeicons (`@hugeicons/react`, `hugeicons-react`, `@hugeicons/core-free-icons`) using direct named imports (Phosphor icons deprecated)
+- **Icons**: Import named components from `hugeicons-react` for static icons. Use the shared `AppIcon` registry for data-driven icons. The archived HTML prototype retains its Phosphor references.
 - **Toasts**: `sonner` (`<Toaster />`)
 - **Motion**: `framer-motion`, `motion`, `tw-animate-css`
 
@@ -98,14 +98,14 @@
   "jose": "^5.10.0",
   "jspdf": "^4.2.1",
   "jspdf-autotable": "^5.0.8",
-  "next": "16.3.5",
+  "next": "16.4.6",
   "otpauth": "^9.5.2",
   "pdf-lib": "^1.17.1",
   "pdfjs-dist": "^4.10.38",
   "pg": "^8.23.0",
   "qrcode": "^1.5.4",
-  "react": "19.2.3",
-  "react-dom": "19.2.3",
+  "react": "19.3.1",
+  "react-dom": "19.3.1",
   "recharts": "^3.10.1",
   "socket.io": "^4.8.3",
   "socket.io-client": "^4.8.3",

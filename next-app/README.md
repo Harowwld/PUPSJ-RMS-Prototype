@@ -43,7 +43,7 @@ Web-based records keeping system for selected offices in PUP San Juan. The curre
 - **PostgreSQL 16** — Containerized via Docker Compose, queried via native `pg` driver.
 
 ### Notable Libraries & Packages
-- **UI & Styling:** Tailwind CSS v4, shadcn/ui, Hugeicons, Phosphor Icons
+- **UI & Styling:** Tailwind CSS v4, Base UI, shadcn/ui, and Hugeicons
 - **Animation:** Framer Motion, GSAP
 - **Auth & Security:** jose (JWT), speakeasy / otpauth (TOTP 2FA), qrcode, Node.js crypto (AES-256 PII/backup encryption)
 - **Real-Time & System:** Socket.io, Chokidar (hot-folder scanner watcher)
@@ -342,14 +342,25 @@ pnpm build                      # production build
 pnpm test:recognition           # coordinate/name recognition tests
 pnpm db:verify                  # PostgreSQL health and row-count checks
 pnpm db:backup                  # create a local encrypted backup
-pnpm populate-sample-data       # seed mock data (students, requests, documents)
-node scripts/seed-real-data.mjs # seed actual curriculum & student records from CSV (or pnpm db:seed:real)
-pnpm reset-rate-limit           # clear active rate-limit hits & temporary lockouts
+pnpm db:seed:sample             # seed mock data (students, requests, documents)
+pnpm db:seed:real               # seed actual curriculum & student records from CSV
+pnpm auth:reset-rate-limit      # clear active rate-limit hits & temporary lockouts
 ```
 
-- **`pnpm populate-sample-data`**: Populates the database with mock records across Registrar and OSAS offices (including sample students, document types, courses, sections, and document requests).
-- **`node scripts/seed-real-data.mjs`** (or `pnpm db:seed:real`): Seeds actual institutional taxonomy and curriculum from `_SAMPLE_DATA/registrar_system_data - final.csv` and student records from `_SAMPLE_DATA/cleaned_student_data.csv`.
-- **`pnpm reset-rate-limit`**: Immediately resets all rate-limit hits and unblocks locked-out accounts/IP addresses in the database.
+- **`pnpm db:seed:sample`**: Populates the database with mock records across Registrar and OSAS offices (including sample students, document types, courses, sections, and document requests).
+- **`pnpm db:seed:real`**: Seeds actual institutional taxonomy and curriculum from `_SAMPLE_DATA/registrar_system_data - final.csv` and student records from `_SAMPLE_DATA/cleaned_student_data.csv`.
+- **`pnpm auth:reset-rate-limit`**: Immediately resets all rate-limit hits and unblocks locked-out accounts/IP addresses in the database.
+
+| Task | Command |
+|---|---|
+| Inventory unused Hero uploads and temporary backup files | `pnpm storage:audit-unused` |
+| Start the scanner watcher or inspect failed scans | `pnpm scans:watch` / `pnpm scans:failed registrar list` |
+| Verify backup restore or the two-office watcher | `pnpm backups:verify-office-restore` / `pnpm scans:verify-watcher` |
+| Seed OSAS or regenerate its sample PDFs | `pnpm db:seed:osas` / `pnpm osas:generate-sample-docs` |
+| Regenerate avatar assets | `pnpm avatars:generate-defaults` / `pnpm avatars:generate-notionists` |
+| Run the OCR baseline or regenerate replay observations | `pnpm ocr:baseline` / `pnpm ocr:generate-replay` |
+| Stop orphaned dev processes or free port 3000 | `pnpm dev:stop-orphans` / `pnpm dev:free-port` |
+| Reset scanned document data | `pnpm scans:reset-documents` |
 
 To inspect request counts without deleting anything, run this from `next-app/`:
 
@@ -384,7 +395,7 @@ The equivalent system-admin-only API is `POST /api/system/reset-db/demo-accounts
 To clear current rate-limit hits and lockouts without changing the configured protections, run:
 
 ```bash
-pnpm reset-rate-limit
+pnpm auth:reset-rate-limit
 ```
 
 ## Project Structure

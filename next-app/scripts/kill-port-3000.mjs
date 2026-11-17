@@ -4,7 +4,7 @@ import process from "node:process";
 import { setTimeout as delay } from "node:timers/promises";
 
 if (process.platform !== "linux" && process.platform !== "darwin") {
-  console.error("[kill:port-3000] This command supports Linux and macOS.");
+  console.error("[dev:free-port] This command supports Linux and macOS.");
   process.exit(1);
 }
 
@@ -24,12 +24,12 @@ function stopDockerPortContainers(port = 3000) {
       .filter((c) => c.id);
 
     for (const c of containers) {
-      console.log(`[kill:port-3000] Stopping Docker container ${c.name} (${c.id}) publishing port ${port}...`);
+      console.log(`[dev:free-port] Stopping Docker container ${c.name} (${c.id}) publishing port ${port}...`);
       try {
         execFileSync("docker", ["stop", c.id], { stdio: "ignore" });
-        console.log(`[kill:port-3000] Stopped Docker container ${c.name}.`);
+        console.log(`[dev:free-port] Stopped Docker container ${c.name}.`);
       } catch (err) {
-        console.warn(`[kill:port-3000] Could not stop Docker container ${c.name}: ${err.message}`);
+        console.warn(`[dev:free-port] Could not stop Docker container ${c.name}: ${err.message}`);
       }
     }
     return containers;
@@ -63,7 +63,7 @@ try {
   pids = [...new Set(output.trim().split(/\s+/).filter(Boolean).map(Number))];
 } catch (error) {
   if (error.status !== 1) {
-    console.error("[kill:port-3000] Could not inspect port 3000 via lsof.");
+    console.error("[dev:free-port] Could not inspect port 3000 via lsof.");
   }
 }
 
@@ -85,23 +85,23 @@ const skipped = pids.length - targets.length;
 if (targets.length === 0) {
   const stillInUse = await isPortBound(3000);
   if (stoppedContainers.length > 0 && !stillInUse) {
-    console.log("[kill:port-3000] Port 3000 freed after stopping Docker container(s).");
+    console.log("[dev:free-port] Port 3000 freed after stopping Docker container(s).");
     process.exit(0);
   }
   if (stillInUse || skipped > 0) {
-    console.error("[kill:port-3000] Port 3000 is occupied by a process owned by another user or container daemon. Try 'docker ps' or running with elevated privileges.");
+    console.error("[dev:free-port] Port 3000 is occupied by a process owned by another user or container daemon. Try 'docker ps' or running with elevated privileges.");
     process.exit(1);
   }
-  console.log("[kill:port-3000] Nothing is listening on port 3000.");
+  console.log("[dev:free-port] Nothing is listening on port 3000.");
   process.exit(0);
 }
 
 for (const target of targets) {
-  console.log(`[kill:port-3000] Stopping PID ${target.pid}: ${target.command}`);
+  console.log(`[dev:free-port] Stopping PID ${target.pid}: ${target.command}`);
   try {
     process.kill(target.pid, "SIGTERM");
   } catch (error) {
-    if (error.code !== "ESRCH") console.warn(`[kill:port-3000] Could not stop PID ${target.pid}: ${error.message}`);
+    if (error.code !== "ESRCH") console.warn(`[dev:free-port] Could not stop PID ${target.pid}: ${error.message}`);
   }
 }
 
@@ -112,8 +112,8 @@ for (const target of targets) {
   try {
     process.kill(target.pid, "SIGKILL");
   } catch (error) {
-    if (error.code !== "ESRCH") console.warn(`[kill:port-3000] Could not force-stop PID ${target.pid}: ${error.message}`);
+    if (error.code !== "ESRCH") console.warn(`[dev:free-port] Could not force-stop PID ${target.pid}: ${error.message}`);
   }
 }
 
-console.log("[kill:port-3000] Finished stopping port 3000 listeners.");
+console.log("[dev:free-port] Finished stopping port 3000 listeners.");

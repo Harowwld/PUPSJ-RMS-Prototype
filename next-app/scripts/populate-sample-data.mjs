@@ -2,8 +2,8 @@
  * Seed the complete local PostgreSQL sample dataset.
  *
  * Run from next-app/:
- *   pnpm populate-sample-data
- *   pnpm populate-sample-data --force   # also replaces storage_layout
+ *   pnpm db:seed:sample
+ *   pnpm db:seed:sample --force   # also replaces storage_layout
  */
 import fs from "node:fs";
 import path from "node:path";

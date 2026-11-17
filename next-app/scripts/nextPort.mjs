@@ -30,7 +30,7 @@ export function assertNextPortAvailable(port = getNextPort()) {
       if (!available) {
         const dockerContainer = getDockerContainerOnPort(port);
         const containerHint = dockerContainer
-          ? ` (in use by Docker container "${dockerContainer}"; stop it with "docker stop ${dockerContainer.split(", ")[0]}" or "pnpm kill:port-3000")`
+          ? ` (in use by Docker container "${dockerContainer}"; stop it with "docker stop ${dockerContainer.split(", ")[0]}" or "pnpm dev:free-port")`
           : "";
         throw new Error(`Port ${port} is already in use${containerHint}. Stop the other RMS server (pnpm dev or pnpm start) before starting this one.`);
       }

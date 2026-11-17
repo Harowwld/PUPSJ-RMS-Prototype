@@ -39,7 +39,7 @@ _SAMPLE_DATA/
 
 *   **`pnpm db:seed:sample`** (`scripts/populate-sample-data.mjs`): Reads `pup_emanage_birth_certificate_students.csv`.
 *   **`pnpm db:seed:real`** (`scripts/seed-real-data.mjs`): Reads `registrar_system_data - final.csv`, `cleaned_student_data.csv`, `osas_system_data - final.csv`, and `pdfs/registrar/sample pdf.pdf`.
-*   **`pnpm generate:sample-docs`** (`scripts/generate-sample-osas-documents.mjs`): Regenerates all mock OSAS PDFs in `pdfs/osas/`.
+*   **`pnpm osas:generate-sample-docs`** (`scripts/generate-sample-osas-documents.mjs`): Regenerates all mock OSAS PDFs in `pdfs/osas/`.
 *   **Automated Tests**:
     *   `test/security-questions-import.test.mjs` verifies `security_questions.csv`.
     *   `test/bulk-import-classification.test.mjs` verifies `registrar_system_data - final.csv`.

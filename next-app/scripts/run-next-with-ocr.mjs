@@ -75,7 +75,26 @@ let next = null;
 let stopping = false;
 let restartTimer = null;
 
+function pruneStaleTurbopackDevCache() {
+  if (!keepOcrUntilShutdown) return;
+  const devCacheDir = path.join(process.cwd(), ".next/dev/cache");
+  const modulesManifest = path.join(process.cwd(), "node_modules/.modules.yaml");
+  try {
+    const cacheStat = statSync(devCacheDir);
+    const modulesStat = statSync(modulesManifest);
+    if (modulesStat.mtimeMs > cacheStat.mtimeMs) {
+      console.info("[next] Clearing stale Turbopack dev cache after dependency update...");
+      rmSync(path.join(process.cwd(), ".next/dev"), { recursive: true, force: true });
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn(`[next] Could not inspect Turbopack dev cache: ${error.message}`);
+    }
+  }
+}
+
 function launchNext() {
+  pruneStaleTurbopackDevCache();
   next = spawn(process.execPath, nextArgs, { stdio: "inherit", env: nextEnv });
   next.once("error", (error) => {
     console.error(`[next] Could not start Next.js: ${error.message}`);
