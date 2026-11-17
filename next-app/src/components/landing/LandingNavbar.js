@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { getClientSession } from "@/lib/clientAuth";
 import { SPRING_LAYOUT, useAppReducedMotion } from "@/lib/motion";
 import { Clock01Icon, CovidInfoIcon, Files01Icon, HelpCircleIcon, WorkflowCircle01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-export default function LandingNavbar() {
+export default function LandingNavbar({ classic }) {
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
@@ -129,15 +130,17 @@ export default function LandingNavbar() {
     <>
 
       <header 
-        className="fixed top-0 left-0 right-0 w-full z-50 select-none font-jakarta pointer-events-none"
+        className="fixed top-0 left-0 right-0 w-full z-50 select-none font-jakarta pointer-events-none backdrop-blur-[28px] backdrop-saturate-150"
       >
         {/* Apple-style global navigation bar container */}
         <div className="w-full pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] px-0 pt-0">
           <div 
-            className={`navbar-glass-shell w-full flex flex-col pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-none shadow-none ${
-              scrolled || mobileMenuOpen
-                ? "bg-[#f5f5f8]/80 backdrop-blur-md border-b border-black/5"
-                : "bg-[#f5f5f8] border-b border-transparent"
+            className={`navbar-glass-shell w-full flex flex-col pointer-events-auto border-b transition-colors duration-200 ${
+              mobileMenuOpen
+                ? "bg-[#fafafc] border-[#e6e6e8]"
+                : scrolled
+                  ? "bg-[#fafafc]/95 border-[#e6e6e8]"
+                  : classic ? "bg-[#f5f5f8] border-transparent" : "bg-white border-transparent"
             }`}
           >
             {/* Top Bar Row - Constrained width like Apple UI */}
@@ -147,19 +150,22 @@ export default function LandingNavbar() {
                 href="#" 
                 onClick={scrollToTop}
                 className="flex items-center gap-2.5 cursor-pointer shrink-0"
-                aria-label="Back to top"
+                aria-label="eManage, back to top"
               >
                 <div className="w-[18px] h-[18px] relative flex items-center justify-center shrink-0">
-                  <img 
+                  <Image
+                    width={18}
+                    height={18}
                     src="/assets/branding/black-icon.png" 
-                    alt="eManage Logo" 
+                    alt=""
                     className="w-full h-full object-contain"
                   />
                 </div>
+                {!classic && <span className="text-sm font-semibold tracking-tight text-[#1d1d1f]">eManage</span>}
               </a>
 
               {/* NAVIGATION LINKS WITH SMOOTH ANIMATION (Desktop) */}
-              <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-black">
+              <nav className="hidden md:flex items-center gap-1 text-xs font-normal text-[#1d1d1f]">
                 <LayoutGroup id="landing-navbar-links">
                   {[
                     { id: "about", label: "About" },
@@ -182,7 +188,7 @@ export default function LandingNavbar() {
                           initial={false}
                           transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
                           aria-hidden="true"
-                          className="absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] bg-black"
+                          className={`absolute bottom-[2px] left-3.5 right-3.5 h-[1.5px] ${classic ? "bg-black" : "bg-pup-maroon"}`}
                         />
                       )}
                     </button>
@@ -195,16 +201,16 @@ export default function LandingNavbar() {
                 {sessionUser ? (
                   <Button
                     onClick={() => router.push(getDashboardPath())}
-                    className="h-8 px-4 tracking-wide cursor-pointer"
+                    className="h-8 rounded-full bg-pup-maroon px-4 text-xs text-white hover:bg-pup-darkMaroon"
                   >
                     Dashboard ↗
                   </Button>
                 ) : (
                   <Button
                     asChild
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-8 px-4 rounded-xl text-[13px] font-medium leading-none text-black hover:bg-black/5 hover:text-black"
+                    className="h-8 rounded-full border-[#86868b] bg-transparent px-4 text-xs font-normal leading-none text-[#1d1d1f] shadow-none hover:bg-black/5 hover:text-[#1d1d1f]"
                   >
                     <Link href="/login">Sign In</Link>
                   </Button>
@@ -216,6 +222,7 @@ export default function LandingNavbar() {
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer text-black hover:bg-black/5 active:scale-95 transition-all"
                   aria-label="Toggle navigation drawer"
+                  aria-expanded={mobileMenuOpen}
                 >
                   <AppIcon  className={` ${mobileMenuOpen ? "Cancel01Icon" : "ListViewIcon"} text-xl`} />
                 </button>

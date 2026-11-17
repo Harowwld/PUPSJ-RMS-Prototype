@@ -28,10 +28,10 @@ export default function LandingStats() {
           <div className="relative z-10">
             <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/95">
               <Timer01Icon size="1em"  className="text-white text-[16px]" />
-              <span>Fast Processing Time</span>
+              <span>Fast processing time</span>
             </div>
             <div className="text-[42px] font-semibold text-white tracking-tight leading-none mt-2">
-              3–5 Days
+              3–5 days
             </div>
             <div className="mt-2 text-[13px] font-normal text-white/90">
               Average turnaround for official certificates and academic evaluations

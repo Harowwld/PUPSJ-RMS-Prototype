@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_HERO_CONTENT = {
@@ -10,7 +11,7 @@ const DEFAULT_HERO_CONTENT = {
   headlineLine2: "Dambana ng Kagitingan.",
   description:
     "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
-  ctaText: "Request",
+  ctaText: "Request a Document",
   ctaLink: "/login",
   autoRotateInterval: 5500,
   slides: [
@@ -32,19 +33,18 @@ const DEFAULT_HERO_CONTENT = {
   ],
 };
 
-export default function LandingHero() {
+export default function LandingHero({ classic, hasNotice, previewContent, preview = false }) {
   const router = useRouter();
-  const [hero, setHero] = useState(DEFAULT_HERO_CONTENT);
+  const [publishedContent, setHero] = useState(DEFAULT_HERO_CONTENT);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const heroContainerRef = useRef(null);
-  const heroInnerRef = useRef(null);
-  const headlineRef = useRef(null);
-  const descRef = useRef(null);
-  const ctaClusterRef = useRef(null);
+  const reduceMotion = useReducedMotion();
 
   // Fetch dynamic CMS settings on mount
+  const hero = previewContent ?? publishedContent;
+
   useEffect(() => {
+    if (previewContent) return;
     let isMounted = true;
     fetch("/api/landing/hero")
       .then((res) => res.json())
@@ -59,119 +59,94 @@ export default function LandingHero() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [previewContent]);
 
   const slides = hero.slides && hero.slides.length > 0 ? hero.slides : DEFAULT_HERO_CONTENT.slides;
 
-  // Auto-switch campus background photos
-  useEffect(() => {
-    const interval = hero.autoRotateInterval || 5500;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, interval);
-    return () => clearInterval(timer);
-  }, [hero.autoRotateInterval, slides.length]);
+  const activeSlide = currentSlide % slides.length;
 
+  useEffect(() => {
+    if (preview || reduceMotion || slides.length < 2) return;
+
+    const timer = setTimeout(() => {
+      setCurrentSlide((previous) => (previous + 1) % slides.length);
+    }, hero.autoRotateInterval || 5500);
+
+    return () => clearTimeout(timer);
+  }, [currentSlide, hero.autoRotateInterval, preview, reduceMotion, slides.length]);
+
+  const photos = (
+    <>
+      {slides.map((slide, index) => (
+        <div key={`${slide.src}-${index}`} aria-hidden={index !== activeSlide}
+          className={`absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none ${index === activeSlide ? "opacity-100" : "opacity-0"}`}>
+          <Image src={slide.src} alt={slide.alt || "Campus photo"} fill preload={index === 0}
+            sizes={classic ? "100vw" : "(max-width: 1440px) 100vw, 1440px"}
+            quality={85} className="object-cover object-center" />
+        </div>
+      ))}
+    </>
+  );
 
   return (
-    <section 
-      ref={heroContainerRef} 
-      className="relative w-full mx-0 px-0 mt-[69px] mb-0 font-jakarta select-none bg-[#ffffff]"
-    >
-      {/* Hero container with gap below navbar */}
-      <div 
-        ref={heroInnerRef}
-        className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16"
-      >
-        
-        {/* BACKGROUND IMAGE CAROUSEL WITH CINEMATIC ATMOSPHERIC MASKS */}
-        <div className="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden bg-[#ffffff]">
-          {slides.map((slide, idx) => (
-            <div
-              key={slide.src || idx}
-              className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-                idx === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
+    <section className={`w-full bg-white text-center ${preview ? (classic ? "" : "pt-10") : classic ? (hasNotice ? "pt-6" : "pt-[69px]") : hasNotice ? "pt-12 sm:pt-20" : "pt-24 sm:pt-32"}`}>
+      <div className={classic ? "relative isolate grid min-h-[550px] h-[75vh] place-items-center overflow-hidden px-6" : "mx-auto max-w-6xl px-5"}>
+        {classic && (
+          <div className="absolute inset-0 -z-10">
+            {photos}
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+            <div aria-hidden="true" className="absolute inset-0 bg-pup-maroon/30" />
+          </div>
+        )}
+        <div>
+          <h1 className={classic ? "text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[1.04] tracking-tight text-white" : "text-[clamp(2rem,6.25vw,5rem)] font-semibold leading-[1.05] tracking-[-0.015em]"}>
+            <span className="block">{hero.headlineLine1 || DEFAULT_HERO_CONTENT.headlineLine1}</span>
+            <span className="block">{hero.headlineLine2 || DEFAULT_HERO_CONTENT.headlineLine2}</span>
+          </h1>
+          <p className={classic ? "mx-auto mt-6 max-w-xl text-sm leading-relaxed text-zinc-300 md:text-base" : "mx-auto mt-5 max-w-2xl text-[17px] leading-[1.47] tracking-[-0.022em] text-[#707070]"}>
+            {hero.description || DEFAULT_HERO_CONTENT.description}
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Button
+              onClick={preview ? undefined : () => router.push("/login")}
+              className={classic ? "h-11 rounded-xl px-8" : "rounded-full bg-pup-maroon px-4 text-white hover:bg-pup-darkMaroon"}
             >
-              <Image 
-                src={slide.src} 
-                alt={slide.alt || "Campus Photo"} 
-                fill
-                priority={idx === 0}
-                sizes="100vw"
-                quality={85}
-                className="object-cover object-center"
-              />
-            </div>
-          ))}
-          {/* Gradient scrims: heavier left for text, lighter right to let image breathe */}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
-          <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
-        </div>
-
-        {/* MAIN HERO CONTENT: CENTERED */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
-          <div className="w-full max-w-4xl flex flex-col items-center">
-            <h1 
-              ref={headlineRef}
-              style={{
-                fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
-                lineHeight: 1.04,
-              }}
-              className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
-            >
-              <span className="block">{hero.headlineLine1 || "Tanglaw ng Bayan,"}</span>
-              <span className="block">
-                {hero.headlineLine2 || "Dambana ng Kagitingan."}
-              </span>
-            </h1>
-
-            <p 
-              ref={descRef}
-              className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal"
-            >
-              {hero.description ||
-                "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
-            </p>
-
-            {/* Action Cluster: centered */}
-            <div 
-              ref={ctaClusterRef}
-              className="flex flex-wrap items-center justify-center gap-4"
-            >
-              <Button
-                onClick={() => router.push("/login")}
-                className="h-11 rounded-xl px-8 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>{hero.ctaText || "Request"}</span>
-              </Button>
-            </div>
+              {hero.ctaText || DEFAULT_HERO_CONTENT.ctaText}
+            </Button>
+            {!classic && <Button asChild variant="outline" className="rounded-full border-[#86868b] bg-white px-4 text-[#1d1d1f] shadow-none">
+              <a href={preview ? undefined : "#catalog"}>Browse Documents</a>
+            </Button>}
           </div>
         </div>
       </div>
 
-      {/* APPLE-STYLE PAGINATION OUTSIDE THE IMAGE PANEL */}
-      <div className="w-full flex justify-center py-5 bg-[#ffffff]">
-        <div className="flex items-center gap-2 px-3 py-1">
-          {slides.map((_, idx) => {
-            const isActive = idx === currentSlide;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setCurrentSlide(idx)}
-                aria-label={`View campus photo ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer ${
-                  isActive 
-                    ? "w-6 bg-gray-800" 
-                    : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                }`}
-              />
-            );
-          })}
+      {!classic && (
+        <div className="relative mx-auto mt-10 aspect-[4/3] w-full max-w-[1440px] overflow-hidden bg-[#f5f5f7] sm:aspect-[2/1]">
+          {photos}
         </div>
-      </div>
+      )}
+
+      {slides.length > 1 && (
+        <div className="flex justify-center px-4 pt-5">
+          <div role="group" aria-label="Campus photo controls" className="flex items-center rounded-full bg-[#f5f5f7] px-3">
+            {slides.map((slide, index) => (
+              <button
+                key={`${slide.src}-${index}`}
+                type="button"
+                onClick={() => setCurrentSlide(index)}
+                aria-label={slide.label || `View campus photo ${index + 1}`}
+                aria-pressed={index === activeSlide}
+                className="flex h-11 min-w-8 items-center justify-center rounded-full"
+              >
+                <span className={`h-2 rounded-full ${
+                  index === activeSlide ? "w-4 bg-pup-maroon" : "w-2 bg-[#86868b]"
+                }`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

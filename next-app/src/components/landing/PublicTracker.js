@@ -34,7 +34,7 @@ export default function PublicTracker() {
       }
       setResult(json.data);
     } catch (err) {
-      setError(err.message || "Failed to find ticket. Please check the reference number.");
+      setError(err.message || "Could not find that ticket. Check the reference number and try again.");
       setResult(null);
     } finally {
       setLoading(false);
@@ -83,11 +83,11 @@ export default function PublicTracker() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-border  relative z-10">
           <div>
-            <span className="text-[11px] font-sans tabular-nums font-semibold uppercase tracking-widest text-[#800000]  block mb-1">
-              Public Records Verification
+            <span className="text-[11px] font-sans tabular-nums font-semibold text-[#800000] block mb-1">
+              Public records verification
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950 ">
-              Track Request Status
+              Track request status
             </h2>
             <p className="text-sm text-gray-500  mt-1 leading-relaxed">
               Instant verification of Registrar evaluation, archive pulling, and release readiness.
@@ -106,7 +106,7 @@ export default function PublicTracker() {
               <input
                 id="tracker-input"
                 type="text" 
-                placeholder="Enter Reference Number (e.g. 104 or REQ-2026-0104)"
+                placeholder="Enter reference number (e.g. 104 or REQ-2026-0104)"
                 value={ticketInput}
                 onChange={(e) => {
                   setTicketInput(e.target.value);
@@ -122,7 +122,7 @@ export default function PublicTracker() {
               title="Verify Request Status"
               className="h-13 px-8 rounded-2xl bg-[#800000] hover:bg-[#600000] text-xs font-semibold text-white shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              {loading ? "Checking..." : "Track Request Status"}
+              {loading ? "Checking…" : "Track request status"}
             </Button>
           </div>
         </form>
@@ -206,8 +206,8 @@ export default function PublicTracker() {
               {/* Updates History */}
               {Array.isArray(result.updates) && result.updates.length > 0 && (
                 <div className="mt-6 pt-5 border-t border-border/80 ">
-                  <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-wider text-gray-400 block mb-2.5">
-                    Official Update Log
+                  <span className="text-[10px] font-sans tabular-nums font-semibold text-gray-400 block mb-2.5">
+                    Official update log
                   </span>
                   <div className="space-y-2">
                     {result.updates.map((up, idx) => {

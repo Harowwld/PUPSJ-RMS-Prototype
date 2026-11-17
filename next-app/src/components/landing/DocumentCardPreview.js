@@ -44,7 +44,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             </div>
             <div>
               <div
-                className={`text-[9px] font-sans tabular-nums uppercase tracking-widest font-bold leading-none ${
+                className={`text-[9px] font-sans tabular-nums font-semibold leading-none ${
                   isActive ? "text-red-200/90" : "text-zinc-400 "
                 }`}
               >
@@ -62,7 +62,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
 
           {item.code && (
             <span
-              className={`px-2 py-0.5 rounded-lg text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider border ${
+              className={`px-2 py-0.5 rounded-lg text-[9px] font-sans tabular-nums font-semibold border ${
                 isActive
                   ? "bg-white/15 border-white/25 text-white"
                   : "bg-black/[0.04] [0.06] border-black/[0.06] [0.08] text-zinc-600 "
@@ -76,7 +76,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
         {/* Document Title Banner */}
         <div className="mt-3.5">
           <div
-            className={`text-[9px] font-sans tabular-nums uppercase tracking-widest font-bold ${
+            className={`text-[9px] font-sans tabular-nums font-semibold ${
               isActive ? "text-red-200" : "text-[#800000] "
             }`}
           >
@@ -171,11 +171,11 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider ${
+                  className={`text-[9px] font-sans tabular-nums font-semibold ${
                     isActive ? "text-emerald-300" : "text-emerald-800 "
                   }`}
                 >
-                  Semester Evaluation
+                  Semester evaluation
                 </span>
                 
               </div>
@@ -276,7 +276,7 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-sans uppercase tracking-widest font-bold ${
+                className={`text-[9px] font-sans font-semibold ${
                   isActive ? "text-amber-200" : "text-amber-900 "
                 }`}
               >
@@ -318,11 +318,11 @@ export default function DocumentCardPreview({ item, isActive = false }) {
               }`}
             >
               <div
-                className={`text-[9px] font-sans tabular-nums uppercase tracking-wider font-semibold ${
+                className={`text-[9px] font-sans tabular-nums font-semibold ${
                   isActive ? "text-red-200" : "text-zinc-400"
                 }`}
               >
-                Student Affairs & Services
+                Student Affairs and Services
               </div>
               <div
                 className={`text-[12px] font-bold mt-0.5 ${
@@ -495,11 +495,11 @@ export default function DocumentCardPreview({ item, isActive = false }) {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[9px] font-sans tabular-nums font-bold uppercase tracking-wider ${
+                  className={`text-[9px] font-sans tabular-nums font-semibold ${
                     isActive ? "text-red-200" : "text-[#800000] "
                   }`}
                 >
-                  {item.client || "Official Credential"}
+                  {item.client || "Official credential"}
                 </span>
                 
               </div>
@@ -569,11 +569,11 @@ export default function DocumentCardPreview({ item, isActive = false }) {
         </div>
 
         <span
-          className={`text-[9px] font-sans tabular-nums font-semibold uppercase tracking-wider ${
+          className={`text-[9px] font-sans tabular-nums font-semibold ${
             isActive ? "text-red-200" : "text-zinc-400 "
           }`}
         >
-          Official Record
+          Official record
         </span>
       </div>
     </div>

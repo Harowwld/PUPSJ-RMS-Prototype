@@ -1,87 +1,32 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-
-
-
-
-
 import AppIcon from "@/components/ui/app-icon";
-const DEFAULT_WORKFLOW_CONTENT = {
-  eyebrow: "",
-  headingLine1: "How to Request",
-  headingLine2: "Your Documents.",
-  description:
-    "A straightforward guide for students and alumni. See how your document request is submitted online, authenticated from our digital records, and prepared for pick-up at the Registrar counter.",
-  primaryButtonText: "Request Document",
-  primaryButtonLink: "/login",
-  primaryButtonEnabled: true,
-  secondaryButtonText: "Explore Services (8)",
-  secondaryButtonTarget: "catalog",
-  secondaryButtonEnabled: true,
-  autoCurve: false,
-  curveStyle: "gentle",
-  steps: [
-    {
-      num: "01",
-      title: "Sign In to Portal",
-      summary: "Log in with your official Student Number",
-      desc: "Log in to the eManage portal using your official Student Number (format: YYYY-XXXXX-SJ-0). Both currently enrolled students and alumni can access the request system directly.",
-      tags: ["Student Portal", "Student Number Login", "Current & Alumni"],
-      actionLabel: "Open Portal",
-      actionType: "link",
-      actionTarget: "/login",
-      actionIcon: "ArrowRight02Icon",
-    },
-    {
-      num: "02",
-      title: "Select Your Document",
-      summary: "Choose from official academic credentials",
-      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
-      tags: ["8 Document Types", "Official Records", "Clear Requirements"],
-      actionLabel: "View Catalog",
-      actionType: "scroll",
-      actionTarget: "catalog",
-      actionIcon: "ArrowDown01Icon",
-    },
-    {
-      num: "03",
-      title: "Submit Your Request",
-      summary: "State your purpose and submit online",
-      desc: "Indicate why you need the document (for employment, scholarship, transfer, or board exams) and submit your request form right from your phone or computer.",
-      tags: ["Online Submission", "Purpose of Request", "No Paper Forms"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "04",
-      title: "Digital Record Retrieval",
-      summary: "Staff pull your records from the system",
-      desc: "Registrar personnel retrieve your digitized student files directly from the system. Your grades, earned units, and credentials are authenticated without having to search physical folders.",
-      tags: ["Digitized Database", "Fast System Pull", "Staff Authentication"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "05",
-      title: "Pick Up at Registrar Counter",
-      summary: "Claim your official stamped document",
-      desc: "Once your document is printed and stamped with the university's official dry seal, you'll be notified that it's ready for pick-up at the Ground Floor Registrar counter.",
-      tags: ["Official Dry Seal", "Registrar Counter", "Campus Pick-Up"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-  ],
-};
+import { DEFAULT_WORKFLOW_CONTENT } from "@/lib/landingRequestContent";
+import { useAppReducedMotion } from "@/lib/motion";
 
-function getStepCurveClass(idx, total, curveStyle = "gentle", autoCurve = true) {
-  if (!autoCurve || curveStyle === "none" || total <= 1) {
+export default function ProcessWorkflow({ classic }) {
+  const [workflow, setWorkflow] = useState(DEFAULT_WORKFLOW_CONTENT);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/landing/workflow", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((response) => {
+        if (response.ok && response.data) setWorkflow(response.data);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") console.warn("[ProcessWorkflow] Using default workflow:", error);
+      });
+    return () => controller.abort();
+  }, []);
+
+  return <WorkflowSection workflow={workflow} classic={classic} />;
+}
+
+function getStepCurveClass(idx, total, curveStyle = "gentle") {
+  if (curveStyle === "none" || total <= 1) {
     return "lg:ml-0 sm:ml-0";
   }
 
@@ -90,47 +35,23 @@ function getStepCurveClass(idx, total, curveStyle = "gentle", autoCurve = true) 
   const factor = Math.sin(progress * Math.PI);
 
   if (curveStyle === "pronounced") {
-    if (factor > 0.85) return "lg:ml-28 sm:ml-14";
-    if (factor > 0.55) return "lg:ml-20 sm:ml-10";
-    if (factor > 0.25) return "lg:ml-10 sm:ml-5";
+    if (factor > 0.85) return "ml-7 sm:ml-14 lg:ml-28";
+    if (factor > 0.55) return "ml-5 sm:ml-10 lg:ml-20";
+    if (factor > 0.25) return "ml-2 sm:ml-5 lg:ml-10";
     return "lg:ml-0 sm:ml-0";
   }
 
   // gentle
-  if (factor > 0.85) return "lg:ml-20 sm:ml-10";
-  if (factor > 0.55) return "lg:ml-14 sm:ml-7";
-  if (factor > 0.25) return "lg:ml-6 sm:ml-3";
+  if (factor > 0.85) return "ml-5 sm:ml-10 lg:ml-20";
+  if (factor > 0.55) return "ml-3 sm:ml-7 lg:ml-14";
+  if (factor > 0.25) return "ml-1 sm:ml-3 lg:ml-6";
   return "lg:ml-0 sm:ml-0";
 }
 
-export default function ProcessWorkflow() {
-  const [workflow, setWorkflow] = useState(DEFAULT_WORKFLOW_CONTENT);
+export function WorkflowSection({ workflow, classic }) {
   const [activeStep, setActiveStep] = useState(0);
-
-  const containerRef = useRef(null);
-  const cardRef = useRef(null);
-
-  // Fetch dynamic CMS settings on mount
-  useEffect(() => {
-    let isMounted = true;
-    fetch("/api/landing/workflow")
-      .then((res) => res.json())
-      .then((json) => {
-        if (isMounted && json?.ok && json?.data) {
-          setWorkflow(json.data);
-        }
-      })
-      .catch((err) => {
-        console.warn("[ProcessWorkflow] Dynamic content fetch failed, using defaults:", err);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const steps = Array.isArray(workflow?.steps) && workflow.steps.length > 0
-    ? workflow.steps
-    : DEFAULT_WORKFLOW_CONTENT.steps;
+  const reduceMotion = useAppReducedMotion();
+  const steps = workflow.steps;
 
   // Handle smooth navigation / scrolling
   const handleActionClick = (target, type = "link") => {
@@ -141,162 +62,152 @@ export default function ProcessWorkflow() {
       if (el) {
         const yOffset = -76;
         const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
+        window.scrollTo({ top: y, behavior: reduceMotion ? "instant" : "smooth" });
       }
       return;
     }
     // Always open portal links in a new tab per user request
-    window.open(target, "_blank");
+    window.open(target, "_blank", "noopener,noreferrer");
   };
 
 
 
   return (
-    <section 
-      ref={containerRef}
-      id="workflow" 
-      className="relative w-full bg-white transition-colors overflow-hidden"
+    <section
+      id="workflow"
+      aria-labelledby="workflow-heading"
+      className={`relative w-full scroll-mt-20 overflow-hidden font-jakarta ${classic ? "bg-zinc-950 text-white" : "bg-white text-[#1d1d1f]"}`}
     >
-      {/* Dark canvas card: full-bleed */}
-      <div 
-        ref={cardRef}
-        className="relative w-full bg-zinc-950 text-white font-jakarta select-none py-20 sm:py-28 lg:py-32 overflow-hidden"
-      >
+      <div className={`mx-auto max-w-7xl px-6 sm:px-10 lg:px-16 ${classic ? "py-20 sm:py-28 lg:py-32" : "py-16 sm:py-[90px]"}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
-            {/* =========================================================================
-                LEFT COLUMN: CENTERED EDITORIAL HERO (Adjusts to middle of steps)
-                ========================================================================= */}
-            <div className="lg:col-span-5 flex flex-col justify-center my-auto lg:py-4">
-              {/* Friendly, relatable title for students and alumni */}
-              <motion.h2 
-                initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-white tracking-tight mb-6 leading-[1.1] max-w-[340px]"
-              >
-                {workflow.headingLine1 || "How to Request"}<br />
-                {workflow.headingLine2 || "Your Documents."}
-              </motion.h2>
+          {/* =========================================================================
+              LEFT COLUMN: CENTERED EDITORIAL HERO (Adjusts to middle of steps)
+              ========================================================================= */}
+          <div className="lg:col-span-5 flex flex-col justify-center my-auto lg:py-4">
+            {/* Friendly, relatable title for students and alumni */}
+            <motion.h2 id="workflow-heading"
+              initial={reduceMotion ? false : { opacity: 0, y: 28, filter: "blur(6px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className={`mb-5 max-w-[340px] font-semibold leading-[1.08] ${classic ? "text-5xl tracking-tight sm:text-6xl lg:text-7xl" : "text-3xl sm:text-[40px]"}`}
+            >
+              {workflow.headingLine1 || "How to Request"}<br />
+              {workflow.headingLine2 || "Your Documents."}
+            </motion.h2>
 
-              {/* Clear, approachable narrative description */}
-              <motion.p 
-                initial={{ opacity: 0, y: 24, filter: "blur(4px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xs sm:text-sm md:text-base text-zinc-400 leading-relaxed font-normal max-w-md mb-8"
-              >
-                {workflow.description ||
-                  "A straightforward guide for students and alumni. See how your document request is submitted online, authenticated from our digital records, and prepared for pick-up at the Registrar counter."}
-              </motion.p>
+            {/* Clear, approachable narrative description */}
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 24, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-5 max-w-md text-[17px] leading-[1.47] text-current opacity-75"
+            >
+              {workflow.description}
+            </motion.p>
+            <p className="max-w-md text-sm leading-relaxed text-current opacity-75">
+              Scanned records are stored locally and accessible only to authorized staff.
+            </p>
+          </div>
 
-              {/* Quick Action cluster */}
+          {/* =========================================================================
+              RIGHT COLUMN: CURVED VERTICAL TIMELINE WITH FRAMER MOTION ENTRANCE
+              ========================================================================= */}
+          <div className="lg:col-span-7 relative">
+            <div className="space-y-12 sm:space-y-16 relative">
+              {steps.map((step, idx) => {
+                const isSelected = activeStep === idx;
+                const curveClass = getStepCurveClass(
+                  idx,
+                  steps.length,
+                  workflow.curveStyle || "gentle"
+                );
 
-            </div>
+                return (
+                  <motion.div
+                    key={step.num || idx}
+                    initial={reduceMotion ? false : { opacity: 0, y: 35, filter: "blur(6px)" }}
+                    whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 0.65,
+                      delay: idx * 0.08,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    whileHover={reduceMotion ? undefined : { x: 4 }}
+                    onMouseEnter={() => setActiveStep(idx)}
+                    className={`workflow-step-item relative pl-16 sm:pl-20 group transition-colors duration-200 ${curveClass}`}
+                  >
+                    {/* Circular Step Badge + Vertical Stem */}
+                    <div className="absolute left-0 top-0">
+                      <motion.div
+                        initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.45,
+                          delay: idx * 0.08 + 0.04,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-all duration-300 ${
+                          isSelected
+                            ? "bg-pup-maroon text-white"
+                            : classic ? "border border-white/10 bg-white/5 text-zinc-300" : "bg-[#f5f5f7] text-[#1d1d1f]"
+                        }`}
+                      >
+                        {step.num || String(idx + 1).padStart(2, "0")}
+                      </motion.div>
 
-            {/* =========================================================================
-                RIGHT COLUMN: CURVED VERTICAL TIMELINE WITH FRAMER MOTION ENTRANCE
-                ========================================================================= */}
-            <div className="lg:col-span-7 relative">
-              <div className="space-y-12 sm:space-y-16 relative">
-                {steps.map((step, idx) => {
-                  const isSelected = activeStep === idx;
-                  const curveClass = getStepCurveClass(
-                    idx,
-                    steps.length,
-                    workflow.curveStyle || "gentle",
-                    workflow.autoCurve !== false
-                  );
-                  
-                  return (
-                    <motion.div
-                      key={step.num || idx}
-                      initial={{ opacity: 0, y: 35, filter: "blur(6px)" }}
-                      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                      viewport={{ once: true, margin: "-40px" }}
-                      transition={{
-                        duration: 0.65,
-                        delay: idx * 0.08,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                      whileHover={{ x: 4 }}
-                      onMouseEnter={() => setActiveStep(idx)}
-                      className={`workflow-step-item relative pl-16 sm:pl-20 group transition-colors duration-200 ${curveClass}`}
-                      style={{ willChange: "transform, opacity, filter" }}
-                    >
-                      {/* Circular Step Badge + Vertical Stem */}
-                      <div className="absolute left-0 top-0">
-                        <motion.div 
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{
-                            duration: 0.45,
-                            delay: idx * 0.08 + 0.04,
-                            ease: [0.16, 1, 0.3, 1],
-                          }}
-                          className={`w-12 h-12 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-all duration-300 ${
-                            isSelected
-                              ? "bg-[#800000] text-white"
-                              : "bg-white/5 border border-white/10 text-zinc-400"
-                          }`}
-                        >
-                          {step.num || String(idx + 1).padStart(2, "0")}
-                        </motion.div>
+                    </div>
 
-                      </div>
+                    {/* Step Content */}
+                    <div className="pt-1">
 
-                      {/* Step Content */}
-                      <div className="pt-1">
+                      {/* Main Title */}
+                      <h3 className="mb-2 text-xl font-semibold tracking-tight sm:text-2xl">
+                        {step.title}
+                      </h3>
 
-                        {/* Main Title */}
-                        <h3 className="text-xl sm:text-2xl font-medium text-white tracking-tight mb-2 transition-colors">
-                          {step.title}
-                        </h3>
+                      {/* Description */}
+                      {step.desc && (
+                        <p className="max-w-xl text-base leading-[1.47] text-current opacity-75 sm:text-[17px]">
+                          {step.desc}
+                        </p>
+                      )}
 
-                        {/* Description */}
-                        {step.desc && (
-                          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal max-w-xl mb-4">
-                            {step.desc}
-                          </p>
-                        )}
-
-                        {/* Metadata tags + optional action button */}
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          {Array.isArray(step.tags) &&
-                            step.tags.map((tag, tIdx) => (
-                              <span
-                                key={tIdx}
-                                className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium bg-transparent border border-white/10 text-zinc-400 transition-colors"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-
-                          {step.actionLabel && (
-                            <button
-                              type="button"
-                              onClick={() => handleActionClick(step.actionTarget, step.actionType)}
-                              className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-400 ml-2 transition-colors cursor-pointer"
+                      {/* Metadata tags + optional action button */}
+                      <div className="flex flex-wrap items-center gap-2 empty:hidden [&:not(:empty)]:mt-3">
+                        {Array.isArray(step.tags) &&
+                          step.tags.map((tag, tIdx) => (
+                            <span
+                              key={tIdx}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium bg-transparent border border-[#d6d6d6] text-current opacity-75 transition-colors"
                             >
-                              <span>{step.actionLabel}</span>
-                              <AppIcon  className={` ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ArrowDown01Icon" : "ArrowRight02Icon")} text-xs`} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                              {tag}
+                            </span>
+                          ))}
 
+                        {step.actionLabel && (
+                          <button
+                            type="button"
+                            onClick={() => handleActionClick(step.actionTarget, step.actionType)}
+                            className={`inline-flex items-center gap-1 cursor-pointer text-sm font-medium hover:underline ${classic ? "text-red-300" : "text-pup-maroon"}`}
+                          >
+                            <span>{step.actionLabel}</span>
+                            <AppIcon  className={` ${step.actionIcon || (step.actionType === "scroll" || step.actionTarget === "catalog" ? "ArrowDown01Icon" : "ArrowRight02Icon")} text-xs`} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
           </div>
+
         </div>
       </div>
     </section>

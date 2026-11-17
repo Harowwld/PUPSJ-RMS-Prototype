@@ -12,7 +12,7 @@ export default function OfficeDirectory() {
   const [manilaInfo, setManilaInfo] = useState({
     timeStr: "",
     isOpen: false,
-    statusText: "Checking schedule...",
+    statusText: "Checking schedule…",
     statusType: "closed", // "open" | "lunch" | "closed"
   });
 
@@ -91,8 +91,8 @@ export default function OfficeDirectory() {
     if (!navigator.clipboard) return;
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    toast.success("Copied to Clipboard", {
-      description: `${label} copied successfully.`,
+    toast.success("Copied to clipboard", {
+      description: `${label} copied.`,
     });
     setTimeout(() => {
       setCopiedKey((prev) => (prev === key ? null : prev));
@@ -122,8 +122,8 @@ export default function OfficeDirectory() {
           className="lg:col-span-7 space-y-3"
         >
           <div className="flex items-center gap-2.5">
-            <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
-              Campus Archive &amp; Records
+            <span className="text-[11px] font-sans tabular-nums font-semibold text-[#800000] ">
+              Campus archive and records
             </span>
 
             <span className="text-[11px] font-sans tabular-nums text-zinc-500 ">
@@ -132,7 +132,7 @@ export default function OfficeDirectory() {
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-950  tracking-tight leading-[1.08]">
-            Visit the Registrar &amp;<br />
+            Visit the Registrar and<br />
             <span className="text-zinc-400 ">Campus Archive Hall</span>
           </h2>
 
@@ -151,8 +151,8 @@ export default function OfficeDirectory() {
         >
           <div className="w-full sm:w-auto min-w-[280px] p-4 sm:p-5 rounded-2xl bg-white  border border-black/[0.06] [0.08] shadow-[0_12px_30px_-10px_rgba(0,0,0,0.06)]">
             <div className="flex items-center justify-between gap-4 mb-2.5">
-              <span className="text-[10px] font-sans tabular-nums uppercase tracking-wider text-zinc-400  font-semibold">
-                Desk Operational State
+              <span className="text-[10px] font-sans tabular-nums text-zinc-400  font-semibold">
+                Desk operational state
               </span>
               <span className="text-[11px] font-sans tabular-nums font-bold text-gray-900 ">
                 {manilaInfo.timeStr || "PST (UTC+8)"}
@@ -202,8 +202,8 @@ export default function OfficeDirectory() {
                 <Location01Icon size="1em"  className="text-xs" />
                 <span>Physical Campus Archive</span>
               </div>
-              <span className="text-[10px] font-sans tabular-nums text-zinc-400 uppercase tracking-wider">
-                Room 101 · Ground Level
+              <span className="text-[10px] font-sans tabular-nums text-zinc-400">
+                Room 101 · Ground level
               </span>
             </div>
 
@@ -259,8 +259,8 @@ export default function OfficeDirectory() {
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-3">
                 <UserSearch01Icon size="1em"  className="text-[#800000] text-sm" />
-                <span className="text-[11px] font-sans tabular-nums font-bold uppercase tracking-wider text-gray-900 ">
-                  Designated Service Windows
+                <span className="text-[11px] font-sans tabular-nums font-semibold text-gray-900 ">
+                  Designated service windows
                 </span>
               </div>
 
@@ -339,8 +339,8 @@ export default function OfficeDirectory() {
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
-                  Operating Calendar
+                <span className="text-[10px] font-sans tabular-nums font-semibold text-[#800000] ">
+                  Operating calendar
                 </span>
                 <span className="text-[10px] font-sans tabular-nums text-zinc-400">
                   Academic Year 2025–2026
@@ -348,7 +348,7 @@ export default function OfficeDirectory() {
               </div>
 
               <h3 className="text-lg sm:text-xl font-bold text-gray-950  mb-1">
-                Registrar Working Hours
+                Registrar working hours
               </h3>
               <p className="text-xs text-gray-500  mb-5 font-normal">
                 Standard Philippine Standard Time (PST) window schedule.
@@ -394,16 +394,16 @@ export default function OfficeDirectory() {
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-sans tabular-nums font-bold uppercase tracking-widest text-[#800000] ">
-                  Official Communication
+                <span className="text-[10px] font-sans tabular-nums font-semibold text-[#800000] ">
+                  Official communication
                 </span>
                 <span className="text-[10px] font-sans tabular-nums text-zinc-400">
-                  Institutional Desks
+                  Institutional desks
                 </span>
               </div>
 
               <h3 className="text-lg sm:text-xl font-bold text-gray-950  mb-1">
-                Direct Records Support
+                Direct records support
               </h3>
               <p className="text-xs text-gray-500  mb-5 font-normal">
                 Direct lines for evaluation status, credential inquiries, and clearances.
@@ -414,8 +414,8 @@ export default function OfficeDirectory() {
                 {/* Registrar Email */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
-                      Registrar Evaluation Desk
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums mb-0.5">
+                      Registrar evaluation desk
                     </span>
                     <a
                       href="mailto:registrar.sanjuan@pup.edu.ph"
@@ -437,8 +437,8 @@ export default function OfficeDirectory() {
                 {/* OSAS Email */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
-                      Student Affairs (OSAS Clearances)
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums mb-0.5">
+                      Student affairs (OSAS clearances)
                     </span>
                     <a
                       href="mailto:osas.sanjuan@pup.edu.ph"
@@ -460,8 +460,8 @@ export default function OfficeDirectory() {
                 {/* Campus Trunkline */}
                 <div className="p-3 rounded-2xl bg-zinc-50  border border-black/[0.04] [0.06] flex items-center justify-between gap-2">
                   <div className="overflow-hidden">
-                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums uppercase tracking-wider mb-0.5">
-                      Campus Direct Trunklines
+                    <span className="block text-zinc-400 text-[10px] font-sans tabular-nums mb-0.5">
+                      Campus direct trunklines
                     </span>
                     <span className="font-sans tabular-nums font-bold text-gray-800  truncate block">
                       (02) 8724-4112 / (02) 8724-4113

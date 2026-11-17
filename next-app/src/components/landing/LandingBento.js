@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Agreement01Icon, Archive01Icon, CalendarCheckIn01Icon, File02Icon, LaptopIcon, Notification02Icon, SentIcon, Shield01Icon, Target01Icon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
 
@@ -57,11 +58,25 @@ const BENTO_CONTENT = {
   },
 };
 
-export default function LandingBento() {
-  const bento = BENTO_CONTENT;
+export default function LandingBento({ classic, contained = false, previewContent }) {
+  const [publishedContent, setBento] = useState(BENTO_CONTENT);
+
+  const bento = previewContent ?? publishedContent;
+
+  useEffect(() => {
+    if (previewContent) return;
+    let mounted = true;
+    fetch("/api/landing/bento", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        if (mounted && json.ok && json.data) setBento(json.data);
+      })
+      .catch((error) => console.warn("[LandingBento] Failed to load CMS content:", error));
+    return () => { mounted = false; };
+  }, [previewContent]);
 
   return (
-    <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-20 w-full font-jakarta select-none">
+    <section id="about" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pt-16 sm:pt-[90px] w-full font-jakarta select-none">
       
       {/* =========================================================================
           ASYMMETRIC EDITORIAL HEADER (Slide from Left to Right Entrance)
@@ -75,9 +90,9 @@ export default function LandingBento() {
           className="lg:col-span-7"
         >
 
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#1d1d1f]  tracking-tight leading-[1.06]">
+          <h2 className="text-3xl sm:text-[40px] font-semibold text-[#1d1d1f]  tracking-tight leading-[1.06]">
             {bento.headingLine1}<br />
-            <span className="text-zinc-400 ">{bento.headingLine2}</span>
+            <span className="text-[#707070]">{bento.headingLine2}</span>
           </h2>
         </motion.div>
 
@@ -88,7 +103,7 @@ export default function LandingBento() {
           transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="lg:col-span-5"
         >
-          <p className="text-base sm:text-lg text-zinc-600  leading-relaxed font-normal max-w-lg">
+          <p className="text-[17px] text-[#707070] leading-[1.47] font-normal max-w-lg">
             {bento.description}
           </p>
         </motion.div>
@@ -100,7 +115,7 @@ export default function LandingBento() {
           - Row 1: 2 Equal Large Cards (50/50 Split)
           - Row 2: 3 Equal Medium Cards (3-Column Split)
           ========================================================================= */}
-      <div className="w-screen relative left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] bg-[#f5f5f7] py-10 sm:py-16 mt-8">
+      <div className={`mt-8 bg-[#f5f5f7] py-12 sm:py-[90px] ${contained ? "" : "relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full flex flex-col gap-4 sm:gap-5">
         
         {/* -----------------------------------------------------------------------
@@ -118,10 +133,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className={classic ? "rounded-3xl bg-white border border-black/[0.04] shadow-sm p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group" : "rounded-[28px] bg-white p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 group"}
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+            <div className="rounded-[28px] bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
               
               {/* Full-Card Success Overlay */}
               <div className="absolute inset-0 bg-emerald-500/85 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white opacity-0 pointer-events-none" style={{ animation: 'submitOverlay 6s infinite 0s' }}>
@@ -179,10 +194,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className={classic ? "rounded-3xl bg-white border border-black/[0.04] shadow-sm p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group" : "rounded-[28px] bg-white p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 group"}
           >
             {/* Simulated UI Area */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
+            <div className="rounded-[28px] bg-[#f5f5f7] p-4 sm:p-6 border-none min-h-[220px] flex flex-col justify-center items-center relative overflow-hidden">
               <CursorOverlay animationName="cursorCard2" delay="1s" />
               {/* Connecting line behind steps */}
               <div className="absolute left-[calc(50%-78px)] top-10 bottom-10 w-0.5 bg-zinc-200/60 z-0"></div>
@@ -240,7 +255,7 @@ export default function LandingBento() {
             Card 4: What You Need to Prepare
             Card 5: Protected by Law (RA 11032)
             ----------------------------------------------------------------------- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
           
           {/* CARD 3: Direct from Campus Archives */}
           <motion.div 
@@ -250,10 +265,10 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className={classic ? "rounded-3xl bg-white border border-black/[0.04] shadow-sm p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group" : "rounded-[28px] bg-white p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 group"}
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden">
+            <div className="rounded-[28px] bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden">
               <div className="flex items-center gap-2 sm:gap-4 relative z-10">
                  <CursorOverlay animationName="cursorCard3" delay="2s" />
                  {/* Online Request */}
@@ -261,7 +276,7 @@ export default function LandingBento() {
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract1 6s infinite 2s' }}>
                      <LaptopIcon size="1em"  className="text-lg" />
                    </div>
-                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{bento.card3?.step1Label || "Request"}</span>
+                   <span className="text-[9px] font-semibold text-zinc-500">{bento.card3?.step1Label || "Request"}</span>
                  </div>
                  
                  {/* Dashed line 1 */}
@@ -274,7 +289,7 @@ export default function LandingBento() {
                    <div className="w-12 h-12 rounded-full bg-[#800000] shadow-md flex items-center justify-center text-white relative transition-all" style={{ animation: 'objInteract3 6s infinite 2s, room1CircleReveal 6s infinite 2s' }}>
                      <Archive01Icon size="1em"  className="text-xl relative z-10" />
                    </div>
-                   <span className="text-[9px] font-bold text-[#800000] uppercase tracking-wider" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>{bento.card3?.step2Label || "Archives"}</span>
+                   <span className="text-[9px] font-semibold text-[#800000]" style={{ animation: 'room1TextReveal 6s infinite 2s' }}>{bento.card3?.step2Label || "Archives"}</span>
                  </div>
                  
                  {/* Dashed line 2 */}
@@ -287,7 +302,7 @@ export default function LandingBento() {
                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#800000] border border-black/5 transition-all" style={{ animation: 'objInteract2 6s infinite 2s' }}>
                      <UserSearch01Icon size="1em"  className="text-lg" />
                    </div>
-                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{bento.card3?.step3Label || "Staff"}</span>
+                   <span className="text-[9px] font-semibold text-zinc-500">{bento.card3?.step3Label || "Staff"}</span>
                  </div>
               </div>
             </div>
@@ -304,17 +319,17 @@ export default function LandingBento() {
           </motion.div>
 
           {/* CARD 4: What You Need to Prepare */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 36, scale: 0.96, filter: "blur(6px)" }}
             whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.65, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className={classic ? "rounded-3xl bg-white border border-black/[0.04] shadow-sm p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group" : "rounded-[28px] bg-white p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 group"}
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-6 border-none min-h-[180px] flex flex-col justify-center items-center relative overflow-hidden gap-5">
+            <div className="rounded-[28px] bg-[#f5f5f7] p-6 border-none min-h-[180px] flex flex-col justify-center items-center relative overflow-hidden gap-5">
               <CursorOverlay animationName="cursorCard4" delay="3s" />
               <div className="w-full max-w-[190px] flex flex-col gap-4 relative z-10">
                 {/* Step 1 */}
@@ -360,13 +375,13 @@ export default function LandingBento() {
             transition={{ duration: 0.65, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ y: -3 }}
 
-            className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group"
+            className={classic ? "rounded-3xl bg-white border border-black/[0.04] shadow-sm p-5 sm:p-8 lg:p-10 flex flex-col justify-between transition-all duration-300 group" : "rounded-[28px] bg-white p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 group"}
           >
             {/* Simulated UI Area: Flow Diagram */}
-            <div className="rounded-2xl bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
+            <div className="rounded-[28px] bg-[#f5f5f7] p-4 border-none min-h-[180px] flex items-center justify-center relative overflow-hidden gap-6">
               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center text-[#800000] border border-black/5 shrink-0 relative">
                  <Shield01Icon size="1em"  className="text-3xl" />
-                 <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{bento.card5?.badgeLabel || "RA 10173"}</span>
+                 <span className="absolute -bottom-2.5 bg-[#800000] text-white text-[8px] font-semibold px-2 py-0.5 rounded-full">{bento.card5?.badgeLabel || "RA 10173"}</span>
               </div>
               
               <div className="flex flex-col gap-4 relative">

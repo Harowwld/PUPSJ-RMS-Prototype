@@ -2,125 +2,48 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty";
-import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { useAppReducedMotion } from "@/lib/motion";
+import CatalogClientBadge from "@/components/landing/CatalogClientBadge";
 import { Files01Icon , Shield01Icon, Tick01Icon} from "hugeicons-react";
 
-export const CATALOG_ITEMS = [
-  {
-    id: "tor",
-    title: "Transcript of Records",
-    description: "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
-    requirements: [
-      "2x2 Formal Photo (White Background, Nametag)",
-      "University Clearance Form (Fully Signed)",
-      "Documentary Stamp (BIR Compliant)"
-    ],
-    client: "Student & Alumni"
-  },
-  {
-    id: "cog",
-    title: "Certificate of Grades",
-    description: "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
-    requirements: [
-      "Current Student ID or SIS Portal Profile Printout",
-      "Specific Academic Year & Semester Identification"
-    ],
-    client: "Enrolled Students"
-  },
-  {
-    id: "cor",
-    title: "Certificate of Registration",
-    description: "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
-    requirements: [
-      "Validated Assessment Form / Enrollment Proof",
-      "Current Semester Course Load Details"
-    ],
-    client: "Enrolled Students"
-  },
-  {
-    id: "ctc",
-    title: "Honorable Dismissal",
-    description: "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
-    requirements: [
-      "Comprehensive Campus University Clearance",
-      "Surrender of PUP Student ID Card",
-      "Parent / Guardian Consent Form (If Minor)"
-    ],
-    client: "Transferees"
-  },
-  {
-    id: "moral",
-    title: "Good Moral Character",
-    description: "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
-    requirements: [
-      "OSAS Disciplinary Clearance Slip",
-      "Valid Student ID or Government ID Card"
-    ],
-    client: "Student & Alumni"
-  },
-  {
-    id: "diploma",
-    title: "Second Copy of Diploma",
-    description: "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
-    requirements: [
-      "Notarized Affidavit of Loss / Damage",
-      "Copy of Official Certificate of Graduation",
-      "Board of Regents Formal Verification"
-    ],
-    client: "Alumni Only"
-  },
-  {
-    id: "cav",
-    title: "CAV (DFA Apostille / Abroad)",
-    description: "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
-    requirements: [
-      "Certified True Copies of TOR and Diploma",
-      "Passport Identification Copy (Full Legal Name)",
-      "CHED / Red Ribbon Endorsement Checklist"
-    ],
-    client: "Graduates & Alumni"
-  },
-  {
-    id: "certified_copy",
-    title: "Certified True Copy",
-    description: "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
-    requirements: [
-      "Original Document for Verification Presentation",
-      "Clear Photocopy for Dry Seal Stamping"
-    ],
-    client: "Student & Alumni"
-  }
-];
-
-export default function DocumentCatalog() {
+export default function DocumentCatalog({ classic, previewContent }) {
+  const reduceMotion = useAppReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [catalogData, setCatalogData] = useState({
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [publishedContent, setCatalogData] = useState({
     heading: "Academic Document Catalog",
     description:
       "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
-    items: CATALOG_ITEMS,
+    items: [],
   });
 
-  // Fetch dynamic catalog configuration
+  const [publishedStatus, setCatalogStatus] = useState("loading");
+
+  // Fetch active requestable document types with matching CMS descriptions.
+  const catalogData = previewContent ?? publishedContent;
+
   useEffect(() => {
+    if (previewContent) return;
     let isMounted = true;
     fetch("/api/landing/catalog", { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => {
-        if (isMounted && json.ok && json.data) {
-          setCatalogData(json.data);
-        }
+        if (!isMounted) return;
+        if (!json.ok || !json.data) throw new Error("Catalog could not be loaded.");
+        setCatalogData(json.data);
+        setCatalogStatus("ready");
       })
       .catch((err) => {
+        if (isMounted) setCatalogStatus("error");
         console.warn("[DocumentCatalog] Failed to fetch catalog config:", err);
       });
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [previewContent]);
 
-  const items = catalogData.items?.length ? catalogData.items : CATALOG_ITEMS;
+  const catalogStatus = previewContent ? "ready" : publishedStatus;
+  const items = catalogData.items;
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
@@ -129,7 +52,7 @@ export default function DocumentCatalog() {
   const scrollTimeout = useRef(null);
   
   // Dramatically reduce DOM nodes: 5 chunks is enough for a seamless treadmill
-  const MULTIPLIER = 5;
+  const MULTIPLIER = items.length > 1 ? 5 : 1;
   const infiniteItems = Array(MULTIPLIER).fill(items).flat();
   const middleIndex = items.length * Math.floor(MULTIPLIER / 2);
 
@@ -149,7 +72,7 @@ export default function DocumentCatalog() {
   }, [middleIndex]);
 
   const handleScroll = useCallback(() => {
-    if (!carouselRef.current) return;
+    if (!carouselRef.current || items.length < 2) return;
     const container = carouselRef.current;
     
     const children = container.children;
@@ -256,11 +179,12 @@ export default function DocumentCatalog() {
   const pauseTimeout = useRef(null);
 
   const startAutoplay = useCallback(() => {
+    if (items.length < 2 || reduceMotion || expandedCard !== null) return;
     if (autoplayTimer.current) clearInterval(autoplayTimer.current);
     autoplayTimer.current = setInterval(() => {
       scrollToNext();
     }, 5000);
-  }, [scrollToNext]);
+  }, [expandedCard, items.length, reduceMotion, scrollToNext]);
 
   const pauseAutoplayTemporarily = useCallback(() => {
     // Stop the current autoplay
@@ -284,7 +208,7 @@ export default function DocumentCatalog() {
 
   // Drag-to-scroll handlers
   const handleMouseDown = (e) => {
-    if (!carouselRef.current) return;
+    if (!carouselRef.current || e.target.closest("button")) return;
     setIsDragging(true);
     setStartX(e.pageX - carouselRef.current.offsetLeft);
     setDragScrollLeft(carouselRef.current.scrollLeft);
@@ -315,7 +239,7 @@ export default function DocumentCatalog() {
   return (
     <section
       id="catalog"
-      className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none font-jakarta min-h-0 flex items-center"
+      className={`relative flex min-h-0 w-full scroll-mt-20 items-center overflow-hidden select-none font-jakarta ${classic ? "bg-white py-16 sm:py-20 lg:py-24" : "bg-[#f5f5f7] py-16 sm:py-[90px]"}`}
     >
 
 
@@ -325,15 +249,24 @@ export default function DocumentCatalog() {
 
           {/* Section Heading & Subtitle */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center mb-12">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-950 leading-[1.08]">
+            <h2 className="text-3xl sm:text-[40px] font-semibold tracking-tight text-[#1d1d1f] leading-[1.08]">
               {catalogData.heading || "Academic Document Catalog"}
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 mt-4 max-w-xl leading-relaxed font-normal">
+            <p className="text-[17px] text-[#707070] mt-5 max-w-xl leading-relaxed font-normal">
               {catalogData.description}
             </p>
           </div>
 
-          {items.length === 0 ? (
+          {catalogStatus === "loading" ? (
+            <p role="status" className="px-5 py-8 text-sm text-[#707070]">Loading requestable documents…</p>
+          ) : catalogStatus === "error" ? (
+            <EmptyState
+              variant="compact"
+              icon={Files01Icon}
+              title="Catalog Unavailable"
+              description="Try refreshing the page to see which documents are available."
+            />
+          ) : items.length === 0 ? (
             <EmptyState
               variant="compact"
               icon={Files01Icon}
@@ -361,10 +294,13 @@ export default function DocumentCatalog() {
                 `}} />
                 {infiniteItems.map((doc, idx) => {
                   const isActive = items.length > 0 ? (idx % items.length) === activeIndex : false;
+                  const expanded = expandedCard === idx;
+                  const requirements = doc.requirements ?? [];
+                  const extraCount = requirements.length - 3;
                   return (
                     <div 
                       key={`${doc.id || doc.title}-${idx}`}
-                      className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col bg-[#f5f5f7] rounded-3xl p-6 sm:p-8 text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
+                      className={`shrink-0 w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[420px] flex flex-col ${classic ? "rounded-3xl bg-[#f5f5f7] p-6 sm:p-8" : "rounded-[28px] bg-white p-6 sm:p-7"} text-left transition-all duration-500 ease-out group snap-center sm:snap-align-none ${
                         isDragging ? 'pointer-events-none' : 'hover:-translate-y-1'
                       } ${
                         isActive 
@@ -373,40 +309,52 @@ export default function DocumentCatalog() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-5">
-                        <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
-                          {doc.client || "Student & Alumni"}
-                        </span>
+                        <CatalogClientBadge label={doc.client} />
                         <span className="text-[10px] font-sans tabular-nums text-zinc-400 font-medium tracking-wide">
                           Official Document
                         </span>
                       </div>
                       
-                      <h3 className="text-xl font-bold text-gray-950 tracking-tight leading-snug mb-3 group-hover:text-[#800000] transition-colors">
+                      <h3 className="text-2xl font-semibold text-[#1d1d1f] tracking-tight leading-snug mb-3 group-hover:text-[#800000] transition-colors">
                         {doc.title}
                       </h3>
                       
-                      <p className="text-sm text-gray-500 leading-relaxed mb-8 flex-grow">
-                        {doc.description}
-                      </p>
+                      {doc.description && (
+                        <p className="text-sm text-[#707070] leading-relaxed mb-8 flex-grow">{doc.description}</p>
+                      )}
                       
                       <div className="pt-5 border-t border-black/5 mt-auto">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-3 flex items-center gap-1.5">
-                          <Shield01Icon size="1em"  className="text-sm" />
-                          Filing Requirements
-                        </div>
-                        <ul className="space-y-3 text-xs text-gray-600">
-                          {doc.requirements?.slice(0, 2).map((req, i) => (
-                            <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                              <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[8px] font-bold">
-                                <Tick01Icon size={16}   />
-                              </span>
-                              <span className="line-clamp-2">{req}</span>
-                            </li>
-                          ))}
-                          {doc.requirements?.length > 2 && (
-                             <li className="text-gray-400 italic text-[11px] pl-6.5">+{doc.requirements.length - 2} more...</li>
+                          <div className="text-[10px] font-semibold text-gray-400 font-sans tabular-nums mb-3 flex items-center gap-1.5">
+                            <Shield01Icon size="1em"  className="text-sm" />
+                            Filing requirements
+                          </div>
+                          {requirements.length > 0 ? (
+                            <>
+                              <ul id={`catalog-requirements-${idx}`} className="space-y-3 text-xs text-gray-600">
+                                {(expanded ? requirements : requirements.slice(0, 3)).map((requirement, index) => (
+                                  <li key={index} className="flex items-start gap-2.5 leading-relaxed">
+                                    <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                                      <Tick01Icon size={16} aria-hidden="true" />
+                                    </span>
+                                    <span className="min-w-0 wrap-break-word">{requirement}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {extraCount > 0 && (
+                                <button
+                                  type="button"
+                                  aria-expanded={expanded}
+                                  aria-controls={`catalog-requirements-${idx}`}
+                                  onClick={() => setExpandedCard(expanded ? null : idx)}
+                                  className="mt-2 min-h-11 cursor-pointer rounded-md text-xs font-semibold text-pup-maroon hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                                >
+                                  {expanded ? "Show fewer requirements" : `Show ${extraCount} more ${extraCount === 1 ? "requirement" : "requirements"}`}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-xs text-gray-500">Contact the Registrar to confirm filing requirements.</p>
                           )}
-                        </ul>
                       </div>
                     </div>
                   );
