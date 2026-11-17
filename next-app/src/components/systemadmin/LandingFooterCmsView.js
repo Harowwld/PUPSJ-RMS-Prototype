@@ -1,10 +1,11 @@
 "use client"
+import LandingSectionPreview from "./LandingSectionPreview"
+import LandingFooter from "@/components/landing/LandingFooter"
 import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
 
 import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +16,6 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { LandingFooterSkeletonContent } from "./skeletons/LandingFooterSkeleton"
-import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch";
 import { ArrowDown01Icon, ArrowUp01Icon, Delete01Icon, Link01Icon, Location01Icon } from "hugeicons-react";
 
@@ -64,16 +64,6 @@ const DEFAULT_FOOTER_CONTENT = {
   watermarkText: "EMANAGE",
 
   copyrightText: "© 2026 PUP San Juan Campus · All rights reserved.",
-}
-
-function getEmbedUrl(mapsUrl) {
-  try {
-    const url = new URL(mapsUrl || "https://maps.google.com/?q=Polytechnic+University+of+the+Philippines+San+Juan+Campus")
-    const q = url.searchParams.get("q") || "Polytechnic University of the Philippines San Juan Campus"
-    return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
-  } catch {
-    return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodeURIComponent("Polytechnic University of the Philippines San Juan Campus")}&t=&z=15&ie=UTF8&iwloc=B&output=embed`
-  }
 }
 
 const SCHEDULE_STATUS_OPTIONS = [
@@ -495,7 +485,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                             mapsUrl: e.target.value,
                           }))
                         }
-                        placeholder="https://maps.google.com/?q=..."
+                        placeholder="https://maps.google.com/?q=PUP+San+Juan"
                         className="h-10 w-full rounded-xl border border-border bg-white pl-9 pr-3 text-xs font-sans tabular-nums dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 disabled:opacity-50 transition-all"
                       />
                     </div>
@@ -677,11 +667,12 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                             </button>
                             <button
                               type="button"
+                              disabled={footerData.scheduleItems.length <= 1}
                               onClick={() => setDeleteScheduleIdx(idx)}
                               title="Remove row"
-                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              <Delete01Icon size="1em"  className="text-xs" />
+                              <Delete01Icon size="1em" className="text-xs" />
                             </button>
                           </div>
                         </div>
@@ -697,7 +688,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) =>
                                 updateScheduleItem(idx, "label", e.target.value)
                               }
-                              placeholder="e.g. Monday – Friday"
+                              placeholder="Monday to Friday"
                               className="h-9 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -712,7 +703,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) =>
                                 updateScheduleItem(idx, "value", e.target.value)
                               }
-                              placeholder="e.g. 8:00 AM – 5:00 PM"
+                              placeholder="8:00 AM to 5:00 PM"
                               className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -821,11 +812,12 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                             </button>
                             <button
                               type="button"
+                              disabled={footerData.contactItems.length <= 1}
                               onClick={() => setDeleteContactIdx(idx)}
                               title="Remove channel"
-                              className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer border-0 bg-transparent p-0 ml-1"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              <Delete01Icon size="1em"  className="text-xs" />
+                              <Delete01Icon size="1em" className="text-xs" />
                             </button>
                           </div>
                         </div>
@@ -841,7 +833,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) =>
                                 updateContactItem(idx, "label", e.target.value)
                               }
-                              placeholder="e.g. Registrar Inquiries"
+                              placeholder="Registrar inquiries"
                               className="h-9 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -856,7 +848,7 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) =>
                                 updateContactItem(idx, "value", e.target.value)
                               }
-                              placeholder="e.g. info@pup.edu.ph"
+                              placeholder="info@pup.edu.ph"
                               className="h-9 rounded-xl border border-border bg-white px-3 text-xs font-sans tabular-nums placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -893,168 +885,14 @@ export default function LandingFooterCmsView({ showToast, onDirtyChange }) {
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Live Portal Footer Simulator
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Accurate live representation of how the public footer renders on the student portal.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open("/#office", "_blank")}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl"
-                >
-                  Test Link
+              <div className="flex justify-end">
+                <Button asChild variant="outline" size="sm">
+                  <a href="/#office" target="_blank" rel="noopener noreferrer">Test Link</a>
                 </Button>
               </div>
-
-              {/* Simulated Footer Window Matching LandingFooter.js Bento Layout */}
-              <div className="w-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-400 p-4 sm:p-8 select-none relative font-jakarta text-xs">
-                <div className="relative z-10 max-w-[1100px] mx-auto">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 pb-8 z-10 relative">
-                    {/* Left Box */}
-                    <div className="lg:col-span-5 bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between shadow-xl">
-                      <div>
-                        <div className="flex items-center gap-2.5 mb-3">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center">
-                            <Image
-                              src="/assets/branding/white-icon.png"
-                              alt="eManage Logo"
-                              width={28}
-                              height={28}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                          <span className="font-bold text-xl text-white tracking-tight">
-                            eManage
-                          </span>
-                        </div>
-                        <p className="text-xs text-zinc-400 leading-relaxed font-normal mb-6 max-w-sm">
-                          {footerData.brandSubtitle}
-                        </p>
-                      </div>
-
-                      <div className="pt-4 border-t border-white/5">
-                        <div className="font-bold text-zinc-200 flex items-center gap-2 mb-1.5 text-xs">
-                          <Location01Icon size={16} className="text-red-400" />
-                          <span>{footerData.locationHall}</span>
-                        </div>
-                        <p className="text-zinc-500 leading-relaxed text-[11px] pl-5 mb-4">
-                          {footerData.locationAddress}
-                        </p>
-                        {footerData.mapsEnabled && (
-                          <div className="mt-4 w-full h-[140px] rounded-xl overflow-hidden border border-white/10 bg-zinc-900/50 relative">
-                            <iframe
-                              width="100%"
-                              height="100%"
-                              style={{ border: 0 }}
-                              loading="lazy"
-                              src={getEmbedUrl(footerData.mapsUrl)}
-                            />
-                            <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-xl" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right Container */}
-                    <div className="lg:col-span-7 flex flex-col gap-4">
-                      <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2rem] p-6 sm:p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-xl">
-                        {/* Registrar Schedule */}
-                        <div>
-                          <h4 className="text-[10px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-3">
-                            {footerData.scheduleEyebrow || "Registrar Schedule"}
-                          </h4>
-                          <div className="space-y-2">
-                            {(footerData.scheduleItems || []).map((item, idx) => (
-                              <div
-                                key={idx}
-                                className="flex flex-col gap-0.5 pb-2 border-b border-white/5 last:border-0 last:pb-0"
-                              >
-                                <span className="text-[10px] text-zinc-500 font-medium">
-                                  {item.label}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "text-xs font-sans tabular-nums",
-                                    item.status === "closed"
-                                      ? "text-rose-400"
-                                      : item.status === "break"
-                                      ? "text-zinc-400"
-                                      : "text-white font-medium"
-                                  )}
-                                >
-                                  {item.value}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Direct Contact Channels */}
-                        <div>
-                          <h4 className="text-[10px] uppercase font-sans tabular-nums font-bold text-red-400 tracking-wider mb-3">
-                            {footerData.contactsEyebrow || "Official Desk"}
-                          </h4>
-                          <div className="space-y-2">
-                            {(footerData.contactItems || []).map((contact, idx) => (
-                              <div
-                                key={idx}
-                                className="flex flex-col gap-0.5 pb-2 border-b border-white/5 last:border-0 last:pb-0"
-                              >
-                                <span className="text-[10px] font-sans tabular-nums text-zinc-500 uppercase font-medium">
-                                  {contact.label}
-                                </span>
-                                {contact.type === "email" ? (
-                                  <span className="text-xs font-medium text-zinc-200">
-                                    {contact.value}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs font-sans tabular-nums text-zinc-300">
-                                    {contact.value}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Sub-footer Links Card */}
-                      <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-2xl px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
-                        <span className="text-[10px] font-sans tabular-nums text-zinc-500">
-                          {footerData.copyrightText}
-                        </span>
-                        <div className="text-[10px] font-sans tabular-nums font-medium text-zinc-400 flex items-center gap-1">
-                          <span>Back to Top</span>
-                          <ArrowUp01Icon size="1em" className="text-[10px]" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ambient Watermark */}
-                {footerData.watermarkEnabled && (
-                  <div className="absolute inset-x-0 bottom-0 pointer-events-none select-none overflow-hidden flex justify-center items-end z-0">
-                    <span
-                      className="block w-full text-center font-black uppercase tracking-tighter leading-none text-white/[0.08] pointer-events-none whitespace-nowrap translate-y-[45%]"
-                      style={{
-                        fontSize: "clamp(3rem, 14vw, 11rem)",
-                        fontWeight: 900,
-                        letterSpacing: "-0.05em",
-                      }}
-                    >
-                      {footerData.watermarkText || "EMANAGE"}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <LandingSectionPreview>
+                {(classic) => <LandingFooter classic={classic} previewContent={footerData} />}
+              </LandingSectionPreview>
             </div>
           )}
         </CardContent>

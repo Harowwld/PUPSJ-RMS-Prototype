@@ -1,18 +1,20 @@
 "use client"
 
 import * as React from "react";
-import { GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LibraryIcon } from "hugeicons-react";
+import { GitMergeIcon, HelpCircleIcon, Image01Icon, LayoutBottomIcon, LayoutGridIcon, LibraryIcon, Settings01Icon } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 import { SegmentedControl } from "@/components/ui/tabs";
 
-export const LANDING_CMS_SECTIONS = ["hero", "workflow", "catalog", "faq", "footer"];
+export const LANDING_CMS_SECTIONS = ["hero", "bento", "workflow", "catalog", "faq", "footer", "version"];
 
 const sections = [
   { key: "hero", label: "Hero Section", icon: Image01Icon },
+  { key: "bento", label: "Feature Showcase", icon: LayoutGridIcon },
   { key: "workflow", label: "Workflow & Steps", icon: GitMergeIcon },
   { key: "catalog", label: "Academic Catalog", icon: LibraryIcon },
   { key: "faq", label: "FAQ Section", icon: HelpCircleIcon },
   { key: "footer", label: "Footer Section", icon: LayoutBottomIcon },
+  { key: "version", label: "Version Settings", icon: Settings01Icon },
 ];
 
 export default function LandingCmsSectionTabs({ section, onSelect, className }) {

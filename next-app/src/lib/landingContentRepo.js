@@ -1,11 +1,14 @@
 import { systemConfigRepo } from "./systemConfigRepo.js";
+import { DEFAULT_FAQ_CONTENT, DEFAULT_WORKFLOW_CONTENT } from "./landingRequestContent.js";
+
+export { DEFAULT_FAQ_CONTENT, DEFAULT_WORKFLOW_CONTENT };
 
 export const DEFAULT_HERO_CONTENT = {
   headlineLine1: "Tanglaw ng Bayan,",
   headlineLine2: "Dambana ng Kagitingan.",
   description:
     "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus.",
-  ctaText: "Request",
+  ctaText: "Request a Document",
   ctaLink: "/login",
   autoRotateInterval: 5500,
   slides: [
@@ -59,7 +62,7 @@ function sanitizeHeroContent(raw) {
     description: typeof raw.description === "string" && raw.description.trim() !== ""
       ? raw.description.trim()
       : DEFAULT_HERO_CONTENT.description,
-    ctaText: typeof raw.ctaText === "string" && raw.ctaText.trim() !== "" && raw.ctaText.trim() !== "Request Document"
+    ctaText: typeof raw.ctaText === "string" && raw.ctaText.trim() !== "" && !["Request", "Request Document"].includes(raw.ctaText.trim())
       ? raw.ctaText.trim()
       : DEFAULT_HERO_CONTENT.ctaText,
     ctaLink: typeof raw.ctaLink === "string" && raw.ctaLink.trim() !== ""
@@ -340,73 +343,21 @@ function sanitizeBentoContent(raw) {
 
 const WORKFLOW_SETTINGS_KEY = "landing_workflow_content";
 
-export const DEFAULT_WORKFLOW_CONTENT = {
-  eyebrow: "",
-  headingLine1: "How to Request",
-  headingLine2: "Your Documents.",
-  description:
-    "A straightforward guide for students and alumni. See how your document request is submitted online, authenticated from our digital records, and prepared for pick-up at the Registrar counter.",
-  primaryButtonText: "Request Document",
-  primaryButtonLink: "/login",
-  primaryButtonEnabled: true,
-  secondaryButtonText: "Explore Services (8)",
-  secondaryButtonTarget: "catalog",
-  secondaryButtonEnabled: true,
-  autoCurve: true,
-  curveStyle: "gentle", // 'none' | 'gentle' | 'pronounced'
-  steps: [
-    {
-      num: "01",
-      title: "Sign In to Portal",
-      desc: "Log in to the eManage portal using your official Student Number (format: YYYY-XXXXX-SJ-0). Both currently enrolled students and alumni can access the request system directly.",
-      tags: ["Student Portal", "Student Number Login", "Current & Alumni"],
-      actionLabel: "Open Portal",
-      actionType: "link",
-      actionTarget: "/login",
-      actionIcon: "ArrowRight02Icon",
-    },
-    {
-      num: "02",
-      title: "Select Your Document",
-      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
-      tags: ["8 Document Types", "Official Records", "Clear Requirements"],
-      actionLabel: "View Catalog",
-      actionType: "scroll",
-      actionTarget: "catalog",
-      actionIcon: "ArrowDown01Icon",
-    },
-    {
-      num: "03",
-      title: "Submit Your Request",
-      desc: "Indicate why you need the document (for employment, scholarship, transfer, or board exams) and submit your request form right from your phone or computer.",
-      tags: ["Online Submission", "Purpose of Request", "No Paper Forms"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "04",
-      title: "Digital Record Retrieval",
-      desc: "Registrar personnel retrieve your digitized student files directly from the system. Your grades, earned units, and credentials are authenticated without having to search physical folders.",
-      tags: ["Digitized Database", "Fast System Pull", "Staff Authentication"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "05",
-      title: "Pick Up at Registrar Counter",
-      desc: "Once your document is printed and stamped with the university's official dry seal, you'll be notified that it's ready for pick-up at the Ground Floor Registrar counter.",
-      tags: ["Official Dry Seal", "Registrar Counter", "Campus Pick-Up"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-  ],
-};
+const PREVIOUS_WORKFLOW_COPY = new Map([
+  ["Use eManage to request official documents from the PUP San Juan Registrar, follow their progress, and check when to claim them on campus.", "Request official documents through eManage, follow updates from the Registrar, and see when your documents are ready to claim."],
+  ["Request and track documents online. Pick them up at the Registrar.", "Request official documents through eManage, follow updates from the Registrar, and see when your documents are ready to claim."],
+  ["Start with the Academic Document Catalog to see which documents you can request online.", "Browse the catalog to find the document you need and check what to prepare before submitting a request."],
+  ["Browse documents available to request online.", "Browse the catalog to find the document you need and check what to prepare before submitting a request."],
+  ["Use your email and password. Have your student number ready. Alumni who no longer know theirs can provide their academic program.", "Sign in with your eManage email and password. Have your student number ready. Alumni who don’t know theirs can enter their academic program."],
+  ["Sign in with your email and password.", "Sign in with your eManage email and password. Have your student number ready. Alumni who don’t know theirs can enter their academic program."],
+  ["Choose the document, explain why you need it, and attach any required files. Parents and guardians also provide the student’s number, their own name and relationship to the student, a government-issued ID, and an authorization letter or Special Power of Attorney (SPA).", "In Document Requests, choose the document you need, explain what it’s for, and attach any required files before submitting."],
+  ["Select a document, state your purpose, and attach any required files.", "In Document Requests, choose the document you need, explain what it’s for, and attach any required files before submitting."],
+  ["Follow the Registrar’s updates", "Track your request"],
+  ["Open your request details to see its status and the Registrar’s notes. Follow the instructions if more information is needed. If you see Pending Payment, upload your receipt or payment slip in the request.", "Open your request to check its status and read the Registrar’s notes. If you see Pending Payment, upload your receipt or payment slip there."],
+  ["Check the Registrar’s notes. If you see Pending Payment, upload your receipt.", "Open your request to check its status and read the Registrar’s notes. If you see Pending Payment, upload your receipt or payment slip there."],
+  ["When the status is Ready for Pickup, check the request details for claiming instructions. The portal lists Window 1 — Releasing (Room 102).", "When your request shows Ready for Pickup, open the request details for the location and instructions before visiting the Registrar."],
+  ["When you see Ready for Pickup, follow the claiming instructions in your request.", "When your request shows Ready for Pickup, open the request details for the location and instructions before visiting the Registrar."],
+]);
 
 export const MAX_WORKFLOW_STEPS = 7;
 export const MIN_WORKFLOW_STEPS = 2;
@@ -549,7 +500,27 @@ export const landingContentRepo = {
         return { ...DEFAULT_WORKFLOW_CONTENT };
       }
       const parsed = JSON.parse(raw);
-      return sanitizeWorkflowContent(parsed);
+      // Upgrade the old published workflow while preserving separately edited sections.
+      if (Array.isArray(parsed?.steps) &&
+          parsed.steps.some((step) => step?.title === "Digital Record Retrieval") &&
+          parsed.steps?.some((step) => step?.tags?.includes("Student Number Login"))) {
+        return sanitizeWorkflowContent({
+          ...DEFAULT_WORKFLOW_CONTENT,
+          eyebrow: parsed.eyebrow,
+          primaryButtonEnabled: parsed.primaryButtonEnabled,
+          secondaryButtonEnabled: parsed.secondaryButtonEnabled,
+        });
+      }
+      const content = sanitizeWorkflowContent(parsed);
+      return {
+        ...content,
+        description: PREVIOUS_WORKFLOW_COPY.get(content.description) ?? content.description,
+        steps: content.steps.map((step) => ({
+          ...step,
+          title: PREVIOUS_WORKFLOW_COPY.get(step.title) ?? step.title,
+          desc: PREVIOUS_WORKFLOW_COPY.get(step.desc) ?? step.desc,
+        })),
+      };
     } catch (err) {
       console.error("[landingContentRepo] getWorkflowContent error:", err);
       return { ...DEFAULT_WORKFLOW_CONTENT };
@@ -599,7 +570,18 @@ export const landingContentRepo = {
         return { ...DEFAULT_FAQ_CONTENT };
       }
       const parsed = JSON.parse(raw);
-      return sanitizeFaqContent(parsed);
+      const content = sanitizeFaqContent(parsed);
+      const corrections = DEFAULT_FAQ_CONTENT.faqs.filter(({ id }) =>
+        ["how-to-request", "forgot-student-number", "processing-time"].includes(id),
+      );
+      const correctedFaqs = content.faqs.map((faq) => {
+        const outdated = /Log in with your Student Number|Yes! You can skip the student number|Regular certificates take 3 working days/.test(faq.a);
+        return outdated ? corrections.find(({ id }) => id === faq.id) ?? faq : faq;
+      });
+      const missingGuidance = DEFAULT_FAQ_CONTENT.faqs.filter(({ id }) =>
+        ["scanned-records", "parent-request"].includes(id) && !correctedFaqs.some((faq) => faq.id === id),
+      );
+      return { ...content, faqs: [...correctedFaqs, ...missingGuidance].slice(0, MAX_FAQ_ITEMS) };
     } catch (err) {
       console.error("[landingContentRepo] getFaqContent error:", err);
       return { ...DEFAULT_FAQ_CONTENT };
@@ -651,101 +633,190 @@ export const DEFAULT_CATALOG_CONTENT = {
     "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
   items: [
     {
-      id: "tor",
-      title: "Transcript of Records",
+      id: "tor_first_copy",
+      title: "Transcript of Records (TOR) – 1st Copy",
+      client: "Graduates & Alumni",
+      description:
+        "The official comprehensive academic record listing all enrolled courses, final grades, earned units, and degree conferred, issued upon completion of graduation requirements.",
+      requirements: [
+        "Certificate of Candidacy",
+        "Signed General Clearance",
+        "2x2 colored toga photo (white background, with academic cap and hood)",
+        "Valid government-issued ID",
+        "Official Receipt (if not covered under R.A. 10931)",
+      ],
+    },
+    {
+      id: "tor_subsequent_copy",
+      title: "Transcript of Records (TOR) – 2nd / Subsequent Copy",
       client: "Student & Alumni",
       description:
-        "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
+        "An official copy of a student's or alumnus's complete academic record required for employment, board/licensure examinations, graduate school admission, or credential evaluation.",
       requirements: [
-        "2x2 Formal Photo (White Background, Nametag)",
-        "University Clearance Form (Fully Signed)",
-        "Documentary Stamp (BIR Compliant)",
+        "Valid government-issued ID",
+        "Student number or previous TOR reference",
+        "Proof of payment (plus PRC examination notice if requested for licensure purposes)",
+      ],
+    },
+    {
+      id: "diploma_first_copy",
+      title: "Diploma (1st Copy)",
+      client: "Graduates & Alumni",
+      description:
+        "The official institutional certificate conferring an academic degree upon a graduate who has fulfilled all curriculum and clearance requirements.",
+      requirements: [
+        "Certificate of Candidacy",
+        "Signed General Clearance",
+        "2x2 colored toga photo",
+        "Valid ID",
+        "Official Receipt (if not covered under R.A. 10931)",
+      ],
+    },
+    {
+      id: "diploma_replacement",
+      title: "Diploma (Replacement or Certified True Copy)",
+      client: "Alumni Only",
+      description:
+        "An authenticated reproduction or re-issued certification of a previously conferred degree diploma.",
+      requirements: [
+        "Clear copy of the original Diploma (for Certified True Copy) or a notarized Affidavit of Loss (for replacement)",
+        "Valid government-issued ID",
+        "Proof of payment",
+      ],
+    },
+    {
+      id: "certificate_of_graduation",
+      title: "Certificate of Graduation",
+      client: "Graduates & Alumni",
+      description:
+        "An official Registrar certification confirming that a student has completed all academic requirements and graduated with a specific degree.",
+      requirements: [
+        "Signed General Clearance (for recent graduates)",
+        "Valid ID",
+        "Student number",
+      ],
+    },
+    {
+      id: "icg",
+      title: "Informative Copy of Grades (ICG)",
+      client: "Student & Alumni",
+      description:
+        "A semester-by-semester summary of grades used for academic evaluation, scholarship renewal, shifting, re-admission, or personal reference.",
+      requirements: [
+        "Active student number",
+        "Valid school or government-issued ID",
+        "Current Registration Card (if currently enrolled)",
       ],
     },
     {
       id: "cog",
       title: "Certificate of Grades",
-      client: "Enrolled Students",
-      description:
-        "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
-      requirements: [
-        "Current Student ID or SIS Portal Profile Printout",
-        "Specific Academic Year & Semester Identification",
-      ],
-    },
-    {
-      id: "cor",
-      title: "Certificate of Registration",
-      client: "Enrolled Students",
-      description:
-        "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
-      requirements: [
-        "Validated Assessment Form / Enrollment Proof",
-        "Current Semester Course Load Details",
-      ],
-    },
-    {
-      id: "ctc",
-      title: "Honorable Dismissal",
-      client: "Transferees",
-      description:
-        "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
-      requirements: [
-        "Comprehensive Campus University Clearance",
-        "Surrender of PUP Student ID Card",
-        "Parent / Guardian Consent Form (If Minor)",
-      ],
-    },
-    {
-      id: "moral",
-      title: "Good Moral Character",
       client: "Student & Alumni",
       description:
-        "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
+        "An official document certifying final ratings earned in specific semesters or subjects when a full Transcript of Records is not required.",
       requirements: [
-        "OSAS Disciplinary Clearance Slip",
-        "Valid Student ID or Government ID Card",
+        "Valid school or government-issued ID",
+        "Student number",
       ],
     },
     {
-      id: "diploma",
-      title: "Second Copy of Diploma",
-      client: "Alumni Only",
+      id: "certificate_of_enrollment",
+      title: "Certificate of Enrollment",
+      client: "Enrolled Students",
       description:
-        "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
+        "Official verification confirming that a student is currently registered and enrolled in a specific program for the active semester or academic year.",
       requirements: [
-        "Notarized Affidavit of Loss / Damage",
-        "Copy of Official Certificate of Graduation",
-        "Board of Regents Formal Verification",
+        "Current Registration Card (Certificate of Registration)",
+        "Valid school ID",
+      ],
+    },
+    {
+      id: "certificate_of_candidacy",
+      title: "Certificate of Candidacy",
+      client: "Enrolled Students",
+      description:
+        "Formal attestation certifying that a graduating student has been evaluated and recognized as an official candidate for graduation for the current term.",
+      requirements: [
+        "Evaluated curriculum sheet",
+        "Current Registration Card",
+        "Valid school ID",
+      ],
+    },
+    {
+      id: "english_medium_of_instruction",
+      title: "Certificate of English as Medium of Instruction",
+      client: "Student & Alumni",
+      description:
+        "Official certification attesting that English was the primary language of instruction for the student's program, commonly required for overseas employment or international study.",
+      requirements: [
+        "Copy of Transcript of Records or Certificate of Graduation",
+        "Valid government-issued ID",
+      ],
+    },
+    {
+      id: "honorable_dismissal",
+      title: "Honorable Dismissal (Transfer Credential)",
+      client: "Transferees",
+      description:
+        "Official withdrawal and transfer clearance issued to students leaving the university to enroll in another higher education institution.",
+      requirements: [
+        "Signed General Clearance",
+        "Formal letter of intent to transfer",
+        "Surrendered school ID",
+        "Valid government-issued ID",
+      ],
+    },
+    {
+      id: "general_clearance",
+      title: "General Clearance",
+      client: "Student & Alumni",
+      description:
+        "A university-wide clearance certifying that a student has no pending financial, library, laboratory, or administrative accountabilities.",
+      requirements: [
+        "Valid school or government-issued ID",
+        "Student number (subject to departmental sign-offs)",
       ],
     },
     {
       id: "cav",
-      title: "CAV (DFA Apostille / Abroad)",
+      title: "Certification, Authentication, and Verification (CAV)",
       client: "Graduates & Alumni",
       description:
-        "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
+        "Official verification and endorsement of academic credentials (TOR, Diploma, Certificate of Graduation) required for CHED validation and DFA Apostille processing.",
       requirements: [
-        "Certified True Copies of TOR and Diploma",
-        "Passport Identification Copy (Full Legal Name)",
-        "CHED / Red Ribbon Endorsement Checklist",
+        "Original and photocopies of the academic documents for authentication",
+        "Valid government-issued ID",
+        "Proof of payment",
       ],
     },
     {
-      id: "certified_copy",
-      title: "Certified True Copy",
+      id: "good_moral_character",
+      title: "Certificate of Good Moral Character",
       client: "Student & Alumni",
       description:
-        "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
+        "Official attestation certifying that a student or alumnus has maintained satisfactory conduct and has no derogatory disciplinary record during their enrollment.",
       requirements: [
-        "Original Document for Verification Presentation",
-        "Clear Photocopy for Dry Seal Stamping",
+        "Valid school or government-issued ID",
+        "Proof of enrollment or graduation (Registration Card, COG, or TOR)",
+        "Stated purpose of request",
+      ],
+    },
+    {
+      id: "certified_true_copy",
+      title: "Certified True Copy (CTC)",
+      client: "Student & Alumni",
+      description:
+        "Authenticated copies of university-issued documents (such as Registration Cards, TORs, or Certificates) verified and stamped against official Registrar records.",
+      requirements: [
+        "Original document (for verification)",
+        "Clear photocopy to be stamped",
+        "Valid ID",
       ],
     },
   ],
 };
 
-export const MAX_CATALOG_ITEMS = 8;
+export const MAX_CATALOG_ITEMS = 15;
 export const MIN_CATALOG_ITEMS = 2;
 
 function sanitizeCatalogContent(raw) {
@@ -762,16 +833,18 @@ function sanitizeCatalogContent(raw) {
 
   const items = rawItemsArray.length >= MIN_CATALOG_ITEMS
     ? rawItemsArray.map((item, idx) => {
-        const defaultItem = def.items[idx] || {};
+        const docTypeId = Number(item?.docTypeId);
+        const linkedDocTypeId = Number.isSafeInteger(docTypeId) && docTypeId > 0 ? docTypeId : null;
+        const defaultItem = linkedDocTypeId ? {} : def.items[idx] || {};
         const id = typeof item?.id === "string" && item.id.trim() !== ""
           ? item.id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_")
           : defaultItem.id || `doc_${idx + 1}`;
         const title = typeof item?.title === "string" && item.title.trim() !== ""
           ? item.title.trim()
           : defaultItem.title || `Document ${idx + 1}`;
-        const client = typeof item?.client === "string" && item.client.trim() !== ""
+        const client = typeof item?.client === "string"
           ? item.client.trim()
-          : defaultItem.client || "Student & Alumni";
+          : defaultItem.client || "";
         const desc = typeof item?.description === "string" && item.description.trim() !== ""
           ? item.description.trim()
           : defaultItem.description || "Official university academic record.";
@@ -786,12 +859,13 @@ function sanitizeCatalogContent(raw) {
         } else if (Array.isArray(defaultItem.requirements)) {
           requirements = defaultItem.requirements;
         }
-        if (requirements.length === 0) {
+        if (requirements.length === 0 && !Array.isArray(item?.requirements)) {
           requirements = ["Valid Student ID or Government Issued ID"];
         }
 
         return {
           id,
+          docTypeId: linkedDocTypeId,
           title,
           client,
           description: desc,
@@ -808,50 +882,6 @@ function sanitizeCatalogContent(raw) {
 }
 
 export const FAQ_SETTINGS_KEY = "landing_faq_content";
-
-export const DEFAULT_FAQ_CONTENT = {
-  heading: "Frequently Asked Questions",
-  description:
-    "Quick answers on requesting, tracking, and claiming your official school records.",
-  faqs: [
-    {
-      id: "how-to-request",
-      q: "How do I request my school records?",
-      a: "Log in with your Student Number, choose the document you need (like your TOR, grades, or diploma), and submit your request online. No paper forms needed.",
-      category: "Requests",
-    },
-    {
-      id: "forgot-student-number",
-      q: "I forgot my student number. Can I still request?",
-      a: "Yes! You can skip the student number and enter your full name, course, and years attended. Our staff will find your file in the records archive.",
-      category: "Requests",
-    },
-    {
-      id: "processing-time",
-      q: "How long does it take to process my request?",
-      a: "Regular certificates take 3 working days. Clearances take 7 days, and full transcripts (TOR) take up to 20 days. You will be notified when it is ready for pickup.",
-      category: "Processing",
-    },
-    {
-      id: "representative-pickup",
-      q: "Can someone else pick up my document for me?",
-      a: "Yes. They just need to bring: (1) an authorization letter signed by you, (2) a copy of your valid ID, and (3) their own valid ID.",
-      category: "Pickup",
-    },
-    {
-      id: "cutoff-time",
-      q: "What time does daily evaluation cut off?",
-      a: "Cut-off is 3:00 PM on weekdays (Monday to Friday). Requests submitted after 3:00 PM are evaluated the next working morning.",
-      category: "Processing",
-    },
-    {
-      id: "claiming-deadline",
-      q: "How long do I have to claim my document?",
-      a: "Please claim your document within 90 days after notification. Unclaimed documents are safely disposed of after 90 days to protect your privacy.",
-      category: "Pickup",
-    },
-  ],
-};
 
 export const MAX_FAQ_ITEMS = 16;
 export const MIN_FAQ_ITEMS = 2;

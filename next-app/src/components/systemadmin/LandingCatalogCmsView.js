@@ -1,4 +1,6 @@
 "use client"
+import LandingSectionPreview from "./LandingSectionPreview"
+import DocumentCatalog from "@/components/landing/DocumentCatalog"
 import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
@@ -14,10 +16,11 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
+import CatalogClientBadge from "@/components/landing/CatalogClientBadge"
 import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, Delete01Icon, Shield01Icon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-export const MAX_CATALOG_ITEMS = 8
+export const MAX_CATALOG_ITEMS = 15
 export const MIN_CATALOG_ITEMS = 2
 
 const DEFAULT_CATALOG_CONTENT = {
@@ -26,95 +29,184 @@ const DEFAULT_CATALOG_CONTENT = {
     "Explore authentic credentials, university clearance protocols, and official registrar records issued by the University.",
   items: [
     {
-      id: "tor",
-      title: "Transcript of Records",
+      id: "tor_first_copy",
+      title: "Transcript of Records (TOR) – 1st Copy",
+      client: "Graduates & Alumni",
+      description:
+        "The official comprehensive academic record listing all enrolled courses, final grades, earned units, and degree conferred, issued upon completion of graduation requirements.",
+      requirements: [
+        "Certificate of Candidacy",
+        "Signed General Clearance",
+        "2x2 colored toga photo (white background, with academic cap and hood)",
+        "Valid government-issued ID",
+        "Official Receipt (if not covered under R.A. 10931)",
+      ],
+    },
+    {
+      id: "tor_subsequent_copy",
+      title: "Transcript of Records (TOR) – 2nd / Subsequent Copy",
       client: "Student & Alumni",
       description:
-        "Official comprehensive academic transcript for employment, PRC board examinations, and graduate studies.",
+        "An official copy of a student's or alumnus's complete academic record required for employment, board/licensure examinations, graduate school admission, or credential evaluation.",
       requirements: [
-        "2x2 Formal Photo (White Background, Nametag)",
-        "University Clearance Form (Fully Signed)",
-        "Documentary Stamp (BIR Compliant)",
+        "Valid government-issued ID",
+        "Student number or previous TOR reference",
+        "Proof of payment (plus PRC examination notice if requested for licensure purposes)",
+      ],
+    },
+    {
+      id: "diploma_first_copy",
+      title: "Diploma (1st Copy)",
+      client: "Graduates & Alumni",
+      description:
+        "The official institutional certificate conferring an academic degree upon a graduate who has fulfilled all curriculum and clearance requirements.",
+      requirements: [
+        "Certificate of Candidacy",
+        "Signed General Clearance",
+        "2x2 colored toga photo",
+        "Valid ID",
+        "Official Receipt (if not covered under R.A. 10931)",
+      ],
+    },
+    {
+      id: "diploma_replacement",
+      title: "Diploma (Replacement or Certified True Copy)",
+      client: "Alumni Only",
+      description:
+        "An authenticated reproduction or re-issued certification of a previously conferred degree diploma.",
+      requirements: [
+        "Clear copy of the original Diploma (for Certified True Copy) or a notarized Affidavit of Loss (for replacement)",
+        "Valid government-issued ID",
+        "Proof of payment",
+      ],
+    },
+    {
+      id: "certificate_of_graduation",
+      title: "Certificate of Graduation",
+      client: "Graduates & Alumni",
+      description:
+        "An official Registrar certification confirming that a student has completed all academic requirements and graduated with a specific degree.",
+      requirements: [
+        "Signed General Clearance (for recent graduates)",
+        "Valid ID",
+        "Student number",
+      ],
+    },
+    {
+      id: "icg",
+      title: "Informative Copy of Grades (ICG)",
+      client: "Student & Alumni",
+      description:
+        "A semester-by-semester summary of grades used for academic evaluation, scholarship renewal, shifting, re-admission, or personal reference.",
+      requirements: [
+        "Active student number",
+        "Valid school or government-issued ID",
+        "Current Registration Card (if currently enrolled)",
       ],
     },
     {
       id: "cog",
       title: "Certificate of Grades",
-      client: "Enrolled Students",
-      description:
-        "Certified summary of semester grades requested for scholarships, employer tuition subsidies, and academic evaluation.",
-      requirements: [
-        "Current Student ID or SIS Portal Profile Printout",
-        "Specific Academic Year & Semester Identification",
-      ],
-    },
-    {
-      id: "cor",
-      title: "Certificate of Registration",
-      client: "Enrolled Students",
-      description:
-        "Official certification of enrollment status for student discounts, government aid, and passport/visa requirements.",
-      requirements: [
-        "Validated Assessment Form / Enrollment Proof",
-        "Current Semester Course Load Details",
-      ],
-    },
-    {
-      id: "ctc",
-      title: "Honorable Dismissal",
-      client: "Transferees",
-      description:
-        "Formal Certificate of Transfer Credential certifying official release from PUP to transfer to another institution.",
-      requirements: [
-        "Comprehensive Campus University Clearance",
-        "Surrender of PUP Student ID Card",
-        "Parent / Guardian Consent Form (If Minor)",
-      ],
-    },
-    {
-      id: "moral",
-      title: "Good Moral Character",
       client: "Student & Alumni",
       description:
-        "Issued in coordination with OSAS certifying zero pending disciplinary infractions during university residency.",
+        "An official document certifying final ratings earned in specific semesters or subjects when a full Transcript of Records is not required.",
       requirements: [
-        "OSAS Disciplinary Clearance Slip",
-        "Valid Student ID or Government ID Card",
+        "Valid school or government-issued ID",
+        "Student number",
       ],
     },
     {
-      id: "diploma",
-      title: "Second Copy of Diploma",
-      client: "Alumni Only",
+      id: "certificate_of_enrollment",
+      title: "Certificate of Enrollment",
+      client: "Enrolled Students",
       description:
-        "Official replacement graduation diploma reissued after verified destruction or loss of the original parchment.",
+        "Official verification confirming that a student is currently registered and enrolled in a specific program for the active semester or academic year.",
       requirements: [
-        "Notarized Affidavit of Loss / Damage",
-        "Copy of Official Certificate of Graduation",
-        "Board of Regents Formal Verification",
+        "Current Registration Card (Certificate of Registration)",
+        "Valid school ID",
+      ],
+    },
+    {
+      id: "certificate_of_candidacy",
+      title: "Certificate of Candidacy",
+      client: "Enrolled Students",
+      description:
+        "Formal attestation certifying that a graduating student has been evaluated and recognized as an official candidate for graduation for the current term.",
+      requirements: [
+        "Evaluated curriculum sheet",
+        "Current Registration Card",
+        "Valid school ID",
+      ],
+    },
+    {
+      id: "english_medium_of_instruction",
+      title: "Certificate of English as Medium of Instruction",
+      client: "Student & Alumni",
+      description:
+        "Official certification attesting that English was the primary language of instruction for the student's program, commonly required for overseas employment or international study.",
+      requirements: [
+        "Copy of Transcript of Records or Certificate of Graduation",
+        "Valid government-issued ID",
+      ],
+    },
+    {
+      id: "honorable_dismissal",
+      title: "Honorable Dismissal (Transfer Credential)",
+      client: "Transferees",
+      description:
+        "Official withdrawal and transfer clearance issued to students leaving the university to enroll in another higher education institution.",
+      requirements: [
+        "Signed General Clearance",
+        "Formal letter of intent to transfer",
+        "Surrendered school ID",
+        "Valid government-issued ID",
+      ],
+    },
+    {
+      id: "general_clearance",
+      title: "General Clearance",
+      client: "Student & Alumni",
+      description:
+        "A university-wide clearance certifying that a student has no pending financial, library, laboratory, or administrative accountabilities.",
+      requirements: [
+        "Valid school or government-issued ID",
+        "Student number (subject to departmental sign-offs)",
       ],
     },
     {
       id: "cav",
-      title: "CAV (DFA Apostille / Abroad)",
+      title: "Certification, Authentication, and Verification (CAV)",
       client: "Graduates & Alumni",
       description:
-        "Certification, Authentication, and Verification endorsed directly to DFA and CHED for international credential recognition.",
+        "Official verification and endorsement of academic credentials (TOR, Diploma, Certificate of Graduation) required for CHED validation and DFA Apostille processing.",
       requirements: [
-        "Certified True Copies of TOR and Diploma",
-        "Passport Identification Copy (Full Legal Name)",
-        "CHED / Red Ribbon Endorsement Checklist",
+        "Original and photocopies of the academic documents for authentication",
+        "Valid government-issued ID",
+        "Proof of payment",
       ],
     },
     {
-      id: "certified_copy",
-      title: "Certified True Copy",
+      id: "good_moral_character",
+      title: "Certificate of Good Moral Character",
       client: "Student & Alumni",
       description:
-        "Official Registrar dry seal and verification stamp placed on original photocopies of university academic records.",
+        "Official attestation certifying that a student or alumnus has maintained satisfactory conduct and has no derogatory disciplinary record during their enrollment.",
       requirements: [
-        "Original Document for Verification Presentation",
-        "Clear Photocopy for Dry Seal Stamping",
+        "Valid school or government-issued ID",
+        "Proof of enrollment or graduation (Registration Card, COG, or TOR)",
+        "Stated purpose of request",
+      ],
+    },
+    {
+      id: "certified_true_copy",
+      title: "Certified True Copy (CTC)",
+      client: "Student & Alumni",
+      description:
+        "Authenticated copies of university-issued documents (such as Registration Cards, TORs, or Certificates) verified and stamped against official Registrar records.",
+      requirements: [
+        "Original document (for verification)",
+        "Clear photocopy to be stamped",
+        "Valid ID",
       ],
     },
   ],
@@ -141,9 +233,6 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
   const [deleteCardIdx, setDeleteCardIdx] = useState(null)
   const [resetModalOpen, setResetModalOpen] = useState(false)
 
-  // Live preview states
-  const [previewActiveIdx, setPreviewActiveIdx] = useState(0)
-  const [previewDarkTheme, setPreviewDarkTheme] = useViewPreference("cms-catalog", "previewDarkTheme", false)
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -309,9 +398,9 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
     const newCard = {
       id: newId,
       title: "New Credential Document",
-      client: "Enrolled Students",
+      client: "Student & Alumni",
       description: "Official description and purpose of this academic credential.",
-      requirements: ["Valid Student ID or Government Issued ID"],
+      requirements: ["Valid school or government-issued ID"],
     }
 
     setCatalogData((prev) => ({
@@ -340,7 +429,6 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
     setDeleteCardIdx(null)
     notify("Document credential removed")
   }
-
 
   return (
     <div className="flex flex-[1_0_auto] flex-col gap-6 w-full animate-fade-up font-jakarta">
@@ -376,14 +464,14 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                 disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saving ? "Saving Changes..." : "Save Catalog Content"}
+                {saving ? "Saving changes…" : "Save catalog content"}
               </Button>
             </div>
           }
           secondaryActions={
             <>
-              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore Defaults</Button>
-              {isDirty && <Button type="button" variant="outline" onClick={() => { setCatalogData(savedData); notify("Draft changes discarded. Reverted to saved catalog content.") }} disabled={loading || saving} className="h-9 px-4">Discard Draft</Button>}
+              <Button type="button" variant="outline" onClick={() => setResetModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Restore defaults</Button>
+              {isDirty && <Button type="button" variant="outline" onClick={() => { setCatalogData(savedData); notify("Draft changes discarded. Reverted to saved catalog content.") }} disabled={loading || saving} className="h-9 px-4">Discard draft</Button>}
             </>
           }
         />
@@ -425,7 +513,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       onChange={(e) =>
                         setCatalogData((prev) => ({ ...prev, heading: e.target.value }))
                       }
-                      placeholder="e.g. Academic Document Catalog"
+                      placeholder="Academic Document Catalog"
                       maxLength={50}
                       className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
@@ -447,7 +535,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       onChange={(e) =>
                         setCatalogData((prev) => ({ ...prev, description: e.target.value }))
                       }
-                      placeholder="Explore authentic credentials, university clearance protocols..."
+                      placeholder="Explore authentic credentials and university clearance protocols"
                       maxLength={200}
                       className="w-full min-h-[72px] resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
@@ -555,7 +643,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                               title="Delete Card"
                               disabled={currentItems.length <= MIN_CATALOG_ITEMS}
                               onClick={() => setDeleteCardIdx(idx)}
-                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <Delete01Icon size="1em" className="text-xs" />
                             </button>
@@ -597,7 +685,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                         id="catalog-document-title"
                         value={currentCard.title || ""}
                         onChange={(e) => updateCardField("title", e.target.value)}
-                        placeholder="e.g. Transcript of Records"
+                        placeholder="Transcript of Records (TOR): 1st Copy"
                         maxLength={60}
                         className="h-10 w-full rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3.5 text-xs font-semibold focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
@@ -612,7 +700,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                         id="catalog-client"
                         value={currentCard.client || ""}
                         onChange={(e) => updateCardField("client", e.target.value)}
-                        placeholder="e.g. Student & Alumni"
+                        placeholder="Student & Alumni"
                         className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3.5 text-xs mb-2 font-medium focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -649,7 +737,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                         id="catalog-document-description"
                         value={currentCard.description || ""}
                         onChange={(e) => updateCardField("description", e.target.value)}
-                        placeholder="Official comprehensive academic transcript for employment, PRC board examinations..."
+                        placeholder="Official comprehensive academic transcript for employment or PRC board examinations"
                         className="w-full resize-none rounded-xl border border-border bg-white px-3.5 py-2 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-zinc-900 focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
@@ -666,6 +754,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       </div>
 
                       <div className="space-y-2">
+                        {!currentCard.requirements?.length && <p className="text-xs text-gray-500 dark:text-zinc-400">No filing requirements are configured for this document. Add the Registrar-approved requirements below.</p>}
                         {(currentCard.requirements || []).map((req, rIdx) => (
                           <div key={rIdx} className="flex items-center gap-2">
                             <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-bold shrink-0">
@@ -681,7 +770,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                               type="button"
                               title="Remove requirement"
                               onClick={() => removeRequirement(rIdx)}
-                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
+                              className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent transition-colors"
                             >
                               <Cancel01Icon size="1em" className="text-xs" />
                             </button>
@@ -701,7 +790,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                               addRequirement()
                             }
                           }}
-                          placeholder="Add required document or clearance (e.g. Valid Student ID)..."
+                          placeholder="Add required document or clearance (such as Valid Student ID)"
                           className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-border dark:border-border px-3 text-xs flex-1 focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
                         <Button
@@ -728,9 +817,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                       {/* Apple-style card container */}
                       <div className="max-w-[420px] mx-auto bg-[#f5f5f7] dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 text-left shadow-sm border border-black/[0.04] dark:border-border font-jakarta">
                         <div className="flex items-center justify-between mb-4">
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
-                            {currentCard.client || "Student & Alumni"}
-                          </span>
+                          <CatalogClientBadge label={currentCard.client} />
                           <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
                             Official Document
                           </span>
@@ -750,7 +837,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                             Filing Requirements
                           </div>
                           <ul className="space-y-2 text-xs text-gray-600 dark:text-zinc-300">
-                            {(currentCard.requirements || []).slice(0, 2).map((req, i) => (
+                            {(currentCard.requirements || []).map((req, i) => (
                               <li key={i} className="flex items-start gap-2 leading-relaxed">
                                 <span className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[7px] font-bold">
                                   <Tick01Icon size={16}  />
@@ -758,12 +845,8 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
                                 <span className="text-[11px] line-clamp-1">{req}</span>
                               </li>
                             ))}
-                            {(currentCard.requirements?.length || 0) > 2 && (
-                              <li className="text-gray-400 text-[10px] italic pl-5">
-                                +{(currentCard.requirements?.length || 0) - 2} more...
-                              </li>
-                            )}
                           </ul>
+                          {!currentCard.requirements?.length && <p className="text-xs text-gray-500 dark:text-zinc-400">Contact the Registrar to confirm filing requirements.</p>}
                         </div>
                       </div>
                     </div>
@@ -775,133 +858,9 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
 
           {/* TAB 2: Interactive Live Carousel Preview */}
           {activeTab === "preview" && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Simulated Apple-Style Document Carousel
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Live interactive carousel with smooth horizontal scaling, active card highlighting, and pagination dots.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
-                    Card {previewActiveIdx + 1} of {currentItems.length}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
-                  >
-                    <AppIcon className={cn("", previewDarkTheme ? "Sun01Icon text-amber-500" : "MoonIcon text-zinc-700")} />
-                    <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Stage Container */}
-              <div
-                data-light-only={!previewDarkTheme ? "" : undefined}
-                data-catalog-preview-theme={previewDarkTheme ? "dark" : "light"}
-                className={cn(
-                  "relative w-full rounded-2xl border p-6 sm:p-10 overflow-hidden transition-colors select-none font-jakarta flex flex-col items-center",
-                  previewDarkTheme && "dark",
-                  previewDarkTheme
-                    ? "bg-zinc-950 text-white border-zinc-800"
-                    : "bg-white text-gray-900 border-border"
-                )}
-              >
-                {/* Header */}
-                <div className="max-w-3xl text-center mb-8">
-                  <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-gray-950 dark:text-white leading-[1.08]">
-                    {catalogData.heading || "Academic Document Catalog"}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-900 dark:text-zinc-300 mt-3 leading-relaxed">
-                    {catalogData.description}
-                  </p>
-                </div>
-
-                {/* Carousel Horizontal Scroll Strip */}
-                <div className="w-full flex overflow-x-auto gap-4 pb-6 pt-2 hide-scrollbar snap-x snap-mandatory">
-                  {currentItems.map((doc, idx) => {
-                    const isActive = idx === previewActiveIdx
-                    return (
-                      <div
-                        key={doc.id || idx}
-                        onClick={() => setPreviewActiveIdx(idx)}
-                        className={cn(
-                          "shrink-0 w-[280px] sm:w-[320px] md:w-[360px] flex flex-col rounded-3xl p-6 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 cursor-pointer snap-center",
-                          previewDarkTheme ? "bg-zinc-900 border border-white/10" : "bg-[#f5f5f7] border border-black/[0.04]",
-                          isActive
-                            ? "scale-[1.02] ring-2 ring-pup-maroon/50 dark:ring-red-500/50 shadow-md z-10"
-                            : "scale-[0.96] opacity-75 hover:opacity-100"
-                        )}
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "font-sans tabular-nums")}>
-                            {doc.client || "Student & Alumni"}
-                          </span>
-                          <span className="text-[10px] font-sans tabular-nums text-zinc-400 dark:text-zinc-500 font-medium">
-                            Official Document
-                          </span>
-                        </div>
-
-                        <h3 className="text-base sm:text-lg font-bold text-gray-950 dark:text-white tracking-tight leading-snug mb-2">
-                          {doc.title}
-                        </h3>
-
-                        <p className="text-xs text-gray-900 dark:text-zinc-300 leading-relaxed mb-6 flex-grow">
-                          {doc.description}
-                        </p>
-
-                        <div className="pt-4 border-t border-black/5 dark:border-border mt-auto">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans tabular-nums mb-2 flex items-center gap-1.5">
-                            <Shield01Icon size="1em" className="text-xs" />
-                            Filing Requirements
-                          </div>
-                          <ul className="space-y-1.5 text-xs text-gray-600 dark:text-zinc-300">
-                            {doc.requirements?.slice(0, 2).map((req, i) => (
-                              <li key={i} className="flex items-start gap-2 leading-relaxed">
-                                <span className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[7px] font-bold">
-                                  <Tick01Icon size={16}  />
-                                </span>
-                                <span className="text-[11px] line-clamp-1">{req}</span>
-                              </li>
-                            ))}
-                            {(doc.requirements?.length || 0) > 2 && (
-                              <li className="text-gray-400 text-[10px] italic pl-5">
-                                +{(doc.requirements?.length || 0) - 2} more...
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Pagination Dots */}
-                <div className="flex items-center justify-center gap-1.5 mt-2 h-4">
-                  {currentItems.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setPreviewActiveIdx(idx)}
-                      className={cn(
-                        "h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border-0",
-                        idx === previewActiveIdx
-                          ? "w-6 bg-black dark:bg-white"
-                          : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
-                      )}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <LandingSectionPreview>
+              {(classic) => <DocumentCatalog classic={classic} previewContent={catalogData} />}
+            </LandingSectionPreview>
           )}
         </CardContent>
         )}
@@ -921,7 +880,7 @@ export default function LandingCatalogCmsView({ showToast, onDirtyChange }) {
         buttonIcon=" ReloadIcon"
         selectedItems={[
           "Reset catalog section heading and description",
-          "Restore official 8 PUP San Juan academic credential documents",
+          "Restore official 15 PUP San Juan academic credential documents",
           "Revert all filing requirement checklists and client eligibility tags",
         ]}
         isPersonnelModal={true}

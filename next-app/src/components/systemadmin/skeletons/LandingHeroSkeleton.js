@@ -10,12 +10,13 @@ export default function LandingHeroSkeleton() {
     <div className="flex min-w-0 flex-[1_0_auto] flex-col font-jakarta">
       <Card className="flex min-w-0 flex-[1_0_auto] w-full flex-col gap-0 rounded-none border-0 bg-transparent p-0 shadow-none">
         <PageHeader
-          title={<div className="flex flex-wrap items-center gap-[6px]"><span>Landing Page CMS</span><Skeleton className="h-3 w-12 rounded" /><span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">· Hero Section</span></div>}
+          title={<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1"><span>Landing Page CMS</span><Skeleton className="h-3 w-12 rounded" /><span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400">· Hero Section</span></div>}
           description="Manage public portal headlines, descriptive messaging, campus background photography, and operational details."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
-          actions={<div className="flex flex-wrap items-center gap-2"><Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" /><Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" /><Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" /></div>}
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+          actions={<div className="flex flex-wrap items-center gap-2"><Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" /><Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" /></div>}
         />
         <LandingCmsViewTabs activeTab="content" contentLabel="Hero Content" />
         <LandingHeroSkeletonContent />

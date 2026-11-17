@@ -1,4 +1,6 @@
 "use client"
+import LandingSectionPreview from "./LandingSectionPreview"
+import LandingHero from "@/components/landing/LandingHero"
 import useViewPreference from "@/hooks/useViewPreference"
 import { Textarea } from "@/components/ui/textarea";
 
@@ -11,6 +13,8 @@ import { Select } from "@/components/ui/select"
 import PageHeader from "@/components/shared/PageHeader"
 import LandingCmsViewTabs from "./LandingCmsViewTabs"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import LandingVersionSettings from "./LandingVersionSettings"
+import LandingBentoCmsView from "./LandingBentoCmsView"
 import LandingWorkflowCmsView from "./LandingWorkflowCmsView"
 import LandingCatalogCmsView from "./LandingCatalogCmsView"
 import LandingFaqCmsView from "./LandingFaqCmsView"
@@ -30,7 +34,6 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
   const [uploadingIndex, setUploadingIndex] = useState(null)
   const [isAddingPhoto, setIsAddingPhoto] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-hero", "activeTab", "slides") // 'slides' | 'preview'
-  const [previewSlideIdx, setPreviewSlideIdx] = useState(0)
 
   // Form State
   const [heroData, setHeroData] = useState({
@@ -287,9 +290,6 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       ...prev,
       slides: prev.slides.filter((_, i) => i !== idx),
     }))
-    if (previewSlideIdx >= heroData.slides.length - 1) {
-      setPreviewSlideIdx(0)
-    }
     setDeleteSlideIndex(null)
     notify("Photo removed")
   }
@@ -318,13 +318,6 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       return { ...prev, slides: nextSlides }
     })
 
-    setPreviewSlideIdx((prev) => {
-      if (prev === fromIndex) return toIndex
-      if (fromIndex < toIndex && prev > fromIndex && prev <= toIndex) return prev - 1
-      if (fromIndex > toIndex && prev >= toIndex && prev < fromIndex) return prev + 1
-      return prev
-    })
-
     notify(`Moved Photo ${fromIndex + 1} to position ${toIndex + 1}`)
   }
 
@@ -333,6 +326,8 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
       <Card className="flex min-w-0 flex-[1_0_auto] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-sm dark:bg-card dark:shadow-none">
       <LandingCmsSectionTabs section={currentSection} onSelect={handleSelectSection} />
 
+      {currentSection === "version" && <LandingVersionSettings hero={savedData} showToast={showToast} onDirtyChange={reportSectionDirty} />}
+      {currentSection === "bento" && <LandingBentoCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "workflow" && <LandingWorkflowCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "catalog" && <LandingCatalogCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
       {currentSection === "faq" && <LandingFaqCmsView showToast={showToast} onDirtyChange={reportSectionDirty} />}
@@ -422,7 +417,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                               headlineLine1: e.target.value,
                             }))
                           }
-                          placeholder="e.g. Tanglaw ng Bayan,"
+                          placeholder="Tanglaw ng Bayan,"
                           maxLength={45}
                           className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
@@ -446,7 +441,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                               headlineLine2: e.target.value,
                             }))
                           }
-                          placeholder="e.g. Dambana ng Kagitingan."
+                          placeholder="Dambana ng Kagitingan."
                           maxLength={45}
                           className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                         />
@@ -473,7 +468,7 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
                         }
                         rows={3}
                         maxLength={280}
-                        placeholder="Official institutional records keeping, archive retrieval, and document verification system..."
+                        placeholder="Official institutional records keeping, archive retrieval, and document verification system"
                         className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
                     </div>
@@ -626,140 +621,9 @@ export default function LandingPageCmsTab({ showToast, initialSection, onDirtyCh
 
             {/* TAB 2: Interactive Live Hero Preview */}
             {activeTab === "preview" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                  <div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                      Simulated Hero Portal Preview
-                    </h3>
-                    <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5">
-                      Live interactive preview showing exact layout, typography, atmospheric gradients, and slide transitions.
-                    </p>
-                  </div>
-
-                  {/* Slide cycler in preview */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
-                      Slide {previewSlideIdx + 1} of {heroData.slides.length}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPreviewSlideIdx((prev) =>
-                            prev === 0 ? heroData.slides.length - 1 : prev - 1
-                          )
-                        }
-                        className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
-                      >
-                        <ArrowLeft01Icon size="1em" className="text-xs" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPreviewSlideIdx((prev) =>
-                            (prev + 1) % heroData.slides.length
-                          )
-                        }
-                        className="h-8 w-8 p-0 rounded-xl border border-border dark:border-border shadow-2xs cursor-pointer active:scale-95"
-                      >
-                        <ArrowRight01Icon size="1em" className="text-xs" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Miniature Hero Simulator Matching LandingHero.js */}
-                <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-white dark:bg-card shadow-sm flex flex-col select-none font-jakarta">
-                  {/* Hero Image & Content Frame */}
-                  <div className="relative w-full h-[75vh] min-h-[550px] overflow-hidden flex flex-col justify-center px-6 sm:px-12 lg:px-16">
-                    {/* Background Images */}
-                    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none bg-white">
-                      {heroData.slides.map((s, sIdx) => (
-                        <div
-                          key={sIdx}
-                          className={cn(
-                            "absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out",
-                            sIdx === previewSlideIdx ? "opacity-100" : "opacity-0"
-                          )}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={s.src}
-                            alt={s.alt || "Campus Photo"}
-                            className="w-full h-full object-cover object-center"
-                            onError={(e) => {
-                              e.currentTarget.src = "/assets/pup/landing-1.jpg"
-                            }}
-                          />
-                        </div>
-                      ))}
-                      {/* Atmospheric Gradient Scrims matching LandingHero.js */}
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-black/95 via-black/70 to-black/30" />
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-t from-black via-black/30 to-transparent" />
-                      <div className="absolute inset-0 w-full h-full bg-[#800000]/30" />
-                    </div>
-
-                    {/* Centered Hero Content Matching LandingHero.js */}
-                    <div className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 sm:py-14 flex flex-col items-center text-center">
-                      <div className="w-full max-w-4xl flex flex-col items-center">
-                        <h1
-                          style={{
-                            fontSize: "clamp(2.25rem, 5vw, 4.5rem)",
-                            lineHeight: 1.04,
-                          }}
-                          className="tanglaw-heading font-extrabold text-white tracking-tight sm:tracking-tighter mb-6"
-                        >
-                          <span className="block">{heroData.headlineLine1 || "Tanglaw ng Bayan,"}</span>
-                          <span className="block">{heroData.headlineLine2 || "Dambana ng Kagitingan."}</span>
-                        </h1>
-
-                        <p className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl mx-auto mb-10 font-normal">
-                          {heroData.description ||
-                            "Official institutional records keeping, archive retrieval, and document verification system for Polytechnic University of the Philippines San Juan Campus."}
-                        </p>
-
-                        {/* Action Cluster: centered */}
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                          <Button
-                            type="button"
-                            className="h-11 px-8 flex items-center justify-center gap-2 cursor-pointer pointer-events-none"
-                          >
-                            <span>{(!heroData.ctaText || heroData.ctaText === "Request Document") ? "Request Document" : heroData.ctaText}</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Apple-Style Pagination Dots Outside Image Panel Matching LandingHero.js */}
-                  <div className="w-full flex justify-center py-5 bg-white dark:bg-zinc-950">
-                    <div className="flex items-center gap-2 px-3 py-1">
-                      {heroData.slides.map((_, dotIdx) => {
-                        const isActive = dotIdx === previewSlideIdx
-                        return (
-                          <button
-                            key={dotIdx}
-                            type="button"
-                            onClick={() => setPreviewSlideIdx(dotIdx)}
-                            aria-label={`View photo ${dotIdx + 1}`}
-                            className={cn(
-                              "h-1.5 rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-500 ease-out cursor-pointer",
-                              isActive
-                                ? "w-6 bg-gray-800 dark:bg-zinc-100"
-                                : "w-1.5 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400"
-                            )}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <LandingSectionPreview>
+                {(classic) => <LandingHero classic={classic} previewContent={heroData} preview />}
+              </LandingSectionPreview>
             )}
           </CardContent>
         )}
@@ -956,7 +820,7 @@ function SlideCard({
             onClick={onDelete}
             onMouseDown={(e) => e.stopPropagation()}
             title="Remove photo"
-            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-1 shadow-2xs"
+            className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 transition-colors"
           >
             <Delete01Icon size="1em" className="text-xs" />
           </button>

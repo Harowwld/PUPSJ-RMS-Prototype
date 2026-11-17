@@ -1,5 +1,7 @@
 "use client"
 
+import LandingSectionPreview from "./LandingSectionPreview"
+import FAQSection from "@/components/landing/FAQSection"
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
 import DashboardSearch from "@/components/systemadmin/DashboardSearch"
@@ -22,55 +24,14 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
-import { Add01Icon, ArrowDown01Icon, ArrowUp01Icon, Copy01Icon, CovidInfoIcon, Delete01Icon, LayoutGridIcon, MinusSignIcon } from "hugeicons-react";
+import { DEFAULT_FAQ_CONTENT } from "@/lib/landingRequestContent"
+import { ArrowDown01Icon, ArrowUp01Icon, Copy01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
 
 
 export const MAX_FAQ_ITEMS = 16
 export const MIN_FAQ_ITEMS = 2
 
-const DEFAULT_FAQ_CONTENT = {
-  heading: "Frequently Asked Questions",
-  description:
-    "Quick answers on requesting, tracking, and claiming your official school records.",
-  faqs: [
-    {
-      id: "how-to-request",
-      q: "How do I request my school records?",
-      a: "Log in with your Student Number, choose the document you need (like your TOR, grades, or diploma), and submit your request online. No paper forms needed.",
-      category: "Requests",
-    },
-    {
-      id: "forgot-student-number",
-      q: "I forgot my student number. Can I still request?",
-      a: "Yes! You can skip the student number and enter your full name, course, and years attended. Our staff will find your file in the records archive.",
-      category: "Requests",
-    },
-    {
-      id: "processing-time",
-      q: "How long does it take to process my request?",
-      a: "Regular certificates take 3 working days. Clearances take 7 days, and full transcripts (TOR) take up to 20 days. You will be notified when it is ready for pickup.",
-      category: "Processing",
-    },
-    {
-      id: "representative-pickup",
-      q: "Can someone else pick up my document for me?",
-      a: "Yes. They just need to bring: (1) an authorization letter signed by you, (2) a copy of your valid ID, and (3) their own valid ID.",
-      category: "Pickup",
-    },
-    {
-      id: "cutoff-time",
-      q: "What time does daily evaluation cut off?",
-      a: "Cut-off is 3:00 PM on weekdays (Monday to Friday). Requests submitted after 3:00 PM are evaluated the next working morning.",
-      category: "Processing",
-    },
-    {
-      id: "claiming-deadline",
-      q: "How long do I have to claim my document?",
-      a: "Please claim your document within 90 days after notification. Unclaimed documents are safely disposed of after 90 days to protect your privacy.",
-      category: "Pickup",
-    },
-  ],
-}
+
 
 const STANDARD_CATEGORIES = [
   "Requests",
@@ -97,9 +58,6 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
   const [deleteFaqIdx, setDeleteFaqIdx] = useState(null)
   const [resetModalOpen, setResetModalOpen] = useState(false)
 
-  // Live Preview State
-  const [previewOpenIdx, setPreviewOpenIdx] = useState(0)
-  const [previewFilter, setPreviewFilter] = useViewPreference("cms-faq", "previewFilter", "all")
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -357,7 +315,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                 disabled={loading || saving || !isDirty}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saving ? "Saving Changes..." : "Save FAQ Content"}
+                {saving ? "Saving changes…" : "Save FAQ content"}
               </Button>
             </div>
           }
@@ -566,11 +524,12 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
 
                           <button
                             type="button"
+                            disabled={faqData.faqs.length <= MIN_FAQ_ITEMS}
                             onClick={() => setDeleteFaqIdx(originalIdx)}
                             title="Delete Question"
-                            className="h-7 w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border-0 bg-transparent p-0 ml-0.5"
+                            className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                           >
-                            <Delete01Icon size="1em"  className="text-xs" />
+                            <Delete01Icon size="1em" className="text-xs" />
                           </button>
 
                           <div className="w-[1px] h-4 bg-gray-200 dark:bg-white/10 mx-1" />
@@ -609,7 +568,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                               id={`faq-question-${originalIdx}`}
                               value={item.q}
                               onChange={(e) => updateFaqItem(originalIdx, "q", e.target.value)}
-                              placeholder="e.g. How do I request my school records?"
+                              placeholder="How do I request my school records?"
                               maxLength={140}
                               className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
@@ -631,7 +590,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) => updateFaqItem(originalIdx, "a", e.target.value)}
                               rows={3}
                               maxLength={400}
-                              placeholder="Provide clear, direct guidance for this inquiry..."
+                              placeholder="Provide clear, direct guidance for this inquiry"
                               className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -674,7 +633,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                                         {cat}
                                       </option>
                                     ))}
-                                    <option value="Custom">Custom Tag...</option>
+                                    <option value="Custom">Custom tag</option>
                                   </Select>
                                 </div>
 
@@ -684,7 +643,7 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
                                   onChange={(e) =>
                                     updateFaqItem(originalIdx, "category", e.target.value)
                                   }
-                                  placeholder="Type or customize category tag (e.g. Requests, Clearance, Graduation)"
+                                  placeholder="Type or customize category tag (Requests, Clearance, Graduation)"
                                   maxLength={30}
                                   className="h-9 flex-1 rounded-xl border border-border bg-white px-3 text-xs placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                                 />
@@ -747,134 +706,9 @@ export default function LandingFaqCmsView({ showToast, onDirtyChange }) {
 
           {/* TAB 2: Interactive Live Preview */}
           {activeTab === "preview" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Simulated Public FAQ Section
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Live interactive preview showing exact layout, accordion animations, category filters, and styling.
-                  </p>
-                </div>
-
-                <span className="text-xs font-sans tabular-nums text-gray-400">
-                  {faqData.faqs.length} Total Questions
-                </span>
-              </div>
-
-              {/* Simulated Public Portal Section Matching FAQSection.js */}
-              <div className="rounded-[2.5rem] bg-[#dadddf] dark:bg-zinc-900/60 p-4 sm:p-8 select-none">
-                <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-950 rounded-[2rem] p-6 sm:p-10 shadow-xs">
-                  {/* Section Header */}
-                  <div className="text-center mb-6 sm:mb-8 max-w-xl mx-auto">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-black dark:text-white tracking-tight">
-                      {faqData.heading || "Frequently Asked Questions"}
-                    </h2>
-                    {faqData.description && (
-                      <p className="mt-2 text-xs sm:text-sm text-gray-900 dark:text-zinc-300">
-                        {faqData.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Preview Category Filter Pills Matching FAQSection.js */}
-                  {uniqueCategories.length > 1 && (
-                    <div className="flex justify-center mb-8">
-                      <div className="flex items-center p-1 border border-border dark:border-border rounded-full bg-white dark:bg-zinc-900 shadow-xs overflow-x-auto gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewFilter("all")}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] whitespace-nowrap cursor-pointer",
-                            previewFilter === "all"
-                              ? "bg-[#800000] text-white"
-                              : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                          )}
-                        >
-                          <LayoutGridIcon size="1em" className={cn("text-sm", previewFilter === "all" ? "text-white" : "text-gray-400")} />
-                          All Questions
-                        </button>
-                        {uniqueCategories.map((cat) => {
-                          const isActive = previewFilter.toLowerCase() === cat.toLowerCase()
-                          return (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => setPreviewFilter(cat)}
-                              className={cn(
-                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] whitespace-nowrap cursor-pointer",
-                                isActive
-                                  ? "bg-[#800000] text-white"
-                                  : "bg-transparent text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                              )}
-                            >
-                              {cat}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Accordion List Matching FAQSection.js */}
-                  <div className="max-w-2xl mx-auto space-y-3">
-                    {faqData.faqs
-                      .filter((f) => {
-                        if (previewFilter === "all") return true
-                        return (f.category || "General").toLowerCase() === previewFilter.toLowerCase()
-                      })
-                      .map((faq, idx) => {
-                        const isOpen = previewOpenIdx === idx
-                        return (
-                          <div
-                            key={faq.id || idx}
-                            className={cn(
-                              "rounded-2xl transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 overflow-hidden",
-                              isOpen ? "bg-[#09090b] text-white" : "bg-[#f4f4f5] dark:bg-zinc-800/60 text-black dark:text-zinc-100"
-                            )}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => setPreviewOpenIdx(isOpen ? null : idx)}
-                              className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer select-none transition-colors border-0 bg-transparent"
-                            >
-                              <span className={cn("text-xs sm:text-sm font-medium pr-4", isOpen ? "text-white" : "text-black dark:text-zinc-100")}>
-                                {faq.q}
-                              </span>
-
-                              <div className="shrink-0 ml-4">
-                                {isOpen ? (
-                                  <MinusSignIcon size="1em" className="text-white text-base" />
-                                ) : (
-                                  <Add01Icon size="1em" className="text-gray-900 dark:text-zinc-300 text-base" />
-                                )}
-                              </div>
-                            </button>
-
-                            <AnimatePresence initial={false}>
-                              {isOpen && (
-                                <motion.div
-                                  key="content"
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="px-4 sm:px-5 pb-5 pt-0 text-xs sm:text-[13px] text-gray-300 leading-relaxed font-normal">
-                                    <p>{faq.a}</p>
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        )
-                      })}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LandingSectionPreview>
+              {(classic) => <FAQSection classic={classic} previewContent={faqData} />}
+            </LandingSectionPreview>
           )}
         </CardContent>
         )}

@@ -12,20 +12,20 @@ export default function LandingCatalogSkeleton() {
         <PageHeader
           icon=" LibraryIcon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · Academic Document Catalog
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                15 documents · Academic Document Catalog
               </span>
             </div>
           }
-          description="Configure authentic university credentials, filing requirements, client eligibility, and Apple-style carousel cards."
+          description="Configure authentic university credentials, document codes, client eligibility tags, and filing requirements for the Apple-style carousel."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2 flex-wrap">
-              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
@@ -74,22 +74,22 @@ export function LandingCatalogSkeletonContent() {
                     Catalog Credentials
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-sans tabular-nums">
-                    6 of 8
+                    15 of 15
                   </span>
                 </div>
                 <p className="text-xs text-gray-900 dark:text-zinc-300 mt-0.5">
-                  Select a credential to edit or adjust order in the carousel.
+                  Select a credential to edit or adjust its order in the carousel.
                 </p>
               </div>
 
-              <Skeleton className="h-8 w-20 rounded-xl dark:bg-muted" />
+              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
             </div>
 
             {/* Cards List */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {/* Item 1: Active Selected Card */}
-              <div className="p-3.5 rounded-2xl border border-red-300 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/30 flex items-center gap-3.5 select-none">
-                <div className="w-7 h-7 rounded-xl bg-pup-maroon text-white flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0">
+              <div className="p-3.5 rounded-2xl border border-gray-950 dark:border-white bg-gray-100/80 dark:bg-zinc-800 flex items-center gap-3.5 select-none shadow-xs ring-1 ring-black/10 dark:ring-white/20">
+                <div className="w-7 h-7 rounded-full bg-gray-950 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0 shadow-xs">
                   01
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
@@ -109,7 +109,7 @@ export function LandingCatalogSkeletonContent() {
                   key={pos}
                   className="p-3.5 rounded-2xl border border-border dark:border-border bg-white dark:bg-zinc-900/50 flex items-center gap-3.5 select-none"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 flex items-center justify-center font-sans tabular-nums text-[11px] font-bold shrink-0">
                     {pos}
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
@@ -123,11 +123,6 @@ export function LandingCatalogSkeletonContent() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Add Card Dashed Button */}
-            <div className="w-full py-3.5 rounded-xl border-2 border-dashed border-border dark:border-border flex items-center justify-center">
-              <Skeleton className="h-4 w-48 rounded dark:bg-muted" />
             </div>
           </div>
 

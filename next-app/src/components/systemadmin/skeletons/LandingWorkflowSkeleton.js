@@ -15,20 +15,20 @@ export default function LandingWorkflowSkeleton() {
         <PageHeader
           icon=" GitMergeIcon"
           title={
-            <div className="flex items-center gap-[6px]">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span>Landing Page CMS</span>
-              <span className="text-[12px] font-normal text-pup-maroon dark:text-red-400">
-                · Workflow &amp; Steps
+              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                5 steps · Workflow &amp; Steps
               </span>
             </div>
           }
           description="Manage public portal process workflow, student application steps, and left-column narrative."
           showBorder={false}
+          className="p-6"
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-900 dark:text-zinc-300 mt-[4px]"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-2 flex-wrap">
-              <Skeleton className="h-9 w-9 rounded-xl dark:bg-muted" />
+            <div className="flex shrink-0 items-center gap-2 flex-wrap">
               <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
               <Skeleton className="h-9 w-36 rounded-xl dark:bg-muted" />
             </div>
@@ -79,7 +79,7 @@ export function LandingWorkflowSkeletonContent() {
               <span className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
                 Sequential Application Process
               </span>
-              <span className="text-xs font-sans tabular-nums font-medium text-pup-maroon dark:text-red-400 bg-pup-maroon/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-sans tabular-nums font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                 5 of 7 Steps
               </span>
             </div>
@@ -97,10 +97,10 @@ export function LandingWorkflowSkeletonContent() {
         {/* Workflow Steps Accordion */}
         <div className="space-y-4">
           {/* STEP 1 ACCORDION: EXPANDED */}
-          <div className="rounded-2xl border border-pup-maroon/40 dark:border-red-500/40 bg-white dark:bg-card shadow-xs overflow-hidden">
+          <div className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-xs overflow-hidden">
             <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-2xl">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-gray-950 dark:bg-zinc-100 text-white dark:text-zinc-900 font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
                   01
                 </div>
                 <div className="min-w-0 space-y-1">
@@ -138,7 +138,7 @@ export function LandingWorkflowSkeletonContent() {
             >
               <div className="flex items-center justify-between p-4 bg-gray-50/40 dark:bg-zinc-900/20 rounded-2xl">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-pup-maroon dark:bg-red-600 text-white font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 font-sans tabular-nums text-xs font-bold flex items-center justify-center shrink-0">
                     {stepNum}
                   </div>
                   <div className="min-w-0 space-y-1">

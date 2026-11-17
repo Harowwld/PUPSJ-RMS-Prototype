@@ -2,6 +2,8 @@
 
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import useViewPreference from "@/hooks/useViewPreference"
+import LandingSectionPreview from "./LandingSectionPreview"
+import { WorkflowSection } from "@/components/landing/ProcessWorkflow"
 import { Textarea } from "@/components/ui/textarea";
 
 
@@ -19,98 +21,13 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import useCmsDraft from "@/hooks/useCmsDraft"
 import LandingCmsDraftStatus from "./LandingCmsDraftStatus"
 import { cn } from "@/lib/utils"
-import { ArrowDown01Icon, ArrowRight02Icon, ArrowUp01Icon, Cancel01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
+import { DEFAULT_WORKFLOW_CONTENT as DEFAULT_WORKFLOW } from "@/lib/landingRequestContent"
+import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, CovidInfoIcon, Delete01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 
 
-const DEFAULT_WORKFLOW = {
-  eyebrow: "",
-  headingLine1: "How to Request",
-  headingLine2: "Your Documents.",
-  description:
-    "A straightforward guide for students and alumni. See how your document request is submitted online, authenticated from our digital records, and prepared for pick-up at the Registrar counter.",
-  primaryButtonText: "Request Document",
-  primaryButtonLink: "/login",
-  primaryButtonEnabled: true,
-  secondaryButtonText: "Explore Services (8)",
-  secondaryButtonTarget: "catalog",
-  secondaryButtonEnabled: true,
-  autoCurve: true,
-  curveStyle: "gentle",
-  steps: [
-    {
-      num: "01",
-      title: "Sign In to Portal",
-      desc: "Log in to the eManage portal using your official Student Number (format: YYYY-XXXXX-SJ-0). Both currently enrolled students and alumni can access the request system directly.",
-      tags: ["Student Portal", "Student Number Login", "Current & Alumni"],
-      actionLabel: "Open Portal",
-      actionType: "link",
-      actionTarget: "/login",
-      actionIcon: "ArrowRight02Icon",
-    },
-    {
-      num: "02",
-      title: "Select Your Document",
-      desc: "Browse the available documents and select what you need, such as a Transcript of Records (TOR), Certificate of Grades, Certificate of Registration, or Diploma.",
-      tags: ["8 Document Types", "Official Records", "Clear Requirements"],
-      actionLabel: "View Catalog",
-      actionType: "scroll",
-      actionTarget: "catalog",
-      actionIcon: "ArrowDown01Icon",
-    },
-    {
-      num: "03",
-      title: "Submit Your Request",
-      desc: "Indicate why you need the document (for employment, scholarship, transfer, or board exams) and submit your request form right from your phone or computer.",
-      tags: ["Online Submission", "Purpose of Request", "No Paper Forms"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "04",
-      title: "Digital Record Retrieval",
-      desc: "Registrar personnel retrieve your digitized student files directly from the system. Your grades, earned units, and credentials are authenticated without having to search physical folders.",
-      tags: ["Digitized Database", "Fast System Pull", "Staff Authentication"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-    {
-      num: "05",
-      title: "Pick Up at Registrar Counter",
-      desc: "Once your document is printed and stamped with the university's official dry seal, you'll be notified that it's ready for pick-up at the Ground Floor Registrar counter.",
-      tags: ["Official Dry Seal", "Registrar Counter", "Campus Pick-Up"],
-      actionLabel: "",
-      actionType: "none",
-      actionTarget: "",
-      actionIcon: "",
-    },
-  ],
-}
 
 
-function getStepCurveClass(idx, total, curveStyle = "gentle", autoCurve = true) {
-  if (!autoCurve || curveStyle === "none" || total <= 1) {
-    return "lg:ml-0 sm:ml-0"
-  }
-  const progress = idx / (total - 1)
-  const factor = Math.sin(progress * Math.PI)
-
-  if (curveStyle === "pronounced") {
-    if (factor > 0.85) return "lg:ml-28 sm:ml-14"
-    if (factor > 0.55) return "lg:ml-20 sm:ml-10"
-    if (factor > 0.25) return "lg:ml-10 sm:ml-5"
-    return "lg:ml-0 sm:ml-0"
-  }
-
-  if (factor > 0.85) return "lg:ml-20 sm:ml-10"
-  if (factor > 0.55) return "lg:ml-14 sm:ml-7"
-  if (factor > 0.25) return "lg:ml-6 sm:ml-3"
-  return "lg:ml-0 sm:ml-0"
-}
 
 export const MAX_STEPS = 7
 export const MIN_STEPS = 2
@@ -121,6 +38,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-workflow", "activeTab", "content") // 'content' | 'preview'
   const [workflowData, setWorkflowData] = useState(DEFAULT_WORKFLOW)
+  const currentSteps = workflowData.steps || []
   const { isDirty, savedData, markSaved } = useCmsDraft(workflowData, onDirtyChange)
 
   // Step deletion & reset modal states
@@ -129,7 +47,6 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
   const [expandedStepIndex, setExpandedStepIndex] = useState(0)
 
   // Preview interactive state
-  const [previewActiveStep, setPreviewActiveStep] = useState(0)
 
 
   const notify = useCallback(
@@ -417,7 +334,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                             headingLine1: e.target.value,
                           }))
                         }
-                        placeholder="e.g. How to Request"
+                        placeholder="How to request"
                         maxLength={40}
                         className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
@@ -441,7 +358,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                             headingLine2: e.target.value,
                           }))
                         }
-                        placeholder="e.g. Your Documents."
+                        placeholder="your documents."
                         maxLength={40}
                         className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
@@ -468,14 +385,14 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                       }
                       rows={3}
                       maxLength={320}
-                      placeholder="A straightforward guide for students and alumni..."
+                      placeholder="A straightforward guide for students and alumni"
                       className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Header Bar with Curve Style & Add Step Buttons */}
+              {/* Workflow steps */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
                 <div>
                   <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
@@ -583,41 +500,35 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                           className="flex items-center gap-1 shrink-0 ml-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Button
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="sm"
                             disabled={isFirst}
                             onClick={() => moveStep(idx, -1)}
-                            className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                            className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title="Move Step Up"
                           >
-                            <ArrowUp01Icon size="1em"  className="text-sm" />
-                          </Button>
+                            <ArrowUp01Icon size="1em" className="text-xs" />
+                          </button>
 
-                          <Button
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="sm"
                             disabled={isLast}
                             onClick={() => moveStep(idx, 1)}
-                            className="h-8 w-8 p-0 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                            className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title="Move Step Down"
                           >
-                            <ArrowDown01Icon size="1em"  className="text-sm" />
-                          </Button>
+                            <ArrowDown01Icon size="1em" className="text-xs" />
+                          </button>
 
-                          <Button
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="sm"
                             disabled={currentSteps.length <= MIN_STEPS}
                             onClick={() => setDeleteStepIndex(idx)}
-                            className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-30 cursor-pointer"
+                            className="w-7 h-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center cursor-pointer border-0 bg-transparent p-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={currentSteps.length <= MIN_STEPS ? `Minimum of ${MIN_STEPS} steps required` : "Delete Step"}
                           >
-                            <Delete01Icon size="1em"  className="text-sm" />
-                          </Button>
+                            <Delete01Icon size="1em" className="text-xs" />
+                          </button>
 
                           <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
 
@@ -655,7 +566,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                               id={`workflow-step-title-${idx}`}
                               value={step.title}
                               onChange={(e) => updateStep(idx, "title", e.target.value)}
-                              placeholder="e.g. Sign In to Portal"
+                              placeholder="Sign in to portal"
                               maxLength={60}
                               className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
@@ -677,7 +588,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
                               onChange={(e) => updateStep(idx, "desc", e.target.value)}
                               rows={3}
                               maxLength={280}
-                              placeholder="Explain what the student or personnel does at this phase..."
+                              placeholder="Explain what the student or personnel does at this phase"
                               className="w-full resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                             />
                           </div>
@@ -738,112 +649,10 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
             </div>
           )}
 
-          {/* TAB 2: INTERACTIVE LIVE PREVIEW */}
           {activeTab === "preview" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Simulated Workflow Section Preview
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Live interactive canvas showing the left sticky column, curved arc progression, step tags, and glowing step rings.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300">
-                    Viewing {currentSteps.length} Steps · Arc: {workflowData.curveStyle}
-                  </span>
-                </div>
-              </div>
-
-              {/* Miniature Workflow Simulator Matching ProcessWorkflow.js */}
-              <div className="relative w-full rounded-2xl overflow-hidden border border-border dark:border-border bg-zinc-950 shadow-lg p-6 sm:p-12 select-none text-white">
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-                  {/* Left Column Preview (Centered relative to steps) */}
-                  <div className="lg:col-span-5 space-y-5 flex flex-col justify-center my-auto">
-                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1] max-w-[320px]">
-                      {workflowData.headingLine1 || "How to Request"}<br />
-                      {workflowData.headingLine2 || "Your Documents."}
-                    </h3>
-
-                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal max-w-md">
-                      {workflowData.description}
-                    </p>
-                  </div>
-
-                  {/* Right Column Steps Preview */}
-                  <div className="lg:col-span-7 space-y-8 relative">
-                    {currentSteps.map((step, sIdx) => {
-                      const isSelected = previewActiveStep === sIdx
-                      const curveClass = getStepCurveClass(
-                        sIdx,
-                        currentSteps.length,
-                        workflowData.curveStyle || "gentle",
-                        workflowData.autoCurve !== false
-                      )
-
-                      return (
-                        <div
-                          key={sIdx}
-                          onClick={() => setPreviewActiveStep(sIdx)}
-                          className={cn(
-                            "relative pl-14 sm:pl-16 group transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 cursor-pointer",
-                            curveClass
-                          )}
-                        >
-                          {/* Circle & Stem */}
-                          <div className="absolute left-0 top-0">
-                            <div
-                              className={cn(
-                                "w-11 h-11 rounded-full flex items-center justify-center font-sans tabular-nums text-sm transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300",
-                                isSelected
-                                  ? "bg-[#800000] text-white shadow-md"
-                                  : "bg-white/5 border border-white/10 text-zinc-400 group-hover:text-white"
-                              )}
-                            >
-                              {step.num || String(sIdx + 1).padStart(2, "0")}
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="pt-0.5">
-                            <h4 className="text-base sm:text-lg font-medium text-white tracking-tight mb-1.5 group-hover:text-red-200 transition-colors">
-                              {step.title}
-                            </h4>
-
-                            {step.desc && (
-                              <p className="text-xs text-zinc-400 leading-relaxed font-normal max-w-xl mb-3">
-                                {step.desc}
-                              </p>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              {(step.tags || []).map((t, ti) => (
-                                <span
-                                  key={ti}
-                                  className={cn(BADGE_BASE, "bg-transparent text-zinc-400")}
-                                >
-                                  {t}
-                                </span>
-                              ))}
-
-                              {step.actionLabel && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 ml-2">
-                                  <span>{step.actionLabel}</span>
-                                  <ArrowRight02Icon size="1em" className="text-[10px]" />
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LandingSectionPreview>
+              {(classic) => <WorkflowSection workflow={workflowData} classic={classic} />}
+            </LandingSectionPreview>
           )}
         </CardContent>
         )}
@@ -862,7 +671,7 @@ export default function LandingWorkflowCmsView({ showToast, onDirtyChange }) {
         icon="ReloadIcon"
         buttonIcon="ReloadIcon"
         selectedItems={[
-          "Reset custom workflow headline, subtitle, and layout curvature",
+          "Reset custom workflow headline and subtitle",
           "Restore official 5-step PUP San Juan document application sequence",
           "Revert all step descriptions, guidelines, and requirement tags",
         ]}

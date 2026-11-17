@@ -1,9 +1,11 @@
 "use client"
 
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
+import LandingSectionPreview from "./LandingSectionPreview"
+import LandingBento from "@/components/landing/LandingBento"
 import { Textarea } from "@/components/ui/textarea";
 
 
+import useCmsDraft from "@/hooks/useCmsDraft"
 import useViewPreference from "@/hooks/useViewPreference"
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,7 +16,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 import { SegmentedControl } from "@/components/ui/tabs"
-import { Agreement01Icon, Archive01Icon, ArrowDown01Icon, CalendarCheckIn01Icon, Cursor01Icon, File02Icon, LaptopIcon, Loading01Icon, Notification02Icon, SentIcon, Shield01Icon, Target01Icon, Tick01Icon, UserSearch01Icon } from "hugeicons-react";
+import { Archive01Icon, ArrowDown01Icon, CalendarCheckIn01Icon, Cursor01Icon, Loading01Icon, Shield01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const DEFAULT_BENTO = {
   eyebrow: "Student & Alumni Services",
@@ -69,14 +71,14 @@ const DEFAULT_BENTO = {
   },
 }
 
-export default function LandingBentoCmsView({ showToast }) {
+export default function LandingBentoCmsView({ showToast, onDirtyChange }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useViewPreference("cms-bento", "activeTab", "cards")
   const [activeCardTab, setActiveCardTab] = useState(1) // 1-5 or null
   const [bentoData, setBentoData] = useState(DEFAULT_BENTO)
+  const { markSaved } = useCmsDraft(bentoData, onDirtyChange)
   const [resetModalOpen, setResetModalOpen] = useState(false)
-  const [previewDarkTheme, setPreviewDarkTheme] = useState(false)
 
   const notify = useCallback(
     (msg, isError = false) => {
@@ -96,6 +98,7 @@ export default function LandingBentoCmsView({ showToast }) {
         if (ignore) return
         if (res.ok && json.ok && json.data) {
           setBentoData(json.data)
+          markSaved(json.data)
         } else {
           notify(json.error || "Failed to load bento grid configuration", true)
         }
@@ -111,7 +114,7 @@ export default function LandingBentoCmsView({ showToast }) {
     return () => {
       ignore = true
     }
-  }, [notify])
+  }, [markSaved, notify])
 
   const handleSave = async () => {
     if (!bentoData.headingLine1?.trim()) {
@@ -129,6 +132,7 @@ export default function LandingBentoCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setBentoData(json.data)
+        markSaved(json.data)
         notify("Bento grid configuration saved successfully")
       } else {
         notify(json.error || "Failed to save bento grid settings", true)
@@ -152,6 +156,7 @@ export default function LandingBentoCmsView({ showToast }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         setBentoData(json.data)
+        markSaved(json.data)
         notify("Bento grid features reverted to default")
       } else {
         notify(json.error || "Failed to reset bento settings", true)
@@ -324,7 +329,7 @@ export default function LandingBentoCmsView({ showToast }) {
                               card1: { ...prev.card1, successLabel: e.target.value },
                             }))
                           }
-                          placeholder="e.g. Submitted!"
+                          placeholder="Submitted"
                           className="h-10 rounded-xl bg-white dark:bg-card text-xs font-sans tabular-nums"
                         />
                       </div>
@@ -1044,7 +1049,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       onChange={(e) =>
                         setBentoData((prev) => ({ ...prev, headingLine1: e.target.value }))
                       }
-                      placeholder="e.g. Request, track, and"
+                      placeholder="Request, track, and"
                       className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-sm font-bold"
                     />
                   </div>
@@ -1058,7 +1063,7 @@ export default function LandingBentoCmsView({ showToast }) {
                       onChange={(e) =>
                         setBentoData((prev) => ({ ...prev, headingLine2: e.target.value }))
                       }
-                      placeholder="e.g. claim your documents"
+                      placeholder="claim your documents"
                       className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-border dark:border-border text-sm font-bold text-zinc-400"
                     />
                   </div>
@@ -1074,7 +1079,7 @@ export default function LandingBentoCmsView({ showToast }) {
                     onChange={(e) =>
                       setBentoData((prev) => ({ ...prev, description: e.target.value }))
                     }
-                    placeholder="Submit your request online, track its progress in real time..."
+                    placeholder="Submit your request online and track its progress in real time"
                     className="w-full resize-none"
                   />
                 </div>
@@ -1084,234 +1089,9 @@ export default function LandingBentoCmsView({ showToast }) {
 
           {/* TAB 3: Interactive Bento Live Preview */}
           {activeTab === "preview" && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card p-6 shadow-2xs">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-zinc-50">
-                    Simulated Bento Grid (5-Card Layout)
-                  </h3>
-                  <p className="text-[12px] font-normal text-gray-900 dark:text-zinc-300">
-                    Live interactive simulation showing Card 1 &amp; 2 in Row 1 (50/50) and Cards 3, 4, 5 in Row 2 (3-Column).
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setPreviewDarkTheme(!previewDarkTheme)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-xs font-semibold text-gray-700 dark:text-zinc-200 border border-border dark:border-border cursor-pointer shadow-xs hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors shrink-0"
-                >
-                  <AppIcon className={cn("", previewDarkTheme ? "Sun01Icon text-amber-500" : "MoonIcon text-zinc-700")} />
-                  <span>{previewDarkTheme ? "Switch to Light View" : "Switch to Dark View"}</span>
-                </button>
-              </div>
-
-              {/* Stage Container */}
-              <div
-                className={cn(
-                  "relative w-full rounded-2xl border p-6 sm:p-10 overflow-hidden transition-colors select-none font-jakarta",
-                  previewDarkTheme ? "bg-zinc-950 border-zinc-800 text-white" : "bg-[#f5f5f7] border-border text-zinc-900"
-                )}
-              >
-                {/* Header Preview */}
-                <div className="max-w-4xl mb-8">
-                  <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-[1.1]">
-                    {bentoData.headingLine1 || "Request, track, and"}<br />
-                    <span className="text-zinc-400">{bentoData.headingLine2 || "claim your documents"}</span>
-                  </h2>
-                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-xl leading-relaxed">
-                    {bentoData.description}
-                  </p>
-                </div>
-
-                {/* 2-Row Bento Grid Container */}
-                <div className="w-full flex flex-col gap-4 sm:gap-5">
-                  {/* ROW 1: 2 Large Cards */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-                    {/* Card 1 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 sm:p-7 flex flex-col justify-between shadow-sm">
-                      <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[190px] flex flex-col justify-center items-center relative overflow-hidden">
-                        <div className="relative z-10 w-full max-w-[180px] flex flex-col gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-sm">
-                              <File02Icon size={16}  />
-                            </div>
-                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{bentoData.card1?.step1Label || "Select Document"}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-zinc-400 shrink-0 border border-black/5">
-                              <Target01Icon size={16}  />
-                            </div>
-                            <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{bentoData.card1?.step2Label || "Specify Purpose"}</span>
-                          </div>
-                          <button className="px-4 py-2 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 w-[110px] mx-auto bg-[#800000] text-white shadow-xs">
-                            {bentoData.card1?.buttonLabel || "Submit"}
-                            <SentIcon size="1em" className="text-xs" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                          {bentoData.card1?.title || "Request Online in Minutes"}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {bentoData.card1?.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 2 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 sm:p-7 flex flex-col justify-between shadow-sm">
-                      <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[190px] flex flex-col justify-center items-center relative overflow-hidden">
-                        <div className="relative z-10 w-full max-w-[190px] flex flex-col gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0">
-                              <CalendarCheckIn01Icon size="1em" className="text-xs" />
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card2?.step1Title || "Clear Schedule"}</div>
-                              <div className="text-[10px] text-zinc-500">{bentoData.card2?.step1Subtitle || "Based on document type"}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0">
-                              <Notification02Icon size="1em" className="text-xs" />
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card2?.step2Title || "Live Notifications"}</div>
-                              <div className="text-[10px] text-zinc-500">{bentoData.card2?.step2Subtitle || "Track progress instantly"}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#800000] text-white flex items-center justify-center text-xs shrink-0 shadow-sm">
-                              <Agreement01Icon size={16}  />
-                            </div>
-                            <div>
-                              <div className="text-xs font-semibold text-[#800000] dark:text-red-400">{bentoData.card2?.step3Title || "Visit Counter"}</div>
-                              <div className="text-[10px] text-[#800000]/70 dark:text-red-300">{bentoData.card2?.step3Subtitle || "No waiting in lines"}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                          {bentoData.card2?.title || "Know Exactly When It's Ready"}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {bentoData.card2?.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ROW 2: 3 Medium Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-                    {/* Card 3 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
-                      <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center relative overflow-hidden">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="flex flex-col items-center gap-1.5">
-                            <div className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5">
-                              <LaptopIcon size="1em" className="text-sm" />
-                            </div>
-                            <span className="text-[9px] font-bold text-zinc-500 uppercase">{bentoData.card3?.step1Label || "Request"}</span>
-                          </div>
-                          <div className="w-6 h-0 border-t-2 border-dashed border-zinc-300 -translate-y-2" />
-                          <div className="flex flex-col items-center gap-1.5">
-                            <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center shadow-md">
-                              <Archive01Icon size="1em" className="text-base" />
-                            </div>
-                            <span className="text-[9px] font-bold text-[#800000] dark:text-red-400 uppercase">{bentoData.card3?.step2Label || "Room 1"}</span>
-                          </div>
-                          <div className="w-6 h-0 border-t-2 border-dashed border-zinc-300 -translate-y-2" />
-                          <div className="flex flex-col items-center gap-1.5">
-                            <div className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-[#800000] dark:text-red-400 border border-black/5">
-                              <UserSearch01Icon size="1em" className="text-sm" />
-                            </div>
-                            <span className="text-[9px] font-bold text-zinc-500 uppercase">{bentoData.card3?.step3Label || "Staff"}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                          {bentoData.card3?.title || "Direct from Campus Archives"}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {bentoData.card3?.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 4 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
-                      <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex flex-col justify-center items-center">
-                        <div className="w-full max-w-[170px] flex flex-col gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <Tick01Icon size="1em" className="text-xs" />
-                            </div>
-                            <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item1 || "Student Number"}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <Tick01Icon size="1em" className="text-xs" />
-                            </div>
-                            <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item2 || "Active Email"}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-emerald-600 border border-black/5 shrink-0">
-                              <Tick01Icon size="1em" className="text-xs" />
-                            </div>
-                            <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{bentoData.card4?.item3 || "Campus Clearance"}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                          {bentoData.card4?.title || "What You Need to Prepare"}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {bentoData.card4?.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 5 */}
-                    <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-black/[0.04] dark:border-border p-5 flex flex-col justify-between shadow-sm">
-                      <div className="rounded-2xl bg-[#f5f5f7] dark:bg-zinc-950 p-4 border-none min-h-[160px] flex items-center justify-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex flex-col items-center justify-center text-[#800000] dark:text-red-400 border border-black/5 shrink-0 relative">
-                          <Shield01Icon size="1em" className="text-2xl" />
-                          <span className={cn(BADGE_BASE, "absolute -bottom-2 bg-[#800000] text-white")}>
-                            {bentoData.card5?.badgeLabel || "RA 11032"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
-                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
-                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item1 || "Zero Red Tape"}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
-                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item2 || "No Hidden Delays"}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Tick01Icon size="1em" className="text-emerald-600 text-xs" />
-                            <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{bentoData.card5?.item3 || "Transparent Tracking"}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                          {bentoData.card5?.title || "Protected by Law (RA 11032)"}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {bentoData.card5?.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LandingSectionPreview>
+              {(classic) => <LandingBento classic={classic} previewContent={bentoData} contained />}
+            </LandingSectionPreview>
           )}
         </CardContent>
       </Card>

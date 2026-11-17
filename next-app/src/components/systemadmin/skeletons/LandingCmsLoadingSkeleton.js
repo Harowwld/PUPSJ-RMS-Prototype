@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { LANDING_CMS_SECTIONS } from "../LandingCmsSectionTabs"
+import LandingBentoSkeleton from "./LandingBentoSkeleton"
 import LandingHeroSkeleton from "./LandingHeroSkeleton"
 import LandingWorkflowSkeleton from "./LandingWorkflowSkeleton"
 import LandingCatalogSkeleton from "./LandingCatalogSkeleton"
@@ -11,6 +12,7 @@ import LandingFooterSkeleton from "./LandingFooterSkeleton"
 
 const skeletons = {
   hero: LandingHeroSkeleton,
+  bento: LandingBentoSkeleton,
   workflow: LandingWorkflowSkeleton,
   catalog: LandingCatalogSkeleton,
   faq: LandingFaqSkeleton,
@@ -19,10 +21,12 @@ const skeletons = {
 
 const sectionLabels = [
   { key: "hero", label: "Hero Section" },
+  { key: "bento", label: "Feature Showcase" },
   { key: "workflow", label: "Workflow & Steps" },
   { key: "catalog", label: "Academic Catalog" },
   { key: "faq", label: "FAQ Section" },
   { key: "footer", label: "Footer Section" },
+  { key: "version", label: "Version Settings" },
 ]
 
 export default function LandingCmsLoadingSkeleton({ section = "hero" }) {
@@ -52,7 +56,12 @@ export default function LandingCmsLoadingSkeleton({ section = "hero" }) {
             })}
           </div>
         </div>
-        <SectionSkeleton />
+        {selected === "version" ? (
+          <div className="p-6">
+            <h2 className="text-base font-semibold">Public Landing Page Version</h2>
+            <p role="status" className="mt-3 text-sm text-muted-foreground">Loading version settings…</p>
+          </div>
+        ) : <SectionSkeleton />}
       </Card>
     </div>
   )
