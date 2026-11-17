@@ -1,3 +1,4 @@
+import { awaitingFirstPostEventReport, postEventCampusToday, postEventReminderRecipientJoin } from "./osasPostEventWorkflow.js";
 import { query, queryOne } from "./postgres.js";
 import { decryptPII } from "./piiEncryption.js";
 import { assertAccountEmailConfigured, sendWorkflowNotificationEmail } from "./accountEmail.js";
@@ -12,15 +13,16 @@ async function canSendReminder(item, link) {
       [link.searchParams.get("request"), item.account_id],
     ));
   }
-  if (item.event_key === "osas_report_due") {
+  if (item.event_key === "osas_report_due" || item.event_key === "osas_report_overdue") {
+    const deadlineFilter = item.event_key === "osas_report_due"
+      ? `BETWEEN ${postEventCampusToday} AND ${postEventCampusToday} + 3`
+      : `< ${postEventCampusToday}`;
     return Boolean(await queryOne(
       `SELECT proposal.id FROM event_proposals proposal
-        WHERE proposal.id = $1 AND proposal.status = 'Approved' AND proposal.post_event_status = 'Pending Submission'
-          AND proposal.post_event_due_date BETWEEN (now() AT TIME ZONE 'Asia/Manila')::date
-            AND (now() AT TIME ZONE 'Asia/Manila')::date + 3
-          AND NOT EXISTS (SELECT 1 FROM osas_post_event_reports report WHERE report.event_proposal_id = proposal.id)
-          AND $2 = (SELECT portal_submitter_account_id FROM event_proposal_versions
-            WHERE event_proposal_id = proposal.id ORDER BY revision_number DESC LIMIT 1)`,
+          ${postEventReminderRecipientJoin}
+          AND proposal.id = $1 AND version.portal_submitter_account_id = $2
+          AND ${awaitingFirstPostEventReport("proposal")}
+          AND proposal.post_event_due_date ${deadlineFilter}`,
       [link.searchParams.get("postEventFor"), item.account_id],
     ));
   }

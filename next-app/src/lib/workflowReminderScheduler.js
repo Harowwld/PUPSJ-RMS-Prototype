@@ -1,8 +1,9 @@
+import { awaitingFirstPostEventReport, postEventCampusToday, postEventReminderRecipientJoin } from "./osasPostEventWorkflow.js";
 import { agingRegistrarQueue, agingProposals, agingPostEventReports } from "./workflowQueueFilters.js";
 import { transaction } from "./postgres.js";
 import { claimNotificationOccurrence, queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "./workflowNotificationsRepo.js";
 
-const campusToday = "(now() AT TIME ZONE 'Asia/Manila')::date";
+const campusToday = postEventCampusToday;
 
 const reminderWindows = { request_pickup_deadline: 7, osas_report_due: 3 };
 
@@ -21,25 +22,31 @@ const reminders = [
     targetPath: (id) => `/student?view=odrs&request=${id}`,
     detail: (date) => `Claim your document by ${date}.`,
   },
-  {
-    eventKey: "osas_report_due",
+  ...[
+    {
+      eventKey: "osas_report_due",
+      deadlineFilter: `BETWEEN ${campusToday} AND ${campusToday} + ${reminderWindows.osas_report_due}`,
+      detail: (date) => `Submit your post-event report by ${date}.`,
+    },
+    {
+      eventKey: "osas_report_overdue",
+      deadlineFilter: `< ${campusToday}`,
+      detail: (date) => `Your post-event report was due on ${date}. Submit it through OSAS Submissions.`,
+    },
+  ].map(({ eventKey, deadlineFilter, detail }) => ({
+    eventKey,
     sql: `SELECT proposal.id, version.portal_submitter_account_id AS account_id,
                  proposal.post_event_due_date::text AS deadline
             FROM event_proposals proposal
-            JOIN LATERAL (
-              SELECT portal_submitter_account_id FROM event_proposal_versions
-               WHERE event_proposal_id = proposal.id ORDER BY revision_number DESC LIMIT 1
-            ) version ON version.portal_submitter_account_id IS NOT NULL
-           WHERE proposal.office_id = 'osas' AND proposal.status = 'Approved'
-             AND proposal.post_event_status = 'Pending Submission'
-             AND proposal.post_event_due_date BETWEEN ${campusToday} AND ${campusToday} + ${reminderWindows.osas_report_due}
-             AND NOT EXISTS (SELECT 1 FROM osas_post_event_reports report WHERE report.event_proposal_id = proposal.id)
+            ${postEventReminderRecipientJoin}
+             AND ${awaitingFirstPostEventReport("proposal")}
+             AND proposal.post_event_due_date ${deadlineFilter}
              AND NOT EXISTS (SELECT 1 FROM workflow_notification_occurrences sent
                 WHERE sent.event_key = $1 AND sent.occurrence_key = proposal.id || ':' || proposal.post_event_due_date::text)
            ORDER BY proposal.post_event_due_date, proposal.id LIMIT 200 FOR UPDATE OF proposal SKIP LOCKED`,
     targetPath: (id) => `/student?view=osas&postEventFor=${id}`,
-    detail: (date) => `Submit your post-event report by ${date}.`,
-  },
+    detail,
+  })),
 ];
 
 const queueSummarySql = `

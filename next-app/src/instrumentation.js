@@ -6,5 +6,7 @@ export async function register() {
     initWorkflowEmailWorker();
     const { initWorkflowReminderScheduler } = await import("./lib/workflowReminderScheduler.js");
     initWorkflowReminderScheduler();
+    const { initReceiptFileCleanup } = await import("./lib/receiptFileCleanup.js");
+    initReceiptFileCleanup();
   }
 }

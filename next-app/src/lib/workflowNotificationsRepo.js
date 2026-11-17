@@ -22,16 +22,20 @@ export async function queuePortalWorkflowNotification(db, { accountId, eventKey,
   );
 }
 
-export async function queueRequestUpdate(db, { request, nextStatus, isReopen, pickupChanged, postedMessage }) {
+export async function queueRequestUpdate(db, { request, nextStatus, isReopen, pickupChanged, postedMessage, correctionsRequested, correctionsSubmitted }) {
   const statusChanged = request.status !== nextStatus;
   if (request.office_id === "registrar" && (isReopen || (statusChanged && nextStatus === "Pending"))) {
     await queueOfficeWorkflowNotification(db, {
       officeId: "registrar", eventKey: "queue_registrar_returned",
-      title: `Request #${request.id} returned to the queue`, entityType: "document_request", entityId: request.id,
+      title: correctionsSubmitted
+        ? `Corrections for request #${request.id} awaiting review`
+        : `Request #${request.id} returned to the queue`, entityType: "document_request", entityId: request.id,
     });
   }
   const eventKey = statusChanged && nextStatus === "Ready"
     ? (request.doc_type === MISSING_DOCUMENTS_INQUIRY ? "request_inquiry_response" : "request_ready")
+    : correctionsSubmitted ? "request_corrections_received"
+    : correctionsRequested ? "request_action_required"
     : isReopen ? "request_reopened"
     : statusChanged ? requestStatusEvents[nextStatus]
     : pickupChanged ? "request_pickup_updated"

@@ -61,6 +61,7 @@ const EVENT_FALLBACK_DESCRIPTIONS = {
   request_submitted: "Your document request has been received and queued for Registrar review.",
   request_processing: "The Registrar is currently preparing and processing your requested document.",
   request_action_required: "Action is required on your document request. Open the request to review the Registrar's note.",
+  request_corrections_received: "All requested corrections were received. Your request is back in the Registrar review queue.",
   request_receipt_received: "Your payment proof was received and queued for Registrar verification.",
   request_payment: "Payment proof is required before the Registrar can continue processing your request.",
   request_pickup_deadline: "Your pickup deadline is approaching. Claim your document at the Registrar's Office soon.",
@@ -81,6 +82,7 @@ const EVENT_FALLBACK_DESCRIPTIONS = {
   osas_review: "Your event proposal is currently under review by OSAS.",
   osas_revision: "OSAS requested revisions on your event proposal. Open it to view reviewer notes.",
   osas_decision: "A decision has been posted on your event proposal.",
+  osas_report_overdue: "Your post-event report is overdue. Open the event to submit it.",
   osas_report_due: "Your post-event narrative and liquidation report is due soon.",
   osas_report_update: "Your post-event report status or details have been updated.",
   osas_report_action: "Your post-event report requires your attention before it can be finalized.",
@@ -144,6 +146,7 @@ function getStudentNotificationVisuals(eventKey = "") {
     key === "osas_revision" ||
     key === "osas_bylaws_revision" ||
     key === "osas_report_due" ||
+    key === "osas_report_overdue" ||
     key === "osas_report_action"
   ) {
     return {
@@ -184,6 +187,7 @@ function getStudentNotificationDescription(item) {
     request_submitted: `Document request ${refLabel} has been received and queued for Registrar review.`,
     request_processing: `The Registrar is currently preparing and processing ${refLabel}.`,
     request_action_required: `Action is required on ${refLabel}. Open to review the Registrar's note.`,
+    request_corrections_received: `All corrections for ${refLabel} were received. The request is back in the Registrar review queue.`,
     request_receipt_received: `Payment proof for ${refLabel} was received and queued for Registrar verification.`,
     request_payment: `Payment proof is required for ${refLabel} before the Registrar can continue processing.`,
     request_pickup_deadline: `The pickup deadline for ${refLabel} is approaching. Claim your document at the Registrar's Office.`,
