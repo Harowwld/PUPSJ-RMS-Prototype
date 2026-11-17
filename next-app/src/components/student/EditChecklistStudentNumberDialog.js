@@ -56,12 +56,12 @@ export default function EditChecklistStudentNumberDialog({ user, onClose, onSave
       <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-md" hideClose={saving}>
         <form className="min-w-0 space-y-5 p-5 sm:p-6" onSubmit={submit} aria-busy={saving}>
           <DialogHeader className="pr-8">
-            <DialogTitle>{hasNumber ? "Edit Student Number" : "Add Student Number"}</DialogTitle>
+            <DialogTitle>{hasNumber ? "Edit student number" : "Add student number"}</DialogTitle>
             <DialogDescription>Enter the student number printed on your school ID.</DialogDescription>
           </DialogHeader>
           <div className="rounded-2xl border border-border bg-gray-50/90 px-4 dark:bg-white/[0.04]">
             <div className="space-y-2 py-4">
-              <label htmlFor={fieldId} className="block text-xs font-semibold">Student Number</label>
+              <label htmlFor={fieldId} className="block text-xs font-semibold">Student number</label>
               <Input
                 id={fieldId}
                 className="h-12 text-base font-semibold tracking-wide tabular-nums"
@@ -81,14 +81,14 @@ export default function EditChecklistStudentNumberDialog({ user, onClose, onSave
             </div>
             {user.email && (
               <dl className="border-t border-border py-3.5">
-                <dt className="text-xs font-semibold">Verified Email</dt>
+                <dt className="text-xs font-semibold">Verified email</dt>
                 <dd className="mt-1 text-sm text-gray-600 [overflow-wrap:anywhere] dark:text-zinc-300">{user.email}</dd>
               </dl>
             )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={saving}>{saving ? "Saving Student Number…" : "Save Student Number"}</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Saving student number…" : "Save student number"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

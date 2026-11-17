@@ -66,8 +66,8 @@ export default function RegistrarODRSTab({ showToast }) {
         setTotal(Number(json.total) || 0);
       } else {
         showToast?.(
-          formatErrorMessage(json?.error || "Unable to load document requests.", {
-            defaultTitle: "Failed to Load Requests",
+          formatErrorMessage(json?.error || "Could not load document requests.", {
+            defaultTitle: "Could not load requests",
           }),
           true
         );
@@ -75,7 +75,7 @@ export default function RegistrarODRSTab({ showToast }) {
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Load Requests",
+          defaultTitle: "Could not load requests",
         }),
         true
       );
@@ -230,7 +230,7 @@ export default function RegistrarODRSTab({ showToast }) {
         <Card className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
           <PageHeader
             icon="InboxIcon"
-            title="Student Document Requests"
+            title="Student document requests"
             description="Review, process, and publish status updates for student academic document requests."
             showBorder={false}
             titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
@@ -314,12 +314,15 @@ export default function RegistrarODRSTab({ showToast }) {
                             {item.client_type === "Parent" ? "Parent/Guardian" : item.client_type}
                           </span>
                         )}
-                        {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-900 dark:text-zinc-300" title={`${item.attachment_count || item.attachments?.length} attachment(s)`}>
-                            <Attachment01Icon size="1em" className="text-[11px]" />
-                            {item.attachment_count || item.attachments?.length}
-                          </span>
-                        )}
+                        {(Number(item.attachment_count) > 0 || (Array.isArray(item.attachments) && item.attachments.length > 0)) && (() => {
+                          const attachmentCount = item.attachment_count || item.attachments?.length || 0;
+                          return (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-900 dark:text-zinc-300" title={`${attachmentCount} ${attachmentCount === 1 ? "attachment" : "attachments"}`}>
+                              <Attachment01Icon size="1em" className="text-[11px]" />
+                              {attachmentCount}
+                            </span>
+                          );
+                        })()}
                       </div>
                       {item.notes && (
                         <p className="mt-2 text-xs text-gray-600 line-clamp-2 italic bg-gray-50/80 dark:bg-zinc-800/60 p-2 rounded-sm dark:text-zinc-300">
@@ -544,12 +547,12 @@ export default function RegistrarODRSTab({ showToast }) {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block uppercase tracking-wide text-gray-600 dark:text-zinc-400 mb-1">
-                      {status === "Deficient" ? "Deficiency Comment (required)" : status === "PendingPayment" ? "Payment Instructions" : "Student-Visible Update Note"}
+                    <label className="text-xs font-semibold block text-gray-600 dark:text-zinc-400 mb-1">
+                      {status === "Deficient" ? "Deficiency comment" : status === "PendingPayment" ? "Payment instructions" : "Student-visible update note"}
                     </label>
                     <Textarea
                       className="min-h-28 w-full"
-                      placeholder={status === "Deficient" ? "Explain what the student is missing (required)..." : status === "PendingPayment" ? "Explain the amount and how to submit payment..." : "Add an update message for the student (e.g. Document signed, ready for pick up at Room 201)..."}
+                      placeholder={status === "Deficient" ? "Explain what the student is missing" : status === "PendingPayment" ? "Explain the amount and how to submit payment" : "Document signed, ready for pick up at Room 201"}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                     />
@@ -625,7 +628,7 @@ export default function RegistrarODRSTab({ showToast }) {
               </div>
               <Textarea
                 className="w-full min-h-[90px] resize-none"
-                placeholder="State the official reason for reopening (e.g., student appeal granted, payment verified, clerical error correction)..."
+                placeholder="Reason for reopening, such as student appeal granted or clerical error correction"
                 value={reopenReason}
                 onChange={(e) => setReopenReason(e.target.value)}
               />

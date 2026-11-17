@@ -48,21 +48,21 @@ export default function MissingDocumentsInquiryDialog({ user, courses, onClose, 
       <DialogContent className="max-h-[85dvh] overflow-y-auto" hideClose={saving}>
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Check for Missing Documents</DialogTitle>
-            <DialogDescription>The Registrar will verify your identity or authorization and share the result in Document Requests.</DialogDescription>
+            <DialogTitle>Check for missing documents</DialogTitle>
+            <DialogDescription>The Registrar will verify your identity or authorization and share the result in Document requests.</DialogDescription>
           </DialogHeader>
           <label className="text-xs font-semibold grid gap-1">
-            {parent ? "Student’s Student Number" : "Student Number (if known)"}
-            <Input placeholder="e.g. 2026-00001-SJ-0" name="studentNo" defaultValue={parent ? "" : user.student_no || ""} required={parent} maxLength={31} />
+            {parent ? "Student’s student number" : "Student number (optional)"}
+            <Input placeholder="2026-00001-SJ-0" name="studentNo" defaultValue={parent ? "" : user.student_no || ""} required={parent} maxLength={31} />
           </label>
           {parent ? (
             <label className="text-xs font-semibold grid gap-1">
-              Relationship to Student
-              <Input placeholder="e.g. Mother" name="requesterRelationship" defaultValue="" maxLength={100} required />
+              Relationship to student
+              <Input placeholder="Mother" name="requesterRelationship" defaultValue="" maxLength={100} required />
             </label>
           ) : (
             <label className="text-xs font-semibold grid gap-1">
-              Academic Program (required if you omit your student number)
+              Academic program (required if student number is omitted)
               <Select placeholder="Select degree program" name="courseCode">
                 {courses.map(({ code, name }) => <option key={code} value={code}>{name || code}</option>)}
               </Select>
@@ -74,14 +74,14 @@ export default function MissingDocumentsInquiryDialog({ user, courses, onClose, 
           </label>
           {parent && (
             <label className="text-xs font-semibold grid gap-1">
-              Authorization Letter or SPA
+              Authorization letter or SPA
               <Input type="file" defaultValue="" name="authorization" accept=".pdf,.png,.jpg,.jpeg" required />
             </label>
           )}
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={saving}>{saving ? "Submitting…" : "Submit Inquiry"}</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Submitting…" : "Submit inquiry"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

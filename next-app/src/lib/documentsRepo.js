@@ -1,3 +1,5 @@
+import { findMissingRequirementAfterDecline } from "./studentChecklist.js";
+import { queuePortalWorkflowNotification } from "./workflowNotificationsRepo.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -784,13 +786,15 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
     );
     if (!existing) return null;
 
-    if (approvalStatus === "Approved" && (existing.student_no || existing.organization_id)) {
-      const entityColumn = existing.student_no ? "student_no" : "organization_id";
-      const entityId = existing.student_no || existing.organization_id;
-      // Sibling rows need a shared lock: locking only this document permits concurrent duplicate approvals.
+    const entityColumn = existing.student_no ? "student_no" : "organization_id";
+    const entityId = existing.student_no || existing.organization_id;
+    if (entityId && (approvalStatus === "Approved" || approvalStatus === "Declined")) {
       await query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
         JSON.stringify(["document-approval", scopedOfficeId, entityColumn, entityId]),
       ]);
+    }
+
+    if (approvalStatus === "Approved" && entityId) {
       const duplicate = await queryOne(
         `SELECT id, approval_status FROM documents
           WHERE office_id = $1 AND ${entityColumn} = $2
@@ -813,13 +817,23 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
       }
     }
 
-    return await queryOne(
+    const review = await queryOne(
       `UPDATE documents
           SET approval_status = $1, reviewed_by = $2,
               reviewed_at = CURRENT_TIMESTAMP, review_note = $3
         WHERE id = $4 AND office_id = $5 RETURNING id`,
       [approvalStatus, reviewedBy || null, reviewNote || null, id, scopedOfficeId],
     );
+    if (review && approvalStatus === "Declined") {
+      const missing = await findMissingRequirementAfterDecline({ query }, existing);
+      for (const recipient of missing?.recipients || []) {
+        await queuePortalWorkflowNotification({ query }, {
+          accountId: recipient.id, eventKey: "checklist_missing", targetPath: "/student?view=compliance",
+          detail: `${missing.name} needs a new submission.`,
+        });
+      }
+    }
+    return review;
   });
   if (!reviewed) return null;
 
@@ -873,67 +887,8 @@ export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNot
 }
 
 export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote }, { officeId } = {}) {
-  await ensureReviewColumns();
-  const scopedOfficeId = requireOfficeId(officeId);
-  const existing = await getDocumentById(id, { officeId: scopedOfficeId });
-  if (!existing) return null;
-
-  // Keep DB row and preserve the physical file for previewing and re-scanning
-  await dbRun(
-    `UPDATE documents
-     SET approval_status = 'Declined',
-         reviewed_by = ?,
-         reviewed_at = datetime('now'),
-         review_note = ?
-     WHERE id = ? AND office_id = ?`,
-    [reviewedBy || null, reviewNote || null, id, scopedOfficeId]
-  );
-
-  const updated = await getDocumentById(id, { officeId: scopedOfficeId });
-  if (updated) {
-    try {
-      let reviewerDisplayName = "Admin";
-      if (reviewedBy) {
-        const { getStaffById, getStaffFullName } = await import("./staffRepo.js");
-        const staffMember = await getStaffById(reviewedBy);
-        if (staffMember) {
-          reviewerDisplayName = getStaffFullName(staffMember) || reviewedBy;
-        } else {
-          reviewerDisplayName = reviewedBy;
-        }
-      }
-      const { createNotification } = await import("./notificationsRepo.js");
-      await createNotification({
-        officeId: scopedOfficeId,
-        type: "document_review",
-        title: `Document Declined: ${updated.doc_type}`,
-        message: `${reviewerDisplayName} declined ${updated.doc_type} for student ${updated.student_name || updated.student_no} (${updated.student_no})${reviewNote ? ': "' + reviewNote + '"' : ""}`,
-        severity: "error",
-        actorName: reviewerDisplayName,
-        actorId: reviewedBy || null,
-        entityType: "document",
-        entityId: id,
-        metadata: {
-          document_id: id,
-          student_no: updated.student_no,
-          student_name: updated.student_name,
-          doc_type: updated.doc_type,
-          original_filename: updated.original_filename,
-          approval_status: "Declined",
-          reviewed_by: reviewedBy,
-          reviewer_name: reviewerDisplayName,
-          reviewed_at: updated.reviewed_at,
-          review_note: reviewNote,
-          is_previewed: updated.is_previewed,
-          mime_type: updated.mime_type,
-        },
-      });
-    } catch (e) {
-      console.error("Failed to create document_review notification:", e);
-    }
-  }
-
-  return updated;
+  // Keep the source file available for preview and rescanning.
+  return reviewDocument(id, { approvalStatus: "Declined", reviewedBy, reviewNote }, { officeId });
 }
 
 export async function deleteDocument(id, { officeId } = {}) {

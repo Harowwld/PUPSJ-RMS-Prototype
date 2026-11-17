@@ -246,3 +246,42 @@ async function getPersonalChecklist(account, requirements) {
     requirements: statuses,
   };
 }
+
+export async function findMissingRequirementAfterDecline(db, document) {
+  if (document.office_id !== "registrar" || !document.student_no ||
+      document.approval_status === null || document.approval_status === "Declined") return null;
+
+  const key = getNormalizedGroupKey(document.doc_type);
+  const { rows: types } = await db.query(checklistTypesQuery);
+  const requirement = types.filter((type) => getNormalizedGroupKey(type.name) === key)
+    .sort((a, b) => b.name.length - a.name.length)[0];
+  if (!requirement) return null;
+
+  const { rows: submissions } = await db.query(
+    `SELECT DISTINCT doc_type FROM documents
+      WHERE office_id = 'registrar' AND student_no = $1 AND approval_status <> 'Declined'`,
+    [document.student_no],
+  );
+  if (submissions.some((item) => getNormalizedGroupKey(item.doc_type) === key)) return null;
+  const { rows: recipients } = await db.query(
+    `SELECT account.id FROM student_accounts account
+       JOIN student_identity_profiles profile ON profile.id = account.identity_profile_id
+       JOIN student_office_memberships membership ON membership.student_no = $1
+        AND membership.office_id = 'registrar' AND membership.status = 'Active'
+      WHERE account.status = 'Active' AND profile.client_type = 'Student'
+        AND profile.portal_setup_complete AND profile.portal_email_verified_at IS NOT NULL
+        AND (account.student_no = $1 OR (
+          account.student_no IS NULL AND (
+            EXISTS (SELECT 1 FROM student_checklist_verifications verification
+              WHERE verification.account_id = account.id AND verification.verified_student_no = $1
+                AND verification.status = 'Verified')
+            OR (upper(profile.checklist_student_no) = upper($1) AND EXISTS (
+              SELECT 1 FROM registrar_odrs_contacts contact
+               WHERE contact.student_no = $1 AND contact.email = profile.email
+            ))
+          )
+        ))`,
+    [document.student_no],
+  );
+  return { name: requirement.name, recipients };
+}
