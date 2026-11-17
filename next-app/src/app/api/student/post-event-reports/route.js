@@ -72,6 +72,7 @@ export async function POST(req) {
   const form = await req.formData().catch(() => null);
 
   const revisionReportId = form?.get("revisionReportId") ?? null;
+  const revisionUpdatedAt = form?.get("revisionUpdatedAt") ?? null;
   const eventProposalId = form?.get("eventProposalId");
   const organizationId = String(form?.get("organizationId") || "").trim();
   const actualAttendance = Number(form?.get("actualAttendance") ?? form?.get("actualAttendees") ?? 0);
@@ -79,7 +80,7 @@ export async function POST(req) {
   const narrativeFile = form?.get("narrativeFile");
   const liquidationFile = form?.get("liquidationFile");
 
-  if (!/^\d+$/.test(String(eventProposalId || "")) || !organizationId || !narrativeFile || typeof narrativeFile === "string") {
+  if (!/^\d+$/.test(String(eventProposalId || "")) || !organizationId || (!revisionReportId && !narrativeFile)) {
     return NextResponse.json(
       { ok: false, error: "Event proposal, organization, and a valid narrative report PDF are required." },
       { status: 400 }
@@ -95,17 +96,17 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Attendance and expenses must be valid non-negative numbers." }, { status: 400 });
   }
 
-  if (narrativeFile.type !== "application/pdf") {
+  if (narrativeFile !== null && (typeof narrativeFile === "string" || narrativeFile.type !== "application/pdf")) {
     return NextResponse.json(
       { ok: false, error: "Narrative report must be a PDF document." },
       { status: 400 }
     );
   }
-  if (!narrativeFile.size || narrativeFile.size > MAX_POST_EVENT_PDF_BYTES) {
+  if (narrativeFile && (!narrativeFile.size || narrativeFile.size > MAX_POST_EVENT_PDF_BYTES)) {
     return NextResponse.json({ ok: false, error: "Narrative report must be between 1 byte and 25 MB." }, { status: 400 });
   }
 
-  if (liquidationFile && typeof liquidationFile !== "string" && liquidationFile.type !== "application/pdf") {
+  if (liquidationFile !== null && (typeof liquidationFile === "string" || liquidationFile.type !== "application/pdf")) {
     return NextResponse.json(
       { ok: false, error: "Liquidation report must be a PDF document." },
       { status: 400 }
@@ -145,16 +146,17 @@ export async function POST(req) {
   }
 
   // Save files to disk; remove them if the database transaction fails.
-  const narrativeStorageFilename = `${crypto.randomUUID()}-narrative.pdf`;
-  const narrativeBytes = Buffer.from(await narrativeFile.arrayBuffer());
+  const narrativeStorageFilename = narrativeFile ? `${crypto.randomUUID()}-narrative.pdf` : null;
   const createdPaths = [];
 
   let liquidationStorageFilename = null;
   let liquidationOriginalFilename = null;
   try {
-    const narrativePath = path.join(uploadsDir(), narrativeStorageFilename);
-    fs.writeFileSync(narrativePath, narrativeBytes, { flag: "wx" });
-    createdPaths.push(narrativePath);
+    if (narrativeStorageFilename) {
+      const narrativePath = path.join(uploadsDir(), narrativeStorageFilename);
+      fs.writeFileSync(narrativePath, Buffer.from(await narrativeFile.arrayBuffer()), { flag: "wx" });
+      createdPaths.push(narrativePath);
+    }
     if (liquidationFile && typeof liquidationFile !== "string") {
       liquidationStorageFilename = `${crypto.randomUUID()}-liquidation.pdf`;
       const liquidationPath = path.join(uploadsDir(), liquidationStorageFilename);
@@ -166,13 +168,14 @@ export async function POST(req) {
     const report = await createPostEventReport({
       eventProposalId: proposal.id,
       revisionReportId,
+      revisionUpdatedAt,
       organizationId,
       submittedByEmail: studentEmail,
       submittedByAccountId: access.user.accountId || null,
       actualAttendance,
       totalExpenses,
       narrativeStorageFilename,
-      narrativeOriginalFilename: narrativeFile.name || "Narrative-Report.pdf",
+      narrativeOriginalFilename: narrativeFile ? narrativeFile.name || "Narrative-Report.pdf" : null,
       liquidationStorageFilename,
       liquidationOriginalFilename: liquidationOriginalFilename || (liquidationStorageFilename ? "Liquidation-Report.pdf" : null),
       createdBy: access.user.student_no || access.user.studentNo || access.user.id || studentEmail,

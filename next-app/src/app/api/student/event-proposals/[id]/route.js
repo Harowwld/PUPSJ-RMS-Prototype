@@ -193,7 +193,6 @@ export async function POST(req, ctx) {
   const storageFilename = `${crypto.randomUUID()}.pdf`;
   const localDir = process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local");
   const primaryFilePath = path.join(localDir, "storage", "osas", "uploads", storageFilename);
-  const legacyFilePath = path.join(localDir, "osas", "uploads", storageFilename);
   const createdPaths = [];
   let updatedProposal;
   let revisionNumber;
@@ -202,11 +201,6 @@ export async function POST(req, ctx) {
     fs.mkdirSync(path.dirname(primaryFilePath), { recursive: true });
     fs.writeFileSync(primaryFilePath, fileBytes, { flag: "wx" });
     createdPaths.push(primaryFilePath);
-    fs.mkdirSync(path.dirname(legacyFilePath), { recursive: true });
-    try {
-      fs.writeFileSync(legacyFilePath, fileBytes, { flag: "wx" });
-      createdPaths.push(legacyFilePath);
-    } catch {}
 
     updatedProposal = await transaction(async (tx) => {
       const locked = await tx.queryOne(

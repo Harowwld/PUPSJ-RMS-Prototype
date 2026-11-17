@@ -9,6 +9,7 @@ import {
   OsasSheetInfoRow as InfoRow,
   OsasSheetSummaryBadge,
 } from "./OsasReviewSheetMetadata";
+import { postEventFileLabels } from "@/lib/osasPostEventWorkflow";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -74,6 +75,8 @@ export default function OsasPostEventReviewSheet({
   setPostEventStatus,
   postEventNote,
   setPostEventNote,
+  revisionFiles = [],
+  onRevisionFilesChange,
   savePostEvent,
   isSavingPostEvent,
   availablePostEventStatusOptions = [],
@@ -370,6 +373,30 @@ export default function OsasPostEventReviewSheet({
               <CampusStatusNotice tone="warning" title="Revision Instructions Required">
                 Provide detailed instructions specifying what receipts or narrative items need amendment.
               </CampusStatusNotice>
+            )}
+
+            {postEventStatus === "Needs Revision" && selectedPostEvent.status !== "Needs Revision" && (
+              <fieldset className="space-y-2">
+                <legend className="text-xs font-semibold">PDFs to Replace</legend>
+                <p className="text-xs text-muted-foreground">Select the files OSAS needs replaced. Leave both unselected for changes to report details.</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(postEventFileLabels).map(([key, label]) => {
+                    const selected = revisionFiles.includes(key);
+                    return (
+                      <Button key={key} type="button" size="sm" variant={selected ? "default" : "outline"}
+                        aria-pressed={selected} disabled={isSavingPostEvent}
+                        onClick={() => onRevisionFilesChange(selected ? revisionFiles.filter((file) => file !== key) : [...revisionFiles, key])}>
+                        {label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+            {selectedPostEvent.status === "Needs Revision" && selectedPostEvent.revision_files?.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Replacement PDFs requested for {selectedPostEvent.revision_files.map((file) => postEventFileLabels[file]).join(" and ")}.
+              </p>
             )}
 
             {/* Remarks Textarea */}

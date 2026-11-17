@@ -1,6 +1,6 @@
 "use client";
 import DataGroupHeader from "@/components/shared/DataGroupHeader";
-import { isInManilaDateRange } from "@/lib/timeFormat";
+import { formatManilaCalendarDate, isInManilaDateRange } from "@/lib/timeFormat";
 import { Table, TableHead } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -280,6 +280,8 @@ function matchesFilterRule(actual, rule) {
 
 export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
   const [rows, setRows] = useState([]);
+  const [overdueEvents, setOverdueEvents] = useState(null);
+  const [overdueLoadFailed, setOverdueLoadFailed] = useState(false);
   const [proposalTotal, setProposalTotal] = useState(0);
   const [proposalOrganizations, setProposalOrganizations] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -390,6 +392,7 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
   const [postEventSheetOpen, setPostEventSheetOpen] = useState(false);
   const [postEventStatus, setPostEventStatus] = useState("Cleared");
   const [postEventNote, setPostEventNote] = useState("");
+  const [postEventRevisionFiles, setPostEventRevisionFiles] = useState([]);
   const [isSavingPostEvent, setIsSavingPostEvent] = useState(false);
   const [draggingPostEvent, setDraggingPostEvent] = useState(null);
   const [dragOverPostEventColumn, setDragOverPostEventColumn] = useState(null);
@@ -434,12 +437,20 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
         return { data, total: data.length, organizations };
       };
 
-      const [proposals, postEvents] = await Promise.allSettled([
+      const [proposals, postEvents, overdue] = await Promise.allSettled([
         fetchStream("/api/osas/event-proposals", proposalQuery, (row) => row.verified_org_name || row.organization_name),
         fetchStream("/api/osas/post-event-reports", postEventQuery, (row) => row.organization_name),
+        (async () => {
+          const response = await fetch("/api/osas/post-event-reports?overdue=1", { cache: "no-store" });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok || !Array.isArray(payload.data)) throw new Error("Could not load overdue reports");
+          return payload.data;
+        })(),
       ]);
       if (request !== loadRequestRef.current) return;
 
+      setOverdueLoadFailed(overdue.status === "rejected");
+      if (overdue.status === "fulfilled") setOverdueEvents(overdue.value);
       setStreamErrors({
         proposals: proposals.status === "rejected",
         post_events: postEvents.status === "rejected",
@@ -514,7 +525,7 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
       const res = await fetch(`/api/osas/event-proposals/${selected.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: targetStatus, note: finalNote }),
+        body: JSON.stringify({ status: targetStatus, note: finalNote, revisionFiles: targetStatus === "Needs Revision" ? postEventRevisionFiles : [] }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -555,6 +566,7 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
     const initialStatus = report.status === "Submitted" ? "Under Review" : report.status;
     setSelectedPostEvent(report);
     setPostEventStatus(requestedStatus ?? initialStatus);
+    setPostEventRevisionFiles([]);
     setPostEventNote(requestedStatus === "Needs Revision" ? "" : report.review_note || report.review_notes || "");
     setPostEventSheetOpen(true);
     try {
@@ -597,7 +609,7 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
       const res = await fetch(`/api/osas/post-event-reports/${selectedPostEvent.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: targetStatus, note: finalNote }),
+        body: JSON.stringify({ status: targetStatus, note: finalNote, revisionFiles: targetStatus === "Needs Revision" ? postEventRevisionFiles : [] }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -1366,6 +1378,31 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
             </div>
           }
         />
+
+        <details className="border-t border-border px-6 py-3">
+          <summary className="cursor-pointer text-xs font-semibold">
+            Overdue Post-Event Reports{overdueEvents ? ` (${overdueEvents.length.toLocaleString()})` : ""}
+          </summary>
+          {overdueLoadFailed && <p role="status" className="mt-2 text-xs text-muted-foreground">Could not refresh overdue reports. Refresh the OSAS queue to try again.</p>}
+          {overdueEvents === null && !overdueLoadFailed && <p role="status" className="mt-2 text-xs text-muted-foreground">Loading overdue reports…</p>}
+          {overdueEvents?.length === 0 && !overdueLoadFailed && <p className="mt-2 text-xs text-muted-foreground">No overdue post-event reports.</p>}
+          {overdueEvents?.length > 0 && (
+            <ul className="mt-2 max-h-64 divide-y divide-border overflow-y-auto">
+              {overdueEvents.map((event) => (
+                <li key={event.id}>
+                  <button type="button" onClick={() => select({ ...event, status: "Approved" })}
+                    className="flex w-full cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-2 py-2 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring">
+                    <span className="min-w-0 font-semibold">
+                      {event.title}
+                      <span className="ml-2 font-normal text-muted-foreground">{event.organization_name}</span>
+                    </span>
+                    <span className="text-amber-700 dark:text-amber-300">Due {formatManilaCalendarDate(event.post_event_due_date)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </details>
 
         {/* 2. Connected Segmented Tabs Row (Stream Scope & View Mode Switcher) */}
         <div
@@ -2185,6 +2222,8 @@ export default function OsasMonitoringTab({ showToast, agingOnly = false }) {
         setPostEventStatus={setPostEventStatus}
         postEventNote={postEventNote}
         setPostEventNote={setPostEventNote}
+        revisionFiles={postEventRevisionFiles}
+        onRevisionFilesChange={setPostEventRevisionFiles}
         savePostEvent={savePostEvent}
         isSavingPostEvent={isSavingPostEvent}
         availablePostEventStatusOptions={availablePostEventStatusOptions}

@@ -98,7 +98,9 @@ import { format } from "date-fns";
 import MultiCriteriaFilter from "@/components/shared/MultiCriteriaFilter";
 import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
 import { ContentSwap } from "@/components/ui/motion";
+import { postEventFileLabels, validatePostEventRevision } from "@/lib/osasPostEventWorkflow";
 import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
+import RequestCorrectionsSection from "@/components/student/RequestCorrectionsSection";
 import FileAttachmentDropzone, { AttachmentViews } from "@/components/shared/FileAttachmentDropzone";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
@@ -433,6 +435,8 @@ function StudentDashboard() {
   const [currentPage, setCurrentPage] = useUrlPage({ enabled: view === "odrs" });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
+  const [correctionUploading, setCorrectionUploading] = useState(false);
+  const correctionUploadLock = useRef(false);
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState(null);
   const [selectedPostEventReportForDetail, setSelectedPostEventReportForDetail] = useState(null);
   const [postEventTimeline, setPostEventTimeline] = useState(null);
@@ -1688,6 +1692,46 @@ function StudentDashboard() {
     }
   }, [router, showToast]);
 
+  const handleCorrectionUpload = async (requestId, correctionId, file) => {
+    if (correctionUploadLock.current) return;
+    if (!file.size || file.size > 10 * 1024 * 1024) {
+      showToast("Check the file size", "Choose a file up to 10 MB.", true);
+      return;
+    }
+    correctionUploadLock.current = true;
+    setCorrectionUploading(true);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("correctionId", correctionId);
+      const response = await authFetch(`/api/document-requests/${requestId}/attachments`, { method: "POST", body: form });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.ok) {
+        showToast("Could not submit correction", json?.error || "Check your connection and try again.", true);
+        if (response.status === 409) await load();
+        return;
+      }
+      const update = (request) => request && String(request.id) === String(requestId) ? {
+        ...request,
+        status: json.status,
+        correction_items: json.corrections,
+        attachments: [...(request.attachments || []), json.data],
+        attachment_count: Number(request.attachment_count ?? request.attachments?.length ?? 0) + 1,
+      } : request;
+      setSelectedRequestForDetail(update);
+      setData((current) => ({ ...current, requests: (current.requests || []).map(update) }));
+      showToast("Correction submitted", json.completed
+        ? "Your request is back in the Registrar review queue."
+        : "Submit the remaining corrections to return your request to the Registrar.");
+      await load();
+    } catch {
+      showToast("Could not refresh the request", "Refresh the request before trying again.", true);
+    } finally {
+      correctionUploadLock.current = false;
+      setCorrectionUploading(false);
+    }
+  };
+
   const handlePaymentProofUpload = useCallback(async (requestId, file) => {
     if (file.size > 10 * 1024 * 1024) {
       showToast(
@@ -2146,23 +2190,34 @@ function StudentDashboard() {
       if (!revisionTargetReport && !hasSelectedApprovedProposal) {
         throw new Error("Please select an approved event proposal.");
       }
-      if (!postEventForm.narrativeFile) {
+      if (revisionTargetReport) {
+        const message = validatePostEventRevision(revisionTargetReport, {
+          narrative: postEventForm.narrativeFile,
+          liquidation: postEventForm.liquidationFile,
+          actualAttendance: Number(postEventForm.actualAttendance),
+          totalExpenses: Number(postEventForm.totalExpenses),
+        });
+        if (message) throw new Error(message);
+      } else if (!postEventForm.narrativeFile) {
         throw new Error("Please upload the Post-Event Narrative Report PDF.");
       }
       const maxPostEventPdfBytes = 25 * 1024 * 1024;
-      if (!postEventForm.narrativeFile.size || postEventForm.narrativeFile.size > maxPostEventPdfBytes) {
+      if (postEventForm.narrativeFile && (!postEventForm.narrativeFile.size || postEventForm.narrativeFile.size > maxPostEventPdfBytes)) {
         throw new Error("Narrative report PDF exceeds the 25 MB limit. Please compress the file.");
       }
       if (postEventForm.liquidationFile && (!postEventForm.liquidationFile.size || postEventForm.liquidationFile.size > maxPostEventPdfBytes)) {
         throw new Error("Liquidation report PDF exceeds the 25 MB limit. Please compress the file.");
       }
       const form = new FormData();
-      if (revisionTargetReport) form.set("revisionReportId", String(revisionTargetReport.id));
+      if (revisionTargetReport) {
+        form.set("revisionReportId", String(revisionTargetReport.id));
+        if (revisionTargetReport.updated_at) form.set("revisionUpdatedAt", revisionTargetReport.updated_at);
+      }
       form.set("eventProposalId", postEventForm.eventProposalId);
       form.set("organizationId", selectedOrg.organization_id);
       form.set("actualAttendance", postEventForm.actualAttendance || "0");
       form.set("totalExpenses", postEventForm.totalExpenses || "0.00");
-      form.set("narrativeFile", postEventForm.narrativeFile);
+      if (postEventForm.narrativeFile) form.set("narrativeFile", postEventForm.narrativeFile);
       if (postEventForm.liquidationFile) {
         form.set("liquidationFile", postEventForm.liquidationFile);
       }
@@ -3634,7 +3689,7 @@ function StudentDashboard() {
                                 <h2 tabIndex={-1} className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{revisionTargetReport ? "Revise post-event report" : "New post-event and liquidation report"}</h2>
                                 <p className="text-xs text-gray-500 dark:text-zinc-400">
                                   {revisionTargetReport
-                                    ? "Upload a revised narrative PDF. You can also replace the liquidation PDF."
+                                    ? "Replace the requested PDFs or update the report details according to the OSAS review note."
                                     : `Submit accomplishment documentation, attendance figures, and liquidation receipts for an approved event · Submitting for ${selectedOsasOrganization.organization_name}`}
                                 </p>
                               </div>
@@ -3717,39 +3772,45 @@ function StudentDashboard() {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Narrative accomplishment report (PDF)
-                                </label>
-                                <FileAttachmentDropzone
-                                  animateCards={false}
-                                  invalid={postEventAttempted && !postEventForm.narrativeFile}
-                                  value={postEventForm.narrativeFile ? { file: postEventForm.narrativeFile, original_filename: postEventForm.narrativeFile.name, size_bytes: postEventForm.narrativeFile.size } : null}
-                                  onChange={(item) => setPostEventForm({ ...postEventForm, narrativeFile: item?.file || null })}
-                                  mode="single"
-                                  accept="application/pdf"
-                                  title="Drop narrative report PDF here, or browse"
-                                  subtitle="Official narrative report (PDF up to 25 MB)"
-                                  maxSizeBytes={25 * 1024 * 1024}
-                                />
-                              </div>
-
-                              <div>
-                                <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Financial liquidation and receipts (PDF) <span className="normal-case tracking-normal opacity-70">(optional)</span>
-                                </label>
-                                <FileAttachmentDropzone
-                                  animateCards={false}
-                                  value={postEventForm.liquidationFile ? { file: postEventForm.liquidationFile, original_filename: postEventForm.liquidationFile.name, size_bytes: postEventForm.liquidationFile.size } : null}
-                                  onChange={(item) => setPostEventForm({ ...postEventForm, liquidationFile: item?.file || null })}
-                                  mode="single"
-                                  accept="application/pdf"
-                                  title="Drop liquidation receipts PDF here, or browse"
-                                  subtitle="Optional liquidation statement (PDF up to 25 MB)"
-                                  maxSizeBytes={25 * 1024 * 1024}
-                                />
-                              </div>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              {Object.entries(postEventFileLabels).map(([kind, label]) => {
+                                const field = `${kind}File`;
+                                const file = postEventForm[field];
+                                const hasExisting = Boolean(revisionTargetReport?.[`${kind}_storage_filename`]);
+                                const replacementRequired = revisionTargetReport?.revision_files?.includes(kind);
+                                const required = replacementRequired || (kind === "narrative" && !hasExisting);
+                                const existingName = revisionTargetReport?.[`${kind}_original_filename`] || `${label}.pdf`;
+                                const url = hasExisting ? `/api/student/post-event-reports/${revisionTargetReport.id}?file=${kind}` : undefined;
+                                return (
+                                  <div key={kind} className="space-y-2">
+                                    <p className="text-xs font-semibold">
+                                      {label} (PDF){" "}
+                                      {replacementRequired
+                                        ? <span className="font-normal text-amber-700 dark:text-amber-300">Replacement required</span>
+                                        : !required && <span className="font-normal text-muted-foreground">(optional)</span>}
+                                    </p>
+                                    {hasExisting && (
+                                      <SheetAttachmentRow
+                                        filename={existingName}
+                                        description={replacementRequired ? "Previously submitted" : "Kept unless replaced"}
+                                        fileUrl={url}
+                                        onPreview={() => handleOpenPdfPreview(null, { url, title: label, originalFilename: existingName })}
+                                      />
+                                    )}
+                                    <FileAttachmentDropzone
+                                      animateCards={false}
+                                      invalid={postEventAttempted && required && !file}
+                                      value={file ? { file, original_filename: file.name, size_bytes: file.size } : null}
+                                      onChange={(item) => setPostEventForm((current) => ({ ...current, [field]: item?.file || null }))}
+                                      mode="single"
+                                      accept="application/pdf"
+                                      title={hasExisting ? "Drop a replacement PDF here, or browse" : "Drop a report PDF here, or browse"}
+                                      subtitle="PDF up to 25 MB"
+                                      maxSizeBytes={25 * 1024 * 1024}
+                                    />
+                                  </div>
+                                );
+                              })}
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
@@ -4608,6 +4669,21 @@ function StudentDashboard() {
                 </div>
               </section>
             )}
+
+            <RequestCorrectionsSection
+              request={selectedRequestForDetail}
+              busy={correctionUploading}
+              onSubmit={(itemId, file) => handleCorrectionUpload(selectedRequestForDetail.id, itemId, file)}
+              onPreview={(item, name) => {
+                const url = item?.previewUrl || item?.url;
+                if (!url) return;
+                handleOpenPdfPreview(null, {
+                  url,
+                  title: name,
+                  originalFilename: item.original_filename || item.file?.name,
+                });
+              }}
+            />
 
             {/* Payment Proof Upload Notice (if PendingPayment) */}
             {selectedRequestForDetail?.status === "PendingPayment" && (

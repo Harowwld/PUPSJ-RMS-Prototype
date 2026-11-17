@@ -1,3 +1,4 @@
+import { postEventFileLabels } from "@/lib/osasPostEventWorkflow";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
@@ -185,6 +186,11 @@ export async function PATCH(req, ctx) {
     );
   }
 
+  const requestedFiles = body?.revisionFiles ?? [];
+  if (!Array.isArray(requestedFiles) || requestedFiles.length > Object.keys(postEventFileLabels).length ||
+      requestedFiles.some((file) => typeof file !== "string" || !Object.hasOwn(postEventFileLabels, file))) {
+    return NextResponse.json({ ok: false, error: "Choose valid report files to replace." }, { status: 400 });
+  }
   let updated;
   try {
     updated = await updatePostEventReportStatus(id, {
@@ -192,6 +198,7 @@ export async function PATCH(req, ctx) {
       note,
       staffId: access.userId,
       expectedStatus: currentStatus,
+      revisionFiles: status === "Needs Revision" ? [...new Set(requestedFiles)] : [],
     });
   } catch (error) {
     if (error?.code === "POST_EVENT_STATUS_CONFLICT") {

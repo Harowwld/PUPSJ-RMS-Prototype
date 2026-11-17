@@ -47,6 +47,7 @@ async function runTests() {
 
   let testProposalId = null;
   let testReportId = null;
+  let supersededLiquidation = null;
 
   try {
     // -------------------------------------------------------------
@@ -153,6 +154,16 @@ async function runTests() {
     );
     console.log("  ✓ Proposal approved; post_event_status set to 'Pending Submission'");
 
+    await query("UPDATE event_proposals SET post_event_due_date = (now() AT TIME ZONE 'Asia/Manila')::date - 1 WHERE id = $1", [testProposalId]);
+    const loadOverdueReports = async () => {
+      const response = await fetch(`${BASE_URL}/api/osas/post-event-reports?overdue=1`, {
+        headers: { cookie: osasAuth.cookieHeader },
+      });
+      assert.equal(response.status, 200);
+      return (await response.json()).data;
+    };
+    assert.ok((await loadOverdueReports()).some((row) => String(row.id) === String(testProposalId)));
+
     // -------------------------------------------------------------
     // Step 4: Whitelisted Officer Submits Post-Event & Liquidation Report
     // -------------------------------------------------------------
@@ -181,6 +192,7 @@ async function runTests() {
     testReportId = submitReportJson.data.id;
     assert.equal(submitReportJson.data.status, "Submitted");
     assert.equal(submitReportJson.data.actual_attendance, 125);
+    assert.ok(!(await loadOverdueReports()).some((row) => String(row.id) === String(testProposalId)));
     console.log(`  ✓ Post-event report submitted with ID: ${testReportId}`);
 
     // Verify student can query pending and submitted reports
@@ -227,19 +239,19 @@ async function runTests() {
     assert.ok(liquidationBytes.byteLength > 0, "Liquidation PDF must have non-zero bytes");
     console.log(`  ✓ Streamed liquidation PDF (${liquidationBytes.byteLength} bytes)`);
 
-    // Revision returns the same report to the review queue and keeps the liquidation PDF.
+    // A targeted liquidation revision preserves the narrative and returns the same report to review.
     for (const status of ["Under Review", "Needs Revision"]) {
       const review = await fetch(`${BASE_URL}/api/osas/post-event-reports/${testReportId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", cookie: osasAuth.cookieHeader },
-        body: JSON.stringify({ status, note: "Please correct the narrative attendance figures." }),
+        body: JSON.stringify({ status, note: "Please attach the revised liquidation receipts.", revisionFiles: status === "Needs Revision" ? ["liquidation"] : [] }),
       });
       assert.equal(review.status, 200);
     }
 
     postEventForm.set("revisionReportId", String(testReportId));
     postEventForm.set("actualAttendance", "130");
-    postEventForm.set("narrativeFile", new Blob([narrativePdf], { type: "application/pdf" }), "revised-narrative.pdf");
+    postEventForm.delete("narrativeFile");
     postEventForm.delete("liquidationFile");
 
     const resubmit = () => fetch(`${BASE_URL}/api/student/post-event-reports`, {
@@ -248,14 +260,19 @@ async function runTests() {
       body: postEventForm,
     });
 
+    assert.equal((await resubmit()).status, 409, "OSAS-requested files are required even when report details changed");
+    postEventForm.set("liquidationFile", new Blob([liquidationPdf], { type: "application/pdf" }), "revised-liquidation.pdf");
     const revisedResponse = await resubmit();
     assert.equal(revisedResponse.status, 200);
     const { data: revisedReport } = await revisedResponse.json();
     assert.equal(revisedReport.id, testReportId);
     assert.equal(revisedReport.status, "Submitted");
     assert.equal(revisedReport.actual_attendance, 130);
-    assert.equal(revisedReport.narrative_original_filename, "revised-narrative.pdf");
-    assert.equal(revisedReport.liquidation_storage_filename, submitReportJson.data.liquidation_storage_filename);
+    supersededLiquidation = submitReportJson.data.liquidation_storage_filename;
+    assert.equal(revisedReport.narrative_storage_filename, submitReportJson.data.narrative_storage_filename);
+    assert.equal(revisedReport.liquidation_original_filename, "revised-liquidation.pdf");
+    assert.notEqual(revisedReport.liquidation_storage_filename, supersededLiquidation);
+    assert.deepEqual(revisedReport.revision_files, []);
     assert.equal((await resubmit()).status, 409, "A repeat submission must not create another report");
 
     // 5d. OSAS Approves & Clears the Post-Event Report
@@ -312,7 +329,7 @@ async function runTests() {
         "DELETE FROM osas_post_event_reports WHERE id = $1 RETURNING narrative_storage_filename, liquidation_storage_filename",
         [testReportId]
       );
-      for (const filename of [report?.narrative_storage_filename, report?.liquidation_storage_filename]) {
+      for (const filename of [report?.narrative_storage_filename, report?.liquidation_storage_filename, supersededLiquidation]) {
         if (!filename) continue;
         const filePath = path.join(localDir, "storage", "osas", "uploads", filename);
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);

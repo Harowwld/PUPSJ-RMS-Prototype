@@ -1,7 +1,7 @@
 import { agingPostEventReports } from "@/lib/workflowQueueFilters";
 import { NextResponse } from "next/server";
 import { requireOfficeModule } from "@/lib/moduleAccess";
-import { listPostEventReports } from "@/lib/osasPostEventRepo";
+import { listApprovedEventsAwaitingReports, listPostEventReports } from "@/lib/osasPostEventRepo";
 import { query } from "@/lib/postgres";
 
 export const runtime = "nodejs";
@@ -12,6 +12,10 @@ export async function GET(req) {
   if (!access) return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
+  if (searchParams.get("overdue") === "1") {
+    const data = await listApprovedEventsAwaitingReports({ overdueOnly: true });
+    return NextResponse.json({ ok: true, data });
+  }
   const status = String(searchParams.get("status") || "").trim();
   const organizationId = String(searchParams.get("organizationId") || "").trim();
   const search = String(searchParams.get("search") || "").trim();

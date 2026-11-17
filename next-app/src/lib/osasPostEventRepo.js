@@ -1,3 +1,4 @@
+import { awaitingFirstPostEventReport, postEventCampusToday, postEventFileLabels, validatePostEventRevision } from "./osasPostEventWorkflow.js";
 import { agingPostEventReports } from "./workflowQueueFilters.js";
 import { queueOfficeWorkflowNotification, queuePortalWorkflowNotification } from "./workflowNotificationsRepo.js";
 import { query, queryOne, transaction } from "./postgres.js";
@@ -10,6 +11,7 @@ import { getStaffFullName } from "./staffRepo.js";
 export async function createPostEventReport({
   eventProposalId,
   revisionReportId = null,
+  revisionUpdatedAt = null,
   organizationId,
   submittedByEmail,
   submittedByAccountId = null,
@@ -24,7 +26,7 @@ export async function createPostEventReport({
   return transaction(async (tx) => {
     // Lock the report before its proposal, matching the staff review transaction.
     const revision = revisionReportId ? await tx.queryOne(
-      `SELECT id FROM osas_post_event_reports
+      `SELECT * FROM osas_post_event_reports
         WHERE id = $1 AND event_proposal_id = $2 AND organization_id = $3
           AND status = 'Needs Revision'
           AND id = (
@@ -40,10 +42,19 @@ export async function createPostEventReport({
       throw error;
     }
 
+    if (revision) {
+      const message = revisionUpdatedAt && new Date(revision.updated_at).toISOString() !== revisionUpdatedAt
+        ? "The report has changed. Refresh and open the current revision."
+        : validatePostEventRevision(revision, {
+            narrative: narrativeStorageFilename, liquidation: liquidationStorageFilename, actualAttendance, totalExpenses,
+          });
+      if (message) throw Object.assign(new Error(message), { code: "POST_EVENT_NOT_ELIGIBLE" });
+    }
+
     const proposal = await tx.queryOne(
       `SELECT id, student_no FROM event_proposals
         WHERE id = $1 AND organization_id = $2 AND office_id = 'osas'
-          AND status = 'Approved'
+          AND status = 'Approved' AND archived_at IS NULL
           AND post_event_status = ANY($3::text[])
         FOR UPDATE`,
       [eventProposalId, organizationId, revision ? ["Needs Revision"] : ["Pending Submission", "Overdue"]],
@@ -57,11 +68,12 @@ export async function createPostEventReport({
     const report = revision ? await tx.queryOne(
       `UPDATE osas_post_event_reports
           SET submitted_by_email = $2, actual_attendance = $3, total_expenses = $4,
-              narrative_storage_filename = $5, narrative_original_filename = $6,
+              narrative_storage_filename = COALESCE($5, narrative_storage_filename),
+              narrative_original_filename = COALESCE($6, narrative_original_filename),
               liquidation_storage_filename = COALESCE($7, liquidation_storage_filename),
               liquidation_original_filename = COALESCE($8, liquidation_original_filename),
               status = 'Submitted', portal_submitter_account_id = $9, review_note = NULL, reviewed_by = NULL,
-              reviewed_at = NULL, updated_at = NOW()
+              reviewed_at = NULL, revision_files = '{}'::text[], updated_at = NOW()
         WHERE id = $1
         RETURNING *`,
       [revision.id, submittedByEmail.toLowerCase(), actualAttendance, totalExpenses,
@@ -84,11 +96,16 @@ export async function createPostEventReport({
       [eventProposalId],
     );
     const actorIdentifier = createdBy || proposal.student_no || submittedByEmail;
+    const replacements = [narrativeStorageFilename && postEventFileLabels.narrative,
+      liquidationStorageFilename && postEventFileLabels.liquidation].filter(Boolean);
+    const message = revision
+      ? `Report resubmitted by ${submittedByEmail}. ${replacements.length ? `Replaced: ${replacements.join(", ")}.` : "Updated report details."}`
+      : `Official post-event report submitted by ${submittedByEmail}.`;
     await tx.query(
       `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
        VALUES ($1, $2, $3, $4)`,
       [eventProposalId, revision ? "Post-Event Resubmitted" : "Post-Event Submitted",
-        `Official Post-Event Narrative Report and Liquidation package ${revision ? "resubmitted" : "submitted"} by ${submittedByEmail}.`, actorIdentifier],
+        message, actorIdentifier],
     );
     await queuePortalWorkflowNotification(tx, {
       accountId: submittedByAccountId, eventKey: "osas_report_update", targetPath: `/student?view=osas&report=${report.id}`,
@@ -256,7 +273,7 @@ export async function listPostEventReportUpdates(reportId) {
 /**
  * Updates status of a post-event report (e.g. Cleared, Needs Revision, Declined)
  */
-export async function updatePostEventReportStatus(id, { status, note, staffId, expectedStatus }) {
+export async function updatePostEventReportStatus(id, { status, note, staffId, expectedStatus, revisionFiles = [] }) {
   return transaction(async (tx) => {
     const existing = await tx.queryOne(
       `SELECT event_proposal_id, status FROM osas_post_event_reports WHERE id = $1 FOR UPDATE`,
@@ -272,10 +289,10 @@ export async function updatePostEventReportStatus(id, { status, note, staffId, e
     const updated = await tx.queryOne(
       `UPDATE osas_post_event_reports
           SET status = $1, review_note = $2, reviewed_by = $3,
-              reviewed_at = NOW(), updated_at = NOW()
+              reviewed_at = NOW(), updated_at = NOW(), revision_files = $5::text[]
         WHERE id = $4
         RETURNING *`,
-      [status, note || null, staffId || null, id],
+      [status, note || null, staffId || null, id, status === "Needs Revision" ? revisionFiles : []],
     );
 
     let proposalPostEventStatus = "Under Review";
@@ -296,7 +313,8 @@ export async function updatePostEventReportStatus(id, { status, note, staffId, e
     await tx.query(
       `INSERT INTO transaction_updates (event_proposal_id, status, message, created_by)
        VALUES ($1, $2, $3, $4)`,
-      [existing.event_proposal_id, `Post-Event ${status}`, note || `Post-event report evaluation completed with status: ${status}.`, staffId || null],
+      [existing.event_proposal_id, `Post-Event ${status}`, revisionFiles.length ? `${note} Replacement PDFs requested: ${revisionFiles.map((file) => postEventFileLabels[file]).join(", ")}.`
+        : note || `Post-event report evaluation completed with status: ${status}.`, staffId || null],
     );
     if (existing.status !== status) {
       await queuePortalWorkflowNotification(tx, {
@@ -313,8 +331,12 @@ export async function updatePostEventReportStatus(id, { status, note, staffId, e
 /**
  * Lists approved events awaiting post-event report submissions
  */
-export async function listApprovedEventsAwaitingReports({ organizationId, studentEmail } = {}) {
-  const conditions = [
+export async function listApprovedEventsAwaitingReports({ organizationId, studentEmail, overdueOnly = false } = {}) {
+  const conditions = overdueOnly ? [
+    awaitingFirstPostEventReport("ep"),
+    `ep.post_event_due_date < ${postEventCampusToday}`,
+  ] : [
+    `ep.archived_at IS NULL`,
     `ep.office_id = 'osas'`,
     `ep.status = 'Approved'`,
     `ep.post_event_status IN ('Pending Submission', 'Needs Revision', 'Overdue')`,
@@ -343,13 +365,13 @@ export async function listApprovedEventsAwaitingReports({ organizationId, studen
             ep.post_event_status, ep.post_event_due_date,
             so.acronym AS org_acronym, so.category AS org_category,
             CASE 
-              WHEN ep.post_event_due_date < CURRENT_DATE THEN TRUE 
+              WHEN ep.post_event_due_date < ${postEventCampusToday} THEN TRUE
               ELSE FALSE 
             END AS is_overdue
      FROM event_proposals ep
      LEFT JOIN student_organizations so ON so.id = ep.organization_id
      WHERE ${conditions.join(" AND ")}
-     ORDER BY ep.event_date ASC`,
+     ORDER BY ${overdueOnly ? "ep.post_event_due_date, ep.id" : "ep.event_date ASC"}`,
     params
   );
 }
