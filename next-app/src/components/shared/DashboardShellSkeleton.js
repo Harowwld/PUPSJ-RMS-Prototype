@@ -1,7 +1,6 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 
 const navigationPlaceholders = [
   { key: "first" },
@@ -14,8 +13,6 @@ const navigationPlaceholders = [
 
 /** Initial dashboard layout with placeholders for navigation and the workspace. */
 export default function DashboardShellSkeleton({ children }) {
-  const { zoomStyle } = useLayoutZoom()
-
   return (
     <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30 select-none">
       <span role="status" className="sr-only">Loading dashboard</span>
@@ -31,7 +28,6 @@ export default function DashboardShellSkeleton({ children }) {
       <div
         inert
         className="flex flex-1 min-h-0 overflow-hidden flex-col md:flex-row"
-        style={zoomStyle}
       >
         {/* Mobile Top Bar (< md) — shared Sidebar renders this in place of a page header */}
         <div className="md:hidden flex h-[52px] w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">

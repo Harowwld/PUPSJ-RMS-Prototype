@@ -82,17 +82,13 @@ test('DashboardShellSkeleton mirrors the standardized 38px icon column geometry'
   )
 })
 
-test('Sidebar search command palette kbd badge uses rounded-full border', () => {
+test('Sidebar search command palette shortcut uses KeyboardShortcutKeys with split modifier and key', () => {
   const sidebarPath = path.join(ROOT_DIR, 'src/components/shared/Sidebar.js')
   const content = fs.readFileSync(sidebarPath, 'utf8')
 
   assert.ok(
-    content.includes('border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none shrink-0 select-none'),
-    'Desktop search trigger kbd badge must use rounded-full border'
-  )
-  assert.ok(
-    content.includes('border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none'),
-    'Mobile search trigger kbd badge must use rounded-full border'
+    content.includes('<KeyboardShortcutKeys keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="xs" />'),
+    'Desktop and mobile search triggers must render KeyboardShortcutKeys with split keys'
   )
 })
 

@@ -147,7 +147,7 @@ function ComplianceStudentsSheetContent({
         setTotal(Number(json.data.total) || 0);
       }
     } catch (err) {
-      toast.error("Failed to load more records", { description: err.message });
+      toast.error("Could not load more records", { description: err.message });
     } finally {
       setLoadingMore(false);
     }
@@ -182,7 +182,7 @@ function ComplianceStudentsSheetContent({
       }
     } catch (failure) {
       if (!controller.signal.aborted)
-        toast.error("Report Export Failed", { description: failure.message });
+        toast.error("Could not export report", { description: failure.message });
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
@@ -209,7 +209,7 @@ function ComplianceStudentsSheetContent({
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle className="text-[17px] font-bold text-gray-900 dark:text-zinc-100">
-                  Incomplete Records
+                  Incomplete records
                 </SheetTitle>
                 <SheetDescription className="sr-only">
                   {documentType?.documentType || "Incomplete student records roster"}
@@ -247,7 +247,7 @@ function ComplianceStudentsSheetContent({
               <EmptyState
                 variant="compact"
                 icon={AlertCircleIcon}
-                title="Could Not Load Incomplete Records"
+                title="Could not load incomplete records"
                 description={error}
               >
                 <Button
@@ -256,21 +256,21 @@ function ComplianceStudentsSheetContent({
                   onClick={() => setRetry((value) => value + 1)}
                   className="mt-3 h-9 px-4 text-xs font-semibold rounded-xl"
                 >
-                  Retry Loading
+                  Retry loading
                 </Button>
               </EmptyState>
             ) : !meta?.configured ? (
               <EmptyState
                 variant="compact"
                 icon={Search01Icon}
-                title="No Requirements Configured"
+                title="No requirements configured"
                 description="Configure compliance document types before generating a report."
               />
             ) : total === 0 ? (
               <EmptyState
                 variant="compact"
                 icon={Search01Icon}
-                title="No Incomplete Records"
+                title="No incomplete records"
                 description="No outstanding requirements match these filters."
               />
             ) : (
@@ -315,8 +315,8 @@ function ComplianceStudentsSheetContent({
                       className="w-full h-9 text-xs font-semibold rounded-xl cursor-pointer"
                     >
                       {loadingMore
-                        ? "Loading more records..."
-                        : `View More (${students.length} of ${total.toLocaleString()})`}
+                        ? "Loading more records…"
+                        : `View more (${students.length} of ${total.toLocaleString()})`}
                     </Button>
                   </div>
                 ) : total > limit ? (
@@ -364,7 +364,7 @@ function ComplianceStudentsSheetContent({
       <PDFPreviewModal
         open={open && Boolean(preview)}
         onClose={() => setPreview(null)}
-        title="Incomplete Records Report Preview"
+        title="Incomplete records report preview"
         description={preview ? `${preview.total} students · ${formatPHDateTime(preview.generatedAt)}` : ""}
         pdfUrl={preview?.url}
         preparedPdf

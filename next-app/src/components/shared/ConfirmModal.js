@@ -264,7 +264,7 @@ export default function ConfirmModal({
               <div>
                 <p className={cn(
                   "text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500",
-                  isAppleStyled && "text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300"
+                  isAppleStyled && "text-[11px] font-medium text-gray-900 dark:text-zinc-300"
                 )}>
                   {selectedItemsLabel} ({selectedItems.length})
                 </p>
@@ -345,8 +345,8 @@ export default function ConfirmModal({
               isDeleteBackup ? (
                 <div className="flex flex-col items-center gap-4 rounded-xl border border-black/[0.04] bg-gray-50/70 p-4 dark:border-white/[0.06] dark:bg-zinc-800/50">
                   <div className="text-center w-full flex flex-col items-center">
-                    <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400 text-center">
-                      Security Authorization Code
+                    <label className="mb-2 block text-[11px] font-medium text-gray-500 dark:text-zinc-400 text-center">
+                      Security authorization code
                     </label>
                     <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl border border-gray-200/80 bg-gray-50/80 dark:bg-zinc-800/60 dark:border-zinc-700/80 shadow-2xs">
                       <span className="font-sans tabular-nums text-[26px] font-bold tracking-[0.25em] text-pup-maroon dark:text-red-400 pl-1 select-all">
@@ -357,8 +357,8 @@ export default function ConfirmModal({
 
                   <div className="w-full">
                     <div className="flex items-center justify-between mb-2.5 px-1">
-                      <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
-                        Input Matching Digits
+                      <label className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                        Input matching digits
                       </label>
                       <div className="flex items-center gap-2.5">
                         {verificationValue && (

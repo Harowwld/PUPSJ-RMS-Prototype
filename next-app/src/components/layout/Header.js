@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon , ArrowDown01Icon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, Home01Icon} from "hugeicons-react";
+import { Search01Icon, ArrowDown01Icon, KeyboardIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, Home01Icon } from "hugeicons-react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -30,11 +30,13 @@ import {
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import KeyboardShortcutsModal from "@/components/shared/KeyboardShortcutsModal";
+import KeyboardShortcutKeys from "@/components/shared/KeyboardShortcutKeys";
 import { isAdminRole, getOfficePrefix, getOfficeRoleLabel, isSystemAdminRole, hasAdminPrivileges, getDefaultHomeView } from "@/lib/roleUtils";
 import { getRoleBranding } from "@/lib/roleBranding";
 import { cn } from "@/lib/utils";
 import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { matchesSearchQuery } from "@/lib/searchUtils";
+import { matchesSearchQuery, prioritizeExactMatchGroups } from "@/lib/searchUtils";
 import AppIcon from "@/components/ui/app-icon";
 import {
   getHighContrastPreference,
@@ -47,6 +49,7 @@ export default function Header({ authUser, onLogout, children }) {
   const searchParams = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [isHighContrast, setIsHighContrast] = useState(false);
   const [preferredView, setPreferredView] = useState(null);
@@ -896,7 +899,7 @@ export default function Header({ authUser, onLogout, children }) {
           label: "Toggle Sidebar",
           action: "toggle-sidebar",
           icon: " LayoutLeftIcon",
-          shortcut: isMac ? "⌘B" : "CTRL B",
+          shortcut: isMac ? ["⌘", "B"] : ["Ctrl", "B"],
           breadcrumb: "Navigation • Action",
           keywords: "toggle sidebar collapse expand hide show drawer panel navigation view hide sidebar",
         },
@@ -991,7 +994,7 @@ export default function Header({ authUser, onLogout, children }) {
 
     const allCandidateGroups = [...candidateGroups, controlsGroup, accountGroup];
 
-    const filtered = allCandidateGroups
+    const matchedGroups = allCandidateGroups
       .map((group) => {
         if (!q) return group;
         const matchingItems = group.items.filter((item) =>
@@ -1000,6 +1003,8 @@ export default function Header({ authUser, onLogout, children }) {
         return { ...group, items: matchingItems };
       })
       .filter((group) => group.items.length > 0);
+
+    const filtered = q ? prioritizeExactMatchGroups(matchedGroups, searchQuery) : matchedGroups;
 
     return {
       filteredGroups: filtered,
@@ -1020,7 +1025,7 @@ export default function Header({ authUser, onLogout, children }) {
     if (item.action === "toggle-contrast") {
       const next = toggleHighContrastPreference(authUser?.id);
       setIsHighContrast(next);
-      toast.success(next ? "High Contrast Enabled" : "High Contrast Disabled", {
+      toast.success(next ? "High contrast enabled" : "High contrast disabled", {
         description: next ? "Enhanced border boundaries and text contrast are now active." : "Standard display contrast restored."
       });
       return;
@@ -1121,6 +1126,7 @@ export default function Header({ authUser, onLogout, children }) {
   return (
     <header className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border-b border-black/[0.08] dark:border-white/10 flex-none z-30 select-none transition-colors duration-200 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_1px_3px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset]">
       <AccountSetupModal authUser={authUser} />
+      <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <div className="w-full px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
         
         {/* LEFT: Branding & Workspace Context Pill (Changes per active view) */}
@@ -1263,6 +1269,14 @@ export default function Header({ authUser, onLogout, children }) {
                   </DropdownMenuItem>
                 )}
 
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 transition-colors outline-none text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  onClick={() => setShortcutsOpen(true)}
+                >
+                  <KeyboardIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+                  <span>Keyboard shortcuts</span>
+                </DropdownMenuItem>
+
                 {!isSuperAdmin && hasAdminRights && (
                   <DropdownMenuItem
                     onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
@@ -1308,7 +1322,7 @@ export default function Header({ authUser, onLogout, children }) {
               ref={commandInputRef}
               type="text"
               aria-label="Search views and actions"
-              placeholder="Type a sidebar view or action to navigate..."
+              placeholder="Type a sidebar view or action to navigate"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -1317,9 +1331,7 @@ export default function Header({ authUser, onLogout, children }) {
               onKeyDown={handleCommandKeyDown}
               className="flex-1 bg-transparent border-0 outline-none text-[16px] font-normal text-gray-900 dark:text-zinc-50 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
             />
-            <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded select-none">
-              ESC
-            </kbd>
+            <KeyboardShortcutKeys keys={["ESC"]} size="xs" className="hidden sm:inline-flex" />
           </div>
 
           {/* Results List */}
@@ -1329,7 +1341,7 @@ export default function Header({ authUser, onLogout, children }) {
                 let currentGlobalIndex = 0;
                 return filteredGroups.map((group) => (
                   <div key={group.id} className="mb-2.5 last:mb-0">
-                    <div className="px-3 pt-2 pb-1 text-[11.5px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
+                    <div className="px-3 pt-2 pb-1 text-[11.5px] font-semibold text-gray-400 dark:text-zinc-500 flex items-center justify-between select-none">
                       <span className="flex items-center gap-1.5">
                         
                         <span>{group.title}</span>
@@ -1405,14 +1417,16 @@ export default function Header({ authUser, onLogout, children }) {
 
                             <div className="flex items-center gap-2 shrink-0">
                               {item.shortcut && (
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-sans tabular-nums font-bold bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 rounded border border-gray-200 dark:border-zinc-700">
-                                  {item.shortcut}
-                                </kbd>
+                                <KeyboardShortcutKeys
+                                  keys={Array.isArray(item.shortcut) ? item.shortcut : [item.shortcut]}
+                                  size="xs"
+                                  className="hidden sm:inline-flex"
+                                />
                               )}
                               {isFocused && (
                                 <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 flex items-center gap-1">
                                   <span>Select</span>
-                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/10 dark:bg-white/10 text-[9px] font-sans tabular-nums">↵</kbd>
+                                  <KeyboardShortcutKeys keys={["↵"]} size="xs" />
                                 </span>
                               )}
                             </div>
@@ -1437,22 +1451,20 @@ export default function Header({ authUser, onLogout, children }) {
           <div className="flex items-center justify-between px-4 py-2.5 text-[11px] text-gray-500 dark:text-zinc-400 select-none">
             <div className="flex items-center gap-3.5">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">↑</kbd>
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">↓</kbd>
+                <KeyboardShortcutKeys keys={["↑"]} size="xs" />
+                <KeyboardShortcutKeys keys={["↓"]} size="xs" />
                 <span>navigate</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">↵</kbd>
+                <KeyboardShortcutKeys keys={["↵"]} size="xs" />
                 <span>select</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">ESC</kbd>
+                <KeyboardShortcutKeys keys={["ESC"]} size="xs" />
                 <span>close</span>
               </span>
               <span className="hidden md:flex items-center gap-1 text-[10px] text-gray-400">
-                <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 font-sans tabular-nums text-[9px] shadow-2xs">
-                  {isMac ? "⌘B" : "CTRL B"}
-                </kbd>
+                <KeyboardShortcutKeys keys={isMac ? ["⌘", "B"] : ["Ctrl", "B"]} size="xs" />
                 <span>sidebar</span>
               </span>
             </div>
@@ -1497,18 +1509,16 @@ export default function Header({ authUser, onLogout, children }) {
             >
               <div className="flex items-center gap-2.5">
                 <Search01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
-                <span className="font-medium text-gray-700 dark:text-zinc-200">Search views, actions...</span>
+                <span className="font-medium text-gray-700 dark:text-zinc-200">Search views or actions</span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-1.5 h-5 text-[9px] font-bold text-gray-400 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded shadow-2xs leading-none">
-                {isMac ? "⌘K" : "CTRL K"}
-              </kbd>
+              <KeyboardShortcutKeys keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="xs" />
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-4 [scrollbar-width:thin]">
             {filteredGroups.map((group) => (
               <div key={group.id} className="space-y-1">
-                <div className="px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                <div className="px-2.5 py-1 text-[11px] font-semibold text-gray-400 dark:text-zinc-500">
                   {group.title}
                 </div>
                 <div className="flex flex-col gap-0.5">
@@ -1576,7 +1586,7 @@ export default function Header({ authUser, onLogout, children }) {
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
             <DialogTitle>
-              Session Expired
+              Session expired
             </DialogTitle>
             <DialogDescription className="pt-2">
               Your active session has ended or you signed out from another window. Please sign in again to continue using the system.

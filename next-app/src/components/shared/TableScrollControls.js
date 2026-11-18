@@ -154,7 +154,7 @@ export default function TableScrollControls({
             size="icon"
             onClick={handleScrollLeft}
             disabled={scrollContainerRef ? !canScrollBackward : canScrollLeft === false}
-            className={cn("rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9" : "h-8 w-8")}
+            className={cn("border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9 rounded-xl" : "h-8 w-8 rounded-lg")}
             aria-label={`Scroll ${scrollTargetLabel} left`}
           >
             <ArrowLeft01Icon size="1em" className="text-xs" />
@@ -170,7 +170,7 @@ export default function TableScrollControls({
             size="icon"
             onClick={handleScrollRight}
             disabled={scrollContainerRef ? !canScrollForward : canScrollRight === false}
-            className={cn("rounded-xl border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9" : "h-8 w-8")}
+            className={cn("border border-border bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95", controlSize === "md" ? "h-9 w-9 rounded-xl" : "h-8 w-8 rounded-lg")}
             aria-label={`Scroll ${scrollTargetLabel} right`}
           >
             <ArrowRight01Icon size="1em" className="text-xs" />

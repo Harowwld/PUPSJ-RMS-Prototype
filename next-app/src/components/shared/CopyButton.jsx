@@ -64,8 +64,8 @@ export function CopyButton({
         }, 2000);
       } catch (err) {
         console.error("Failed to copy text:", err);
-        toast.error("Copy Failed", {
-          description: "Unable to copy to clipboard. Please check browser permissions.",
+        toast.error("Could not copy", {
+          description: "Check browser clipboard permissions and try again.",
         });
       }
     },

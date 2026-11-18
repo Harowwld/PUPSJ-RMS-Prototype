@@ -209,7 +209,7 @@ export default function MultiCriteriaFilter({
                   className={cn(groupIdx > 0 && "pt-2 border-t-[0.5px] border-border/70 dark:border-white/10")}
                 >
                   <div className="flex items-center justify-between px-1.5 mb-1">
-                    <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
+                    <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500">
                       {group.label}
                     </span>
                     {selectedInGroup.length > 0 && (

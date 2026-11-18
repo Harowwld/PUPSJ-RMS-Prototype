@@ -18,12 +18,6 @@ test("1. Expanded Toast Max-Width in src/app/globals.css and sonner.jsx", () => 
     "globals.css must set max-width to min(620px, calc(100vw - 32px))"
   );
 
-  // sonner.jsx must use 620px max-width in Tailwind classes
-  assert.ok(
-    sonnerJsx.includes("max-w-[min(620px,calc(100vw-32px))]"),
-    "sonner.jsx must use max-w-[min(620px,calc(100vw-32px))]"
-  );
-
   // Hover bridge must expand to 620px to support wide stacked toasts
   assert.ok(
     sonnerJsx.includes("w-[620px] max-w-[calc(100vw-32px)]"),
@@ -31,25 +25,13 @@ test("1. Expanded Toast Max-Width in src/app/globals.css and sonner.jsx", () => 
   );
 });
 
-test("2. Full Pill Toast Geometry (rounded-full across all stages)", () => {
+test("2. Toasts with descriptions use a top-aligned card while title-only toasts use a pill", () => {
   const globalsCss = fs.readFileSync(path.join(ROOT_DIR, "src/app/globals.css"), "utf8");
   const sonnerJsx = fs.readFileSync(path.join(ROOT_DIR, "src/components/ui/sonner.jsx"), "utf8");
 
-  // globals.css must enforce rounded-full (border-radius: 999px)
-  assert.ok(
-    globalsCss.includes("border-radius: 999px"),
-    "globals.css must set border-radius: 999px on .rms-toast"
-  );
-
-  // sonner.jsx must apply rounded-full class across toast items
-  assert.ok(
-    sonnerJsx.includes("rounded-full"),
-    "sonner.jsx must apply rounded-full class"
-  );
-  assert.ok(
-    !sonnerJsx.includes("is-card"),
-    "sonner.jsx must not apply is-card squircle override"
-  );
+  assert.match(sonnerJsx, /data-has-description=\{Boolean\(descContent\)\}/);
+  assert.match(globalsCss, /\.rms-toast \{[^}]*align-items: center;[^}]*border-radius: 999px;/);
+  assert.match(globalsCss, /\.rms-toast\[data-has-description="true"\] \{[^}]*align-items: flex-start;[^}]*border-radius: 20px;/);
 });
 
 test("3. Long Technical Identifiers Word Break Support (renderBreakableText & overflow-wrap)", () => {

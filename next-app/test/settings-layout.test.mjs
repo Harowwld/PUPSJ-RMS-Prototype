@@ -88,7 +88,7 @@ test("AccountSettingsPanel relocates the name and identity group inside the Prof
 
   // Contains social metadata cards
   assert.ok(
-    profileSection.includes("PUP San Juan") && profileSection.includes("2FA Security"),
+    profileSection.includes("PUP San Juan") && profileSection.includes("Directory Record") && !profileSection.includes("2FA Security"),
     "Profile tab must include social metadata cards strip"
   );
 
@@ -182,7 +182,7 @@ test("APPLE_WALLPAPER_PRESETS defines 8 curated institutional themes without mac
   );
 });
 
-test("AccountSettingsPanel implements 4x1 Bento grid, in-situ avatar picker, tactile copy, and Apple Inset Grouped lists", () => {
+test("AccountSettingsPanel implements responsive metadata cards, in-situ avatar picker, tactile copy, and Apple Inset Grouped lists", () => {
   const code = fs.readFileSync(SETTINGS_PANEL_PATH, "utf8");
 
   const profileSection = code.substring(
@@ -190,10 +190,10 @@ test("AccountSettingsPanel implements 4x1 Bento grid, in-situ avatar picker, tac
     code.indexOf('<TabsContent value="security"')
   );
 
-  // 1. 4x1 Bento grid for metadata cards
+  // 1. Metadata cards reflow based on the available width
   assert.ok(
-    profileSection.includes("lg:grid-cols-4"),
-    "Profile metadata strip must use 4x1 grid layout (lg:grid-cols-4) on desktop"
+    profileSection.includes("grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))]"),
+    "Profile metadata cards must reflow within the available width"
   );
 
   // 2. In-situ Apple Avatar Picker Dialog trigger
@@ -287,18 +287,14 @@ test("AccountSettingsPanel establishes dedicated Two-Factor Auth sidebar tab and
     "AccountSettingsPanel must resolve 2fa alias to two-factor"
   );
 
-  // 3. Profile Card 4 links directly to two-factor tab
+  // 3. Two-factor setup is separate from the Profile overview
   const profileSection = code.substring(
     code.indexOf('<TabsContent value="profile"'),
     code.indexOf('<TabsContent value="security"')
   );
   assert.ok(
-    profileSection.includes('onClick={() => handleTabChange("two-factor")}'),
-    "Profile Card 4 must link directly to two-factor tab"
-  );
-  assert.ok(
-    profileSection.includes("Manage 2FA credentials"),
-    "Profile Card 4 action button must read 'Manage 2FA credentials'"
+    !profileSection.includes("Manage 2FA credentials"),
+    "Profile tab must omit the 2FA metadata card"
   );
 
   // 4. Security tab contains Password Rotation and Security Questions only

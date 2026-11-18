@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
+import KeyboardShortcutKeys from "@/components/shared/KeyboardShortcutKeys"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { SPRING_PRESS, useAppReducedMotion } from "@/lib/motion"
 
 const getActionVariant = (variant) =>
-  ["danger", "success", "warning", "default", "outline", "ghost", "destructive"].includes(variant)
+  ["danger", "success", "warning", "default", "outline", "secondary", "ghost", "destructive"].includes(variant)
     ? variant
     : "outline"
 
@@ -87,16 +88,26 @@ function FloatingSecondaryActionButton({ act, isBusy }) {
     }
   }
 
+  const resolvedVariant = getActionVariant(act.variant)
+  const isNeutralVariant = resolvedVariant === "outline" || resolvedVariant === "secondary"
+
   return (
     <Button
       type="button"
-      variant={act.variant || "outline"}
+      variant={resolvedVariant}
       size="sm"
       onClick={handleClick}
       disabled={actDisabled}
       aria-live={isCopy ? "polite" : undefined}
       title={act.title || act.label}
-      className="flex h-8.5 items-center justify-center rounded-xl px-3 text-xs font-medium border border-border dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
+      className={cn(
+        "flex h-8.5 items-center justify-center rounded-xl text-xs cursor-pointer active:scale-95 transition-all whitespace-nowrap",
+        isNeutralVariant
+          ? "px-3 font-medium border border-border dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs"
+          : resolvedVariant === "ghost"
+            ? "px-3 font-medium"
+            : "px-4 font-semibold shadow-xs"
+      )}
     >
       {isCopy ? (
         <span className="inline-grid grid-cols-1 grid-rows-1 place-items-center w-full">
@@ -268,9 +279,7 @@ export default function FloatingActionBar({
         className="flex h-8.5 items-center gap-1.5 rounded-xl px-2.5 text-xs font-medium border border-border dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer active:scale-95 transition-all whitespace-nowrap"
       >
         <span>Deselect</span>
-        <kbd className="hidden sm:inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-700 px-1.5 py-0.5 text-[9.5px] font-sans font-semibold text-gray-400 dark:text-zinc-400 border border-gray-200/80 dark:border-white/5 leading-none">
-          esc
-        </kbd>
+        <KeyboardShortcutKeys keys={["Esc"]} size="xs" className="hidden sm:inline-flex" />
       </Button>
     )
   }

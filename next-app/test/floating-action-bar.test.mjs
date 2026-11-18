@@ -53,8 +53,8 @@ test("FloatingActionBar - formats entity pluralization and renders Apple dock st
   // Overflow trigger button
   assert.match(html, /aria-label="More batch actions"/);
 
-  // Deselect button at the end with separator and rounded-full kbd capsule
-  assert.match(html, /aria-hidden="true"><\/div><button[^>]*><span>Deselect<\/span><kbd[^>]*class="[^"]*rounded-full[^"]*"[^>]*>esc<\/kbd><\/button>/);
+  // Deselect button at the end with separator and standardized kbd keycap
+  assert.match(html, /aria-hidden="true"><\/div><button[^>]*><span>Deselect<\/span><span[^>]*aria-label="Esc"[^>]*>[\s\S]*?<kbd[^>]*>Esc<\/kbd><\/span><\/span><\/button>/);
 });
 
 test("FloatingActionBar - supports backward-compatible single action props", () => {
@@ -145,4 +145,41 @@ test("FloatingActionBar - secondary copy actions implement zero-layout-shift qui
 
   // Non-copy action must render plain label
   assert.match(html, /<span>Export CSV<\/span>/);
+});
+
+test("FloatingActionBar - crucial secondary actions preserve semantic variant colors while copy actions stay neutral", () => {
+  const html = renderToStaticMarkup(React.createElement(FloatingActionBar, {
+    selectedCount: 3,
+    entityName: "records",
+    forceMount: true,
+    onCancel: () => {},
+    actions: [
+      { label: "Approve Records", variant: "success", onClick: () => {} },
+      { label: "Decline Records", variant: "danger", onClick: () => {} },
+    ],
+    secondaryActions: [
+      { label: "Copy Student IDs", copiedLabel: "IDs Copied!", onClick: () => {} },
+      { label: "Flag Records", variant: "warning", onClick: () => {} },
+    ],
+  }));
+
+  // Decline Records (secondary from actions[1]) must render with danger styling, not neutral white/gray
+  const declineMatch = html.match(/<button[^>]*title="Decline Records"[^>]*>/);
+  assert.ok(declineMatch, "Decline Records button should render");
+  assert.match(declineMatch[0], /data-variant="danger"/);
+  assert.match(declineMatch[0], /bg-red-600/);
+  assert.doesNotMatch(declineMatch[0], /bg-white\/80/);
+
+  // Flag Records (secondaryActions with warning) must render with warning styling
+  const flagMatch = html.match(/<button[^>]*title="Flag Records"[^>]*>/);
+  assert.ok(flagMatch, "Flag Records button should render");
+  assert.match(flagMatch[0], /data-variant="warning"/);
+  assert.match(flagMatch[0], /bg-amber-700/);
+  assert.doesNotMatch(flagMatch[0], /bg-white\/80/);
+
+  // Copy Student IDs must remain neutral outline secondary button
+  const copyMatch = html.match(/<button[^>]*title="Copy Student IDs"[^>]*>/);
+  assert.ok(copyMatch, "Copy Student IDs button should render");
+  assert.match(copyMatch[0], /data-variant="outline"/);
+  assert.match(copyMatch[0], /bg-white\/80/);
 });

@@ -8,6 +8,8 @@ const TooltipContext = React.createContext({
   setContent: () => {},
 })
 
+const TooltipProviderContext = React.createContext(false)
+
 function TooltipPortal({ tooltip }) {
   const { text, rect, placement } = tooltip
   const [coords, setCoords] = React.useState({ top: 0, left: 0 })
@@ -62,7 +64,7 @@ function TooltipPortal({ tooltip }) {
       data-top={`${coords.top}px`}
       data-left={`${coords.left}px`}
       style={{ top: coords.top, left: coords.left }}
-      className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-tight leading-snug text-white bg-gray-950/85 dark:bg-zinc-850/90 backdrop-blur-xl shadow-[0_4px_14px_rgba(0,0,0,0.22),0_1px_3px_rgba(0,0,0,0.12)] border border-white/15 dark:border-white/10 select-none text-center max-w-[260px] whitespace-pre-line ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
+      className={`rms-tooltip rms-tooltip-positioned px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-tight leading-snug text-white bg-gray-950/85 dark:bg-zinc-850/90 backdrop-blur-xl shadow-[0_4px_14px_rgba(0,0,0,0.22),0_1px_3px_rgba(0,0,0,0.12)] border border-white/15 dark:border-white/10 select-none text-center w-max max-w-[min(420px,calc(100vw-16px))] whitespace-pre-line break-words ${mounted ? "rms-tooltip-visible" : "rms-tooltip-hidden"}`}
     >
       {text}
     </div>
@@ -70,12 +72,37 @@ function TooltipPortal({ tooltip }) {
 }
 
 function TooltipProvider({ children }) {
+  const hasParentProvider = React.useContext(TooltipProviderContext)
+  if (hasParentProvider) {
+    return <>{children}</>
+  }
+  return <TooltipProviderRoot>{children}</TooltipProviderRoot>
+}
+
+function TooltipProviderRoot({ children }) {
   const [globalTooltip, setGlobalTooltip] = React.useState(null)
+  const globalTooltipRef = React.useRef(null)
   const hoverTimeoutRef = React.useRef(null)
   const showTimeoutRef = React.useRef(null)
+  const lastClosedAtRef = React.useRef(0)
+  const tooltipIdRef = React.useRef(0)
 
   React.useEffect(() => {
     if (typeof window === "undefined") return
+
+    const showForTarget = (target, text) => {
+      const rect = target.getBoundingClientRect()
+      const placement = target.getAttribute("data-tooltip-placement") || "top"
+      const next = {
+        id: ++tooltipIdRef.current,
+        text,
+        rect,
+        placement,
+        target,
+      }
+      globalTooltipRef.current = next
+      setGlobalTooltip(next)
+    }
 
     const handleMouseOver = (e) => {
       // Find the closest element with a title or data-tooltip attribute
@@ -104,21 +131,27 @@ function TooltipProvider({ children }) {
         hoverTimeoutRef.current = null
       }
 
-      // Clear any existing show delay and start a new 0.5-second delay
+      // Already displaying tooltip for this exact element
+      if (globalTooltipRef.current?.target === target && globalTooltipRef.current?.text === text) {
+        return
+      }
+
+      // Clear any existing show delay
       if (showTimeoutRef.current) {
         clearTimeout(showTimeoutRef.current)
+        showTimeoutRef.current = null
+      }
+
+      // If a tooltip is already visible or was just closed within the skip-delay window,
+      // reset and immediately show the tooltip for the newly hovered element.
+      const isWarm = Boolean(globalTooltipRef.current) || (Date.now() - lastClosedAtRef.current < 200)
+      if (isWarm) {
+        showForTarget(target, text)
+        return
       }
 
       showTimeoutRef.current = setTimeout(() => {
-        const rect = target.getBoundingClientRect()
-        const placement = target.getAttribute("data-tooltip-placement") || "top"
-
-        setGlobalTooltip({
-          text,
-          rect,
-          placement,
-          target,
-        })
+        showForTarget(target, text)
       }, 500)
     }
 
@@ -138,8 +171,15 @@ function TooltipProvider({ children }) {
         showTimeoutRef.current = null
       }
 
-      // Small delay so fast transitions between items don't feel glitchy
+      // Small delay so fast transitions between items keep warm skip-delay state
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
       hoverTimeoutRef.current = setTimeout(() => {
+        if (globalTooltipRef.current) {
+          lastClosedAtRef.current = Date.now()
+        }
+        globalTooltipRef.current = null
         setGlobalTooltip(null)
       }, 50)
     }
@@ -149,6 +189,12 @@ function TooltipProvider({ children }) {
         clearTimeout(showTimeoutRef.current)
         showTimeoutRef.current = null
       }
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+        hoverTimeoutRef.current = null
+      }
+      globalTooltipRef.current = null
+      lastClosedAtRef.current = 0
       setGlobalTooltip(null)
     }
 
@@ -158,6 +204,8 @@ function TooltipProvider({ children }) {
     window.addEventListener("scroll", handleScrollOrClick, true)
 
     return () => {
+      if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current)
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
       document.removeEventListener("mouseover", handleMouseOver)
       document.removeEventListener("mouseout", handleMouseOut)
       document.removeEventListener("click", handleScrollOrClick)
@@ -166,13 +214,15 @@ function TooltipProvider({ children }) {
   }, [])
 
   return (
-    <TooltipContext.Provider value={{ content: "", setContent: () => {} }}>
-      {children}
-      {globalTooltip && typeof document !== "undefined" && createPortal(
-        <TooltipPortal tooltip={globalTooltip} />,
-        document.body
-      )}
-    </TooltipContext.Provider>
+    <TooltipProviderContext.Provider value={true}>
+      <TooltipContext.Provider value={{ content: "", setContent: () => {} }}>
+        {children}
+        {globalTooltip && typeof document !== "undefined" && createPortal(
+          <TooltipPortal key={globalTooltip.id} tooltip={globalTooltip} />,
+          document.body
+        )}
+      </TooltipContext.Provider>
+    </TooltipProviderContext.Provider>
   )
 }
 

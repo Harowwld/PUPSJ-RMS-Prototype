@@ -2,7 +2,7 @@
 
 
 import { EmptyState } from "@/components/ui/empty";
-import { Search01Icon, UnfoldMoreIcon, DashboardSquare01Icon, LayoutLeftIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, VolumeHighIcon, VolumeMute01Icon, Home01Icon } from "hugeicons-react";
+import { Search01Icon, UnfoldMoreIcon, DashboardSquare01Icon, KeyboardIcon, LayoutLeftIcon, ListViewIcon, Logout01Icon, Settings01Icon, Time01Icon, UserIcon, VolumeHighIcon, VolumeMute01Icon, Home01Icon } from "hugeicons-react";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -53,6 +53,8 @@ import {
 } from "@/components/ui/sheet";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import KeyboardShortcutsModal from "@/components/shared/KeyboardShortcutsModal";
+import KeyboardShortcutKeys from "@/components/shared/KeyboardShortcutKeys";
 import AppIcon from "@/components/ui/app-icon";
 import CommandPalette from "@/components/shared/CommandPalette";
 // Icon map for navigation items
@@ -144,6 +146,7 @@ export default function Sidebar({
     authUser?.avatar_filename || null
   );
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now());
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -272,7 +275,7 @@ export default function Sidebar({
           body: JSON.stringify({ preferences: { sound_enabled: next } }),
         });
         const json = await res.json().catch(() => null);
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save preference");
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not save preference");
       } catch {
         setSoundEnabledPreference(!next, authUser?.id || null);
       }
@@ -1231,7 +1234,7 @@ export default function Sidebar({
     if (item.action === "toggle-contrast") {
       const next = toggleHighContrastPreference(authUser?.id);
       setIsHighContrast(next);
-      toast.success(next ? "High Contrast Enabled" : "High Contrast Disabled", {
+      toast.success(next ? "High contrast enabled" : "High contrast disabled", {
         description: next
           ? "Enhanced border boundaries and text contrast are now active."
           : "Standard display contrast restored.",
@@ -1386,6 +1389,14 @@ export default function Sidebar({
         )}
 
         <DropdownMenuItem
+          className="cursor-pointer rounded-lg flex items-center gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
+          onClick={() => setShortcutsOpen(true)}
+        >
+          <KeyboardIcon size="1em" className="text-sm text-gray-500 dark:text-zinc-400 shrink-0" />
+          <span>Keyboard shortcuts</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
           data-sound="swoosh"
           onClick={handleToggleSoundFromMenu}
           className="cursor-pointer rounded-lg flex items-center justify-between gap-2 text-xs font-medium py-1.5 px-2 text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none"
@@ -1446,6 +1457,7 @@ export default function Sidebar({
     <>
       {/* Account Setup Modal (Enforces password & security questions if needed) */}
       <AccountSetupModal authUser={authUser} />
+      <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
       {/* Mobile Top Bar (< md only) */}
       <div className="md:hidden flex items-center justify-between w-full h-[52px] px-3 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_0_0_rgba(255,255,255,0.7)_inset,0_1px_3px_rgba(0,0,0,0.02)] z-20 shrink-0 select-none">
@@ -1661,15 +1673,10 @@ export default function Sidebar({
                   style={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
                   className="text-xs font-normal truncate text-gray-600 dark:text-zinc-300 ml-1.5"
                 >
-                  Search views, records...
+                  Search views or records
                 </span>
               </div>
-              <kbd
-                style={{ fontSize: "calc(9.5px * var(--app-font-scale, 1))" }}
-                className="inline-flex items-center justify-center px-2 h-5 min-w-[32px] text-[9.5px] font-sans tabular-nums font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none shrink-0 select-none"
-              >
-                {isMac ? "⌘K" : "Ctrl K"}
-              </kbd>
+              <KeyboardShortcutKeys keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="xs" />
             </motion.button>
           </div>
         ) : (
@@ -2315,12 +2322,10 @@ export default function Sidebar({
               <div className="flex items-center gap-2.5">
                 <Search01Icon size="1em" className="text-sm text-pup-maroon dark:text-red-400" />
                 <span className="font-medium text-gray-700 dark:text-zinc-200">
-                  Search views, records...
+                  Search views or records
                 </span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-2 h-5 text-[9px] font-bold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 rounded-full shadow-2xs leading-none">
-                {isMac ? "⌘K" : "Ctrl K"}
-              </kbd>
+              <KeyboardShortcutKeys keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="xs" />
             </button>
           </div>
 
@@ -2329,7 +2334,7 @@ export default function Sidebar({
               <div key={group.id} className="space-y-1">
                 <div
                   style={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}
-                  className="px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider"
+                  className="px-2.5 py-1 text-[11px] font-semibold text-gray-400 dark:text-zinc-500"
                 >
                   {group.title}
                 </div>
@@ -2399,7 +2404,7 @@ export default function Sidebar({
         <DialogContent className="max-w-md rounded-2xl border-gray-200 bg-white dark:bg-zinc-900 dark:border-white/10">
           <DialogHeader>
             <DialogTitle>
-              Session Expired
+              Session expired
             </DialogTitle>
             <DialogDescription className="pt-2">
               Your active session has ended or you signed out from another window. Please sign in

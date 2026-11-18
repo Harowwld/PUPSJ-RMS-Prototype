@@ -30,7 +30,7 @@ export default function DocTypeModal({
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle>
-                Create Document Type
+                Create document type
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Create a new document type to categorize uploaded records.
@@ -41,8 +41,8 @@ export default function DocTypeModal({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-              Document Type Name
+            <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+              Document type name
             </label>
             <Input
               type="text"
@@ -82,7 +82,7 @@ export default function DocTypeModal({
             className="h-9 px-4 cursor-pointer disabled:opacity-50 border-0"
             disabled={isLoading}
           >
-            {isLoading ? "Saving..." : "Save Document Type"}
+            {isLoading ? "Saving…" : "Save document type"}
           </Button>
         </DialogFooter>
       </DialogContent>

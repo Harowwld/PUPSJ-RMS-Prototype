@@ -7,6 +7,15 @@ import React, { useEffect } from "react";
 import { Alert02Icon, Cancel01Icon, CovidInfoIcon, Loading01Icon, Tick01Icon } from "hugeicons-react";
 import { playSoundCue } from "@/lib/soundPatch";
 
+const TOAST_ICON_COLORS = {
+  default: "bg-zinc-600",
+  success: "bg-emerald-700",
+  error: "bg-red-600",
+  warning: "bg-amber-700",
+  info: "bg-blue-600",
+  loading: "bg-zinc-600",
+};
+
 // 1. Play Tone logic (synthesized Kobra outcome cues governed by user Sound preferences)
 const PORTAL_SOUND_PREFIXES = ["/admin", "/staff", "/systemadmin", "/student", "/account"];
 
@@ -224,6 +233,13 @@ const ToastItem = ({
     dragStartY.current = null;
   };
 
+  // Legacy plain messages can also signal errors or warnings.
+  const variant = type === "default"
+    ? /fail|error/.test(lowerTitle)
+      ? "error"
+      : lowerTitle.includes("warning") ? "warning" : "default"
+    : type;
+
   // Apple spring fluid entry (360ms with subtle overshoot) & swift upward retraction exit (200ms)
   const animationClass = t.visible 
     ? "animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]" 
@@ -240,40 +256,38 @@ const ToastItem = ({
         transition: isDragging ? "none" : "transform 260ms cubic-bezier(0.16, 1, 0.3, 1)",
         touchAction: "none",
       }}
-      className={`rms-toast rounded-full flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
+      data-has-description={Boolean(descContent)}
+      className={`rms-toast cursor-grab active:cursor-grabbing select-none active:scale-[0.98] transition-transform duration-100 ease-out ${animationClass}`}
     >
       {/* Left Icon (Stage 2, 3, 5) */}
       {(stage === 2 || stage === 3 || stage === 5) && (
-        <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white border-none shadow-xs transition-transform duration-200 active:scale-95 ${
-          type === "error" || type === "warning" ? "bg-[#e30000]" :
-          type === "info" ? "bg-blue-500" :
-          type === "loading" ? "bg-zinc-800 dark:bg-zinc-700" :
-          "bg-[#16a34a]"
-        }`}>
-          {type === "error" || type === "warning" ? (
-            <Alert02Icon size="1em" className="text-[14px] text-white" />
+        <div className={`size-5 rounded-full flex items-center justify-center shrink-0 text-white border-none transition-transform duration-200 active:scale-95 ${
+          TOAST_ICON_COLORS[variant]
+        }`} aria-hidden="true">
+          {variant === "error" || variant === "warning" ? (
+            <Alert02Icon size="1em" className="text-[11px] text-white" />
           ) : type === "info" ? (
-            <CovidInfoIcon size="1em" className="text-[14px] text-white" />
+            <CovidInfoIcon size="1em" className="text-[11px] text-white" />
           ) : type === "loading" ? (
-            <Loading01Icon size="1em" className="animate-spin text-[14px] text-white" />
+            <Loading01Icon size="1em" className="animate-spin text-[11px] text-white" />
           ) : (
-            <Tick01Icon size="1em" className="text-[14px] text-white" />
+            <Tick01Icon size="1em" className="text-[11px] text-white" />
           )}
         </div>
       )}
       
       {/* Text Block */}
-      <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
+      <div className="flex flex-col justify-center min-w-0 flex-1">
         {React.isValidElement(titleContent) ? (
           titleContent
         ) : (
-          <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
+          <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-5">
             {renderBreakableText(titleContent)}
           </span>
         )}
         {descContent && (
           typeof descContent === "string" || typeof descContent === "number" ? (
-            <span className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal break-words">
+            <span className="text-[13px] font-normal text-gray-600 dark:text-zinc-400 mt-0.5 leading-5">
               {renderBreakableText(descContent)}
             </span>
           ) : (
@@ -291,7 +305,7 @@ const ToastItem = ({
             safeOptions.action.onClick?.(e);
             hotToast.dismiss(t.id);
           }}
-          className="relative z-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ml-auto"
+          className="self-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 border-none outline-none transition-all ml-auto"
         >
           <span className={
             String(safeOptions.action.label || "").toLowerCase() === "undo"
@@ -313,7 +327,7 @@ const ToastItem = ({
             e.stopPropagation();
             hotToast.dismiss(t.id);
           }}
-          className="relative z-10 h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-all"
+          className="self-center h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 active:scale-90 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-all"
           aria-label="Dismiss notification"
         >
           <Cancel01Icon size="1em" className="text-gray-500 dark:text-zinc-400 text-xs" />
@@ -399,12 +413,36 @@ try {
   console.warn("Could not patch sonner toast exports:", e);
 }
 
-// 5. Custom Toaster renderer using CSP-safe classes with Apple liquid glass styling
+function ToastStackItem({ toastId, updateHeight, style, children }) {
+  const ref = React.useRef(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    const measure = () => updateHeight(toastId, element.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [toastId, updateHeight]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute top-0 transition-all duration-380 ease-[cubic-bezier(0.16,1,0.3,1)]"
+      style={style}
+    >
+      {children}
+    </div>
+  );
+}
+
+// 5. Custom Toaster renderer
 const Toaster = () => {
   const { toasts, handlers } = useToaster({ duration: 3000, position: "top-center" });
   const [expanded, setExpanded] = React.useState(false);
   
   const visibleToasts = toasts.filter((t) => t.visible);
+  const expandedHeight = visibleToasts.reduce((height, toast) => height + (toast.height ?? 40) + 8, 0);
 
   useEffect(() => {
     // Limit to 3 active visible toasts
@@ -424,20 +462,25 @@ const Toaster = () => {
     >
       {/* Invisible hover bridge to prevent jitter when moving mouse between expanded toasts */}
       {expanded && visibleToasts.length > 1 && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] max-w-[calc(100vw-32px)] h-[340px] pointer-events-auto bg-transparent z-0" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] max-w-[calc(100vw-32px)] pointer-events-auto bg-transparent z-0" style={{ height: expandedHeight }} />
       )}
       {toasts.map((toastItem) => {
         const stackIndex = visibleToasts.findIndex(t => t.id === toastItem.id);
         const isVisible = toastItem.visible;
         
         // react-hot-toast puts newest toasts at index 0 for top-* positions.
-        let effIndex = stackIndex === -1 ? 0 : stackIndex;
+        const effIndex = stackIndex === -1 ? 0 : stackIndex;
 
-        // Apple fluid spring depth calculation:
-        // Stacked: index 0 is full size; index 1 peeks down 10px with 0.94 scale; index 2 peeks 20px with 0.88 scale
-        // Expanded (on hover): toasts cascade downward with 64px step, full scale (1.0), and full brightness
-        const scale = isVisible ? (expanded ? 1 : Math.max(0.86, 1 - (effIndex * 0.06))) : 0.90;
-        const translateY = isVisible ? (expanded ? effIndex * 64 : effIndex * 10) : -24;
+        const scale = isVisible ? (expanded ? 1 : Math.max(0.86, 1 - effIndex * 0.06)) : 0.90;
+        const expandedOffset = visibleToasts
+          .slice(0, effIndex)
+          .reduce((offset, toast) => offset + (toast.height ?? 40) + 8, 0);
+        const frontHeight = visibleToasts[0]?.height ?? 40;
+        const itemHeight = toastItem.height ?? 40;
+        const stackedOffset = effIndex === 0
+          ? 0
+          : Math.max(effIndex * 10, frontHeight - itemHeight * scale + effIndex * 10);
+        const translateY = isVisible ? (expanded ? expandedOffset : stackedOffset) : -24;
         const opacity = isVisible ? (effIndex >= 3 && !expanded ? 0 : (expanded ? 1 : Math.max(0.70, 1 - effIndex * 0.14))) : 0;
         const zIndex = 100 - effIndex;
         const filter = isVisible && !expanded && effIndex > 0
@@ -449,9 +492,9 @@ const Toaster = () => {
         const content = typeof toastItem.message === "function"
           ? toastItem.message(toastItem)
           : (
-            <div className="rms-toast rounded-full flex flex-row flex-nowrap items-center gap-[10px] w-max max-w-[min(620px,calc(100vw-32px))] pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]">
-              <div className="relative z-10 flex flex-col justify-center min-w-0 flex-1 py-0.5">
-                <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-snug break-words">
+            <div className="rms-toast active:scale-[0.98] transition-transform duration-100 ease-out animate-[apple-toast-slide-down_360ms_cubic-bezier(0.16,1,0.3,1)_forwards]">
+              <div className="flex flex-col justify-center min-w-0 flex-1">
+                <span className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] leading-5">
                   {renderBreakableText(rawMsg)}
                 </span>
               </div>
@@ -459,9 +502,10 @@ const Toaster = () => {
           );
 
         return (
-          <div
+          <ToastStackItem
             key={toastItem.id}
-            className="absolute top-0 transition-all duration-380 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            toastId={toastItem.id}
+            updateHeight={handlers.updateHeight}
             style={{
               opacity: opacity,
               transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
@@ -472,7 +516,7 @@ const Toaster = () => {
             }}
           >
             {content}
-          </div>
+          </ToastStackItem>
         );
       })}
     </div>

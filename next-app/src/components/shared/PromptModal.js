@@ -126,7 +126,7 @@ export default function PromptModal({
             {inputLabel && (
               <label className={cn(
                 "block text-[11px] font-semibold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5",
-                isDeclineModal && "mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300"
+                isDeclineModal && "mb-1 block text-[11px] font-medium text-gray-900 dark:text-zinc-300"
               )}>
                 {inputLabel}
               </label>
@@ -174,7 +174,7 @@ export default function PromptModal({
             disabled={isLoading || confirmDisabled}
             className="h-9 px-4"
           >
-            {isLoading ? "Processing..." : confirmLabel}
+            {isLoading ? "Processing…" : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

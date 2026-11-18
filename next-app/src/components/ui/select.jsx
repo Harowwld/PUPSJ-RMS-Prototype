@@ -39,7 +39,7 @@ const Select = React.forwardRef(({
         {title && <div className="px-4.5 py-2.5 text-[11px] font-semibold text-gray-900 dark:text-zinc-100 border-b border-black/[0.06] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">{title}</div>}
         <Primitive.List className="max-h-[min(15rem,var(--available-height))] overflow-y-auto overflow-x-hidden p-1.5 space-y-0.5 outline-none">
           {options.map((option, index) => option.isHeader ? (
-            <div key={`heading-${index}`} role="presentation" className="px-3 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">{option.label}</div>
+            <div key={`heading-${index}`} role="presentation" className="px-3 pb-0.5 pt-1.5 text-[11px] font-semibold text-gray-400 dark:text-zinc-500">{option.label}</div>
           ) : (
             <Primitive.Item key={`${option.value}-${index}`} value={option.value} disabled={option.disabled} className={cn("min-h-[30px] flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none transition-colors duration-100 data-highlighted:bg-black/[0.05] data-selected:bg-black/[0.05] data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:data-highlighted:bg-white/10 dark:data-selected:bg-white/10", optionClassName)}>
               <Primitive.ItemText className="min-w-0 flex-1 truncate">{option.label}</Primitive.ItemText>

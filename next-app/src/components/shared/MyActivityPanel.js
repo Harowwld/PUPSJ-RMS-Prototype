@@ -284,12 +284,12 @@ export default function MyActivityPanel() {
         { cache: "no-store" }
       );
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load activity");
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not load activity");
       setRows(Array.isArray(json.data) ? json.data : []);
       setTotal(Number(json.total) || 0);
       setHasLoaded(true);
     } catch (err) {
-      setError(err?.message || "Failed to load activity");
+      setError(err?.message || "Could not load activity");
     } finally {
       setLoading(false);
     }
@@ -377,7 +377,7 @@ export default function MyActivityPanel() {
   const handleCopy = (text, label) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
-    toast.success("Copied to Clipboard", { description: `${label} has been successfully copied.` });
+    toast.success("Copied to clipboard", { description: `${label} copied.` });
   };
 
   const totalPages = Math.max(1, Math.ceil(total / perPage) || 1);
@@ -391,7 +391,7 @@ export default function MyActivityPanel() {
           icon="Time01Icon"
           title={
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span>My Activity</span>
+              <span>My activity</span>
               <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
                 {total.toLocaleString()} records
               </span>
@@ -403,7 +403,7 @@ export default function MyActivityPanel() {
           titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <RefreshButton onRefresh={handleRefresh} isLoading={loading} title="Refresh Activity" className="h-9 w-9" />
+            <RefreshButton onRefresh={handleRefresh} isLoading={loading} title="Refresh activity" className="h-9 w-9" />
           }
         />
 

@@ -151,7 +151,7 @@ function CardSectionHeader({
     <div
       data-slot="card-section-header"
       className={cn(
-        "px-1 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground select-none",
+        "px-1 mb-2 text-[11px] font-semibold text-muted-foreground select-none",
         className
       )}
       {...props}

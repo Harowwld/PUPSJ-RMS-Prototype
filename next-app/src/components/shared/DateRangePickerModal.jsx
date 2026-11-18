@@ -315,7 +315,7 @@ export function DateRangePickerContent({
       {/* Optional Popover Header matching Filter by Header in OfficeTableControls */}
       {showHeader && (
         <PopoverHeader className="px-4.5 py-2.5 border-b border-black/[0.06] dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between">
-          <PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">
+          <PopoverTitle className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
             Filter by date range
           </PopoverTitle>
           {(tempStart || tempEnd) && (
@@ -336,7 +336,7 @@ export function DateRangePickerContent({
         <div className="w-full md:w-[150px] shrink-0 border-b md:border-b-0 md:border-r border-border dark:border-border/60 p-2.5 bg-gray-50/50 dark:bg-zinc-900/40 flex flex-col justify-between">
           <div>
             <div className="px-1.5 pt-0.5 pb-1.5">
-              <span className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 uppercase select-none">
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 select-none">
                 Presets
               </span>
             </div>
@@ -386,7 +386,7 @@ export function DateRangePickerContent({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pb-1.5">
               {/* Start Date Input */}
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
                   Start
                 </label>
                 <div className="relative flex items-center">
@@ -411,7 +411,7 @@ export function DateRangePickerContent({
 
               {/* End Date Input */}
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                <label className="mb-1 block text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
                   End
                 </label>
                 <div className="relative flex items-center">
@@ -470,7 +470,7 @@ export function DateRangePickerContent({
                     variant="ghost"
                     size="icon"
                     onClick={handlePrevMonth}
-                    className="h-6.5 w-6.5 rounded-md text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer"
+                    className="h-6.5 w-6.5 rounded-lg text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer"
                     title="Previous month"
                   >
                     <ArrowLeft01Icon size={13} />
@@ -498,7 +498,7 @@ export function DateRangePickerContent({
                     variant="ghost"
                     size="icon"
                     onClick={handleNextMonth}
-                    className="h-6.5 w-6.5 rounded-md text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer"
+                    className="h-6.5 w-6.5 rounded-lg text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer"
                     title="Next month"
                   >
                     <ArrowRight01Icon size={13} />
