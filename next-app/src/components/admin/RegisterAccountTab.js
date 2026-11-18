@@ -76,7 +76,7 @@ export default function RegisterAccountTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  Register Account
+                  Register account
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Create new user credentials for {officePrefix} personnel and administrators.
@@ -90,8 +90,8 @@ export default function RegisterAccountTab({
               {/* Row 1: Editable Full Name */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-500">
-                    First Name
+                  <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
+                    First name
                   </label>
                   <Input
                     type="text"
@@ -110,8 +110,8 @@ export default function RegisterAccountTab({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-500">
-                    Last Name
+                  <label className="text-xs font-semibold mb-1.5 block text-gray-700 dark:text-zinc-300">
+                    Last name
                   </label>
                   <Input
                     type="text"
@@ -132,8 +132,8 @@ export default function RegisterAccountTab({
 
               {/* Row 2: Role Selection */}
               <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Privilege Level
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                  Privilege level
                 </label>
                 <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                   <button
@@ -168,8 +168,8 @@ export default function RegisterAccountTab({
               {/* Row 3: System-Generated Identifiers (Grouped Read-Only Section) */}
               <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                    Account Credentials
+                  <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                    Account credentials
                   </span>
                   <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
                     Employee ID auto-assigned

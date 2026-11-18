@@ -21,7 +21,7 @@ function createRequestNonce() {
 
 function contentSecurityPolicy(nonce) {
   const developmentScriptPolicy = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
-  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentScriptPolicy}; style-src 'self' 'nonce-${nonce}'; style-src-attr 'none'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' blob: data:; object-src 'self' blob: data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';`;
+  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentScriptPolicy}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob:; worker-src 'self'; frame-src 'self' blob: data:; object-src 'self' blob: data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';`;
 }
 
 function continueWithNonce(req, nonce) {
@@ -76,6 +76,7 @@ export async function proxy(req) {
   // The student portal is a public login/register entry point when there is
   // no session. Authenticated users still pass through the normal role gate.
   if ((pathname === "/student" || pathname.startsWith("/student/")) &&
+      !["request", "proposal", "report", "bylaws", "postEventFor"].some((key) => req.nextUrl.searchParams.has(key)) &&
       !req.cookies.get(getSessionCookieName())?.value && !req.cookies.get(getRefreshCookieName())?.value) {
     return addSecurityHeaders(continueWithNonce(req, nonce), nonce);
   }
@@ -90,7 +91,8 @@ export async function proxy(req) {
     }
     const url = req.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", pathname);
+    url.search = "";
+    url.searchParams.set("redirect", pathname + req.nextUrl.search);
     const redirectRes = NextResponse.redirect(url);
     if (token || req.cookies.get(getRefreshCookieName())?.value) {
       clearAuthCookies(redirectRes, req);

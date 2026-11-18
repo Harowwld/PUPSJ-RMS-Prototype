@@ -248,7 +248,7 @@ export default function Home() {
           if (typeof window !== "undefined") {
             redirectPath = new URLSearchParams(window.location.search).get("redirect");
           }
-          if (redirectPath && canAccessPage(redirectPath, role)) {
+          if (redirectPath && /^\/(?![\/\\])/.test(redirectPath) && !redirectPath.includes("\\") && canAccessPage(redirectPath.split("?")[0], role)) {
             router.replace(redirectPath);
             return;
           }
@@ -306,7 +306,7 @@ export default function Home() {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to identify account.");
+        throw new Error(json.error || "Could not identify account.");
       }
       if (forgotMethod === "questions") {
         if (!json.data?.id || !json.data?.questions?.length) {
@@ -350,8 +350,8 @@ export default function Home() {
         body: JSON.stringify({ id: forgotAccountId, questionId: Number(forgotQuestionId), answer: forgotAnswer.trim(), newPassword: forgotNewPassword })
       });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Failed to reset password.");
-      toast.success("Password Reset Successful", { description: "You can now log in with your new password." });
+      if (!res.ok || !json.ok) throw new Error(json.error || "Could not reset password.");
+      toast.success("Password reset", { description: "You can now log in with your new password." });
       resetForgotState();
       setView("login");
     } catch (err) {
@@ -410,7 +410,7 @@ export default function Home() {
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Failed to verify your identity. Try again.");
+          throw new Error(json?.error || "Could not verify your identity. Try again.");
         }
 
         if (json.data.staffEmailVerificationRequired) {
@@ -450,7 +450,7 @@ export default function Home() {
         if (typeof window !== "undefined") {
           redirectPath = new URLSearchParams(window.location.search).get("redirect");
         }
-        if (redirectPath && canAccessPage(redirectPath, role)) {
+        if (redirectPath && /^\/(?![\/\\])/.test(redirectPath) && !redirectPath.includes("\\") && canAccessPage(redirectPath.split("?")[0], role)) {
           router.replace(redirectPath);
           return;
         }
@@ -470,7 +470,7 @@ export default function Home() {
 
         router.replace("/staff");
       } catch (err) {
-        setError(err?.message || "Invalid username or password.");
+        setError(err?.message || "Check your username and password and try again.");
         setIsLoading(false);
       }
     })();
@@ -548,7 +548,7 @@ export default function Home() {
         throw new Error(result.error || `${fallback} The server returned an unexpected response (HTTP ${result.status}).`);
       }
       if (action === "send") {
-        if (signupChallengeId) toast.success("Verification Code Sent");
+        if (signupChallengeId) toast.success("Verification code sent");
         startSignupResendCountdown(result.data.retryAfter);
         setSignupChallengeId(result.data.challengeId);
         setSignupCode("");
@@ -573,7 +573,7 @@ export default function Home() {
   const handle2FAVerify = async (e) => {
     e.preventDefault();
     if (!twoFactorCode || twoFactorCode.length < 6) {
-      toast.error("Invalid Code Length", {
+      toast.error("Enter a 6-digit code", {
         description: "Please enter the 6-digit verification code, recovery code, or serial key.",
       });
       return;
@@ -593,7 +593,7 @@ export default function Home() {
         throw new Error(json.error || "Verification failed.");
       }
 
-      toast.success("Verification Successful", { description: "Logging you in..." });
+      toast.success("Verified", { description: "Logging you in…" });
 
       invalidateClientSession();
       
@@ -810,6 +810,7 @@ export default function Home() {
                         <label htmlFor="staff-email-code" className="text-xs font-semibold block">Email verification code</label>
                         <p className="text-xs text-muted-foreground">Enter the six-digit code for {staffVerificationEmail}.</p>
                         <Input
+                          placeholder="Enter the six-digit code"
                           id="staff-email-code"
                           inputMode="numeric"
                           autoComplete="one-time-code"
@@ -1008,15 +1009,15 @@ export default function Home() {
                       </div>
                       <div>
                         <label htmlFor="forgotAnswer" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Answer</label>
-                        <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <Input placeholder="Enter your security answer" id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       <div>
                         <label htmlFor="forgotNewPassword" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">New Password</label>
-                        <PasswordInput id="forgotNewPassword" label="new password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotNewPassword} onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <PasswordInput placeholder="Enter a new password" id="forgotNewPassword" label="new password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotNewPassword} onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       <div>
                         <label htmlFor="forgotConfirmPassword" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Confirm Password</label>
-                        <PasswordInput id="forgotConfirmPassword" label="password confirmation" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotConfirmPassword} onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <PasswordInput placeholder="Re-enter your new password" id="forgotConfirmPassword" label="password confirmation" autoComplete="new-password" minLength={8} maxLength={128} required disabled={forgotLoading} value={forgotConfirmPassword} onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                       {forgotError && <p role="alert" className="text-[12px] text-[#E5484D]">{forgotError}</p>}
                     </div>
@@ -1071,6 +1072,7 @@ export default function Home() {
                   <span className="sr-only">Email verification code</span>
                   <span data-otp-input className="relative grid grid-cols-6 gap-1.5 sm:gap-2">
                     <input
+                      placeholder="Enter the six-digit code"
                       autoFocus
                       type="text"
                       autoComplete="one-time-code"
@@ -1417,7 +1419,7 @@ export default function Home() {
           <DialogContent className="max-w-md rounded-2xl border-border bg-white dark:border-border dark:bg-zinc-900">
             <DialogHeader>
               <DialogTitle>
-                Two-Factor Authentication
+                Two-factor authentication
               </DialogTitle>
               <DialogDescription>
                 Enter the 6-digit code from your authenticator app, a recovery code, or your Serial key.
@@ -1427,7 +1429,7 @@ export default function Home() {
             <form onSubmit={handle2FAVerify} className="space-y-4 mt-2">
               <div className="space-y-2">
                 <label htmlFor="twoFactorCode" className="block text-xs font-semibold text-gray-700 tracking-wide ml-1 dark:text-zinc-200">
-                  Verification Code
+                  Verification code
                 </label>
                 <Input
                   variant="verification"
@@ -1438,7 +1440,7 @@ export default function Home() {
                   inputMode="text"
                   autoCapitalize="characters"
                   aria-label="Two-factor verification code"
-                  placeholder="000000, Recovery Code, or Serial key"
+                  placeholder="000000, recovery code, or serial key"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}
                   autoFocus
@@ -1451,16 +1453,16 @@ export default function Home() {
                   type="submit"
                   size="sm"
                   disabled={twoFactorLoading}
-                  title="Verify & Log In"
+                  title="Verify & log in"
                   className="w-full h-9 disabled:opacity-50 group"
                 >
                   {twoFactorLoading ? (
                     <>
                       <Loading01Icon size={16}  className="animate-spin"></Loading01Icon>
-                      Verifying...
+                      Verifying…
                     </>
                   ) : (
-                    "Verify & Log In"
+                    "Verify & log in"
                   )}
                 </Button>
                 <Button

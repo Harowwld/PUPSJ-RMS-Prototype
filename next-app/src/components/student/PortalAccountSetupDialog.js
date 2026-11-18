@@ -11,8 +11,8 @@ import { validateSecurityAnswer } from "@/lib/authSchemas";
 import { normalizeChecklistStudentNo, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 
 const SETUP_STEPS = [
-  { title: "Portal Profile", description: "Choose your affiliation and add your student number." },
-  { title: "Security Questions", description: "Set up your account recovery questions." },
+  { title: "Portal profile", description: "Choose your affiliation and add your student number." },
+  { title: "Security questions", description: "Set up your account recovery questions." },
   { title: "Preferences", description: "Choose your avatar and display name format." },
 ];
 const LABEL_CLASS = "mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300";
@@ -51,7 +51,7 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
     if (saving || !affiliation) return;
     const studentNumber = normalizeChecklistStudentNo(number);
     if (needsStudentNumber && !studentNumber && (required || number.trim())) {
-      setError("Enter a valid student number for the Document Checklist.");
+      setError("Enter a valid student number like 2024-00123-SJ-0.");
       return;
     }
     setSaving(true);
@@ -123,7 +123,7 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
         hideClose={required || saving}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Account Setup</DialogTitle>
+          <DialogTitle>Account setup</DialogTitle>
           <DialogDescription>Complete your portal profile to continue.</DialogDescription>
         </DialogHeader>
 
@@ -144,18 +144,18 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
                 <>
                   <div>
                     <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                      Set Up Your Portal Profile
+                      Set up your portal profile
                     </h3>
                     <p className="mt-1 text-[13px] leading-normal text-gray-500 dark:text-zinc-400">
                       {required
                         ? "Current students need their student number to check their document records."
-                        : "Update your affiliation or student number for the Document Checklist."}
+                        : "Update your affiliation or student number for the Document checklist."}
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label id="portal-affiliation-label" className="text-xs font-semibold mb-1.5 block uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
+                      <label id="portal-affiliation-label" className="text-xs font-semibold mb-1.5 block text-gray-600 dark:text-zinc-400">
                         Affiliation
                       </label>
                       <Select
@@ -175,9 +175,9 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
 
                     {needsStudentNumber && (
                       <div>
-                        <label htmlFor="portal-student-number" className="text-xs font-semibold mb-1.5 block uppercase tracking-[0.04em] text-gray-600 dark:text-zinc-400">
-                          Student Number
-                          {!required && <span className="normal-case tracking-normal opacity-70">(optional)</span>}
+                        <label htmlFor="portal-student-number" className="text-xs font-semibold mb-1.5 block text-gray-600 dark:text-zinc-400">
+                          Student number
+                          {!required && <span className="normal-case tracking-normal opacity-70"> (optional)</span>}
                         </label>
                         <Input
                           id="portal-student-number"
@@ -197,7 +197,7 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
 
               {step === 1 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Security Questions</h3>
+                  <h3 className="text-lg font-semibold">Security questions</h3>
                   {questions.length === 0 && (
                     <p className="text-[13px] text-muted-foreground">Your campus has no security questions configured. You can continue to preferences.</p>
                   )}
@@ -246,8 +246,8 @@ export default function PortalAccountSetupDialog({ user, required, onClose, onSa
               )}
               <Button type="submit" disabled={saving || !affiliation} className="h-9 px-4 text-xs font-semibold">
                 {required
-                  ? (saving ? "Please Wait…" : "Continue")
-                  : (saving ? "Saving Account Setup…" : "Save Account Setup")}
+                  ? (saving ? "Saving…" : "Continue")
+                  : (saving ? "Saving setup…" : "Save setup")}
               </Button>
             </div>
           </form>

@@ -28,7 +28,7 @@ export default function DefaultPasswordModal({
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle>
-                Account Credentials Ready
+                Account credentials ready
               </DialogTitle>
               <DialogDescription className="mt-1">
                 The staff account has been created. Securely share these
@@ -46,7 +46,7 @@ export default function DefaultPasswordModal({
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold tracking-wider text-gray-900 dark:text-zinc-300">
-                New Account
+                New account
               </p>
               <p className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">
                 {userName}
@@ -57,7 +57,7 @@ export default function DefaultPasswordModal({
           {/* Password display - prominent style */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-              Temporary Password
+              Temporary password
             </label>
             <div className="relative">
               <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.04] p-4 text-center">

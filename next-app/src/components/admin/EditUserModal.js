@@ -32,7 +32,7 @@ export default function EditUserModal({
           <div className="flex items-start gap-4">
             <div className="min-w-0">
               <DialogTitle>
-                Update Personnel Profile
+                Update personnel profile
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Changes will sync across the repository immediately after saving.
@@ -46,8 +46,8 @@ export default function EditUserModal({
             {/* Part 1: Full name */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  First Name
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  First name
                 </label>
                 <Input
                   type="text"
@@ -61,8 +61,8 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Last Name
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Last name
                 </label>
                 <Input
                   type="text"
@@ -79,8 +79,8 @@ export default function EditUserModal({
 
             {/* Part 2: Role Selection */}
             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-              <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                System Role
+              <label className="block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                System role
               </label>
               <div className="inline-flex w-fit items-center gap-1 bg-gray-100/80 dark:bg-zinc-800/60 p-1 rounded-xl border border-border/60 dark:border-border">
                 <button
@@ -115,20 +115,20 @@ export default function EditUserModal({
             {/* Part 3: System Identifiers */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
                   Employee ID
                 </label>
                 <Input
                   type="text"
                   readOnly
                   className="h-10 cursor-not-allowed rounded-xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-900/30 text-xs font-normal text-gray-900 dark:text-zinc-300 shadow-xs focus-visible:outline-none"
-                  placeholder="e.g. 2023-001"
+                  placeholder="2023-001"
                   value={editForm.id}
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Institutional Email
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Institutional email
                 </label>
                 <Input
                   type="email"

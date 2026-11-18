@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to identify account.");
+        throw new Error(json.error || "Could not identify account.");
       }
       setForgotResetToken("");
       setForgotNewPassword("");
@@ -154,9 +154,9 @@ export default function ForgotPasswordPage() {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to reset password.");
+        throw new Error(json.error || "Could not reset password.");
       }
-      toast.success("Password Reset Successful", { description: "You can now log in with your new password." });
+      toast.success("Password reset", { description: "You can now log in with your new password." });
       
       resetForgotState();
       router.push("/login");
@@ -377,7 +377,7 @@ export default function ForgotPasswordPage() {
                       </div>
                       <div>
                         <label htmlFor="forgotAnswer" className="text-xs font-semibold block mb-1 text-gray-500 dark:text-zinc-400">Security Answer</label>
-                        <Input id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
+                        <Input placeholder="Enter your security answer" id="forgotAnswer" type="password" autoComplete="off" required disabled={forgotLoading} value={forgotAnswer} onChange={(e) => { setForgotAnswer(e.target.value); setForgotError(""); }} className="h-10 rounded-xl" />
                       </div>
                     </div>
                   )}

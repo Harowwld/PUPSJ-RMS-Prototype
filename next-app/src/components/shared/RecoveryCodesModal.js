@@ -46,7 +46,7 @@ export default function RecoveryCodesModal({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("Recovery Codes Downloaded", {
+    toast.success("Recovery codes downloaded", {
       description: "Saved as pupsj-recovery-codes.txt",
     });
   };
@@ -61,7 +61,7 @@ export default function RecoveryCodesModal({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <DialogTitle>
-                Recovery Codes
+                Recovery codes
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Emergency single-use codes for two-factor authentication recovery.
@@ -86,8 +86,8 @@ export default function RecoveryCodesModal({
           {/* Recovery Codes Grid */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Backup Codes ({recoveryCodes.length})
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500">
+                Backup codes ({recoveryCodes.length})
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
                 <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">

@@ -209,8 +209,8 @@ export default function AccountSetupPreferences({ authUser, saving, error, onBac
           {/* Avatars Grid */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                {avatarType === "notionists" ? "Select Notionist Character" : "Select Default Avatar"}
+              <label className="text-xs font-medium text-gray-600 dark:text-zinc-400">
+                {avatarType === "notionists" ? "Select Notionist character" : "Select default avatar"}
               </label>
               {avatarType === "notionists" && (
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500">

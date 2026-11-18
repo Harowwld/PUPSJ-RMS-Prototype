@@ -88,19 +88,19 @@ export default function AccountSetupModal({ authUser }) {
     e.preventDefault()
     if (pwLoading) return
     if (!pwNext || !pwConfirm) {
-      toast.error("Required Fields Missing", {
-        description: "Please fill in all password fields.",
+      toast.error("Fill in both password fields", {
+        description: "Please enter and confirm your new password.",
       })
       return
     }
     if (pwNext !== pwConfirm) {
-      toast.error("Password Mismatch", {
+      toast.error("Passwords do not match", {
         description: "The new passwords you entered do not match.",
       })
       return
     }
     if (pwNext.length < 8) {
-      toast.error("Password Too Short", {
+      toast.error("Password too short", {
         description: "Password must be at least 8 characters long.",
       })
       return
@@ -122,9 +122,9 @@ export default function AccountSetupModal({ authUser }) {
       })
       const json = await res.json()
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to change password")
+        throw new Error(json?.error || "Could not change password")
 
-      toast.success("Password Updated", {
+      toast.success("Password updated", {
         description: "Your new credentials are now active.",
       })
 
@@ -137,8 +137,8 @@ export default function AccountSetupModal({ authUser }) {
       }
     } catch (err) {
       const errInfo = formatErrorMessage(err, {
-        title: "Password Update Failed",
-        description: "Failed to change default password.",
+        title: "Could not update password",
+        description: "Could not change default password.",
       })
       toast.error(errInfo.title, {
         description: errInfo.description,
@@ -158,7 +158,7 @@ export default function AccountSetupModal({ authUser }) {
     for (const q of requiredQuestions) {
       const hasCurrentInput = !!(answers[q.id] && answers[q.id].trim());
       if (!q.hasAnswer && !hasCurrentInput) {
-        toast.error("Security Answer Required", {
+        toast.error("Security answer required", {
           description: `Please provide an answer for: ${q.question}`,
         })
         return
@@ -171,7 +171,7 @@ export default function AccountSetupModal({ authUser }) {
       if (input) {
         const validation = validateSecurityAnswer(input, q.question);
         if (!validation.valid) {
-          toast.error("Weak Security Answer", {
+          toast.error("Use a stronger security answer", {
             description: `${q.question}: ${validation.error}`,
           });
           return;
@@ -202,16 +202,16 @@ export default function AccountSetupModal({ authUser }) {
       const json = await res.json()
       console.info("[auth-debug] account_setup.security_response", { ok: Boolean(res.ok && json?.ok), status: res.status })
       if (!res.ok || !json.ok)
-        throw new Error(json.error || "Failed to save answers")
+        throw new Error(json.error || "Could not save answers")
 
-      toast.success("Security Answers Saved", {
+      toast.success("Security answers saved", {
         description: "Your recovery questions have been recorded.",
       })
       setStep(3)
     } catch (err) {
       const errInfo = formatErrorMessage(err, {
-        title: "Security Setup Failed",
-        description: "Failed to save recovery question answers.",
+        title: "Could not save security answers",
+        description: "Could not save recovery question answers.",
       })
       toast.error(errInfo.title, {
         description: errInfo.description,
@@ -246,7 +246,7 @@ export default function AccountSetupModal({ authUser }) {
           body: JSON.stringify({ preferences: { display_name_format: nameFormat } }),
         })
         const result = await response.json()
-        if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to save display name format")
+        if (!response.ok || !result?.ok) throw new Error(result?.error || "Could not save display name format")
       }
       if (avatar) {
         const response = await fetch("/api/account/avatar", {
@@ -255,17 +255,17 @@ export default function AccountSetupModal({ authUser }) {
           body: JSON.stringify(avatar),
         })
         const result = await response.json()
-        if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to set profile avatar")
+        if (!response.ok || !result?.ok) throw new Error(result?.error || "Could not set profile avatar")
         window.dispatchEvent(new CustomEvent("avatar-changed", {
           detail: { avatar_filename: result.avatar_filename || null },
         }))
       }
 
-      toast.success("Account Setup Complete")
+      toast.success("Account setup complete")
       finishSetup()
     } catch (err) {
       const errInfo = formatErrorMessage(err, {
-        title: "Preferences Update Failed",
+        title: "Could not update preferences",
         description: "Could not save your account preferences.",
       })
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action })
@@ -283,7 +283,7 @@ export default function AccountSetupModal({ authUser }) {
         hideClose
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Account Setup</DialogTitle>
+          <DialogTitle>Account setup</DialogTitle>
           <DialogDescription>Complete account setup steps to continue.</DialogDescription>
         </DialogHeader>
 
@@ -315,8 +315,8 @@ export default function AccountSetupModal({ authUser }) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      New Password
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                      New password
                     </label>
                     <div className="relative group">
                       <Input
@@ -341,8 +341,8 @@ export default function AccountSetupModal({ authUser }) {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      Confirm Password
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-zinc-300">
+                      Confirm password
                     </label>
                     <div className="relative group">
                       <Input
@@ -371,7 +371,7 @@ export default function AccountSetupModal({ authUser }) {
                   disabled={pwLoading}
                   className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
                 >
-                  {pwLoading ? "Saving..." : "Continue"}
+                  {pwLoading ? "Saving…" : "Continue"}
                 </Button>
               </div>
             </form>
@@ -385,7 +385,7 @@ export default function AccountSetupModal({ authUser }) {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div>
                   <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                    Recovery Questions
+                    Recovery questions
                   </h3>
                   <p className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-normal">
                     Set up security questions to recover your account if you forget your password.
@@ -404,7 +404,7 @@ export default function AccountSetupModal({ authUser }) {
                     <EmptyState
                       variant="compact"
                       icon={HelpCircleIcon}
-                      title="No Recovery Questions Configured"
+                      title="No recovery questions configured"
                       description="No global security questions have been configured. Contact your system administrator to enable account recovery questions."
                     />
                   ) : (
@@ -440,7 +440,7 @@ export default function AccountSetupModal({ authUser }) {
                   disabled={secLoading || secSubmitting || questions.length === 0}
                   className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
                 >
-                  {secSubmitting ? "Saving..." : "Continue"}
+                  {secSubmitting ? "Saving…" : "Continue"}
                 </Button>
               </div>
             </form>

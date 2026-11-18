@@ -41,7 +41,7 @@ export default function StaffPasswordResetAction({ account, email, global = fals
       const response = await authFetch(`/api/staff/${encodeURIComponent(account.id)}/password-reset`, { method: "POST" });
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.ok) throw new Error(payload?.error || "Could not send the password reset email.");
-      toast.success("Password Reset Email Sent");
+      toast.success("Password reset email sent");
       setOpen(false);
       onClose?.();
     } catch (failure) {

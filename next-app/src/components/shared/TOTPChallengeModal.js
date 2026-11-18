@@ -36,7 +36,7 @@ export function TOTPChallengeModal({
     e.preventDefault()
     const trimmed = token.trim()
     if (!trimmed || (trimmed.length !== 6 && trimmed.length !== 8)) {
-      toast.error("Invalid Code", {
+      toast.error("Enter a valid code", {
         description: "Please enter a 6-digit verification code or 8-character recovery code.",
       })
       return
@@ -44,7 +44,7 @@ export function TOTPChallengeModal({
     try {
       await onConfirm(trimmed)
     } catch (err) {
-      const errInfo = formatErrorMessage(err, "Verification Failed")
+      const errInfo = formatErrorMessage(err, "Verification failed")
       toast.error(errInfo.title, {
         description: errInfo.description,
         action: errInfo.action,
@@ -77,8 +77,8 @@ export function TOTPChallengeModal({
           <div className="space-y-4 p-6">
 
             <div className="space-y-3">
-              <label className="text-xs font-semibold ml-1 tracking-widest text-gray-400 dark:text-zinc-500">
-                Security Verification Code
+              <label className="text-xs font-semibold ml-1 text-gray-500 dark:text-zinc-400">
+                Security verification code
               </label>
               <Input
                 type="text"
@@ -117,7 +117,7 @@ export function TOTPChallengeModal({
               {isLoading ? (
                 <>
                   <Loading01Icon size="1em"  className="animate-spin text-sm mr-1.5"></Loading01Icon>
-                  Verifying...
+                  Verifying…
                 </>
               ) : (
                 actionLabel
@@ -141,7 +141,7 @@ export async function verifyTOTPWithRetry(token, maxRetries = 1) {
       })
       const json = await res.json()
       if (!res.ok || !json?.ok || !json?.data?.valid) {
-        lastError = new Error(json?.error || "Invalid verification code")
+        lastError = new Error(json?.error || "Check the verification code and try again")
         continue
       }
       return true

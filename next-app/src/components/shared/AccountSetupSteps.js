@@ -36,7 +36,7 @@ export default function AccountSetupSteps({ steps, activeIndex, className }) {
                     ) : (
                       <span aria-hidden="true" className="size-[14px] shrink-0" />
                     )}
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
+                    <span className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
                       Step {index + 1}
                     </span>
                   </div>

@@ -1,6 +1,12 @@
 "use client";
 
+import WorkflowNotificationSettings from "@/components/shared/WorkflowNotificationSettings";
+
+import { setAttachmentLayout, useAttachmentLayout } from "@/hooks/useAttachmentLayout";
+import { AttachedFileCard, AttachedFileRow } from "@/components/shared/FileAttachmentDropzone";
 import InitialLoaderSetting from "@/components/shared/InitialLoaderSetting";
+import SavedViewsResetSetting from "@/components/shared/SavedViewsResetSetting";
+import { KeyboardShortcutList } from "@/components/shared/KeyboardShortcutsModal";
 import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -96,6 +102,13 @@ import {
   normalizeSoundCategories,
 } from "@/lib/soundPreferences";
 import { playSoundCue } from "@/lib/soundPatch";
+
+const ATTACHMENT_VIEW_EXAMPLE = {
+  original_filename: "landing-page.png",
+  url: "/assets/landing-page.png",
+  mime_type: "image/png",
+  size_bytes: 1_327_543,
+};
 
 const FONT_SIZE_OPTIONS = [
   { id: "smaller", label: "Smaller", scale: "88%", glyphClass: "text-xs font-semibold", desc: "Compact density", tag: "Dense" },
@@ -197,6 +210,7 @@ const getPasswordStrength = (pwd) => {
 
 export default function AccountSettingsPanel() {
   const router = useRouter();
+  const attachmentLayout = useAttachmentLayout();
   const { density: tableDensity, setDensity: setTableDensity } = useTablePreferences();
 
   const [authUser, setAuthUser] = useState(null);
@@ -376,7 +390,7 @@ export default function AccountSettingsPanel() {
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== "undefined") {
       const tab = new URLSearchParams(window.location.search).get("tab");
-      const validTabs = ["profile", "security", "two-factor", "preferences", "sound", "accessibility", "activity"];
+      const validTabs = ["profile", "security", "two-factor", "preferences", "notifications", "sound", "accessibility", "activity"];
       if (tab && (validTabs.includes(tab) || tab === "2fa")) {
         return tab === "2fa" ? "two-factor" : tab;
       }
@@ -502,8 +516,8 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
-      toast.success("Preference Saved", {
-        description: "Your accessibility settings have been updated successfully."
+      toast.success("Preference saved", {
+        description: "Your accessibility settings have been updated."
       });
     } catch (error) {
       setUserPreferences(oldPrefs);
@@ -514,7 +528,7 @@ export default function AccountSettingsPanel() {
       } else if (key === "pointer_cursor") {
         setPointerCursorPreference(Boolean(oldPrefs.pointer_cursor !== undefined ? oldPrefs.pointer_cursor : true), authUser?.id);
       }
-      const errInfo = formatErrorMessage(error, { title: "Preference Update Failed", description: "Could not update your preference." });
+      const errInfo = formatErrorMessage(error, { title: "Could not update preference", description: "Try updating the setting again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
@@ -544,12 +558,12 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
-      toast.success("Zoom Preference Saved", {
+      toast.success("Zoom preference saved", {
         description: `Default layout scale set to ${ZOOM_PERCENTAGES[node] ?? 100}%.`
       });
     } catch (error) {
       setUserPreferences(oldPrefs);
-      const errInfo = formatErrorMessage(error, { title: "Zoom Setting Failed", description: "Could not update zoom preference." });
+      const errInfo = formatErrorMessage(error, { title: "Could not update zoom", description: "Try updating the zoom preference again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
@@ -568,18 +582,18 @@ export default function AccountSettingsPanel() {
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
       const label = FONT_SIZE_OPTIONS.find((o) => o.id === size)?.label || size;
-      toast.success("Font Size Saved", {
+      toast.success("Font size saved", {
         description: `Default text scale set to ${label}.`,
       });
     } catch (error) {
       setUserPreferences(oldPrefs);
       setFontSizePreference(oldPrefs.font_size || "default", authUser?.id);
-      const errInfo = formatErrorMessage(error, { title: "Font Size Setting Failed", description: "Could not update font size preference." });
+      const errInfo = formatErrorMessage(error, { title: "Could not update font size", description: "Try updating the font size preference again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
 
-  const handlePreferenceChange = async (key, val, successMsg = "Preference Saved") => {
+  const handlePreferenceChange = async (key, val, successMsg = "Preference saved") => {
     const oldPrefs = { ...userPreferences };
     const nextPrefs = { ...userPreferences, [key]: val };
     setUserPreferences((prev) => ({ ...prev, [key]: val }));
@@ -632,14 +646,14 @@ export default function AccountSettingsPanel() {
           );
         }
       }
-      const errInfo = formatErrorMessage(error, { title: "Preference Update Failed", description: "Could not update your preference." });
+      const errInfo = formatErrorMessage(error, { title: "Could not update preference", description: "Try updating the setting again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
   };
 
   const handleTableDensityChange = (newDensity) => {
     setTableDensity(newDensity);
-    toast.success("Table Row Density Updated", {
+    toast.success("Table row density updated", {
       description: `Tables set to ${newDensity} (${TABLE_DENSITIES[newDensity]?.height || 52}px rows).`,
     });
   };
@@ -674,7 +688,7 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
-      toast.success(boolVal ? "Interface Sounds Enabled" : "Interface Sounds Muted", {
+      toast.success(boolVal ? "Interface sounds enabled" : "Interface sounds muted", {
         description: boolVal
           ? "Synthesized audio cues will play across portal controls."
           : "All interface sound effects have been muted.",
@@ -734,7 +748,7 @@ export default function AccountSettingsPanel() {
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
       const catDef = SOUND_CATEGORY_DEFINITIONS.find((c) => c.id === categoryId);
-      toast.success("Sound Category Updated", {
+      toast.success("Sound category updated", {
         description: `${catDef?.label || "Category"} sounds ${boolVal ? "enabled" : "muted"}.`,
       });
     } catch (error) {
@@ -744,8 +758,8 @@ export default function AccountSettingsPanel() {
         authUser?.id
       );
       const errInfo = formatErrorMessage(error, {
-        title: "Sound Category Failed",
-        description: "Could not update sound category preference.",
+        title: "Could not update sound category",
+        description: "Try updating the sound category preference again.",
       });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     }
@@ -874,7 +888,7 @@ export default function AccountSettingsPanel() {
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Failed to reset avatar");
+          throw new Error(json.error || "Could not reset avatar");
         }
 
         setSelectedDefaultAvatarId(0);
@@ -888,7 +902,7 @@ export default function AccountSettingsPanel() {
           })
         );
 
-        toast.success("Avatar Reverted", {
+        toast.success("Avatar reverted", {
           description: "Profile reverted to default system avatar.",
         });
         return;
@@ -913,7 +927,7 @@ export default function AccountSettingsPanel() {
 
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to save avatar");
+        throw new Error(json.error || "Could not save avatar");
       }
 
       const timestamp = getNowTimestamp();
@@ -934,11 +948,11 @@ export default function AccountSettingsPanel() {
           : DEFAULT_AVATARS.find((a) => a.id === defaultAvatarId)?.name
       ) || (avatarType === "custom" ? "Custom Notionist" : "Avatar");
 
-      toast.success("Avatar Updated", {
+      toast.success("Avatar updated", {
         description: `Profile avatar set to ${avatarName}.`,
       });
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Avatar Update Failed", description: "Could not save your selected avatar." });
+      const errInfo = formatErrorMessage(err, { title: "Could not update avatar", description: "Try saving your selected avatar again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setAvatarSaving(false);
@@ -1258,7 +1272,7 @@ export default function AccountSettingsPanel() {
     setStudentNo(initialProfileValues.studentNo);
     setChecklistStudentNo(initialProfileValues.checklistStudentNo);
     setClientType(initialProfileValues.clientType);
-    toast.info("Changes Discarded", {
+    toast.info("Changes discarded", {
       description: "Reverted profile fields to initial values.",
     });
   };
@@ -1271,7 +1285,7 @@ export default function AccountSettingsPanel() {
       setTimeout(() => {
         setCopiedItem((curr) => (curr === "studentNo" ? null : curr));
       }, 1800);
-      toast.success("Student Number copied to clipboard");
+      toast.success("Student number copied to clipboard");
     }
   };
 
@@ -1302,8 +1316,8 @@ export default function AccountSettingsPanel() {
     if (profileLoading) return;
 
     if (!(fname || "").trim() || !(lname || "").trim()) {
-      toast.error("Profile Incomplete", {
-        description: "Please fill all required profile fields.",
+      toast.error("Profile incomplete", {
+        description: "Fill all required profile fields.",
       });
       return;
     }
@@ -1335,7 +1349,7 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update profile");
+        throw new Error(json?.error || "Could not update profile");
       }
 
       setInitialProfileValues({
@@ -1347,14 +1361,14 @@ export default function AccountSettingsPanel() {
         clientType,
       });
 
-      toast.success("Profile Updated", {
-        description: "Your changes have been saved successfully.",
+      toast.success("Profile updated", {
+        description: "Your changes have been saved.",
       });
       setTimeout(() => {
         window.location.reload();
       }, 1200);
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Profile Update Failed", description: "Unable to save profile changes." });
+      const errInfo = formatErrorMessage(err, { title: "Could not update profile", description: "Try saving your profile changes again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setProfileLoading(false);
@@ -1367,25 +1381,25 @@ export default function AccountSettingsPanel() {
     setPasswordAttempted(true);
 
     if (!pwCurrent || !pwNext || !pwConfirm) {
-      toast.error("Required Fields Missing", {
-        description: "Please provide all password fields.",
+      toast.error("Required fields missing", {
+        description: "Enter your current password and new password fields.",
       });
       return;
     }
     if (pwNext !== pwConfirm) {
-      toast.error("Password Mismatch", {
+      toast.error("Passwords do not match", {
         description: "New passwords do not match.",
       });
       return;
     }
     if (pwNext === pwCurrent) {
-      toast.error("Identical Password", {
+      toast.error("Password unchanged", {
         description: "New password cannot be the same as the current password.",
       });
       return;
     }
     if (pwNext.length < 8) {
-      toast.error("Password Too Short", {
+      toast.error("Password too short", {
         description: "New password must be at least 8 characters long.",
       });
       return;
@@ -1404,10 +1418,10 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to change password");
+        throw new Error(json?.error || "Could not change password");
       }
 
-      toast.success("Password Changed", {
+      toast.success("Password changed", {
         description: "Your new password is now active.",
       });
       setPwCurrent("");
@@ -1415,7 +1429,7 @@ export default function AccountSettingsPanel() {
       setPwConfirm("");
       setPasswordAttempted(false);
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Password Change Failed", description: "Unable to update password." });
+      const errInfo = formatErrorMessage(err, { title: "Could not change password", description: "Try updating your password again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setPwLoading(false);
@@ -1439,16 +1453,16 @@ export default function AccountSettingsPanel() {
       const hasExisting = q.hasAnswer;
       const hasNewInput = !!(secAnswers[q.id] && secAnswers[q.id].trim());
       if (!hasExisting && !hasNewInput) {
-        toast.error("Security Answer Required", {
-          description: `Please provide an answer for the required question: "${q.question}"`,
+        toast.error("Security answer required", {
+          description: `Enter an answer for the required question: "${q.question}"`,
         });
         return;
       }
     }
 
     if (payload.length === 0) {
-      toast.error("Empty Submission", {
-        description: "Please provide at least one answer to save.",
+      toast.error("No answers entered", {
+        description: "Enter at least one answer to save.",
       });
       return;
     }
@@ -1458,7 +1472,7 @@ export default function AccountSettingsPanel() {
       const q = globalQuestions.find((g) => g.id === item.questionId);
       const validation = validateSecurityAnswer(item.answer, q?.question || "");
       if (!validation.valid) {
-        toast.error("Weak Security Answer", {
+        toast.error("Security answer is too weak", {
           description: `"${q?.question || "Question"}": ${validation.error}`,
         });
         return;
@@ -1483,12 +1497,12 @@ export default function AccountSettingsPanel() {
       if (res.status === 403 && json?.requiresTOTP) {
         setSecLoading(false);
         if (totpToken) {
-          const cleanMsg = (json?.error || "Invalid verification code").replace("TOTP verification required: ", "");
+          const cleanMsg = (json?.error || "Check the verification code and try again").replace("TOTP verification required: ", "");
           throw new Error(cleanMsg);
         }
         if (json?.notConfigured) {
-          const msg = "Please configure Two-Factor Authentication or generate recovery codes before updating security questions.";
-          toast.error("2FA Required", { description: msg });
+          const msg = "Set up two-factor authentication or generate recovery codes before updating security questions.";
+          toast.error("Two-factor authentication required", { description: msg });
           return;
         }
         setShowSecTOTPModal(true);
@@ -1496,10 +1510,10 @@ export default function AccountSettingsPanel() {
       }
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update security questions");
+        throw new Error(json?.error || "Could not update security questions");
       }
 
-      toast.success("Security Questions Updated", {
+      toast.success("Security questions updated", {
         description: "Your answers have been saved.",
       });
       setShowSecTOTPModal(false);
@@ -1519,9 +1533,9 @@ export default function AccountSettingsPanel() {
       // Refresh TOTP & recovery codes count (e.g. if a recovery code was used)
       await refreshTOTPStatus();
     } catch (err) {
-      const cleanMsg = (err?.message || "Failed to update security questions").replace("TOTP verification required: ", "");
+      const cleanMsg = (err?.message || "Could not update security questions").replace("TOTP verification required: ", "");
       if (totpToken) throw new Error(cleanMsg);
-      const errInfo = formatErrorMessage(err, { title: "Security Answers Failed", description: cleanMsg });
+      const errInfo = formatErrorMessage(err, { title: "Could not save security answers", description: cleanMsg });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setSecLoading(false);
@@ -1552,12 +1566,12 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to start setup");
+        throw new Error(json?.error || "Could not start setup");
       }
       setTotpSetupData(json.data);
       setTotpStep("setup");
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Two-Factor Setup Failed", description: "Unable to initialize two-factor authentication." });
+      const errInfo = formatErrorMessage(err, { title: "Could not start two-factor setup", description: "Try initializing two-factor authentication again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpSetupLoading(false);
@@ -1567,7 +1581,7 @@ export default function AccountSettingsPanel() {
   const verifyTOTP = async (e) => {
     e.preventDefault();
     if (!totpToken || totpToken.length !== 6) {
-      toast.error("Invalid Code Length", {
+      toast.error("Enter a 6-digit code", {
         description: "Please enter the 6-digit verification code from your authenticator app.",
       });
       return;
@@ -1581,19 +1595,19 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Invalid code");
+        throw new Error(json?.error || "Check the verification code and try again");
       }
       setTotpEnabled(true);
       setHasTotpSecret(true);
       setTotpStep("idle");
       setTotpSetupData(null);
       setTotpToken("");
-      toast.success("Two-Factor Auth Enabled", {
+      toast.success("Two-factor authentication enabled", {
         description: "Your account is now extra secure.",
       });
       await refreshTOTPStatus();
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Verification Failed", description: "The verification code you entered is invalid or expired." });
+      const errInfo = formatErrorMessage(err, { title: "Verification failed", description: "Check the verification code and try again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpLoading(false);
@@ -1602,7 +1616,7 @@ export default function AccountSettingsPanel() {
 
   const disableTOTP = async () => {
     if (!totpToken || totpToken.length !== 6) {
-      toast.error("Invalid Code Length", {
+      toast.error("Enter a 6-digit code", {
         description: "Please enter your current 6-digit code to disable two-factor authentication.",
       });
       return;
@@ -1616,17 +1630,17 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Invalid code");
+        throw new Error(json?.error || "Check the verification code and try again");
       }
       setTotpEnabled(false);
       setHasTotpSecret(false);
       setTotpToken("");
-      toast.success("Two-Factor Auth Disabled", {
+      toast.success("Two-factor authentication disabled", {
         description: "Your account is now using standard security.",
       });
       await refreshTOTPStatus();
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Disable Two-Factor Failed", description: "Unable to turn off two-factor authentication." });
+      const errInfo = formatErrorMessage(err, { title: "Could not disable two-factor authentication", description: "Try again or check your verification code." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setTotpLoading(false);
@@ -1660,17 +1674,17 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to generate codes");
+        throw new Error(json?.error || "Could not generate recovery codes");
       }
       setRecoveryCodes(json.data.codes);
       setRecoveryCodesCount(json.data.codes.length);
       setShowRecoveryCodesDialog(true);
       await refreshTOTPStatus();
-      toast.success("Codes Generated", {
+      toast.success("Recovery codes generated", {
         description: "Please save these codes somewhere safe.",
       });
     } catch (err) {
-      const errInfo = formatErrorMessage(err, { title: "Generation Failed", description: "Unable to generate recovery codes." });
+      const errInfo = formatErrorMessage(err, { title: "Could not generate codes", description: "Try generating recovery codes again." });
       toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
     } finally {
       setRecoveryCodesLoading(false);
@@ -1680,7 +1694,7 @@ export default function AccountSettingsPanel() {
   const copyRecoveryCodes = () => {
     const text = recoveryCodes.join("\n");
     navigator.clipboard.writeText(text);
-    toast.success("Copied to Clipboard", {
+    toast.success("Copied to clipboard", {
       description: "Recovery codes have been saved to your clipboard."
     });
   };
@@ -1742,6 +1756,7 @@ export default function AccountSettingsPanel() {
                 { id: "security", label: "Security", icon: "Shield01Icon" },
                 { id: "two-factor", label: "Two-Factor Auth", icon: "SmartPhone01Icon" },
                 { id: "preferences", label: "Preferences", icon: "Settings01Icon" },
+                { id: "notifications", label: "Notifications", icon: "Notification01Icon" },
                 { id: "sound", label: "Sound", icon: "VolumeHighIcon" },
                 { id: "accessibility", label: "Accessibility", icon: "GlassesIcon" },
               ].map((tab) => {
@@ -1804,6 +1819,9 @@ export default function AccountSettingsPanel() {
           {loading ? (
             <AccountSettingsContentSkeleton tab={activeTab} />
           ) : <>
+          <TabsContent value="notifications" className="m-0 border-0">
+            <WorkflowNotificationSettings canManagePickup={authUser?.role === "Admin" && authUser?.office_id === "registrar"} />
+          </TabsContent>
           <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
                   <div className="p-8">
                     <div>
@@ -1928,13 +1946,13 @@ export default function AccountSettingsPanel() {
                               : "Personal account information and verified institutional directory profile within the PUPSJ Records Keeping System."}
                           </p>
 
-                          {/* Social Metadata Cards Strip: Apple-style Bento 4x1 Grid */}
+                          {/* Profile Metadata Cards */}
                           <div className="mt-5 p-3 sm:p-3.5 rounded-[24px] bg-[#f4f5f7] dark:bg-zinc-900/60 border border-black/[0.05] dark:border-white/[0.08]">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-2.5 sm:gap-3">
                               {/* Card 1: Campus Station */}
-                              <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                              <div className="min-w-0 rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-center gap-2">
                                     <div className="size-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                                       <Building04Icon size="0.75em" />
                                     </div>
@@ -1956,13 +1974,13 @@ export default function AccountSettingsPanel() {
                               </div>
 
                               {/* Card 2: Academic Program / Department Office */}
-                              <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                              <div className="min-w-0 rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-center gap-2">
                                     <div className="size-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                                       <SchoolIcon size="0.75em" />
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight truncate">
+                                    <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight [overflow-wrap:anywhere]">
                                       {authUser?.role === "Student" ? "Academic Program" : "Department Office"}
                                     </span>
                                   </div>
@@ -1975,10 +1993,10 @@ export default function AccountSettingsPanel() {
                                     </span>
                                   </span>
                                 </div>
-                                <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 truncate">
+                                <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2 [overflow-wrap:anywhere]">
                                   {authUser?.role === "Student" ? (authUser?.course_code || "BSIT") : (authUser?.section || "Registrar")}
                                 </div>
-                                <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 truncate font-medium">
+                                <div className="text-[11.5px] text-gray-400 dark:text-zinc-500 mt-2 break-words font-medium">
                                   {authUser?.role === "Student"
                                     ? (authUser?.course_name || "College of Computer & Information Sciences")
                                     : "Office of the University Registrar"}
@@ -1986,9 +2004,9 @@ export default function AccountSettingsPanel() {
                               </div>
 
                               {/* Card 3: Directory Record State */}
-                              <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                              <div className="min-w-0 rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-center gap-2">
                                     <div className="size-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                                       <CheckmarkCircle01Icon size="0.75em" />
                                     </div>
@@ -2004,7 +2022,7 @@ export default function AccountSettingsPanel() {
                                 <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
                                   {authUser?.status || "Active"}
                                 </div>
-                                <div className="flex items-center justify-between mt-2 pt-0.5">
+                                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pt-0.5">
                                   <span className="text-[11.5px] text-gray-400 dark:text-zinc-500 font-medium">
                                     Authorized Records Profile
                                   </span>
@@ -2023,40 +2041,6 @@ export default function AccountSettingsPanel() {
                                   </div>
                                 </div>
                               </div>
-
-                              {/* Card 4: 2FA Security & Credentials */}
-                              <div className="rounded-[18px] p-4 sm:p-4.5 bg-white dark:bg-zinc-800 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition-all duration-200 flex flex-col justify-between">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <div className="size-5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                                      <Shield01Icon size="0.75em" />
-                                    </div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">2FA Security</span>
-                                  </div>
-                                  {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? (
-                                    <span className={SETTINGS_STATUS_PILL_SM}>
-                                      <SecurityCheckIcon size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                      <span className="font-semibold text-gray-900 dark:text-zinc-100">TOTP Active</span>
-                                    </span>
-                                  ) : (
-                                    <span className={SETTINGS_STATUS_PILL_SM}>
-                                      <CancelCircleIcon size={13} className="text-gray-400 dark:text-zinc-500 shrink-0" />
-                                      <span className="font-medium text-gray-500 dark:text-zinc-400">2FA Pending</span>
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
-                                  {(totpEnabled && hasTotpSecret) || authUser?.totp_enabled ? "Enforced" : "Configured"}
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleTabChange("two-factor")}
-                                  className="flex items-center justify-between w-full mt-2 pt-0.5 text-[11.5px] font-medium text-gray-600 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer group/sec select-none"
-                                >
-                                  <span>Manage 2FA credentials</span>
-                                  <ArrowRight01Icon size="1em" className="text-xs transition-transform group-hover/sec:translate-x-0.5 text-gray-400 group-hover/sec:text-gray-900 dark:group-hover/sec:text-white" />
-                                </button>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -2064,8 +2048,8 @@ export default function AccountSettingsPanel() {
                     </div>
 
                     <div className="mt-8 mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Personal Details & Contact
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                        Personal details and contact
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                         Update your registered identity credentials and contact information.
@@ -2144,6 +2128,7 @@ export default function AccountSettingsPanel() {
                             </label>
                             <div className="flex-1 flex items-center justify-between gap-2">
                               <Input
+                                placeholder="Email address unavailable"
                                 type="email"
                                 id="profileEmail"
                                 value={username}
@@ -2167,8 +2152,8 @@ export default function AccountSettingsPanel() {
                         {authUser?.role === "Student" && (
                           <div className="pt-8 mt-8 border-t border-border dark:border-border/60">
                             <div className="mb-3">
-                              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                                Academic Information
+                              <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                                Academic information
                               </h4>
                               <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                                 Manage your student affiliation and archive registration details.
@@ -2269,7 +2254,7 @@ export default function AccountSettingsPanel() {
                               {profileLoading && (
                                 <Loading01Icon size="1em" className="animate-spin text-xs" />
                               )}
-                              {profileLoading ? "Saving..." : "Save Changes"}
+                              {profileLoading ? "Saving…" : "Save changes"}
                             </Button>
                           </div>
                         </div>
@@ -2307,8 +2292,8 @@ export default function AccountSettingsPanel() {
                 {/* Password Rotation Section */}
                 <div>
                   <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Password Rotation
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Password rotation
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                       Keep your account secure with a strong password. Must be at least 8 characters long.
@@ -2448,7 +2433,7 @@ export default function AccountSettingsPanel() {
                         {pwLoading && (
                           <Loading01Icon size="1em" className="animate-spin text-xs" />
                         )}
-                        {pwLoading ? "Updating..." : "Update Password"}
+                        {pwLoading ? "Updating…" : "Update password"}
                       </Button>
                     </div>
                   </form>
@@ -2458,8 +2443,8 @@ export default function AccountSettingsPanel() {
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Security Questions
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                        Security questions
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                         Set up questions to help recover your account.
@@ -2488,7 +2473,7 @@ export default function AccountSettingsPanel() {
                           <EmptyHeader>
                             <EmptyMedia><EmptyHelpCircleIcon size="1em" /></EmptyMedia>
                             <EmptyTitle>
-                              No Recovery Questions Configured
+                              No recovery questions configured
                             </EmptyTitle>
                             <EmptyDescription>
                               Institutional security questions have not been configured yet. Contact your system administrator to enable question-based account recovery.
@@ -2526,7 +2511,7 @@ export default function AccountSettingsPanel() {
                                     }}
                                     className="text-xs font-semibold text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer shrink-0"
                                   >
-                                    {isEditing ? "Cancel" : "Edit Answer"}
+                                    {isEditing ? "Cancel" : "Edit answer"}
                                   </button>
                                 )}
                               </div>
@@ -2567,7 +2552,7 @@ export default function AccountSettingsPanel() {
                           {secLoading && (
                             <Loading01Icon size="1em" className="animate-spin text-xs" />
                           )}
-                          {secLoading ? "Saving..." : "Save Security Questions"}
+                          {secLoading ? "Saving…" : "Save security questions"}
                         </Button>
                       </div>
                     )}
@@ -2610,16 +2595,16 @@ export default function AccountSettingsPanel() {
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-8 items-center">
                           <div className="space-y-4">
                             <div>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Step 1</span>
+                              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">Step 1</span>
                               <h4 className="text-lg font-bold text-gray-900 tracking-tight dark:text-zinc-50 font-jakarta mt-0.5">
-                                Link Authenticator App
+                                Link authenticator app
                               </h4>
                               <p className="text-sm font-normal text-gray-600 dark:text-zinc-300 mt-1">
                                 Scan this QR code using Apple Passwords, Google Authenticator, 1Password, Authy, or Microsoft Authenticator to connect your account.
                               </p>
                               <div className="pt-2">
-                                <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider block mb-1.5">
-                                  Compatible Applications
+                                <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 block mb-1.5">
+                                  Compatible applications
                                 </span>
                                 <AuthenticatorAppBadges size="sm" />
                               </div>
@@ -2629,8 +2614,8 @@ export default function AccountSettingsPanel() {
                               {/* Secret key */}
                               <div className="bg-gray-50/80 dark:bg-zinc-900/60 px-4 py-3 rounded-xl border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-zinc-500 block">
-                                    Secret Key (Manual Entry)
+                                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 block">
+                                    Secret key (manual entry)
                                   </span>
                                   <span className="text-xs sm:text-sm font-bold font-mono text-gray-900 dark:text-primary tracking-wider break-all">
                                     {totpSetupData.secret}
@@ -2653,8 +2638,8 @@ export default function AccountSettingsPanel() {
                               {/* Serial key */}
                               <div className="bg-gray-50/80 dark:bg-zinc-900/60 px-4 py-3 rounded-xl border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-zinc-500 block">
-                                    Serial Key (Backup Verification)
+                                  <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 block">
+                                    Serial key (backup verification)
                                   </span>
                                   <span className="text-xs sm:text-sm font-bold font-mono text-gray-900 dark:text-zinc-200 tracking-wider break-all">
                                     {totpSetupData.serialKey}
@@ -2691,8 +2676,8 @@ export default function AccountSettingsPanel() {
                         {/* Step 2: Verification Code Input */}
                         <div className="mt-8 pt-6 border-t border-black/[0.06] dark:border-white/[0.08] space-y-3">
                           <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Step 2</span>
-                            <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100">Enter 6-Digit Code</h4>
+                            <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">Step 2</span>
+                            <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100">Enter 6-digit code</h4>
                             <p className="text-xs text-gray-500 dark:text-zinc-400">Type the rotating code shown in your authenticator app to finalize configuration.</p>
                           </div>
                           <Input
@@ -2761,8 +2746,8 @@ export default function AccountSettingsPanel() {
                               Generate rotating 6-digit codes on your smartphone or desktop authenticator app.
                             </p>
                             <div className="pt-1.5">
-                              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-wider block mb-1.5">
-                                Compatible Applications
+                              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 block mb-1.5">
+                                Compatible applications
                               </span>
                               <AuthenticatorAppBadges />
                             </div>
@@ -2905,7 +2890,7 @@ export default function AccountSettingsPanel() {
                                   const json = await res.json();
                                   if (json.ok) {
                                     setRecoveryCodesCount(0);
-                                    toast.success("Recovery Codes Disabled", {
+                                    toast.success("Recovery codes disabled", {
                                       description: "Your emergency backup codes have been invalidated."
                                     });
                                     await refreshTOTPStatus();
@@ -2913,7 +2898,7 @@ export default function AccountSettingsPanel() {
                                     throw new Error(json.error);
                                   }
                                 } catch (err) {
-                                  const errInfo = formatErrorMessage(err, { title: "Disable Recovery Codes Failed", description: "Could not disable recovery codes." });
+                                  const errInfo = formatErrorMessage(err, { title: "Could not disable recovery codes", description: "Try disabling recovery codes again." });
                                   toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action });
                                 } finally {
                                   setRecoveryCodesLoading(false);
@@ -2976,8 +2961,8 @@ export default function AccountSettingsPanel() {
                 {/* Section 1: Default Home View */}
                 <div>
                   <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Default Home View
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Default home view
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                       Choose which workspace view automatically opens whenever you sign into the records system.
@@ -3011,7 +2996,7 @@ export default function AccountSettingsPanel() {
                     <div className="w-full sm:w-72 shrink-0">
                       <Select placeholder="Select home view"
                         value={activeHomeView?.id}
-                        onValueChange={(val) => handlePreferenceChange("default_home_view", val, "Start Page Updated")}
+                        onValueChange={(val) => handlePreferenceChange("default_home_view", val, "Start page updated")}
                         buttonClassName="h-10 text-[13px] font-medium"
                       >
                         {availableHomeViews.map((view) => (
@@ -3026,14 +3011,14 @@ export default function AccountSettingsPanel() {
 
                 <InitialLoaderSetting
                   value={userPreferences.initial_loader}
-                  onSave={(value) => handlePreferenceChange("initial_loader", value, "Dashboard Loader Updated")}
+                  onSave={(value) => handlePreferenceChange("initial_loader", value, "Dashboard loader updated")}
                 />
 
                 {/* Section 2: Display Name Format */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Display Name Format
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Display name format
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                       Choose how your name appears in the top navigation header, sidebar profile menu, and institutional reports.
@@ -3058,7 +3043,7 @@ export default function AccountSettingsPanel() {
                     <div className="w-full sm:w-72 shrink-0">
                       <Select placeholder="Select name format"
                         value={activeNameFormat?.id}
-                        onValueChange={(val) => handlePreferenceChange("display_name_format", val, "Display Name Format Updated")}
+                        onValueChange={(val) => handlePreferenceChange("display_name_format", val, "Display name format updated")}
                         buttonClassName="h-10 text-[13px] font-medium"
                       >
                         {displayNameFormats.map((fmt) => (
@@ -3071,12 +3056,64 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
+                <div className="space-y-4 border-t border-black/[0.06] pt-6 dark:border-white/[0.08]">
+                  <div>
+                    <h4 id="attachment-view-heading" className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Attachment view
+                    </h4>
+                    <p className="mt-0.5 text-[13px] text-gray-500 dark:text-zinc-400">
+                      Choose how attachments appear across the app in this browser.
+                    </p>
+                  </div>
+                  <div role="group" aria-labelledby="attachment-view-heading" className="grid min-w-0 gap-2.5 sm:grid-cols-2">
+                    {[
+                      { layout: "rows", label: "Compact", Attachment: AttachedFileRow },
+                      { layout: "cards", label: "Cards", Attachment: AttachedFileCard },
+                    ].map(({ layout, label, Attachment }) => {
+                      const selected = attachmentLayout === layout;
+                      return (
+                        <div
+                          key={layout}
+                          className={cn(
+                            "relative flex min-w-0 flex-col gap-2 rounded-xl border p-3 transition-colors",
+                            selected
+                              ? "border-gray-950 bg-gray-100/80 ring-1 ring-black/10 dark:border-white dark:bg-zinc-800 dark:ring-white/20"
+                              : "border-border hover:bg-muted/60",
+                          )}
+                        >
+                          <div className="flex items-center gap-2 text-xs font-semibold">
+                            <span className={cn(
+                              "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                              selected ? "border-transparent bg-foreground text-background" : "border-muted-foreground/50",
+                            )} aria-hidden="true">
+                              {selected && <Tick01Icon size={10} />}
+                            </span>
+                            {label}
+                          </div>
+                          <div inert className="grid min-h-36 min-w-0 flex-1 place-items-center rounded-lg bg-background p-2">
+                            <div className="w-full min-w-0 max-w-80 [&>*]:mx-auto [&>*]:max-w-full">
+                              <Attachment item={ATTACHMENT_VIEW_EXAMPLE} readOnly animateLayout={false} />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={label}
+                            aria-pressed={selected}
+                            onClick={() => setAttachmentLayout(layout)}
+                            className="absolute inset-0 cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Section 3: Table Row Density */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 font-jakarta">
-                        Table Row Density
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300 font-jakarta">
+                        Table row density
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                         Choose the row vertical spacing, height, and padding used by tables across this browser.
@@ -3223,7 +3260,10 @@ export default function AccountSettingsPanel() {
                   </div>
                 </div>
 
-                {/* Section 4: Profile Avatar Card */}
+                {/* Section 4: Saved Views */}
+                <SavedViewsResetSetting authUser={authUser} />
+
+                {/* Section 5: Profile Avatar Card */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 shadow-xs">
                     <div className="flex items-center gap-4">
@@ -3277,7 +3317,7 @@ export default function AccountSettingsPanel() {
                       onClick={() => setShowAvatarModal(true)}
                       className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                     >
-                      Choose Avatar...
+                      Choose avatar…
                     </Button>
                   </div>
                 </div>
@@ -3329,8 +3369,8 @@ export default function AccountSettingsPanel() {
                 {/* Section 1: Master Interface Sounds & Volume */}
                 <div>
                   <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Master Output
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Master output
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                       Enable or mute synthesized Web Audio feedback for buttons, toggles, dialogs, and alerts. Off by default for shared office counters.
@@ -3439,8 +3479,8 @@ export default function AccountSettingsPanel() {
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Sound Categories
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                        Sound categories
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                         Choose which interaction groups play sound effects. Use the preview button on any row to audition its cue.
@@ -3558,8 +3598,8 @@ export default function AccountSettingsPanel() {
                       <>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300 font-jakarta">
-                              Text & Font Size
+                            <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300 font-jakarta">
+                              Text and font size
                             </h4>
                             <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                               Adjust typography sizing across the records keeping system. Controls text scale on cards, tables, and dialogs.
@@ -3645,8 +3685,8 @@ export default function AccountSettingsPanel() {
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                        Interface Layout Zoom
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                        Interface layout zoom
                       </h4>
                       <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                         Choose your default viewport scaling level. Your preferred zoom persists across all dashboard sessions.
@@ -3720,8 +3760,8 @@ export default function AccountSettingsPanel() {
                 {/* Section 3: Visual & Motor Accommodations */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
                   <div className="mb-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
-                      Visual & Motor Accommodations
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Visual and motor accommodations
                     </h4>
                     <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
                       Display settings to improve text contrast, boundary visibility, motion comfort, and cursor affordance.
@@ -3789,6 +3829,19 @@ export default function AccountSettingsPanel() {
                     </div>
                   </div>
                 </div>
+
+                {/* Section 3: Keyboard */}
+                <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <div className="mb-4">
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
+                      Keyboard
+                    </h4>
+                    <p className="text-[13px] text-gray-500 dark:text-zinc-400 mt-0.5">
+                      Reference of keyboard shortcuts supported across global navigation, review queues, and layout tools.
+                    </p>
+                  </div>
+                  <KeyboardShortcutList />
+                </div>
               </div>
             </TabsContent>
           </>}
@@ -3802,7 +3855,7 @@ export default function AccountSettingsPanel() {
             <div className="px-5 sm:px-6 pt-5 pb-2 shrink-0">
               <DialogHeader>
                 <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Choose Profile Avatar
+                  Choose profile avatar
                 </DialogTitle>
                 <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
                   Select an institutional avatar representing your identity across the records system.
@@ -4020,8 +4073,8 @@ export default function AccountSettingsPanel() {
                   <div className="space-y-2.5 min-h-0 flex flex-col">
                     {/* Preview Header / Label */}
                     <div className="flex items-center justify-between shrink-0">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                        Live Preview
+                      <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                        Live preview
                       </span>
                       <span className={SETTINGS_STATUS_PILL_SM}>
                         <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
@@ -4300,7 +4353,7 @@ export default function AccountSettingsPanel() {
                       onClick={handleApplyStagedAvatar}
                       className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                     >
-                      {avatarSaving ? "Saving..." : "Apply Avatar"}
+                      {avatarSaving ? "Saving…" : "Apply avatar"}
                     </Button>
                   </div>
                 </div>

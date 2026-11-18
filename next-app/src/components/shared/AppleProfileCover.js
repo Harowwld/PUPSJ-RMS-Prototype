@@ -188,7 +188,7 @@ export default function AppleProfileCover({
           <div className="px-5 sm:px-6 pt-5 pb-2 shrink-0">
             <DialogHeader>
               <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-50">
-                Profile Cover Themes
+                Profile cover themes
               </DialogTitle>
               <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
                 Personalize your profile header with dynamic mesh gradients and curated institutional themes.
@@ -201,8 +201,8 @@ export default function AppleProfileCover({
             {/* Left Pane: Curated Presets Selection */}
             <div className="w-full md:w-[54%] lg:w-[56%] flex flex-col p-4 sm:p-5 border-b md:border-b-0 md:border-r border-black/[0.06] dark:border-white/[0.08] overflow-hidden min-h-0">
               <div className="flex items-center justify-between shrink-0 mb-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                  Curated Presets ({APPLE_WALLPAPER_PRESETS.length})
+                <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                  Curated presets ({APPLE_WALLPAPER_PRESETS.length})
                 </span>
                 <span className="text-[11px] text-gray-400 dark:text-zinc-500">
                   Select to preview
@@ -263,8 +263,8 @@ export default function AppleProfileCover({
                 <div className="space-y-3 min-h-0 flex flex-col overflow-y-auto pr-0.5">
                   {/* Live Preview Label & Badge */}
                   <div className="flex items-center justify-between shrink-0">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                      Live Preview
+                    <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                      Live preview
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
                       <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-zinc-100">
@@ -308,7 +308,7 @@ export default function AppleProfileCover({
 
                     <div className="relative z-10 flex items-end justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <span className="text-[9.5px] font-semibold uppercase tracking-wider text-white/70 block truncate">
+                        <span className="text-[9.5px] font-semibold text-white/70 block truncate">
                           {stagedTheme?.theme || "Harmonic Blend"}
                         </span>
                         <h4 className="text-sm sm:text-base font-bold text-white drop-shadow-xs truncate">
