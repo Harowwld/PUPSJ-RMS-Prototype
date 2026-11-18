@@ -295,3 +295,65 @@ test('ProfileAvatar Implements Standardized macOS Fallback Styling and SuperAdmi
   assert.ok(auditCode.includes('<AuditActorAvatar'), 'GlobalAuditLogsTab must render AuditActorAvatar')
 })
 
+test('CommandPalette and Header choice shortcuts use KeyboardShortcutKeys with split keys', () => {
+  const palettePath = path.join(ROOT_DIR, 'src/components/shared/CommandPalette.js')
+  const headerPath = path.join(ROOT_DIR, 'src/components/layout/Header.js')
+  const paletteCode = fs.readFileSync(palettePath, 'utf8')
+  const headerCode = fs.readFileSync(headerPath, 'utf8')
+
+  assert.ok(
+    paletteCode.includes('shortcut: isMac ? ["⌘", "B"] : ["Ctrl", "B"]'),
+    'CommandPalette choice shortcut must be split into modifier and key'
+  )
+  assert.ok(
+    paletteCode.includes('keys={Array.isArray(item.shortcut) ? item.shortcut : [item.shortcut]}'),
+    'CommandPalette choice rows must render item.shortcut via KeyboardShortcutKeys'
+  )
+  assert.ok(
+    paletteCode.includes('<KeyboardShortcutKeys keys={["↵"]} size="xs" />'),
+    'CommandPalette choice rows must render Select return key via KeyboardShortcutKeys'
+  )
+  assert.ok(
+    paletteCode.includes('<KeyboardShortcutKeys keys={["⇥"]} size="xs" />'),
+    'CommandPalette scope hint must render Tab key via KeyboardShortcutKeys'
+  )
+  assert.ok(
+    headerCode.includes('shortcut: isMac ? ["⌘", "B"] : ["Ctrl", "B"]'),
+    'Header choice shortcut must be split into modifier and key'
+  )
+  assert.ok(
+    headerCode.includes('keys={Array.isArray(item.shortcut) ? item.shortcut : [item.shortcut]}'),
+    'Header choice rows must render item.shortcut via KeyboardShortcutKeys'
+  )
+})
+
+test('prioritizeExactMatchGroups places exact label matches first across and within groups', async () => {
+  const { prioritizeExactMatchGroups } = await import('../src/lib/searchUtils.js')
+
+  const groups = [
+    {
+      id: 'nav',
+      items: [
+        { id: 'doc-req', label: 'Document Requests' },
+        { id: 'docs', label: 'Documents' },
+      ],
+    },
+    {
+      id: 'controls',
+      items: [
+        { id: 'sidebar-layout', label: 'Toggle Sidebar Layout' },
+        { id: 'sidebar', label: 'Toggle Sidebar' },
+      ],
+    },
+  ]
+
+  const docsResult = prioritizeExactMatchGroups(groups, '  documents ')
+  assert.equal(docsResult[0].id, 'nav')
+  assert.deepEqual(docsResult[0].items.map((i) => i.id), ['docs', 'doc-req'])
+
+  const sidebarResult = prioritizeExactMatchGroups(groups, 'toggle sidebar')
+  assert.equal(sidebarResult[0].id, 'controls')
+  assert.deepEqual(sidebarResult[0].items.map((i) => i.id), ['sidebar', 'sidebar-layout'])
+  assert.equal(sidebarResult[1].id, 'nav')
+})
+

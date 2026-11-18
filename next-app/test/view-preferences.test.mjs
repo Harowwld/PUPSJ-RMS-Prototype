@@ -1,6 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createViewPreferenceStore, normalizeViewPreference, restoreViewPreference, serializeViewPreference, viewPreferenceKey, workspaceViewPreferenceKey } from "../src/lib/viewPreferences.js";
+import {
+  classifySavedWorkViewState,
+  classifyViewPreferenceField,
+  createViewPreferenceStore,
+  deleteSavedWorkView,
+  getSavedViewPagesForUser,
+  inspectSavedViewForPage,
+  listAllSavedWorkViewsForUser,
+  normalizeViewPreference,
+  readSavedWorkViews,
+  renameSavedWorkView,
+  resetAllSavedViewsForUser,
+  resetSavedViewForPage,
+  restoreViewPreference,
+  saveWorkView,
+  serializeViewPreference,
+  viewPreferenceKey,
+  workspaceViewPreferenceKey,
+} from "../src/lib/viewPreferences.js";
 
 const user = { id: "PUPSUPERADMIN-001", role: "SuperAdmin" };
 const normalize = (value) => normalizeViewPreference("staff", "visibleColumns", value, ["name", "office"]);
@@ -212,4 +230,215 @@ test("SuperAdmin and shared table column controls default to essential columns a
     normalizeViewPreference("backups", "visibleColumns", ["size", "created", "actor", "type", "status"], []),
     ["size", "created", "actor", "type", "status"]
   );
+});
+
+function fullStorageFixture() {
+  const data = new Map();
+  return {
+    data,
+    storage: {
+      get length() {
+        return data.size;
+      },
+      key(index) {
+        return Array.from(data.keys())[index] ?? null;
+      },
+      getItem(key) {
+        return data.get(key) ?? null;
+      },
+      setItem(key, value) {
+        data.set(key, String(value));
+      },
+      removeItem(key) {
+        data.delete(key);
+      },
+    },
+  };
+}
+
+test("classifyViewPreferenceField maps filters, sorting, grouping, columns, and layout including stream-prefixed fields", () => {
+  assert.equal(classifyViewPreferenceField("filterRules"), "filters");
+  assert.equal(classifyViewPreferenceField("proposals.filterRules"), "filters");
+  assert.equal(classifyViewPreferenceField("statusFilters"), "filters");
+  assert.equal(classifyViewPreferenceField("startDate"), "filters");
+  assert.equal(classifyViewPreferenceField("searchQuery"), "filters");
+  assert.equal(classifyViewPreferenceField("sortBy"), "sorting");
+  assert.equal(classifyViewPreferenceField("post_events.tableSortOrder"), "sorting");
+  assert.equal(classifyViewPreferenceField("folderSortBy"), "sorting");
+  assert.equal(classifyViewPreferenceField("groupBy"), "grouping");
+  assert.equal(classifyViewPreferenceField("matrixGroupBy"), "grouping");
+  assert.equal(classifyViewPreferenceField("visibleColumns"), "columns");
+  assert.equal(classifyViewPreferenceField("proposals.visibleColumns"), "columns");
+  assert.equal(classifyViewPreferenceField("viewMode"), "layout");
+  assert.equal(classifyViewPreferenceField("layoutView"), "layout");
+  assert.equal(classifyViewPreferenceField("pageSize"), "layout");
+  assert.equal(classifyViewPreferenceField("proposals.itemsPerPage"), "layout");
+});
+
+test("getSavedViewPagesForUser returns role and office-appropriate workspace pages", () => {
+  const superAdminPages = getSavedViewPagesForUser({ id: "SA-1", role: "SuperAdmin" });
+  assert.ok(superAdminPages.some((p) => p.id === "operations"));
+  assert.ok(superAdminPages.some((p) => p.id === "landing" && p.pageKeys.includes("cms-hero")));
+
+  const adminPages = getSavedViewPagesForUser({ id: "ADM-1", role: "Admin", office_id: "registrar" });
+  assert.ok(adminPages.some((p) => p.id === "digital_records_review"));
+  assert.ok(!adminPages.some((p) => p.id === "operations"));
+
+  const osasStaffPages = getSavedViewPagesForUser({ id: "STF-1", role: "Staff", office_id: "osas" });
+  assert.ok(osasStaffPages.some((p) => p.id === "osas_monitoring"));
+  assert.ok(osasStaffPages.some((p) => p.id === "documents" && p.pageKeys.includes("office_documents")));
+
+  const regStaffPages = getSavedViewPagesForUser({ id: "STF-2", role: "Staff", office_id: "registrar" });
+  assert.ok(regStaffPages.some((p) => p.id === "document_requests"));
+  assert.ok(regStaffPages.some((p) => p.id === "records_archive" && p.pageKeys.includes("archive_files")));
+
+  const studentPages = getSavedViewPagesForUser({ id: "STU-1", account_id: 9, role: "Student", client_type: "Student", portal_setup_complete: true });
+  assert.ok(studentPages.some((p) => p.id === "student_requests"));
+  assert.ok(studentPages.some((p) => p.id === "student_compliance"));
+});
+
+test("resetSavedViewForPage clears a selected page's filters, sorting, grouping, columns, and layout together and notifies mounted stores", () => {
+  const { storage, data } = fullStorageFixture();
+  const store = createViewPreferenceStore(() => storage);
+  const staffUser = { id: "PUPREG-002", role: "Staff", office_id: "registrar" };
+  const otherUser = { id: "PUPREG-999", role: "Staff", office_id: "registrar" };
+
+  const filterKey = workspaceViewPreferenceKey(staffUser, "document_requests", "filterRules");
+  const sortKey = workspaceViewPreferenceKey(staffUser, "document_requests", "sortBy");
+  const groupKey = workspaceViewPreferenceKey(staffUser, "document_requests", "groupBy");
+  const colsKey = workspaceViewPreferenceKey(staffUser, "document_requests", "visibleColumns");
+  const layoutKey = workspaceViewPreferenceKey(staffUser, "document_requests", "viewMode");
+  const otherPageKey = workspaceViewPreferenceKey(staffUser, "student_directory", "filterRules");
+  const otherUserKey = workspaceViewPreferenceKey(otherUser, "document_requests", "filterRules");
+
+  store.write(filterKey, [{ id: "1", fieldKey: "status", operator: "is", value: "Pending" }]);
+  store.write(sortKey, "student_name");
+  store.write(groupKey, "status");
+  store.write(colsKey, ["student", "doc_type"]);
+  store.write(layoutKey, "kanban");
+  store.write(otherPageKey, [{ id: "2", fieldKey: "course", operator: "is", value: "BSIT" }]);
+  store.write(otherUserKey, [{ id: "3", fieldKey: "status", operator: "is", value: "Ready" }]);
+
+  let notifications = 0;
+  const unsubscribe = store.subscribe(colsKey, () => {
+    notifications += 1;
+  });
+
+  const inspected = inspectSavedViewForPage(staffUser, ["document_requests"], storage);
+  assert.equal(inspected.keys.length, 5);
+  assert.deepEqual(inspected.categories, ["filters", "sorting", "grouping", "columns", "layout"]);
+
+  const result = resetSavedViewForPage(staffUser, ["document_requests"], storage);
+  assert.equal(result.removedCount, 5);
+  assert.deepEqual(result.categories, ["filters", "sorting", "grouping", "columns", "layout"]);
+  assert.equal(notifications, 1);
+
+  assert.equal(data.has(filterKey), false);
+  assert.equal(data.has(sortKey), false);
+  assert.equal(data.has(groupKey), false);
+  assert.equal(data.has(colsKey), false);
+  assert.equal(data.has(layoutKey), false);
+  assert.equal(data.has(otherPageKey), true);
+  assert.equal(data.has(otherUserKey), true);
+  assert.deepEqual(store.read(colsKey, ["student", "doc_type", "status"], (v) => v), ["student", "doc_type", "status"]);
+
+  unsubscribe();
+});
+
+test("AccountSettingsPanel renders SavedViewsResetSetting in Preferences -> Workspace", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+  const panelCode = fs.readFileSync(
+    path.resolve(__dirname, "../src/components/shared/AccountSettingsPanel.js"),
+    "utf8"
+  );
+  assert.ok(panelCode.includes("import SavedViewsResetSetting from \"@/components/shared/SavedViewsResetSetting\""));
+  assert.ok(panelCode.includes("<SavedViewsResetSetting authUser={authUser} />"));
+});
+
+test("resetAllSavedViewsForUser clears all customized pages for the user while preserving other users", () => {
+  const { storage, data } = fullStorageFixture();
+  const store = createViewPreferenceStore(() => storage);
+  const staffUser = { id: "PUPREG-002", role: "Staff", office_id: "registrar" };
+  const otherUser = { id: "PUPREG-999", role: "Staff", office_id: "registrar" };
+
+  const reqKey = workspaceViewPreferenceKey(staffUser, "document_requests", "filterRules");
+  const dirKey = workspaceViewPreferenceKey(staffUser, "student_directory", "visibleColumns");
+  const otherUserKey = workspaceViewPreferenceKey(otherUser, "document_requests", "filterRules");
+
+  store.write(reqKey, [{ id: "1", fieldKey: "status", operator: "is", value: "Pending" }]);
+  store.write(dirKey, ["student_no", "name"]);
+  store.write(otherUserKey, [{ id: "2", fieldKey: "status", operator: "is", value: "Ready" }]);
+
+  const result = resetAllSavedViewsForUser(staffUser, storage);
+  assert.equal(result.removedCount, 2);
+  assert.equal(result.pageCount, 2);
+  assert.equal(data.has(reqKey), false);
+  assert.equal(data.has(dirKey), false);
+  assert.equal(data.has(otherUserKey), true);
+});
+
+test("saveWorkView, renameSavedWorkView, deleteSavedWorkView, and listAllSavedWorkViewsForUser manage named views per user and page", () => {
+  const { storage } = fullStorageFixture();
+  const registrarStaff = { id: "PUPREG-002", role: "Staff", office_id: "registrar" };
+  const osasStaff = { id: "PUPOSAS-002", role: "Staff", office_id: "osas" };
+
+  const saved = saveWorkView(
+    registrarStaff,
+    "document_requests",
+    {
+      name: "Awaiting Payment",
+      state: {
+        statusFilters: ["PendingPayment"],
+        visibleColumns: ["student_no", "student", "docType", "status"],
+        sortBy: "created_at",
+        sortOrder: "ASC",
+        viewMode: "table",
+      },
+    },
+    storage
+  );
+  assert.equal(saved.updated, false);
+  assert.equal(saved.savedView.name, "Awaiting Payment");
+  assert.deepEqual(classifySavedWorkViewState(saved.savedView.state), ["filters", "sorting", "columns", "layout"]);
+
+  // Updating by same name (case-insensitive) updates existing entry
+  const updated = saveWorkView(
+    registrarStaff,
+    "document_requests",
+    {
+      name: "awaiting payment",
+      state: {
+        statusFilters: ["PendingPayment"],
+        visibleColumns: ["student_no", "student", "status"],
+        sortBy: "created_at",
+        sortOrder: "DESC",
+        viewMode: "list",
+      },
+    },
+    storage
+  );
+  assert.equal(updated.updated, true);
+  assert.equal(updated.views.length, 1);
+  assert.equal(updated.savedView.state.viewMode, "list");
+
+  // Rename
+  const renamed = renameSavedWorkView(registrarStaff, "document_requests", saved.savedView.id, "Payment Queue", storage);
+  assert.equal(renamed.renamed, true);
+  assert.equal(readSavedWorkViews(registrarStaff, "document_requests", storage)[0].name, "Payment Queue");
+
+  // Isolated per user/office
+  assert.equal(readSavedWorkViews(osasStaff, "document_requests", storage).length, 0);
+  const allForReg = listAllSavedWorkViewsForUser(registrarStaff, storage);
+  assert.equal(allForReg.length, 1);
+  assert.equal(allForReg[0].page.id, "document_requests");
+  assert.equal(allForReg[0].views[0].name, "Payment Queue");
+
+  // Delete
+  const remaining = deleteSavedWorkView(registrarStaff, "document_requests", saved.savedView.id, storage);
+  assert.equal(remaining.length, 0);
+  assert.equal(listAllSavedWorkViewsForUser(registrarStaff, storage).length, 0);
 });

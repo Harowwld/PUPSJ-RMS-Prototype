@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { matchesSearchQuery } from "@/lib/searchUtils";
+import { matchesSearchQuery, prioritizeExactMatchGroups } from "@/lib/searchUtils";
 import {
   getHighContrastPreference,
   toggleHighContrastPreference,
@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CopyButton from "@/components/shared/CopyButton";
 import AppIcon from "@/components/ui/app-icon";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
+import KeyboardShortcutKeys from "@/components/shared/KeyboardShortcutKeys";
 import { getDefaultHomeView } from "@/lib/roleUtils";
 import {
   Search01Icon,
@@ -1116,7 +1117,7 @@ export default function CommandPalette({
           action: "toggle-sidebar",
           icon: LayoutLeftIcon,
           scope: "actions",
-          shortcut: isMac ? "⌘B" : "Ctrl B",
+          shortcut: isMac ? ["⌘", "B"] : ["Ctrl", "B"],
           breadcrumb: "Navigation • Action",
           keywords:
             "toggle sidebar collapse expand hide show drawer panel navigation view hide sidebar",
@@ -1366,8 +1367,8 @@ export default function CommandPalette({
     const scopeTabs = SCOPE_TABS.filter((tab) => tab.id === "all" || availableScopes.has(tab.id));
     const activeScope = scopeTabs.some((tab) => tab.id === selectedScope) ? selectedScope : "all";
 
-    // Filter by query and active scope tab
-    const filtered = allCandidateGroups
+    // Filter by query and active scope tab, prioritizing exact label matches first
+    const matchedGroups = allCandidateGroups
       .map((group) => {
         let items = group.items;
 
@@ -1389,6 +1390,8 @@ export default function CommandPalette({
         return { ...group, items };
       })
       .filter((group) => group.items.length > 0);
+
+    const filtered = q ? prioritizeExactMatchGroups(matchedGroups, searchQuery) : matchedGroups;
 
     return {
       availableCommands: new Map(allCandidateGroups.flatMap((group) => group.items.map((item) => [item.id, item]))),
@@ -1450,7 +1453,7 @@ export default function CommandPalette({
     if (typeof window !== "undefined") {
       localStorage.removeItem(RECENT_COMMANDS_KEY);
     }
-    toast.success("Recent Commands Cleared");
+    toast.success("Recent commands cleared");
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -1482,7 +1485,7 @@ export default function CommandPalette({
                 new CustomEvent("locate-student", { detail: { student } })
               );
             }, 100);
-            toast.success(`Locating ${student.name} in Archive`, {
+            toast.success(`Locating ${student.name} in archive`, {
               description: `Room ${student.room} • Cabinet ${student.cabinet} • Drawer ${student.drawer}`,
             });
             return;
@@ -1492,7 +1495,7 @@ export default function CommandPalette({
           window.dispatchEvent(
             new CustomEvent("switch-view", { detail: { view: "students" } })
           );
-          toast.info(`Opening ${student.name}'s Profile`);
+          toast.info(`Opening ${student.name}'s profile`);
           return;
         }
 
@@ -1509,7 +1512,7 @@ export default function CommandPalette({
         const req = item.rawRequest;
         const targetView = isStudentPalette ? "odrs" : "requests";
         window.dispatchEvent(new CustomEvent("switch-view", { detail: { view: targetView } }));
-        toast.info(`Opening Request #${req.id}`, {
+        toast.info(`Opening request #${req.id}`, {
           description: `${req.doc_type || "Document"} • ${req.status || "Pending"}`,
         });
         return;
@@ -1531,7 +1534,7 @@ export default function CommandPalette({
             body: JSON.stringify({ preferences: { high_contrast: next } }),
           }).catch(() => {});
         }
-        toast.success(next ? "High Contrast Enabled" : "High Contrast Disabled", {
+        toast.success(next ? "High contrast enabled" : "High contrast disabled", {
           description: next
             ? "Tactile borders and maximum contrast readability active."
             : "Standard interface contrast restored.",
@@ -1549,7 +1552,7 @@ export default function CommandPalette({
             body: JSON.stringify({ preferences: { reduce_motion: next } }),
           }).catch(() => {});
         }
-        toast.success(next ? "Reduce Motion Enabled" : "Reduce Motion Disabled", {
+        toast.success(next ? "Reduce motion enabled" : "Reduce motion disabled", {
           description: next
             ? "Interface animations minimized and spring overshoot eliminated."
             : "Standard fluid spring transitions restored.",
@@ -1713,7 +1716,7 @@ export default function CommandPalette({
   const handleCopyIdentifier = useCallback((text) => {
     if (!text) return;
     navigator.clipboard?.writeText(text);
-    toast.success("Copied to Clipboard", { description: text });
+    toast.success("Copied to clipboard", { description: text });
   }, []);
 
   return (
@@ -1747,10 +1750,10 @@ export default function CommandPalette({
             aria-label="Spotlight Command Search"
             placeholder={
               isStudent
-                ? "Search portal views and requests..."
+                ? "Search portal views and requests"
                 : isOsas
-                  ? "Search organizations by name or acronym, views, or actions..."
-                  : "Search views, actions, students (e.g. 2024-), or requests..."
+                  ? "Search organizations by name or acronym, views, or actions"
+                  : "Search views, actions, students (e.g. 2024-), or requests"
             }
             value={searchQuery}
             onChange={(e) => {
@@ -1776,9 +1779,7 @@ export default function CommandPalette({
                 <Cancel01Icon size="1em" className="text-xs" />
               </button>
             )}
-            <kbd className="hidden sm:inline-flex items-center justify-center px-1.5 h-5 text-[10px] font-sans font-semibold text-gray-400 dark:text-zinc-400 bg-black/[0.04] dark:bg-white/[0.08] border border-black/10 dark:border-white/10 rounded-md shadow-2xs select-none">
-              ESC
-            </kbd>
+            <KeyboardShortcutKeys keys={["ESC"]} size="xs" className="hidden sm:inline-flex" />
           </div>
         </div>
 
@@ -1805,9 +1806,7 @@ export default function CommandPalette({
 
           <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-zinc-500">
             <span>Tab to cycle scopes</span>
-            <kbd className="px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 text-[9px] font-sans">
-              ⇥
-            </kbd>
+            <KeyboardShortcutKeys keys={["⇥"]} size="xs" />
           </div>
         </div>
 
@@ -1820,10 +1819,10 @@ export default function CommandPalette({
             {/* Empty search: Show Recent Commands if available */}
             {!searchQuery && activeScope === "all" && visibleRecents.length > 0 && (
               <div className="mb-3">
-                <div className="px-3 pt-1.5 pb-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
+                <div className="px-3 pt-1.5 pb-1 text-[11px] font-semibold text-gray-400 dark:text-zinc-500 flex items-center justify-between select-none">
                   <span className="flex items-center gap-1.5">
                     <Time01Icon size="1em" className="text-xs" />
-                    <span>Recent Commands</span>
+                    <span>Recent commands</span>
                   </span>
                   <button
                     type="button"
@@ -1873,7 +1872,7 @@ export default function CommandPalette({
                 let currentGlobalIndex = 0;
                 return filteredGroups.map((group) => (
                   <div key={group.id} className="mb-3 last:mb-0">
-                    <div className="px-3 pt-1.5 pb-1 text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between select-none">
+                    <div className="px-3 pt-1.5 pb-1 text-[11px] font-semibold text-gray-400 dark:text-zinc-500 flex items-center justify-between select-none">
                       <span className="flex items-center gap-1.5">
                         <span>{group.title}</span>
                       </span>
@@ -2017,16 +2016,16 @@ export default function CommandPalette({
 
                             <div className="flex items-center gap-2 shrink-0">
                               {item.shortcut && (
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-sans tabular-nums font-semibold bg-black/[0.04] dark:bg-white/[0.08] text-gray-600 dark:text-zinc-300 rounded border border-black/10 dark:border-white/10 shadow-2xs">
-                                  {item.shortcut}
-                                </kbd>
+                                <KeyboardShortcutKeys
+                                  keys={Array.isArray(item.shortcut) ? item.shortcut : [item.shortcut]}
+                                  size="xs"
+                                  className="hidden sm:inline-flex"
+                                />
                               )}
                               {isFocused && (
                                 <span className="text-[10px] font-semibold text-pup-maroon dark:text-red-400 flex items-center gap-1">
                                   <span>Select</span>
-                                  <kbd className="px-1 py-0.5 rounded bg-pup-maroon/15 dark:bg-white/15 text-[9px] font-sans">
-                                    ↵
-                                  </kbd>
+                                  <KeyboardShortcutKeys keys={["↵"]} size="xs" />
                                 </span>
                               )}
                             </div>
@@ -2217,40 +2216,28 @@ export default function CommandPalette({
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-black/[0.06] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02] text-[11px] text-gray-500 dark:text-zinc-400 select-none">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                ↑
-              </kbd>
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                ↓
-              </kbd>
+              <KeyboardShortcutKeys keys={["↑"]} size="xs" />
+              <KeyboardShortcutKeys keys={["↓"]} size="xs" />
               <span>navigate</span>
             </span>
 
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                ↵
-              </kbd>
+              <KeyboardShortcutKeys keys={["↵"]} size="xs" />
               <span>select</span>
             </span>
 
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                Tab
-              </kbd>
+              <KeyboardShortcutKeys keys={["Tab"]} size="xs" />
               <span>scope</span>
             </span>
 
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                ESC
-              </kbd>
+              <KeyboardShortcutKeys keys={["ESC"]} size="xs" />
               <span>dismiss</span>
             </span>
 
             <span className="hidden lg:flex items-center gap-1 text-[10px] text-gray-400">
-              <kbd className="px-1.5 py-0.5 rounded-md bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/10 font-sans tabular-nums text-[9px] shadow-2xs">
-                {isMac ? "⌘B" : "Ctrl B"}
-              </kbd>
+              <KeyboardShortcutKeys keys={isMac ? ["⌘", "B"] : ["Ctrl", "B"]} size="xs" />
               <span>sidebar</span>
             </span>
           </div>

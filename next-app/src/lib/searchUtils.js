@@ -109,3 +109,42 @@ export function getDocTypeSearchAliases(docType) {
   if (dt.includes("proposal")) aliases.push("event proposal");
   return aliases;
 }
+
+/**
+ * Reorders filtered command palette groups and their items so exact label matches
+ * (case-insensitive, trimmed) appear first while preserving relative order
+ * for all other items and groups.
+ *
+ * @param {Array<{ items: Array<{ label?: string }> }>} groups
+ * @param {string} query
+ */
+export function prioritizeExactMatchGroups(groups, query) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery || !Array.isArray(groups) || groups.length === 0) {
+    return groups;
+  }
+
+  const isExactItemMatch = (item) =>
+    String(item?.label || "").trim().toLowerCase() === normalizedQuery;
+
+  return groups
+    .map((group) => {
+      const hasExact = group.items.some(isExactItemMatch);
+      if (!hasExact) {
+        return { ...group, _hasExactMatch: false };
+      }
+      const exactItems = [];
+      const otherItems = [];
+      for (const item of group.items) {
+        if (isExactItemMatch(item)) exactItems.push(item);
+        else otherItems.push(item);
+      }
+      return {
+        ...group,
+        items: [...exactItems, ...otherItems],
+        _hasExactMatch: true,
+      };
+    })
+    .sort((a, b) => Number(b._hasExactMatch) - Number(a._hasExactMatch))
+    .map(({ _hasExactMatch, ...group }) => group);
+}
