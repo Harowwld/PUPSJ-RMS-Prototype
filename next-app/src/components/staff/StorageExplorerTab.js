@@ -1,34 +1,45 @@
-import { BADGE_BASE } from "@/lib/badgeStyles";
 import useUrlPage from "@/hooks/useUrlPage"
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
 
-import { useState, useMemo, useEffect } from "react"
+import { Fragment, useState, useMemo, useEffect, useRef } from "react"
 import RoomMap2D from "@/components/staff/RoomMap2D"
 import PageHeader from "@/components/shared/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardGroup, CardHeader, CardTitle } from "@/components/ui/card"
+import { IdentifierBadge, TableStatus } from "@/components/ui/table"
 import { ContentReveal } from "@/components/ui/motion"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants"
-import { areCabinetsEqual } from "@/lib/storageLayoutUtils"
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton"
 import TablePagination from "@/components/shared/TablePagination";
-import { Cancel01Icon, File02Icon, FolderOpenIcon, Target01Icon, ViewOffIcon, WarehouseIcon } from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import { ArrowDown01Icon, ArrowRight01Icon, Cancel01Icon, File02Icon, FolderOpenIcon, ViewOffIcon, WarehouseIcon } from "hugeicons-react";
 function getStudentNoYear(studentNo) {
   const raw = String(studentNo || "").trim();
   const yearPart = raw.split("-")[0];
   const year = Number(yearPart);
   if (!Number.isInteger(year) || year < 1900 || year > 2200) return null;
   return year;
+}
+
+function getCabinetLabel(cabinet) {
+  const label = String(cabinet)
+  return label.toUpperCase().startsWith("CAB") || label.toUpperCase().includes("ORGANIZATION")
+    ? label
+    : `Cabinet ${label}`
+}
+
+function getDrawerLabel(drawer) {
+  const label = String(drawer)
+  return label.toLowerCase().startsWith("drawer") ? label : `Drawer ${label}`
 }
 
 export default function StorageExplorerTab({
@@ -39,7 +50,6 @@ export default function StorageExplorerTab({
   setSelectedCabinet,
   setCurrentLocatorLevel,
   selectedCabinet,
-  currentLocatorLevel,
   activeStudent,
   onUnfocusStudent,
   onLocateStudent,
@@ -81,20 +91,27 @@ export default function StorageExplorerTab({
   const [roomsPerPage, setRoomsPerPage] = useOsasViewPreference("storage_explorer", "roomsPerPage", 10)
   const [expandedDrawer, setExpandedDrawer] = useState(null)
 
+  const locatedDrawer = locatorModel?.drawers?.find((drawer) => drawer.isTarget)?.drawer ?? null
+  const locatedDrawerRef = useRef(null)
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (
-        activeStudent &&
-        selectedCabinet &&
-        areCabinetsEqual(activeStudent.cabinet, selectedCabinet, locatorModel?.cabinets)
-      ) {
-        setExpandedDrawer(activeStudent.drawer)
-      } else {
-        setExpandedDrawer(null)
-      }
-    }, 0)
+    const timer = setTimeout(() => setExpandedDrawer(null), 0)
     return () => clearTimeout(timer)
-  }, [selectedCabinet, activeStudent, locatorModel?.cabinets])
+  }, [selectedRoom, selectedCabinet])
+
+  useEffect(() => {
+    if (locatedDrawer == null) return
+    const timer = setTimeout(() => setExpandedDrawer(locatedDrawer), 0)
+    return () => clearTimeout(timer)
+  }, [activeStudent, locatedDrawer, selectedRoom, selectedCabinet])
+
+  useEffect(() => {
+    if (locatedDrawer == null || String(expandedDrawer) !== String(locatedDrawer)) return
+    const frame = requestAnimationFrame(() => {
+      locatedDrawerRef.current?.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [activeStudent, expandedDrawer, locatedDrawer])
 
   const paginatedRooms = useMemo(() => {
     const rooms = locatorModel?.rooms || []
@@ -110,13 +127,11 @@ export default function StorageExplorerTab({
       list.push({ level: "cabinets", label: roomLabel })
     }
     if (selectedCabinet != null) {
-      const cabLabel = String(selectedCabinet).startsWith("CAB") || String(selectedCabinet).includes("ORGANIZATION")
-        ? selectedCabinet
-        : `Cab ${selectedCabinet}`
-      list.push({ level: "drawers", label: cabLabel })
+      list.push({ level: "drawers", label: getCabinetLabel(selectedCabinet) })
+      if (locatedDrawer != null) list.push({ level: "located-drawer", label: getDrawerLabel(locatedDrawer) })
     }
     return list
-  }, [selectedRoom, selectedCabinet, locatorModel])
+  }, [selectedRoom, selectedCabinet, locatorModel, locatedDrawer])
 
   // Reset/auto-paginate rooms page when locator model or active student changes
   useEffect(() => {
@@ -137,8 +152,16 @@ export default function StorageExplorerTab({
 
 
 
-  const isInsideRoom = !loading && (locatorModel?.kind === "cabinets" || locatorModel?.kind === "drawers")
-  const mapWrap = "w-full max-w-5xl lg:max-w-[calc(100%-344px)] h-full flex-1 min-h-0 mx-auto overflow-hidden"
+  const isInsideRoom = (locatorModel?.kind === "cabinets" || locatorModel?.kind === "drawers")
+  const hasTargetRoom = locatorModel?.rooms?.some((room) => room.isTarget)
+  const isDrawerLevel = locatorModel?.kind === "drawers"
+  const cabinets = locatorModel?.cabinets || []
+  const hasTargetCabinet = cabinets.some((cabinet) => cabinet.isTarget)
+  const hasTargetDrawer = locatedDrawer != null
+  const openCabinet = (cabinetId) => {
+    setSelectedCabinet(cabinetId)
+    setCurrentLocatorLevel(cabinetId ? "drawers" : "cabinets")
+  }
 
   return (
     <div
@@ -190,54 +213,39 @@ export default function StorageExplorerTab({
 
         {/* Navigation Toolbar / Location Breadcrumbs */}
         <div className="border-t border-border dark:border-border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card">
-          <div className="flex flex-col gap-2 h-8 justify-center">
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Location Path Text (Breadcrumbs) */}
-              <Breadcrumb className="flex items-center select-none">
-                    <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
-                      {breadcrumbs.map((b, idx) => (
-                        <div
-                          key={`${b.level}-${idx}`}
-                          className="flex items-center gap-0"
-                        >
-                          {idx > 0 && (
-                            <BreadcrumbSeparator className="flex items-center">
-                              <span className="text-[#C7C7CC] text-[13px] mx-[7px] select-none font-normal">›</span>
-                            </BreadcrumbSeparator>
-                          )}
-                          <BreadcrumbItem>
-                            <BreadcrumbLink
-                              className={cn(
-                                "cursor-pointer transition-colors hover:no-underline text-[14px] font-jakarta",
-                                currentLocatorLevel === b.level
-                                  ? "text-pup-maroon font-semibold dark:text-red-400"
-                                  : "text-[#8E8E93] font-medium hover:text-[#1C1C1E] dark:text-zinc-400 dark:hover:text-zinc-200"
-                              )}
-                              onClick={() => {
-                                if (b.level === "rooms") {
-                                  setCurrentLocatorLevel("rooms")
-                                  setSelectedRoom(null)
-                                  setSelectedCabinet(null)
-                                  onUnfocusStudent?.()
-                                } else if (b.level === "cabinets") {
-                                  setCurrentLocatorLevel("cabinets")
-                                  setSelectedCabinet(null)
-                                  onUnfocusStudent?.()
-                                } else if (b.level === "drawers") {
-                                  setCurrentLocatorLevel("drawers")
-                                }
-                              }}
-                            >
-                              {b.label}
-                            </BreadcrumbLink>
-                          </BreadcrumbItem>
-                        </div>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                </div>
-              </div>
+          <Breadcrumb aria-label="Storage location" className="min-w-0">
+            <BreadcrumbList className="min-h-8">
+              {breadcrumbs.map(({ level, label }, index) => (
+                <Fragment key={level}>
+                  {index > 0 && <BreadcrumbSeparator />}
+                  <BreadcrumbItem>
+                    {index === breadcrumbs.length - 1 ? (
+                      <BreadcrumbPage>{label}</BreadcrumbPage>
+                    ) : level === "drawers" ? (
+                      <span>{label}</span>
+                    ) : (
+                      <BreadcrumbLink
+                        render={<button type="button" />}
+                        onClick={() => {
+                          if (level === "rooms") {
+                            setCurrentLocatorLevel("rooms")
+                            setSelectedRoom(null)
+                            setSelectedCabinet(null)
+                            onUnfocusStudent?.()
+                          } else {
+                            openCabinet(null)
+                            onUnfocusStudent?.()
+                          }
+                        }}
+                      >
+                        {label}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
 
               {activeStudent && (
                 <div className="flex items-center gap-[16px] sm:gap-[20px]">
@@ -270,7 +278,7 @@ export default function StorageExplorerTab({
             <div
               className={cn(
                 "flex w-full flex-col mx-auto bg-white dark:bg-card rounded-b-2xl",
-                isInsideRoom ? "flex-1 min-h-0 pt-4 overflow-hidden" : "flex-[1_0_auto] pt-6"
+                isInsideRoom ? "flex-1 min-h-0 pt-4 overflow-y-auto lg:overflow-hidden" : "flex-[1_0_auto] pt-6"
               )}
             >
               {loading && !locatorModel ? (
@@ -278,429 +286,299 @@ export default function StorageExplorerTab({
             ) : locatorModel?.kind === "rooms" ? (
               <div className="flex flex-[1_0_auto] flex-col w-full">
                 <div className="px-8 pb-8 w-full flex-[1_0_auto]">
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full">
-                    {(() => {
-                      const hasActiveTarget = (locatorModel?.rooms || []).some((room) => room.isTarget)
-                      return paginatedRooms.map((r) => {
-                        const isTarget = r.isTarget
-                        const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
-                        const isClickable = !hasActiveTarget
-                        const maxCapacity = Math.max((r.cabinetsCount || 4) * 20, 50);
-                        const occupancyRate = Math.min(Math.round((r.occupiedCount / maxCapacity) * 100), 100);
-                        let statusColor = "bg-[#8e8e93]/10 text-[#8e8e93] dark:bg-[#8e8e93]/20 dark:text-[#aeaeb2]";
-                        let statusLabel = "Empty";
-                        if (occupancyRate >= 90) {
-                          statusColor = "bg-[#ff3b30]/10 text-[#ff3b30] dark:bg-[#ff453a]/25 dark:text-[#ff453a]";
-                          statusLabel = "Near Capacity";
-                        } else if (occupancyRate >= 50) {
-                          statusColor = "bg-[#ff9500]/10 text-[#ff9500] dark:bg-[#ff9f0a]/25 dark:text-[#ff9f0a]";
-                          statusLabel = "Moderate";
-                        } else if (occupancyRate > 0) {
-                          statusColor = "bg-[#34c759]/10 text-[#34c759] dark:bg-[#30d158]/25 dark:text-[#30d158]";
-                          statusLabel = "Optimal";
-                        }
+                  <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-4">
+                    {paginatedRooms.map((room) => {
+                      const name = room.name || `Room ${room.room}`
+                      const folderType = isOsas ? "organization" : "student"
 
-                        return (
-                          <div
-                            key={r.room}
-                            className={cn(
-                              "group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.03)] dark:shadow-none p-5 select-none",
-                              isClickable ? "cursor-pointer hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5" : "pointer-events-none",
-                              !isClickable && !isTarget && "opacity-40",
-                              isTarget
-                                ? "border-transparent text-white ring-2 ring-white/10 scale-[1.01] shadow-md"
-                                : "border-border dark:border-border bg-white dark:bg-card text-gray-900 dark:text-zinc-100"
+                      return (
+                        <Card
+                          key={room.room}
+                          className={cn(
+                            "relative gap-3 transition-shadow",
+                            !hasTargetRoom && "hover:shadow-md",
+                            hasTargetRoom && !room.isTarget && "opacity-50"
+                          )}
+                          style={room.isTarget ? { borderColor: activeTheme.frontEnd } : undefined}
+                        >
+                          <CardHeader className="flex min-h-6 items-center justify-between gap-2">
+                            <CardTitle className="min-w-0 truncate" title={name}>{name}</CardTitle>
+                            {room.isTarget ? (
+                              <Badge
+                                variant="secondary"
+                                className="shrink-0"
+                                style={{ backgroundColor: `color-mix(in srgb, ${activeTheme.frontStart} 22%, transparent)` }}
+                              >
+                                Located
+                              </Badge>
+                            ) : !hasTargetRoom && (
+                              <ArrowRight01Icon size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
                             )}
-                            style={isTarget ? {
-                              background: `linear-gradient(135deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`,
-                            } : undefined}
-                            onClick={() => {
-                              if (isClickable) {
-                                setSelectedRoom(r.room)
+                          </CardHeader>
+                          <CardContent>
+                            <div className="h-28 overflow-hidden rounded-xl" aria-hidden="true">
+                              <RoomMap2D
+                                kind="cabinets"
+                                cabinets={room.cabinets}
+                                roomDoor={room.door}
+                                isPreview
+                              />
+                            </div>
+                          </CardContent>
+                          <CardFooter className="flex-wrap gap-x-4 gap-y-2 py-3">
+                            <span className="inline-flex items-center gap-1.5">
+                              <WarehouseIcon size={14} aria-hidden="true" />
+                              <span><strong className="font-semibold tabular-nums text-foreground">{room.cabinetsCount}</strong> {room.cabinetsCount === 1 ? "cabinet" : "cabinets"}</span>
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <FolderOpenIcon size={14} aria-hidden="true" />
+                              <span><strong className="font-semibold tabular-nums text-foreground">{room.occupiedCount}</strong> {folderType} {room.occupiedCount === 1 ? "folder" : "folders"}</span>
+                            </span>
+                          </CardFooter>
+                          {!hasTargetRoom && (
+                            <button
+                              type="button"
+                              aria-label={`Open ${name}`}
+                              className="absolute inset-0 z-20 cursor-pointer rounded-2xl outline-none transition-colors active:bg-muted/30 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
+                              onClick={() => {
+                                setSelectedRoom(room.room)
                                 setSelectedCabinet(null)
                                 setCurrentLocatorLevel("cabinets")
-                              }
-                            }}
-                          >
-
-
-                            <div className="relative z-10 flex flex-col flex-1 w-full">
-                              <div className="flex w-full justify-between items-start flex-1 gap-2">
-                                <div className="flex flex-col flex-1 min-w-0">
-                                  {/* Room Number */}
-                                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                                    <h5 className={cn(
-                                      "text-[18px] font-bold tracking-tight font-jakarta leading-none truncate",
-                                      isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"
-                                    )}>
-                                      {r.name || `Room ${r.room}`}
-                                    </h5>
-
-                                    {/* Status badge moved inline */}
-                                    {isTarget ? (
-                                      <div className={cn("bg-white/20 backdrop-blur-md text-white", BADGE_BASE)}>
-                                        Target Room
-                                      </div>
-                                    ) : (
-                                      <Badge className={cn("border-0 text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-none shrink-0", statusColor, BADGE_BASE)}>
-                                        {statusLabel}
-                                      </Badge>
-                                    )}
-                                  </div>
-
-                                  {/* Stats breakdown */}
-                                  <div className="space-y-2 mt-1.5 flex-1">
-                                    <div className={cn(
-                                      "flex items-center text-xs font-medium truncate",
-                                      isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
-                                    )}>
-                                      <WarehouseIcon size="1em"  className="text-sm mr-2 opacity-80 shrink-0" />
-                                      <span className="truncate">{r.cabinetsCount} Cabinets installed</span>
-                                    </div>
-                                    <div className={cn(
-                                      "flex items-center text-xs font-medium truncate",
-                                      isTarget ? "text-white/80" : "text-gray-550 dark:text-zinc-400"
-                                    )}>
-                                      <FolderOpenIcon size="1em"  className="text-sm mr-2 opacity-80 shrink-0" />
-                                      <span className="truncate">{r.occupiedCount} {isOsas ? "Archived organization folders" : "Archived student folders"}</span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Room Preview Thumbnail */}
-                                <div className="w-[76px] h-[60px] shrink-0 pointer-events-none opacity-90 rounded-md overflow-hidden bg-white dark:bg-zinc-800 border border-border/60 dark:border-border ml-2 relative">
-                                  <div className="absolute inset-[-14px]">
-                                    <RoomMap2D
-                                      kind="cabinets"
-                                      cabinets={r.cabinets}
-                                      roomDoor={r.door}
-                                      isPreview={true}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Occupancy Rate Progress Bar */}
-                              <div className="mt-4 pt-3 border-t border-border dark:border-border">
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
-                                  <span className={isTarget ? "text-white/70" : "text-[#8e8e93] dark:text-[#8e8e93]"}>Occupancy</span>
-                                  <span className={isTarget ? "text-white font-bold" : "text-gray-700 dark:text-zinc-300 font-bold"}>{occupancyRate}%</span>
-                                </div>
-                                <div className={cn(
-                                  "h-1.5 w-full rounded-full overflow-hidden",
-                                  isTarget ? "bg-white/20" : "bg-[#f2f2f7] dark:bg-[#2c2c2e]"
-                                )}>
-                                  <div
-                                    className={cn(
-                                      "h-full rounded-full transition-all duration-500",
-                                      isTarget
-                                        ? "bg-white"
-                                        : occupancyRate >= 90 ? "bg-[#ff3b30]" : occupancyRate >= 50 ? "bg-[#ff9500]" : "bg-[#34c759]"
-                                    )}
-                                    style={{ width: `${occupancyRate}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })
-                    })()}
+                              }}
+                            />
+                          )}
+                        </Card>
+                      )
+                    })}
                   </div>
                 </div>
 
                 {(locatorModel?.rooms || []).length > 0 && <TablePagination label="Storage room pages" page={roomsPage} pageSize={roomsPerPage} totalCount={locatorModel.rooms.length} displayedCount={paginatedRooms.length} onPageChange={setRoomsPage} onPageSizeChange={setRoomsPerPage} />}
               </div>
-            ) : locatorModel?.kind === "cabinets" ? (
-              <div className="px-6 pb-6 w-full flex-1 min-h-0 flex flex-col">
-                <div className={mapWrap}>
-                  <RoomMap2D
-                    kind="cabinets"
-                    activeStudent={activeStudent}
-                    activeStudentColor={activeStudentColor}
-                    cabinets={locatorModel.cabinets}
-                    roomDoor={locatorModel.roomDoor}
-                    selectedCabinetId={selectedCabinet}
-                    onCabinetClick={(cabId) => {
-                      setSelectedCabinet(cabId)
-                      if (cabId) {
-                        setCurrentLocatorLevel("drawers")
-                      } else {
-                        setCurrentLocatorLevel("cabinets")
-                      }
-                    }}
-                    onDrawerClick={() => {
-                      // Optional: Highlight drawer students in the future
-                    }}
-                    onPreviewDocument={onPreviewDocument}
-                    onUnfocusStudent={onUnfocusStudent}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="px-6 pb-6 w-full flex-1 min-h-0 flex flex-col">
-                <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center w-full flex-1 min-h-0">
-                  <div className={cn(mapWrap, "mx-0 flex-1 min-w-0 lg:max-w-none")}>
+            ) : isInsideRoom ? (
+              <div className="flex w-full flex-col gap-4 px-6 pb-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-6">
+                <section aria-label="Room Plan" className="flex h-72 min-w-0 flex-col gap-2 lg:h-full lg:flex-1">
+                  <h2 className="text-sm font-semibold text-foreground">Room Plan</h2>
+                  <div className="min-h-0 flex-1">
                     <RoomMap2D
-                      kind="drawers"
+                      kind={locatorModel.kind}
                       activeStudent={activeStudent}
                       activeStudentColor={activeStudentColor}
-                      cabinets={locatorModel?.cabinets || []}
-                      roomDoor={locatorModel?.roomDoor}
+                      cabinets={cabinets}
+                      roomDoor={locatorModel.roomDoor}
                       selectedCabinetId={selectedCabinet}
-                      drawerSlots={locatorModel?.drawers}
-                      onCabinetClick={(cabId) => {
-                        setSelectedCabinet(cabId)
-                        if (cabId) {
-                          setCurrentLocatorLevel("drawers")
-                        } else {
-                          setCurrentLocatorLevel("cabinets")
-                        }
-                      }}
-                      onPreviewDocument={onPreviewDocument}
-                      onUnfocusStudent={onUnfocusStudent}
+                      drawerSlots={locatorModel.drawers}
+                      onCabinetClick={openCabinet}
                     />
                   </div>
-
-                  {selectedCabinet && (
-                    <ContentReveal className="w-full lg:w-[clamp(340px,42%,400px)] shrink-0 rounded-xl border border-border bg-white p-6 dark:border-border dark:bg-zinc-900 flex flex-col min-h-0 overflow-y-auto shadow-md select-none">
-                      {/* Header */}
-                      <div className="mb-4 flex items-center justify-between select-none">
-                        <h5
-                          className={cn(
-                            "font-bold text-[18px] tracking-tight font-sans pointer-events-none",
-                            !activeStudent && "text-[#1C1C1E] dark:text-zinc-50"
-                          )}
-                          style={activeStudent ? { color: activeTheme.frontStart } : undefined}
-                        >
-                          {String(selectedCabinet).startsWith("CAB") || String(selectedCabinet).includes("ORGANIZATION")
-                            ? selectedCabinet
-                            : `Cabinet ${selectedCabinet}`}
-                        </h5>
-                        {/* Close X Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (activeStudent) {
-                              onUnfocusStudent?.()
-                            }
-                            setSelectedCabinet(null)
-                            setCurrentLocatorLevel("cabinets")
+                </section>
+                <ContentReveal
+                  key={isDrawerLevel ? selectedCabinet : "cabinets"}
+                  className="flex min-h-0 w-full shrink-0 lg:w-[clamp(340px,42%,400px)]"
+                >
+                  <Card variant="flat" className="w-full lg:min-h-0">
+                    <CardHeader className="flex shrink-0 items-center justify-between gap-2">
+                      <CardTitle>
+                        {isDrawerLevel
+                          ? getCabinetLabel(selectedCabinet)
+                          : "Cabinets"}
+                      </CardTitle>
+                      {isDrawerLevel && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="rounded-full"
+                          aria-label="Back to cabinets"
+                          title="Back to cabinets"
+                          onClick={() => {
+                            if (activeStudent) onUnfocusStudent?.()
+                            openCabinet(null)
                           }}
-                          className="rounded-full p-[6px] text-[#8E8E93] hover:bg-[#F5F5F7] hover:text-gray-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-all pointer-events-auto flex items-center justify-center cursor-pointer"
-                          title={activeStudent ? "Unfocus student" : "Back to Cabinets"}
                         >
-                          <Cancel01Icon size="1em"  className="text-[16px]"></Cancel01Icon>
-                        </button>
-                      </div>
-
-                      {/* Drawer Slots */}
-                      <div className="flex flex-col gap-3 flex-1 min-h-0">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#8E8E93] dark:text-zinc-500 font-sans">
-                          Drawer slots
-                        </span>
-                        <div className="flex flex-col gap-[10px] flex-1 min-h-0 overflow-y-auto pr-1">
-                          {locatorModel?.drawers?.map((d) => {
-                            const isDrawerTarget = d.isTarget
-                            const hasOccupants = d.count > 0
-                            const hasActiveDrawerTarget = locatorModel?.drawers?.some((slot) => slot.isTarget)
-                            const isClickable = !hasActiveDrawerTarget || isDrawerTarget
-                            const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
-
-                            // Determine row labels
-                            let labelText = "Empty"
-                            if (isDrawerTarget) {
-                              labelText = "Target"
-                            } else if (hasOccupants) {
-                              labelText = isOsas
-                                ? (d.count === 1 ? "1 organization" : `${d.count} organizations`)
-                                : (d.count === 1 ? "1 record" : `${d.count} records`)
-                            }
-
-                            return (
-                              <div
-                                key={d.drawer}
-                                className={cn(
-                                  "flex flex-col gap-[10px] transition-all duration-normal",
-                                  !isClickable && "opacity-30 pointer-events-none select-none"
-                                )}
+                          <Cancel01Icon size={16} aria-hidden="true" />
+                        </Button>
+                      )}
+                    </CardHeader>
+                    <CardContent className="lg:min-h-0 lg:overflow-y-auto">
+                      {!isDrawerLevel ? (
+                        cabinets.length > 0 ? (
+                          <CardGroup>
+                            {cabinets.map((cabinet) => (
+                              <Button
+                                key={cabinet.cab}
+                                type="button"
+                                variant="ghost"
+                                disabled={hasTargetCabinet && !cabinet.isTarget}
+                                className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-3.5 py-2.5 text-left whitespace-normal focus-visible:ring-inset"
+                                onClick={() => openCabinet(cabinet.cab)}
                               >
-                                {/* Drawer Row Card */}
-                                <div
-                                  className={cn(
-                                    "flex items-center justify-between rounded-[12px] border p-3 cursor-pointer transition-all active:scale-[0.98] font-sans h-11",
-                                    isDrawerTarget
-                                      ? "text-white"
-                                      : hasOccupants
-                                        ? "border-2 border-[#0A84FF] bg-[#0A84FF]/8 text-[#0A84FF] dark:bg-[#0A84FF]/12"
-                                        : "border-[#E5E5EA] bg-[#F5F5F7] hover:bg-[#EAEAEF] text-[#1C1C1E] dark:border-border dark:bg-zinc-800/40 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                                  )}
-                                  style={isDrawerTarget ? {
-                                    backgroundColor: theme.frontStart,
-                                    borderColor: theme.frontEnd,
-                                  } : undefined}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setExpandedDrawer(String(expandedDrawer) === String(d.drawer) ? null : d.drawer)
-                                  }}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <AppIcon  className={cn(
-                                      " text-[16px]",
-                                      isDrawerTarget
-                                        ? "Location01Icon"
-                                        : hasOccupants
-                                          ? "FolderOpenIcon text-[#0A84FF]"
-                                          : "Folder01Icon text-[#8E8E93]"
-                                    )}></AppIcon>
-                                    <span className="text-[14px] font-bold">
-                                      {String(d.drawer).toLowerCase().startsWith("drawer") ? d.drawer : `Drawer ${d.drawer}`}
-                                    </span>
-                                  </div>
-                                  <span className={cn(
-                                    "text-[12px] font-semibold",
-                                    isDrawerTarget ? "text-white/95" : hasOccupants && !isDrawerTarget ? "text-[#0A84FF]" : "text-[#8E8E93]"
-                                  )}>
-                                    {labelText}
+                                <WarehouseIcon size={16} className="text-muted-foreground" aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block text-[13px] font-semibold">{cabinet.cab}</span>
+                                  <span className="block text-xs font-normal text-muted-foreground">
+                                    {cabinet.drawerIds?.length ?? 0} {cabinet.drawerIds?.length === 1 ? "drawer" : "drawers"}
                                   </span>
-                                </div>
+                                </span>
+                                {cabinet.isTarget && <Badge variant="secondary">Located</Badge>}
+                                <ArrowRight01Icon size={16} className="text-muted-foreground" aria-hidden="true" />
+                              </Button>
+                            ))}
+                          </CardGroup>
+                        ) : <p className="text-xs text-muted-foreground">No cabinets in this room.</p>
+                      ) : locatorModel.drawers?.length ? (
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-semibold text-muted-foreground">Cabinet Front</h3>
+                          <CardGroup className="border-2 border-border bg-muted/30">
+                            {locatorModel.drawers.map((d) => {
+                              const hasOccupants = d.count > 0
+                              const isExpanded = String(expandedDrawer) === String(d.drawer)
+                              const drawerLabel = getDrawerLabel(d.drawer)
+                              const occupantLabel = isOsas ? "organization" : "record"
+                              const countLabel = hasOccupants
+                                ? `${d.count} ${occupantLabel}${d.count === 1 ? "" : "s"}`
+                                : "Empty"
 
-                                {/* Expanded Detail Panel */}
-                                {String(expandedDrawer) === String(d.drawer) && (
-                                  <div className="ml-2 pl-3 border-l border-[#E5E5EA] dark:border-border py-1.5 space-y-3 max-h-52 overflow-y-auto">
-                                    {hasOccupants && d.students && d.students.length > 0 ? (
-                                      d.students.map((student) => {
-                                        const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
-                                        const collapseDocuments = student.documents?.length > 3;
-                                        const DocumentList = collapseDocuments ? "details" : "div";
-                                        return (
-                                          <div
-                                            key={student.studentNo}
-                                            className="group/item flex flex-col gap-3 rounded-[12px] p-4 bg-[#FAFAFA] border border-[#E5E5EA] dark:bg-zinc-800/60 dark:border-border transition-colors font-sans"
-                                          >
-                                            <div className="min-w-0 flex-1 flex items-start justify-between gap-1">
-                                              <div className="min-w-0 flex-1">
-                                                <div className="flex items-center justify-between gap-2">
-                                                  <p className="font-bold text-[15px] text-[#1C1C1E] dark:text-zinc-50 truncate">
-                                                    {student.name.toUpperCase()}
-                                                  </p>
-                                                  {!isTargetPerson && onLocateStudent && (
-                                                    <button
-                                                      type="button"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onLocateStudent({
-                                                          ...student,
-                                                          room: selectedRoom,
-                                                          cabinet: selectedCabinet,
-                                                          drawer: d.drawer,
-                                                        });
-                                                      }}
-                                                      className="px-2 py-0.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 rounded-md transition-colors cursor-pointer flex items-center gap-1 shrink-0"
-                                                      title={isOsas ? "Focus organization archive" : "Focus student folder"}
-                                                    >
-                                                      <AppIcon className=" Target01Icon text-[12px]" />
-                                                      Focus
-                                                    </button>
-                                                  )}
-                                                </div>
-                                                {/* Soft Tag for Student Number / Org Acronym & Category */}
-                                                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                                                  <div className={cn("bg-[#F5F5F7] text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-400 tabular-nums", BADGE_BASE)}>
-                                                    {student.studentNo}
-                                                  </div>
-                                                  {student.category && (
-                                                    <span className={cn("inline-block rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide", student.category === "Academic"
-                                                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40"
-                                                        : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40", BADGE_BASE)}>
-                                                      {student.category}
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                              {isTargetPerson && (
-                                                <Target01Icon size="1em"
-                                                  className="text-sm shrink-0 animate-pulse mt-0.5"
-                                                  style={{ color: theme.frontStart }}
-                                                />
+                              return (
+                                <div key={d.drawer}>
+                                  <Button
+                                    ref={d.isTarget ? locatedDrawerRef : undefined}
+                                    type="button"
+                                    variant="ghost"
+                                    disabled={hasTargetDrawer && !d.isTarget}
+                                    aria-expanded={isExpanded}
+                                    className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-3.5 py-2.5 text-left whitespace-normal focus-visible:ring-inset"
+                                    style={d.isTarget ? {
+                                      backgroundColor: `color-mix(in srgb, ${activeTheme.frontStart} 16%, transparent)`,
+                                    } : undefined}
+                                    onClick={() => setExpandedDrawer(isExpanded ? null : d.drawer)}
+                                  >
+                                    <span className="h-1.5 w-5 shrink-0 rounded-full bg-foreground/25" aria-hidden="true" />
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block text-[13px] font-semibold">{drawerLabel}</span>
+                                      <span className="block text-xs font-normal text-muted-foreground">
+                                        {countLabel}
+                                      </span>
+                                    </span>
+                                    {d.isTarget && <Badge variant="secondary">Located</Badge>}
+                                    <ArrowDown01Icon
+                                      size={16}
+                                      aria-hidden="true"
+                                      className={cn("text-muted-foreground transition-transform motion-reduce:transition-none", isExpanded && "rotate-180")}
+                                    />
+                                  </Button>
+
+                                  {/* Expanded Detail Panel */}
+                                  {isExpanded && (
+                                    <div className="space-y-2 border-t border-border bg-muted/30 p-3">
+                                      {hasOccupants && d.students && d.students.length > 0 ? (
+                                        d.students.map((student) => {
+                                          const isTargetPerson = d.isTarget && activeStudent && student.studentNo === activeStudent.studentNo;
+                                          const canToggleFocus = isTargetPerson ? Boolean(onUnfocusStudent) : Boolean(onLocateStudent)
+                                          const toggleFocus = () => {
+                                            if (isTargetPerson) {
+                                              onUnfocusStudent?.()
+                                            } else {
+                                              onLocateStudent?.({
+                                                ...student,
+                                                room: selectedRoom,
+                                                cabinet: selectedCabinet,
+                                                drawer: d.drawer,
+                                              })
+                                            }
+                                          }
+                                          const collapseDocuments = student.documents?.length > 3;
+                                          const DocumentList = collapseDocuments ? "details" : "div";
+                                          return (
+                                            <Card
+                                              key={student.studentNo}
+                                              variant="flat"
+                                              size="sm"
+                                              data-focused={isTargetPerson ? "true" : undefined}
+                                              className={cn(
+                                                "gap-2 px-3",
+                                                isTargetPerson && "border-gray-950 bg-gray-100/80 shadow-xs ring-1 ring-black/10 dark:border-white dark:bg-zinc-800 dark:ring-white/20",
+                                                !isTargetPerson && canToggleFocus && "cursor-pointer hover:bg-muted/40"
                                               )}
-                                            </div>
-
-                                            {/* Documents */}
-                                            {student.documents && student.documents.length > 0 ? (
-                                              <DocumentList className="mt-1 space-y-2">
-                                                {collapseDocuments && (
-                                                  <summary className="cursor-pointer py-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                                    Documents ({student.documents.length})
-                                                  </summary>
-                                                )}
-                                                <div className="flex flex-col gap-2">
-                                                  {student.documents.map((doc) => {
-                                                    const isApproved = doc.approvalStatus === "Approved";
-                                                    const statusClass = isApproved
-                                                      ? "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full"
-                                                      : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400 rounded-full";
-
-                                                    return (
-                                                      <div
-                                                        key={doc.id}
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id, doc.file_url);
-                                                        }}
-                                                        className="flex items-center justify-between gap-2 p-2 bg-white hover:bg-gray-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-900 border border-[#E5E5EA] dark:border-border rounded-[8px] cursor-pointer transition-colors group/doc"
-                                                      >
-                                                        <div className="flex items-center gap-1.5 min-w-0">
-                                                          <File02Icon size="1em"  className="text-[16px] text-[#FF3B30] group-hover/doc:scale-105 transition-transform"></File02Icon>
-                                                          <span className="truncate font-bold text-[14px] text-[#1C1C1E] dark:text-zinc-300" title={doc.filename}>
-                                                            {doc.docType}
-                                                          </span>
-                                                        </div>
-                                                        {/* Soft Status Pill */}
-                                                        <span className={cn(
-                                                          "text-[10px] font-semibold px-2 py-0.5 whitespace-nowrap tracking-wide shrink-0",
-                                                          statusClass
-                                                        )}>
-                                                          {doc.approvalStatus}
-                                                        </span>
-                                                      </div>
-                                                    );
-                                                  })}
+                                              onClick={!isTargetPerson && canToggleFocus ? (event) => {
+                                                if (!event.target.closest("button, a, summary")) toggleFocus()
+                                              } : undefined}
+                                            >
+                                              <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                  <CardTitle className="truncate" title={student.name}>{student.name}</CardTitle>
+                                                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                                    <IdentifierBadge>{student.studentNo}</IdentifierBadge>
+                                                    {student.category && (
+                                                      <Badge variant={student.category === "Academic" ? "info" : "success"}>
+                                                        {student.category}
+                                                      </Badge>
+                                                    )}
+                                                  </div>
                                                 </div>
+                                                {canToggleFocus && (
+                                                  <Button
+                                                    type="button"
+                                                    size="xs"
+                                                    variant="outline"
+                                                    className="min-w-[4.5rem]"
+                                                    onClick={toggleFocus}
+                                                  >
+                                                    {isTargetPerson ? "Unfocus" : "Focus"}
+                                                  </Button>
+                                                )}
+                                              </div>
+
+                                              {/* Documents */}
+                                              {student.documents && student.documents.length > 0 ? (
+                                                <DocumentList className="mt-1 space-y-2">
+                                                  {collapseDocuments && (
+                                                    <summary className="cursor-pointer py-1 text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                                      Documents ({student.documents.length})
+                                                    </summary>
+                                                  )}
+                                                  <CardGroup>
+                                                    {student.documents.map((doc) => (
+                                                      <Button
+                                                        key={doc.id}
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() => onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id, doc.file_url)}
+                                                        className="h-auto min-h-9 w-full justify-start gap-2 rounded-none px-2.5 py-1 text-left focus-visible:ring-inset"
+                                                      >
+                                                        <File02Icon size={16} className="text-muted-foreground" aria-hidden="true" />
+                                                        <span className="min-w-0 flex-1 truncate" title={doc.filename}>{doc.docType}</span>
+                                                        <TableStatus value={doc.approvalStatus} className="h-5 min-h-5 px-2 py-0 text-[11px] leading-none" />
+                                                      </Button>
+                                                    ))}
+                                                </CardGroup>
                                               </DocumentList>
                                             ) : (
-                                              <p className="text-[12px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
+                                              <p className="text-xs text-muted-foreground">
                                                 {isOsas ? "No official documents or proposals filed yet" : "No documents uploaded"}
                                               </p>
                                             )}
-                                          </div>
+                                          </Card>
                                         );
                                       })
                                     ) : (
-                                      <div className="flex flex-col items-center justify-center p-4 rounded-[12px] bg-[#F5F5F7] dark:bg-zinc-800/40 border border-dashed border-border dark:border-border text-center select-none">
-                                        <FolderOpenIcon size="1em" className="text-2xl text-gray-400 dark:text-zinc-500 mb-1" />
-                                        <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                                          Empty Drawer Slot
-                                        </p>
-                                        <p className="text-[11px] text-gray-900 dark:text-zinc-300 mt-0.5 max-w-[200px]">
-                                          {isOsas
-                                            ? "Available physical archive slot for organization records."
-                                            : "Available physical archive slot for student records."}
-                                        </p>
-                                      </div>
+                                      <p className="px-1 py-2 text-xs text-muted-foreground">
+                                        {isOsas ? "No organizations in this drawer." : "No student records in this drawer."}
+                                      </p>
                                     )}
                                   </div>
                                 )}
                               </div>
                             )
                           })}
+                          </CardGroup>
                         </div>
-                      </div>
-                    </ContentReveal>
-                  )}
-                </div>
+                      ) : <p className="text-xs text-muted-foreground">No drawers in this cabinet.</p>}
+                    </CardContent>
+                  </Card>
+                </ContentReveal>
               </div>
-            )}
+            ) : null}
           </div>
         </Card>
     </div>

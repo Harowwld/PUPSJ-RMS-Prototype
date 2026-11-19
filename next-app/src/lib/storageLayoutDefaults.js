@@ -179,7 +179,7 @@ export function buildDefaultStorageLayout() {
     {
       id: 1,
       name: "Room 1",
-      cabinets: buildGridCabinets({ cols: 4, rows: 2 }),
+      cabinets: buildGridCabinets({ cols: 4, rows: 2 }).slice(0, 7),
       door: getDefaultDoor(),
     },
   ];

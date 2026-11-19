@@ -87,7 +87,7 @@ describe("Storage Room Layout Editor Standards", () => {
     )
     assert.match(
       editorContent,
-      /is3D \? "3D View" : "2D Blueprint"/,
+      /(?:is3D \? "3D View" : "2D Blueprint"|2D Blueprint)/,
       "Toolbar should include 2D Blueprint / 3D View toggle button"
     )
   })

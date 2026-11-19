@@ -1,6 +1,7 @@
 "use client"
 
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { useAppReducedMotion, SPRING_LAYOUT } from "@/lib/motion"
@@ -28,6 +29,7 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { SegmentedControl } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
+import { getStorageRoute } from "@/lib/storageWayfinding"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +45,6 @@ import {
   getCabinetEffectiveSize,
   clampToRoom,
   snapValue,
-  calculatePath,
 } from "@/lib/storageLayoutUtils"
 import { Add01Icon, Alert02Icon, ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, ArrowTurnBackwardIcon, ArrowTurnForwardIcon, Delete01Icon, Door01Icon, Loading01Icon, MoreVerticalIcon, PencilEdit01Icon, ReloadIcon, SaveEnergy01Icon, Tick01Icon } from "hugeicons-react";
 
@@ -145,7 +146,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     }
   }, [gridOpacity])
 
-  const [is3D, setIs3D] = useState(false)
+  const [is3D, setIs3D] = useWorkspaceViewPreference("storage_layout_editor", "is3D", false)
   const [applyPreviewOpen, setApplyPreviewOpen] = useState(false)
   const [applyPreviewRows, setApplyPreviewRows] = useState([])
   const [applyReportOpen, setApplyReportOpen] = useState(false)
@@ -924,14 +925,14 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     return () => clearTimeout(timer)
   }, [activeRoom, selectedCabinetIds])
 
-  const simulationMode = false
-
-  const activePath = useMemo(() => {
-    if (simulationMode && selectedCabinet && !selectedCabinet.isDoor) {
-      return calculatePath(activeRoom, selectedCabinet.id, getDefaultDoor)
-    }
-    return null
-  }, [simulationMode, selectedCabinet, activeRoom])
+  const [testCabinetRoutes, setTestCabinetRoutes] = useState(false)
+  const routeTarget = selectedCabinetIds.size === 1 && selectedCabinet && !selectedCabinet.isDoor
+    ? selectedCabinet
+    : null
+  const isRouteVisible = testCabinetRoutes && routeTarget != null
+  const activePath = useMemo(() => (
+    isRouteVisible ? getStorageRoute(activeRoom.cabinets, routeTarget, activeRoom.door || getDefaultDoor()) : null
+  ), [isRouteVisible, activeRoom, routeTarget])
 
   const fetchStudentUsage = useCallback(async () => {
     try {
@@ -1677,6 +1678,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
 
   const renderCanvasControls = () => (
     <div className="space-y-5">
+      {/* Zone A: Editing Actions */}
       <section className="space-y-2.5">
         <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Room editing</h4>
         <div className="flex items-center gap-2">
@@ -1717,6 +1719,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         </div>
       </section>
 
+      {/* Zone B: Canvas View Controls & Templates */}
       <section className="space-y-3">
         <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">Canvas view</h4>
         <div className="divide-y divide-border border-y border-border dark:divide-border">
@@ -1735,7 +1738,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           {showGrid && (
             <div className="py-3">
               <Slider
-                label="Grid opacity"
+                label="Opacity"
                 min={10}
                 max={100}
                 step={5}
@@ -1757,6 +1760,22 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               checked={snapToGrid}
               onCheckedChange={setSnapToGrid}
               aria-label="Snap cabinets to grid"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 py-3">
+            <div>
+              <p className="text-xs font-medium text-gray-800 dark:text-zinc-200">Test Cabinet Route</p>
+              <p className="mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                {isRouteVisible && activePath?.length === 0
+                  ? "No walkable route to this cabinet."
+                  : "Select a cabinet to preview its route from the entrance."}
+              </p>
+            </div>
+            <Switch
+              size="sm"
+              checked={testCabinetRoutes}
+              onCheckedChange={setTestCabinetRoutes}
+              aria-label="Test Cabinet Route"
             />
           </div>
         </div>
@@ -1792,7 +1811,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               disabled={!activeRoom}
               className="h-9 w-full justify-between px-3.5 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              <span>Browse Templates</span>
+              <span>Templates</span>
               <ArrowDown01Icon size="1em" className="text-[12px] text-gray-400 dark:text-zinc-400" />
             </Button>
           </DropdownMenuTrigger>
@@ -1805,6 +1824,9 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               Layout Presets
             </DropdownMenuLabel>
             <div className="max-h-56 overflow-y-auto space-y-0.5 scrollbar-thin">
+              {templates.length === 0 && (
+                <p className="px-2 py-1.5 text-xs text-muted-foreground">No layout templates available.</p>
+              )}
               {templates.map((tpl) => (
                 <DropdownMenuItem
                   key={`tpl-opt-${tpl.id}`}
@@ -1932,7 +1954,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
           Could not load the storage layout. Use Refresh Storage Layout to try again.
         </div>
       ) : (
-      <div className="relative flex flex-1 flex-col lg:flex-none lg:h-[min(80vh,900px)] lg:flex-row min-h-[620px] w-full">
+      <div className="relative flex min-h-[620px] w-full flex-1 flex-col lg:min-h-[clamp(620px,80vh,900px)] lg:flex-row">
         <div className="flex-1 min-w-0 p-6 flex flex-col items-center justify-center bg-neutral-50 dark:bg-zinc-950/20 relative overflow-hidden">
           <CabinetCanvas 
             canvasRef={canvasRef}
@@ -1941,7 +1963,6 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             selectedCabinet={selectedCabinet}
             collidingIds={collidingIds}
             activePath={activePath}
-            simulationMode={simulationMode}
             snapToGrid={snapToGrid}
             showGrid={showGrid}
             gridOpacity={gridOpacity}
@@ -1962,7 +1983,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             isModalOpen={false}
           />
         </div>
-        <div className="w-full h-[min(60vh,480px)] lg:h-full lg:w-[380px] min-h-0 shrink-0 overflow-hidden border-t lg:border-t-0 lg:border-l border-border dark:border-border bg-white dark:bg-card flex flex-col select-none">
+        <div className="w-full h-[min(60vh,480px)] lg:h-auto lg:w-[380px] lg:[contain:size] min-h-0 shrink-0 overflow-hidden border-t lg:border-t-0 lg:border-l border-border dark:border-border bg-white dark:bg-card flex flex-col select-none">
           <CabinetSidebar 
             activeRoom={activeRoom}
             carouselIndex={carouselIndex}
@@ -1981,6 +2002,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             revertToHistoryState={revertToHistoryState}
             studentDrawerUsage={studentDrawerUsage}
             canvasControls={renderCanvasControls()}
+            testCabinetRoutes={testCabinetRoutes}
           />
         </div>
       </div>

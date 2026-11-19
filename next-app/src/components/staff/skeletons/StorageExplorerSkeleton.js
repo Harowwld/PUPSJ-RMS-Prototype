@@ -1,43 +1,25 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 
 export default function StorageExplorerSkeleton({ embedded = false }) {
   const content = (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 w-full animate-fade-up font-jakarta select-none px-8 pb-8">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-4 w-full animate-fade-up font-jakarta select-none px-8 pb-8">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-border dark:bg-card flex flex-col justify-between min-h-[180px]"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-xl" />
-                <div className="space-y-1.5">
-                  <Skeleton className="h-4 w-24 rounded" />
-                  <Skeleton className="h-3 w-32 rounded" />
-                </div>
-              </div>
-              <Skeleton className="h-5 w-16 rounded-full" />
-            </div>
-
-            {/* Occupancy bar skeleton */}
-            <div className="space-y-2 mt-4">
-              <div className="flex justify-between">
-                <Skeleton className="h-2.5 w-20 rounded" />
-                <Skeleton className="h-2.5 w-10 rounded" />
-              </div>
-              <Skeleton className="h-2 w-full rounded-full" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t border-border dark:border-border mt-4">
-            <Skeleton className="h-3 w-28 rounded" />
-            <Skeleton className="h-3 w-16 rounded" />
-          </div>
-        </div>
+        <Card key={i} className="gap-3">
+          <CardHeader className="flex min-h-6 items-center justify-between gap-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="size-4 rounded" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-28 w-full rounded-xl" />
+          </CardContent>
+          <CardFooter className="gap-4 py-3">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-24" />
+          </CardFooter>
+        </Card>
       ))}
     </div>
   )

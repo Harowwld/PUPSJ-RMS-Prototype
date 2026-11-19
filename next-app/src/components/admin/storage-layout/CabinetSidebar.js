@@ -34,12 +34,13 @@ const CabinetSidebar = memo(({
   revertToHistoryState,
   studentDrawerUsage,
   canvasControls,
+  testCabinetRoutes,
 }) => {
   const [activeTab, setActiveTab] = React.useState("canvas")
 
   useEffect(() => {
-    setActiveTab(selectedCabinetIds.size > 0 ? "selection" : "canvas")
-  }, [selectedCabinetIds])
+    setActiveTab(!testCabinetRoutes && selectedCabinetIds.size > 0 ? "selection" : "canvas")
+  }, [selectedCabinetIds, testCabinetRoutes])
 
   // Calculate total student records stored in this cabinet
   const totalCabinetRecords = useMemo(() => {

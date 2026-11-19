@@ -2,6 +2,8 @@
 
 
 import { memo } from "react"
+import StorageCabinetFace, { cabinetSurfaceClass, selectedCabinetSurfaceClass } from "@/components/shared/StorageCabinetFace"
+import StorageRoute from "@/components/shared/StorageRoute"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -126,22 +128,7 @@ const CabinetCanvas = memo(({
         />
       )}
 
-      {/* Path simulation */}
-      {activePath && (
-        <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-60">
-          <polyline
-            points={activePath
-              .map(([x, y]) => `${(x / 40) * 100},${(y / 25) * 100}`)
-              .join(" ")}
-            fill="none"
-            stroke="cyan"
-            strokeWidth="3"
-            strokeDasharray="8 4"
-            className="animate-[dash_2s_linear_infinite]"
-          />
-        </svg>
-      )}
-
+      {activePath?.length > 0 && <StorageRoute routePoints={activePath} />}
 
       {/* Orientation marker (Entrance Block) */}
       <div
@@ -250,15 +237,15 @@ const CabinetElement = memo(({
   pushHistory,
   layout
 }) => {
-  const drawerCount = (cab.drawerIds || []).length || 1
 
   return (
     <div
       className={cn(
-        "absolute rounded-lg border-2 transition-all duration-fast cursor-move group/cab hover:brightness-105",
-        isSelected ? "z-30 border-cyan-400 bg-cyan-50 dark:border-cyan-500 dark:bg-cyan-950" 
-          : isConflict ? "z-20 border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950" 
-          : "z-10 border-border bg-white dark:border-border dark:bg-zinc-800"
+        "absolute transition-colors duration-fast cursor-move group/cab hover:brightness-105",
+        cabinetSurfaceClass,
+        isSelected ? "z-30" : isConflict ? "z-20" : "z-10",
+        isSelected && selectedCabinetSurfaceClass,
+        !isSelected && isConflict && "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -273,11 +260,7 @@ const CabinetElement = memo(({
             : isConflict
               ? "0 1px 0 #ef4444, 0 2px 0 #ef4444, 0 3px 0 #ef4444, 0 4px 0 #ef4444, 0 5px 0 #ef4444, 0 6px 0 #ef4444, 0 7px 0 #ef4444, 0 8px 0 #ef4444, 0 9px 0 #ef4444, 0 10px 0 #ef4444, 0 11px 0 #ef4444, 0 12px 0 #ef4444, 0 16px 20px rgba(0,0,0,0.15)"
               : "0 1px 0 #e2e8f0, 0 2px 0 #e2e8f0, 0 3px 0 #e2e8f0, 0 4px 0 #e2e8f0, 0 5px 0 #e2e8f0, 0 6px 0 #e2e8f0, 0 7px 0 #e2e8f0, 0 8px 0 #e2e8f0, 0 9px 0 #e2e8f0, 0 10px 0 #e2e8f0, 0 11px 0 #e2e8f0, 0 12px 0 #e2e8f0, 0 16px 20px rgba(0,0,0,0.1)"
-          : isSelected
-            ? "0 0 0 2px #06b6d4, 0 4px 12px rgba(6,182,212,0.15)"
-            : isConflict
-              ? "0 0 0 2px #ef4444, 0 4px 12px rgba(239,68,68,0.15)"
-              : "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+          : undefined,
       }}
       onPointerDown={(e) => {
         const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
@@ -329,118 +312,13 @@ const CabinetElement = memo(({
       }}
       title={`Cabinet ${cab.id}`}
     >
-      {/* Physical Drawer Divisions & Handle Notches (Skeuomorphic-lite) */}
-      <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden rounded-[4px]">
-        {Array.from({ length: drawerCount }).map((_, idx) => (
-          <div
-            key={idx}
-            className={cn(
-              "flex-1 flex items-center justify-center border-b last:border-b-0 border-border/40 dark:border-border/40",
-              isSelected && "border-cyan-300/30 dark:border-cyan-700/30",
-              isConflict && "border-red-300/30 dark:border-red-800/30"
-            )}
-          >
-            {/* Skeuomorphic Pull Handle */}
-            <div
-              className={cn(
-                "w-7 h-1.5 rounded-full bg-gray-200 dark:bg-zinc-700 shadow-none",
-                
-                
-              )}
-            />
-          </div>
-        ))}
-      </div>
-
-
-
-      {/* Floating Cabinet ID Badge Overlay (Positioned outside depending on constraints and overlaps) */}
-      {(() => {
-        const otherCabinets = (activeRoom?.cabinets || []).filter(c => c.id !== cab.id)
-        
-        // Approximate normalized dimensions of the badge
-        const wl = 0.12
-        const hl = 0.035
-
-        // Check if candidate placement rect overlaps canvas bounds or any other cabinet
-        const isInvalid = (xl, yl, wl, hl) => {
-          // Canvas bounds check (with a small buffer)
-          if (xl < 0.002 || yl < 0.002 || xl + wl > 0.998 || yl + hl > 0.998) {
-            return true
-          }
-          // Other cabinets overlap check
-          for (const other of otherCabinets) {
-            const otherEff = getCabinetEffectiveSize(other)
-            const ox = other.rect.x
-            const oy = other.rect.y
-            const ow = otherEff.w
-            const oh = otherEff.h
-            
-            const pad = 0.001
-            if (xl < ox + ow - pad && xl + wl > ox + pad && yl < oy + oh - pad && yl + hl > oy + pad) {
-              return true
-            }
-          }
-          return false
-        }
-
-        const candidates = ["top", "bottom", "right", "left"]
-        let placement = "top"
-        let found = false
-
-        for (const cand of candidates) {
-          let xl = cab.rect.x + eff.w / 2 - wl / 2
-          let yl = cab.rect.y - hl
-          
-          if (cand === "bottom") {
-            xl = cab.rect.x + eff.w / 2 - wl / 2
-            yl = cab.rect.y + eff.h
-          } else if (cand === "left") {
-            xl = cab.rect.x - wl
-            yl = cab.rect.y + eff.h / 2 - hl / 2
-          } else if (cand === "right") {
-            xl = cab.rect.x + eff.w
-            yl = cab.rect.y + eff.h / 2 - hl / 2
-          }
-          
-          if (!isInvalid(xl, yl, wl, hl)) {
-            placement = cand
-            found = true
-            break
-          }
-        }
-
-        if (!found) {
-          placement = "center"
-        }
-
-        const placementClasses = {
-          top: "absolute bottom-full left-1/2 -translate-x-1/2 mb-0.5 z-30",
-          bottom: "absolute top-full left-1/2 -translate-x-1/2 mt-0.5 z-30",
-          left: "absolute right-full top-1/2 -translate-y-1/2 mr-0.5 z-30",
-          right: "absolute left-full top-1/2 -translate-y-1/2 ml-0.5 z-30",
-          center: "absolute inset-0 flex items-center justify-center z-30"
-        }
-
-        return (
-          <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
-            <div className={cn(
-              "inline-flex w-fit min-w-0 max-w-full items-center justify-center rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] shadow-xs border font-sans",
-              isSelected
-                ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
-                : isConflict
-                  ? "bg-[#FEF2F2] text-[#DC2626] border-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30"
-                  : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
-            )}
-            style={{ maxWidth: "12cqw" }}
-            >
-              <span className="block min-w-0 max-w-full truncate whitespace-nowrap" title={cab.id}>
-                {cab.id}
-              </span>
-            </div>
-          </div>
-        )
-      })()}
+      <StorageCabinetFace
+        cabinet={cab}
+        cabinets={activeRoom.cabinets}
+        label={cab.id}
+        selected={isSelected}
+        conflict={isConflict && !isSelected}
+      />
 
       {isSelected && selectedCabinetIds.size === 1 && (
         <div
