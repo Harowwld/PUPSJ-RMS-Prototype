@@ -537,7 +537,7 @@ export default function BackupTab({
                         onClick={onRefresh}
                         className="mt-6 h-9 px-4 text-xs font-semibold rounded-xl"
                       >
-                        Retry Connection
+                        Retry connection
                       </Button>
                     </EmptyHeader>
                   </Empty>
@@ -585,7 +585,7 @@ export default function BackupTab({
         <Sheet open={statusSheetOpen} onOpenChange={setStatusSheetOpen}>
           <SheetContent side="right" className="w-[480px] sm:w-[540px] max-w-[90vw] p-0">
             <SheetHeader className="px-6 py-5 pr-14">
-              <SheetTitle>System Status</SheetTitle>
+              <SheetTitle>System status</SheetTitle>
             </SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
               <HealthSidebar

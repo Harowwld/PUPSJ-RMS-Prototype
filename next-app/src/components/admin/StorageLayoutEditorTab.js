@@ -581,7 +581,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     if (!activeRoom || !target || target.isDoor) return
     const trimmed = String(newCabinetName || "").trim()
     if (!trimmed) {
-      showToast?.({ title: "Invalid Name", description: "Cabinet identifier cannot be empty." }, true)
+      showToast?.({ title: "Enter a cabinet name", description: "Cabinet identifier cannot be empty." }, true)
       return
     }
 
@@ -998,7 +998,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       const templatesJson = await templatesRes.json()
 
       if (!layoutRes.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to load layout")
+        throw new Error(json?.error || "Could not load layout")
 
       setLayout(json.data)
       setSavedLayout(JSON.parse(JSON.stringify(json.data)))
@@ -1034,14 +1034,14 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
 
       if (isManual) {
         showToast?.({
-          title: "Storage Layout Refreshed",
+          title: "Storage layout refreshed",
           description: "Archive rooms and templates reloaded."
         })
       }
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Load Layout",
+          defaultTitle: "Could not load layout",
         }),
         true
       )
@@ -1167,15 +1167,15 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
       setIsDirty?.(false)
       setSaveConfirmOpen(false)
       showToast?.({
-        title: "Layout Saved",
+        title: "Layout saved",
         description: json.movedCount
-          ? `Archive room mapping updated. ${json.movedCount} student record(s) relocated.`
+          ? `Archive room mapping updated. ${json.movedCount} student ${json.movedCount === 1 ? "record" : "records"} relocated.`
           : "Archive room mapping updated.",
       })
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Save Layout",
+          defaultTitle: "Could not save layout",
         }),
         true
       )
@@ -1284,16 +1284,16 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         body: JSON.stringify(nextTemplates),
       })
       const json = await res.json()
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save template")
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not save template")
       setTemplates(nextTemplates)
       setSelectedTemplateId(newTpl.id)
       setSaveTemplateOpen(false)
       setNewTemplateName("")
-      showToast?.({ title: "Template Saved", description: `Saved "${name}".` })
+      showToast?.({ title: "Template saved", description: `Saved "${name}".` })
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Save Template",
+          defaultTitle: "Could not save template",
         }),
         true
       )
@@ -1313,15 +1313,15 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         body: JSON.stringify(nextTemplates),
       })
       const json = await res.json()
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to delete template")
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not delete template")
       setTemplates(nextTemplates)
       setSelectedTemplateId(nextTemplates[0]?.id || "")
       setDeleteTemplateConfirmOpen(false)
-      showToast?.({ title: "Template Deleted", description: "The template was removed." })
+      showToast?.({ title: "Template deleted", description: "The template was removed." })
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Delete Template",
+          defaultTitle: "Could not delete template",
         }),
         true
       )
@@ -1337,15 +1337,15 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
         method: "DELETE",
       })
       const json = await res.json()
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to restore defaults")
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not restore defaults")
       setTemplates(json.data || [])
       if (json.data?.length > 0) setSelectedTemplateId(json.data[0].id)
       setRestoreTemplatesConfirmOpen(false)
-      showToast?.({ title: "Defaults Restored", description: "Templates reverted to factory settings." })
+      showToast?.({ title: "Defaults restored", description: "Templates reverted to factory settings." })
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Restore Default Templates",
+          defaultTitle: "Could not restore default templates",
         }),
         true
       )
@@ -1379,14 +1379,14 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     if (!layout || !activeRoom) return
     if (activeRoomStudentCount > 0) {
       showToast?.({
-        title: "Cannot Remove Room",
-        description: `${activeRoom.name || `Room ${activeRoom.id}`} cannot be removed because ${activeRoomStudentCount} student record(s) are currently stored in it. Please relocate or clear all student records before deleting this room.`,
+        title: "Cannot remove room",
+        description: `${activeRoom.name || `Room ${activeRoom.id}`} cannot be removed because ${activeRoomStudentCount} student ${activeRoomStudentCount === 1 ? "record is" : "records are"} currently stored in it. Relocate or clear all student records before deleting this room.`,
       }, true)
       return
     }
     if ((layout.rooms || []).length <= 1) {
       showToast?.({
-        title: "Cannot Remove Room",
+        title: "Cannot remove room",
         description: "At least one storage room must remain in the archive system.",
       }, true)
       return
@@ -1519,7 +1519,7 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
-          defaultTitle: "Failed to Apply Template",
+          defaultTitle: "Could not apply template",
         }),
         true
       )
@@ -1656,13 +1656,13 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             className="h-7.5 px-3 text-xs font-semibold rounded-lg text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
             title={
               activeRoomStudentCount > 0
-                ? `Cannot clear room with ${activeRoomStudentCount} assigned student record(s)`
+                ? `Cannot clear room with ${activeRoomStudentCount} assigned student ${activeRoomStudentCount === 1 ? "record" : "records"}`
                 : (activeRoom?.cabinets || []).length === 0
                   ? "No cabinets to clear in this room"
                   : "Remove all cabinets from this room"
             }
           >
-            Clear Cabinets
+            Clear cabinets
           </Button>
 
           <div className="h-3.5 w-px bg-border dark:border-border" />
@@ -1678,13 +1678,13 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
               !activeRoom
                 ? "Select a storage room to delete"
                 : activeRoomStudentCount > 0
-                  ? `Cannot delete room with ${activeRoomStudentCount} assigned student record(s)`
+                  ? `Cannot delete room with ${activeRoomStudentCount} assigned student ${activeRoomStudentCount === 1 ? "record" : "records"}`
                   : totalStats.rooms <= 1
                     ? "At least one storage room must remain in the system"
                     : `Delete ${activeRoom.name || `Room ${activeRoom.id}`}`
             }
           >
-            Delete Room
+            Delete room
           </Button>
         </div>
       </div>
@@ -1835,8 +1835,8 @@ export default function StorageLayoutEditorTab({ showToast, setIsDirty }) {
             sideOffset={6}
             className="w-56 rounded-xl border border-border dark:border-white/10 shadow-lg p-1 bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
           >
-            <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Layout Presets
+            <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              Layout presets
             </DropdownMenuLabel>
             <div className="max-h-56 overflow-y-auto space-y-0.5 scrollbar-thin">
               {templates.length === 0 && (

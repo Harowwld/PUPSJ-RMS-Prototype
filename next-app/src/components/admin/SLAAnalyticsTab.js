@@ -324,8 +324,8 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   sideOffset={6}
                   className="w-60 rounded-xl border border-border dark:border-white/10 shadow-lg p-1 bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
                 >
-                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Export Datasets
+                  <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Export datasets
                   </DropdownMenuLabel>
                   <div className="space-y-0.5">
                     <DropdownMenuItem 
@@ -378,8 +378,8 @@ const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
                   sideOffset={6}
                   className="w-64 rounded-xl border border-border dark:border-white/10 shadow-lg p-1 bg-white dark:bg-zinc-900 select-none z-50 font-jakarta"
                 >
-                  <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Official Reports
+                  <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Official reports
                   </DropdownMenuLabel>
                   <div className="space-y-0.5">
                     <DropdownMenuItem 

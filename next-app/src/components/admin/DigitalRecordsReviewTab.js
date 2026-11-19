@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import DataContentSkeleton from "@/components/shared/DataContentSkeleton"
 import { format } from "date-fns"
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal"
+import SavedViewsPopover from "@/components/shared/SavedViewsPopover"
 import { cn, formatTitleCase } from "@/lib/utils"
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import {
@@ -418,10 +419,10 @@ export default function DigitalRecordsReviewTab({
         return next
       })
       await onApprove(id, true)
-      toast.success("Record Approved", {
+      toast.success("Record approved", {
         description: "The digital record has been finalized.",
         action: {
-          label: "UNDO",
+          label: "Undo",
           onClick: () => onSetStatus(id, "Pending", "Undo accidental approval"),
         },
       })
@@ -646,12 +647,12 @@ export default function DigitalRecordsReviewTab({
                           <Clock01Icon size="0.75em" />
                         </div>
                         <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
-                          Pending Review
+                          Pending review
                         </span>
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
                         <Clock01Icon size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Needs Action</span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Needs action</span>
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 font-jakarta mt-2">
@@ -677,7 +678,7 @@ export default function DigitalRecordsReviewTab({
                         <span className="size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0">
                           <Tick01Icon size={8} className="stroke-[3]" />
                         </span>
-                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Archival Ready</span>
+                        <span className="font-semibold text-gray-900 dark:text-zinc-100">Archival ready</span>
                       </span>
                     </div>
                     <div className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-jakarta mt-2">
@@ -779,7 +780,7 @@ export default function DigitalRecordsReviewTab({
                 count={totalCount}
                 loading={isLoading && !isManualLoading}
                 label={isOsas ? "Search organization records" : "Search student records"}
-                placeholder={isOsas ? "Search organization, document type..." : "Search student, name, doc type..."}
+                placeholder={isOsas ? "Search organization or document type" : "Search student, name, or doc type"}
               />
               {viewMode === "table" && (
                 <TableScrollControls
@@ -846,6 +847,37 @@ export default function DigitalRecordsReviewTab({
                 }}
                 disableFutureDates={true}
               />
+              <SavedViewsPopover
+                page="digital_records_review"
+                placeholder="Pending review"
+                currentState={{
+                  filterRules,
+                  statusFilters,
+                  docTypeFilters,
+                  startDate: dateFrom,
+                  endDate: dateTo,
+                  sortBy,
+                  sortOrder,
+                  groupBy,
+                  visibleColumns,
+                  viewMode,
+                  pageSize: itemsPerPage,
+                }}
+                onApplyState={(state) => {
+                  if (Array.isArray(state.filterRules)) setFilterRules(state.filterRules)
+                  if (Array.isArray(state.statusFilters)) setStatusFilters(state.statusFilters)
+                  if (Array.isArray(state.docTypeFilters)) setDocTypeFilters(state.docTypeFilters)
+                  if (typeof state.startDate === "string") setDateFrom(state.startDate)
+                  if (typeof state.endDate === "string") setDateTo(state.endDate)
+                  if (typeof state.sortBy === "string") setSortBy(state.sortBy)
+                  if (typeof state.sortOrder === "string") setSortOrder(state.sortOrder)
+                  if (typeof state.groupBy === "string") setGroupBy(state.groupBy)
+                  if (Array.isArray(state.visibleColumns)) setVisibleColumns(state.visibleColumns)
+                  if (typeof state.viewMode === "string") setViewMode(state.viewMode)
+                  if (typeof state.pageSize === "number") setItemsPerPage(state.pageSize)
+                  setCurrentPage(1)
+                }}
+              />
             </div>
           </DataViewToolbar>
 
@@ -873,13 +905,13 @@ export default function DigitalRecordsReviewTab({
                   <EmptyMedia className="text-red-600 dark:text-red-400">
                     <EmptyAlertCircleIcon size="1em" />
                   </EmptyMedia>
-                  <EmptyTitle>Could Not Load Digital Records</EmptyTitle>
+                  <EmptyTitle>Could not load digital records</EmptyTitle>
                   <EmptyDescription>{error}</EmptyDescription>
                 </EmptyHeader>
                 {onRefresh && (
                   <EmptyContent>
                     <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading || isManualLoading}>
-                      Try Again
+                      Try again
                     </Button>
                   </EmptyContent>
                 )}
@@ -893,7 +925,7 @@ export default function DigitalRecordsReviewTab({
                     <EmptySearch01Icon size="1em" />
                   </EmptyMedia>
                   <EmptyTitle>
-                    {activeChips.length > 0 ? "No Records Found" : "No Records Yet"}
+                    {activeChips.length > 0 ? "No records found" : "No records yet"}
                   </EmptyTitle>
                   <EmptyDescription>
                     {activeChips.length > 0

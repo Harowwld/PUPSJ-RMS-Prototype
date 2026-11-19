@@ -165,7 +165,7 @@ export default function LogDetailSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Audit Event Details
+                Audit event details
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Immutable forensic log entry recorded by PUPSJ Records Keeper.
@@ -250,7 +250,7 @@ export default function LogDetailSheet({
 
             {/* 1. Event Specification (Standard Information Rows) */}
             <div className="space-y-2">
-              <SheetSectionHeading icon={Shield01Icon} title="Event Specification" />
+              <SheetSectionHeading icon={Shield01Icon} title="Event specification" />
 
               <div className="divide-y-0">
                 <InfoRow
@@ -372,7 +372,7 @@ export default function LogDetailSheet({
 
             {/* 2. Network & Forensic Origin (Standard Information Rows) */}
             <div className="space-y-2">
-              <SheetSectionHeading icon={GlobeIcon} title="Forensic & Network Origin" />
+              <SheetSectionHeading icon={GlobeIcon} title="Forensic and network origin" />
 
               <div className="divide-y-0">
                 <InfoRow
@@ -390,7 +390,7 @@ export default function LogDetailSheet({
                           size="sm"
                           variant="outline"
                           onClick={() => onSearchSimilar(selectedLog.ip)}
-                          className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                          className="h-6 px-2 text-[10px] font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
                           title="Filter logs by this IP"
                         >
                           Filter IP

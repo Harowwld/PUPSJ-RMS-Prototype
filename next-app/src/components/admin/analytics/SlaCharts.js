@@ -399,7 +399,7 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
                     <span className="text-[28px] font-semibold text-[#111111] dark:text-zinc-50 leading-none">
                       {totalSlaRequests}
                     </span>
-                    <span className="text-[11px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-1 uppercase tracking-[0.04em]">
+                    <span className="text-xs font-normal text-[#8E8E93] dark:text-zinc-500 mt-1">
                       total
                     </span>
                   </div>
@@ -588,8 +588,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-2 border-t border-border dark:border-border">
               {/* Rating Breakdown Bars */}
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Rating Distribution
+                <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                  Rating distribution
                 </span>
                 <div className="flex flex-col gap-2.5">
                   {[5, 4, 3, 2, 1].map((stars) => {
@@ -622,8 +622,8 @@ const SlaCharts = React.memo(function SlaCharts({ data, pieData, viewMode = "all
 
               {/* Evaluation Aspects */}
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Top Service Highlights
+                <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                  Top service highlights
                 </span>
                 {data.feedback.topAspects?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2">

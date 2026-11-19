@@ -133,15 +133,15 @@ export default function CoursesTab({
       }, () => setIsAddCourseOpen(false))
 
       showToast({
-        title: "Degree Program Added",
+        title: "Degree program added",
         description:
-          "The new degree program has been successfully registered in the system.",
+          "The new degree program has been registered in the system.",
       })
       Promise.resolve().then(() => loadAll?.()).catch(() => {
-        showToast({ title: "Refresh Failed", description: "Program created. Refresh the list to see the new entry." }, true)
+        showToast({ title: "Could not refresh list", description: "Program created. Refresh the list to see the new entry." }, true)
       })
     } catch (err) {
-      showToast(formatErrorMessage(err, "Registration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not register degree program"), true)
     } finally {
       repeat.endSave()
     }
@@ -165,13 +165,13 @@ export default function CoursesTab({
       setIsEditCourseOpen(false)
       setEditCourseBlocks([""])
       showToast({
-        title: "Degree Program Updated",
+        title: "Degree program updated",
         description:
-          "The changes to the degree program and its associated blocks have been successfully saved.",
+          "Changes to the degree program and its associated blocks have been saved.",
       })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Update Failed"), true)
+      showToast(formatErrorMessage(err, "Could not update degree program"), true)
     }
   }
 
@@ -190,13 +190,13 @@ export default function CoursesTab({
         })
       }
       showToast({
-        title: "Degree Program Archived",
+        title: "Degree program archived",
         description:
-          "The selected degree program has been successfully moved to the archive.",
+          "The selected degree program has been moved to the archive.",
       })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Archival Failed"), true)
+      showToast(formatErrorMessage(err, "Could not archive degree program"), true)
     }
   }
 
@@ -217,13 +217,13 @@ export default function CoursesTab({
         })
       }
       showToast({
-        title: "Degree Program Restored",
+        title: "Degree program restored",
         description:
-          "The degree program has been successfully restored from the archive.",
+          "The degree program has been restored from the archive.",
       })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Restoration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not restore degree program"), true)
     }
   }
 
@@ -336,7 +336,7 @@ export default function CoursesTab({
                 setPageCourse(1)
               }}
               count={filteredCoursesFull.length}
-              placeholder="Search code or program name..."
+              placeholder="Search code or program name"
               label="Search degree programs"
             />
 
@@ -377,14 +377,14 @@ export default function CoursesTab({
                 <EmptyHeader>
                   <EmptyMedia>{showArchived && totalInView === 0 ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
                   <EmptyTitle>
-                    {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Programs Found" : "No Degree Programs Found")}
+                    {totalInView > 0 ? "No matches found" : (showArchived ? "No archived programs found" : "No degree programs found")}
                   </EmptyTitle>
                   <EmptyDescription>
                     {totalInView > 0
                       ? "Try adjusting your search filters to find what you're looking for."
                       : showArchived
                         ? "There are currently no archived degree programs in the system."
-                        : "Add Degree Program to start building your organizational hierarchy."}
+                        : "Add a degree program to start building your organizational hierarchy."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -635,7 +635,7 @@ export default function CoursesTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  New Degree Program
+                  New degree program
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Register a new academic track and its initial organizational blocks.
@@ -646,7 +646,7 @@ export default function CoursesTab({
           <form ref={attachForm} onSubmit={addCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 pb-4 flex flex-col gap-4">
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
                   Code
                 </label>
                 <Input
@@ -661,7 +661,7 @@ export default function CoursesTab({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
                   Designation
                 </label>
                 <Input
@@ -676,8 +676,8 @@ export default function CoursesTab({
 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Course Blocks <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                  <label className="text-xs font-medium text-gray-900 dark:text-zinc-300">
+                    Course blocks <span className="opacity-70">(optional)</span>
                   </label>
                   <Button
                     type="button"
@@ -770,7 +770,7 @@ export default function CoursesTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  Update Program Details
+                  Update program details
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Modify the designation or associated blocks for this program.
@@ -782,10 +782,10 @@ export default function CoursesTab({
             <div className="max-h-[60vh] space-y-4 overflow-y-auto p-6 pb-4">
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
+                  <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
                     Code
                   </label>
-                  <Input placeholder="e.g. BSIT"
+                  <Input placeholder="BSIT"
                     type="text"
                     className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.code}
@@ -799,10 +799,10 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Program Designation
+                  <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                    Program designation
                   </label>
-                  <Input placeholder="e.g. Bachelor of Science in Information Technology"
+                  <Input placeholder="Bachelor of Science in Information Technology"
                     type="text"
                     className="h-10 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs"
                     value={editCourse.name}
@@ -819,8 +819,8 @@ export default function CoursesTab({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                    Manage Course Blocks <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                  <label className="text-xs font-medium text-gray-900 dark:text-zinc-300">
+                    Manage course blocks <span className="opacity-70">(optional)</span>
                   </label>
                   <Button
                     type="button"

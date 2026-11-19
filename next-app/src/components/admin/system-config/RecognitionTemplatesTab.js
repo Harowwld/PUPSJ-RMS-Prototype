@@ -530,13 +530,13 @@ export default function RecognitionTemplatesTab({ showToast }) {
           <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* Left Panel: Calibration Controls */}
           <div className="space-y-4 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Template Controls
+            <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+              Template controls
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                Document Type
+                Document type
               </label>
               <Select
                 options={docTypeOptions}
@@ -632,8 +632,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
             </div>
 
             <div className="rounded-xl border border-border bg-gray-50 dark:border-border dark:bg-zinc-800/40 p-3 text-xs text-gray-600 dark:text-zinc-300">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Active Field Target
+              <div className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
+                Active field target
               </div>
               <div className="mt-0.5 font-semibold text-gray-900 dark:text-zinc-50">
                 {[WHOLE_FIELD, ...FIELDS].find(([key]) => key === activeField)?.[1] || "Choose a recognition method"}
@@ -780,7 +780,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <EmptyHeader>
                   <EmptyMedia><EmptyUpload01Icon size="1em" /></EmptyMedia>
                   <EmptyTitle>
-                    No Sample Document Loaded
+                    No sample document loaded
                   </EmptyTitle>
                   <EmptyDescription>
                     Load a representative PSA PDF or image to visualize text boundaries and calibrate coordinate extraction boxes.
@@ -793,7 +793,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                     className="h-9 px-4 cursor-pointer border-0"
                     onClick={chooseSampleFile}
                   >
-                    Upload Sample Document
+                    Upload sample document
                   </Button>
                   {!documentTypeId && (
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
@@ -844,8 +844,8 @@ export default function RecognitionTemplatesTab({ showToast }) {
           {/* Right Panel: Saved Templates */}
           <div className="space-y-4 rounded-2xl border border-border bg-white p-5 dark:border-border dark:bg-card shadow-xs">
             <div className="flex items-center justify-between">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Saved Templates
+              <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                Saved templates
               </div>
             </div>
 
@@ -874,7 +874,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 <EmptyHeader>
                   <EmptyMedia><EmptyBoundingBoxIcon size="1em" /></EmptyMedia>
                   <EmptyTitle>
-                    {templateFilter === "Archived" ? "No Archived Templates" : "No Templates Saved"}
+                    {templateFilter === "Archived" ? "No archived templates" : "No templates saved"}
                   </EmptyTitle>
                   <EmptyDescription>
                     {templateFilter === "Archived"
@@ -884,7 +884,7 @@ export default function RecognitionTemplatesTab({ showToast }) {
                 </EmptyHeader>
                 {templateFilter === "Archived" && (
                   <EmptyContent>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setTemplateFilter("Active")}>View Active Templates</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setTemplateFilter("Active")}>View active templates</Button>
                   </EmptyContent>
                 )}
               </Empty>

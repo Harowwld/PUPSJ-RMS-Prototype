@@ -536,11 +536,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       ])
       const json = await res.json()
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to load staff")
+        throw new Error(json?.error || "Could not load staff")
       setStaffData(Array.isArray(json.data) ? json.data : [])
       setStaffLoaded(true)
     } catch (err) {
-      showToast(formatErrorMessage(err, "Personnel Directory Load Failed"), true)
+      showToast(formatErrorMessage(err, "Could not load personnel directory"), true)
     } finally {
       setStaffInitialLoading(false)
       setViewLoading((prev) => ({ ...prev, directory: false }))
@@ -795,16 +795,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
       const json = await res.json()
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load records")
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not load records")
       if (request !== reviewRequestRef.current) return
       setReviewRecords(json.data.rows || [])
       setReviewTotal(Number(json.data.total) || 0)
       setReviewStats(json.data.stats || null)
       setPendingReviewCount(Number(json.data.stats?.pending) || 0)
     } catch (err) {
-      if (request === reviewRequestRef.current) setReviewError(err?.message || "Failed to load records")
+      if (request === reviewRequestRef.current) setReviewError(err?.message || "Could not load records")
       if (isManual && request === reviewRequestRef.current) {
-        showToast(formatErrorMessage(err, "Digital Records Review Load Failed"), true)
+        showToast(formatErrorMessage(err, "Could not load digital records review"), true)
       }
     } finally {
       if (request === reviewRequestRef.current) {
@@ -1083,18 +1083,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         })
         const json = await res.json()
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Failed to review document")
+          throw new Error(json?.error || "Could not review document")
         }
 
         if (!suppressToast) {
           showToast({
-            title: "Document Review Finalized",
+            title: "Document review finalized",
             description: "Record status updated in the repository.",
           })
         }
         refreshReviewRecords()
       } catch (err) {
-        showToast(formatErrorMessage(err, "Review Update Failed"), true)
+        showToast(formatErrorMessage(err, "Could not update review"), true)
         throw err
       }
     },
@@ -1106,8 +1106,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (!ids || ids.length === 0) return
       const toastId = !suppressToast ? showToast(
         {
-          title: "Processing Batch",
-          description: `Updating ${ids.length} digital records...`,
+          title: "Processing batch",
+          description: `Updating ${ids.length} digital ${ids.length === 1 ? "record" : "records"}…`,
         },
         "loading"
       ) : null
@@ -1133,13 +1133,13 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       
       if (!suppressToast) {
         if (results.failed === 0) {
-          toast.success("Batch Action Complete", {
-            description: `Successfully ${approvalStatus.toLowerCase()} ${results.success} records.`,
+          toast.success("Batch action complete", {
+            description: `${approvalStatus} ${results.success} ${results.success === 1 ? "record" : "records"}.`,
             action: {
-              label: "UNDO",
+              label: "Undo",
               onClick: async () => {
-                const undoToastId = toast.loading(`Undoing batch action...`, {
-                  description: `Reverting ${ids.length} records back to Pending...`,
+                const undoToastId = toast.loading(`Undoing batch action…`, {
+                  description: `Reverting ${ids.length} ${ids.length === 1 ? "record" : "records"} back to Pending…`,
                 })
                 let reverted = 0
                 for (const id of ids) {
@@ -1151,8 +1151,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                   }
                 }
                 toast.dismiss(undoToastId)
-                toast.success("Batch Action Undone", {
-                  description: `Reverted ${reverted} records back to Pending.`,
+                toast.success("Batch action undone", {
+                  description: `Reverted ${reverted} ${reverted === 1 ? "record" : "records"} back to Pending.`,
                 })
                 refreshReviewRecords()
               },
@@ -1161,8 +1161,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         } else {
           showToast(
             {
-              title: "Batch Action Partial",
-              description: `Processed ${results.success} success, ${results.failed} failed.`,
+              title: "Batch action partial",
+              description: `Processed ${results.success} succeeded, ${results.failed} failed.`,
             },
             true
           )
@@ -1264,7 +1264,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       officeId: office,
     })
     if (!staffCheck.success) {
-      showToast(formatErrorMessage(staffCheck.error.issues[0]?.message || "Please check all fields.", "Validation Error"), true)
+      showToast(formatErrorMessage(staffCheck.error.issues[0]?.message || "Please check all fields.", "Check account details"), true)
       setCreateLoading(false)
       accountRepeat.endSave()
       return
@@ -1285,7 +1285,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (res.status === 403) {
         if (json?.requiresTOTP) {
           if (typeof totpToken === "string") {
-            throw new Error(json.error || "Invalid verification code")
+            throw new Error(json.error || "Check the verification code and try again")
           }
           await executeWithTOTP(
             (token) => handleCreate(null, token),
@@ -1298,11 +1298,11 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to create staff")
+        throw new Error(json?.error || "Could not create staff account")
 
       setStaffData((prev) => [json.data, ...prev])
       showToast({
-        title: "Account Created",
+        title: "Account created",
         description: `Staff account for ${createForm.fname} ${createForm.lname} has been created. ${json.credentialEmail?.sent ? "Sign-in details and a verification code were emailed to the staff member." : "Email delivery failed. Share the sign-in details securely so the staff member can request a new code."}`,
       })
       accountRepeat.complete(() => setCreateForm({
@@ -1316,7 +1316,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }), () => setRegisterOpen(false))
     } catch (err) {
       if (typeof totpToken === "string") throw err
-      showToast(formatErrorMessage(err, "Creation Failed"), true)
+      showToast(formatErrorMessage(err, "Could not create account"), true)
     } finally {
       setCreateLoading(false)
       accountRepeat.endSave()
@@ -1329,14 +1329,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     if (editForm.fname) {
       const fCheck = PersonNameSchema("First name").safeParse(editForm.fname)
       if (!fCheck.success) {
-        showToast(formatErrorMessage(fCheck.error.issues[0]?.message, "Validation Error"), true)
+        showToast(formatErrorMessage(fCheck.error.issues[0]?.message, "Check first name"), true)
         return
       }
     }
     if (editForm.lname) {
       const lCheck = PersonNameSchema("Last name").safeParse(editForm.lname)
       if (!lCheck.success) {
-        showToast(formatErrorMessage(lCheck.error.issues[0]?.message, "Validation Error"), true)
+        showToast(formatErrorMessage(lCheck.error.issues[0]?.message, "Check last name"), true)
         return
       }
     }
@@ -1363,7 +1363,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       if (res.status === 403) {
         if (json?.requiresTOTP) {
           if (typeof totpToken === "string") {
-            throw new Error(json.error || "Invalid verification code")
+            throw new Error(json.error || "Check the verification code and try again")
           }
           await executeWithTOTP(
             (token) => handleEditSubmit(null, token),
@@ -1376,19 +1376,19 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to update staff")
+        throw new Error(json?.error || "Could not update staff")
 
       setStaffData((prev) =>
         prev.map((u) => (u.id === editOriginalId ? json.data : u))
       )
       showToast({
-        title: "Staff Account Updated",
-        description: `Profile changes for ${editForm.fname} ${editForm.lname} have been successfully committed.`,
+        title: "Staff account updated",
+        description: `Profile changes for ${editForm.fname} ${editForm.lname} have been saved.`,
       })
       setEditOpen(false)
     } catch (err) {
       if (typeof totpToken === "string") throw err
-      showToast(formatErrorMessage(err, "Account Update Failed"), true)
+      showToast(formatErrorMessage(err, "Could not update account"), true)
     }
   }
 
@@ -1413,23 +1413,23 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       })
       const json = await res.json()
       if (res.status === 403 && json?.requiresTOTP) {
-        if (typeof token === "string") throw new Error(json.error || "Invalid verification code")
+        if (typeof token === "string") throw new Error(json.error || "Check the verification code and try again")
         await executeWithTOTP((verifiedToken) => confirmRestoreUser(verifiedToken), "Restore Staff", true)
         return
       }
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to restore account")
+        throw new Error(json?.error || "Could not restore account")
 
       setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)))
       showToast({
-        title: "Staff Account Restored",
-        description: `System access for ${name} has been successfully reactivated.`,
+        title: "Staff account restored",
+        description: `System access for ${name} has been reactivated.`,
       })
       setSelectedStaffIds(new Set())
       setRestoreOpen(false)
     } catch (err) {
       if (typeof token === "string") throw err
-      showToast(formatErrorMessage(err, "Account Restoration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not restore account"), true)
     }
   }
 
@@ -1459,7 +1459,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         if (json?.requiresTOTP) {
           if (totpToken) {
             setDeleteLoading(false)
-            throw new Error(json.error || "Invalid verification code")
+            throw new Error(json.error || "Check the verification code and try again")
           }
           setDeleteLoading(false)
           await executeWithTOTP(
@@ -1473,18 +1473,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to delete staff")
+        throw new Error(json?.error || "Could not archive staff")
       }
       setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)))
       showToast({
-        title: "Staff Account Archived",
-        description: `The personnel account for ${name} has been successfully moved to the archive vault.`,
+        title: "Staff account archived",
+        description: `The personnel account for ${name} has been moved to the archive vault.`,
       })
       setSelectedStaffIds(new Set())
       setDeleteOpen(false)
     } catch (err) {
       if (totpToken) throw err
-      showToast(formatErrorMessage(err, "Account Archival Failed"), true)
+      showToast(formatErrorMessage(err, "Could not archive account"), true)
     } finally {
       setDeleteLoading(false)
     }
@@ -1533,14 +1533,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       showToast({
-        title: "Bulk Restoration Complete",
-        description: `Successfully reactivated system access for ${successCount} personnel account(s). ${failCount > 0 ? `${failCount} accounts could not be restored.` : ""}`,
+        title: "Bulk restoration complete",
+        description: `Reactivated system access for ${successCount} personnel ${successCount === 1 ? "account" : "accounts"}. ${failCount > 0 ? `${failCount} ${failCount === 1 ? "account" : "accounts"} could not be restored.` : ""}`,
       })
       setBulkRestoreOpen(false)
       setSelectedStaffIds(new Set())
     } catch (err) {
       if (typeof token === "string") throw err
-      showToast(formatErrorMessage(err, "Bulk Restoration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not restore accounts"), true)
     } finally {
       setBulkRestoreLoading(false)
     }
@@ -1590,14 +1590,14 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       }
 
       showToast({
-        title: "Bulk Archival Complete",
-        description: `Successfully moved ${successCount} personnel record(s) to the archive vault. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
+        title: "Bulk archival complete",
+        description: `Moved ${successCount} personnel ${successCount === 1 ? "record" : "records"} to the archive vault. ${failCount > 0 ? `${failCount} ${failCount === 1 ? "record" : "records"} could not be archived.` : ""}`,
       })
       setBulkArchiveOpen(false)
       setSelectedStaffIds(new Set())
     } catch (err) {
       if (totpToken) throw err
-      showToast(formatErrorMessage(err, "Bulk Archival Failed"), true)
+      showToast(formatErrorMessage(err, "Could not archive accounts"), true)
     } finally {
       setBulkArchiveLoading(false)
     }
@@ -1628,7 +1628,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       if (res.status === 403 && json?.totpNotConfigured) {
         showToast({
-          title: "Two-Factor Auth Required",
+          title: "Two-factor auth required",
           description: "Two-Factor Authentication (TOTP) must be enabled on your account before creating backups. Please configure 2FA in your Account settings.",
         }, "warning")
         return null
@@ -1636,7 +1636,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
       if (res.status === 403 && json?.requiresTOTP) {
         if (totpToken) {
-          throw new Error(json.error || "Invalid verification code")
+          throw new Error(json.error || "Check the verification code and try again")
         }
         executeWithTOTP((token) => simulateBackup(token), "Create Backup", true)
         throw new Error("TOTP_REQUIRED")
@@ -1662,26 +1662,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
     toast.promise(promise, {
       loading: "Creating office partition snapshot...",
-      success: (json) => {
-        return (
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold text-emerald-700">Backup Successful</p>
-            <p className="text-xs font-normal">
-              Archive &apos;{json?.data?.filename || "backup package"}&apos; has been secured.
-            </p>
-          </div>
-        )
-      },
+      success: (json) => ({
+        title: "Backup Successful",
+        description: `Archive '${json?.data?.filename || "backup package"}' has been secured.`,
+      }),
       error: (err) => {
         if (err.message === "TOTP_REQUIRED") return null
-        return (
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold text-red-600">Backup Failed</p>
-            <p className="text-xs font-medium opacity-80">
-              {err.message || "Unable to complete office backup snapshot."}
-            </p>
-          </div>
-        )
+        const norm = formatErrorMessage(err, { defaultTitle: "Backup Failed" })
+        return {
+          title: norm.title,
+          description: norm.description || "Unable to complete office backup snapshot.",
+          action: norm.action,
+        }
       },
     })
     
@@ -1717,22 +1709,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
     toast.promise(promise, {
       loading: "Copying backup to external drive...",
-      success: (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold">Backup Saved to External Drive</p>
-          <p className="text-xs font-medium opacity-80">
-            A copy of this backup has been saved on your external drive.
-          </p>
-        </div>
-      ),
-      error: (err) => (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-red-600">Copy Failed</p>
-          <p className="text-xs font-medium opacity-80">
-            {err.message || "Could not copy to external drive."}
-          </p>
-        </div>
-      ),
+      success: {
+        title: "Backup Saved to External Drive",
+        description: "A copy of this backup has been saved on your external drive.",
+      },
+      error: (err) => {
+        const norm = formatErrorMessage(err, { defaultTitle: "Copy Failed" })
+        return {
+          title: norm.title,
+          description: norm.description || "Could not copy to external drive.",
+          action: norm.action,
+        }
+      },
     })
 
     return promise
@@ -1757,18 +1745,18 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       )
       const json = await res.json()
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to delete backup(s)")
+        throw new Error(json?.error || "Could not delete backup")
 
       showToast({
-        title: isBulk ? "Bulk Deletion Successful" : "Deletion Successful",
+        title: isBulk ? "Backups deleted" : "Backup deleted",
         description: isBulk
-          ? `Successfully removed ${json.deletedCount} backup archives from the system.`
+          ? `Removed ${json.deletedCount} backup archives from the system.`
           : "The selected backup archive has been permanently removed.",
       })
       setBackupDeleteOpen(false)
       refreshBackups()
     } catch (err) {
-      showToast(formatErrorMessage(err, { defaultTitle: "Deletion Failed" }), true)
+      showToast(formatErrorMessage(err, { defaultTitle: "Could not delete backup" }), true)
     } finally {
       setBackupDeleteLoading(false)
     }
@@ -2279,10 +2267,10 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           setDeclineReason("")
         }}
         variant="danger"
-        confirmLabel="Decline Record"
+        confirmLabel="Decline record"
         buttonIcon=" Cancel01Icon"
         inputLabel="Reason"
-        placeholder="e.g., Image is too blurry, incorrect document type..."
+        placeholder="Image is too blurry or incorrect document type"
         multiline
         isDeclineModal={true}
       />
@@ -2294,16 +2282,16 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
           setBulkDeclineOpen(false)
           setBulkDeclineReason("")
         }}
-        title="Bulk Decline Records"
-        message={`You are about to decline ${bulkDeclineIds.length} digital records. This action will notify all impacted students.`}
+        title="Bulk decline records"
+        message={`You are about to decline ${bulkDeclineIds.length} digital ${bulkDeclineIds.length === 1 ? "record" : "records"}. This action will notify all impacted students.`}
         value={bulkDeclineReason}
         onChange={setBulkDeclineReason}
         variant="danger"
         buttonIcon=" Cancel01Icon"
-        inputLabel="Common Rejection Reason"
-        placeholder="Reason for bulk rejection (applied to all selected)..."
+        inputLabel="Common rejection reason"
+        placeholder="Reason for bulk rejection (applied to all selected)"
         onConfirm={submitBulkDecline}
-        confirmLabel="Decline Selected Records"
+        confirmLabel="Decline selected records"
         multiline
       />
 
@@ -2385,8 +2373,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             <div className="min-w-0">
               <DialogTitle>
                 {extDriveEvent?.type === "connected"
-                  ? "External Drive Connected"
-                  : "External Drive Disconnected"}
+                  ? "External drive connected"
+                  : "External drive disconnected"}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 {extDriveEvent?.type === "connected"
@@ -2405,8 +2393,8 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
                 : "border-amber-200/60 bg-amber-50/40 dark:border-amber-900/30 dark:bg-amber-950/20"
             )}>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  {extDriveEvent?.type === "connected" ? "Connected Volume" : "Disconnected Volume"}
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400">
+                  {extDriveEvent?.type === "connected" ? "Connected volume" : "Disconnected volume"}
                 </p>
                 <p className="mt-0.5 text-sm font-semibold text-gray-900 truncate dark:text-zinc-50">
                   {extDriveEvent?.label || "PUPSJ_BACKUP"}

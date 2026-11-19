@@ -116,7 +116,7 @@ export default function LogFilters({
             setLogSearch?.("")
             setLogPage?.(1)
           }}
-          placeholder="Search logs by actor, action, details..."
+          placeholder="Search logs by actor, action, or details"
           label="Search activity history"
           count={logTotal}
           loading={isLoading}

@@ -136,12 +136,12 @@ export default function DocTypesTab({
         setNewDocTypeIsCompliance(true)
       }, () => setIsAddDocTypeOpen(false))
 
-      showToast({ title: "Document Type Added", description: "The new document type has been successfully registered in the system." })
+      showToast({ title: "Document type added", description: "The new document type has been registered in the system." })
       Promise.resolve().then(() => loadAll?.()).catch(() => {
-        showToast({ title: "Refresh Failed", description: "Document type created. Refresh the list to see the new entry." }, true)
+        showToast({ title: "Could not refresh list", description: "Document type created. Refresh the list to see the new entry." }, true)
       })
     } catch (err) {
-      showToast(formatErrorMessage(err, "Registration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not register document type"), true)
     } finally {
       repeat.endSave()
     }
@@ -163,10 +163,10 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed")
       setIsEditDocTypeOpen(false)
-      showToast({ title: "Document Type Updated", description: "The changes to the document type have been successfully saved." })
+      showToast({ title: "Document type updated", description: "Changes to the document type have been saved." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Update Failed"), true)
+      showToast(formatErrorMessage(err, "Could not update document type"), true)
     }
   }
 
@@ -184,10 +184,10 @@ export default function DocTypesTab({
           return next
         })
       }
-      showToast({ title: "Document Type Archived", description: "The selected document type has been successfully moved to the archive." })
+      showToast({ title: "Document type archived", description: "The selected document type has been moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Archival Failed"), true)
+      showToast(formatErrorMessage(err, "Could not archive document type"), true)
     }
   }
 
@@ -209,10 +209,10 @@ export default function DocTypesTab({
           return next
         })
       }
-      showToast({ title: "Document Type Restored", description: "The document type has been successfully restored from the archive." })
+      showToast({ title: "Document type restored", description: "The document type has been restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Restoration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not restore document type"), true)
     }
   }
 
@@ -325,7 +325,7 @@ export default function DocTypesTab({
                 setPageDoc(1)
               }}
               count={filteredDocTypesFull.length}
-              placeholder="Filter document name..."
+              placeholder="Filter document name"
               label="Search document types"
             />
 
@@ -366,14 +366,14 @@ export default function DocTypesTab({
                 <EmptyHeader>
                   <EmptyMedia>{showArchived && totalInView === 0 ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
                   <EmptyTitle>
-                    {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Document Types Found" : "No Document Types Found")}
+                    {totalInView > 0 ? "No matches found" : (showArchived ? "No archived document types found" : "No document types found")}
                   </EmptyTitle>
                   <EmptyDescription>
                     {totalInView > 0
                       ? "Try adjusting your search filters to find what you're looking for."
                       : showArchived
                         ? "There are currently no archived document types in the system."
-                        : "Add Document Type to structure the digital repository."}
+                        : "Add a document type to structure the digital repository."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -618,7 +618,7 @@ export default function DocTypesTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  New Document Type
+                  New document type
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Deploy a new formal document type to the digitization framework.
@@ -629,12 +629,12 @@ export default function DocTypesTab({
           <form ref={attachForm} onSubmit={addDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="text-xs font-semibold mb-1 block uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                  Document Name
+                <label className="text-xs font-semibold mb-1 block text-gray-900 dark:text-zinc-300">
+                  Document name
                 </label>
                 <Input
                   type="text"
-                  placeholder="e.g. Health Information Sheet"
+                  placeholder="Health Information Sheet"
                   className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={newDocTypeName}
                   onChange={(e) => setNewDocTypeName(e.target.value)}
@@ -722,7 +722,7 @@ export default function DocTypesTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  Edit Document Type
+                  Edit document type
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Update the document purpose settings.
@@ -733,10 +733,10 @@ export default function DocTypesTab({
           <form onSubmit={updDocType}>
             <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div>
-                <label className="text-xs font-semibold mb-1 block uppercase tracking-[0.04em] text-gray-900 dark:text-zinc-300">
-                  Document Type Name
+                <label className="text-xs font-semibold mb-1 block text-gray-900 dark:text-zinc-300">
+                  Document type name
                 </label>
-                <Input placeholder="e.g. Certificate of Good Moral Character"
+                <Input placeholder="Certificate of Good Moral Character"
                   type="text"
                   className="h-10 rounded-xl border border-border bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-border dark:text-zinc-50"
                   value={editDocType.name}

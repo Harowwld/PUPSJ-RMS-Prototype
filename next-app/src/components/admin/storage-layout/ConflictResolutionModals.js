@@ -49,7 +49,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
-              Template Conflict Resolution
+              Template conflict resolution
             </DialogTitle>
             <DialogDescription className="mt-1">
               The selected room template removes drawers that currently store student documents. Reassign these records to continue.
@@ -157,7 +157,7 @@ const ConflictResolutionModals = memo(({
                               [row.sourceKey]: e.target.value,
                             }))
                           }
-                          placeholder="Select target drawer..."
+                          placeholder="Select target drawer"
                           className="h-9 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-medium text-gray-900 dark:text-zinc-100 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80"
                         >
                           {templateTargetOptions.map((opt) => (
@@ -246,7 +246,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
-              Confirm Reassignment
+              Confirm reassignment
             </DialogTitle>
             <DialogDescription className="mt-1">
               Review the drawer migrations before applying the new room layout template.
@@ -314,7 +314,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-border shadow-2xl rounded-2xl dark:bg-card dark:border-border gap-0">
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
-              Template Apply Report
+              Template apply report
             </DialogTitle>
             <DialogDescription className="mt-1">
               Per-drawer reassignment results from the latest template application.

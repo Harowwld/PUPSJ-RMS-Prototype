@@ -1144,7 +1144,7 @@ export default function StaffDirectoryTab({
               count={filteredStaff.length}
               loading={isLoading}
               label="Staff search"
-              placeholder="Search name, email or ID..."
+              placeholder="Search name, email, or ID"
             />
 
             {viewMode === "table" && (
@@ -1307,7 +1307,7 @@ export default function StaffDirectoryTab({
               <EmptyHeader>
                 <EmptyMedia>{activeTab === "archived" && !hasActiveFilters && search === "" ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
                 <EmptyTitle>
-                  {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No Archived Personnel Found" : "No Personnel Found")}
+                  {hasActiveFilters || search !== "" ? "No matches found" : (activeTab === "archived" ? "No archived personnel found" : "No personnel found")}
                 </EmptyTitle>
                 <EmptyDescription>
                   {hasActiveFilters || search !== ""
@@ -1700,7 +1700,7 @@ export default function StaffDirectoryTab({
                 <SheetHeader className="shrink-0 p-0">
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
-                      <SheetTitle>Staff Details</SheetTitle>
+                      <SheetTitle>Staff details</SheetTitle>
                       <SheetDescription className="sr-only">
                         Detailed account profile and security metadata for {getStaffCleanName(inspectMember)}
                       </SheetDescription>

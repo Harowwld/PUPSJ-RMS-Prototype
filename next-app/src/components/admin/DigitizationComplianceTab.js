@@ -1039,7 +1039,7 @@ function DigitizationComplianceContent({
                 setPage(1);
               }}
               resultCount={sortedByCourse.length}
-              placeholder="Search programs..."
+              placeholder="Search programs"
             />
 
             <TableScrollControls
@@ -1130,7 +1130,7 @@ function DigitizationComplianceContent({
                 <EmptyMedia className="text-red-600 dark:text-red-400">
                   <EmptyAlertCircleIcon size="1em" />
                 </EmptyMedia>
-                <EmptyTitle>Data Unavailable</EmptyTitle>
+                <EmptyTitle>Data unavailable</EmptyTitle>
                 <EmptyDescription>{error}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
@@ -1140,7 +1140,7 @@ function DigitizationComplianceContent({
                   onClick={() => load(true)}
                   className="flex h-9 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-colors hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                 >
-                  Retry Loading
+                  Retry loading
                 </Button>
               </EmptyContent>
             </Empty>

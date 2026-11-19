@@ -134,12 +134,12 @@ export default function SectionsTab({
         if (!repeat.createAnother) setSecCourseCode("")
       }, () => setIsAddSectionOpen(false))
 
-      showToast({ title: "Course Block Created", description: "The new course block has been successfully registered in the system." })
+      showToast({ title: "Course block created", description: "The new course block has been registered in the system." })
       Promise.resolve().then(() => loadAll?.()).catch(() => {
-        showToast({ title: "Refresh Failed", description: "Block created. Refresh the list to see the new entry." }, true)
+        showToast({ title: "Could not refresh list", description: "Block created. Refresh the list to see the new entry." }, true)
       })
     } catch (err) {
-      showToast(formatErrorMessage(err, "Registration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not register course block"), true)
     } finally {
       repeat.endSave()
     }
@@ -160,10 +160,10 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed")
       setIsEditSectionOpen(false)
-      showToast({ title: "Course Block Updated", description: "The changes to the course block have been successfully saved." })
+      showToast({ title: "Course block updated", description: "Changes to the course block have been saved." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Update Failed"), true)
+      showToast(formatErrorMessage(err, "Could not update course block"), true)
     }
   }
 
@@ -181,10 +181,10 @@ export default function SectionsTab({
           return next
         })
       }
-      showToast({ title: "Course Block Archived", description: "The selected course block has been successfully moved to the archive." })
+      showToast({ title: "Course block archived", description: "The selected course block has been moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Archival Failed"), true)
+      showToast(formatErrorMessage(err, "Could not archive course block"), true)
     }
   }
 
@@ -204,10 +204,10 @@ export default function SectionsTab({
           return next
         })
       }
-      showToast({ title: "Course Block Restored", description: "The course block has been successfully restored from the archive." })
+      showToast({ title: "Course block restored", description: "The course block has been restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast(formatErrorMessage(err, "Restoration Failed"), true)
+      showToast(formatErrorMessage(err, "Could not restore course block"), true)
     }
   }
 
@@ -348,7 +348,7 @@ export default function SectionsTab({
                 setPageSection(1)
               }}
               count={filteredSectionsFull.length}
-              placeholder="Filter block name..."
+              placeholder="Filter block name"
               label="Search course blocks"
             />
 
@@ -401,14 +401,14 @@ export default function SectionsTab({
                 <EmptyHeader>
                   <EmptyMedia>{showArchived && totalInView === 0 ? <EmptyArchive01Icon size="1em" /> : <EmptySearch01Icon size="1em" />}</EmptyMedia>
                   <EmptyTitle>
-                    {totalInView > 0 ? "No matches found" : (showArchived ? "No Archived Course Blocks Found" : "No Course Blocks Found")}
+                    {totalInView > 0 ? "No matches found" : (showArchived ? "No archived course blocks found" : "No course blocks found")}
                   </EmptyTitle>
                   <EmptyDescription>
                     {totalInView > 0
                       ? "Try adjusting your search filters or course selection to find what you're looking for."
                       : showArchived
                         ? "There are currently no archived course blocks in the system."
-                        : "Add Course Block to organize students within degree programs."}
+                        : "Add a course block to organize students within degree programs."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
@@ -661,7 +661,7 @@ export default function SectionsTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  New Course Block
+                  New course block
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Create a new organizational section for degree program management.
@@ -672,8 +672,8 @@ export default function SectionsTab({
           <form ref={attachForm} onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 flex flex-col gap-4">
               <div className="w-full min-w-0">
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Degree Program
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Degree program
                 </label>
                 <Select placeholder="Select a program"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
@@ -689,12 +689,12 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Block Name
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Block name
                 </label>
                 <Input
                   type="text"
-                  placeholder="e.g. Section 1"
+                  placeholder="Section 1"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
                   value={newSectionName}
                   data-create-another-focus
@@ -744,7 +744,7 @@ export default function SectionsTab({
             <div className="flex items-start gap-4">
               <div className="min-w-0">
                 <DialogTitle>
-                  Edit Course Block
+                  Edit course block
                 </DialogTitle>
                 <DialogDescription className="mt-1">
                   Update the block label or program association.
@@ -755,8 +755,8 @@ export default function SectionsTab({
           <form onSubmit={updSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 pb-4 space-y-4">
               <div className="w-full min-w-0">
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Degree Program
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Degree program
                 </label>
                 <Select placeholder="Select a program"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal text-gray-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none min-w-0"
@@ -777,10 +777,10 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div className="min-w-0">
-                <label className="text-xs font-semibold mb-1.5 block uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                  Block Name
+                <label className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
+                  Block name
                 </label>
-                <Input placeholder="e.g. 1-1"
+                <Input placeholder="1-1"
                   type="text"
                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-xs font-normal text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon shadow-xs min-w-0"
                   value={editSection.name}

@@ -59,14 +59,14 @@ export default function RateLimitingTab() {
         new Promise((resolve) => setTimeout(resolve, 600)), // Animation visible
       ])
       
-      if (!response.ok) throw new Error("Failed to fetch rate limiting data")
+      if (!response.ok) throw new Error("Could not fetch rate limiting data")
 
       const result = await response.json()
       if (result.ok) {
         setData(result.data)
       }
     } catch (error) {
-      const norm = formatErrorMessage(error, { defaultTitle: "Failed to Load Rate Limits" });
+      const norm = formatErrorMessage(error, { defaultTitle: "Could not load rate limits" });
       toast.error(norm.title, { description: norm.description, action: norm.action });
       console.error(error);
     } finally {
@@ -96,14 +96,14 @@ export default function RateLimitingTab() {
         body: JSON.stringify({ endpointType, identifier }),
       })
 
-      if (!response.ok) throw new Error("Failed to clear violation")
+      if (!response.ok) throw new Error("Could not clear violation")
 
-      toast.success("Rate Limit Cleared", {
+      toast.success("Rate limit cleared", {
         description: `Violation entry for ${identifier} has been reset.`,
       })
       fetchData()
     } catch (error) {
-      const norm = formatErrorMessage(error, { defaultTitle: "Failed to Clear Violation" });
+      const norm = formatErrorMessage(error, { defaultTitle: "Could not clear violation" });
       toast.error(norm.title, { description: norm.description, action: norm.action });
       console.error(error);
     }

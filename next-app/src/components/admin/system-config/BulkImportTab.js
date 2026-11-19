@@ -181,9 +181,9 @@ export default function BulkImportTab({
                 <button
                   type="button"
                   onClick={() => setShowInstructions(true)}
-                  aria-label="Import Instructions"
+                  aria-label="Import instructions"
                   className="text-gray-400 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
-                  title="Import Instructions"
+                  title="Import instructions"
                 >
                   <HelpCircleIcon size="1em" className="text-[18px]" />
                 </button>
@@ -271,7 +271,7 @@ export default function BulkImportTab({
                   setCurrentPage(1)
                 }}
                 count={filteredImportRows.length}
-                placeholder="Search preview..."
+                placeholder="Search preview"
                 label="Search preview"
               />
               <TableScrollControls
@@ -381,7 +381,7 @@ export default function BulkImportTab({
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleQuickAdd()
                         }}
-                        placeholder="Quick add name/label..."
+                        placeholder="Quick add name or label"
                       />
                     </td>
                     <td className="p-4 border-r border-border/70 dark:border-border/70">
@@ -795,7 +795,7 @@ export default function BulkImportTab({
           {/* Modal Header */}
           <div className="mb-6">
             <DialogTitle>
-              Import Instructions
+              Import instructions
             </DialogTitle>
             <DialogDescription className="sr-only">
               Data categories and guidelines for importing bulk CSV files.

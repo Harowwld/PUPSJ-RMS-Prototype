@@ -43,7 +43,7 @@ export default function BackupFilters({
             setBackupSearch?.("")
             setPage?.(1)
           }}
-          placeholder="Search archive filename..."
+          placeholder="Search archive filename"
           label="Search archive filename"
           count={backupTotal}
           loading={isLoading}
