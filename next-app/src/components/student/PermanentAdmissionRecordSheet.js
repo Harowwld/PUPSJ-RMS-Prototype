@@ -3,7 +3,7 @@
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetPagination from "@/components/shared/SheetPagination";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import React, { useMemo } from "react";
 
 import {
@@ -19,7 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
 import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { ArrowUpRight01Icon, Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
+import { ArrowUpRight01Icon, Cancel01Icon, Mail01Icon, TaskDone01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import NarrativeText from "@/components/shared/NarrativeText";
 export const CHECKLIST_HIGHLIGHTED_PHRASES = [
@@ -142,7 +142,7 @@ export default function PermanentAdmissionRecordSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Permanent Admission Record
+                Permanent admission record
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed permanent credential specification and archival clearance status
@@ -160,8 +160,8 @@ export default function PermanentAdmissionRecordSheet({
                   onNext={onNavigateNext}
                   previousDisabled={currentIndex <= 0}
                   nextDisabled={currentIndex >= totalCount - 1}
-                  previousLabel="Previous Record"
-                  nextLabel="Next Record"
+                  previousLabel="Previous record"
+                  nextLabel="Next record"
                 />
               )}
 
@@ -183,7 +183,7 @@ export default function PermanentAdmissionRecordSheet({
         </SheetHeader>
 
         {/* 2. Line-Attached Edge-to-Edge Status Notice (Zero card margins, takes the line) */}
-        {!statusOnly && <NoticeBanner tone={isSubmitted ? "success" : "warning"} title={isSubmitted ? "Archived & Verified" : "Action Required"}>
+        {!statusOnly && <NoticeBanner className="border-b" tone={isSubmitted ? "success" : "warning"} title={isSubmitted ? "Archived and verified:" : "Action required:"}>
             {isSubmitted
               ? "Physical authenticated hard copy is securely vaulted in institutional records."
               : "Physical hard copy submission required to clear academic records hold."}
@@ -227,14 +227,14 @@ export default function PermanentAdmissionRecordSheet({
           {/* Essential Record Specification (Unboxed InfoRow List) */}
           <div className="space-y-2">
             {statusOnly ? (
-              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Document Information" />
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Document information" />
             ) : (
-              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Record Specification" />
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Record specification" />
             )}
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               {statusOnly && (
                 <>
-                  <InfoRow icon="File02Icon" label="Document Type" value={docTitle} />
+                  <InfoRow icon="File02Icon" label="Document type" value={docTitle} />
                   <InfoRow icon="Tag01Icon" label="Category">
                     <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray)}>{docCategory}</span>
                   </InfoRow>
@@ -247,10 +247,10 @@ export default function PermanentAdmissionRecordSheet({
               )}
               <InfoRow
                 icon="Building01Icon"
-                label="Verifying Office"
+                label="Verifying office"
                 value="Office of the Campus Registrar"
               />
-              {showStatus && <InfoRow icon="PieChartIcon" label={statusOnly ? "Submission Status" : "Clearance Status"}>
+              {showStatus && <InfoRow icon="PieChartIcon" label={statusOnly ? "Submission status" : "Clearance status"}>
                 <span
                   className={cn(
                     COMPACT_BADGE_BASE,
@@ -265,29 +265,29 @@ export default function PermanentAdmissionRecordSheet({
               {!statusOnly && isSubmitted && archiveDate && (
                 <InfoRow
                   icon="CalendarCheckIn01Icon"
-                  label="Archived On"
+                  label="Archived on"
                   value={formatPHDateTime(archiveDate)}
                 />
               )}
               {!statusOnly && isSubmitted && (
                 <InfoRow
                   icon="Shield01Icon"
-                  label="Clearance Standing"
+                  label="Clearance standing"
                   value="Good Standing · No Records Hold"
                 />
               )}
               {!statusOnly && !isSubmitted && (
                 <InfoRow
                   icon="Door01Icon"
-                  label="Submission Window"
-                  value="Window 2 — Admissions & Archives (Room 102)"
+                  label="Submission window"
+                  value="Window 2: Admissions and Archives (Room 102)"
                 />
               )}
               {!statusOnly && !isSubmitted && (
                 <InfoRow
                   icon="Clock01Icon"
-                  label="Window Hours"
-                  value="Mon – Fri, 8:00 AM – 5:00 PM (PST)"
+                  label="Window hours"
+                  value="Mon to Fri, 8:00 AM to 5:00 PM (PST)"
                 />
               )}
             </div>
@@ -321,7 +321,7 @@ export default function PermanentAdmissionRecordSheet({
           {/* Contextual Action: Submission Instructions (Pending Only, Unboxed) */}
           {!statusOnly && !isSubmitted && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-              <SheetSectionHeading icon="ClipboardIcon" title="Submission Guidelines" />
+              <SheetSectionHeading icon="ClipboardIcon" title="Submission guidelines" />
               <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                 <NarrativeText text={docInstructions} mode="full" />
               </div>
@@ -335,36 +335,12 @@ export default function PermanentAdmissionRecordSheet({
           {/* Contextual Action: Digitized Reference (Submitted Only, Single Unboxed Row) */}
           {!statusOnly && isSubmitted && originalFilename && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-              <SheetSectionHeading icon="File02Icon" title="Digitized Archive Reference" />
-              <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                    <File02Icon size="1em" className="text-base" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate" title={originalFilename}>
-                      {originalFilename}
-                    </p>
-                    {sizeBytes ? (
-                      <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                        {(sizeBytes / 1024).toFixed(1)} KB · Digitized Record
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-
-                {onPreviewDocument && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPreviewDocument(item)}
-                    className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
-                  >
-                    {PDF_ACTION_LABELS.preview}
-                  </Button>
-                )}
-              </div>
+              <SheetSectionHeading icon="File02Icon" title="Digitized archive reference" />
+              <SheetAttachmentRow
+                filename={originalFilename}
+                size={sizeBytes}
+                onPreview={onPreviewDocument ? () => onPreviewDocument(item) : undefined}
+              />
             </div>
           )}
         </div>

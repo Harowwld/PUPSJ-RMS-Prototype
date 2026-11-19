@@ -12,7 +12,7 @@ const RATING_LABELS = {
   1: "Poor",
   2: "Fair",
   3: "Satisfactory",
-  4: "Very Good",
+  4: "Very good",
   5: "Excellent",
 };
 
@@ -82,7 +82,7 @@ export default function StudentSidebarFeedbackCard({
   // Expanded Sidebar State
   return (
     <section
-      aria-label="Experience Feedback"
+      aria-label="Experience feedback"
       className={`${styles.card} relative isolate mx-1 overflow-hidden rounded-2xl p-3 text-white`}
     >
       <RequestFeedbackBackdrop sizes="240px" />

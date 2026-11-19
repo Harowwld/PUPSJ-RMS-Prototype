@@ -30,7 +30,7 @@ import ChecklistStatusBadge from "./ChecklistStatusBadge";
 import { StudentChecklistVerificationSkeleton, StudentComplianceListSkeleton } from "./skeletons/StudentComplianceSkeleton";
 
 const sortOptions = [
-  { value: "docType", label: "Requirement Name" },
+  { value: "docType", label: "Requirement name" },
   { value: "status", label: "Status" },
   { value: "category", label: "Category" },
 ];
@@ -157,20 +157,20 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
         icon={verified ? "CheckListIcon" : undefined}
         title={verified ? (
           <div className="flex flex-wrap items-baseline gap-2">
-            <span>Document Checklist &amp; Compliance</span>
+            <span>Document checklist &amp; compliance</span>
             <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
               {requirements.length} {requirements.length === 1 ? "requirement" : "requirements"} · {data.student.studentNo}
             </span>
           </div>
-        ) : "Document Checklist"}
+        ) : "Document checklist"}
         description={verified ? "Track your submitted credentials and monitor required documents for university records compliance." : "Find out which documents to prepare for enrollment and how to submit them."}
         className="p-6"
         titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
         descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-        actions={<RefreshButton onRefresh={refresh} isLoading={loading} title="Refresh Checklist" />}
+        actions={<RefreshButton onRefresh={refresh} isLoading={loading} title="Refresh checklist" />}
       />
       {data && !canVerify && (
-        <CampusStatusNotice tone="info" title="For Current Students" imageSizes="100vw">
+        <CampusStatusNotice tone="info" title="For current students" imageSizes="100vw">
           This checklist covers enrollment documents. Personal submission status is available after verification.
         </CampusStatusNotice>
       )}
@@ -182,19 +182,19 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
           <StudentChecklistVerificationSkeleton />
         </div>
       ) : data?.verificationUnavailable ? (
-        <CampusStatusNotice tone="warning" title="Verification Temporarily Unavailable" imageSizes="100vw">
+        <CampusStatusNotice tone="warning" title="Verification temporarily unavailable" imageSizes="100vw">
           Personal checklist status will be available after the records system update.
         </CampusStatusNotice>
       ) : data?.unavailable ? (
-        <CampusStatusNotice tone="warning" title="Registrar Record Unavailable" imageSizes="100vw">
+        <CampusStatusNotice tone="warning" title="Registrar record unavailable" imageSizes="100vw">
           Contact the Registrar to check your record’s status.
         </CampusStatusNotice>
       ) : data && (
         <CampusStatusNotice
-          title={data.needsEnrollmentMatch ? "Registrar Record Could Not Be Matched" : "Verify Your Student Record"}
+          title={data.needsEnrollmentMatch ? "Registrar record not matched" : "Verify your student record"}
           imageSizes="100vw"
           action={<Button type="button" variant="outline" size="sm" onClick={() => setStudentNumberDialogOpen(true)}>
-            {data.needsEnrollmentMatch ? "Edit Student Number" : "Add Student Number"}
+            {data.needsEnrollmentMatch ? "Edit student number" : "Add student number"}
           </Button>}
         >
           {data.needsEnrollmentMatch
@@ -214,7 +214,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
             className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card justify-between select-none"
           >
             <div className="flex min-w-0 items-center gap-2">
-              <DashboardSearch label="Search requirements" placeholder="Search requirements..." value={search}
+              <DashboardSearch label="Search requirements" placeholder="Search requirements" value={search}
                 onChange={setSearch} count={filtered.length} loading={loading} />
             </div>
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -224,8 +224,8 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
               <GroupPopover options={availableGroupOptions} groupBy={activeGroup} onGroupByChange={verified ? setGroupBy : setPublicGroupBy} />
               <SegmentedControl value={viewMode} onValueChange={setViewMode} variant="capsule"
                 className="inline-grid grid-flow-col auto-cols-fr shrink-0" items={[
-                  { value: "grid", title: "Grid View", ariaLabel: "Grid View", disabled: initialLoading, icon: <ViewModeIcon mode="grid" className="text-sm" /> },
-                  { value: "list", title: "List View", ariaLabel: "List View", disabled: initialLoading, icon: <ViewModeIcon mode="list" className="text-sm" /> },
+                  { value: "grid", title: "Grid view", ariaLabel: "Grid view", disabled: initialLoading, icon: <ViewModeIcon mode="grid" className="text-sm" /> },
+                  { value: "list", title: "List view", ariaLabel: "List view", disabled: initialLoading, icon: <ViewModeIcon mode="list" className="text-sm" /> },
                 ]} />
             </div>
           </DataViewToolbar>
@@ -241,21 +241,21 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
             ) : error && filtered.length === 0 ? (
               <EmptyState
                 icon={AlertCircleIcon}
-                title="Could Not Load Document Checklist"
+                title="Could not load document checklist"
                 description="Try loading the checklist again."
               >
-                <Button variant="outline" size="sm" onClick={refresh}>Try Again</Button>
+                <Button variant="outline" size="sm" onClick={refresh}>Try again</Button>
               </EmptyState>
             ) : filtered.length === 0 ? (
               <EmptyState
                 icon={requirements.length ? Search01Icon : CheckListIcon}
-                title={requirements.length ? "No Matches Found" : "No Requirements Available"}
+                title={requirements.length ? "No matches found" : "No requirements available"}
                 description={requirements.length
                   ? "Adjust your search or reset your filters."
                   : "Registrar enrollment requirements will appear here when available."}
               >
                 {requirements.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={clearFilters}>Reset Filters</Button>
+                  <Button variant="outline" size="sm" onClick={clearFilters}>Reset filters</Button>
                 )}
               </EmptyState>
             ) : viewMode === "list" ? (
@@ -334,7 +334,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
                                           <ViewIcon size="1em" className="text-[14px]" />
                                         </button>
                                       </TooltipTrigger>
-                                      <TooltipContent>View Details</TooltipContent>
+                                      <TooltipContent>View details</TooltipContent>
                                     </Tooltip>
                                   </div>
                                 </div>
@@ -412,7 +412,7 @@ export default function StudentComplianceTab({ authUser, onChecklistChange, onSt
                                 aria-label={`View details for ${item.name}`}
                                 className="flex cursor-pointer items-center gap-1 rounded-lg text-xs font-semibold text-pup-maroon after:absolute after:inset-0 after:rounded-3xl focus-visible:after:ring-1 focus-visible:after:ring-inset focus-visible:after:ring-ring dark:text-red-400"
                               >
-                                View Details <ArrowRight02Icon size="1em" aria-hidden="true" />
+                                View details <ArrowRight02Icon size="1em" aria-hidden="true" />
                               </button>
                             </div>
                           </div>

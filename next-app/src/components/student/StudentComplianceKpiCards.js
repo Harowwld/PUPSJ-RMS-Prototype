@@ -26,7 +26,7 @@ export default function StudentComplianceKpiCards({ summary }) {
                 <PieChartIcon size="0.75em" />
               </div>
               <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
-                Compliance Rate
+                Compliance rate
               </span>
             </div>
             <ChecklistStatusBadge complete={isCompliant}>
@@ -49,7 +49,7 @@ export default function StudentComplianceKpiCards({ summary }) {
                 <CheckmarkCircle01Icon size="0.75em" />
               </div>
               <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 tracking-tight">
-                Submitted Documents
+                Submitted documents
               </span>
             </div>
             <ChecklistStatusBadge complete={true}>

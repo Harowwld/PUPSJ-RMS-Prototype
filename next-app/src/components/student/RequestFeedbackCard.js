@@ -42,7 +42,7 @@ export default function RequestFeedbackCard({ minimized, onToggle, onRate }) {
 
       <div className="min-w-0 flex-[1_1_10rem]">
         <h3 className="text-sm font-semibold leading-snug">
-          {minimized ? "Experience Feedback" : "How was your experience?"}
+          {minimized ? "Experience feedback" : "How was your experience?"}
         </h3>
         <p id={descriptionId} hidden={minimized} className="mt-1 text-xs leading-relaxed text-white/85">
           Help improve Registrar services in eManage.
@@ -55,7 +55,7 @@ export default function RequestFeedbackCard({ minimized, onToggle, onRate }) {
           onClick={onRate}
           className="ml-auto border-0 focus-visible:ring-white/80 focus-visible:ring-offset-0"
         >
-          Rate Service
+          Rate service
         </Button>
       )}
       <Tooltip>

@@ -23,7 +23,7 @@ const RATING_LABELS = {
   1: "Poor",
   2: "Fair",
   3: "Satisfactory",
-  4: "Very Good",
+  4: "Very good",
   5: "Excellent",
 };
 
@@ -85,8 +85,8 @@ export default function StudentFeedbackModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!rating) {
-      toast.error("Rating Required", {
-        description: "Please select a star rating from 1 to 5 before submitting your feedback.",
+      toast.error("Select a rating", {
+        description: "Choose 1 to 5 stars before submitting.",
       });
       return;
     }
@@ -106,11 +106,11 @@ export default function StudentFeedbackModal({
 
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Unable to submit feedback.");
+        throw new Error(json?.error || "Could not submit feedback. Try again.");
       }
 
-      toast.success("Thank you for your feedback!", {
-        description: `Your ${rating}-star rating has been recorded for Request ${request.id}.`,
+      toast.success("Feedback recorded", {
+        description: `Your ${rating}-star rating for Request ${request.id} is saved.`,
       });
 
       if (onFeedbackSubmitted) {
@@ -119,8 +119,8 @@ export default function StudentFeedbackModal({
       handleClose();
     } catch (err) {
       const normalized = formatErrorMessage(err, {
-        title: "Feedback Submission Failed",
-        description: "Could not record your feedback. Please check your network connection and retry.",
+        title: "Could not send feedback",
+        description: "Check your connection and try again.",
       });
       toast.error(normalized.title, {
         description: normalized.description,
@@ -142,7 +142,7 @@ export default function StudentFeedbackModal({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <DialogTitle>
-                  Rate Your Experience
+                  Rate your experience
                 </DialogTitle>
                 {request?.id && (
                   <span className={cn(BADGE_BASE, BADGE_PALETTES.maroon)}>
@@ -161,8 +161,8 @@ export default function StudentFeedbackModal({
           <div className="space-y-4 p-6">
             {/* Star Rating Section */}
             <div>
-              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                Overall Satisfaction
+              <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                Overall satisfaction
               </label>
               <div className="flex flex-col items-center justify-center py-3 bg-gray-50/70 dark:bg-zinc-900/40 rounded-xl border border-border dark:border-border">
                 <div
@@ -217,8 +217,8 @@ export default function StudentFeedbackModal({
 
             {/* Quick Feedback Aspect Chips */}
             <div>
-              <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-900 dark:text-zinc-300">
-                What Went Well? <span className="normal-case tracking-normal opacity-70">(optional)</span>
+              <label className="mb-2 block text-xs font-medium text-gray-900 dark:text-zinc-300">
+                What went well? <span className="opacity-70">(optional)</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {SUGGESTED_ASPECTS.map((aspect) => {
@@ -245,14 +245,14 @@ export default function StudentFeedbackModal({
             {/* Suggestions / Comments Textarea */}
             <div>
               <label htmlFor="student-feedback-comments" className="text-xs font-semibold mb-1.5 block text-gray-900 dark:text-zinc-300">
-                Comments or Suggestions <span className="opacity-70">(optional)</span>
+                Comments or suggestions <span className="opacity-70">(optional)</span>
               </label>
               <Textarea
                 id="student-feedback-comments"
                 rows={3}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                placeholder="Share any thoughts or suggestions for the Registrar Office..."
+                placeholder="Share thoughts or suggestions for the Registrar"
                 className="w-full resize-none"
               />
             </div>
@@ -278,12 +278,12 @@ export default function StudentFeedbackModal({
               {submitting ? (
                 <span className="flex items-center gap-2">
                   <Loading01Icon size="1em" className="animate-spin text-sm" />
-                  Submitting...
+                  Submitting…
                 </span>
               ) : request?.feedback ? (
-                "Update Feedback"
+                "Update feedback"
               ) : (
-                "Submit Feedback"
+                "Submit feedback"
               )}
             </Button>
           </DialogFooter>

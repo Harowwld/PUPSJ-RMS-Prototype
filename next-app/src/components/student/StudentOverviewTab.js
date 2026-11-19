@@ -1,5 +1,6 @@
 "use client";
 
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import SheetPagination from "@/components/shared/SheetPagination";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/sheet";
 import { StudentOverviewContentSkeleton } from "@/components/student/skeletons/StudentOverviewSkeleton";
 import NarrativeText from "@/components/shared/NarrativeText";
-import { Clock01Icon as EmptyClock01Icon, InboxIcon , ArrowRight01Icon, ArrowRight02Icon, ArrowUpRight01Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, File02Icon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
+import { Clock01Icon as EmptyClock01Icon, InboxIcon , Alert02Icon, ArrowRight01Icon, ArrowRight02Icon, ArrowUpRight01Icon, Cancel01Icon, ClipboardIcon, CovidInfoIcon, FileUploadIcon, Shield01Icon, StudentIcon} from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
@@ -97,6 +98,7 @@ export default function StudentOverviewTab({
 }) {
   const [activityFilter, setActivityFilter] = useState("all");
   const [selectedPostEventDetail, setSelectedPostEventDetail] = useState(null);
+  const [isAttentionSheetOpen, setIsAttentionSheetOpen] = useState(false);
 
   const [overrideAvatar, setOverrideAvatar] = useState(null);
   const currentAvatarFilename = overrideAvatar ? overrideAvatar.filename : (authUser?.avatar_filename || null);
@@ -128,10 +130,10 @@ export default function StudentOverviewTab({
         id: `ready-req-${req.id}`,
         type: "ready",
         priority: 1,
-        title: "Record Ready for Pick-Up",
+        title: "Record ready for pick-up",
         description: `Your ${req.doc_type} (Ticket ${req.ticket_no || req.id}) has been printed. Visit Registrar Window 2 with your student ID to claim your physical document.`,
         highlightedPhrases: [req.doc_type],
-        actionLabel: "View Pick-Up Info",
+        actionLabel: "View pick-up info",
         redirects: !Boolean(onSelectRequest),
         action: () => {
           if (onSelectRequest) {
@@ -155,10 +157,10 @@ export default function StudentOverviewTab({
         id: `payment-req-${req.id}`,
         type: "payment",
         priority: 2,
-        title: "Proof of Payment Required",
+        title: "Payment proof required",
         description: `Ticket ${req.ticket_no || req.id} for ${req.doc_type} requires your official payment receipt for processing.`,
         highlightedPhrases: [req.doc_type],
-        actionLabel: "Open Payment Details",
+        actionLabel: "Open payment details",
         redirects: !Boolean(onSelectRequest),
         action: () => {
           if (onSelectRequest) {
@@ -168,7 +170,7 @@ export default function StudentOverviewTab({
           }
         },
         icon: " Invoice01Icon",
-        badge: "Action Required",
+        badge: "Action required",
         theme: "amber",
       });
     });
@@ -185,14 +187,14 @@ export default function StudentOverviewTab({
         id: "compliance-missing",
         type: "compliance",
         priority: 3,
-        title: "Missing Permanent Admission Records",
-        description: `You have ${missingDocs.length} unsubmitted enrollment requirement${missingDocs.length > 1 ? "s" : ""} (${topMissing.join(", ")}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
+        title: "Missing permanent admission records",
+        description: `You have ${missingDocs.length} unsubmitted enrollment ${missingDocs.length === 1 ? "requirement" : "requirements"} (${topMissing.join(", ")}${extraText}). Submit physical hard copies to the Registrar Window to clear your hold.`,
         highlightedPhrases: topMissing,
-        actionLabel: "Open Document Checklist",
+        actionLabel: "Open document checklist",
         redirects: true,
         action: () => onNavigate("compliance"),
         icon: " ClipboardIcon",
-        badge: "Enrollment Clearance",
+        badge: "Enrollment clearance",
         theme: "amber",
       });
     }
@@ -207,9 +209,9 @@ export default function StudentOverviewTab({
         id: `revision-prop-${prop.id}`,
         type: "revision",
         priority: 4,
-        title: "Event Proposal Returned for Revision",
-        description: `OSAS requested revisions for "${prop.title || prop.event_title}". Please review the evaluation notes and resubmit.`,
-        actionLabel: "View Proposal Feedback",
+        title: "Event proposal needs revision",
+        description: `OSAS requested revisions for "${prop.title || prop.event_title}". Review the evaluation notes and resubmit.`,
+        actionLabel: "View proposal feedback",
         redirects: !Boolean(onSelectProposal),
         action: () => {
           if (onSelectProposal) {
@@ -219,7 +221,7 @@ export default function StudentOverviewTab({
           }
         },
         icon: " ReloadIcon",
-        badge: "OSAS Evaluation",
+        badge: "OSAS evaluation",
         theme: "amber",
       });
     });
@@ -230,19 +232,24 @@ export default function StudentOverviewTab({
         id: "pending-post-event",
         type: "post_event",
         priority: 5,
-        title: "Post-Event Report Due",
-        description: `You have ${pendingPostEvents.length} completed event${pendingPostEvents.length > 1 ? "s" : ""} pending liquidation and post-activity reports.`,
-        actionLabel: "Open OSAS Submissions",
+        title: "Post-event report due",
+        description: `You have ${pendingPostEvents.length} completed ${pendingPostEvents.length === 1 ? "event" : "events"} pending liquidation and post-activity reports.`,
+        actionLabel: "Open OSAS submissions",
         redirects: true,
         action: () => onNavigate("osas"),
         icon: " FileUploadIcon",
-        badge: "Liquidation Due",
+        badge: "Liquidation due",
         theme: "blue",
       });
     }
 
     return items.sort((a, b) => a.priority - b.priority);
   }, [data.requests, data.proposals, complianceData, pendingPostEvents, onNavigate, onSelectRequest, onSelectProposal]);
+
+  const MAX_INLINE_ATTENTION = 2;
+  const displayedAttentionItems = attentionItems.slice(0, MAX_INLINE_ATTENTION);
+  const hasMoreAttention = attentionItems.length > MAX_INLINE_ATTENTION;
+  const hiddenAttentionCount = attentionItems.length - MAX_INLINE_ATTENTION;
 
   // 2. Identify the Active In-Flight Request Tracker
   const activeRequest = useMemo(() => {
@@ -290,9 +297,9 @@ export default function StudentOverviewTab({
 
     return [
       { id: "submitted", label: "Submitted", done: isSubmitted, current: status === "submitted" || status === "pending" },
-      { id: "review", label: "Under Review", done: isUnderReview, current: status === "under review" || status === "inprogress" || status === "pendingpayment" },
+      { id: "review", label: "Under review", done: isUnderReview, current: status === "under review" || status === "inprogress" || status === "pendingpayment" },
       { id: "processing", label: "Processing", done: isProcessing, current: status === "processing" },
-      { id: "ready", label: "Ready for Pick-Up", done: isReady, current: status === "ready" },
+      { id: "ready", label: "Ready for pick-up", done: isReady, current: status === "ready" },
     ];
   }, [activeRequest]);
 
@@ -343,7 +350,7 @@ export default function StudentOverviewTab({
         office: "Office of the Registrar",
         icon,
         tone,
-        actionLabel: "View Details",
+        actionLabel: "View details",
         request: req,
         onClick: () => {
           if (onSelectRequest) {
@@ -379,14 +386,14 @@ export default function StudentOverviewTab({
       events.push({
         id: `milestone-prop-${prop.id}-${prop.updated_at || prop.created_at}`,
         category: "osas",
-        title: prop.title || prop.event_title || "Event Proposal",
-        subtitle: prop.organization_name || "OSAS Proposal",
+        title: prop.title || prop.event_title || "Event proposal",
+        subtitle: prop.organization_name || "OSAS proposal",
         description: desc,
         date: prop.updated_at || prop.created_at,
         office: "Student Affairs (OSAS)",
         icon,
         tone,
-        actionLabel: "View Details",
+        actionLabel: "View details",
         proposal: prop,
         onClick: () => {
           if (onSelectProposal) {
@@ -403,14 +410,14 @@ export default function StudentOverviewTab({
       events.push({
         id: `milestone-post-event-${report.id}`,
         category: "osas",
-        title: report.event_title || "Post-Event Liquidation",
-        subtitle: report.organization_name || "OSAS Report",
+        title: report.event_title || "Post-event liquidation",
+        subtitle: report.organization_name || "OSAS report",
         description: `Post-event report and financial liquidation statement filed.`,
         date: report.updated_at || report.created_at,
         office: "Student Affairs (OSAS)",
         icon: " ClipboardIcon",
         tone: "blue",
-        actionLabel: "View Details",
+        actionLabel: "View details",
         report,
         onClick: () => setSelectedPostEventDetail(report),
       });
@@ -451,7 +458,7 @@ export default function StudentOverviewTab({
   const complianceSummary = complianceData?.summary;
   const isParent = authUser?.client_type === "Parent";
   const isAlumni = authUser?.client_type === "Alumni";
-  const requestActionLabel = isParent ? "Request on Behalf of a Student" : "Open Request Form";
+  const requestActionLabel = isParent ? "Request for a student" : "Open request form";
   const overviewDescription = isParent
     ? "Request a student’s academic documents and track the Registrar’s review."
     : isAlumni
@@ -507,7 +514,7 @@ export default function StudentOverviewTab({
               <RefreshButton
                 onRefresh={onRefresh}
                 isLoading={refreshing}
-                title="Refresh Overview"
+                title="Refresh overview"
               />
               <Button
                 type="button"
@@ -529,15 +536,27 @@ export default function StudentOverviewTab({
       {/* 2. Urgent Attention Center — Inline Alerts (Full Width, Non-Floating) */}
       {attentionItems.length > 0 && (
         <div className="flex flex-col gap-2.5 w-full">
-          <div className="flex items-center gap-2 px-0.5">
-            <span className="flex h-2 w-2 rounded-full bg-amber-500" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-              Attention Required ({attentionItems.length})
-            </h2>
+          <div className="flex items-center justify-between gap-2 px-0.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-amber-500" />
+              <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+                Attention required ({attentionItems.length})
+              </h2>
+            </div>
+            {hasMoreAttention && (
+              <button
+                type="button"
+                onClick={() => setIsAttentionSheetOpen(true)}
+                className="group/all inline-flex items-center gap-1 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline underline-offset-4 cursor-pointer transition-colors"
+              >
+                <span>View all ({attentionItems.length})</span>
+                <ArrowRight01Icon size={14} className="shrink-0 transition-transform group-hover/all:translate-x-0.5" />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-col gap-2.5 w-full">
-            {attentionItems.map((item) => {
+            {displayedAttentionItems.map((item) => {
               const isAmber = item.theme === "amber";
               const isEmerald = item.theme === "emerald";
               const isBlue = item.theme === "blue";
@@ -608,6 +627,21 @@ export default function StudentOverviewTab({
               );
             })}
           </div>
+
+          {hasMoreAttention && (
+            <div className="flex items-center justify-center pt-0.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAttentionSheetOpen(true)}
+                className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all inline-flex items-center gap-1.5"
+              >
+                <span>View more ({hiddenAttentionCount} more)</span>
+                <ArrowRight01Icon size={14} className="shrink-0 text-gray-400 dark:text-zinc-500" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -615,8 +649,8 @@ export default function StudentOverviewTab({
       <div className="flex flex-col gap-2.5 w-full">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-0.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-              Active Request Tracking
+            <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+              Active request tracking
             </h2>
             {inFlightCount > 0 && (
               <OverviewBadge className="tabular-nums">
@@ -638,8 +672,8 @@ export default function StudentOverviewTab({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border dark:border-border">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-pup-maroon dark:text-red-400">
-                      Registrar Academic Request
+                    <span className="text-xs font-semibold text-pup-maroon dark:text-red-400">
+                      Registrar academic request
                     </span>
                     <span className="text-gray-300 dark:text-zinc-700">•</span>
                     <span className="text-xs text-gray-500">
@@ -669,7 +703,7 @@ export default function StudentOverviewTab({
                     }}
                     className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                   >
-                    View Details
+                    View details
                   </Button>
                 </div>
               </div>
@@ -725,8 +759,8 @@ export default function StudentOverviewTab({
             variant="compact"
             className="rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs"
             icon={InboxIcon}
-            title="No In-Flight Document Requests"
-            description="Need official credentials, TOR, certifications, or diploma duplicates? Submit a request anytime."
+            title="No active document requests"
+            description="Submit a request whenever you need transcripts, certifications, or other official records."
           >
             <Button
               type="button"
@@ -742,8 +776,8 @@ export default function StudentOverviewTab({
 
       {/* 4. Quick Portals & Actions Hub (Full-Width 3-Column Grid) */}
       <div className="flex flex-col gap-2.5 w-full">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400 px-0.5">
-          Quick Portals &amp; Actions
+        <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400 px-0.5">
+          Quick portals and actions
         </h2>
 
         <div className="grid w-full grid-cols-1 gap-3.5 sm:grid-cols-3">
@@ -763,13 +797,13 @@ export default function StudentOverviewTab({
               </OverviewBadge>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
-              Document Requests
+              Document requests
             </span>
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               {isParent ? "See what to attach, submit a request, and track its status." : "Browse available transcripts, certifications, and other academic documents."}
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-pup-maroon dark:text-red-400 group-hover:underline underline-offset-4">
-              <span>Open Document Requests</span>
+              <span>Open document requests</span>
               <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
@@ -794,13 +828,13 @@ export default function StudentOverviewTab({
               )}
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
-              Document Checklist
+              Document checklist
             </span>
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               Review the documents students need to submit for enrollment.
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 group-hover:underline underline-offset-4">
-              <span>Open Document Checklist</span>
+              <span>Open document checklist</span>
               <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
@@ -821,13 +855,13 @@ export default function StudentOverviewTab({
               </OverviewBadge>
             </div>
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-100 mt-3.5">
-              OSAS Submissions
+              OSAS submissions
             </span>
             <span className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1 leading-normal">
               Student organization event proposals, CBL approvals, and liquidation.
             </span>
             <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 dark:text-blue-400 group-hover:underline underline-offset-4">
-              <span>Open OSAS Submissions</span>
+              <span>Open OSAS submissions</span>
               <ArrowUpRight01Icon size="1em" className="text-[12px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </button>
@@ -840,8 +874,8 @@ export default function StudentOverviewTab({
       <div className="flex flex-[1_0_auto] flex-col gap-2.5 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-0.5">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-              Recent Activity &amp; Institutional Updates
+            <h2 className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
+              Recent activity and updates
             </h2>
             <OverviewBadge className="tabular-nums">
               {filteredMilestones.length}
@@ -855,10 +889,10 @@ export default function StudentOverviewTab({
             variant="capsule"
             className="inline-grid grid-flow-col auto-cols-fr shrink-0 self-start sm:self-auto"
             items={[
-              { value: "all", label: "All Activity" },
-              { value: "requests", label: "Registrar Requests" },
-              { value: "compliance", label: "Permanent Records" },
-              { value: "osas", label: "OSAS Affairs" },
+              { value: "all", label: "All activity" },
+              { value: "requests", label: "Registrar requests" },
+              { value: "compliance", label: "Permanent records" },
+              { value: "osas", label: "OSAS affairs" },
             ]}
           />
         </div>
@@ -940,12 +974,12 @@ export default function StudentOverviewTab({
                 <EmptyHeader>
                   <EmptyMedia><EmptyClock01Icon size="1em" /></EmptyMedia>
                   <EmptyTitle>
-                    {activityFilter === "all" ? "No Recent Activity Yet" : "No Activity in this Category"}
+                    {activityFilter === "all" ? "No recent activity yet" : "No activity in this category"}
                   </EmptyTitle>
                   <EmptyDescription>
                     {activityFilter === "all"
                       ? "Updates for document requests, enrollment records, and OSAS submissions will appear here."
-                      : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar Requests" : activityFilter === "compliance" ? "Permanent Records" : "OSAS Affairs"}.`}
+                      : `No status transitions recorded under ${activityFilter === "requests" ? "Registrar requests" : activityFilter === "compliance" ? "Permanent records" : "OSAS affairs"}.`}
                   </EmptyDescription>
                 </EmptyHeader>
                 {activityFilter !== "all" && (
@@ -954,10 +988,10 @@ export default function StudentOverviewTab({
                       variant="outline"
                       size="sm"
                       onClick={() => handleFilterChange("all")}
-                      title="View All Activity"
+                      title="View all activity"
                       className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
                     >
-                      View All Activity
+                      View all activity
                     </Button>
                   </EmptyContent>
                 )}
@@ -970,7 +1004,161 @@ export default function StudentOverviewTab({
         )}
       </Card>
 
-      {/* 2. Standardized Post-Event Report Details Sheet */}
+      {/* 2. Standardized Attention Required Sheet */}
+      <Sheet
+        open={isAttentionSheetOpen}
+        onOpenChange={setIsAttentionSheetOpen}
+      >
+        <SheetContent
+          side="right"
+          size="default"
+          showCloseButton={false}
+          className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex flex-col h-full font-jakarta p-0 overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 p-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <SheetTitle>Attention required</SheetTitle>
+                  <span className={cn(COMPACT_BADGE_BASE, "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 font-semibold")}>
+                    {attentionItems.length} {attentionItems.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
+                <SheetDescription className="sr-only">
+                  Detailed list of urgent records, clearance holds, and required student actions
+                </SheetDescription>
+              </div>
+
+              <div className="ml-auto flex items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setIsAttentionSheetOpen(false)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          </SheetHeader>
+
+          {/* Line-Attached Edge-to-Edge Status Notice (Standard Look matching pick-up info sheet) */}
+          <NoticeBanner
+            tone={attentionItems.some((item) => item.type === "ready") ? "success" : "warning"}
+            title={attentionItems.some((item) => item.type === "ready") ? "Action required and pick-up available:" : "Action required:"}
+          >
+            {attentionItems.some((item) => item.type === "ready")
+              ? "You have records ready for claiming at Registrar Window 2, as well as required submissions to review."
+              : "Review and resolve urgent items to avoid academic holds, document delays, or missed deadlines."}
+          </NoticeBanner>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6 scrollbar-thin [&>section]:shrink-0">
+            <section className="space-y-3">
+              <SheetSectionHeading icon="Alert02Icon" title={`Urgent items (${attentionItems.length})`} />
+
+              <div className="flex flex-col gap-3">
+                {attentionItems.map((item) => {
+                  const isAmber = item.theme === "amber";
+                  const isEmerald = item.theme === "emerald";
+                  const isBlue = item.theme === "blue";
+
+                  return (
+                    <div
+                      key={`attention-sheet-${item.id}`}
+                      role="alert"
+                      className="relative flex flex-col gap-3 p-4 rounded-2xl border border-border dark:border-border bg-white dark:bg-card shadow-2xs hover:shadow-xs transition-all"
+                    >
+                      <div className="flex items-start gap-3.5 min-w-0">
+                        <div
+                          className={cn(
+                            "size-10 shrink-0 rounded-full flex items-center justify-center mt-0.5",
+                            isAmber && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+                            isEmerald && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+                            isBlue && "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
+                          )}
+                        >
+                          <AppIcon className={cn(item.icon, "text-lg")} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-zinc-100 leading-tight">
+                              {item.title}
+                            </span>
+                            <OverviewBadge>
+                              <AppIcon
+                                className={cn(
+                                  item.icon,
+                                  "shrink-0 text-[12px]",
+                                  isEmerald ? "text-emerald-600 dark:text-emerald-400"
+                                    : isBlue ? "text-blue-600 dark:text-blue-400"
+                                    : "text-amber-600 dark:text-amber-400"
+                                )}
+                                aria-hidden="true"
+                              />
+                              {item.badge}
+                            </OverviewBadge>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                            <NarrativeText text={item.description} mode="full" highlightedPhrases={item.highlightedPhrases} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end pt-2 border-t border-gray-100/70 dark:border-zinc-800/50">
+                        {item.redirects ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAttentionSheetOpen(false);
+                              item.action();
+                            }}
+                            className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-1 focus-visible:after:ring-pup-maroon group/btn inline-flex items-center gap-1.5 text-xs font-semibold text-pup-maroon dark:text-red-400 hover:underline underline-offset-4 transition-colors cursor-pointer py-1.5 px-2"
+                          >
+                            <span>{item.actionLabel}</span>
+                            <ArrowUpRight01Icon size={14} aria-hidden="true" className="shrink-0 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                          </button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsAttentionSheetOpen(false);
+                              item.action();
+                            }}
+                            className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-1 focus-visible:after:ring-pup-maroon h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-none transition-colors"
+                          >
+                            {item.actionLabel}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAttentionSheetOpen(false)}
+              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              Close
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* 3. Standardized Post-Event Report Details Sheet */}
       <Sheet
         open={Boolean(selectedPostEventDetail)}
         onOpenChange={(open) => !open && setSelectedPostEventDetail(null)}
@@ -985,7 +1173,7 @@ export default function StudentOverviewTab({
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <SheetTitle>Post-Event Liquidation Details</SheetTitle>
+                  <SheetTitle>Post-event liquidation details</SheetTitle>
                   <span className={cn(COMPACT_BADGE_BASE, getStatusBadgeClass(selectedPostEventDetail?.status || "Submitted"))}>
                     {selectedPostEventDetail?.status || "Submitted"}
                   </span>
@@ -1004,8 +1192,8 @@ export default function StudentOverviewTab({
                     totalPages={visiblePostEventReports.length}
                     onPrevious={() => setSelectedPostEventDetail(visiblePostEventReports[postEventIndex - 1])}
                     onNext={() => setSelectedPostEventDetail(visiblePostEventReports[postEventIndex + 1])}
-                    previousLabel="Previous Report"
-                    nextLabel="Next Report"
+                    previousLabel="Previous report"
+                    nextLabel="Next report"
                   />
                 )}
                 <Tooltip>
@@ -1027,8 +1215,8 @@ export default function StudentOverviewTab({
 
           {/* Line-Attached Edge-to-Edge Status Notice */}
           <NoticeBanner tone={["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status) ? "success" : selectedPostEventDetail?.status === "Needs Revision" ? "warning" : selectedPostEventDetail?.status === "Declined" ? "danger" : "info"} title={["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status)
-                  ? "Liquidation Cleared"
-                  : selectedPostEventDetail?.status === "Needs Revision" ? "Revision Required" : selectedPostEventDetail?.status === "Declined" ? "Report Declined" : "Report Submitted"}>
+                  ? "Liquidation Cleared:"
+                  : selectedPostEventDetail?.status === "Needs Revision" ? "Revision Required:" : selectedPostEventDetail?.status === "Declined" ? "Report Declined:" : "Report Submitted:"}>
             <NarrativeText
                 text={
                   ["Approved", "Completed", "Cleared"].includes(selectedPostEventDetail?.status)
@@ -1064,7 +1252,7 @@ export default function StudentOverviewTab({
 
             {/* Post-Event Specification (Unboxed InfoRow List) */}
             <div className="space-y-2">
-              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Post-Event Specification" />
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Post-event specification" />
               <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
                 <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventDetail?.organization_name || "Student Affairs"} />
                 <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${selectedPostEventDetail?.actual_attendance || 0} participants`} />
@@ -1080,41 +1268,21 @@ export default function StudentOverviewTab({
             {/* Attached Report Documents (Unboxed, Single Sleek Rows) */}
             {(selectedPostEventDetail?.narrative_original_filename || selectedPostEventDetail?.liquidation_original_filename) && (
               <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <SheetSectionHeading icon="Attachment01Icon" title="Attached Report Documents" />
+                <SheetSectionHeading icon="Attachment01Icon" title="Attached report documents" />
                 <div className="space-y-2">
                   {selectedPostEventDetail?.narrative_original_filename && (
-                    <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
-                          <File02Icon size="1em" className="text-base" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                            {selectedPostEventDetail.narrative_original_filename}
-                          </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                            Narrative Event Report
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <SheetAttachmentRow
+                      filename={selectedPostEventDetail.narrative_original_filename}
+                      fileUrl={`/api/student/post-event-reports/${selectedPostEventDetail.id}?file=narrative`}
+                      description="Narrative Event Report"
+                    />
                   )}
                   {selectedPostEventDetail?.liquidation_original_filename && (
-                    <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                          <AppIcon className=" Invoice01Icon text-base" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                            {selectedPostEventDetail.liquidation_original_filename}
-                          </p>
-                          <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                            Financial Liquidation Statement
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <SheetAttachmentRow
+                      filename={selectedPostEventDetail.liquidation_original_filename}
+                      fileUrl={`/api/student/post-event-reports/${selectedPostEventDetail.id}?file=liquidation`}
+                      description="Financial Liquidation Statement"
+                    />
                   )}
                 </div>
               </div>
