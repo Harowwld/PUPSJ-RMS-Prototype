@@ -450,7 +450,7 @@ export default function ScanUploadTab({
         let data
         if (selectedRow && previewUrl) {
           const res = await fetch(previewUrl)
-          if (!res.ok) throw new Error("Failed to fetch PDF file")
+          if (!res.ok) throw new Error("Could not fetch PDF file")
           data = await res.arrayBuffer()
         } else if (file) {
           data = await file.arrayBuffer()
@@ -569,7 +569,7 @@ export default function ScanUploadTab({
       if (files.length > 0) {
         e.preventDefault()
         handlePdfFileSelect(files)
-        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
+        showToast({ title: "File pasted", description: "Document pasted from clipboard." })
       }
     }
 
@@ -599,7 +599,7 @@ export default function ScanUploadTab({
     if (validFiles.length === 0) return
     if (uploadedFile) {
       if (validFiles.length !== 1) {
-        showToast({ title: "Choose One Replacement", description: "Replace the selected page with one PDF or image." }, true)
+        showToast({ title: "Choose one replacement", description: "Replace the selected page with one PDF or image." }, true)
         return
       }
       replaceFile(validFiles[0])
@@ -626,12 +626,12 @@ export default function ScanUploadTab({
       }
       if (files.length > 0) {
         handlePdfFileSelect(files)
-        showToast({ title: "File Pasted", description: "Document pasted from clipboard." })
+        showToast({ title: "File pasted", description: "Document pasted from clipboard." })
       } else {
-        showToast({ title: "Clipboard Empty", description: "No valid image or PDF found in clipboard." }, "warning")
+        showToast({ title: "Clipboard empty", description: "No valid image or PDF found in clipboard." }, "warning")
       }
     } catch {
-      showToast({ title: "Clipboard Access Limited", description: "Browser prevented automatic paste. Press Ctrl+V (or Cmd+V) to paste." }, "warning")
+      showToast({ title: "Clipboard access limited", description: "Browser prevented automatic paste. Press Ctrl+V (or Cmd+V) to paste." }, "warning")
     }
   }
 
@@ -699,9 +699,9 @@ export default function ScanUploadTab({
             <>
               <ConfirmModal
                 open={clearInboxOpen}
-                title="Clear Scanner Inbox?"
-                message={`This will remove ${hf.rows.length} queued item(s) from the scanner inbox. You can’t undo this.`}
-                confirmLabel="Clear Inbox"
+                title="Clear scanner inbox?"
+                message={`This removes ${hf.rows.length} queued ${hf.rows.length === 1 ? "item" : "items"} from the scanner inbox. You can’t undo this.`}
+                confirmLabel="Clear inbox"
                 onConfirm={async () => {
                   await hf.clearInbox()
                   setClearInboxOpen(false)
@@ -1349,6 +1349,7 @@ export default function ScanUploadTab({
                                         Acronym
                                       </label>
                                       <Input
+                                        placeholder="Acronym unavailable"
                                         type="text"
                                         className={cn(
                                           "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
@@ -1363,6 +1364,7 @@ export default function ScanUploadTab({
                                         Category
                                       </label>
                                       <Input
+                                        placeholder="Category unavailable"
                                         type="text"
                                         className={cn(
                                           "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
@@ -1378,6 +1380,7 @@ export default function ScanUploadTab({
                                           Faculty Adviser
                                         </label>
                                         <Input
+                                          placeholder="Faculty adviser unavailable"
                                           type="text"
                                           className={cn(
                                             "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",
@@ -1699,6 +1702,7 @@ export default function ScanUploadTab({
                                     Full Name
                                   </label>
                                   <Input
+                                    placeholder="Full name unavailable"
                                     type="text"
                                     className={cn(
                                       "h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs font-normal transition-all",

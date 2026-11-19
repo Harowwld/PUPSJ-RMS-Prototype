@@ -168,14 +168,14 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
           )
         );
       }
-      showToast({ title: "Queue Cleared", description: `Cleared ${failedRows.length} failed document(s).` });
+      showToast({ title: "Queue cleared", description: `Cleared ${failedRows.length} failed ${failedRows.length === 1 ? "document" : "documents"}.` });
       setFailedRows([]);
       setOpen(false);
       await refresh();
     } catch (error) {
       showToast(
         formatErrorMessage(error, {
-          title: "Clear Queue Failed",
+          title: "Could not clear queue",
           actionContext: "Clearing all failed documents from queue",
         }),
         true
@@ -191,17 +191,17 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
         <DialogHeader className="p-6 pb-0 text-left">
           <div className="flex items-center justify-between">
             <DialogTitle>
-              Failed Documents {failedRows.length > 0 && `(${failedRows.length})`}
+              Failed documents {failedRows.length > 0 && `(${failedRows.length})`}
             </DialogTitle>
           </div>
           <DialogDescription className="mt-1">
-            These documents encountered processing errors or are missing from the ingest directory. You can retry them or clear them from the review queue.
+            These documents encountered processing errors or are missing from the ingest directory. Retry them or clear them from the review queue.
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4" aria-live="polite">
           {loading && failedRows.length === 0 ? (
-            <p className="p-4 text-center text-sm text-gray-500 dark:text-zinc-400">Loading failed documents...</p>
+            <p className="p-4 text-center text-sm text-gray-500 dark:text-zinc-400">Loading failed documents…</p>
           ) : failedRows.length === 0 ? (
             <p className="p-4 text-center text-sm text-gray-500 dark:text-zinc-400">No failed documents remain.</p>
           ) : (
@@ -227,7 +227,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
                       className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      {retryingId === row.id ? "Retrying..." : "Retry"}
+                      {retryingId === row.id ? "Retrying…" : "Retry"}
                     </Button>
                     <Button
                       type="button"
@@ -237,7 +237,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
                       disabled={retryingId !== null || dismissingId !== null || clearingAll}
                       className="h-9 rounded-xl px-3.5 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
                     >
-                      {dismissingId === row.id ? "Clearing..." : "Dismiss Scan"}
+                      {dismissingId === row.id ? "Clearing…" : "Dismiss scan"}
                     </Button>
                   </div>
                 </li>
@@ -256,7 +256,7 @@ export default function GlobalFailedBatchReviewModal({ officeId, showToast = () 
               onClick={clearAllFailed}
               className="h-9 rounded-xl px-4 text-xs font-semibold border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all"
             >
-              {clearingAll ? "Clearing..." : "Clear All Failed"}
+              {clearingAll ? "Clearing…" : "Clear all failed"}
             </Button>
           ) : <div />}
           <Button

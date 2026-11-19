@@ -171,8 +171,8 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     return () => window.removeEventListener("user-preferences-changed", handlePreferencesChanged);
   }, []);
 
-  const switchView = useCallback((nextView) => {
-    const params = new URLSearchParams();
+  const switchView = useCallback((nextView, filters) => {
+    const params = new URLSearchParams(filters);
     params.set("view", nextView);
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
   }, [router]);
@@ -352,7 +352,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     refId: "",
   });
 
-  const showToast = useCallback((msg, typeOrIsError = false) => {
+  const showToast = useCallback((msg, typeOrIsError = false, autoHide = true) => {
     if (msg instanceof Error) {
       const normalized = formatErrorMessage(msg);
       return toast.error(normalized.title, {
@@ -361,8 +361,16 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       });
     }
 
-    const isError = typeOrIsError === true || typeOrIsError === "error";
-    const isWarning = typeOrIsError === "warning";
+    const isError =
+      typeOrIsError === true ||
+      typeOrIsError === "error" ||
+      (msg && typeof msg === "object" && (msg.variant === "destructive" || msg.variant === "error"));
+    const isWarning =
+      typeOrIsError === "warning" ||
+      (msg && typeof msg === "object" && msg.variant === "warning");
+    const isLoading =
+      typeOrIsError === "loading" ||
+      (msg && typeof msg === "object" && msg.variant === "loading");
 
     if (msg && typeof msg === "object") {
       const opts = {};
@@ -382,6 +390,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       if (isWarning) {
         return toast.warning(msg.title || "", opts);
       }
+      if (isLoading) {
+        return toast.loading(msg.title || "", opts);
+      }
+      if (!autoHide) {
+        return toast.message(msg.title || "", { ...opts, duration: 5000 });
+      }
       return toast.success(msg.title || "", opts);
     }
 
@@ -395,6 +409,12 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     }
     if (isWarning) {
       return toast.warning(str);
+    }
+    if (isLoading) {
+      return toast.loading(str);
+    }
+    if (!autoHide) {
+      return toast.message(str, { duration: 5000 });
     }
     return toast.success(str);
   }, []);
@@ -1961,7 +1981,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
                   });
                   const json = await res.json().catch(() => null);
                   if (!res.ok || !json?.ok) {
-                    throw new Error(json?.error || `Failed to restore ${isOsas ? "organization" : "student"} record`);
+                    throw new Error(json?.error || `Could not restore ${isOsas ? "organization" : "student"} record`);
                   }
                   setSelectedStudentIds((prev) => {
                     if (!prev.has(targetId)) return prev;
@@ -2105,12 +2125,13 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
 
           {view === "batch_review" && (
             <div className="w-full h-full min-h-0 flex-1 flex flex-col overflow-hidden m-0 border-0">
-              <BatchReviewTab showToast={showToast} students={students} docTypes={docTypes} />
+              <BatchReviewTab notificationBatchId={searchParams?.get("notificationBatch")} showToast={showToast} students={students} docTypes={docTypes} />
             </div>
           )}
 
           {view === "requests" && (
             <DocumentRequestsTab
+              agingOnly={searchParams?.get("aging") === "1"}
               students={students}
               courses={courses}
               docTypes={requestableDocTypes}
@@ -2121,7 +2142,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
           )}
 
           {view === "osas_monitoring" && (
-            <OsasMonitoringTab showToast={showToast} />
+            <OsasMonitoringTab agingOnly={searchParams?.get("aging") === "1"} showToast={showToast} />
           )}
 
           {view === "organizations" && (
@@ -2199,11 +2220,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       />
       <ConfirmModal
         open={bulkArchiveOpen}
-        title="Confirm Bulk Archival"
+        title="Archive selected records?"
         message={authUser?.office_id === "osas"
-          ? `You are about to move ${selectedStudentIds.size} student organization(s) to the system archive.`
-          : `You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
-        confirmLabel="Archive Records"
+          ? `This moves ${selectedStudentIds.size} ${selectedStudentIds.size === 1 ? "organization" : "organizations"} to the system archive.`
+          : `This moves ${selectedStudentIds.size} ${selectedStudentIds.size === 1 ? "student record" : "student records"} to the system archive and disables processing for them.`}
+        confirmLabel="Archive records"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkArchive}
         onCancel={() => setBulkArchiveOpen(false)}
@@ -2213,11 +2234,11 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
       />
       <ConfirmModal
         open={bulkRestoreOpen}
-        title="Confirm Bulk Restoration"
+        title="Restore selected records?"
         message={authUser?.office_id === "osas"
-          ? `You are about to restore ${selectedStudentIds.size} student organization(s) to active status.`
-          : `You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
-        confirmLabel="Restore Records"
+          ? `This restores ${selectedStudentIds.size} ${selectedStudentIds.size === 1 ? "organization" : "organizations"} to active status.`
+          : `This restores ${selectedStudentIds.size} ${selectedStudentIds.size === 1 ? "student record" : "student records"} to active status.`}
+        confirmLabel="Restore records"
         selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkRestore}
         onCancel={() => setBulkRestoreOpen(false)}

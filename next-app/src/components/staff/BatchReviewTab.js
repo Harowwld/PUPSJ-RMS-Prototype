@@ -33,10 +33,11 @@ import PageHeader from "@/components/shared/PageHeader";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
-import PDFPreview from "@/components/shared/PDFPreview";
+import ResilientPDFViewer from "@/components/shared/ResilientPDFViewer";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import { SegmentedControl } from "@/components/ui/tabs";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import SavedViewsPopover from "@/components/shared/SavedViewsPopover";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
   FilterPopover,
@@ -77,7 +78,7 @@ const REGION_LABELS = {
   lastName: { label: "Last name", color: "#dc2626" },
 };
 
-export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [] }) {
+export default function BatchReviewTab({ showToast = () => {}, students = [], docTypes = [], notificationBatchId }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [statusFilters, setStatusFilters] = useOsasViewPreference("batch_review", "statusFilters", ["Needs Review"]);
@@ -149,7 +150,8 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
     else setLoading(true);
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(append ? rowsRef.current.length : 0) });
-      const currentStatuses = statusFilterOverride ?? effectiveStatuses;
+      if (notificationBatchId) params.set("batchId", notificationBatchId);
+      const currentStatuses = notificationBatchId ? ["Needs Review", "Conflict", "Duplicate", "Failed"] : statusFilterOverride ?? effectiveStatuses;
       if (currentStatuses.length > 0) params.set("status", currentStatuses.join(","));
       if (effectiveDocTypes.length > 0) params.set("docType", effectiveDocTypes.join(","));
       params.set("sortBy", sortBy);
@@ -200,7 +202,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
         setLoadingMore(false);
       }
     }
-  }, [query, showToast, effectiveStatuses, effectiveDocTypes, filterRules, sortBy, sortOrder, groupBy, startDate, endDate]);
+  }, [notificationBatchId, query, showToast, effectiveStatuses, effectiveDocTypes, filterRules, sortBy, sortOrder, groupBy, startDate, endDate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -314,11 +316,12 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.ok) {
-        throw new Error(data?.error || "Failed to clear failed documents");
+        throw new Error(data?.error || "Could not clear failed documents");
       }
+      const clearedCount = data.clearedCount || 0;
       showToast({
-        title: "Failed Documents Cleared",
-        description: `Successfully cleared ${data.clearedCount || 0} failed document(s).`,
+        title: "Failed documents cleared",
+        description: `Cleared ${clearedCount} failed ${clearedCount === 1 ? "document" : "documents"}.`,
       });
       setSelectedId(null);
       await load();
@@ -637,7 +640,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                     onClick={handleClearAllFailed}
                     className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                   >
-                    {clearingAll ? "Clearing..." : "Clear All Failed"}
+                    {clearingAll ? "Clearing…" : "Clear all failed"}
                   </Button>
                 )}
                 <RefreshButton
@@ -674,7 +677,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                 onChange={(val) => setQuery(val)}
                 count={total}
                 loading={loading}
-                placeholder="Search filename or OCR text..."
+                placeholder="Search filename or OCR text"
                 label="Search review queue"
               />
             </div>
@@ -711,6 +714,30 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                   setEndDate("");
                 }}
                 disableFutureDates={true}
+              />
+              <SavedViewsPopover
+                page="batch_review"
+                placeholder="e.g. Needs Review"
+                currentState={{
+                  statusFilters,
+                  docTypeFilters,
+                  filterRules,
+                  startDate,
+                  endDate,
+                  sortBy,
+                  sortOrder,
+                  groupBy,
+                }}
+                onApplyState={(state) => {
+                  if (Array.isArray(state.statusFilters)) setStatusFilters(state.statusFilters);
+                  if (Array.isArray(state.docTypeFilters)) setDocTypeFilters(state.docTypeFilters);
+                  if (Array.isArray(state.filterRules)) setFilterRules(state.filterRules);
+                  if (typeof state.startDate === "string") setStartDate(state.startDate);
+                  if (typeof state.endDate === "string") setEndDate(state.endDate);
+                  if (typeof state.sortBy === "string") setSortBy(state.sortBy);
+                  if (typeof state.sortOrder === "string") setSortOrder(state.sortOrder);
+                  if (typeof state.groupBy === "string") setGroupBy(state.groupBy);
+                }}
               />
             </div>
           </DataViewToolbar>
@@ -753,7 +780,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                         onClick={handleClearAllFailed}
                         className="h-7 px-3 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-40"
                       >
-                        {clearingAll ? "Clearing..." : "Clear All Failed"}
+                        {clearingAll ? "Clearing…" : "Clear all failed"}
                       </Button>
                     )}
                     <span className="text-xs text-gray-900 dark:text-zinc-300">
@@ -955,7 +982,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             onClick={openFullscreenPreview}
                             aria-label="Open document preview fullscreen"
                             title="View fullscreen"
-                            className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white max-md:right-0 max-md:top-0 max-md:h-8 max-md:w-8"
+                            className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white max-md:right-0 max-md:top-0 max-md:h-8 max-md:w-8 max-md:rounded-lg"
                           >
                             <ArrowExpand01Icon size="1em" className="text-base" />
                           </button>
@@ -1010,7 +1037,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             </div>
                           ) : (
                           <div className="flex h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
-                            <PDFPreview
+                            <ResilientPDFViewer
                               title="Scanned document preview"
                               src={previewUrl}
                               className="min-h-0 flex-1 w-full border-0"
@@ -1090,7 +1117,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                             <Input
                               value={studentAssignmentQuery}
                               onChange={(event) => setStudentAssignmentQuery(event.target.value)}
-                              placeholder="Type a name or student number to search..."
+                              placeholder="Search by name or student number"
                               role="combobox"
                               aria-expanded={Boolean(studentAssignmentQuery.trim())}
                               aria-controls={`student-search-results-${selected.id}`}
@@ -1200,7 +1227,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           value={note}
                           onChange={(event) => setNote(event.target.value)}
                           onBlur={() => update({ reviewNote: note }).catch(() => {})}
-                          placeholder="Optional review or conflict note..."
+                          placeholder="Add a review or conflict note (optional)"
                           className="w-full min-h-[72px] resize-y rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 p-3 text-xs shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                         />
                       </div>
@@ -1230,7 +1257,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                           }
                           className="h-9 px-4 text-xs font-semibold rounded-xl disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
                         >
-                          {saving ? "Confirming..." : "Confirm Document"}
+                          {saving ? "Confirming…" : "Confirm document"}
                         </Button>
                         <Button
                           size="sm"
@@ -1262,7 +1289,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
                       <EmptyHeader>
                         <EmptyMedia><EmptyFile02Icon size="1em" /></EmptyMedia>
                         <EmptyTitle>
-                          Select a Document
+                          Select a document
                         </EmptyTitle>
                         <EmptyDescription>
                           Choose an item from the review queue on the left to inspect its scanned preview and extracted OCR fields.
@@ -1280,7 +1307,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       <Dialog open={confirmBulkDismiss} onOpenChange={setConfirmBulkDismiss}>
         <DialogContent className="sm:max-w-md rounded-[22px] p-5 gap-4">
           <DialogHeader>
-            <DialogTitle>Dismiss Selected Files?</DialogTitle>
+            <DialogTitle>Dismiss selected files?</DialogTitle>
             <DialogDescription>
               This will dismiss up to {selectedIds.length} selected files that are still eligible. Other files will be skipped and listed in the results.
             </DialogDescription>
@@ -1300,7 +1327,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
               onClick={() => runBulkAction("dismiss", { confirmed: true })}
               className="h-9 px-4 text-xs font-semibold rounded-xl shadow-xs cursor-pointer active:scale-95"
             >
-              Dismiss Selected Files
+              Dismiss selected files
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1308,7 +1335,7 @@ export default function BatchReviewTab({ showToast = () => {}, students = [], do
       <Dialog open={Boolean(bulkResults)} onOpenChange={(open) => !open && setBulkResults(null)}>
         <DialogContent className="sm:max-w-xl rounded-[22px] p-5 gap-4">
           <DialogHeader>
-            <DialogTitle>Bulk Action Results</DialogTitle>
+            <DialogTitle>Bulk action results</DialogTitle>
             <DialogDescription>
               {bulkResults?.items.filter((item) => item.status === "Completed").length || 0} completed · {bulkResults?.items.filter((item) => item.status === "Skipped").length || 0} skipped · {bulkResults?.items.filter((item) => item.status === "Failed").length || 0} failed
             </DialogDescription>

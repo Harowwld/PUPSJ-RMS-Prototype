@@ -5,6 +5,7 @@ import TableScrollControls from "@/components/shared/TableScrollControls";
 import TablePagination from "@/components/shared/TablePagination";
 import { SegmentedControl } from "@/components/ui/tabs";
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
+import SavedViewsPopover from "@/components/shared/SavedViewsPopover";
 import DashboardSearch from "@/components/shared/DashboardSearch";
 import {
   FilterPopover,
@@ -670,7 +671,7 @@ export default function DocumentsTab({
                     }}
                     count={matrixTotal}
                     loading={docsLoading}
-                    placeholder="Search student no., name, or section..."
+                    placeholder="Search student no., name, or section"
                     label="Search compliance matrix"
                   />
                   {paginatedMatrixRecords.length > 0 && (
@@ -736,6 +737,37 @@ export default function DocumentsTab({
                       setMatrixPage(1);
                     }}
                     disableFutureDates={true}
+                  />
+                  <SavedViewsPopover
+                    page="documents"
+                    placeholder="e.g. Missing Form 137"
+                    currentState={{
+                      statusFilter: matrixStatusFilter,
+                      courseFilters: matrixCourseFilters,
+                      missingDocFilters: matrixMissingDocFilters,
+                      filterRules: matrixFilterRules,
+                      startDate: matrixStartDate,
+                      endDate: matrixEndDate,
+                      sortBy: matrixSortBy,
+                      sortOrder: matrixSortOrder,
+                      groupBy: matrixGroupBy,
+                      visibleColumns: matrixVisibleColumns,
+                      pageSize: matrixItemsPerPage,
+                    }}
+                    onApplyState={(state) => {
+                      if (typeof state.statusFilter === "string") setMatrixStatusFilter(state.statusFilter);
+                      if (Array.isArray(state.courseFilters)) setMatrixCourseFilters(state.courseFilters);
+                      if (Array.isArray(state.missingDocFilters)) setMatrixMissingDocFilters(state.missingDocFilters);
+                      if (Array.isArray(state.filterRules)) setMatrixFilterRules(state.filterRules);
+                      if (typeof state.startDate === "string") setMatrixStartDate(state.startDate);
+                      if (typeof state.endDate === "string") setMatrixEndDate(state.endDate);
+                      if (typeof state.sortBy === "string") setMatrixSortBy(state.sortBy);
+                      if (typeof state.sortOrder === "string") setMatrixSortOrder(state.sortOrder);
+                      if (typeof state.groupBy === "string") setMatrixGroupBy(state.groupBy);
+                      if (Array.isArray(state.visibleColumns)) setMatrixVisibleColumns(state.visibleColumns);
+                      if (typeof state.pageSize === "number") setMatrixItemsPerPage(state.pageSize);
+                      setMatrixPage(1);
+                    }}
                   />
                 </div>
               </DataViewToolbar>
@@ -1082,7 +1114,7 @@ export default function DocumentsTab({
               <div className="flex items-start gap-4">
                 <div className="min-w-0 pr-10">
                   <DialogTitle className="text-lg font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-100">
-                    Document View: {selectedDoc?.doc_type || "Loading..."}
+                    Document view: {selectedDoc?.doc_type || "Loading…"}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                     Viewing details for student {selectedDoc?.student_no}.

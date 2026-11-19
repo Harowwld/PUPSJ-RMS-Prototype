@@ -284,7 +284,7 @@ export default function OfficeDocumentsTable({
     if (startDate || endDate) {
       chips.push({
         id: "dateRange",
-        label: `Date: ${formatChipDate(startDate)} – ${formatChipDate(endDate)}`,
+        label: `Date: ${formatChipDate(startDate)} to ${formatChipDate(endDate)}`,
         onRemove: () => {
           setStartDate("");
           setEndDate("");
@@ -330,7 +330,7 @@ export default function OfficeDocumentsTable({
             }}
             count={totalCount}
             loading={isLoading}
-            placeholder={`Search ${officeLabel.toLowerCase()} documents...`}
+            placeholder={`Search ${officeLabel.toLowerCase()} documents`}
             label={`Search ${officeLabel} documents`}
           />
           {visibleRows.length > 0 && (

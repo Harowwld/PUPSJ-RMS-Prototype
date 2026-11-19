@@ -9,7 +9,8 @@ import {
   formatToLNFnMi,
   recognizeNameFromTemplates,
 } from "./ocrClient.js";
-import { query } from "./postgres.js";
+import { query, transaction } from "./postgres.js";
+import { claimNotificationOccurrence, queueOfficeWorkflowNotification } from "./workflowNotificationsRepo.js";
 import { matchOcrStudents, uniqueOcrStudentMatch } from "./studentNameMatcher.js";
 import { getOcrStudentRoster } from "./ocrStudentRoster.js";
 import {
@@ -22,6 +23,38 @@ import {
 } from "./ingestQueueRepo.js";
 
 export async function processNextBatchItem(batchId, officeId) {
+  const item = await processBatchItem(batchId, officeId);
+  try {
+    await notifyCompletedBatch(batchId, officeId);
+  } catch (error) {
+    console.warn("Could not record scan batch notification", { code: error.code });
+  }
+  return item;
+}
+
+async function notifyCompletedBatch(batchId, officeId) {
+  if (officeId !== "registrar" && officeId !== "osas") return;
+  await transaction(async (db) => {
+    const counts = await db.queryOne(
+      `SELECT count(*) FILTER (WHERE status = 'processing'
+          OR (status = 'pending' AND lower(coalesce(review_status, 'Processing')) IN ('processing', 'pending'))
+          OR (status IN ('pending', 'failed') AND review_status = 'Failed' AND coalesce(auto_retry_count, 0) < 1))::int AS remaining,
+              count(*) FILTER (WHERE review_status IN ('Needs Review', 'Conflict', 'Duplicate'))::int AS review,
+              count(*) FILTER (WHERE review_status = 'Failed' AND coalesce(auto_retry_count, 0) >= 1)::int AS failed
+         FROM ingest_queue WHERE office_id = $1 AND batch_id = $2`,
+      [officeId, batchId],
+    );
+    if (counts.remaining || !(counts.review || counts.failed)) return;
+    const eventKey = `queue_${officeId}_scan`;
+    if (!await claimNotificationOccurrence(db, eventKey, String(batchId))) return;
+    await queueOfficeWorkflowNotification(db, {
+      officeId, eventKey, entityType: "ingest_batch", entityId: batchId, title: "Scan Batch Needs Attention",
+      detail: `${counts.review} files need review and ${counts.failed} failed processing.`,
+    });
+  });
+}
+
+async function processBatchItem(batchId, officeId) {
   if (!String(officeId || "").trim()) throw new Error("Office scope is required");
   const item = await claimNextBatchItem(batchId, officeId);
   if (!item) return null;

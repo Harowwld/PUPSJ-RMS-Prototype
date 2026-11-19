@@ -267,9 +267,9 @@ export default function ContinuousScanningPanel({ onOpenReview, showToast = () =
       <Dialog open={showCompleted} onOpenChange={setShowCompleted}>
         <DialogContent className="sm:max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-[22px]">
           <DialogHeader className="px-5 py-4 border-b border-border dark:border-border">
-            <DialogTitle>Completed Scans</DialogTitle>
+            <DialogTitle>Completed scans</DialogTitle>
             <DialogDescription>
-              {completedRows.length} OCR-completed document(s) in this batch. Confirmation is still required.
+              {completedRows.length} OCR-completed {completedRows.length === 1 ? "document" : "documents"} in this batch. Confirmation is still required.
             </DialogDescription>
           </DialogHeader>
           <DataViewToolbar label="Completed scan search and filters" className="border-b border-border p-4 dark:border-border">
