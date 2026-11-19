@@ -46,11 +46,11 @@ export default function EditOdrsEmailDialog({ studentNo, email, onSaved }) {
 
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild><Button type="button" size="xs" variant="outline">Edit ODRS Email</Button></DialogTrigger>
+      <DialogTrigger asChild><Button type="button" size="xs" variant="outline">Edit ODRS email</Button></DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-md" hideClose={saving}>
         <form className="min-w-0 space-y-5 p-5 sm:p-6" onSubmit={save} aria-busy={saving}>
           <DialogHeader className="pr-8">
-            <DialogTitle>Edit ODRS Email</DialogTitle>
+            <DialogTitle>Edit ODRS email</DialogTitle>
             <DialogDescription>Update the email used to verify the student’s checklist access.</DialogDescription>
           </DialogHeader>
           <div className="rounded-2xl border border-border bg-gray-50/90 px-4 dark:bg-white/[0.04]">

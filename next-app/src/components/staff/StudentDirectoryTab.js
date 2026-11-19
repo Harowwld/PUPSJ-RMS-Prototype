@@ -414,7 +414,7 @@ export default function StudentDirectoryTab({
     if (startDate || endDate) {
       chips.push({
         id: "dateRange",
-        label: `Range: ${startDate || "..."} to ${endDate || "..."}`,
+        label: `Range: ${startDate || "…"} to ${endDate || "…"}`,
         onRemove: () => { setStartDate(""); setEndDate(""); setPage(1); },
       });
     }
@@ -666,8 +666,8 @@ export default function StudentDirectoryTab({
       }
 
       showToast?.({
-        title: bulkActionType === "archive" ? "Bulk Archival Complete" : "Bulk Restoration Complete",
-        description: `Processed ${success} student record(s). ${fail > 0 ? `${fail} failed.` : ""}`,
+        title: bulkActionType === "archive" ? "Records archived" : "Records restored",
+        description: `Processed ${success} ${success === 1 ? "student record" : "student records"}.${fail > 0 ? ` ${fail} failed.` : ""}`,
       });
 
       setSelectedIds(new Set());
@@ -871,7 +871,7 @@ export default function StudentDirectoryTab({
                   setPage(1);
                 }}
                 resultCount={filteredCount}
-                placeholder={isRegistrar ? "Search student no., name, or email..." : "Search student no. or name..."}
+                placeholder={isRegistrar ? "Search student no., name, or email" : "Search student no. or name"}
               />
               <TableScrollControls
                 scrollContainerRef={tableContainerRef}
@@ -1494,13 +1494,13 @@ export default function StudentDirectoryTab({
           open={bulkActionOpen}
           onOpenChange={setBulkActionOpen}
           onCancel={() => setBulkActionOpen(false)}
-          title={bulkActionType === "archive" ? "Bulk Archive Student Records" : "Bulk Restore Student Records"}
+          title={bulkActionType === "archive" ? "Archive student records?" : "Restore student records?"}
           description={
             bulkActionType === "archive"
-              ? `Are you sure you want to archive ${selectedIds.size} student record(s)?`
-              : `Are you sure you want to restore ${selectedIds.size} student record(s) to Active status?`
+              ? `This moves ${selectedIds.size} ${selectedIds.size === 1 ? "student record" : "student records"} to the archive.`
+              : `This restores ${selectedIds.size} ${selectedIds.size === 1 ? "student record" : "student records"} to active status.`
           }
-          confirmLabel={bulkActionType === "archive" ? "Archive Students" : "Restore Students"}
+          confirmLabel={bulkActionType === "archive" ? "Archive students" : "Restore students"}
           variant={bulkActionType === "archive" ? "warning" : "success"}
           isArchiveModal={bulkActionType === "archive"}
           isRestoreModal={bulkActionType === "restore"}

@@ -229,7 +229,7 @@ export default function BulkImportStudentsModal({
     const r = new FileReader();
     r.onerror = () => {
       setCsvLoading(false);
-      showToast({ title: "File Read Error", description: "Failed to read the selected CSV file." }, true);
+      showToast({ title: "Could not read file", description: "Check that the CSV file is readable and try again." }, true);
     };
 
     r.onload = (e) => {
@@ -479,7 +479,7 @@ export default function BulkImportStudentsModal({
         {/* Header */}
         <DialogHeader className="p-6 pb-0 text-left shrink-0 pr-12">
           <DialogTitle>
-            Bulk Import Students
+            Bulk import students
           </DialogTitle>
           <DialogDescription className="mt-1">
             Upload a CSV spreadsheet to validate and import multiple student master records and physical archive assignments at once. {collectOdrsEmail ? "Email is optional." : ""}
@@ -607,7 +607,7 @@ export default function BulkImportStudentsModal({
                     type="text"
                     value={localCsvSearch}
                     onChange={(e) => setLocalCsvSearch(e.target.value)}
-                    placeholder="Search loaded students..."
+                    placeholder="Search loaded students"
                     className="h-9 pl-8 pr-3 text-xs rounded-xl bg-white dark:bg-zinc-800 border border-border dark:border-border text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-none"
                   />
                 </div>
@@ -871,7 +871,7 @@ export default function BulkImportStudentsModal({
                           ) : !isValid ? (
                             <Alert01Icon size="1em"
                               className="text-amber-500 text-base inline-block"
-                              title="Invalid storage location. Please update room, cabinet, or drawer."
+                              title="Storage location is not valid. Update the room, cabinet, or drawer."
                             />
                           ) : (
                             <CheckmarkCircle01Icon size="1em"

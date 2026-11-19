@@ -1497,10 +1497,10 @@ export default function RecordsArchiveTab({
               const res = await fetch(url, { method: "DELETE" })
               const json = await res.json().catch(() => null)
               if (!res.ok || !json?.ok) {
-                throw new Error(json?.error || `Failed to archive ${isOsas ? "organization" : "student"} record`)
+                throw new Error(json?.error || `Could not archive ${isOsas ? "organization" : "student"} record`)
               }
               showToast?.({
-                title: "Record Archived",
+                title: "Record archived",
                 description: isOsas
                   ? "Organization record moved to archive."
                   : `Student ${sn} moved to archive.`,
@@ -1519,8 +1519,8 @@ export default function RecordsArchiveTab({
               }
             } catch (err) {
               showToast?.({
-                title: "Archive Failed",
-                description: err?.message || "Failed to archive record",
+                title: "Could not archive record",
+                description: err?.message || "Check your connection and try again.",
               }, true)
             }
           }

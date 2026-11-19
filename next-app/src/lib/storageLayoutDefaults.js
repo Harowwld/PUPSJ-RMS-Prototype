@@ -195,7 +195,7 @@ export function buildDefaultOsasStorageLayout() {
     id,
     rect: { x: (12 + index * 12) * GX, y: 9 * GY, w: 3 * GX, h: 3 * GY },
     rotation: 0,
-    drawerIds: [1, 2, 3, 4, 5, 6, 7],
+    drawerIds: [1, 2, 3, 4],
   }));
 
   return {

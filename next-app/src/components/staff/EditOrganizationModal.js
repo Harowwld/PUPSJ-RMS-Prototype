@@ -91,12 +91,12 @@ export default function EditOrganizationModal({
 
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update organization.");
+        throw new Error(json?.error || "Could not update organization.");
       }
 
       showToast?.({
-        title: "Organization Updated",
-        description: `${cleanName} saved successfully.`,
+        title: "Organization updated",
+        description: `${cleanName} saved.`,
       });
 
       onOpenChange(false);
@@ -119,7 +119,7 @@ export default function EditOrganizationModal({
       <DialogContent className="sm:max-w-xl w-full rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 shadow-2xl overflow-hidden flex flex-col gap-0 font-jakarta">
         <DialogHeader className="p-6 pb-0 text-left">
           <DialogTitle>
-            Edit Organization Record
+            Edit organization record
           </DialogTitle>
           <DialogDescription className="mt-1">
             Update official student organization accreditation information and filing coordinates.
@@ -278,7 +278,7 @@ export default function EditOrganizationModal({
               disabled={isSubmitting}
               className="h-9 px-4 cursor-pointer"
             >
-              {isSubmitting ? "Saving Changes..." : "Save Changes"}
+              {isSubmitting ? "Saving changes…" : "Save changes"}
             </Button>
           </DialogFooter>
         </form>

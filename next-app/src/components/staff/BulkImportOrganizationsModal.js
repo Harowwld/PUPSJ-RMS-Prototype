@@ -132,7 +132,7 @@ export default function BulkImportOrganizationsModal({
     const r = new FileReader();
     r.onerror = () => {
       setCsvLoading(false);
-      showToast({ title: "File Read Error", description: "Failed to read the selected CSV file." }, true);
+      showToast({ title: "Could not read file", description: "Check that the CSV file is readable and try again." }, true);
     };
 
     r.onload = (e) => {
@@ -378,7 +378,7 @@ export default function BulkImportOrganizationsModal({
         {/* Header */}
         <DialogHeader className="p-6 pb-0 text-left shrink-0 pr-12">
           <DialogTitle>
-            Bulk Import Student Organizations
+            Bulk import student organizations
           </DialogTitle>
           <DialogDescription className="mt-1">
             Upload a CSV spreadsheet to register multiple student organizations and assign physical archive cabinets at once.
@@ -503,7 +503,7 @@ export default function BulkImportOrganizationsModal({
                     type="text"
                     value={localCsvSearch}
                     onChange={(e) => setLocalCsvSearch(e.target.value)}
-                    placeholder="Search loaded organizations..."
+                    placeholder="Search loaded organizations"
                     className="h-9 pl-8 pr-3 text-xs rounded-xl bg-white dark:bg-zinc-800 border-border"
                   />
                 </div>

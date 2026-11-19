@@ -190,12 +190,12 @@ export default function RegisterStudentModal({
       const json = await res.json().catch(() => null);
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to register student record.");
+        throw new Error(json?.error || "Could not register student record.");
       }
 
       showToast?.({
-        title: "Student Registered",
-        description: `Student ${cleanNo} (${cleanName}) has been enrolled in the registry.`,
+        title: "Student registered",
+        description: `${cleanNo} (${cleanName}) added to the registry.`,
       });
 
       setValidationAttempted(false);
@@ -230,7 +230,7 @@ export default function RegisterStudentModal({
         <form ref={attachForm} onInvalid={() => setValidationAttempted(true)} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
           <DialogHeader className="p-6 pb-0 text-left shrink-0">
             <DialogTitle>
-              Register Student Record
+              Register student record
             </DialogTitle>
             <DialogDescription className="mt-1">
               Enroll a new student profile and allocate physical archive storage coordinates.

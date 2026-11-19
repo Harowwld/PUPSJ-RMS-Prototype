@@ -127,16 +127,16 @@ export default function EditStudentModal({
     const nameCheck = PersonNameSchema("Student Name", 200).safeParse(cleanName);
     if (!nameCheck.success) {
       showToast?.({
-        title: "Validation Error",
-        description: nameCheck.error.issues[0]?.message || "Invalid student name.",
+        title: "Enter a valid student name",
+        description: nameCheck.error.issues[0]?.message || "Check the student name and try again.",
       }, "warning");
       return;
     }
 
     if (!Number.isFinite(parsedYear) || parsedYear < 2000 || parsedYear > 2100) {
       showToast?.({
-        title: "Validation Error",
-        description: "Please provide a valid entry year (e.g. 2024).",
+        title: "Enter a valid entry year",
+        description: "Use a four-digit year like 2024.",
       }, "warning");
       return;
     }
@@ -165,12 +165,12 @@ export default function EditStudentModal({
       const json = await res.json().catch(() => null);
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update student profile.");
+        throw new Error(json?.error || "Could not update student profile.");
       }
 
       showToast?.({
-        title: "Student Updated",
-        description: `Profile for ${student.studentNo} has been modified successfully.`,
+        title: "Student updated",
+        description: `Profile for ${student.studentNo} saved.`,
       });
 
       onOpenChange(false);
@@ -194,7 +194,7 @@ export default function EditStudentModal({
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-col">
           <DialogHeader className="p-6 pb-0 text-left shrink-0">
             <DialogTitle>
-              Edit Student Profile
+              Edit student profile
             </DialogTitle>
             <DialogDescription className="mt-1">
               Update registry details and archive drawer coordinates for student{" "}
@@ -218,6 +218,7 @@ export default function EditStudentModal({
                   Student Number
                 </label>
                 <Input
+                  placeholder="Student number unavailable"
                   id="edit-student-number"
                   type="text"
                   disabled

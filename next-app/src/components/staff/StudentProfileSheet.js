@@ -1,6 +1,7 @@
 "use client";
 
 
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import { formatRequestStatus } from "@/lib/auditLogFormatting";
 import NoticeBanner from "@/components/shared/NoticeBanner";
 import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
@@ -27,7 +28,7 @@ import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
-import { Files01Icon, InboxIcon, Calendar01Icon, Cancel01Icon, File02Icon, Loading01Icon, MoreHorizontalIcon, ReloadIcon, Time01Icon, ViewIcon, WarehouseIcon } from "hugeicons-react";
+import { Files01Icon, InboxIcon, Calendar01Icon, Cancel01Icon, Loading01Icon, MoreHorizontalIcon, ReloadIcon, Time01Icon, ViewIcon, WarehouseIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
@@ -55,8 +56,6 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
-const documentListClass = "divide-y divide-border overflow-hidden rounded-xl border border-border bg-white dark:bg-card";
-
 const documentStatusVariants = {
   Approved: "success",
   Pending: "warning",
@@ -64,47 +63,44 @@ const documentStatusVariants = {
   Missing: "secondary",
 };
 
-function ProfileDocumentRow({ name, description, status, onPreview, onRescan }) {
-  const Main = onPreview ? "button" : "div";
+function ProfileDocumentRow({ name, filename, description, size, doc, status, onPreview, onRescan }) {
   return (
-    <li className="flex items-center gap-1 pr-2">
-      <Main
-        {...(onPreview ? { type: "button", onClick: onPreview, "aria-label": `Preview ${name}` } : {})}
-        className={cn(
-          "flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left",
-          onPreview && "cursor-pointer rounded-lg transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+    <li>
+      <SheetAttachmentRow
+        filename={filename || name}
+        description={description}
+        size={size}
+        mimeType={doc?.mime_type}
+        fileUrl={doc?.file_url || (doc?.id && !doc?.source_type ? `/api/documents/${encodeURIComponent(doc.id)}` : undefined)}
+        status={(
+          <Badge size="compact" variant={documentStatusVariants[status] || "secondary"}>
+            {status === "Missing" ? "Not Submitted" : status}
+          </Badge>
         )}
-      >
-        <File02Icon size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-semibold">{name}</span>
-          <span className="block truncate text-[10px] text-muted-foreground">{description}</span>
-        </span>
-        <Badge size="compact" variant={documentStatusVariants[status] || "secondary"}>
-          {status === "Missing" ? "Not Submitted" : status}
-        </Badge>
-      </Main>
-      {(onPreview || onRescan) && (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="table-action-button rounded-lg" aria-label={`Actions for ${name}`}>
-            <MoreHorizontalIcon size={16} aria-hidden="true" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {onPreview && (
-              <DropdownMenuItem onClick={onPreview}>
-                <ViewIcon size="1em" aria-hidden="true" />
-                {PDF_ACTION_LABELS.preview}
-              </DropdownMenuItem>
-            )}
-            {onRescan && (
-              <DropdownMenuItem onClick={onRescan}>
-                <ReloadIcon size="1em" aria-hidden="true" />
-                Re-scan Document
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+        onPreview={onPreview}
+        previewLabel={`Preview ${name}`}
+        actions={(onPreview || onRescan) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="table-action-button shrink-0 rounded-lg" aria-label={`Actions for ${name}`}>
+              <MoreHorizontalIcon size={16} aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onPreview && (
+                <DropdownMenuItem onClick={onPreview}>
+                  <ViewIcon size="1em" aria-hidden="true" />
+                  {PDF_ACTION_LABELS.preview}
+                </DropdownMenuItem>
+              )}
+              {onRescan && (
+                <DropdownMenuItem onClick={onRescan}>
+                  <ReloadIcon size="1em" aria-hidden="true" />
+                  Re-scan Document
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      />
     </li>
   );
 }
@@ -323,14 +319,17 @@ export default function StudentProfileSheet({
   }
 
   const organizationFiles = !isOrg ? null : studentDocs.length ? (
-    <ul className={documentListClass}>
+    <ul className="space-y-2">
       {studentDocs.map((doc, index) => {
         const name = doc.doc_type || "Document";
         return (
           <ProfileDocumentRow
             key={doc.id || `doc-${index}`}
             name={name}
-            description={`${doc.original_filename || "document.pdf"} • ${formatPHDateTime(doc.created_at)}`}
+            filename={doc.original_filename}
+            size={doc.size_bytes}
+            doc={doc}
+            description={`${name} · ${formatPHDateTime(doc.created_at)}`}
             status={doc.approval_status || "Pending"}
             {...getDocumentActions(doc, name)}
           />
@@ -359,7 +358,7 @@ export default function StudentProfileSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                {student?.category || student?.rawOrg ? "Organization Details" : "Student Details"}
+                {student?.category || student?.rawOrg ? "Organization details" : "Student details"}
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed profile, physical archive location, and digitized records
@@ -464,7 +463,7 @@ export default function StudentProfileSheet({
 
           {/* 1. Academic & Enrollment Details (Standard Info List) */}
           <div className="space-y-2">
-            <SheetSectionHeading icon={student?.category || student?.rawOrg ? "Building01Icon" : "GraduationScrollIcon"} title={student?.category || student?.rawOrg ? "Organization & Registry Details" : "Academic & Registry Details"} />
+            <SheetSectionHeading icon={student?.category || student?.rawOrg ? "Building01Icon" : "GraduationScrollIcon"} title={student?.category || student?.rawOrg ? "Organization and registry details" : "Academic and registry details"} />
 
             <div className="divide-y-0">
               {student?.category || student?.rawOrg ? (
@@ -561,7 +560,7 @@ export default function StudentProfileSheet({
                     label="Degree Program"
                     value={
                       courseInfo
-                        ? `${courseInfo.code} — ${courseInfo.name}`
+                        ? `${courseInfo.code}: ${courseInfo.name}`
                         : student.courseCode || "N/A"
                     }
                   />
@@ -595,7 +594,7 @@ export default function StudentProfileSheet({
 
           {/* 2. Physical Archive Filing Location (Standard Info List) */}
           <div className="space-y-2">
-            <SheetSectionHeading icon={WarehouseIcon} title="Physical Archive Location" />
+            <SheetSectionHeading icon={WarehouseIcon} title="Physical archive location" />
 
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
               <InfoRow
@@ -628,7 +627,7 @@ export default function StudentProfileSheet({
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-1.5">
               <div>
-                <SheetSectionHeading icon={Files01Icon} title={isOrg ? `Organization Records & Documents (${studentDocs.length})` : "Requirements Checklist"} divider={false} />
+                <SheetSectionHeading icon={Files01Icon} title={isOrg ? `Organization records and documents (${studentDocs.length})` : "Requirements checklist"} divider={false} />
                 {!isOrg && complianceSummary.total > 0 && (
                   <div className="flex items-center gap-2 mt-1">
                     <div className="w-24 h-1.5 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
@@ -647,12 +646,15 @@ export default function StudentProfileSheet({
             </div>
 
             {isOrg ? organizationFiles : requirementsList.length ? (
-              <ul className={documentListClass}>
+              <ul className="space-y-2">
                 {requirementsList.map(({ id, name, status, doc }) => (
                   <ProfileDocumentRow
                     key={id}
                     name={name}
-                    description={doc?.original_filename || (status === "Missing" ? "Not submitted to archive" : "Pending document")}
+                    filename={doc?.original_filename}
+                    size={doc?.size_bytes}
+                    doc={doc}
+                    description={doc?.original_filename ? name : (status === "Missing" ? "Not submitted to archive" : "Pending document")}
                     status={status}
                     {...getDocumentActions(doc, name)}
                   />
@@ -662,7 +664,7 @@ export default function StudentProfileSheet({
               <EmptyState
                 variant="compact"
                 icon={Files01Icon}
-                title="No Checklist Requirements"
+                title="No checklist requirements"
               />
             )}
           </section>
@@ -671,13 +673,13 @@ export default function StudentProfileSheet({
           {!isOrg && (
             <div className="space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border">
-                <SheetSectionHeading icon={Time01Icon} title={`Requests History (${requests.length})`} divider={false} />
+                <SheetSectionHeading icon={Time01Icon} title={`Requests history (${requests.length})`} divider={false} />
               </div>
 
               {isLoadingRequests ? (
                 <div className="py-4 text-center text-xs text-gray-400">
                   <Loading01Icon size="1em" className="animate-spin text-sm mb-1 block mx-auto text-pup-maroon dark:text-red-400" />
-                  Loading requests...
+                  Loading requests…
                 </div>
               ) : requests.length === 0 ? (
                 <EmptyState
