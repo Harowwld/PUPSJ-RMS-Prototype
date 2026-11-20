@@ -529,7 +529,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       }
     } catch {
       if (!cachedStaff) {
-        showToast("Failed to load directory data", true)
+        showToast("Could not load directory data", true)
       }
     } finally {
       setLoading(false)
@@ -676,11 +676,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           setPwDialogOpen(true)
         }
       } else {
-        showToast(json.error || "Failed to save personnel profile", true)
+        showToast(json.error || "Could not save personnel profile", true)
       }
     } catch (error) {
       if (token) throw error
-      showToast("Network error saving personnel", true)
+      showToast("Network error while saving personnel", true)
     } finally {
       setSubmitLoading(false)
       repeat.endSave()
@@ -710,10 +710,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         invalidateDataCache("systemadmin_offices_stats")
         fetchData()
       } else {
-        showToast(json.error || "Failed to archive personnel account", true)
+        showToast(json.error || "Could not archive personnel account", true)
       }
     } catch {
-      showToast("Network error archiving personnel account", true)
+      showToast("Network error while archiving personnel account", true)
     } finally {
       setIsArchiving(false)
     }
@@ -742,10 +742,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         invalidateDataCache("systemadmin_offices_stats")
         fetchData()
       } else {
-        showToast(json.error || "Failed to restore personnel account", true)
+        showToast(json.error || "Could not restore personnel account", true)
       }
     } catch {
-      showToast("Network error restoring personnel account", true)
+      showToast("Network error while restoring personnel account", true)
     } finally {
       setIsRestoring(false)
     }
@@ -1034,14 +1034,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         }
       }
 
-      showToast(`Archived ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      showToast(`Archived ${successCount} personnel ${successCount === 1 ? "account" : "accounts"}${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkArchiveOpen(false)
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_staff")
       invalidateDataCache("systemadmin_offices_stats")
       fetchData()
     } catch {
-      showToast("Network error archiving selected accounts", true)
+      showToast("Network error while archiving selected accounts", true)
     } finally {
       setBulkArchiveLoading(false)
     }
@@ -1070,14 +1070,14 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         }
       }
 
-      showToast(`Restored ${successCount} personnel account(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      showToast(`Restored ${successCount} personnel ${successCount === 1 ? "account" : "accounts"}${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkRestoreOpen(false)
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_staff")
       invalidateDataCache("systemadmin_offices_stats")
       fetchData()
     } catch {
-      showToast("Network error restoring selected accounts", true)
+      showToast("Network error while restoring selected accounts", true)
     } finally {
       setBulkRestoreLoading(false)
     }
@@ -1225,7 +1225,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
         <DataViewToolbar label="Personnel search, filters, sorting, grouping, and columns" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID or email..." />
+            <DashboardSearch value={search} onChange={setSearch} count={filteredStaff.length} label="Search personnel" placeholder="Search name, ID, or email" />
             {layoutView === "table" && (
               <TableScrollControls scrollContainerRef={tableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetScroll} controlSize="md" />
             )}
@@ -1688,7 +1688,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           <form ref={attachForm} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
             <DialogHeader className="p-6 pb-0 text-left shrink-0">
               <DialogTitle>
-                {isEditing ? "Edit Personnel Profile" : "Register Personnel Account"}
+                {isEditing ? "Edit personnel profile" : "Register personnel account"}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Define the authorization scope, profile metadata, and security settings for the account.
@@ -1866,7 +1866,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         <DialogContent finalFocus={formOpen ? fnameRef : undefined} className="max-w-md rounded-2xl bg-white border border-border dark:bg-zinc-900 dark:border-border p-0 overflow-hidden shadow-2xl">
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
-              Staff Credentials Generated
+              Staff credentials generated
             </DialogTitle>
             <DialogDescription className="mt-1">
               Please share this temporary password securely with the user. They will be prompted to change it upon first login.
@@ -2008,7 +2008,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
                       <SheetTitle>
-                        Personnel Details
+                        Personnel details
                       </SheetTitle>
                       <SheetDescription className="sr-only">
                         Detailed account profile, office partition, and system activity for {getStaffCleanName(inspectMember)}
@@ -2131,7 +2131,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                     <>
                   {/* Profile & Credentials Section (Unboxed) */}
                   <div className="space-y-2">
-                    <SheetSectionHeading icon="Contact01Icon" title="Identity & Access Metadata" />
+                    <SheetSectionHeading icon="Contact01Icon" title="Identity and access metadata" />
                     <div className="divide-y-0">
                       <InfoRow
                         icon=" Contact01Icon"
@@ -2201,7 +2201,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {/* Timestamps & Lifecycle (Unboxed) */}
                   <div className="space-y-2">
-                    <SheetSectionHeading icon={Clock01Icon} title="System Activity & Registration" />
+                    <SheetSectionHeading icon={Clock01Icon} title="System activity and registration" />
                     <div className="divide-y-0">
                       <InfoRow
                         icon=" Calendar01Icon"
@@ -2219,7 +2219,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   {/* Recent Activity History Preview (Unboxed) */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/80 dark:border-border">
-                      <SheetSectionHeading icon={Clock01Icon} title="Recent Activity History" divider={false} />
+                      <SheetSectionHeading icon={Clock01Icon} title="Recent activity history" divider={false} />
                       <span className="text-[11px] font-sans tabular-nums text-gray-500 dark:text-zinc-400">
                         {inspectActivitySummary.total} {inspectActivitySummary.total === 1 ? "event" : "events"}
                       </span>

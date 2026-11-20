@@ -210,7 +210,7 @@ export default function OfficeDetailSheet({
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
             <div>
               <SheetTitle>
-                Department Details
+                Department details
               </SheetTitle>
               <SheetDescription className="sr-only">
                 Detailed profile, scanning station hardware, staff roster, and enabled modules for {displayOffice.name}
@@ -308,7 +308,7 @@ export default function OfficeDetailSheet({
 
           {/* Section 1: Department Overview & Identity */}
           <div className="space-y-2">
-            <SheetSectionHeading icon={Building01Icon} title="Department Identity & Scope" />
+            <SheetSectionHeading icon={Building01Icon} title="Department identity and scope" />
             <div className="divide-y-0">
               <InfoRow
                 icon=" Contact01Icon"
@@ -363,7 +363,7 @@ export default function OfficeDetailSheet({
 
           {/* Section 2: Scanning Workstation & Hardware */}
           <div className="space-y-2">
-            <SheetSectionHeading icon={ComputerIcon} title="Scanning Station & Ingestion Hardware" />
+            <SheetSectionHeading icon={ComputerIcon} title="Scanning station and ingestion hardware" />
             <div className="divide-y-0">
               <InfoRow
                 icon=" Tablet01Icon"
@@ -495,7 +495,7 @@ export default function OfficeDetailSheet({
           {/* Section 3: Assigned Personnel ({staffList.length}) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
-              <SheetSectionHeading icon={UserSearch01Icon} title="Assigned Personnel Roster" divider={false} />
+              <SheetSectionHeading icon={UserSearch01Icon} title="Assigned personnel roster" divider={false} />
               <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {staffLoading ? "..." : `${staffList.length} Staff`}
               </Badge>
@@ -589,7 +589,7 @@ export default function OfficeDetailSheet({
           {/* Section 4: Enabled Workspace Modules */}
           <div className="space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-border dark:border-border">
-              <SheetSectionHeading icon={LayoutGridIcon} title="Department Workspace Modules" divider={false} />
+              <SheetSectionHeading icon={LayoutGridIcon} title="Department workspace modules" divider={false} />
               <Badge size="compact" variant="outline" className="font-sans tabular-nums text-gray-600 dark:text-zinc-300">
                 {modulesLoading ? "..." : `${enabledModules.length} Active`}
               </Badge>

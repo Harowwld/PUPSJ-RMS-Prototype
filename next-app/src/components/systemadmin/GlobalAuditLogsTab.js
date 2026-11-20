@@ -787,7 +787,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
                 value={localSearch}
                 onChange={setLocalSearch}
                 onClear={handleClearSearch}
-                placeholder="Search logs by actor, action, details..."
+                placeholder="Search logs by actor, action, or details"
                 label="Search platform activity history"
                 count={total}
               />

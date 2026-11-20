@@ -313,7 +313,7 @@ export default function OfficeTableControls({
   return (
     <DataViewToolbar label="Department search, filters, sorting, grouping, and columns" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
       <div className="flex min-w-0 items-center gap-2">
-        <DashboardSearch value={searchQuery} onChange={onSearchChange} count={resultCount} loading={isLoading} label="Search departments" placeholder="Search departments by name, acronym, ID..." />
+        <DashboardSearch value={searchQuery} onChange={onSearchChange} count={resultCount} loading={isLoading} label="Search departments" placeholder="Search departments by name, acronym, or ID" />
         {showTableControls && <TableScrollControls controlSize="md" {...scrollControls} />}
       </div>
 

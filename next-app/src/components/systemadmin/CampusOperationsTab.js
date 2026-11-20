@@ -12,7 +12,7 @@ import { TableActions } from "@/components/shared/TableActions";
 
 import SheetPagination from "@/components/shared/SheetPagination";
 import CopyButton from "@/components/shared/CopyButton";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import SheetAttachmentRow from "@/components/shared/SheetAttachmentRow";
 import useUrlPage from "@/hooks/useUrlPage"
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Card } from "@/components/ui/card"
@@ -220,11 +220,13 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfPreviewData, setPdfPreviewData] = useState(null)
 
+  const getAttachmentUrl = (item) => item.officeId === "registrar"
+    ? `/api/documents/${item.linkedDocumentId || item.originalId}`
+    : `/api/osas/event-proposals/${item.originalId}?file=1`
+
   const handleOpenPdfPreview = (item) => {
     if (!item?.originalFilename) return
-    const url = item.officeId === "registrar"
-      ? `/api/documents/${item.linkedDocumentId || item.originalId}`
-      : `/api/osas/event-proposals/${item.originalId}?file=1`
+    const url = getAttachmentUrl(item)
     setPdfPreviewData({
       url,
       title: item.title || item.originalFilename,
@@ -758,7 +760,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 {isExporting ? (
                   <>
                     <Loading01Icon size="1em" aria-hidden="true" className="mr-1.5 animate-spin" />
-                    Exporting...
+                    Exporting…
                   </>
                 ) : (
                   "Export CSV"
@@ -773,7 +775,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 {isGeneratingPdf ? (
                   <>
                     <Loading01Icon size="1em" aria-hidden="true" className="mr-1.5 animate-spin" />
-                    Generating...
+                    Generating…
                   </>
                 ) : (
                   "Preview PDF"
@@ -814,7 +816,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         <DataViewToolbar label="Campus operations search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
             {/* Search Input with Clear Button & Record Count */}
-            <DashboardSearch value={search} onChange={setSearch} count={filteredTransactions.length} loading={loading} label="Search campus operations" placeholder="Search student, document, or org..." />
+            <DashboardSearch value={search} onChange={setSearch} count={filteredTransactions.length} loading={loading} label="Search campus operations" placeholder="Search student, document, or org" />
             {viewMode === "table" && (
               <TableScrollControls
                 scrollContainerRef={tableContainerRef}
@@ -872,11 +874,11 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
         <NoticeBanner
           title={slaStandards?.frameworkName || "Citizen's Charter (ARTA RA 11032)"}
-          action={<Button type="button" variant="secondary" size="sm" onClick={() => setStandardsSheetOpen(true)}>Configure Standards</Button>}
+          action={<Button type="button" variant="secondary" size="sm" onClick={() => setStandardsSheetOpen(true)}>Configure standards</Button>}
         >
           <div className="text-white/90">
             <span className="tabular-nums">{slaStandards?.simpleDays ?? 3}-{slaStandards?.complexDays ?? 7}-{slaStandards?.highlyTechnicalDays ?? 20}d SLA</span>
-            {" · "}{slaStandards?.workingDaysOnly !== false ? "Business Days (Mon–Fri)" : "Consecutive Calendar Days"}
+            {" · "}{slaStandards?.workingDaysOnly !== false ? "Business days (Mon to Fri)" : "Consecutive calendar days"}
             <p>Target processing deadlines and on-time completion rates for Registrar and OSAS requests are calculated using this schedule.</p>
           </div>
         </NoticeBanner>
@@ -1282,7 +1284,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
                 <SheetTitle>
-                  Operation Record Details
+                  Operation record details
                 </SheetTitle>
                 <SheetDescription className="sr-only">
                   Detailed information for cross-office campus transaction
@@ -1386,7 +1388,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
             {/* SECTION 1: Transaction Specification */}
             <div className="space-y-2">
-              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Transaction Specification" />
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Transaction specification" />
 
               <div className="divide-y-0">
                 <InfoRow
@@ -1528,34 +1530,14 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {/* SECTION 3: Attached Document */}
             {sheetItem?.originalFilename && (
               <div className="space-y-2 pt-2">
-                <SheetSectionHeading icon={File02Icon} title="Attached Document" />
-                <div className="p-3.5 rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 flex items-center justify-center shrink-0">
-                      <File02Icon size="1em" className="text-base" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-semibold text-gray-900 dark:text-zinc-100 text-xs block truncate max-w-[200px]">
-                        {sheetItem.originalFilename}
-                      </span>
-                      {sheetItem.sizeBytes && (
-                        <span className="text-[10px] text-gray-400 font-sans tabular-nums">
-                          {(sheetItem.sizeBytes / 1024).toFixed(1)} KB · PDF Document
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenPdfPreview(sheetItem)}
-                    className="shrink-0 h-8 px-3 text-xs font-semibold rounded-lg"
-                  >
-                    {PDF_ACTION_LABELS.preview}
-                  </Button>
-                </div>
+                <SheetSectionHeading icon={File02Icon} title="Attached document" />
+                <SheetAttachmentRow
+                  filename={sheetItem.originalFilename}
+                  fileUrl={getAttachmentUrl(sheetItem)}
+                  size={sheetItem.sizeBytes}
+                  mimeType={sheetItem.mimeType}
+                  onPreview={() => handleOpenPdfPreview(sheetItem)}
+                />
               </div>
             )}
           </div>

@@ -328,11 +328,11 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           setSelectedOfficeId((prev) => prev || initialOfficeId || json.data.offices[0].id)
         }
       } else if (!cached) {
-        showToast(json.error || "Failed to fetch module matrix", true)
+        showToast(json.error || "Could not load module matrix", true)
       }
     } catch {
       if (!getCachedData("systemadmin_module_matrix")) {
-        showToast("Network error fetching module matrix", true)
+        showToast("Network error while loading module matrix", true)
       }
     } finally {
       setLoading(false)
@@ -344,10 +344,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
     try {
       const response = await fetch("/api/system/settings", { cache: "no-store" })
       const result = await response.json()
-      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to load login settings")
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Could not load login settings")
       setDemoAccountsEnabled(String(result.data?.login_demo_accounts_enabled ?? "true").toLowerCase() !== "false")
     } catch (error) {
-      showToast?.({ title: "Load Failed", description: error.message || "Could not load demo account visibility." }, true)
+      showToast?.({ title: "Could not load settings", description: error.message || "Could not load demo account visibility." }, true)
     } finally {
       setDemoSettingLoading(false)
     }
@@ -362,11 +362,11 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
         body: JSON.stringify({ key: "login_demo_accounts_enabled", value: String(enabled) }),
       })
       const result = await response.json()
-      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to save login setting")
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Could not save login setting")
       setDemoAccountsEnabled(enabled)
-      showToast?.({ title: "Saved", description: `Demo Accounts button ${enabled ? "shown" : "hidden"} on the login page.` })
+      showToast?.({ title: "Saved", description: `Demo accounts button ${enabled ? "shown" : "hidden"} on the login page.` })
     } catch (error) {
-      showToast?.({ title: "Save Failed", description: error.message || "Could not update demo account visibility." }, true)
+      showToast?.({ title: "Could not save setting", description: error.message || "Could not update demo account visibility." }, true)
     } finally {
       setDemoSettingSaving(false)
     }
@@ -463,12 +463,12 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       } else {
         // Rollback on server failure
         setMatrix((prev) => ({ ...prev, assignments: previousAssignments }))
-        showToast(json.error || "Failed to update feature settings", true)
+        showToast(json.error || "Could not update feature settings", true)
       }
     } catch {
       // Rollback on network failure
       setMatrix((prev) => ({ ...prev, assignments: previousAssignments }))
-      showToast("Network error updating feature", true)
+      showToast("Network error while updating feature", true)
     } finally {
       setToggling((prev) => {
         const next = { ...prev }
@@ -508,7 +508,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
       const json = await res.json()
       if (res.ok && json.ok) {
         const groupName = category === "all" ? "all" : category === "admin" ? "supervisor" : "staff"
-        showToast(`Updated ${groupName} features successfully`)
+        showToast(`Updated ${groupName} features`)
         invalidateDataCache("systemadmin_module_matrix")
         setMatrix((prev) => {
           const nextAssignments = { ...prev.assignments }
@@ -521,10 +521,10 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
           return { ...prev, assignments: nextAssignments }
         })
       } else {
-        showToast(json.error || "Failed to update features", true)
+        showToast(json.error || "Could not update features", true)
       }
     } catch {
-      showToast("Network error updating features", true)
+      showToast("Network error while updating features", true)
     } finally {
       setToggling((prev) => {
         const next = { ...prev }
@@ -771,7 +771,7 @@ export default function ModuleConfigTab({ showToast, initialOfficeId }) {
 
         <DataViewToolbar label="Feature search and filters" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} loading={loading} label="Search features" placeholder="Search features by name, description..." />
+            <DashboardSearch value={searchQuery} onChange={setSearchQuery} count={filteredModules.length} loading={loading} label="Search features" placeholder="Search features by name or description" />
             {viewMode === "matrix" && visibleMatrixOffices.length > 0 && <TableScrollControls scrollContainerRef={matrixTableContainerRef} canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} isScrolled={isScrolled} onScrollLeft={scrollLeft} onScrollRight={scrollRight} onResetScroll={resetMatrixScroll} />}
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-2">

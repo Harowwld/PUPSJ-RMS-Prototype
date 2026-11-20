@@ -186,7 +186,7 @@ export default function CampusOperationsList({
 
                         {/* Requester & Org Subtitle */}
                         <span className="text-xs text-gray-400 dark:text-zinc-500 truncate hidden md:inline font-normal select-none">
-                          — {requester}
+                          : {requester}
                           {tx.studentNo ? ` (${tx.studentNo})` : ""}
                           {tx.organizationName ? ` • ${tx.organizationName}` : tx.notes ? ` • ${tx.notes}` : ""}
                         </span>

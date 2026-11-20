@@ -64,7 +64,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
       const json = await res.json().catch(() => null)
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to load security questions")
+        throw new Error(json?.error || "Could not load security questions")
       }
 
       if (Array.isArray(json.data)) {
@@ -228,19 +228,19 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
       if (res.status === 403 && json?.requiresTOTP) {
         setSaving(false)
         if (totpToken) {
-          throw new Error(json?.error || "Invalid verification code")
+          throw new Error(json?.error || "Check the verification code and try again")
         }
         setTotpModalOpen(true)
         return
       }
 
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update security questions")
+        throw new Error(json?.error || "Could not update security questions")
       }
 
       showToast?.({
-        title: "Security Questions Updated",
-        description: "Institutional account recovery questions have been successfully saved.",
+        title: "Security questions updated",
+        description: "Institutional account recovery questions have been saved.",
       })
 
       const savedList = normalizeQuestions(json.data)
@@ -250,8 +250,8 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
     } catch (err) {
       if (totpToken) throw err
       showToast?.({
-        title: "Update Failed",
-        description: err.message || "Failed to save security questions.",
+        title: "Could not save changes",
+        description: err.message || "Could not save security questions.",
         variant: "destructive",
       })
     } finally {
@@ -324,9 +324,9 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
           descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex shrink-0 items-center gap-2">
-              <Button type="button" variant="outline" onClick={() => setBulkModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Import Questions</Button>
+              <Button type="button" variant="outline" onClick={() => setBulkModalOpen(true)} disabled={loading || saving} className="h-9 px-4">Import questions</Button>
               <Button onClick={() => handleSave()} disabled={loading || saving || !isDirty} className="h-9 px-4 cursor-pointer">
-                {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving Questions...</span> : "Save Questions"}
+                {saving ? <span className="flex items-center gap-1.5"><Loading01Icon size={14} className="animate-spin" />Saving questions…</span> : "Save questions"}
               </Button>
             </div>
           }
@@ -339,7 +339,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                 disabled={loading || saving}
                 className="h-9 px-4"
               >
-                Discard Draft
+                Discard draft
               </Button>
             ) : null
           }
@@ -360,7 +360,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
         </div>
 
         <DataViewToolbar label="Security question search" className="gap-2 bg-white p-4 dark:bg-card sm:px-5 sm:py-3">
-          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} loading={loading} label="Search security questions" placeholder="Search questions..." />
+          <DashboardSearch value={search} onChange={setSearch} count={visibleQuestions.length} loading={loading} label="Search security questions" placeholder="Search questions" />
         </DataViewToolbar>
         <ActiveFilterChips searchQuery={search} onClearSearch={() => setSearch("")} onClearAll={() => setSearch("")} className="border-t border-border dark:border-border px-5 py-2.5" />
 
@@ -443,7 +443,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveQuestion(i)}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 active:scale-95"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-[color,background-color,border-color,box-shadow,opacity,transform] cursor-pointer border-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-400 active:scale-95"
                                 aria-label="Remove Question"
                               >
                                 <Delete01Icon size="1em" className="text-sm" />
@@ -460,7 +460,7 @@ export default function SecurityQuestionsTab({ showToast, onDirtyChange }) {
                     {/* Full Width Input field */}
                     <Input
                       type="text"
-                      placeholder="e.g., What was the name of your first elementary school?"
+                      placeholder="What was the name of your first elementary school?"
                       value={text}
                       onFocus={() => setFocusedIndex(i)}
                       onBlur={() => setFocusedIndex(null)}

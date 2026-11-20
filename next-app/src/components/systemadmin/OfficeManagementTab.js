@@ -329,12 +329,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         setCachedData("systemadmin_offices_stats", result.data, 60000)
       } else {
         setOfficesLoadFailed(true)
-        if (!cached) showToast(result.error || "Failed to fetch offices", true)
+        if (!cached) showToast(result.error || "Could not load departments", true)
       }
     } catch {
       setOfficesLoadFailed(true)
       if (!getCachedData("systemadmin_offices_stats")) {
-        showToast("Network error fetching offices", true)
+        showToast("Network error while loading departments", true)
       }
     } finally {
       setLoading(false)
@@ -484,10 +484,10 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         invalidateDataCache("systemadmin_offices_stats")
         fetchOffices(true)
       } else {
-        showToast(json.error || "Failed to save office", true)
+        showToast(json.error || "Could not save department", true)
       }
     } catch {
-      showToast("Network error saving office", true)
+      showToast("Network error while saving department", true)
     } finally {
       setSubmitLoading(false)
     }
@@ -505,18 +505,18 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       if (res.ok && json.ok) {
         showToast(
           nextStatus === "Active"
-            ? "Department restored successfully"
-            : "Department archived successfully"
+            ? "Department restored"
+            : "Department archived"
         )
         invalidateDataCache("systemadmin_offices")
         invalidateDataCache("systemadmin_staff")
         invalidateDataCache("systemadmin_offices_stats")
         fetchOffices(true)
       } else {
-        showToast(json.error || "Failed to toggle status", true)
+        showToast(json.error || "Could not update department status", true)
       }
     } catch {
-      showToast("Network error toggling status", true)
+      showToast("Network error while updating department status", true)
     }
   }
 
@@ -843,7 +843,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         }
       }
 
-      showToast(`Archived ${successCount} department(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      showToast(`Archived ${successCount} ${successCount === 1 ? "department" : "departments"}${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkArchiveOpen(false)
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_offices_stats")
@@ -851,7 +851,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       invalidateDataCache("systemadmin_staff")
       fetchOffices(true)
     } catch {
-      showToast("Network error archiving selected departments", true)
+      showToast("Network error while archiving selected departments", true)
     } finally {
       setBulkArchiveLoading(false)
     }
@@ -880,7 +880,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
         }
       }
 
-      showToast(`Restored ${successCount} department(s)${failCount > 0 ? ` (${failCount} failed)` : ""}`)
+      showToast(`Restored ${successCount} ${successCount === 1 ? "department" : "departments"}${failCount > 0 ? ` (${failCount} failed)` : ""}`)
       setBulkRestoreOpen(false)
       setSelectedIds(new Set())
       invalidateDataCache("systemadmin_offices_stats")
@@ -888,7 +888,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       invalidateDataCache("systemadmin_staff")
       fetchOffices(true)
     } catch {
-      showToast("Network error restoring selected departments", true)
+      showToast("Network error while restoring selected departments", true)
     } finally {
       setBulkRestoreLoading(false)
     }
@@ -1636,7 +1636,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
             {/* Header: Clean title without icon as requested */}
             <DialogHeader className="p-6 sm:px-8 pt-6 pb-0 text-left shrink-0">
               <DialogTitle>
-                {isEditing ? "Edit Department Details" : "Add New Department"}
+                {isEditing ? "Edit department details" : "Add new department"}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Set up department identity, scanning computer, and enabled services.
@@ -1648,7 +1648,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Department Acronym / Short Name
+                    Department acronym / short name
                   </label>
                   <Input
                     value={form.short_name}
@@ -1671,7 +1671,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                         return next
                       })
                     }}
-                    placeholder="e.g. Registrar, OSAS, Library"
+                    placeholder="Registrar, OSAS, Library"
                     className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
@@ -1679,12 +1679,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Full Name of the Department
+                    Full name of the department
                   </label>
                   <Input
                     value={form.name}
                     onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g. Office of the University Library Services"
+                    placeholder="Office of the University Library Services"
                     className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                     required
                   />
@@ -1701,7 +1701,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe the department's institutional role and functions..."
+                  placeholder="Describe the department's institutional role and functions"
                   className="w-full min-h-[72px] resize-y rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-normal placeholder:text-gray-400 dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                 />
               </div>
@@ -1777,12 +1777,12 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">
-                    Workstation Name <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                    Workstation name <span className="opacity-70">(optional)</span>
                   </label>
                   <Input
                     value={form.station_name}
                     onChange={(e) => setForm(prev => ({ ...prev, station_name: e.target.value }))}
-                    placeholder="e.g. Registrar Archive PC (leave blank to assign automatically)"
+                    placeholder="Registrar Archive PC (leave blank to assign automatically)"
                     className="h-10 rounded-xl bg-white border border-border text-xs focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 dark:bg-zinc-950 dark:border-border dark:text-white transition-all"
                   />
                   <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1 block">

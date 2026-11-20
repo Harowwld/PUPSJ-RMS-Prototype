@@ -152,7 +152,7 @@ export default function PersonnelActivityStream({ member, onNavigateToLogs }) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter actions or details..."
+              placeholder="Filter actions or details"
               className="h-8 pl-8 pr-7 text-xs bg-gray-50/70 dark:bg-zinc-900/40 border-border/80 dark:border-border"
             />
             {search && (

@@ -338,7 +338,7 @@ export default function BulkImportQuestionsModal({
         {/* Header - Strictly NO ICON */}
         <DialogHeader className="p-6 pb-0 min-w-0">
           <DialogTitle>
-            Import Security Questions
+            Import security questions
           </DialogTitle>
           <DialogDescription className="mt-1">
             {fileInfo
@@ -463,7 +463,7 @@ export default function BulkImportQuestionsModal({
                           type="text"
                           value={row.text}
                           onChange={(e) => handleRowChange(index, e.target.value)}
-                          placeholder="Challenge question text..."
+                          placeholder="Challenge question text"
                           className={cn(
                             "h-9 w-full rounded-xl border bg-white dark:bg-zinc-800 text-xs text-gray-900 dark:text-zinc-100 px-3 placeholder:text-gray-400 dark:placeholder:text-zinc-500 transition-all focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 shadow-2xs",
                             isInvalid
@@ -492,7 +492,7 @@ export default function BulkImportQuestionsModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveRow(index)}
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95 shrink-0"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all cursor-pointer border-0 outline-none active:scale-95 shrink-0"
                           aria-label="Remove Question"
                         >
                           <Delete01Icon size="1em" className="text-sm" />

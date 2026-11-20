@@ -640,7 +640,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                           jurisdictionHeader: e.target.value,
                         }))
                       }
-                      placeholder="e.g. Republic of the Philippines"
+                      placeholder="Republic of the Philippines"
                       maxLength={100}
                       className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
@@ -661,7 +661,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                           institutionName: e.target.value,
                         }))
                       }
-                      placeholder="e.g. Polytechnic University of the Philippines"
+                      placeholder="Polytechnic University of the Philippines"
                       maxLength={120}
                       className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
@@ -683,7 +683,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                             campusName: e.target.value,
                           }))
                         }
-                        placeholder="e.g. San Juan City Campus"
+                        placeholder="San Juan City Campus"
                         maxLength={100}
                         className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-medium dark:border-border dark:bg-card focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />
@@ -708,7 +708,7 @@ export default function InstitutionalBrandingTab({ showToast, onDirtyChange }) {
                             tagline: e.target.value.toUpperCase(),
                           }))
                         }
-                        placeholder="e.g. OFFICIAL ACADEMIC ARCHIVES & RECORDS"
+                        placeholder="OFFICIAL ACADEMIC ARCHIVES & RECORDS"
                         maxLength={100}
                         className="h-10 w-full rounded-xl border border-border bg-white px-3.5 text-xs font-sans tabular-nums dark:border-border dark:bg-card uppercase focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                       />

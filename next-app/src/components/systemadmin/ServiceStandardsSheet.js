@@ -294,7 +294,7 @@ export default function ServiceStandardsSheet({
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <SheetTitle>
-                  Processing Time Standards
+                  Processing time standards
                 </SheetTitle>
                 <SheetDescription className="mt-0.5">
                   Configure target processing times, deadline rules, and working day schedules for student document requests.
@@ -367,7 +367,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 1. Presets Segmented Selector */}
                 <div className="space-y-2.5">
-                  <SheetSectionHeading icon={LayoutGridIcon} title="Standard Timeline Presets" />
+                  <SheetSectionHeading icon={LayoutGridIcon} title="Standard timeline presets" />
                   <div className="grid grid-cols-2 gap-2">
                     {PRESETS.map((p) => {
                       const isSelected = activePreset?.id === p.id;
@@ -405,7 +405,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 2. Policy & Calendar Configuration */}
                 <div className="space-y-3 pt-2">
-                  <SheetSectionHeading icon="SlidersHorizontalIcon" title="Policy & Calendar Configuration" />
+                  <SheetSectionHeading icon="SlidersHorizontalIcon" title="Policy and calendar configuration" />
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
@@ -420,7 +420,7 @@ export default function ServiceStandardsSheet({
                           frameworkType: "CUSTOM",
                         }))
                       }
-                      placeholder="e.g. Citizen's Charter (ARTA RA 11032)"
+                      placeholder="Citizen's Charter (ARTA RA 11032)"
                       className="h-10 text-xs rounded-xl border-border dark:border-border focus:outline-none focus:border-pup-maroon focus:ring-1 focus:ring-pup-maroon focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus:border-red-500/80 dark:focus:ring-red-500/80 dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 transition-all"
                     />
                     <span className="text-[11px] text-gray-400 dark:text-zinc-500">
@@ -453,7 +453,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 3. Tier Steppers */}
                 <div className="space-y-2.5 pt-2">
-                  <SheetSectionHeading icon={HourglassIcon} title="Processing Days by Request Type" />
+                  <SheetSectionHeading icon={HourglassIcon} title="Processing days by request type" />
                   <div className="rounded-xl border border-border/80 dark:border-border bg-white dark:bg-zinc-900/40 divide-y divide-border/60 overflow-hidden shadow-2xs">
                     {/* Simple */}
                     <div className="flex items-center justify-between p-3.5">
@@ -537,7 +537,7 @@ export default function ServiceStandardsSheet({
 
                 {/* 4. Live Simulator */}
                 <div className="space-y-2.5 pt-2">
-                  <SheetSectionHeading icon={CalendarCheckIn01Icon} title="Estimated Completion Dates" />
+                  <SheetSectionHeading icon={CalendarCheckIn01Icon} title="Estimated completion dates" />
 
                   <div className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40 p-4 flex flex-col gap-3 shadow-2xs">
                     <div className="flex items-center justify-between pb-2 border-b border-border/80 dark:border-border">

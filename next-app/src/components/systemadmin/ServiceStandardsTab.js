@@ -139,10 +139,10 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setOriginalStandards(json.data);
       } else {
-        showToast?.({ title: "Failed to load standards", description: json?.error || "Could not retrieve processing time settings." }, true);
+        showToast?.({ title: "Could not load standards", description: json?.error || "Could not retrieve processing time settings." }, true);
       }
     } catch {
-      showToast?.({ title: "Network Error", description: "Could not connect to service standards API." }, true);
+      showToast?.({ title: "Network error", description: "Could not connect to service standards API." }, true);
     } finally {
       setLoading(false);
     }
@@ -204,14 +204,14 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setConfirmSaveOpen(false);
         showToast?.({
-          title: "Standards Saved",
+          title: "Standards saved",
           description: `Updated to ${json.data.frameworkName} (${json.data.simpleDays}-${json.data.complexDays}-${json.data.highlyTechnicalDays} ${json.data.workingDaysOnly ? "working" : "calendar"} days).`,
         });
       } else {
-        showToast?.({ title: "Failed", description: json?.error || "Could not save standards." }, true);
+        showToast?.({ title: "Could not save standards", description: json?.error || "Could not save standards." }, true);
       }
     } catch {
-      showToast?.({ title: "Error", description: "Failed to save service standards." }, true);
+      showToast?.({ title: "Could not save standards", description: "Check your connection and try again." }, true);
     } finally {
       setSaving(false);
     }
@@ -231,14 +231,14 @@ export default function ServiceStandardsTab({ showToast }) {
         setStandards(json.data);
         setConfirmResetOpen(false);
         showToast?.({
-          title: "Defaults Restored",
+          title: "Defaults restored",
           description: "Service turnaround standards reset to ARTA RA 11032 statutory defaults (3-7-20).",
         });
       } else {
-        showToast?.({ title: "Failed", description: json?.error || "Could not reset standards." }, true);
+        showToast?.({ title: "Could not reset standards", description: json?.error || "Could not reset standards." }, true);
       }
     } catch {
-      showToast?.({ title: "Error", description: "Failed to reset service standards." }, true);
+      showToast?.({ title: "Could not reset standards", description: "Check your connection and try again." }, true);
     } finally {
       setSaving(false);
     }
@@ -296,7 +296,7 @@ export default function ServiceStandardsTab({ showToast }) {
                 disabled={!isModified || saving}
                 className="h-9 px-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {saving ? "Saving Changes..." : "Save Standards"}
+                {saving ? "Saving changes…" : "Save standards"}
               </Button>
             </div>
           }
@@ -375,7 +375,7 @@ export default function ServiceStandardsTab({ showToast }) {
               <div className="flex items-center justify-between p-4 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white dark:bg-card shadow-2xs">
                 <div className="flex flex-col gap-0.5 max-w-[80%]">
                   <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
-                    Business Days (Monday – Friday) Only
+                    Business days (Monday to Friday) only
                   </span>
                   <span className="text-[11px] text-gray-500 dark:text-zinc-400 leading-normal">
                     Excludes Saturdays and Sundays from deadline calculations. Disable to count consecutive calendar days.
