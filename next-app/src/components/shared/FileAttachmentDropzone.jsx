@@ -3,27 +3,21 @@ import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE, SETTINGS_STATUS_PILL_SM
 
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import usePdfThumbnail from "@/hooks/usePdfThumbnail";
+import { useAttachmentLayout } from "@/hooks/useAttachmentLayout";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { downloadDocument } from "@/lib/documentDownload";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
+import SheetAttachmentRow, { formatFileSize } from "@/components/shared/SheetAttachmentRow";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty";
 import { Attachment01Icon, Add01Icon, Cancel01Icon, CloudUploadIcon, Download01Icon, Files01Icon, Image01Icon, ViewIcon } from "hugeicons-react";
 
-/**
- * Formats bytes into clean human-readable strings (e.g. 111 KB, 12 MB)
- */
-export function formatFileSize(bytes) {
-  if (!bytes || isNaN(bytes) || bytes <= 0) return "0 KB";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  const mb = bytes / (1024 * 1024);
-  return mb % 1 === 0 ? `${mb.toFixed(0)} MB` : `${mb.toFixed(1)} MB`;
-}
+export { formatFileSize };
 
 /**
  * Validates a file against an accept string (e.g. ".pdf,.png,image/*,application/pdf")
@@ -146,6 +140,52 @@ export function getFileFormatConfig(filename = "", mimeType = "") {
   };
 }
 
+const ATTACHMENT_CATEGORY_LABELS = {
+  spa: "SPA Letter",
+  valid_id: "Valid Government ID",
+  receipt: "Proof of Payment",
+  clearance: "Clearance Slip",
+  evidence: "Supporting Evidence",
+};
+
+function getAttachmentCategoryLabel(type, categories) {
+  if (!type) return undefined;
+  return categories?.find((category) => category.value === type)?.label || ATTACHMENT_CATEGORY_LABELS[type] || type;
+}
+
+export function AttachedFileRow({ item, onPreview, onRemove, categories, onCategoryChange, readOnly = false }) {
+  const file = item?.file || item;
+  const filename = item?.original_filename || file?.name || "Attached File";
+  const type = item?.attachmentType || item?.attachment_type;
+  const editableCategory = Boolean(!readOnly && categories?.length && onCategoryChange);
+  return (
+    <SheetAttachmentRow
+      filename={filename}
+      size={item?.size_bytes ?? file?.size}
+      mimeType={item?.mime_type || file?.type}
+      file={file instanceof Blob ? file : undefined}
+      fileUrl={item?.url || item?.downloadUrl}
+      fixedCompact
+      description={editableCategory ? undefined : getAttachmentCategoryLabel(type, categories)}
+      onPreview={onPreview && (() => onPreview(item))}
+      onRemove={!readOnly && onRemove ? () => onRemove(item) : undefined}
+      downloadUrl={item?.url || item?.downloadUrl}
+    >
+      {editableCategory && (
+        <Select
+          placeholder="Select category"
+          value={type || categories[0]?.value || ""}
+          onChange={(event) => onCategoryChange(item, event.target.value)}
+          className="h-8 w-full"
+          aria-label={`Category for ${filename}`}
+        >
+          {categories.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+        </Select>
+      )}
+    </SheetAttachmentRow>
+  );
+}
+
 /**
  * AttachedFileCard
  * Replicates the exact visual design from user reference media_1792608266426.png:
@@ -172,7 +212,7 @@ export function AttachedFileCard({
   const formatConfig = useMemo(() => getFileFormatConfig(filename, mimeType), [filename, mimeType]);
 
   const previewBlobUrl = useMemo(() => {
-    if (item?.url) return null;
+    if (item?.url || item?.downloadUrl) return null;
     if (file instanceof Blob && formatConfig.isImage) {
       try {
         return URL.createObjectURL(file);
@@ -181,7 +221,7 @@ export function AttachedFileCard({
       }
     }
     return null;
-  }, [file, formatConfig.isImage, item?.url]);
+  }, [file, formatConfig.isImage, item?.url, item?.downloadUrl]);
 
   useEffect(() => {
     return () => {
@@ -192,75 +232,10 @@ export function AttachedFileCard({
   }, [previewBlobUrl]);
 
   const isPdf = formatConfig.extLabel === "PDF";
-  const pdfSourceKey = item?.url || file;
-  const [pdfThumbnail, setPdfThumbnail] = useState({ source: null, url: null });
-  const pdfThumbnailUrl = pdfThumbnail.source === pdfSourceKey ? pdfThumbnail.url : null;
-  useEffect(() => {
-    if (!isPdf || (!item?.url && !(file instanceof Blob))) return;
+  const fileUrl = item?.url || item?.downloadUrl;
+  const pdfThumbnailUrl = usePdfThumbnail({ file, url: fileUrl, isPdf });
 
-    let active = true;
-    let loadingTask = null;
-    const controller = new AbortController();
-
-    async function renderPdfThumbnail() {
-      try {
-        let data;
-        if (file instanceof Blob) {
-          data = await file.arrayBuffer();
-        } else if (item?.url) {
-          const response = await fetch(item.url, {
-            credentials: "same-origin",
-            cache: "no-store",
-            signal: controller.signal,
-          });
-          if (!response.ok) throw new Error("Unable to load the PDF attachment.");
-          data = await response.arrayBuffer();
-        } else {
-          return;
-        }
-        if (!active) return;
-
-        const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
-        loadingTask = pdfjs.getDocument({ data });
-        const pdf = await loadingTask.promise;
-        if (!active) return;
-
-        const page = await pdf.getPage(1);
-        if (!active) return;
-
-        const baseViewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(1.5, 320 / (baseViewport.width || 612));
-        const viewport = page.getViewport({ scale });
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.ceil(viewport.width);
-        canvas.height = Math.ceil(viewport.height);
-        const context = canvas.getContext("2d", { alpha: false });
-        if (!context) return;
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        await page.render({ canvasContext: context, viewport }).promise;
-        if (active) setPdfThumbnail({ source: pdfSourceKey, url: canvas.toDataURL("image/jpeg", 0.88) });
-      } catch {
-        if (active) setPdfThumbnail({ source: pdfSourceKey, url: null });
-      } finally {
-        try {
-          loadingTask?.destroy?.();
-        } catch {}
-      }
-    }
-
-    renderPdfThumbnail();
-    return () => {
-      active = false;
-      controller.abort();
-      try {
-        loadingTask?.destroy?.();
-      } catch {}
-    };
-  }, [file, isPdf, item?.url, pdfSourceKey]);
-
-  const imageUrl = item?.url || previewBlobUrl;
+  const imageUrl = formatConfig.isImage ? fileUrl || previewBlobUrl : null;
   const documentPlaceholder = (
     <div className="flex flex-col gap-1.5 w-full pointer-events-none opacity-90">
       <div className="h-2 w-7/12 rounded-xs bg-gray-300/80 dark:bg-zinc-700/60" />
@@ -272,18 +247,7 @@ export function AttachedFileCard({
 
   const downloadUrl = item?.url || item?.downloadUrl || null;
 
-  const categoryLabel = useMemo(() => {
-    if (!item?.attachmentType && !item?.attachment_type) return null;
-    const type = item.attachmentType || item.attachment_type;
-    const match = categories?.find((c) => c.value === type);
-    if (match) return match.label;
-    if (type === "spa") return "SPA Letter";
-    if (type === "valid_id") return "Valid Government ID";
-    if (type === "receipt") return "Proof of Payment";
-    if (type === "clearance") return "Clearance Slip";
-    if (type === "evidence") return "Supporting Evidence";
-    return type;
-  }, [item?.attachmentType, item?.attachment_type, categories]);
+  const categoryLabel = getAttachmentCategoryLabel(item?.attachmentType || item?.attachment_type, categories);
 
   return (
     <motion.div
@@ -415,6 +379,16 @@ export function AttachedFileCard({
         ) : null}
       </div>
     </motion.div>
+  );
+}
+
+export function AttachmentViews({ children }) {
+  const layout = useAttachmentLayout();
+
+  return (
+    <div className={layout === "rows" ? "space-y-2" : "flex flex-wrap items-start gap-3"}>
+      <AnimatePresence mode="sync">{children(layout === "rows" ? AttachedFileRow : AttachedFileCard)}</AnimatePresence>
+    </div>
   );
 }
 
@@ -850,7 +824,7 @@ export default function FileAttachmentDropzone({
 
   // Real upload progress display (when parent manages uploading state)
   if (isUploading && uploadProgress !== null) {
-    const singleName = items[0]?.file?.name || items[0]?.original_filename || "Uploading file...";
+    const singleName = items[0]?.file?.name || items[0]?.original_filename || "Uploading file…";
     return (
       <div className={cn(heading ? "space-y-2" : "space-y-3", className)}>
         {attachmentHeader}
@@ -947,22 +921,20 @@ export default function FileAttachmentDropzone({
       {/* 3. Attached Cards Grid */}
       {items.length > 0 && (
         <div className="space-y-2.5">
-          <div className="flex flex-wrap items-start gap-3">
-            <AnimatePresence>
-              {items.map((item, idx) => (
-                <AttachedFileCard
-                  key={item?.id || idx}
-                  item={item}
-                  onRemove={handleRemoveItem}
-                  onPreview={onPreview}
-                  readOnly={readOnly}
-                  animateLayout={animateCards}
-                  categories={categories}
-                  onCategoryChange={handleCategoryChange}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
+          <AttachmentViews>
+            {(Attachment) => items.map((item, idx) => (
+              <Attachment
+                key={item?.id || idx}
+                item={item}
+                onRemove={handleRemoveItem}
+                onPreview={onPreview}
+                readOnly={readOnly}
+                animateLayout={animateCards}
+                categories={categories}
+                onCategoryChange={handleCategoryChange}
+              />
+            ))}
+          </AttachmentViews>
 
           {/* Bottom action bar in multiple mode: Add more files trigger + Remove All Files action */}
           {mode === "multiple" && !readOnly && (!isFull || (!heading && removeAllButton)) && (

@@ -86,7 +86,7 @@ function PDFPreviewContent({
       .catch((err) => {
         if (!active) return
         console.error("PDF generation failed:", err)
-        setGeneratorError(err?.message || "Failed to generate PDF preview.")
+        setGeneratorError(err?.message || "Could not generate PDF preview.")
       })
       .finally(() => {
         if (active) setGeneratorLoading(false)
@@ -118,7 +118,7 @@ function PDFPreviewContent({
   const heading = title || preview?.title || preview?.docType || preview?.originalFilename || "PDF Preview"
   const context = description || preview?.subtitle || [preview?.studentName, preview?.studentNo].filter(Boolean).join(" · ")
   const FullscreenIcon = isFullscreen ? ArrowShrink01Icon : ArrowExpand01Icon
-  const originalAvailable = source && fileState === "ready" && (!activeFile || activeFile.isConverted) && !effectiveIsPreparing && !effectiveError
+  const originalAvailable = source && (fileState === "ready" || fileState === "unreadable") && (!activeFile || activeFile.isConverted) && !effectiveIsPreparing && !effectiveError
   const handleUpdate = onUpdate || preview?.onUpdate
 
   useEffect(() => {
@@ -135,7 +135,7 @@ function PDFPreviewContent({
       onPrint?.()
     } catch (failure) {
       if (onPrintError) onPrintError(failure)
-      else toast.error("Unable to Print PDF", { description: failure.message })
+      else toast.error("Could not print PDF", { description: failure.message })
     }
   }
 

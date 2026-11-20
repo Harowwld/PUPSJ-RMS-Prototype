@@ -306,7 +306,7 @@ export default function GoogleDrivePdfCard({
       if (onDownload) await onDownload(doc);
       else if (resolvedSrc) await downloadDocument(resolvedSrc, originalFilename);
     } catch (error) {
-      toast.error("Download Failed", { description: error.message });
+      toast.error("Could not download file", { description: error.message });
     }
   };
 

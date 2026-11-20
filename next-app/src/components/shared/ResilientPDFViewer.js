@@ -37,6 +37,7 @@ export default function ResilientPDFViewer({
   useEffect(() => {
     const controller = new AbortController();
     let objectUrl;
+    let pdfTask;
     const timer = setTimeout(async () => {
       setLoadState("loading");
       setFrameSrc(null);
@@ -60,7 +61,6 @@ export default function ResilientPDFViewer({
           return;
         }
         const response = await fetch(resolvedSrc, {
-          method: resolvedSrc.startsWith("blob:") ? "GET" : "HEAD",
           credentials: "same-origin",
           cache: "no-store",
           signal: controller.signal,
@@ -73,21 +73,49 @@ export default function ResilientPDFViewer({
         if (!response.ok) {
           throw new Error(response.status === 401 || response.status === 403
             ? "You do not have access to preview this file."
-            : `Unable to load the preview (HTTP ${response.status}).`);
+            : response.status === 410
+              ? "This earlier file is no longer available."
+              : `Unable to load the preview (HTTP ${response.status}).`);
         }
         const mime = (response.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
         const isImage = mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp)$/i.test(originalFilename);
         if (isImage) {
-          const imageResponse = resolvedSrc.startsWith("blob:") ? response : await fetch(resolvedSrc, { credentials: "same-origin", cache: "no-store", signal: controller.signal });
-          if (!imageResponse.ok) throw new Error("Unable to load the image attachment.");
-          const pdf = await createImagePdfPreview(await imageResponse.blob());
+          const pdf = await createImagePdfPreview(await response.blob());
           if (controller.signal.aborted) return;
           objectUrl = URL.createObjectURL(pdf);
           setFrameSrc(objectUrl);
           onPreviewReady?.({ url: objectUrl, source: resolvedSrc, isConverted: true });
         } else if (!mime || mime.includes("pdf") || (mime === "application/octet-stream" && (!originalFilename || /\.pdf$/i.test(originalFilename)))) {
-          setFrameSrc(resolvedSrc);
-          onPreviewReady?.({ url: resolvedSrc, source: resolvedSrc, isConverted: false });
+          const pdf = new Blob([await response.blob()], { type: "application/pdf" });
+          const data = await pdf.arrayBuffer();
+          const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
+          if (controller.signal.aborted) return;
+          pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
+          pdfTask = pdfjs.getDocument({ data, isEvalSupported: false });
+          try {
+            const document = await pdfTask.promise;
+            await document.getPage(1);
+          } catch (failure) {
+            if (controller.signal.aborted) return;
+            if (failure.name !== "PasswordException" && failure.name !== "InvalidPDFException" && failure.name !== "FormatError") {
+              throw failure;
+            }
+            setError(failure.name === "PasswordException"
+              ? "This PDF is password-protected. Download the original and use its password to open it."
+              : "This PDF could not be read. Ask the uploader for a readable copy.");
+            setLoadState("unreadable");
+            onStatusChange?.("unreadable");
+            return;
+          } finally {
+            const task = pdfTask;
+            pdfTask = null;
+            await task?.destroy().catch(() => {});
+          }
+          if (controller.signal.aborted) return;
+          objectUrl = URL.createObjectURL(pdf);
+          const fragment = new URL(resolvedSrc, window.location.href).hash;
+          setFrameSrc(objectUrl + fragment);
+          onPreviewReady?.({ url: objectUrl, source: resolvedSrc, isConverted: false });
         } else {
           setLoadState("unsupported");
           onStatusChange?.("ready");
@@ -105,6 +133,9 @@ export default function ResilientPDFViewer({
     return () => {
       clearTimeout(timer);
       controller.abort();
+      const task = pdfTask;
+      pdfTask = null;
+      task?.destroy().catch(() => {});
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [resolvedSrc, docId, originalFilename, preparedPdf, onStatusChange, onReadyChange, onPreviewReady, attempt]);
@@ -113,11 +144,11 @@ export default function ResilientPDFViewer({
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.type !== "application/pdf") {
-      toast.error("Invalid File Type", { description: "Only PDF files are supported for document re-attachment." });
+      toast.error("Unsupported file type", { description: "Select a PDF file to re-attach this document." });
       return;
     }
     if (file.size > DOCUMENT_MAX_SIZE_BYTES) {
-      toast.error("File Too Large", {
+      toast.error("File too large", {
         description: `Replacement PDF (${formatBytes(file.size)}) exceeds the ${DOCUMENT_MAX_SIZE_LABEL} limit.`,
       });
       return;
@@ -129,12 +160,12 @@ export default function ResilientPDFViewer({
       formData.append("file", file);
       const response = await fetch(`/api/documents/${docId}`, { method: "PATCH", body: formData });
       const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to re-attach document file.");
-      toast.success("Document Re-Attached", { description: "Replacement PDF file uploaded and verified successfully." });
+      if (!response.ok || !result?.ok) throw new Error(result?.error || "Could not re-attach document file.");
+      toast.success("Document re-attached", { description: "Replacement PDF file uploaded and verified." });
       onFileReplaced?.(result.data);
       setAttempt((value) => value + 1);
     } catch (failure) {
-      const info = formatErrorMessage(failure, { title: "Upload Failed", description: "Failed to upload replacement PDF." });
+      const info = formatErrorMessage(failure, { title: "Upload failed", description: "Could not upload replacement PDF." });
       toast.error(info.title, { description: info.description, action: info.action });
     } finally {
       setIsReuploading(false);
@@ -157,7 +188,7 @@ export default function ResilientPDFViewer({
           <EmptyState
             variant="compact"
             icon={FileAddIcon}
-            title={loadState === "missing" ? "Digital File Missing" : "PDF Preview Unavailable"}
+            title={loadState === "missing" ? "Digital file missing" : "PDF preview unavailable"}
             description={loadState === "missing"
               ? "The record details are available, but the digital file could not be found."
               : loadState === "unsupported"
