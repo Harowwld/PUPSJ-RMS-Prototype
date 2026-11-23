@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createViewPreferenceStore, normalizeViewPreference, viewPreferenceKey } from "../src/lib/viewPreferences.js";
+import { createViewPreferenceStore, normalizeViewPreference, restoreViewPreference, serializeViewPreference, viewPreferenceKey, workspaceViewPreferenceKey } from "../src/lib/viewPreferences.js";
 
 const user = { id: "PUPSUPERADMIN-001", role: "SuperAdmin" };
 const normalize = (value) => normalizeViewPreference("staff", "visibleColumns", value, ["name", "office"]);
@@ -32,6 +32,34 @@ test("reading defaults never overwrites storage; snapshots are stable across rep
   assert.equal(store.read("view", fallback, normalize), restored);
 });
 
+test("workspace preferences isolate accounts, offices, roles and pages while retaining OSAS saves", () => {
+  const admin = { id: "123", role: "Admin", office_id: "registrar" };
+  const staff = { ...admin, role: "Staff" };
+  const student = { id: "123", role: "Student", account_id: 123 };
+  const osas = { ...admin, office_id: "osas" };
+  const field = "sortBy";
+  const key = workspaceViewPreferenceKey(admin, "documents", field);
+  assert.notEqual(key, workspaceViewPreferenceKey(staff, "documents", field));
+  assert.notEqual(key, workspaceViewPreferenceKey(student, "documents", field));
+  assert.notEqual(key, workspaceViewPreferenceKey(osas, "documents", field));
+  assert.notEqual(key, workspaceViewPreferenceKey(admin, "audit_logs", field));
+  assert.equal(workspaceViewPreferenceKey(null, "documents", field), null);
+  assert.notEqual(workspaceViewPreferenceKey(student, "documents", field),
+    workspaceViewPreferenceKey({ ...student, account_id: 124 }, "documents", field));
+  assert.equal(workspaceViewPreferenceKey(student, "documents", field),
+    workspaceViewPreferenceKey({ ...student, id: "changed-student-number" }, "documents", field));
+  assert.equal(workspaceViewPreferenceKey(osas, "documents", field, { preserveOsasKey: true }),
+    "pup_osas_view_v1:123:documents:sortBy");
+  assert.equal(workspaceViewPreferenceKey(admin, "documents", field, { preserveOsasKey: true }), key);
+  assert.equal(workspaceViewPreferenceKey(admin, "records_archive", "selectedYear", { preserveOsasKey: true }), null);
+
+  const { storage } = storageFixture();
+  createViewPreferenceStore(() => storage).write(key, "created_at");
+  const reloaded = createViewPreferenceStore(() => storage);
+  assert.equal(reloaded.read(key, "student_no", String), "created_at");
+  assert.equal(reloaded.read(workspaceViewPreferenceKey(staff, "documents", field), "student_no", String), "student_no");
+});
+
 test("stored changes survive a new store, notify mounted consumers, and respect external removal", () => {
   const { storage, data } = storageFixture();
   const store = createViewPreferenceStore(() => storage);
@@ -54,10 +82,10 @@ test("malformed and outdated preferences recover safely", () => {
   data.set("view", "{broken");
   assert.deepEqual(store.read("view", fallback, normalize), fallback);
   data.set("view", '["name","removed-column","name"]');
-  assert.deepEqual(store.read("view", fallback, normalize), ["name"]);
+  assert.deepEqual(store.read("view", fallback, normalize), ["name", "office"]);
   assert.deepEqual(normalize(["obsolete-only"]), fallback);
   assert.deepEqual(normalize(null), fallback);
-  assert.deepEqual(normalize([]), []);
+  assert.deepEqual(normalize([]), fallback);
   assert.equal(normalizeViewPreference("logs", "limit", -50, 20), 20);
   assert.equal(normalizeViewPreference("logs", "startDate", "2026-02-30", ""), "");
   assert.equal(normalizeViewPreference("logs", "startDate", "2026-11-03", ""), "2026-11-03");
@@ -78,7 +106,24 @@ test("filter rules and multi-value filters validate structure, remove obsolete f
   assert.deepEqual(normalizeViewPreference("staff", "filterRules", rules, []), [rules[0]]);
   const fallback = { severity: [], office: [] };
   assert.equal(normalizeViewPreference("logs", "logFilters", { severity: "INFO", office: [] }, fallback), fallback);
-  assert.deepEqual(normalizeViewPreference("offices", "visibleColumns", ["status"], []), ["department", "status"]);
+  assert.deepEqual(normalizeViewPreference("offices", "visibleColumns", ["status"], ["department", "office"]), ["status", "department"]);
+});
+
+test("legacy column selections retain formerly fixed columns and new selections can hide them", () => {
+  const { storage, data } = storageFixture();
+  const store = createViewPreferenceStore(() => storage);
+  const field = "visibleColumns";
+  const fallback = ["id", "department", "requester", "title", "details", "status", "submitted"];
+  const key = viewPreferenceKey(user, "operations", field);
+  const restore = (value) => restoreViewPreference("operations", field, value, fallback);
+  data.set(key, '["title","status"]');
+  assert.deepEqual(store.read(key, fallback, restore), ["id", "title", "status"]);
+
+  const selected = ["title", "status"];
+  store.write(key, selected, serializeViewPreference("operations", field, selected));
+  const reloaded = createViewPreferenceStore(() => storage);
+  assert.deepEqual(reloaded.read(key, fallback, restore), selected);
+  assert.deepEqual(restore({ selected: ["title"] }), ["title", "id"]);
 });
 
 test("blocked and full storage retain usable in-memory preferences, and recover when writable", () => {
@@ -94,6 +139,30 @@ test("blocked and full storage retain usable in-memory preferences, and recover 
   blocked = false;
   assert.deepEqual(store.read("view", ["name"], normalize), ["email"]);
   assert.equal(storage.getItem("view"), '["email"]');
+});
+
+test("SuperAdmin SLA and portal filters, audit grouping, and personnel severity survive reload", () => {
+  const { storage } = storageFixture();
+  const store = createViewPreferenceStore(() => storage);
+  const reloaded = createViewPreferenceStore(() => storage);
+  const preferences = [
+    ["operations", "operationFilters", [], [{ id: "sla", fieldKey: "queue_risk", operator: "is", value: "overdue" }]],
+    ["portal-accounts", "filterRules", [], [{ id: "status", fieldKey: "status", operator: "is_not", value: "Archived" }]],
+    ["portal-accounts", "groupBy", "none", "affiliation"],
+    ["portal-accounts", "sortBy", "createdAt", "studentNo"],
+    ["portal-accounts", "sortOrder", "DESC", "ASC"],
+    ["portal-accounts", "visibleColumns", ["name", "email", "affiliation", "status", "studentNo", "createdAt"], ["name", "status"]],
+    ["logs", "groupBy", "none", "severity"],
+    ["personnel-activity", "severity", "All", "WARNING"],
+  ];
+  for (const [page, field, fallback, selection] of preferences) {
+    const key = viewPreferenceKey(user, page, field);
+    const validate = (value) => normalizeViewPreference(page, field, value, fallback);
+    store.write(key, validate(selection));
+    assert.deepEqual(reloaded.read(key, fallback, validate), selection);
+    store.write(key, validate(fallback));
+    assert.deepEqual(reloaded.read(key, fallback, validate), fallback);
+  }
 });
 
 test("SuperAdmin and shared table column controls default to essential columns and reset to defaults instead of all columns", async () => {
@@ -121,7 +190,7 @@ test("SuperAdmin and shared table column controls default to essential columns a
     "utf8"
   );
   assert.ok(
-    staffCode.includes('["name", "email", "office", "role", "section", "totp_enabled"]'),
+    staffCode.includes('["id", "name", "email", "office", "role", "section", "totp_enabled"]'),
     "GlobalStaffTab must default visibleColumns to essential staff columns (excluding last_active, created_at, updated_at)"
   );
   assert.ok(

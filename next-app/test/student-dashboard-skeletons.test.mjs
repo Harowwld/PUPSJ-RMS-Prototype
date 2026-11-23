@@ -63,24 +63,15 @@ describe("Student Dashboard Skeletons match data-populated views", () => {
     assert.match(pageSrc, /<StudentRequestsTableRowsSkeleton/);
   });
 
-  it("StudentComplianceSkeleton matches StudentComplianceKpiCards, 2-zone toolbar, and default list view", () => {
+  it("Document Checklist keeps the live header and toolbar while the grouped list loads", () => {
     const src = readFile("src/components/student/skeletons/StudentComplianceSkeleton.js");
+    const tab = readFile("src/components/student/StudentComplianceTab.js");
 
-    // Header has 3 h-9 action buttons (Refresh, Download PDF, Preview PDF)
-    assert.match(src, /h-9 w-9 rounded-xl/);
-    assert.match(src, /h-9 w-28 rounded-xl/);
-
-    // 3-column KPI cards inside rounded-[22px] container with rounded-[18px] cards
-    assert.match(src, /rounded-\[22px\]/);
-    assert.match(src, /rounded-\[18px\]/);
-
-    // Canonical 2-zone toolbar with w-72 sm:w-80 search and 2-icon Grid/List SegmentedControl
-    assert.match(src, /h-9 w-72 sm:w-80 shrink-0 rounded-xl/);
-    assert.match(src, /inline-grid grid-flow-col auto-cols-fr items-center gap-1 p-1 rounded-full/);
-
-    // Default list view rows
-    assert.match(src, /role="list"/);
-    assert.match(src, /min-h-\[52px\]/);
+    assert.match(src, /<StudentChecklistVerificationSkeleton \/>/);
+    assert.match(tab, /<StudentChecklistVerificationSkeleton \/>/);
+    assert.match(src, /getListDensityClasses\(density\)/);
+    assert.match(src, /size-8 shrink-0 rounded-lg/);
+    assert.match(tab, /<PageHeader[\s\S]*<DataViewToolbar[\s\S]*<StudentComplianceListSkeleton density=\{density\}/);
   });
 
   it("StudentOsasProposalsSkeleton matches OSAS header, 3-tab stream switcher, inline form, 2-zone toolbar, and proposal cards", () => {

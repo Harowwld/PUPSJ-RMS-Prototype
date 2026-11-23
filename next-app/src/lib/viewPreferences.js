@@ -1,14 +1,25 @@
+import { normalizeRole } from "./roleUtils.js";
+
+const portalAccountColumns = ["name", "email", "affiliation", "status", "studentNo", "createdAt"];
 const columns = {
+  "portal-accounts": portalAccountColumns,
   offices: ["department", "office", "station", "staff", "modules", "status", "created_at", "updated_at"],
-  staff: ["name", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
-  operations: ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"],
+  staff: ["id", "name", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
+  operations: ["id", "department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"],
   logs: ["created_at", "severity", "actor", "action", "office_id", "details", "ip"],
-  backups: ["size", "created", "actor", "type", "status", "external", "offsite"],
+  backups: ["filename", "size", "created", "actor", "type", "status"],
+};
+const previouslyFixedColumns = {
+  staff: ["id"],
+  operations: ["id"],
+  logs: ["created_at", "action"],
+  backups: ["filename"],
 };
 const enums = {
   statusFilter: ["Active", "Inactive", "Archived"],
   officeFilter: ["Active", "Archived"],
   lifecycle: ["all", "open", "closed"],
+  severity: ["All", "INFO", "WARNING", "CRITICAL"],
   scope: ["all", "required", "optional"],
   layoutView: ["grid", "table", "list"],
   viewMode: ["office", "matrix", "table", "list"],
@@ -16,6 +27,7 @@ const enums = {
   matrixSortOrder: ["ASC", "DESC"],
 };
 const sortKeys = {
+  "portal-accounts": portalAccountColumns,
   offices: ["short_name", "name", "station_name", "staff_count", "module_count", "status", "created_at", "updated_at"],
   staff: ["name", "id", "email", "office", "role", "section", "last_active", "totp_enabled", "created_at", "updated_at"],
   operations: ["createdAt", "id", "officeId", "studentName", "title", "organizationName", "status", "slaStatus", "updatedAt"],
@@ -26,12 +38,15 @@ const groups = {
   offices: ["none", "status", "station", "staff_count"],
   staff: ["none", "office", "role"],
   operations: ["none", "department", "status"],
+  "portal-accounts": ["none", "affiliation", "status"],
+  logs: ["none", "role", "severity"],
   backups: ["none", "backup_type", "status_local"],
 };
 const ruleFields = {
   offices: ["short_name", "name", "station_name", "staff_count", "module_count"],
   staff: ["role", "office"],
-  operations: ["department", "status"],
+  operations: ["department", "status", "queue_risk"],
+  "portal-accounts": ["affiliation", "status"],
   backups: ["status_local", "size_bytes"],
   modules: ["category", "required", "status"],
   "cms-faq": ["category"],
@@ -46,16 +61,38 @@ export function viewPreferenceKey(user, page, field) {
   return `pup_superadmin_view_v2:${encodeURIComponent(String(user.id))}:${page}:${field}`;
 }
 
+export function workspaceViewPreferenceKey(user, page, field, { preserveOsasKey = false } = {}) {
+  const role = normalizeRole(user?.role);
+  const accountId = role === "Student" ? user?.account_id ?? user?.id : user?.id;
+  if (!accountId || !role) return null;
+  const office = String(user.office_id || "").trim().toLowerCase();
+  const id = encodeURIComponent(String(accountId));
+  if (preserveOsasKey && office === "osas" && (role === "Admin" || role === "Staff")) {
+    return `pup_osas_view_v1:${id}:${page}:${field}`;
+  }
+  if (preserveOsasKey && !/(?:^|\.)(?:viewMode|filterRules|visibleColumns|groupBy|(?:folder|record|table)?sort(?:By|Order))$/i.test(field)) {
+    return null;
+  }
+  return `pup_workspace_view_v1:${role}:${encodeURIComponent(office)}:${id}:${page}:${field}`;
+}
+
 export function normalizeViewPreference(page, field, value, fallback) {
   if (field === "activeTab") {
-    const tabs = page === "cms-hero" ? ["slides", "preview"] : ["content", "preview"];
+    const tabs = {
+      "cms-hero": ["slides", "preview"],
+      "cms-bento": ["cards", "header", "preview"],
+    }[page] || ["content", "preview"];
     return tabs.includes(value) ? value : fallback;
   }
   if (field === "visibleColumns" && columns[page]) {
     if (!strings(value)) return fallback;
     const selected = [...new Set(value.filter((key) => columns[page].includes(key)))];
     if (value.length && !selected.length) return fallback;
-    return page === "offices" ? ["department", ...selected.filter((key) => key !== "department")] : selected;
+    for (const key of fallback) {
+      if (selected.length >= 2) break;
+      if (!selected.includes(key)) selected.push(key);
+    }
+    return selected;
   }
   const allowed = enums[field] || (field === "sortBy" ? sortKeys[page] : field === "groupBy" ? groups[page] : null);
   if (allowed) return allowed.includes(value) ? value : fallback;
@@ -86,6 +123,18 @@ export function normalizeViewPreference(page, field, value, fallback) {
   return fallback;
 }
 
+export function restoreViewPreference(page, field, value, fallback) {
+  if (field === "visibleColumns" && previouslyFixedColumns[page]) {
+    // Older saves omitted columns that were always rendered.
+    value = strings(value) ? [...previouslyFixedColumns[page], ...value] : value?.selected;
+  }
+  return normalizeViewPreference(page, field, value, fallback);
+}
+
+export function serializeViewPreference(page, field, value) {
+  return field === "visibleColumns" && previouslyFixedColumns[page] ? { selected: value } : value;
+}
+
 export function createViewPreferenceStore(getStorage) {
   const cache = new Map();
   const listeners = new Map();
@@ -112,9 +161,9 @@ export function createViewPreferenceStore(getStorage) {
         return previous?.value ?? fallback;
       }
     },
-    write(key, value) {
+    write(key, value, storedValue = value) {
       if (!key) return;
-      const raw = JSON.stringify(value);
+      const raw = JSON.stringify(storedValue);
       let unsaved = false;
       try { getStorage().setItem(key, raw); } catch { unsaved = true; }
       cache.set(key, { raw, value, unsaved });
