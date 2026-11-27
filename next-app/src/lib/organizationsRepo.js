@@ -680,6 +680,7 @@ export async function getOrganizationsForStudentEmail(email) {
       so.id AS organization_id,
       so.name AS organization_name,
       so.acronym,
+      so.banner_gradient,
       so.category,
       so.adviser_name,
       so.description,

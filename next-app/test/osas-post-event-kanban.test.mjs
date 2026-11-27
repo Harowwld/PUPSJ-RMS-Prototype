@@ -1,3 +1,4 @@
+import { formatManilaCalendarDate } from "../src/lib/timeFormat.js";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
@@ -65,7 +66,7 @@ async function runPostEventKanbanGuardsTest() {
     pForm.append("title", "Post-Event Pipeline Target Event 2026");
     pForm.append("organizationId", "helping-hands");
     pForm.append("organizationName", "Helping Hands Community Organization");
-    pForm.append("eventDate", "2026-11-20");
+    pForm.append("eventDate", formatManilaCalendarDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
     pForm.append("file", new Blob([proposalPdf], { type: "application/pdf" }), "target-event.pdf");
 
     const pRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {

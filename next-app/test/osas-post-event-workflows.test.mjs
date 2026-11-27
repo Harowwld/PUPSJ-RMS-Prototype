@@ -1,3 +1,4 @@
+import { formatManilaCalendarDate } from "../src/lib/timeFormat.js";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
@@ -114,7 +115,7 @@ async function runTests() {
     proposalForm.append("title", "Community Tech Outreach & Code Camp 2026");
     proposalForm.append("organizationId", "helping-hands");
     proposalForm.append("organizationName", "Helping Hands Community Organization");
-    proposalForm.append("eventDate", "2026-11-15");
+    proposalForm.append("eventDate", formatManilaCalendarDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
     proposalForm.append("file", new Blob([proposalPdf], { type: "application/pdf" }), "tech-outreach-proposal.pdf");
 
     const submitProposalRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {

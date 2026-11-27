@@ -1,0 +1,36 @@
+.card {
+  background-color: #280f16;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, #280f16 8%, rgb(40 15 22 / 94%) 36%, rgb(40 15 22 / 58%) 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card[data-entered] .backdrop {
+    animation: reveal-campus 250ms var(--ease-fluid) both;
+  }
+}
+
+:global(.reduce-motion) .card[data-entered] .backdrop {
+  animation: none;
+}
+
+@keyframes reveal-campus {
+  from {
+    opacity: 0.6;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

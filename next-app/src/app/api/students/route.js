@@ -69,7 +69,8 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: errorMsg }, { status: 400 });
   }
 
-  const { studentNo, name, courseCode, yearLevel, section, room, cabinet, drawer, status } = validation.data;
+  const { studentNo, name, courseCode, yearLevel, section, room, cabinet, drawer, status, odrsEmail } = validation.data;
+  if (odrsEmail && officeId !== "registrar") return createAuthErrorResponse("Registrar access required", 403);
   const layout = await getStorageLayout({ officeId });
   const roomDef = layout?.rooms?.find((entry) => Number(entry.id) === room);
   if (!roomDef) {
@@ -97,6 +98,7 @@ export async function POST(req) {
       cabinet,
       drawer,
       status,
+      odrsEmail,
       officeId,
     });
     if (!row || !canAccessResource(access.user, "student", { ...row, office_id: officeId })) {
@@ -109,7 +111,9 @@ export async function POST(req) {
     const msg = String(e?.message || "");
     if (isUniqueViolation(e)) {
       return NextResponse.json(
-        { ok: false, error: "Student already exists" },
+        { ok: false, error: e.constraint === "registrar_odrs_contacts_email_unique"
+          ? "This ODRS email is already recorded for another student."
+          : "Student already exists" },
         { status: 409 }
       );
     }

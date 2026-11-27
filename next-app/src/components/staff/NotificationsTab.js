@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_BASE } from "@/lib/badgeStyles";
 
 
 import SheetPagination from "@/components/shared/SheetPagination";
@@ -1070,7 +1070,7 @@ export default function NotificationsTab({
 
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border", ui.badgeClass, BADGE_BASE)}
+                          className={cn(ui.badgeClass, COMPACT_BADGE_BASE)}
                         >
                           {ui.label}
                         </span>

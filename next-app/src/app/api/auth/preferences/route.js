@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { DEFAULT_INITIAL_LOADER } from "@/lib/initialLoaderPreference";
 import { getStaffById, parseStaffPreferences, updateStaffPreferences } from "@/lib/staffRepo";
 import { requireAuth, createAuthErrorResponse } from "@/lib/authHelpers";
-import { queryOne, query } from "@/lib/postgres";
+import { queryOne } from "@/lib/postgres";
 import {
   DEFAULT_SOUND_CATEGORIES,
   DEFAULT_SOUND_VOLUME,
@@ -18,6 +19,7 @@ const DEFAULT_USER_PREFERENCES = {
   reduce_motion: false,
   zoom_node: 3,
   default_home_view: "default",
+  initial_loader: DEFAULT_INITIAL_LOADER,
   display_name_format: "full_name",
   font_size: "default",
   pointer_cursor: true,
@@ -34,6 +36,7 @@ const PREFERENCE_VALIDATORS = {
   high_contrast: (value) => typeof value === "boolean",
   reduce_motion: (value) => typeof value === "boolean",
   zoom_node: (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 6,
+  initial_loader: (value) => ["skeleton", "workspace"].includes(value),
   default_home_view: (value) => typeof value === "string" && value.length <= 50,
   display_name_format: (value) => ["full_name", "first_only", "last_only", "last_first"].includes(value),
   font_size: (value) => ["smaller", "small", "default", "large", "larger"].includes(value),
@@ -137,14 +140,16 @@ export async function POST(req) {
         sound_categories: mergedCategories,
       };
 
-      if (accountId) {
-        await query(
-          `UPDATE student_accounts
-              SET preferences = $1::jsonb,
-                  updated_at = NOW()
-            WHERE id = $2`,
-          [JSON.stringify(updatedPrefs), accountId]
-        ).catch(() => {});
+      const updatedAccount = accountId && await queryOne(
+        `UPDATE student_accounts
+            SET preferences = $1::jsonb,
+                updated_at = NOW()
+          WHERE id = $2
+          RETURNING id`,
+        [JSON.stringify(updatedPrefs), accountId]
+      );
+      if (!updatedAccount) {
+        return NextResponse.json({ ok: false, error: "Student account not found" }, { status: 404 });
       }
 
       return NextResponse.json({ ok: true, data: updatedPrefs });

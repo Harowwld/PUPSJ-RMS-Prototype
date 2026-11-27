@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { isSystemAdminRole } from "../../../lib/roleUtils";
@@ -46,6 +47,12 @@ export async function GET(req) {
   const studentNo = searchParams.get("studentNo") || "";
   const clientType = searchParams.get("clientType") || "";
   const docType = searchParams.get("docType") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  if (!isValidCalendarDateRange(startDate, endDate)) {
+    return NextResponse.json({ ok: false, error: "Invalid request date range." }, { status: 400 });
+  }
+
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
   const sortBy = searchParams.get("sortBy") || "created_at";
@@ -58,6 +65,8 @@ export async function GET(req) {
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,
       docType: docType || undefined,
+      startDate,
+      endDate,
       officeId,
       limit,
       offset,
@@ -70,6 +79,8 @@ export async function GET(req) {
       studentNo: studentNo || undefined,
       clientType: clientType || undefined,
       docType: docType || undefined,
+      startDate,
+      endDate,
       officeId,
     }),
   ]);

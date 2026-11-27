@@ -64,6 +64,8 @@ export async function listDocumentRequests({
   studentNo = "",
   clientType = "",
   docType = "",
+  startDate = "",
+  endDate = "",
   officeId = "",
   limit = 50,
   offset = 0,
@@ -72,6 +74,15 @@ export async function listDocumentRequests({
 } = {}) {
   const filters = [];
   const params = [];
+
+  if (startDate) {
+    filters.push("dr.created_at >= (?::date::timestamp AT TIME ZONE 'Asia/Manila')");
+    params.push(startDate);
+  }
+  if (endDate) {
+    filters.push("dr.created_at < ((?::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')");
+    params.push(endDate);
+  }
 
   if (officeId) {
     filters.push("dr.office_id = ?");
@@ -177,10 +188,21 @@ export async function countDocumentRequests({
   studentNo = "",
   clientType = "",
   docType = "",
+  startDate = "",
+  endDate = "",
   officeId = "",
 } = {}) {
   const filters = [];
   const params = [];
+
+  if (startDate) {
+    filters.push("dr.created_at >= (?::date::timestamp AT TIME ZONE 'Asia/Manila')");
+    params.push(startDate);
+  }
+  if (endDate) {
+    filters.push("dr.created_at < ((?::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')");
+    params.push(endDate);
+  }
 
   if (officeId) {
     filters.push("dr.office_id = ?");

@@ -164,10 +164,7 @@ export default function StudentOverviewSkeleton() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border">
-                      <div className="flex items-center gap-2.5">
-                        <Skeleton className="h-5 w-24 rounded-full dark:bg-muted" />
-                        <Skeleton className="h-3.5 w-28 rounded dark:bg-muted" />
-                      </div>
+                      <Skeleton className="hidden h-3.5 w-28 rounded dark:bg-muted sm:block" />
                       <Skeleton className="h-8 w-24 rounded-xl dark:bg-muted shrink-0" />
                     </div>
                   </div>

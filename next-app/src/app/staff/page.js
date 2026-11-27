@@ -1,4 +1,5 @@
 "use client";
+import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,7 +29,17 @@ import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
 import useOsasViewPreference from "@/hooks/useOsasViewPreference";
-import WorkspaceLoading from "@/components/shared/WorkspaceLoading";
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton";
+import DocumentRequestsSkeleton from "@/components/staff/skeletons/DocumentRequestsSkeleton";
+import OsasMonitoringSkeleton from "@/components/staff/skeletons/OsasMonitoringSkeleton";
+import StudentOrganizationsSkeleton from "@/components/staff/skeletons/StudentOrganizationsSkeleton";
+import StudentDirectorySkeleton from "@/components/staff/skeletons/StudentDirectorySkeleton";
+import ScanUploadSkeleton from "@/components/staff/skeletons/ScanUploadSkeleton";
+import BatchReviewSkeleton from "@/components/staff/skeletons/BatchReviewSkeleton";
+import DocumentsTabSkeleton from "@/components/staff/skeletons/DocumentsTabSkeleton";
+import NotificationsTabSkeleton from "@/components/staff/skeletons/NotificationsTabSkeleton";
+import RecordsArchiveSkeleton from "@/components/staff/skeletons/RecordsArchiveSkeleton";
+import StorageExplorerSkeleton from "@/components/staff/skeletons/StorageExplorerSkeleton";
 
 import AppIcon from "@/components/ui/app-icon";
 
@@ -165,7 +176,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
     setView(resolveStaffView(tab, authUser))
   }, [searchParams, authUser])
-  const [loading, setLoading] = useState(!initialAuthUser);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
   const sidebarItems = useMemo(() => {
@@ -533,7 +543,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   useEffect(() => {
     if (!initialAuthUser) return undefined;
     setAuthUser(initialAuthUser);
-    setLoading(false);
     const timer = setTimeout(() => {
       fetchNotificationsUnread();
     }, 0);
@@ -1866,10 +1875,6 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   }, []);
 
 
-  if (loading) {
-    return <WorkspaceLoading />;
-  }
-
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-jakarta relative transition-colors duration-300" style={{ "--brand-accent": brandAccent, "--brand-foreground": brandForeground }}>
       {/* Dynamic Liquid Glass Background Blobs */}
@@ -1942,7 +1947,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "overflow-hidden" : "overflow-y-auto")}>
+        <main className={cn("flex-1 relative w-full min-w-0 min-h-0 bg-white dark:bg-zinc-950/50 flex flex-col", (view === "batch_review" || (view === "storage" && currentLocatorLevel !== "rooms")) ? "overflow-hidden" : "overflow-y-auto")}>
           <div 
             className={cn(
               "p-2 flex flex-col w-full",
@@ -1954,7 +1959,7 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
             {view === "students" && (
             <StudentDirectoryTab
               authUser={authUser}
-              loading={!storageLayout || loading}
+              loading={!storageLayout}
               courses={courses}
               sections={sections}
               storageLayout={storageLayout}
@@ -2264,21 +2269,39 @@ function StaffPageContent({ authUser: propAuthUser = null }) {
   );
 }
 
+const STAFF_VIEW_SKELETONS = {
+  requests: DocumentRequestsSkeleton,
+  osas_monitoring: OsasMonitoringSkeleton,
+  organizations: StudentOrganizationsSkeleton,
+  students: StudentDirectorySkeleton,
+  upload: ScanUploadSkeleton,
+  batch_review: BatchReviewSkeleton,
+  documents: DocumentsTabSkeleton,
+  notifications: NotificationsTabSkeleton,
+  search: RecordsArchiveSkeleton,
+  storage: StorageExplorerSkeleton,
+};
+
 function StaffPageWithView() {
-  const fallback = <WorkspaceLoading />;
+  const searchParams = useSearchParams();
+  const view = resolveRequestedStaffView(searchParams?.get("view") || searchParams?.get("tab"));
+  const ViewSkeleton = STAFF_VIEW_SKELETONS[view];
+  const fallback = (
+    <InitialDashboardLoader>
+      <DashboardShellSkeleton>{ViewSkeleton ? <ViewSkeleton /> : null}</DashboardShellSkeleton>
+    </InitialDashboardLoader>
+  );
 
   return (
     <StaffGuard fallback={fallback}>
-      <Suspense fallback={fallback}>
-        <StaffPageContent />
-      </Suspense>
+      <StaffPageContent />
     </StaffGuard>
   );
 }
 
 export default function StaffPage() {
   return (
-    <Suspense fallback={<WorkspaceLoading />}>
+    <Suspense fallback={<InitialDashboardLoader />}>
       <StaffPageWithView />
     </Suspense>
   );

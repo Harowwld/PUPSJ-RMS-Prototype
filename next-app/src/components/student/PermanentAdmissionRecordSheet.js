@@ -1,6 +1,7 @@
 "use client";
 
 import SheetPagination from "@/components/shared/SheetPagination";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import React, { useMemo } from "react";
 
@@ -12,13 +13,38 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { ArrowUpRight01Icon, Cancel01Icon, File02Icon, Mail01Icon, TaskDone01Icon, ViewIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import NarrativeText from "@/components/shared/NarrativeText";
+export const CHECKLIST_HIGHLIGHTED_PHRASES = [
+  "Philippine Statistics Authority (PSA)",
+  "CAEPUP application slip",
+  "Senior High School Diploma",
+  "identification document",
+  "Senior High School Student Permanent Record (SF10-SHS)",
+  "Senior High School Final Report Card (Form 138 / SF9)",
+  "Certified true copy",
+  "certificate of good moral character",
+  "Health information",
+  "university admission waiver",
+  "PUP iApply",
+  "PUP San Juan Admissions",
+  "PUP San Juan Registrar",
+  "certified true copy",
+  "Learner Reference Number (LRN)",
+  "both semesters",
+  "Certificate of Graduation",
+  "Certificate of Good Moral Character",
+  "Student Admission Record (SAR)",
+  "PSA Serbilis",
+  "PSA Civil Registry System outlet",
+];
+
 /**
  * Standard Information Row (label : value)
  * Clean unboxed metadata layout aligned with colons and icons.
@@ -74,6 +100,7 @@ export default function PermanentAdmissionRecordSheet({
   onNavigateNext,
   student = null,
   onPreviewDocument,
+  statusOnly = false,
 }) {
   const item = itemProp || requirement;
   const isSubmitted = useMemo(() => {
@@ -95,6 +122,9 @@ export default function PermanentAdmissionRecordSheet({
   const archiveDate = item?.document?.createdAt || item?.date || item?.created_at || item?.reviewed_at;
   const originalFilename = item?.document?.originalFilename || item?.original_filename;
   const sizeBytes = item?.document?.sizeBytes || item?.size_bytes;
+
+  const showStatus = !statusOnly || Boolean(item?.status);
+  const highlightedPhrases = statusOnly ? [docTitle, ...CHECKLIST_HIGHLIGHTED_PHRASES] : undefined;
 
   const totalCount = items?.length || 0;
   const hasMultiple = totalCount > 1 && currentIndex >= 0;
@@ -134,21 +164,25 @@ export default function PermanentAdmissionRecordSheet({
                 />
               )}
 
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                aria-label="Close"
-                title="Close"
-              >
-                <Cancel01Icon size="1em" className="text-sm" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onOpenChange(false)}
+                    className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                    aria-label="Close"
+                  >
+                    <Cancel01Icon size="1em" className="text-sm" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Close</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </SheetHeader>
 
         {/* 2. Line-Attached Edge-to-Edge Status Notice (Zero card margins, takes the line) */}
-        <div
+        {!statusOnly && <div
           className={cn(
             "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
             isSubmitted
@@ -172,87 +206,105 @@ export default function PermanentAdmissionRecordSheet({
               ? "Physical authenticated hard copy is securely vaulted in institutional records."
               : "Physical hard copy submission required to clear academic records hold."}
           </span>
-        </div>
+        </div>}
 
         {/* 3. Scrollable Body: Clean, Typographic & Card-Free */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-          {/* Document Identity Block (Unboxed) */}
-          <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-            <div
-              className={cn(
-                "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs",
-                isSubmitted
-                  ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-              )}
-            >
-              <TaskDone01Icon size={16}
+          {!statusOnly && (
+            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
+              <div
                 className={cn(
-                  "",
-                  isSubmitted ? "" : getCategoryIcon(docCategory)
+                  "w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs",
+                  isSubmitted
+                    ? "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    : "bg-amber-500/10 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                 )}
-              />
+              >
+                <TaskDone01Icon size={16} aria-hidden="true"
+                  className={cn(
+                    "",
+                    isSubmitted ? "" : getCategoryIcon(docCategory)
+                  )}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums mb-1")}>
+                  {docCategory}
+                </span>
+                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
+                  {docTitle}
+                </h3>
+                {docDescription && (
+                  <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                    <NarrativeText text={docDescription} mode="full" highlightedPhrases={highlightedPhrases} />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "font-sans tabular-nums mb-1")}>
-                {docCategory}
-              </span>
-              <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                {docTitle}
-              </h3>
-              {docDescription && (
-                <div className="text-xs text-gray-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                  <NarrativeText text={docDescription} mode="full" />
-                </div>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Essential Record Specification (Unboxed InfoRow List) */}
           <div className="space-y-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              Record Specification
-            </h4>
+            {statusOnly ? (
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Document Information" />
+            ) : (
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Record Specification
+              </h4>
+            )}
             <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              {statusOnly && (
+                <>
+                  <InfoRow icon="File02Icon" label="Document Type" value={docTitle} />
+                  <InfoRow icon="Tag01Icon" label="Category">
+                    <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray)}>{docCategory}</span>
+                  </InfoRow>
+                  <InfoRow icon="Message01Icon" label="Description">
+                    <div className="font-normal leading-relaxed">
+                      <NarrativeText text={docDescription} mode="full" highlightedPhrases={highlightedPhrases} />
+                    </div>
+                  </InfoRow>
+                </>
+              )}
               <InfoRow
                 icon="Building01Icon"
                 label="Verifying Office"
                 value="Office of the Campus Registrar"
               />
-              <InfoRow icon="PieChartIcon" label="Clearance Status">
+              {showStatus && <InfoRow icon="PieChartIcon" label={statusOnly ? "Submission Status" : "Clearance Status"}>
                 <span
                   className={cn(
-                    BADGE_BASE,
+                    statusOnly ? COMPACT_BADGE_BASE : BADGE_BASE,
                     isSubmitted
                       ? BADGE_PALETTES.emerald
                       : BADGE_PALETTES.amber
                   )}
                 >
-                  {isSubmitted ? "Archived & Verified" : "Pending Submission"}
+                  {statusOnly ? (isSubmitted ? "Submitted" : "Missing") : (isSubmitted ? "Archived & Verified" : "Pending Submission")}
                 </span>
-              </InfoRow>
-              {isSubmitted && archiveDate && (
+              </InfoRow>}
+              {!statusOnly && isSubmitted && archiveDate && (
                 <InfoRow
                   icon="CalendarCheckIn01Icon"
                   label="Archived On"
                   value={formatPHDateTime(archiveDate)}
                 />
               )}
-              {isSubmitted && (
+              {!statusOnly && isSubmitted && (
                 <InfoRow
                   icon="Shield01Icon"
                   label="Clearance Standing"
                   value="Good Standing · No Records Hold"
                 />
               )}
-              {!isSubmitted && (
+              {!statusOnly && !isSubmitted && (
                 <InfoRow
                   icon="Door01Icon"
                   label="Submission Window"
                   value="Window 2 — Admissions & Archives (Room 102)"
                 />
               )}
-              {!isSubmitted && (
+              {!statusOnly && !isSubmitted && (
                 <InfoRow
                   icon="Clock01Icon"
                   label="Window Hours"
@@ -262,8 +314,29 @@ export default function PermanentAdmissionRecordSheet({
             </div>
           </div>
 
+          {statusOnly && !isSubmitted && item?.instructions && (
+            <section className="space-y-2.5">
+              <SheetSectionHeading icon="File02Icon" title="How to get it" />
+              <p className="text-[13px] leading-relaxed text-gray-600 dark:text-zinc-300">
+                <NarrativeText text={item.instructions} mode="full" highlightedPhrases={highlightedPhrases} />
+              </p>
+              {item.source && (
+                <a
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                  href={item.source.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {item.source.label}
+                  <ArrowUpRight01Icon size={14} aria-hidden="true" data-icon="inline-end" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              )}
+            </section>
+          )}
+
           {/* Contextual Action: Submission Instructions (Pending Only, Unboxed) */}
-          {!isSubmitted && (
+          {!statusOnly && !isSubmitted && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Submission Guidelines
@@ -279,7 +352,7 @@ export default function PermanentAdmissionRecordSheet({
           )}
 
           {/* Contextual Action: Digitized Reference (Submitted Only, Single Unboxed Row) */}
-          {isSubmitted && originalFilename && (
+          {!statusOnly && isSubmitted && originalFilename && (
             <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                 Digitized Archive Reference

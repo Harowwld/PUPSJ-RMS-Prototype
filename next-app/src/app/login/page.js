@@ -17,67 +17,66 @@ import {
 import { isSystemAdminRole, isAdminRole, canAccessPage } from "@/lib/roleUtils";
 import { invalidateClientSession, getClientSession } from "@/lib/clientAuth";
 import { fetchJsonOnce } from "@/lib/clientRequest";
-import { formatRegistrarStudentName, LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
-import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
+import { LoginIdentifierSchema, PersonNameSchema } from "@/lib/validationSchemas";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import { Alert01Icon, ArrowRight02Icon, CovidInfoIcon, Loading01Icon, UserSearch01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const DEMO_ACCOUNTS = [
   {
-    role: "SuperAdmin",
+    name: "Ramon Villanueva",
     title: "System Administrator",
     department: "Institutional IT & Systems",
-    email: "superadmin@pup.local",
+    email: "superadmin@pup.com",
     badge: "Global",
     icon: "Shield01Icon",
     accent: "text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700",
     badgeColor: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
   },
   {
-    role: "Registrar Admin",
+    name: "Elias Austria",
     title: "Head Registrar Administrator",
     department: "Academic Records & Approvals",
-    email: "admin.registrar@pup.local",
+    email: "admin.registrar@pup.com",
     badge: "Registrar",
     icon: "Contact01Icon",
     accent: "text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-900/60",
     badgeColor: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300",
   },
   {
-    role: "Registrar Staff",
+    name: "Marcus Reyes",
     title: "Records Keeping Personnel",
     department: "Archives, Scanning & Drawer Filing",
-    email: "staff.registrar@pup.local",
+    email: "staff.registrar@pup.com",
     badge: "Records",
     icon: "Folder01Icon",
     accent: "text-orange-800 dark:text-orange-200 bg-orange-50 dark:bg-orange-950/40 border-orange-200/80 dark:border-orange-900/60",
     badgeColor: "bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300",
   },
   {
-    role: "OSAS Admin",
+    name: "Sandra Gomez",
     title: "Student Affairs Administrator",
     department: "Good Moral & Clearance Approvals",
-    email: "admin.osas@pup.local",
+    email: "admin.osas@pup.com",
     badge: "OSAS",
     icon: "UserSearch01Icon",
     accent: "text-blue-800 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/40 border-blue-200/80 dark:border-blue-900/60",
     badgeColor: "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
   },
   {
-    role: "OSAS Staff",
+    name: "Juanito Rizal",
     title: "Student Affairs Personnel",
     department: "Event Proposals & Organization Monitoring",
-    email: "staff.osas@pup.local",
+    email: "staff.osas@pup.com",
     badge: "OSAS",
     icon: "StudentIcon",
     accent: "text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border-sky-200/80 dark:border-sky-900/60",
     badgeColor: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300",
   },
   {
-    role: "Student",
-    title: "Undergraduate / Alumni",
+    name: "Juan Dela Cruz",
+    title: "Undergraduate Student",
     department: "ODRS Online Document Requests",
-    email: "student@pup.local",
+    email: "student@pup.com",
     password: "student123",
     badge: "Student",
     icon: "GraduationScrollIcon",
@@ -85,10 +84,10 @@ const DEMO_ACCOUNTS = [
     badgeColor: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300",
   },
   {
-    role: "Maria Clara Santos",
+    name: "Maria Clara Santos",
     title: "Undergraduate Student (BSIT)",
     department: "ODRS Online Document Requests",
-    email: "test.student@pup.local",
+    email: "test.student@pup.com",
     password: "student123",
     badge: "Student",
     icon: "GraduationScrollIcon",
@@ -103,6 +102,9 @@ export default function Home() {
   const [loginStep, setLoginStep] = useState(1); // 1 = email, 2 = password
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [staffVerificationEmail, setStaffVerificationEmail] = useState("");
+  const [staffEmailCode, setStaffEmailCode] = useState("");
+  const [staffCodeMessage, setStaffCodeMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -114,10 +116,17 @@ export default function Home() {
   const [demoOpen, setDemoOpen] = useState(false);
   const [demoAccountsEnabled, setDemoAccountsEnabled] = useState(false);
 
+  function resetStaffVerification() {
+    setStaffVerificationEmail("");
+    setStaffEmailCode("");
+    setStaffCodeMessage("");
+  }
+
   const handleSelectDemoAccount = (acc) => {
     setView("login");
     setUsername(acc.email);
     setPassword("");
+    resetStaffVerification();
     setLoginStep(2);
     setEmailError("");
     setPasswordError("");
@@ -139,12 +148,10 @@ export default function Home() {
   const [tempToken, setTempToken] = useState("");
   const [studentSignup, setStudentSignup] = useState({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [studentSignupError, setStudentSignupError] = useState("");
-  const [studentSignupLoading, setStudentSignupLoading] = useState(false);
+  const [pendingSignupAction, setPendingSignupAction] = useState(null);
+  const studentSignupLoading = pendingSignupAction !== null;
   const [signupChallengeId, setSignupChallengeId] = useState("");
   const [signupCode, setSignupCode] = useState("");
-  const [signupSetup, setSignupSetup] = useState(null);
-  const [signupAnswers, setSignupAnswers] = useState({});
-  const [signupAffiliation, setSignupAffiliation] = useState("");
   const [firstNameFocused, setFirstNameFocused] = useState(false);
   const [middleNameFocused, setMiddleNameFocused] = useState(false);
   const [lastNameFocused, setLastNameFocused] = useState(false);
@@ -156,12 +163,9 @@ export default function Home() {
   const resetStudentSignupState = () => {
     setStudentSignup({ firstName: "", middleName: "", lastName: "", email: "", password: "", confirmPassword: "" });
     setStudentSignupError("");
-    setStudentSignupLoading(false);
+    setPendingSignupAction(null);
     setSignupChallengeId("");
     setSignupCode("");
-    setSignupSetup(null);
-    setSignupAnswers({});
-    setSignupAffiliation("");
     setFirstNameFocused(false);
     setMiddleNameFocused(false);
     setLastNameFocused(false);
@@ -268,6 +272,7 @@ export default function Home() {
     setForgotError("");
     setForgotLoading(false);
     setLoginStep(1);
+    resetStaffVerification();
     setForgotIdentifierFocused(false);
   };
 
@@ -376,7 +381,7 @@ export default function Home() {
     }
   };
 
-  function handleLogin(usernameValue = username, passwordValue = password, isDemo = false) {
+  function handleLogin(usernameValue = username, passwordValue = password, isDemo = false, resendStaffEmailCode = false) {
     if (isLoading) return;
 
     const usernameInput = usernameValue.trim();
@@ -390,12 +395,34 @@ export default function Home() {
         const res = await fetch(isDemo ? "/api/auth/demo-login" : "/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(isDemo ? { username: usernameInput } : { username: usernameInput, password: passwordInput }),
+          body: JSON.stringify(isDemo ? { username: usernameInput } : {
+            username: usernameInput,
+            password: passwordInput,
+            ...(staffVerificationEmail && !resendStaffEmailCode ? { staffEmailCode } : {}),
+            ...(resendStaffEmailCode ? { resendStaffEmailCode: true } : {}),
+          }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Failed to verify your identity. Try again.");
         }
+
+        if (json.data.staffEmailVerificationRequired) {
+          setStaffVerificationEmail(json.data.email);
+          setStaffCodeMessage("");
+          const delivery = json.data.delivery;
+          if (delivery?.sent) {
+            setStaffEmailCode("");
+            setStaffCodeMessage("A new code was sent to your email.");
+          } else if (delivery) {
+            setError(delivery.reason === "cooldown"
+              ? "Wait one minute before requesting another code."
+              : "The code couldn’t be sent. Try again or contact your administrator.");
+          }
+          setIsLoading(false);
+          return;
+        }
+        resetStaffVerification();
 
         if (json.data.totpRequired) {
           setTempToken(json.data.tempToken);
@@ -476,68 +503,54 @@ export default function Home() {
   }
 
   async function submitSignupStep(action) {
+    if (studentSignupLoading) return;
     setStudentSignupError("");
-    setStudentSignupLoading(true);
+    setPendingSignupAction(action);
     try {
-      const payload = { action, email: studentSignup.email.trim().toLowerCase() };
-      if (action !== "verify") {
-        const { firstName, middleName, lastName, password } = studentSignup;
-        Object.assign(payload, { firstName, middleName, lastName, password });
-      }
-      if (action === "send" && signupSetup) payload.setupToken = signupSetup.setupToken;
-      if (action === "verify") {
-        Object.assign(payload, { challengeId: signupChallengeId, code: signupCode });
-      }
-      if (action === "complete") {
-        Object.assign(payload, {
-          setupToken: signupSetup.setupToken,
-          answers: signupAnswers,
-          clientType: signupAffiliation,
-        });
-      }
+      const { firstName, middleName, lastName, password } = studentSignup;
+      const payload = {
+        action,
+        email: studentSignup.email.trim().toLowerCase(),
+        firstName,
+        middleName,
+        lastName,
+        password,
+        ...(action === "verify" ? { challengeId: signupChallengeId, code: signupCode } : {}),
+      };
       const result = await fetchJsonOnce("/api/auth/student/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!result.ok || !result.body?.ok || !result.data) {
+        if (result.status === 409) {
+          setSignupChallengeId("");
+          setSignupCode("");
+        }
         const fallback = action === "send"
           ? "Unable to send the verification code."
-          : action === "verify"
-            ? "Unable to verify the code."
-            : "Unable to complete account setup.";
+          : "Unable to verify the code.";
         throw new Error(result.error || `${fallback} The server returned an unexpected response (HTTP ${result.status}).`);
       }
       if (action === "send") {
         if (signupChallengeId) toast.success("Verification Code Sent");
         setSignupChallengeId(result.data.challengeId);
         setSignupCode("");
-        setSignupSetup(null);
-        setSignupAnswers({});
-        return;
-      }
-      if (action === "verify") {
-        setSignupSetup(result.data);
-        setSignupCode("");
+        setPendingSignupAction(null);
         return;
       }
 
+      invalidateClientSession();
       localStorage.setItem("pup-session-recovered", Date.now().toString());
       localStorage.removeItem("pup-logout");
-      toast.success("Account Created", {
-        description: "Use your email address and the password you chose to sign in again.",
-      });
-      resetStudentSignupState();
       router.replace("/student");
     } catch (err) {
       setStudentSignupError(err?.message || "Unable to create student account.");
-    } finally {
-      setStudentSignupLoading(false);
+      setPendingSignupAction(null);
     }
   }
 
-  const isVerifyingSignup = view === "student-signup" && Boolean(signupChallengeId) && !signupSetup;
-  const formattedStudentSignupName = formatRegistrarStudentName(studentSignup);
+  const isVerifyingSignup = view === "student-signup" && Boolean(signupChallengeId);
 
   const handle2FAVerify = async (e) => {
     e.preventDefault();
@@ -733,6 +746,7 @@ export default function Home() {
                           onChange={(e) => {
                             const val = e.target.value;
                             setUsername(val);
+                            resetStaffVerification();
                             if (emailError) setEmailError("");
                             if (val.trim() === "") {
                               setLoginStep(1);
@@ -770,6 +784,7 @@ export default function Home() {
                             onBlur={() => setPasswordFocused(false)}
                             onChange={(e) => {
                               setPassword(e.target.value);
+                              resetStaffVerification();
                               if (passwordError) setPasswordError("");
                               if (error) setError("");
                             }}
@@ -795,6 +810,33 @@ export default function Home() {
                         <p className="text-[12px] font-normal leading-none">
                           {emailError || passwordError || error}
                         </p>
+                      </div>
+                    )}
+
+                    {loginStep === 2 && staffVerificationEmail && (
+                      <div className="mt-5 space-y-2 text-left">
+                        <label htmlFor="staff-email-code" className="block text-sm font-medium">Email verification code</label>
+                        <p className="text-xs text-muted-foreground">Enter the six-digit code for {staffVerificationEmail}.</p>
+                        <Input
+                          id="staff-email-code"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          autoFocus
+                          pattern="[0-9]{6}"
+                          required
+                          value={staffEmailCode}
+                          onChange={(event) => setStaffEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="button"
+                          className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+                          disabled={isLoading}
+                          onClick={() => handleLogin(username, password, false, true)}
+                        >
+                          Resend Code
+                        </button>
+                        {staffCodeMessage && <p role="status" className="text-xs text-muted-foreground">{staffCodeMessage}</p>}
                       </div>
                     )}
 
@@ -860,17 +902,16 @@ export default function Home() {
                     <div className="mt-auto" />
                   )}
 
-                  {/* Continue Button (Always visible at the bottom) */}
-                  <div className="absolute bottom-[64px] left-[52px] right-[52px]">
+                  <div className={staffVerificationEmail ? "mt-6" : "absolute bottom-[64px] left-[52px] right-[52px]"}>
                     <Button
                       type="submit"
-                      disabled={isLoading || (loginStep === 1 && !username.trim())}
+                      disabled={isLoading || (loginStep === 1 && !username.trim()) || (Boolean(staffVerificationEmail) && staffEmailCode.length !== 6)}
                       className="w-full h-10 disabled:opacity-50 flex items-center justify-center"
                     >
                       {isLoading ? (
                         <Loading01Icon size="1em"  className="animate-spin text-lg flex items-center justify-center"></Loading01Icon>
                       ) : (
-                        <span>{loginStep === 1 ? "Continue" : "Sign In"}</span>
+                        <span>{loginStep === 1 ? "Continue" : staffVerificationEmail ? "Verify Email" : "Sign In"}</span>
                       )}
                     </Button>
                   </div>
@@ -1056,6 +1097,7 @@ export default function Home() {
                       aria-invalid={Boolean(studentSignupError)}
                       aria-describedby={studentSignupError ? "signup-code-instructions signup-code-error" : "signup-code-instructions"}
                       value={signupCode}
+                      readOnly={studentSignupLoading}
                       onChange={(event) => {
                         setSignupCode(event.target.value.replace(/\D/g, "").slice(0, 6));
                         setStudentSignupError("");
@@ -1077,11 +1119,16 @@ export default function Home() {
                 {studentSignupError && <p id="signup-code-error" role="alert" className="mt-3 text-sm text-destructive">{studentSignupError}</p>}
 
                 <Button type="submit" className="mt-5 h-11 w-full" disabled={studentSignupLoading || signupCode.length !== 6}>
-                  {studentSignupLoading ? "Please wait…" : "Verify Email"}
+                  {pendingSignupAction === "verify" ? (
+                    <>
+                      <Loading01Icon size={16} aria-hidden="true" className="motion-safe:animate-spin" />
+                      Verifying Email…
+                    </>
+                  ) : "Verify Email"}
                 </Button>
                 <div className="mt-2 flex w-full flex-wrap justify-center gap-x-1">
                   <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
-                    Resend Code
+                    {pendingSignupAction === "send" ? "Sending Code…" : "Resend Code"}
                   </Button>
                   <Button type="button" variant="ghost" className="h-11 px-3 text-xs" disabled={studentSignupLoading} onClick={() => {
                     setSignupChallengeId("");
@@ -1115,56 +1162,6 @@ export default function Home() {
                   </button>
                 </div>
 
-                {signupChallengeId ? (
-                  <form
-                    className="mt-3 w-full space-y-4 text-left"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      submitSignupStep("complete");
-                    }}
-                  >
-                    <h2 className="text-base font-semibold">Account Setup</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {signupSetup.questions.length
-                        ? "Set up your recovery questions to finish creating your account."
-                        : "Your email is verified. Finish creating your account to continue."}
-                    </p>
-                    <label htmlFor="signup-affiliation" className="block text-sm font-medium">
-                      How are you using eManage?
-                    </label>
-                    <Select
-                      id="signup-affiliation"
-                      value={signupAffiliation}
-                      onChange={(event) => setSignupAffiliation(event.target.value)}
-                    >
-                      <option value="" disabled>Select your affiliation</option>
-                      {STUDENT_AFFILIATIONS.map(({ value, label }) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </Select>
-                    {signupSetup.questions.map(({ id, question }) => (
-                      <label key={id} className="block space-y-1 text-sm">
-                        <span>{question}</span>
-                        <Input
-                          type="password"
-                          autoComplete="off"
-                          required
-                          minLength={3}
-                          maxLength={100}
-                          value={signupAnswers[id] || ""}
-                          onChange={(event) => setSignupAnswers((answers) => ({ ...answers, [id]: event.target.value }))}
-                        />
-                      </label>
-                    ))}
-                    {studentSignupError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{studentSignupError}</p>}
-                    <Button type="submit" className="w-full" disabled={studentSignupLoading || !signupAffiliation}>
-                      Complete Account Setup
-                    </Button>
-                    <Button type="button" variant="outline" className="w-full" disabled={studentSignupLoading} onClick={() => submitSignupStep("send")}>
-                      Request New Code
-                    </Button>
-                  </form>
-                ) : (
                 <form onSubmit={handleStudentSignup} className="w-full flex flex-col mt-2">
                   <div className="w-full text-left">
                     {/* Merged Field Container */}
@@ -1296,13 +1293,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Registrar format helper */}
-                    {formattedStudentSignupName && (
-                      <p className="mt-2 text-[11px] text-gray-500 dark:text-zinc-400">
-                        Registrar format: <span className="font-semibold text-gray-800 dark:text-zinc-200">{formattedStudentSignupName}</span>
-                      </p>
-                    )}
-
                     {/* Error message */}
                     {studentSignupError && (
                       <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
@@ -1341,7 +1331,6 @@ export default function Home() {
                     </div>
                   </div>
                 </form>
-                )}
               </div>
             )}
           </div>
@@ -1391,7 +1380,7 @@ export default function Home() {
                 <div className="p-1.5 space-y-1">
                   {DEMO_ACCOUNTS.map((acc) => (
                     <button
-                      key={acc.role}
+                      key={acc.email}
                       type="button"
                       onClick={() => handleSelectDemoAccount(acc)}
                       disabled={isLoading}
@@ -1403,7 +1392,7 @@ export default function Home() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1.5">
                           <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-[#800000] dark:group-hover:text-red-400 transition-colors truncate">
-                            {acc.role}
+                            {acc.name}
                           </span>
                           <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${acc.badgeColor}`}>
                             {acc.badge}

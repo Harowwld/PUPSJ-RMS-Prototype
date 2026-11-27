@@ -1,6 +1,6 @@
-import { isStudentAffiliation } from "@/lib/studentAffiliation";
+import { isStudentAffiliation, normalizeChecklistStudentNo } from "@/lib/studentAffiliation";
 import { NextResponse } from "next/server";
-import { updateStaff, getStaffByUsername, getStaffById } from "@/lib/staffRepo";
+import { updateStaff, getStaffByUsername, getStaffById, hasAllSecurityAnswers } from "@/lib/staffRepo";
 import { writeAuditLog, writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { query, queryOne } from "@/lib/postgres";
 import { requireAuth, createAuthErrorResponse } from "../../../../lib/authHelpers";
@@ -31,15 +31,17 @@ export async function POST(req) {
       const accountId = principal.accountId || (Number.isFinite(Number(userId)) ? Number(userId) : null);
       const studentAccount = await queryOne(
         `SELECT sa.*, sip.email AS profile_email,
-                sip.client_type AS profile_client_type,
+                sip.client_type AS profile_client_type, sip.portal_setup_complete, sip.checklist_student_no,
                 s.name, s.course_code
          FROM student_accounts sa 
          JOIN student_identity_profiles sip ON sip.id = sa.identity_profile_id
          LEFT JOIN students s ON s.student_no = sa.student_no 
          WHERE (sa.id = $1 AND $1 IS NOT NULL)
-            OR (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
-            OR (lower(sip.email) = lower($3) AND $3 IS NOT NULL)
-            OR (sip.email = $4 AND $4 IS NOT NULL)
+            OR ($1 IS NULL AND (
+              (sa.student_no IS NOT NULL AND upper(sa.student_no) = upper($2) AND $2 IS NOT NULL)
+              OR (lower(sip.email) = lower($3) AND $3 IS NOT NULL)
+              OR (sip.email = $4 AND $4 IS NOT NULL)
+            ))
          LIMIT 1`,
         [accountId, principal.studentNo || null, principal.email || null, principal.email ? encryptPII(principal.email.toLowerCase()) : null]
       );
@@ -48,7 +50,7 @@ export async function POST(req) {
         return NextResponse.json({ ok: false, error: "Student account not found" }, { status: 404 });
       }
 
-      const { fname, lname, mname, student_no, client_type } = body;
+      const { fname, lname, mname, student_no, client_type, checklist_student_no } = body;
       const cleanFirst = String(fname || "").trim();
       const cleanLast = String(lname || "").trim();
       const cleanMiddle = String(mname || "").trim();
@@ -81,15 +83,35 @@ export async function POST(req) {
         return NextResponse.json({ ok: false, error: "Student identity cannot be changed from the authenticated account." }, { status: 403 });
       }
 
+      const updateChecklistNumber = cleanClientType === "Student" && !currentStudentNo && checklist_student_no !== undefined;
+      const checklistNumber = updateChecklistNumber ? normalizeChecklistStudentNo(checklist_student_no) : null;
+      if (updateChecklistNumber && !checklistNumber && (typeof checklist_student_no !== "string" || checklist_student_no.trim())) {
+        return NextResponse.json({ ok: false, error: "Enter a valid student number for Check My Records." }, { status: 400 });
+      }
+
+      if (studentAccount.portal_setup_complete === false && cleanClientType === "Student" && !currentStudentNo) {
+        const setupStudentNumber = updateChecklistNumber
+          ? checklistNumber
+          : normalizeChecklistStudentNo(decryptPII(studentAccount.checklist_student_no));
+        if (!setupStudentNumber) {
+          return NextResponse.json({ ok: false, error: "Enter your student number to complete account setup." }, { status: 400 });
+        }
+      }
+
+      if (studentAccount.portal_setup_complete === false && !await hasAllSecurityAnswers(studentAccount.id, "Student")) {
+        return NextResponse.json({ ok: false, error: "Answer all required security questions before completing account setup." }, { status: 400 });
+      }
+
       const middleInitial = cleanMiddle ? ` ${cleanMiddle[0].toUpperCase()}.` : "";
       const formattedFullName = `${cleanLast.toUpperCase()}, ${cleanFirst.toUpperCase()}${middleInitial}`;
 
       await query(
         `UPDATE student_identity_profiles
          SET first_name = $1, middle_name = $2, last_name = $3,
-             display_name = $4, client_type = $5, updated_at = NOW()
+             display_name = $4, client_type = $5, portal_setup_complete = TRUE, updated_at = NOW(),
+             checklist_student_no = CASE WHEN $7 THEN $8 ELSE checklist_student_no END
          WHERE id = $6`,
-        [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(formattedFullName), cleanClientType, studentAccount.identity_profile_id]
+        [encryptPII(cleanFirst), encryptPII(cleanMiddle), encryptPII(cleanLast), encryptPII(formattedFullName), cleanClientType, studentAccount.identity_profile_id, updateChecklistNumber, encryptPII(checklistNumber)]
       );
 
       await writeGlobalAuditLog(req, "Student profile updated", {

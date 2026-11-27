@@ -63,7 +63,13 @@ export function assertAccountEmailConfigured() {
   getTransporter();
 }
 
-export async function sendStudentSignupCode({ to, code }) {
+export async function sendEmailVerificationCode({ to, code, staff = false }) {
+  const instructions = staff
+    ? "Enter this code after signing in with your staff email and password."
+    : "Enter this code in eManage to continue setting up your account.";
+  const ignore = staff
+    ? "If you weren’t expecting a staff account, contact your administrator."
+    : "If you didn’t start signing up, you can ignore this email.";
   const mailer = getTransporter();
   const logoCid = "emanage-signup-logo@pupsj-rms";
   const result = await mailer.transporter.sendMail({
@@ -73,11 +79,11 @@ export async function sendStudentSignupCode({ to, code }) {
     text: [
       "Verify your email address",
       "",
-      "Enter this code in eManage to continue setting up your account:",
+      instructions,
       "",
       String(code),
       "",
-      "This code expires in 10 minutes. If you didn’t start signing up, you can ignore this email.",
+      `This code expires in 10 minutes. ${ignore}`,
     ].join("\n"),
     html: `<!doctype html>
 <html lang="en">
@@ -134,7 +140,7 @@ export async function sendStudentSignupCode({ to, code }) {
           <tr>
             <td class="bg-panel panel-pad" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:24px;padding:40px" align="left">
               <h1 class="headline text-pri" style="margin:0;color:#1d1d1f;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.8px;text-align:left">Verify your<br>email address</h1>
-              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">Enter this code in eManage to continue setting up your account.</p>
+              <p class="text-sec" style="margin:14px 0 0;color:#6e6e73;font-size:17px;line-height:1.47;letter-spacing:-0.2px;text-align:left">${instructions}</p>
 
               <!-- Code tiles -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="margin:32px 0 0;border-collapse:separate;border-spacing:8px 0;margin-left:-8px">
@@ -156,7 +162,7 @@ export async function sendStudentSignupCode({ to, code }) {
           <!-- Footer -->
           <tr>
             <td class="text-sec" style="padding:20px 8px 0;color:#6e6e73;font-size:13px;line-height:1.5;text-align:left">
-              If you didn’t start signing up, you can safely ignore this email. Someone may have entered your address by mistake.
+              ${ignore}
             </td>
           </tr>
 
@@ -176,6 +182,8 @@ export async function sendStudentSignupCode({ to, code }) {
   });
   if (!result.accepted?.length) throw new Error("Signup verification email was not accepted.");
 }
+
+export const sendStudentSignupCode = sendEmailVerificationCode;
 
 export async function sendSmtpTestEmail({ to }) {
   const recipient = String(to || "").trim();
@@ -236,6 +244,7 @@ export async function sendAccountCredentialsEmail({
   accountType,
   accountId,
   requiresActivation = false,
+  verificationCode,
   username,
   password,
 }) {
@@ -274,6 +283,7 @@ export async function sendAccountCredentialsEmail({
     ...(accountId ? [`Account ID: ${accountId}`] : []),
     `Username: ${username}`,
     passwordText,
+    ...(verificationCode ? [`Email verification code: ${verificationCode} (expires in 10 minutes). Enter it at first sign-in.`] : []),
     signInText,
     "",
     securityText,
@@ -286,6 +296,7 @@ export async function sendAccountCredentialsEmail({
     <p><strong>Username:</strong> ${escapeHtml(username)}${password ? `<br><strong>Password:</strong> ${escapeHtml(password)}` : ""}</p>
     ${password ? "" : "<p>Use the password you chose during registration.</p>"}
     ${loginUrl ? `<p><a href="${escapeHtml(loginUrl)}">Open the eManage sign-in page</a></p>` : "<p>Open the eManage sign-in page provided by your institution.</p>"}
+    ${verificationCode ? `<p><strong>Email verification code:</strong> ${escapeHtml(verificationCode)}. Enter it at first sign-in. The code expires in 10 minutes.</p>` : ""}
     <p>${securityText}</p>
   </body></html>`;
 
@@ -296,6 +307,7 @@ export async function sendAccountCredentialsEmail({
     text,
     html,
   });
+  if (!result.accepted?.length) throw new Error("Account credentials email was not accepted.");
   return { messageId: result.messageId };
 }
 

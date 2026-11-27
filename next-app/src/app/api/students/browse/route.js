@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 import { requireStaff, createAuthErrorResponse, getPrincipalOfficeId } from "@/lib/authHelpers";
 import { hasAdminPrivileges } from "@/lib/roleUtils";
 import { canAccessResource } from "@/lib/resourceAuthorization";
@@ -26,18 +27,25 @@ export async function GET(req) {
   }
   const page = Math.max(1, Math.min(1000000, Number.parseInt(params.get("page") || "1", 10) || 1));
   const pageSize = Math.max(1, Math.min(100, Number.parseInt(params.get("pageSize") || "10", 10) || 10));
+  const startDate = params.get("startDate") || "";
+  const endDate = params.get("endDate") || "";
+  if (!isValidCalendarDateRange(startDate, endDate)) {
+    return NextResponse.json({ ok: false, error: "Invalid date range." }, { status: 400 });
+  }
   const year = params.has("folderYear") ? Number(params.get("folderYear")) : null;
   if (year != null && (!Number.isInteger(year) || year < 1900 || year > 2200)) {
     return NextResponse.json({ ok: false, error: "Invalid folder year" }, { status: 400 });
   }
   const sortBy = params.get("sortBy") || "studentNo";
-  if (!["studentNo", "name", "courseCode", "yearLevel", "section", "room", "cabinet", "drawer", "documents"].includes(sortBy)) {
+  if (!["studentNo", "name", "odrsEmail", "courseCode", "yearLevel", "section", "room", "cabinet", "drawer", "documents"].includes(sortBy)) {
     return NextResponse.json({ ok: false, error: "Invalid sort" }, { status: 400 });
   }
   const data = await browseStudents({
     officeId,
     archived: params.get("archived") === "true",
     year,
+    startDate,
+    endDate,
     q: params.get("q") || "",
     courses: params.getAll("course"),
     years: params.getAll("year").map(Number).filter(Number.isInteger),
@@ -51,8 +59,8 @@ export async function GET(req) {
   const rows = data.rows.filter((row) => canAccessResource(user, "student", { ...row, office_id: officeId }));
 
   if (exportAll) {
-    const headers = ["Student No", "Full Name", "Degree Program", "Section", "Year Level", "Room", "Cabinet", "Drawer", "Documents Count", "Status"];
-    const lines = rows.map((s) => [s.studentNo, s.name, s.courseCode, s.section, s.yearLevel, s.room, s.cabinet, s.drawer, s.documentCount, s.status].map(csv).join(","));
+    const headers = ["Student No", "Full Name", ...(officeId === "registrar" ? ["Email"] : []), "Degree Program", "Section", "Year Level", "Room", "Cabinet", "Drawer", "Documents Count", "Status"];
+    const lines = rows.map((s) => [s.studentNo, s.name, ...(officeId === "registrar" ? [s.odrsEmail] : []), s.courseCode, s.section, s.yearLevel, s.room, s.cabinet, s.drawer, s.documentCount, s.status].map(csv).join(","));
     await writeAuditLog(req, "Exported student directory", { details: `${rows.length} records` });
     return new Response([headers.join(","), ...lines].join("\n"), {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="student-directory.csv"', "Cache-Control": "private, no-store" },

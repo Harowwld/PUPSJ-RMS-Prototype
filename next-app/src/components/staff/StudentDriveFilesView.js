@@ -1,4 +1,5 @@
 "use client";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
 
@@ -35,7 +36,7 @@ export default function StudentDriveFilesView({
   onOpenDetails,
 }) {
   const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [viewMode, setViewMode] = useWorkspaceViewPreference("archive_files", "viewMode", "grid");
   const handleOpenDetails = onOpenDetails || onOpenDossier;
 
   // Gather all documents for this student or organization

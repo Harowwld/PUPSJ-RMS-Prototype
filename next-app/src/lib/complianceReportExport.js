@@ -1,3 +1,5 @@
+import { formatReportOffice } from "./exportHelpers.js"
+
 export const complianceRequirementLabel = (requirement) => {
   const state =
     requirement.status === "pending"
@@ -17,9 +19,12 @@ export function buildComplianceRosterCsv(report) {
   const rows = [
     ["Incomplete Records", report.documentType || "All requirements"],
     ["Generated (UTC)", report.meta.generatedAt],
-    ["Office", report.meta.officeId || "All authorized offices"],
+    ["Office", formatReportOffice(report.meta.officeId, report.meta.officeName) || "All authorized offices"],
     ["Student status", report.meta.studentStatus],
     ["Programs", report.meta.courseCode || "All"],
+    ...(report.meta.startDate || report.meta.endDate
+      ? [["Student records created (Manila)", `${report.meta.startDate || "Any"} to ${report.meta.endDate || "Any"}`]]
+      : []),
     ["Approved only", report.meta.requireApproved ? "Yes" : "No"],
     ["Students", report.total],
     [],

@@ -1,50 +1,43 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
+import { useEffect, useState } from "react";
+import { AlertCircleIcon, ArrowDown01Icon, ArrowRight02Icon, CheckListIcon, Search01Icon, ViewIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty";
+import AppIcon from "@/components/ui/app-icon";
+import { SegmentedControl } from "@/components/ui/tabs";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
-import { formatPHDateTime } from "@/lib/timeFormat";
-import { generateExportFilename } from "@/lib/exportHelpers";
-import { toast } from "sonner";
-import { formatErrorMessage } from "@/lib/errorUtils";
-import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyContent,
-} from "@/components/ui/empty";
-import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
-import StudentComplianceSkeleton from "./skeletons/StudentComplianceSkeleton";
-import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
-import ViewModeIcon from "@/components/shared/ViewModeIcon";
-import { SegmentedControl } from "@/components/ui/tabs";
-import PermanentAdmissionRecordSheet from "./PermanentAdmissionRecordSheet";
+import DataContentSkeleton from "@/components/shared/DataContentSkeleton";
+import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import NarrativeText from "@/components/shared/NarrativeText";
-import {
-  generateStudentComplianceSlipPdf,
-} from "@/lib/pdfGenerator";
-import usePdfPreviewSession from "@/hooks/usePdfPreviewSession";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import DashboardSearch from "@/components/shared/DashboardSearch";
+import ViewModeIcon from "@/components/shared/ViewModeIcon";
+import ActiveFilterChips from "@/components/shared/ActiveFilterChips";
+import { FilterPopover, SortPopover, GroupPopover } from "@/components/systemadmin/OfficeTableControls";
+import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { cn } from "@/lib/utils";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import DataViewToolbar from "@/components/shared/DataViewToolbar";
-import DashboardSearch from "@/components/shared/DashboardSearch";
-import {
-  FilterPopover,
-  SortPopover,
-  GroupPopover,
-  ActiveFilterChips,
-} from "@/components/systemadmin/OfficeTableControls";
-import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
-import { CheckListIcon as EmptyCheckListIcon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowRight02Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, Clock01Icon, FoldersIcon, Loading01Icon, Location01Icon, Shield01Icon, Tick01Icon, ViewIcon } from "hugeicons-react";
-import AppIcon from "@/components/ui/app-icon";
+import EditChecklistStudentNumberDialog from "./EditChecklistStudentNumberDialog";
+import PermanentAdmissionRecordSheet, { CHECKLIST_HIGHLIGHTED_PHRASES } from "./PermanentAdmissionRecordSheet";
+import StudentComplianceKpiCards from "./StudentComplianceKpiCards";
+import ChecklistStatusBadge from "./ChecklistStatusBadge";
+import { StudentChecklistVerificationSkeleton, StudentComplianceListSkeleton } from "./skeletons/StudentComplianceSkeleton";
+
+const sortOptions = [
+  { value: "docType", label: "Requirement Name" },
+  { value: "status", label: "Status" },
+  { value: "category", label: "Category" },
+];
+const groupOptions = [
+  { value: "category", label: "Category" },
+  { value: "status", label: "Status" },
+  { value: "none", label: "No grouping" },
+];
 
 function getRequirementCategoryIcon(category) {
   const cat = String(category || "").toLowerCase();
@@ -60,921 +53,444 @@ function getRequirementCategoryIcon(category) {
   return "File02Icon";
 }
 
-function formatChipDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  } catch {
-    return dateStr;
-  }
+function RequirementStatus({ status }) {
+  if (!status) return null;
+  return (
+    <ChecklistStatusBadge complete={status === "Submitted"}>{status}</ChecklistStatusBadge>
+  );
 }
 
-export default function StudentComplianceTab({ initialData }) {
-  const [data, setData] = useState(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
-  const [refreshing, setRefreshing] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [printModalOpen, setPrintModalOpen] = useState(false);
-  const [selectedRequirement, setSelectedRequirement] = useState(null);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState(null);
-  const previewSession = usePdfPreviewSession();
-
+export default function StudentComplianceTab({ authUser, onChecklistChange, onStudentNumberSaved }) {
+  const [studentNumberDialogOpen, setStudentNumberDialogOpen] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [version, setVersion] = useState(0);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedRequirementId, setSelectedRequirementId] = useState(null);
+  const [viewMode, setViewMode] = useWorkspaceViewPreference("student_compliance", "viewMode", "list", { user: authUser });
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [filters, setFilters] = useWorkspaceViewPreference("student_compliance", "filterRules", [], { user: authUser });
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("student_compliance", "sortBy", "docType", { user: authUser });
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("student_compliance", "sortOrder", "asc", { user: authUser });
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("student_compliance", "groupBy", "none", { user: authUser });
   const { density } = useTablePreferences();
   const densityClasses = getListDensityClasses(density);
-  const [collapsedGroups, setCollapsedGroups] = useState({});
-
-  const toggleGroup = (key) => {
-    setCollapsedGroups((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  // Search & Standard Toolbar state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("docType");
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [groupBy, setGroupBy] = useState("none");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [viewMode, setViewMode] = useState("list");
-
-  const loadComplianceData = async () => {
-    setRefreshing(true);
-
-    try {
-      const res = await fetch("/api/student/compliance", {
-        headers: { "Cache-Control": "no-cache" },
-      });
-      const json = await res.json();
-      if (json.ok && json.data) {
-        setData(json.data);
-      } else {
-        toast.error("Could not load requirements", {
-          description: json.error || "Failed to retrieve student compliance data.",
-        });
-      }
-    } catch (err) {
-      console.error("Failed to load compliance data:", err);
-      toast.error("Network Error", {
-        description: "Failed to connect to the records server.",
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
-    if (initialData) return;
-    let active = true;
-
-    (async () => {
+    const controller = new AbortController();
+    async function load() {
       try {
-        const res = await fetch("/api/student/compliance", {
-          headers: { "Cache-Control": "no-cache" },
-        });
-        const json = await res.json();
-        if (!active) return;
-        if (json.ok && json.data) {
-          setData(json.data);
-        } else {
-          toast.error("Could not load requirements", {
-            description: json.error || "Failed to retrieve student compliance data.",
-          });
-        }
+        const response = await fetch("/api/student/compliance", { cache: "no-store", signal: controller.signal });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Could not load the checklist.");
+        if (controller.signal.aborted) return;
+        setError("");
+        setData(result.data);
+        onChecklistChange?.(result.data.student ? result.data : null);
       } catch (err) {
-        if (!active) return;
-        console.error("Failed to load compliance data:", err);
-        toast.error("Network Error", {
-          description: "Failed to connect to the records server.",
-        });
+        if (!controller.signal.aborted) setError(err.message);
       } finally {
-        if (active) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [initialData]);
-
-  const requirements = useMemo(() => data?.requirements || [], [data?.requirements]);
-  const summary = data?.summary || {
-    total: 0,
-    submitted: 0,
-    missing: 0,
-    complianceRate: 0,
-    isCompliant: false,
-    categories: [],
-  };
-
-  // Filter fields configuration
-  const filterFields = useMemo(() => [
-    {
-      key: "status",
-      label: "Status",
-      type: "select",
-      options: [
-        { label: "Completed (Submitted)", value: "submitted" },
-        { label: "Pending Submission", value: "missing" },
-      ],
-    },
-    {
-      key: "category",
-      label: "Category",
-      type: "select",
-      options: (summary.categories || []).map((cat) => ({
-        label: cat.name,
-        value: cat.name,
-      })),
-    },
-  ], [summary.categories]);
-
-  // Sort options
-  const sortOptions = useMemo(() => [
-    { value: "docType", label: "Requirement Name" },
-    { value: "status", label: "Compliance Status" },
-    { value: "category", label: "Category" },
-  ], []);
-
-  // Group options (No grouping is the last choice)
-  const groupOptions = useMemo(() => [
-    { value: "category", label: "Category" },
-    { value: "status", label: "Status" },
-    { value: "none", label: "No grouping" },
-  ], []);
-
-  // Filtered requirements
-  const filteredRequirements = useMemo(() => {
-    if (!requirements) return [];
-    const q = searchQuery.trim().toLowerCase();
-
-    return requirements.filter((item) => {
-      const matchesSearch =
-        !q ||
-        item.docType.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
-        (item.description && item.description.toLowerCase().includes(q)) ||
-        (item.document?.originalFilename && item.document.originalFilename.toLowerCase().includes(q));
-
-      if (!matchesSearch) return false;
-
-      for (const rule of filterRules) {
-        if (rule.fieldKey === "status") {
-          const itemKey = item.status === "Submitted" ? "submitted" : "missing";
-          const match = itemKey === rule.value;
-          if (rule.operator === "is_not" ? match : !match) return false;
-        } else if (rule.fieldKey === "category") {
-          const match = item.category.toLowerCase() === String(rule.value || "").toLowerCase();
-          if (rule.operator === "is_not" ? match : !match) return false;
-        }
-      }
-
-      if (startDate) {
-        const s = new Date(startDate).getTime();
-        const rowDate = item.document?.createdAt ? new Date(item.document.createdAt).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (endDate) {
-        const e = new Date(endDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = item.document?.createdAt ? new Date(item.document.createdAt).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
-    });
-  }, [requirements, searchQuery, filterRules, startDate, endDate]);
-
-  // Sorted Requirements
-  const sortedRequirements = useMemo(() => {
-    return [...filteredRequirements].sort((a, b) => {
-      let comp = 0;
-      if (sortBy === "category") {
-        comp = a.category.localeCompare(b.category);
-      } else if (sortBy === "status") {
-        const order = { "Not Submitted": 0, Submitted: 1 };
-        comp = (order[a.status] ?? 2) - (order[b.status] ?? 2);
-      } else {
-        comp = a.docType.localeCompare(b.docType);
-      }
-      return sortOrder === "desc" ? -comp : comp;
-    });
-  }, [filteredRequirements, sortBy, sortOrder]);
-
-  // Grouped Requirements
-  const groupedRequirements = useMemo(() => {
-    if (groupBy === "none") return [{ key: "all", label: null, items: sortedRequirements }];
-    const map = new Map();
-    for (const item of sortedRequirements) {
-      let key = "Other";
-      if (groupBy === "category") key = item.category || "General";
-      else if (groupBy === "status") key = item.status === "Submitted" ? "Completed" : "Pending Submission";
-
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(item);
     }
-    return Array.from(map.entries()).map(([label, items]) => ({
-      key: label,
-      label,
-      items,
-    }));
-  }, [sortedRequirements, groupBy]);
+    load();
+    return () => controller.abort();
+  }, [version, onChecklistChange, authUser?.checklist_student_no]);
 
-  // Active chips
-  const activeChips = useMemo(() => {
-    const chips = [];
-    filterRules.forEach((rule) => {
-      const field = filterFields.find((f) => f.key === rule.fieldKey);
-      const fieldLabel = field?.label || rule.fieldKey;
-      const optionLabel = field?.options?.find((o) => String(o.value) === String(rule.value))?.label || rule.value;
-      chips.push({
-        id: rule.id,
-        label: `${fieldLabel} ${rule.operator === "is_not" ? "is not" : "is"} ${optionLabel}`,
-        onRemove: () => setFilterRules((prev) => prev.filter((r) => r.id !== rule.id)),
-      });
-    });
-    if (startDate || endDate) {
-      chips.push({
-        id: "dateRange",
-        label: `Date: ${formatChipDate(startDate)} – ${formatChipDate(endDate)}`,
-        onRemove: () => {
-          setStartDate("");
-          setEndDate("");
-        },
-      });
-    }
-    return chips;
-  }, [filterRules, filterFields, startDate, endDate]);
-
-  if (loading && !data) {
-    return <StudentComplianceSkeleton />;
+  function refresh() {
+    setError("");
+    setLoading(true);
+    setVersion((value) => value + 1);
   }
 
-  const checklistNotice = (
-    <div className="w-full border-b border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/35 dark:text-blue-100">
-      <p className="font-semibold">For current students</p>
-      <p className="mt-1 text-blue-800 dark:text-blue-200">
-        This checklist covers documents students submit for enrollment. Personal submission status is available to current students with a linked record.
-      </p>
-    </div>
-  );
-
-  if (!data?.student) {
-    const term = searchQuery.trim().toLowerCase();
-    const matchingRequirements = requirements.filter(({ name, category, instructions }) =>
-      [name, category, instructions].some((value) => value?.toLowerCase().includes(term))
-    );
-    const categories = new Map();
-    for (const requirement of matchingRequirements) {
-      const category = requirement.category || "General Requirements";
-      if (!categories.has(category)) categories.set(category, []);
-      categories.get(category).push(requirement);
-    }
-
-    return (
-      <Card className="flex min-w-0 w-full flex-1 flex-col gap-0 overflow-hidden rounded-2xl p-0">
-        <PageHeader
-          title="Document Checklist"
-          description="Find out which documents to prepare for enrollment and how to submit them."
-          className="p-6"
-        />
-        {checklistNotice}
-        {requirements.length > 0 && (
-          <DataViewToolbar label="Search enrollment requirements" className="border-b border-border px-6 py-3">
-            <DashboardSearch
-              label="Search enrollment requirements"
-              placeholder="Search documents or categories"
-              value={searchQuery}
-              onChange={setSearchQuery}
-              count={matchingRequirements.length}
-              className="w-full sm:w-80"
-            />
-          </DataViewToolbar>
-        )}
-        {categories.size > 0 ? (
-          <div className="min-w-0 divide-y divide-border">
-            {[...categories].map(([category, items]) => (
-              <section key={category}>
-                <h2 className="flex items-center gap-2.5 border-b border-border bg-muted/35 px-6 py-3 text-sm font-semibold">
-                  <AppIcon icon={getRequirementCategoryIcon(category)} aria-hidden="true" className="shrink-0 text-base text-pup-maroon dark:text-red-400" />
-                  <span className="min-w-0 break-words">{category}</span>
-                </h2>
-                <ul className="divide-y divide-border">
-                  {items.map((requirement) => (
-                    <li key={requirement.id} className="space-y-1 px-6 py-3.5">
-                      <h3 className="break-words text-sm font-semibold">{requirement.name}</h3>
-                      <p className="break-words text-sm leading-relaxed text-muted-foreground">{requirement.instructions}</p>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        ) : (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                {term ? <EmptySearch01Icon size="1em" /> : <EmptyCheckListIcon size="1em" />}
-              </EmptyMedia>
-              <EmptyTitle>{term ? "No Matching Requirements" : "No Requirements Available"}</EmptyTitle>
-              {term && <EmptyDescription>Try a document name or category.</EmptyDescription>}
-            </EmptyHeader>
-            {term && (
-              <EmptyContent>
-                <Button variant="outline" onClick={() => setSearchQuery("")}>Clear Search</Button>
-              </EmptyContent>
-            )}
-          </Empty>
-        )}
-      </Card>
-    );
+  const initialLoading = loading && !data;
+  const verified = Boolean(data?.student);
+  const canVerify = authUser?.client_type === "Student";
+  const requirements = data?.requirements || [];
+  const categories = [...new Set(requirements.map(({ category }) => category))];
+  const fields = [
+    { key: "status", label: "Status", options: [{ label: "Submitted", value: "submitted" }, { label: "Missing", value: "missing" }] },
+    { key: "category", label: "Category", options: categories.map((value) => ({ label: value, value })) },
+  ];
+  const applicableFilters = verified ? filters : [];
+  const term = search.trim().toLowerCase();
+  const filtered = requirements.filter((item) => {
+    if (![item.name, item.category].some((value) => value.toLowerCase().includes(term))) return false;
+    return applicableFilters.every(({ fieldKey, operator, value }) => {
+      const current = fieldKey === "status" ? item.status.toLowerCase() : item.category;
+      return operator === "is_not" ? current !== value : current === value;
+    });
+  });
+  filtered.sort((a, b) => {
+    const key = verified ? sortBy : "docType";
+    const order = verified && sortOrder.toLowerCase() === "desc" ? -1 : 1;
+    return order * (a[key] || a.name).localeCompare(b[key] || b.name);
+  });
+  const groups = new Map();
+  for (const item of filtered) {
+    const label = verified ? (groupBy === "none" ? "" : item[groupBy]) : item.category;
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(item);
   }
 
-  const { student } = data;
+  const selectedIndex = filtered.findIndex(({ id }) => id === selectedRequirementId);
+  const groupedRequirements = [...groups].map(([label, items]) => ({ key: label, label, items }));
 
-  const handleDownloadPdf = async () => {
-    setDownloadingPdf(true);
-    try {
-      const blob = await generateStudentComplianceSlipPdf(
-        student,
-        sortedRequirements,
-        summary
-      );
-      const safeStudentNo = student.studentNo
-        ? String(student.studentNo).replace(/[^0-9A-Za-z-]/g, "")
-        : "SUMMARY";
-      const fileName = generateExportFilename("STUDENT-COMPLIANCE", safeStudentNo, "pdf");
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success("Checklist PDF Downloaded", {
-        description: `Saved as ${fileName}`,
-      });
-    } catch (err) {
-      console.error("PDF download failed:", err);
-      const normalized = formatErrorMessage(err, {
-        title: "Download Interrupted",
-        description: "Unable to generate the compliance PDF. Please try again.",
-      });
-      toast.error(normalized.title, {
-        description: normalized.description,
-        action: normalized.action,
-      });
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
+  function clearFilters() {
+    setSearch("");
+    setFilters([]);
+  }
 
-  const handlePreviewPdf = async () => {
-    setIsGeneratingPdf(true);
-    setPrintModalOpen(true);
-    const request = previewSession.begin();
-    try {
-      const blob = await generateStudentComplianceSlipPdf(
-        student,
-        sortedRequirements,
-        summary
-      );
-      const url = previewSession.createUrl(blob, request);
-      if (url) {
-        setPdfPreviewUrl(url);
-      }
-    } catch (err) {
-      if (!previewSession.isCurrent(request)) return;
-      console.error("PDF Preview generation failed:", err);
-      toast.error("Preview Failed", {
-        description: "Failed to generate compliance slip preview.",
-      });
-      setPrintModalOpen(false);
-    } finally {
-      if (previewSession.isCurrent(request)) {
-        setIsGeneratingPdf(false);
-      }
-    }
-  };
+  function toggleGroup(key) {
+    setCollapsedGroups((current) => ({ ...current, [key]: !current[key] }));
+  }
 
   return (
-    <div className="flex flex-col w-full flex-[1_0_auto]">
-      {/* 1. Main Unified Container Card */}
-      <Card
-        className="flex flex-[1_0_auto] h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta focus:outline-none"
-        tabIndex={0}
-      >
-        {/* A. Header */}
-        <PageHeader
-          icon="CheckListIcon"
-          title={
-            <div className="flex flex-wrap items-baseline gap-2">
-              <span>Document Checklist & Compliance</span>
-              <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
-                {requirements.length} {requirements.length === 1 ? "requirement" : "requirements"}
-                {student.studentNo ? ` · ${student.studentNo}` : ""}
-              </span>
-            </div>
-          }
-          description="Track your submitted credentials and monitor required documents for university records compliance."
-          className="p-6"
-          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
-          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
-          actions={
-            <div className="flex items-center gap-2">
-              <RefreshButton
-                onRefresh={() => loadComplianceData(true)}
-                isLoading={refreshing}
-                title="Refresh Checklist"
-              />
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadPdf}
-                disabled={downloadingPdf || loading}
-                className="h-9 shrink-0 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-              >
-                {downloadingPdf ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loading01Icon size="1em" className="animate-spin text-sm" />
-                    Downloading...
-                  </span>
-                ) : (
-                  PDF_ACTION_LABELS.download
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                onClick={handlePreviewPdf}
-                disabled={isGeneratingPdf || loading}
-                className="h-9 px-4 border-0 cursor-pointer"
-              >
-                {isGeneratingPdf ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loading01Icon size="1em" className="animate-spin text-sm" />
-                    Generating...
-                  </span>
-                ) : (
-                  PDF_ACTION_LABELS.preview
-                )}
-              </Button>
-            </div>
-          }
-        />
-
-        {checklistNotice}
-        {/* B. KPI Stat Cards Row */}
-        <div className="px-6 pt-4 pb-6">
-          <StudentComplianceKpiCards summary={summary} />
+    <Card className="flex flex-[1_0_auto] h-auto w-full min-w-0 flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none isolate font-jakarta">
+      <PageHeader
+        icon={verified ? "CheckListIcon" : undefined}
+        title={verified ? (
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span>Document Checklist &amp; Compliance</span>
+            <span className="text-[11px] font-normal tracking-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+              {requirements.length} {requirements.length === 1 ? "requirement" : "requirements"} · {data.student.studentNo}
+            </span>
+          </div>
+        ) : "Document Checklist"}
+        description={verified ? "Track your submitted credentials and monitor required documents for university records compliance." : "Find out which documents to prepare for enrollment and how to submit them."}
+        className="p-6"
+        titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+        descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+        actions={<RefreshButton onRefresh={refresh} isLoading={loading} title="Refresh Checklist" />}
+      />
+      {data && !canVerify && (
+        <div className="w-full border-b border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/35 dark:text-blue-100">
+          <p className="font-semibold">For current students</p>
+          <p className="mt-1 text-blue-800 dark:text-blue-200">
+            This checklist covers documents students submit for enrollment. Personal submission status is available after verification.
+          </p>
         </div>
-
-        {/* C. Canonical 2-Zone DataViewToolbar */}
-        <DataViewToolbar
-          label="Compliance search, views, and filters"
-          className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none"
-        >
-          {/* Left Zone: DashboardSearch */}
-          <div className="flex min-w-0 items-center gap-2">
-            <DashboardSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              count={filteredRequirements.length}
-              loading={loading || refreshing}
-              label="Search requirements"
-              placeholder="Search requirements..."
-            />
-          </div>
-
-          {/* Right Zone: Filter -> Sort -> Group -> DateRange -> View Mode Switcher */}
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <FilterPopover
-              fields={filterFields}
-              filters={filterRules}
-              onFiltersChange={setFilterRules}
-              entityLabel="requirements"
-            />
-            <SortPopover
-              options={sortOptions}
-              sortBy={sortBy}
-              onSortByChange={(val) => {
-                setSortBy(val);
-                setSortOrder("asc");
-              }}
-              sortOrder={sortOrder}
-              onSortOrderChange={setSortOrder}
-            />
-            <GroupPopover
-              options={groupOptions}
-              groupBy={groupBy}
-              onGroupByChange={setGroupBy}
-            />
-            <DateRangeFilterButton
-              startDate={startDate}
-              endDate={endDate}
-              onApply={({ startDate: s, endDate: e }) => {
-                setStartDate(s);
-                setEndDate(e);
-              }}
-              onClear={() => {
-                setStartDate("");
-                setEndDate("");
-              }}
-              disableFutureDates={true}
-            />
-            <SegmentedControl
-              value={viewMode === "cards" ? "grid" : viewMode}
-              onValueChange={setViewMode}
-              variant="capsule"
-              className="inline-grid grid-flow-col auto-cols-fr shrink-0"
-              items={[
-                {
-                  value: "grid",
-                  title: "Grid View",
-                  ariaLabel: "Grid View",
-                  icon: <ViewModeIcon mode="grid" className="text-sm" />,
-                },
-                {
-                  value: "list",
-                  title: "List View",
-                  ariaLabel: "List View",
-                  icon: <ViewModeIcon mode="list" className="text-sm" />,
-                },
-              ]}
-            />
-          </div>
-        </DataViewToolbar>
-
-        {/* D. Active Filter Chips Bar */}
-        {activeChips.length > 0 && (
-          <ActiveFilterChips
-            chips={activeChips}
-            onClearAll={() => {
-              setFilterRules([]);
-              setStartDate("");
-              setEndDate("");
-              setSearchQuery("");
-            }}
-            className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
-          />
-        )}
-
-        {/* E. Requirements Content (Cards or List) */}
-        <div
-          className={cn(
-            "flex flex-[1_0_auto] flex-col border-t border-border dark:border-border",
-            sortedRequirements.length > 0 && viewMode === "list" ? "min-w-0" : "p-6"
-          )}
-        >
-          {sortedRequirements.length === 0 ? (
-            <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia>{searchQuery || filterRules.length > 0 || startDate || endDate ? <EmptySearch01Icon size="1em" /> : <EmptyCheckListIcon size="1em" />}</EmptyMedia>
-                  <EmptyTitle>
-                    {searchQuery || filterRules.length > 0 || startDate || endDate
-                      ? "No Matches Found"
-                      : "No Document Requirements Assigned"}
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    {searchQuery || filterRules.length > 0 || startDate || endDate
-                      ? "Try adjusting your search query or clearing some of the combined filters."
-                      : "There are currently no document requirements assigned for your degree program."}
-                  </EmptyDescription>
-                </EmptyHeader>
-                {(searchQuery || filterRules.length > 0 || startDate || endDate) && (
-                  <EmptyContent>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setFilterRules([]);
-                        setStartDate("");
-                        setEndDate("");
-                      }}
-                      title="Reset Filters"
-                      className="h-9 px-4 text-xs font-semibold rounded-xl"
-                    >
-                      Reset Filters
-                    </Button>
-                  </EmptyContent>
-                )}
-              </Empty>
-            </div>
-          ) : viewMode === "list" ? (
-            /* SuperAdmin-Inspired Sleek Horizontal List View */
-            <div className="flex flex-col flex-1 divide-y divide-border dark:divide-border bg-white dark:bg-card font-jakarta">
-              {groupedRequirements.map((group) => {
-                const isCollapsed = Boolean(collapsedGroups[group.key]);
-                const isGrouped = Boolean(group.label && groupBy !== "none");
-
-                return (
-                  <div key={group.key} className="flex flex-col">
-                    {/* Collapsible Group Header (if grouped) */}
-                    {isGrouped && (
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(group.key)}
-                        className="w-full flex items-center justify-between border-b border-border text-left hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs"
-                        aria-expanded={!isCollapsed}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <ArrowDown01Icon
-                            size="1em"
-                            className={cn(
-                              "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
-                              isCollapsed && "-rotate-90"
-                            )}
-                          />
-                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                            {group.label}
-                          </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
-                            {group.items.length}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
-                          {isCollapsed ? "Expand" : "Collapse"}
-                        </span>
-                      </button>
-                    )}
-
-                    {/* Group Items */}
-                    {!isCollapsed && (
-                      <div className="divide-y divide-gray-100 dark:divide-zinc-800/60">
-                        {group.items.map((item) => {
-                          const isSubmitted = item.status === "Submitted";
-
-                          return (
-                            <div
-                              key={item.id}
-                              onClick={() => setSelectedRequirement(item)}
-                              className={cn(
-                                "group flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer select-none border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
-                                densityClasses.paddingX,
-                                densityClasses.paddingY,
-                                densityClasses.gap,
-                                densityClasses.minHeight
-                              )}
-                            >
-                              {/* Left: Category Icon, Title, and Formatted Description Context */}
-                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
-                                <div
-                                  className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs",
-                                    isSubmitted
-                                      ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
-                                      : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
-                                  )}
-                                >
-                                  <AppIcon className="text-base" icon={getRequirementCategoryIcon(item.category)} />
-                                </div>
-
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate">
-                                    {item.docType}
-                                  </span>
-
-                                  {item.description && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="text-[11px] sm:text-xs text-gray-500 dark:text-zinc-400 truncate block mt-0.5 max-w-xl font-normal select-text">
-                                          <NarrativeText text={item.description} mode="compact" />
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent
-                                        side="top"
-                                        className="max-w-[440px] rounded-xl border-border bg-white p-3 text-xs font-medium text-gray-700 shadow-xl backdrop-blur-sm dark:border-border dark:bg-card/95 dark:text-zinc-200"
-                                      >
-                                        <NarrativeText text={item.description} mode="full" />
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Right: Category Pill, Status Pill, Timestamp, and Action Button */}
-                              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                                <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "hidden sm:inline-flex")}>
-                                  {item.category}
-                                </span>
-
-                                {isSubmitted ? (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                                    Completed
-                                  </span>
-                                ) : (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
-                                    Pending Submission
-                                  </span>
-                                )}
-
-                                {isSubmitted && item.document?.createdAt && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-normal tabular-nums hidden lg:inline shrink-0">
-                                        {formatPHDateTime(item.document.createdAt, { dateOnly: true })}
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      Archived on {formatPHDateTime(item.document.createdAt)}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-
-                                <div className="flex items-center justify-end ml-1">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedRequirement(item);
-                                        }}
-                                        aria-label="View Details"
-                                        title="View Details"
-                                        className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                                      >
-                                        <ViewIcon size="1em" className="text-[14px]" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>View Details</TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+      )}
+      {error && filtered.length > 0 && (
+        <p role="alert" className="border-b border-border px-6 py-3 text-sm text-destructive">{error}</p>
+      )}
+      {canVerify && !verified && (data || initialLoading) && (
+        <div className={cn(
+          "flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-3",
+          initialLoading
+            ? "bg-muted/30"
+            : data.needsEnrollmentMatch || data.unavailable
+              ? "bg-amber-50 text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"
+              : "bg-blue-50 text-blue-950 dark:bg-blue-950/30 dark:text-blue-100"
+        )}>
+          {initialLoading ? (
+            <StudentChecklistVerificationSkeleton />
+          ) : data.verificationUnavailable ? (
+            <p role="status" className="text-sm">Personal checklist status is temporarily unavailable while the records system is being updated.</p>
+          ) : data.unavailable ? (
+            <p className="text-sm">Your Registrar record is unavailable. Contact the Registrar to check its status.</p>
           ) : (
-            /* Cards View */
-            <div className="space-y-6">
-              {groupedRequirements.map((group) => (
-                <div key={group.key} className="space-y-4">
-                  {group.label && (
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                        {group.label}
-                      </span>
-                      <span className="text-xs text-gray-400 dark:text-zinc-500">
-                        {group.items.length} {group.items.length === 1 ? "requirement" : "requirements"}
-                      </span>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
-                    {group.items.map((item) => {
-                      const isSubmitted = item.status === "Submitted";
+            <>
+              <p className="min-w-0 grow basis-64 text-sm">
+                {data.needsEnrollmentMatch
+                  ? "Your student number and verified email didn’t match a Registrar record. Check your number or ask the Registrar to confirm your enrollment email."
+                  : "Add your student number to see your personal checklist status."}
+              </p>
+              <Button type="button" size="sm" className="h-11 sm:h-9" onClick={() => setStudentNumberDialogOpen(true)}>
+                {data.needsEnrollmentMatch ? "Edit Student Number" : "Add Student Number"}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+      {verified && (
+        <div className="px-6 pt-4 pb-6">
+          <StudentComplianceKpiCards summary={data.summary} />
+        </div>
+      )}
+      {(data || initialLoading || error) && (
+        <>
+          <DataViewToolbar
+            label="Compliance search, views, and filters"
+            className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card justify-between select-none"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <DashboardSearch label="Search requirements" placeholder="Search requirements..." value={search}
+                onChange={setSearch} count={filtered.length} loading={loading} />
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              {verified && (
+                <>
+                  <FilterPopover fields={fields} filters={filters} onFiltersChange={setFilters} entityLabel="requirements" />
+                  <SortPopover options={sortOptions} sortBy={sortBy} sortOrder={sortOrder}
+                    onSortByChange={(value) => { setSortBy(value); setSortOrder("asc"); }} onSortOrderChange={setSortOrder} />
+                  <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={setGroupBy} />
+                </>
+              )}
+              <SegmentedControl value={viewMode} onValueChange={setViewMode} variant="capsule"
+                className="inline-grid grid-flow-col auto-cols-fr shrink-0" items={[
+                  { value: "grid", title: "Grid View", ariaLabel: "Grid View", disabled: initialLoading, icon: <ViewModeIcon mode="grid" className="text-sm" /> },
+                  { value: "list", title: "List View", ariaLabel: "List View", disabled: initialLoading, icon: <ViewModeIcon mode="list" className="text-sm" /> },
+                ]} />
+            </div>
+          </DataViewToolbar>
+          <ActiveFilterChips chips={applicableFilters.map((rule) => ({
+            id: rule.id,
+            groupLabel: fields.find(({ key }) => key === rule.fieldKey)?.label,
+            label: `${rule.operator === "is_not" ? "Not " : ""}${fields.find(({ key }) => key === rule.fieldKey)?.options.find(({ value }) => value === rule.value)?.label || rule.value}`,
+            onRemove: () => setFilters((current) => current.filter(({ id }) => id !== rule.id)),
+          }))} onClearAll={clearFilters} className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5" />
+          <div className={cn(
+            "flex min-w-0 flex-[1_0_auto] flex-col border-t border-border dark:border-border",
+            !initialLoading && filtered.length > 0 && viewMode === "grid" && "p-6"
+          )}>
+            {initialLoading ? (
+              viewMode === "grid" ? (
+                <DataContentSkeleton viewMode="grid" />
+              ) : (
+                <StudentComplianceListSkeleton density={density} />
+              )
+            ) : error && filtered.length === 0 ? (
+              <EmptyState
+                icon={AlertCircleIcon}
+                title="Could Not Load Document Checklist"
+                description="Try loading the checklist again."
+              >
+                <Button variant="outline" size="sm" onClick={refresh}>Try Again</Button>
+              </EmptyState>
+            ) : filtered.length === 0 ? (
+              <EmptyState
+                icon={requirements.length ? Search01Icon : CheckListIcon}
+                title={requirements.length ? "No Matches Found" : "No Requirements Available"}
+                description={requirements.length
+                  ? "Adjust your search or reset your filters."
+                  : "Registrar enrollment requirements will appear here when available."}
+              >
+                {requirements.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={clearFilters}>Reset Filters</Button>
+                )}
+              </EmptyState>
+            ) : viewMode === "list" ? (
+              <div className="flex flex-col flex-1 divide-y divide-border dark:divide-border bg-white dark:bg-card font-jakarta">
+                {groupedRequirements.map((group) => {
+                  const isCollapsed = Boolean(collapsedGroups[group.key]);
+                  const isGrouped = Boolean(group.label);
 
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => setSelectedRequirement(item)}
-                          className="group flex flex-col justify-between rounded-3xl bg-[#f5f5f7] dark:bg-zinc-850/60 p-6 sm:p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xs border border-transparent dark:border-white/5 cursor-pointer"
+                  return (
+                    <div key={group.key} className="flex flex-col">
+                      {/* Collapsible Group Header (if grouped) */}
+                      {isGrouped && (
+                        <button
+                          type="button"
+                          onClick={() => toggleGroup(group.key)}
+                          className="w-full flex items-center justify-between border-b border-border text-left hover:bg-gray-100/60 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer px-5 py-2.5 bg-gray-50/80 dark:bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-xs"
+                          aria-expanded={!isCollapsed}
                         >
-                          <div className="flex flex-col flex-grow">
-                            <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <ArrowDown01Icon
+                              size="1em"
+                              className={cn(
+                                "text-gray-400 dark:text-zinc-500 text-sm transition-transform duration-200 shrink-0",
+                                isCollapsed && "-rotate-90"
+                              )}
+                            />
+                            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
+                              {group.label}
+                            </span>
+                            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
+                              {group.items.length}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500 font-medium">
+                            {isCollapsed ? "Expand" : "Collapse"}
+                          </span>
+                        </button>
+                      )}
+
+                      {/* Group Items */}
+                      {!isCollapsed && (
+                        <div className="divide-y divide-gray-100 dark:divide-zinc-800/60">
+                          {group.items.map((item) => {
+                            const description = item.description;
+                            const highlightedPhrases = [item.docType, ...CHECKLIST_HIGHLIGHTED_PHRASES];
+                            const isSubmitted = item.status === "Submitted";
+
+                            return (
                               <div
+                                key={item.id}
                                 className={cn(
-                                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
-                                  isSubmitted
-                                    ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
-                                    : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                                  "group relative flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-colors border-b border-gray-100 dark:border-zinc-800/60 last:border-b-0",
+                                  densityClasses.paddingX,
+                                  densityClasses.paddingY,
+                                  densityClasses.gap,
+                                  densityClasses.minHeight
                                 )}
                               >
-                                <AppIcon className={cn("text-xl", getRequirementCategoryIcon(item.category))} />
-                              </div>
+                                {/* Left: Category Icon, Title, and Formatted Description Context */}
+                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
+                                  <div
+                                    className={cn(
+                                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs",
+                                      isSubmitted
+                                        ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                                        : item.status === "Missing"
+                                          ? "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                                          : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    <AppIcon className="text-base" icon={getRequirementCategoryIcon(item.category)} />
+                                  </div>
 
-                              <div>
-                                {isSubmitted ? (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                                    Completed
+                                  <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors truncate">
+                                      {item.docType}
+                                    </span>
+
+                                    {description && (
+                                      <span className="mt-0.5 block max-w-xl truncate text-[11px] font-normal text-gray-500 sm:text-xs dark:text-zinc-400">
+                                        <NarrativeText text={description} mode="compact" highlightedPhrases={highlightedPhrases} />
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Category and submission status */}
+                                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "hidden sm:inline-flex")}>
+                                    {item.category}
                                   </span>
-                                ) : (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
-                                    Pending
-                                  </span>
-                                )}
+
+                                  <RequirementStatus status={item.status} />
+                                  <div className="flex items-center justify-end ml-1">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button type="button" onClick={() => setSelectedRequirementId(item.id)}
+                                          aria-label={`View details for ${item.name}`}
+                                          className="table-action-button rounded-lg cursor-pointer after:absolute after:inset-0 focus-visible:after:ring-1 focus-visible:after:ring-inset focus-visible:after:ring-ring">
+                                          <ViewIcon size="1em" className="text-[14px]" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>View Details</TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-
-                            <div className="mb-2">
-                              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-                                {item.category}
-                              </span>
-                              <h4 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors mt-0.5 line-clamp-2">
-                                {item.docType}
-                              </h4>
-                            </div>
-
-                            <div className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-3 mb-5 flex-grow leading-relaxed">
-                              <NarrativeText
-                                text={item.description || "Required document submission for student institutional archive."}
-                                mode="full"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="pt-4 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between text-xs">
-                            <span className="text-[11.5px] text-gray-400 dark:text-zinc-500 font-sans tabular-nums">
-                              {isSubmitted && item.document?.createdAt
-                                ? formatPHDateTime(item.document.createdAt, { dateOnly: true })
-                                : "Awaiting document"}
-                            </span>
-                            <div className="flex items-center gap-1 font-semibold text-pup-maroon dark:text-red-400 group-hover:translate-x-1 transition-transform">
-                              <span>Inspect</span>
-                              <ArrowRight02Icon size="1em" className="text-xs" />
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {groupedRequirements.map((group) => (
+                  <div key={group.key} className="space-y-4">
+                    {group.label && (
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                          {group.label}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-zinc-500">
+                          {group.items.length} {group.items.length === 1 ? "requirement" : "requirements"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+                      {group.items.map((item) => {
+                        const isSubmitted = item.status === "Submitted";
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="group relative flex flex-col justify-between rounded-3xl bg-[#f5f5f7] dark:bg-zinc-850/60 p-6 sm:p-7 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xs border border-transparent dark:border-white/5"
+                          >
+                            <div className="flex flex-col flex-grow">
+                              <div className="flex items-start justify-between gap-4 mb-4">
+                                <div
+                                  className={cn(
+                                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
+                                    isSubmitted
+                                      ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                                      : item.status === "Missing"
+                                          ? "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                                          : "bg-muted text-muted-foreground"
+                                  )}
+                                >
+                                  <AppIcon className={cn("text-xl", getRequirementCategoryIcon(item.category))} />
+                                </div>
+
+                                <div>
+                                  <RequirementStatus status={item.status} />
+                                </div>
+                              </div>
+
+                              <div className="mb-2">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                                  {item.category}
+                                </span>
+                                <h4 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors mt-0.5 break-words">
+                                  {item.docType}
+                                </h4>
+                              </div>
+
+                              {item.description && (
+                                <p className="mb-4 line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-300">
+                                  <NarrativeText
+                                    text={item.description}
+                                    mode="compact"
+                                    highlightedPhrases={[item.docType, ...CHECKLIST_HIGHLIGHTED_PHRASES]}
+                                  />
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex justify-end border-t border-black/[0.04] pt-3 dark:border-white/[0.06]">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedRequirementId(item.id)}
+                                aria-label={`View details for ${item.name}`}
+                                className="flex cursor-pointer items-center gap-1 rounded-lg text-xs font-semibold text-pup-maroon after:absolute after:inset-0 after:rounded-3xl focus-visible:after:ring-1 focus-visible:after:ring-inset focus-visible:after:ring-ring dark:text-red-400"
+                              >
+                                View Details <ArrowRight02Icon size="1em" aria-hidden="true" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* PDF Slip Preview Modal */}
-      {printModalOpen && (
-        <PDFPreviewModal
-          isOpen={printModalOpen}
-          onClose={() => {
-            previewSession.cancel();
-            setIsGeneratingPdf(false);
-            setPdfPreviewUrl(null);
-            setPrintModalOpen(false);
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      {studentNumberDialogOpen && (
+        <EditChecklistStudentNumberDialog
+          user={authUser}
+          onClose={() => setStudentNumberDialogOpen(false)}
+          onSaved={(number) => {
+            setStudentNumberDialogOpen(false);
+            onStudentNumberSaved(number);
+            refresh();
           }}
-          title="Admission Credentials Checklist"
-          subtitle={`${student.name} (${student.studentNo}) · ${student.courseCode} ${student.section}`}
-          pdfUrl={pdfPreviewUrl}
-          isPreparing={isGeneratingPdf}
-          onDownload={handleDownloadPdf}
-          filename={generateExportFilename("STUDENT-COMPLIANCE", student.studentNo || "SUMMARY", "pdf")}
         />
       )}
-
-      {/* Individual Attached Document Preview Modal */}
-      {previewDoc && (
-        <PDFPreviewModal
-          open={Boolean(previewDoc)}
-          onClose={() => setPreviewDoc(null)}
-          title={previewDoc.title || "Document Preview"}
-          description={previewDoc.subtitle || "Archived digitized credential"}
-          pdfUrl={previewDoc.url}
-          preview={previewDoc}
-          downloadFilename={previewDoc.originalFilename}
-        />
-      )}
-
-      {/* Permanent Admission Record Interactive Inspector Sheet */}
-      {selectedRequirement && (
+      {selectedIndex >= 0 && (
         <PermanentAdmissionRecordSheet
-          open={Boolean(selectedRequirement)}
-          onOpenChange={(open) => {
-            if (!open) setSelectedRequirement(null);
-          }}
-          item={selectedRequirement}
-          items={sortedRequirements}
-          currentIndex={sortedRequirements.findIndex((r) => r.id === selectedRequirement.id)}
-          onNavigatePrev={() => {
-            const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement.id);
-            if (idx > 0) setSelectedRequirement(sortedRequirements[idx - 1]);
-          }}
-          onNavigateNext={() => {
-            const idx = sortedRequirements.findIndex((r) => r.id === selectedRequirement.id);
-            if (idx >= 0 && idx < sortedRequirements.length - 1) setSelectedRequirement(sortedRequirements[idx + 1]);
-          }}
-          student={student}
-          onPreviewDocument={(reqItem) => {
-            if (reqItem?.document?.fileUrl || reqItem?.document?.id) {
-              setPreviewDoc({
-                id: reqItem.document.id,
-                url: reqItem.document.fileUrl,
-                originalFilename: reqItem.document.originalFilename,
-                title: reqItem.docType,
-                subtitle: `${student.name} (${student.studentNo})`,
-              });
-            }
-          }}
+          open
+          statusOnly
+          onOpenChange={(open) => { if (!open) setSelectedRequirementId(null); }}
+          item={filtered[selectedIndex]}
+          items={filtered}
+          currentIndex={selectedIndex}
+          onNavigatePrev={() => setSelectedRequirementId(filtered[selectedIndex - 1]?.id)}
+          onNavigateNext={() => setSelectedRequirementId(filtered[selectedIndex + 1]?.id)}
         />
       )}
-    </div>
+    </Card>
   );
 }

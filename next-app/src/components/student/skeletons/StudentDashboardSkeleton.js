@@ -2,7 +2,6 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
-import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 import StudentRequestsTableSkeleton from "./StudentRequestsTableSkeleton"
 import StudentOsasProposalsSkeleton from "./StudentOsasProposalsSkeleton"
 import StudentComplianceSkeleton from "./StudentComplianceSkeleton"
@@ -44,7 +43,6 @@ function StudentSettingsSkeleton() {
 }
 
 export default function StudentDashboardSkeleton({ view = "overview" }) {
-  const { zoomStyle } = useLayoutZoom()
   const activeView = view || "overview"
 
   return (
@@ -57,10 +55,7 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
       </div>
 
       {/* Main Body with Sidebar + Main Workspace */}
-      <div
-        className="flex-1 h-full w-full flex min-h-0 overflow-hidden flex-col md:flex-row"
-        style={zoomStyle}
-      >
+      <div className="flex-1 h-full w-full flex min-h-0 overflow-hidden flex-col md:flex-row">
         {/* Mobile Top Bar Skeleton (< md) — shared Sidebar renders this in place of a page header */}
         <div className="md:hidden flex h-[52px] w-full shrink-0 items-center justify-between border-b border-gray-200/80 bg-white/80 px-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/80">
           <div className="flex items-center gap-2">
@@ -195,7 +190,7 @@ export default function StudentDashboardSkeleton({ view = "overview" }) {
         </aside>
 
         {/* Main Content Skeleton Area — matches student/page.js main layout */}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white dark:bg-zinc-950/50 flex flex-col">
           <div className="p-2 md:pl-1 flex flex-[1_0_auto] min-h-full flex-col w-full">
             <div className="w-full flex flex-[1_0_auto] flex-col [&>*]:flex-[1_0_auto]">
               {activeView === "osas" ? (

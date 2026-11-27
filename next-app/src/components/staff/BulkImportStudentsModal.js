@@ -35,6 +35,7 @@ export default function BulkImportStudentsModal({
   sections = [],
   onSuccess,
   showToast = () => {},
+  collectOdrsEmail = false,
 }) {
   const [csvFile, setCsvFile] = useState(null);
   const [csvRows, setCsvRows] = useState([]);
@@ -273,6 +274,7 @@ export default function BulkImportStudentsModal({
               student: {
                 studentNo,
                 name: row.name || "",
+                ...(collectOdrsEmail ? { odrsEmail: row.odrsemail || row.studentemail || row.email || "" } : {}),
                 courseCode: (row.coursecode || row.course || "").toUpperCase(),
                 yearLevel: rawYear,
                 section: row.section || "",
@@ -355,6 +357,7 @@ export default function BulkImportStudentsModal({
       return (
         String(r.student?.studentNo || "").toLowerCase().includes(q) ||
         String(r.student?.name || "").toLowerCase().includes(q) ||
+        String(r.student?.odrsEmail || "").toLowerCase().includes(q) ||
         String(r.student?.courseCode || "").toLowerCase().includes(q)
       );
     });
@@ -477,7 +480,7 @@ export default function BulkImportStudentsModal({
             Bulk Import Students
           </DialogTitle>
           <DialogDescription className="mt-1">
-            Upload a CSV spreadsheet to validate and import multiple student master records and physical archive assignments at once.
+            Upload a CSV spreadsheet to validate and import multiple student master records and physical archive assignments at once. {collectOdrsEmail ? "Email is optional." : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -527,7 +530,7 @@ export default function BulkImportStudentsModal({
                 Choose a CSV file or drag & drop here
               </h3>
               <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1 max-w-md">
-                Spreadsheet must contain student numbers, names, program codes, academic years, sections, and storage locations.
+                Spreadsheet must contain student numbers, names, program codes, academic years, sections, and storage locations. {collectOdrsEmail ? "Email is optional." : ""}
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -560,6 +563,7 @@ export default function BulkImportStudentsModal({
                   {[
                     "studentNo",
                     "name",
+                    ...(collectOdrsEmail ? ["email"] : []),
                     "courseCode",
                     "academicYear",
                     "section",
@@ -711,6 +715,7 @@ export default function BulkImportStudentsModal({
                 "selection",
                 { kind: "identifier", minWidth: 184 },
                 { kind: "text", minWidth: 148, maxWidth: 172 },
+                ...(collectOdrsEmail ? [{ kind: "text", minWidth: 200, maxWidth: 300 }] : []),
                 { kind: "category", minWidth: 128 },
                 { kind: "year", minWidth: 92 },
                 { kind: "category", minWidth: 112 },
@@ -718,7 +723,7 @@ export default function BulkImportStudentsModal({
                 { kind: "category", width: 152, paddingX: 8 },
                 { kind: "category", width: 152, paddingX: 8 },
                 "status",
-              ]} className="min-w-[1160px]">
+              ]} className={collectOdrsEmail ? "min-w-[1360px]" : "min-w-[1160px]"}>
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 select-none">
                     <th className="w-12 min-w-[48px] p-3 text-center">
@@ -741,6 +746,7 @@ export default function BulkImportStudentsModal({
                     </th>
                     <th className="whitespace-nowrap">Student No.</th>
                     <th className="whitespace-nowrap">Full Name</th>
+                    {collectOdrsEmail && <th className="whitespace-nowrap">Email</th>}
                     <th className="whitespace-nowrap">Course</th>
                     <th className="whitespace-nowrap">Year</th>
                     <th className="whitespace-nowrap">Section</th>
@@ -781,6 +787,11 @@ export default function BulkImportStudentsModal({
                         <td className="p-3 align-middle font-medium text-gray-800 dark:text-zinc-200 truncate border-r border-border/70 dark:border-border/70" title={formatTitleCase(r.student.name)}>
                           {formatTitleCase(r.student.name)}
                         </td>
+                        {collectOdrsEmail && (
+                          <td className="p-3 align-middle text-xs text-gray-600 dark:text-zinc-300 truncate border-r border-border/70 dark:border-border/70" title={r.student.odrsEmail || undefined}>
+                            {r.student.odrsEmail || "—"}
+                          </td>
+                        )}
                         <td className="p-3 align-middle border-r border-border/70 dark:border-border/70">
                           <span className={cn("font-sans tabular-nums text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300", BADGE_BASE)}>
                             {r.student.courseCode}

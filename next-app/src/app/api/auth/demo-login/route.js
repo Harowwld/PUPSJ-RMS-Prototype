@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { POST as login } from "../login/route";
 import { isLocalhostRequest, shouldUseSecureCookie } from "@/lib/cookieSecurity";
 import { systemConfigRepo } from "@/lib/systemConfigRepo";
-import { isDemoAccount } from "@/lib/demoAccounts";
+import { getDemoAccountId } from "@/lib/demoAccounts";
+import { getStaffByUsername, touchStaffLastActiveById } from "@/lib/staffRepo";
+import { isStaffOfficeActive } from "@/lib/officeAccess";
 
 export const runtime = "nodejs";
 
@@ -18,11 +20,16 @@ export async function POST(req) {
 
   const body = await req.json().catch(() => null);
   const username = String(body?.username || "").trim().toLowerCase();
-  if (!isDemoAccount(username)) {
+  const demoId = getDemoAccountId(username);
+  if (!demoId) {
     return NextResponse.json({ ok: false, error: "Demo account not found" }, { status: 404 });
   }
 
-  const isStudent = username === "student@pup.local" || username === "test.student@pup.local";
+  const isStudent = !demoId.startsWith("PUP");
+  const staff = await getStaffByUsername(username);
+  if (isStudent ? Boolean(staff) : staff?.id !== demoId || staff.email_verification_required) {
+    return NextResponse.json({ ok: false, error: "Demo account not found" }, { status: 404 });
+  }
   const password = isStudent ? "student123" : process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const headers = new Headers({ "content-type": "application/json" });
   for (const name of ["x-forwarded-for", "x-real-ip", "user-agent"]) {
@@ -40,7 +47,6 @@ export async function POST(req) {
 
   // If password was rotated on this whitelisted demo account, authenticate directly
   if (!isStudent) {
-    const { getStaffByUsername, touchStaffLastActiveById } = await import("../../../../lib/staffRepo.js");
     const { getSessionCookieName, signSessionToken } = await import("../../../../lib/jwt.js");
     const { createSession } = await import("../../../../lib/sessionStore.js");
     const { attachRefreshSession } = await import("../../../../lib/refreshSessions.js");
@@ -49,7 +55,8 @@ export async function POST(req) {
     const { resetAuthLoginRateLimit } = await import("../../../../lib/rateLimiter.js");
 
     const staff = await getStaffByUsername(username);
-    if (staff && !staff.totp_enabled && staff.status !== "Archived" && staff.status !== "Inactive") {
+    if (staff?.id === demoId && !staff.email_verification_required && !staff.totp_enabled && staff.status === "Active"
+        && await isStaffOfficeActive(staff.office_id, staff.role)) {
       let touched = process.env.DATABASE_URL
         ? await queryOne("UPDATE staff SET last_active = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *", [staff.id])
         : await touchStaffLastActiveById(staff.id);

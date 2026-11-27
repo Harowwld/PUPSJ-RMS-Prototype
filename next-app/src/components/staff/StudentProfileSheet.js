@@ -1,6 +1,8 @@
 "use client";
 
 
+import EditOdrsEmailDialog from "./EditOdrsEmailDialog";
+import CopyButton from "@/components/shared/CopyButton";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import StudentRecordsReportDialog from "@/components/shared/StudentRecordsReportDialog";
@@ -15,14 +17,14 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatPHDateTime } from "@/lib/timeFormat";
-import { cn, formatTitleCase } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { cn } from "@/lib/utils";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { getRoleBranding } from "@/lib/roleBranding";
 import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import { EmptyState } from "@/components/ui/empty";
-import { Files01Icon, InboxIcon, Calendar01Icon, Cancel01Icon, File02Icon, Loading01Icon, ReloadIcon, Time01Icon, ViewIcon, WarehouseIcon } from "hugeicons-react";
+import { Files01Icon, InboxIcon, Calendar01Icon, Cancel01Icon, File02Icon, Loading01Icon, MoreHorizontalIcon, ReloadIcon, Time01Icon, ViewIcon, WarehouseIcon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 /**
  * Standard Information Row (label : value)
@@ -50,6 +52,60 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
+const documentListClass = "divide-y divide-border overflow-hidden rounded-xl border border-border bg-white dark:bg-card";
+
+const documentStatusVariants = {
+  Approved: "success",
+  Pending: "warning",
+  Declined: "danger",
+  Missing: "secondary",
+};
+
+function ProfileDocumentRow({ name, description, status, onPreview, onRescan }) {
+  const Main = onPreview ? "button" : "div";
+  return (
+    <li className="flex items-center gap-1 pr-2">
+      <Main
+        {...(onPreview ? { type: "button", onClick: onPreview, "aria-label": `Preview ${name}` } : {})}
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left",
+          onPreview && "cursor-pointer rounded-lg transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+        )}
+      >
+        <File02Icon size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-semibold">{name}</span>
+          <span className="block truncate text-[10px] text-muted-foreground">{description}</span>
+        </span>
+        <Badge size="compact" variant={documentStatusVariants[status] || "secondary"}>
+          {status === "Missing" ? "Not Submitted" : status}
+        </Badge>
+      </Main>
+      {(onPreview || onRescan) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="table-action-button rounded-lg" aria-label={`Actions for ${name}`}>
+            <MoreHorizontalIcon size={16} aria-hidden="true" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {onPreview && (
+              <DropdownMenuItem onClick={onPreview}>
+                <ViewIcon size="1em" aria-hidden="true" />
+                {PDF_ACTION_LABELS.preview}
+              </DropdownMenuItem>
+            )}
+            {onRescan && (
+              <DropdownMenuItem onClick={onRescan}>
+                <ReloadIcon size="1em" aria-hidden="true" />
+                Re-scan Document
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </li>
+  );
+}
+
 export default function StudentProfileSheet({
   open,
   onOpenChange,
@@ -64,11 +120,13 @@ export default function StudentProfileSheet({
   onPreviewDocument,
   onRescan,
   onEditStudent,
+  onOdrsEmailSaved,
   onArchiveStudent,
   onRestoreStudent,
   authUser = null,
 }) {
   const branding = useMemo(() => getRoleBranding(authUser), [authUser]);
+  const odrsEmail = student?.odrsEmail;
   const [requests, setRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -110,7 +168,6 @@ export default function StudentProfileSheet({
 
   // Fetch active document types for requirements compliance
   const [docTypes, setDocTypes] = useState([]);
-  const [complianceView, setComplianceView] = useState("checklist"); // "checklist" | "files"
 
   useEffect(() => {
     let isMounted = true;
@@ -238,6 +295,53 @@ export default function StudentProfileSheet({
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("") || "ST";
+
+  function getDocumentActions(doc, name) {
+    if (!doc) return {};
+    const isCbl = String(doc.id || "").startsWith("cbl-");
+    return {
+      onPreview: onPreviewDocument && (() => {
+        const target = isCbl
+          ? student.rawOrg?.bylaws_storage_filename || student.bylawsStorageFilename || doc.id
+          : doc.id;
+        onPreviewDocument(name, student.name, student.acronym || student.studentNo, target);
+      }),
+      onRescan: onRescan && !doc.source_type && !isCbl ? () => {
+        onOpenChange(false);
+        onRescan(
+          doc.organization_id || doc.student_no || student.rawOrg?.id || student.studentNo,
+          name,
+          doc.id,
+          doc.original_filename,
+          doc.mime_type
+        );
+      } : undefined,
+    };
+  }
+
+  const organizationFiles = !isOrg ? null : studentDocs.length ? (
+    <ul className={documentListClass}>
+      {studentDocs.map((doc, index) => {
+        const name = doc.doc_type || "Document";
+        return (
+          <ProfileDocumentRow
+            key={doc.id || `doc-${index}`}
+            name={name}
+            description={`${doc.original_filename || "document.pdf"} • ${formatPHDateTime(doc.created_at)}`}
+            status={doc.approval_status || "Pending"}
+            {...getDocumentActions(doc, name)}
+          />
+        );
+      })}
+    </ul>
+  ) : (
+    <EmptyState
+      variant="compact"
+      icon={Files01Icon}
+      title="No Digitized Records"
+      description="No digitized records uploaded for this organization yet."
+    />
+  );
 
   return (
     <>
@@ -435,9 +539,17 @@ export default function StudentProfileSheet({
                     icon=" Tag01Icon"
                     label="Student Number"
                   >
-                    <span className="font-sans tabular-nums text-gray-800 dark:text-zinc-200 font-semibold">
-                      {student.studentNo}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="select-text font-sans tabular-nums">{student.studentNo}</span>
+                      {student.studentNo && (
+                        <CopyButton
+                          iconOnly
+                          textToCopy={student.studentNo}
+                          entityName="Student Number"
+                          showToast={false}
+                        />
+                      )}
+                    </div>
                   </InfoRow>
 
                   <InfoRow
@@ -445,6 +557,30 @@ export default function StudentProfileSheet({
                     label="Full Name"
                     value={displayName}
                   />
+
+                  {(authUser?.office_id || authUser?.officeId) === "registrar" && (
+                    <InfoRow icon=" Mail01Icon" label="ODRS Email">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {odrsEmail ? (
+                          <>
+                            <span className="select-text break-all">{odrsEmail}</span>
+                            <CopyButton
+                              iconOnly
+                              textToCopy={odrsEmail}
+                              entityName="ODRS Email"
+                              showToast={false}
+                            />
+                          </>
+                        ) : (
+                          <span className="font-normal text-muted-foreground">Not recorded</span>
+                        )}
+                        {student.status !== "Archived" && (
+                          <EditOdrsEmailDialog key={student.studentNo} studentNo={student.studentNo} email={odrsEmail}
+                            onSaved={(email) => onOdrsEmailSaved?.(student.studentNo, email)} />
+                        )}
+                      </div>
+                    </InfoRow>
+                  )}
 
                   <InfoRow
                     icon=" BookOpen01Icon"
@@ -499,45 +635,35 @@ export default function StudentProfileSheet({
                 value={`Room ${student.room}`}
               />
 
-              <InfoRow
-                icon=" Archive01Icon"
-                label="Cabinet & Drawer"
-                value={`Cabinet ${student.cabinet} · Drawer ${student.drawer}`}
-              />
-
-              <InfoRow
-                icon=" Location01Icon"
-                label="Full Coordinates"
-              >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-sans tabular-nums text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                    Room {student.room} • Cabinet {student.cabinet} • Drawer {student.drawer}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onOpenChange(false);
-                      onLocateStudent?.(student);
-                    }}
-                    className="h-6 px-2 text-[10px] font-semibold rounded-md border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  >
-                    Locate Drawer
-                  </Button>
+              <InfoRow icon=" Archive01Icon" label="Cabinet & Drawer">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="tabular-nums">Cabinet {student.cabinet} · Drawer {student.drawer}</span>
+                  {onLocateStudent && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      onClick={() => {
+                        onOpenChange(false);
+                        onLocateStudent(student);
+                      }}
+                    >
+                      Locate Drawer
+                    </Button>
+                  )}
                 </div>
               </InfoRow>
             </div>
           </div>
 
           {/* 3. Requirements Compliance & Digitized Records */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pb-1.5 border-b border-border/80 dark:border-border flex-wrap gap-2">
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-1.5">
               <div>
                 <div className="flex items-center gap-2">
                   <Files01Icon size="1em" className="text-pup-maroon dark:text-red-400 text-sm" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
-                    {isOrg ? "Organization Records & Documents" : "Requirements Compliance & Records"} ({studentDocs.length})
+                    {isOrg ? `Organization Records & Documents (${studentDocs.length})` : "Requirements Checklist"}
                   </h3>
                 </div>
                 {!isOrg && complianceSummary.total > 0 && (
@@ -555,246 +681,28 @@ export default function StudentProfileSheet({
                 )}
               </div>
 
-              {/* View Switcher: Checklist vs Files (Students only) */}
-              {!isOrg && (
-                <div className="flex items-center gap-1 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-full border border-black/[0.04] dark:border-white/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
-                  <button
-                    type="button"
-                    onClick={() => setComplianceView("checklist")}
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                      complianceView === "checklist"
-                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
-                    )}
-                  >
-                    Checklist
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setComplianceView("files")}
-                    className={cn(
-                      "px-3 py-1 text-xs font-semibold rounded-full transition-all duration-150 cursor-pointer active:scale-[0.98]",
-                      complianceView === "files"
-                        ? "bg-white dark:bg-zinc-800 text-gray-950 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.85)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-                        : "text-gray-500 hover:text-gray-900 dark:text-zinc-400"
-                    )}
-                  >
-                    Files ({studentDocs.length})
-                  </button>
-                </div>
-              )}
             </div>
 
-            {!isOrg && complianceView === "checklist" && requirementsList.length > 0 ? (
-              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/40">
-                {requirementsList.map((req, index) => {
-                  const isApproved = req.status === "Approved";
-                  const isPending = req.status === "Pending";
-                  const isDeclined = req.status === "Declined";
-                  const isMissing = req.status === "Missing";
-
-                  return (
-                    <div
-                      key={req.id || `req-${index}-${req.name || ""}`}
-                      className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div
-                          className={cn(
-                            "flex size-7 shrink-0 items-center justify-center text-base",
-                            isApproved
-                              ? "text-emerald-800 dark:text-emerald-300"
-                              : isPending
-                              ? "text-sky-800 dark:text-sky-300"
-                              : isDeclined
-                              ? "text-rose-800 dark:text-rose-300"
-                              : "text-amber-800 dark:text-amber-300"
-                          )}
-                        >
-                          <AppIcon
-                            className={
-                              isApproved
-                                ? " CheckmarkBadge01Icon"
-                                : isPending
-                                ? " HourglassIcon"
-                                : isDeclined
-                                ? " CancelCircleIcon"
-                                : " CircleIcon"
-                            }
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate block">
-                            {req.name}
-                          </span>
-                          <span className="text-[10px] text-gray-500 dark:text-zinc-400 block truncate">
-                            {req.doc?.original_filename || (isMissing ? "Not submitted to archive" : "Pending document")}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={cn("text-[10px]", isApproved
-                              ? BADGE_PALETTES.emerald
-                              : isPending
-                              ? BADGE_PALETTES.blue
-                              : isDeclined
-                              ? BADGE_PALETTES.rose
-                              : BADGE_PALETTES.amber, BADGE_BASE)}
-                        >
-                          {req.status === "Missing" ? "Not Submitted" : req.status}
-                        </span>
-
-                        {req.doc && onRescan && !req.doc.source_type && !String(req.doc.id || "").startsWith("cbl-") && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onOpenChange(false);
-                                  onRescan(
-                                    req.doc.organization_id || req.doc.student_no || student.rawOrg?.id || student.studentNo,
-                                    req.name,
-                                    req.doc.id,
-                                    req.doc.original_filename,
-                                    req.doc.mime_type
-                                  );
-                                }}
-                                aria-label="Re-scan Document"
-                                className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                              >
-                                <ReloadIcon size="1em" className="text-xs" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>Re-scan Document</TooltipContent>
-                          </Tooltip>
-                        )}
-
-                        {req.doc && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onPreviewDocument?.(
-                                    req.name,
-                                    student.name,
-                                    student.acronym || student.studentNo,
-                                    req.doc.id
-                                  );
-                                }}
-                                aria-label={PDF_ACTION_LABELS.preview}
-                                className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                              >
-                                <ViewIcon size="1em" className="text-xs" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : studentDocs.length === 0 ? (
+            {isOrg ? organizationFiles : requirementsList.length ? (
+              <ul className={documentListClass}>
+                {requirementsList.map(({ id, name, status, doc }) => (
+                  <ProfileDocumentRow
+                    key={id}
+                    name={name}
+                    description={doc?.original_filename || (status === "Missing" ? "Not submitted to archive" : "Pending document")}
+                    status={status}
+                    {...getDocumentActions(doc, name)}
+                  />
+                ))}
+              </ul>
+            ) : (
               <EmptyState
                 variant="compact"
                 icon={Files01Icon}
-                title="No Digitized Records"
-                description={isOrg
-                  ? "No digitized records uploaded for this organization yet."
-                  : "No digitized records uploaded for this student yet."}
+                title="No Checklist Requirements"
               />
-            ) : (
-              <div className="rounded-xl border border-border/80 dark:border-border overflow-hidden divide-y divide-border/70 dark:divide-border bg-white dark:bg-zinc-900/40">
-                {studentDocs.map((doc, docIdx) => (
-                  <div
-                    key={doc.id || `doc-${docIdx}`}
-                    className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="flex size-8 shrink-0 items-center justify-center text-muted-foreground">
-                        <File02Icon size="1em" className="text-base" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                          {doc.doc_type || "Document"}
-                        </div>
-                        <div className="text-[10px] text-gray-500 dark:text-zinc-400 truncate mt-0.5">
-                          {doc.original_filename || "document.pdf"} • {formatPHDateTime(doc.created_at)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={cn("text-[10px]", doc.approval_status === "Approved"
-                            ? BADGE_PALETTES.emerald
-                            : doc.approval_status === "Declined"
-                            ? BADGE_PALETTES.rose
-                            : BADGE_PALETTES.amber, BADGE_BASE)}
-                      >
-                        {doc.approval_status || "Pending"}
-                      </span>
-
-                      {onRescan && !doc.source_type && !String(doc.id || "").startsWith("cbl-") && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onOpenChange(false);
-                                onRescan(
-                                  doc.organization_id || doc.student_no || student.rawOrg?.id || student.studentNo,
-                                  doc.doc_type,
-                                  doc.id,
-                                  doc.original_filename,
-                                  doc.mime_type
-                                );
-                              }}
-                              aria-label="Re-scan Document"
-                              className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                            >
-                              <ReloadIcon size="1em" className="text-xs" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Re-scan Document</TooltipContent>
-                        </Tooltip>
-                      )}
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const isCbl = String(doc.id || "").startsWith("cbl-");
-                              const previewTarget = isCbl
-                                ? (student.rawOrg?.bylaws_storage_filename || student.bylawsStorageFilename || doc.id)
-                                : doc.id;
-                              onPreviewDocument?.(
-                                doc.doc_type || "Document",
-                                student.name,
-                                student.acronym || student.studentNo,
-                                previewTarget
-                              );
-                            }}
-                            aria-label={PDF_ACTION_LABELS.preview}
-                            className="table-action-button rounded-lg active:scale-95 cursor-pointer"
-                          >
-                            <ViewIcon size="1em" className="text-xs" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>{PDF_ACTION_LABELS.preview}</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
-          </div>
+          </section>
 
           {/* 4. Document Requests History (Students only) */}
           {!isOrg && (
@@ -835,7 +743,7 @@ export default function StudentProfileSheet({
                               ? BADGE_PALETTES.blue
                               : req.status === "Ready"
                               ? BADGE_PALETTES.purple
-                              : BADGE_PALETTES.amber, BADGE_BASE)}
+                              : BADGE_PALETTES.amber, COMPACT_BADGE_BASE)}
                         >
                           {req.status === "InProgress" ? "In Progress" : (req.status || "Pending")}
                         </span>
@@ -892,11 +800,11 @@ export default function StudentProfileSheet({
                   }}
                   className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
                 >
-                  {isOrg ? "Archive Organization Record" : "Archive Student Record"}
+                  {isOrg ? "Archive Organization Record" : "Archive Student"}
                 </Button>
               )
             )}
-            {!isOrg && <Button size="sm" className="h-9 px-4" onClick={() => setReportOpen(true)}>{PDF_ACTION_LABELS.preview}</Button>}
+            {!isOrg && <Button size="sm" className="h-9 px-4" onClick={() => setReportOpen(true)}>Preview Student Records Report</Button>}
           </div>
         </SheetFooter>
       </SheetContent>

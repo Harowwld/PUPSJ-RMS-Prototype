@@ -19,7 +19,8 @@ import { getSessionVersion, registerSessionToken } from "@/lib/authSessions";
 import { warmRegistrarIngestQueueOnLogin } from "@/lib/ingestEventProcessor";
 import { shouldUseSecureCookie } from "@/lib/cookieSecurity";
 import { isStaffOfficeActive } from "@/lib/officeAccess";
-import { isDemoAccount } from "@/lib/demoAccounts";
+import { getDemoAccountId, isDemoAccount } from "@/lib/demoAccounts";
+import { sendStaffVerification, verifyStaffEmail } from "@/lib/staffEmailVerification";
 
 export const runtime = "nodejs";
 
@@ -105,7 +106,7 @@ async function _POST(req) {
     ));
   }
 
-  const { username, password } = validation.data;
+  const { username, password, staffEmailCode, resendStaffEmailCode } = validation.data;
 
   // 2. Authenticate
   const cleanUsername = String(username || "").trim();
@@ -115,17 +116,33 @@ async function _POST(req) {
   if (accountRateLimitResponse) return accountRateLimitResponse;
   const lowerUser = cleanUsername.toLowerCase();
   const isSuperAdminAlias = lowerUser === "admin.default@pup.local" || lowerUser === "pupregistrar-001";
-  const searchIdentifier = isSuperAdminAlias ? "superadmin@pup.local" : cleanUsername;
-
-  let staff = await getStaffByUsername(searchIdentifier);
-
+  let staff = await getStaffByUsername(cleanUsername);
   if (!staff && isSuperAdminAlias) {
-    staff = await getStaffByUsername(cleanUsername);
+    const demo = await getStaffByUsername("superadmin@pup.com");
+    if (demo?.id === getDemoAccountId("superadmin@pup.com")) staff = demo;
+  }
+
+  // Keep legacy sign-in identifiers usable for the same seeded accounts.
+  if (!staff && lowerUser.endsWith("@pup.local")) {
+    const demoEmail = lowerUser.replace(/\.local$/, ".com");
+    const demoId = getDemoAccountId(demoEmail);
+    if (demoId?.startsWith("PUP")) {
+      const demo = await getStaffByUsername(demoEmail);
+      if (demo?.id === demoId) staff = demo;
+    }
   }
 
   if (!staff) {
     // Check if it's a student trying to log in
-    const student = await authenticateStudent({ studentNo: cleanUsername, password });
+    let student = await authenticateStudent({ studentNo: cleanUsername, password });
+    if (!student && lowerUser.endsWith("@pup.local")) {
+      const demoEmail = lowerUser.replace(/\.local$/, ".com");
+      const demoId = getDemoAccountId(demoEmail);
+      if (demoId && !demoId.startsWith("PUP")) {
+        const demo = await authenticateStudent({ studentNo: demoEmail, password });
+        if (demo?.student_no === demoId) student = demo;
+      }
+    }
     if (student) {
       if (student.totp_enabled) {
         const tempToken = await createStudent2FAChallenge(student);
@@ -215,6 +232,22 @@ async function _POST(req) {
       { ok: false, error: "This office is inactive. Please contact a system administrator." },
       { status: 403 }
     ));
+  }
+
+  if (staff.email_verification_required) {
+    if (staffEmailCode && !resendStaffEmailCode) {
+      if (!(await verifyStaffEmail(staff, staffEmailCode))) {
+        return addSecurityHeaders(NextResponse.json({
+          ok: false, error: "That code is incorrect, expired, or used up. Check your code or request a new one.",
+        }, { status: 400 }));
+      }
+    } else {
+      const delivery = resendStaffEmailCode ? await sendStaffVerification(staff) : null;
+      return addSecurityHeaders(NextResponse.json({
+        ok: true,
+        data: { staffEmailVerificationRequired: true, email: staff.email, delivery },
+      }));
+    }
   }
 
   if (passwordVerification.needsRehash) {

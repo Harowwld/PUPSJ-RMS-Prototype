@@ -6,6 +6,7 @@ import { isSessionActive } from "./authSessions.js";
 import { queryOne } from "./postgres.js";
 import { isStudentRole, isSystemAdminRole, normalizeRole } from "./roleUtils.js";
 import { checkCSRFProtection } from "./csrfProtection.js";
+import { decryptPII } from "./piiEncryption.js";
 import { decryptStudentRow } from "./studentAuth.js";
 import { isStaffOfficeActive } from "./officeAccess.js";
 import { authDebug } from "./authDebug.js";
@@ -73,7 +74,7 @@ export async function getAuthenticatedPrincipal(req) {
 
     if (isStudentRole(tokenRole)) {
       const account = await queryOne(
-        `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.client_type, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
+        `SELECT sa.id, sa.identity_profile_id, sa.student_no, sip.email, sip.client_type, sip.portal_setup_complete, sip.checklist_student_no, sip.first_name, sip.middle_name, sip.last_name, sa.avatar_filename,
                 sa.status AS account_status, s.status AS student_status,
                 EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Active') AS has_active_office,
                 EXISTS (SELECT 1 FROM student_office_memberships som WHERE som.student_no = sa.student_no AND som.status = 'Archived') AS has_archived_office,
@@ -107,6 +108,8 @@ export async function getAuthenticatedPrincipal(req) {
         student_no: decryptedAccount.student_no ? String(decryptedAccount.student_no) : null,
         email: decryptedAccount.email || null,
         clientType: decryptedAccount.client_type,
+        portalSetupComplete: decryptedAccount.portal_setup_complete,
+        checklistStudentNo: decryptPII(account.checklist_student_no),
         status: "Active",
         sessionId: payload.jti,
         jti: payload.jti,
@@ -273,6 +276,14 @@ export async function requireStaff(req) {
  */
 export async function requireStudent(req) {
   return requireAuth(req, ["Student"]);
+}
+
+export async function requireCurrentStudent(req) {
+  const access = await requireStudent(req);
+  if (access.user && (access.user.clientType !== "Student" || access.user.portalSetupComplete === false)) {
+    return { user: null, error: "Access denied for this affiliation" };
+  }
+  return access;
 }
 
 /**

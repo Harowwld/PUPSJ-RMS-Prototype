@@ -261,8 +261,9 @@ export default function OsasKanbanPipeline({
                         "Student Officer";
                       const dateStr = item.created_at
                         ? new Date(item.created_at).toLocaleDateString(
-                            "en-US",
+                            "en-PH",
                             {
+                              timeZone: "Asia/Manila",
                               month: "short",
                               day: "numeric",
                             }

@@ -1,5 +1,6 @@
 import { query, queryOne } from "./postgres.js";
 import { decryptStudentRow } from "./studentAuth.js";
+import { decryptPII } from "./piiEncryption.js";
 import { matchesSearchQuery } from "./searchUtils.js";
 
 const folderYear = `COALESCE(CASE WHEN split_part(s.student_no, '-', 1) ~ '^[0-9]{4}$'
@@ -16,12 +17,15 @@ function scope() {
 }
 
 function normalize(row) {
-  const student = decryptStudentRow(row);
+  const { odrs_email, ...record } = row;
+  const student = decryptStudentRow(record);
+  const decodedEmail = odrs_email ? decryptPII(odrs_email) : "";
   return {
     ...student,
     studentNo: student.student_no,
     courseCode: student.course_code,
     yearLevel: student.year_level,
+    odrsEmail: decodedEmail?.startsWith("enc:v1:") ? "" : (decodedEmail || ""),
     documentCount: Number(row.document_count || 0),
   };
 }
@@ -48,20 +52,29 @@ export async function getStudentBrowseSummary(officeId) {
   return { counts, facets, years, documents, docTypes };
 }
 
-export async function browseStudents({ officeId, archived = false, year, q = "", courses = [], years = [], sections = [], sortBy = "studentNo", sortOrder = "ASC", page = 1, pageSize = 10, exportAll = false }) {
+export async function browseStudents({ officeId, archived = false, year, startDate = "", endDate = "", q = "", courses = [], years = [], sections = [], sortBy = "studentNo", sortOrder = "ASC", page = 1, pageSize = 10, exportAll = false }) {
+  const includeOdrsEmail = String(officeId || "").trim().toLowerCase() === "registrar";
+  const selectedStudentColumns = includeOdrsEmail
+    ? `${studentColumns}, odrs.email AS odrs_email`
+    : studentColumns;
+  const contactJoin = includeOdrsEmail
+    ? " LEFT JOIN registrar_odrs_contacts odrs ON odrs.student_no = s.student_no"
+    : "";
   const params = [officeId];
   const add = (value) => { params.push(value); return `$${params.length}`; };
   const conditions = [archived ? `${status} <> 'Active'` : `${status} = 'Active'`];
   if (year != null) conditions.push(`${folderYear} = ${add(year)}`);
+  if (startDate) conditions.push(`s.created_at >= (${add(startDate)}::date::timestamp AT TIME ZONE 'Asia/Manila')`);
+  if (endDate) conditions.push(`s.created_at < ((${add(endDate)}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`);
   if (courses.length) conditions.push(`upper(s.course_code) = ANY(${add(courses.map((v) => v.toUpperCase()))}::text[])`);
   if (years.length) conditions.push(`s.year_level = ANY(${add(years)}::int[])`);
   if (sections.length) conditions.push(`upper(s.section) = ANY(${add(sections.map((v) => v.toUpperCase()))}::text[])`);
   const search = String(q || "").trim();
-  const needsDecrypt = Boolean(search && !/^[\d-]+$/.test(search)) || sortBy === "name";
+  const needsDecrypt = Boolean(search && !/^[\d-]+$/.test(search)) || sortBy === "name" || sortBy === "odrsEmail";
   if (search && !needsDecrypt) {
     conditions.push(`(s.student_no ILIKE ${add(`%${search}%`)} OR replace(s.student_no, '-', '') ILIKE ${add(`%${search.replace(/-/g, "")}%`)})`);
   }
-  const from = `${scope()} WHERE ${conditions.join(" AND ")}`;
+  const from = `${scope()}${contactJoin} WHERE ${conditions.join(" AND ")}`;
   const docCount = `(SELECT count(*)::int FROM documents d WHERE d.office_id = $1
     AND d.student_no = s.student_no AND d.approval_status <> 'Declined') AS document_count`;
   const orderColumn = {
@@ -73,11 +86,11 @@ export async function browseStudents({ officeId, archived = false, year, q = "",
   const offset = (page - 1) * pageSize;
 
   if (needsDecrypt) {
-    const rows = (await query(`SELECT ${studentColumns}, ${docCount} ${from}`, params)).map(normalize);
-    const matched = search ? rows.filter((s) => matchesSearchQuery([s.studentNo, s.name, s.courseCode, s.section], search)) : rows;
+    const rows = (await query(`SELECT ${selectedStudentColumns}, ${docCount} ${from}`, params)).map(normalize);
+    const matched = search ? rows.filter((s) => matchesSearchQuery([s.studentNo, s.name, s.courseCode, s.section, s.odrsEmail], search)) : rows;
     matched.sort((a, b) => {
-      const left = sortBy === "documents" ? a.documentCount : a[sortBy] ?? "";
-      const right = sortBy === "documents" ? b.documentCount : b[sortBy] ?? "";
+      const left = sortBy === "documents" ? a.documentCount : sortBy === "odrsEmail" ? a.odrsEmail : a[sortBy] ?? "";
+      const right = sortBy === "documents" ? b.documentCount : sortBy === "odrsEmail" ? b.odrsEmail : b[sortBy] ?? "";
       const comparison = typeof left === "number" && typeof right === "number"
         ? left - right : String(left).localeCompare(String(right), undefined, { numeric: true });
       return (direction === "DESC" ? -comparison : comparison) || a.studentNo.localeCompare(b.studentNo);
@@ -86,7 +99,7 @@ export async function browseStudents({ officeId, archived = false, year, q = "",
   }
 
   const total = Number((await queryOne(`SELECT count(*)::int AS total ${from}`, params))?.total || 0);
-  const rows = await query(`SELECT ${studentColumns}, ${docCount} ${from}
+  const rows = await query(`SELECT ${selectedStudentColumns}, ${docCount} ${from}
     ORDER BY ${orderColumn} ${direction} NULLS LAST, s.student_no ASC
     ${exportAll ? "" : `LIMIT ${add(pageSize)} OFFSET ${add(offset)}`}`, params);
   return { rows: rows.map(normalize), total };

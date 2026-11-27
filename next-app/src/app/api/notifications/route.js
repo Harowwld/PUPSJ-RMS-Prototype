@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidCalendarDateRange } from "@/lib/timeFormat";
 import {
   getStaffReviewNotificationsState,
   listNotifications,
@@ -30,6 +31,11 @@ export async function GET(req) {
   const type = searchParams.get("type") || "";
   const decision = searchParams.get("decision") || "";
   const severity = searchParams.get("severity") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  if (!isValidCalendarDateRange(startDate, endDate)) {
+    return NextResponse.json({ ok: false, error: "Invalid date range." }, { status: 400 });
+  }
 
   const state = await getStaffReviewNotificationsState(staff.id);
   const res = await listNotifications({
@@ -44,6 +50,8 @@ export async function GET(req) {
     type,
     decision,
     severity,
+    startDate,
+    endDate,
   });
 
   return NextResponse.json({

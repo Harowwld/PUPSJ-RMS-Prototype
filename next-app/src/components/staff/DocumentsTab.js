@@ -54,7 +54,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, File01Icon, FingerPrintScanIcon, PieChartIcon, ReloadIcon, Tick01Icon } from "hugeicons-react";
+import { AlertCircleIcon as EmptyAlertCircleIcon, Search01Icon as EmptySearch01Icon, FileRemoveIcon, Alert01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, File01Icon, FingerPrintScanIcon, PieChartIcon, Tick01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 import ComplianceStudentsSheet from "@/components/shared/ComplianceStudentsSheet";
 
@@ -831,21 +831,6 @@ export default function DocumentsTab({
                                     sortOrder={matrixSortOrder}
                                   />
                                 </button>
-                                {isScrolledX && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        onClick={resetMatrixScroll}
-                                        className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                        aria-label="Reset scroll to start"
-                                      >
-                                        <ReloadIcon size="1em" className="text-xs" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                                  </Tooltip>
-                                )}
                               </div>
                             </th>
                           )}

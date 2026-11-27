@@ -25,10 +25,12 @@ export default function EditStudentModal({
   courses = [],
   sections = [],
   storageLayout = null,
+  collectOdrsEmail = false,
   onSuccess,
   showToast,
 }) {
   const [name, setName] = useState("");
+  const [odrsEmail, setOdrsEmail] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   const [section, setSection] = useState("");
@@ -41,6 +43,7 @@ export default function EditStudentModal({
     const timer = setTimeout(() => {
       if (student && open) {
         setName(student.name && !student.name.startsWith("enc:v1:") ? student.name : "");
+        setOdrsEmail(student.odrsEmail || "");
         setCourseCode(student.courseCode || student.course_code || "");
         setYearLevel(String(student.yearLevel || student.year_level || ""));
         setSection(student.section || "");
@@ -127,6 +130,9 @@ export default function EditStudentModal({
       return;
     }
 
+    const cleanEmail = odrsEmail.trim().toLowerCase();
+    const emailChanged = collectOdrsEmail && cleanEmail !== (student.odrsEmail || "").trim().toLowerCase();
+
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/students/${encodeURIComponent(student.studentNo)}`, {
@@ -134,6 +140,7 @@ export default function EditStudentModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: cleanName,
+          ...(emailChanged ? { odrsEmail: cleanEmail } : {}),
           courseCode: cleanCourse,
           yearLevel: parsedYear,
           section: cleanSec,
@@ -155,7 +162,7 @@ export default function EditStudentModal({
       });
 
       onOpenChange(false);
-      onSuccess?.();
+      onSuccess?.(json.data);
     } catch (err) {
       showToast?.(
         formatErrorMessage(err, {
@@ -172,7 +179,7 @@ export default function EditStudentModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-4xl sm:max-w-4xl overflow-hidden rounded-[22px] sm:rounded-[22px] border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader className="p-6 pb-0 text-left">
             <DialogTitle>
               Edit Student Profile
@@ -219,6 +226,20 @@ export default function EditStudentModal({
                   className="h-10 rounded-xl border border-border dark:border-border bg-gray-50 dark:bg-zinc-800/50 text-xs font-sans tabular-nums text-gray-900 dark:text-zinc-300 cursor-not-allowed shadow-none"
                 />
               </div>
+              {collectOdrsEmail && (
+                <label className="grid gap-1.5 text-xs font-medium text-gray-700 dark:text-zinc-300 md:col-span-8">
+                  Email for ODRS (optional)
+                  <Input
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="off"
+                    maxLength={100}
+                    value={odrsEmail}
+                    disabled={isSubmitting}
+                    onChange={(event) => setOdrsEmail(event.target.value)}
+                  />
+                </label>
+              )}
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+import { formatManilaCalendarDate } from "../src/lib/timeFormat.js";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
@@ -64,7 +65,7 @@ async function runGuardsTest() {
     formData.append("title", "State Machine Guarded Pipeline Test 2026");
     formData.append("organizationId", "helping-hands");
     formData.append("organizationName", "Helping Hands Community Organization");
-    formData.append("eventDate", "2026-12-01");
+    formData.append("eventDate", formatManilaCalendarDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
     formData.append("file", new Blob([pdfBytes], { type: "application/pdf" }), "guard-test.pdf");
 
     const createRes = await fetch(`${BASE_URL}/api/student/event-proposals`, {

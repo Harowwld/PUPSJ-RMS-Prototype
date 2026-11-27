@@ -58,6 +58,8 @@ export async function GET(req) {
           sip.middle_name,
           sip.last_name,
           sip.client_type,
+          sip.checklist_student_no,
+          sip.portal_setup_complete,
           sa.avatar_filename,
           sa.preferences,
           sa.status AS account_status,
@@ -152,6 +154,9 @@ export async function GET(req) {
           role: "Student",
           status: student.account_status || student.student_status || "Active",
           student_no: student.student_no || "",
+          checklist_student_no: clientType === "Student" && !student.student_no
+            ? decryptPII(student.checklist_student_no) || ""
+            : "",
           name: [fname, lname].filter(Boolean).join(" ") || student.name || student.email || "",
           fname,
           lname,
@@ -159,6 +164,7 @@ export async function GET(req) {
           email: student.email || "",
           username: student.email || student.student_no || "",
           client_type: clientType,
+          portal_setup_complete: student.portal_setup_complete,
           course_code: student.course_code || "",
           year_level: student.year_level || null,
           section: student.section || "",

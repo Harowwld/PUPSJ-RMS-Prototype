@@ -8,7 +8,9 @@ import { canManageStaffRole, canAccessOffice, isSystemAdminRole, normalizeRole }
 import { validatePasswordPolicy } from "@/lib/passwordPolicy";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { sanitizeUser } from "@/lib/dataSanitizer";
-import { sendAccountCredentialsNotice } from "@/lib/accountEmail";
+import { sendAccountCredentialsEmail } from "@/lib/accountEmail";
+import { sendStaffVerification } from "@/lib/staffEmailVerification";
+import { isDemoAccount } from "@/lib/demoAccounts";
 import { StaffRegistrationSchema } from "@/lib/validationSchemas";
 import { getOfficeById } from "@/lib/officesRepo";
 
@@ -91,6 +93,9 @@ export async function POST(req) {
   }
 
   const { id = "", fname, lname, role, section, email } = validation.data;
+  if (isDemoAccount(email) || email.endsWith(".local")) {
+    return NextResponse.json({ ok: false, error: "Enter an email address the staff member can receive mail at." }, { status: 400 });
+  }
   const status = body.status === "Inactive" || body.status === "Archived" ? body.status : "Active";
   const usesConfiguredDefault = body.password === undefined || body.password === null || String(body.password) === "";
   const password = usesConfiguredDefault ? DEFAULT_PASSWORD : String(body.password);
@@ -138,19 +143,21 @@ export async function POST(req) {
       email,
       lastActive,
       password,
+      requireEmailVerification: true,
     });
     if (!row || !canAccessResource(user, "staff", row)) {
       return NextResponse.json({ ok: false, error: "Staff account could not be created" }, { status: 500 });
     }
-    const credentialEmail = await sendAccountCredentialsNotice({
-      to: email,
+    const credentialEmail = await sendStaffVerification(row, ({ to, code }) => sendAccountCredentialsEmail({
+      to,
+      verificationCode: code,
       fullName: `${fname} ${lname}`,
       accountType: `${normalizeRole(role)} staff account`,
       accountId: row.id,
-      requiresActivation: true,
+      requiresActivation: status !== "Active",
       username: email,
       password,
-    });
+    }));
 
     await writeAuditLog(req, `Create Staff Account`, {
       details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${row.id}, Role: ${normalizeRole(role)}, Section: ${section}, Office: ${officeId || "Global"})`,

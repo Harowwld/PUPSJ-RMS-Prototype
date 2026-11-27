@@ -1459,6 +1459,11 @@ export default function RecordsArchiveTab({
         onPreviewDocument={onPreviewDocument}
         onRescan={onRescan}
         onEditStudent={handleEditRecord}
+        onOdrsEmailSaved={(studentNo, odrsEmail) => {
+          setActiveStudent((current) => current?.studentNo === studentNo ? { ...current, odrsEmail } : current)
+          setSelectedStudent((current) => current?.studentNo === studentNo ? { ...current, odrsEmail } : current)
+          setBrowseVersion((version) => version + 1)
+        }}
         onArchiveStudent={handleArchiveRecord}
         onRestoreStudent={async (sn) => {
           const target = browsePage.rows.find((s) => (s.studentNo || s.id) === sn) || activeStudent
@@ -1495,6 +1500,7 @@ export default function RecordsArchiveTab({
                 const formatted = {
                   studentNo: updated.student_no,
                   name: updated.name,
+                  odrsEmail: updated.odrsEmail,
                   courseCode: updated.course_code,
                   yearLevel: updated.year_level,
                   section: updated.section,
@@ -1510,7 +1516,7 @@ export default function RecordsArchiveTab({
           }
         }}
         showToast={showToast}
-        authUser={authUser}
+        collectOdrsEmail={(authUser?.office_id || authUser?.officeId) === "registrar"}
       />
 
       {/* Edit Organization Modal (OSAS) */}

@@ -9,7 +9,6 @@ import {
   signupEmail,
   StudentSignupError,
   validateStudentSignupDetails,
-  verifySignupChallenge,
 } from "@/lib/studentSignup";
 
 export const runtime = "nodejs";
@@ -34,22 +33,18 @@ export async function POST(req) {
         || req.headers.get("x-real-ip")?.trim() || req.ip || "unknown";
       const limit = await getRateLimiter().checkRateLimit("student_signup_email", `ip:${ip}`, { ipAddress: ip });
       if (!limit.allowed) throw new StudentSignupError("Too many verification emails requested. Try again later.", 429);
-      return NextResponse.json({ ok: true, data: await sendSignupChallenge(email, body.setupToken) });
+      return NextResponse.json({ ok: true, data: await sendSignupChallenge(email) });
     }
-    if (action === "verify") {
-      step = "verify";
-      return NextResponse.json({ ok: true, data: await verifySignupChallenge(email, body.challengeId, body.code) });
-    }
-    if (action !== "complete") throw new StudentSignupError("Invalid registration step.");
+    if (action !== "verify") throw new StudentSignupError("Invalid registration step.");
 
-    step = "complete";
+    step = "verify";
     const student = await completeStudentSignup(email, body);
     step = "sign-in";
     await writeGlobalAuditLog(req, "Student account registered", {
       actor: student.name || String(student.id),
       actor_id: String(student.id),
       role: "Student",
-      details: "Verified email and completed student account setup",
+      details: "Verified email and created a student portal account",
       entity_type: "student_account",
       entity_id: String(student.id),
     });

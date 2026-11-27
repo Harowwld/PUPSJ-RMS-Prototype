@@ -2,8 +2,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { isFutureManilaCalendarDate } from "@/lib/timeFormat";
 import { query, queryOne, transaction } from "@/lib/postgres";
-import { requireStudent, createAuthErrorResponse } from "@/lib/authHelpers";
+import { requireCurrentStudent, createAuthErrorResponse } from "@/lib/authHelpers";
 import { canAccessResource } from "@/lib/resourceAuthorization";
 import { writeGlobalAuditLog } from "@/lib/auditLogRequest";
 import { FILE_SECURITY_HEADERS } from "@/lib/fileSecurityHeaders";
@@ -56,7 +57,7 @@ async function synthesizeFallbackPdf(proposal) {
 }
 
 export async function GET(req, ctx) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   }
@@ -181,7 +182,7 @@ export async function GET(req, ctx) {
 }
 
 export async function POST(req, ctx) {
-  const access = await requireStudent(req);
+  const access = await requireCurrentStudent(req);
   if (access.error || !access.user) {
     return createAuthErrorResponse(access.error || "Student authentication required", access.error?.startsWith("Access denied") ? 403 : 401);
   }
@@ -213,9 +214,8 @@ export async function POST(req, ctx) {
   if (file.size <= 0 || file.size > 26214400) {
     return NextResponse.json({ ok: false, error: "The revised PDF must be between 1 byte and 25 MB." }, { status: 400 });
   }
-  const parsedEventDate = new Date(`${eventDate}T00:00:00.000Z`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || Number.isNaN(parsedEventDate.getTime()) || parsedEventDate.toISOString().slice(0, 10) !== eventDate) {
-    return NextResponse.json({ ok: false, error: "Event date must be a valid calendar date in YYYY-MM-DD format." }, { status: 400 });
+  if (!isFutureManilaCalendarDate(eventDate)) {
+    return NextResponse.json({ ok: false, error: "Select a valid event date after today (Manila time)." }, { status: 400 });
   }
 
   const studentEmail = access.user.email || "";

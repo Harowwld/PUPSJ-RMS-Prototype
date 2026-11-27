@@ -1,5 +1,10 @@
 "use client";
+
+import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference";
 import TablePagination from "@/components/shared/TablePagination";
+import CopyButton from "@/components/shared/CopyButton";
+import SheetSectionHeading from "@/components/shared/SheetSectionHeading";
 import SheetPagination from "@/components/shared/SheetPagination";
 import { PDF_ACTION_LABELS } from "@/lib/pdfPreview";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,23 +13,22 @@ import { Textarea } from "@/components/ui/textarea";
 import useUrlPage from "@/hooks/useUrlPage";
 import { useCallback, useEffect, useState, useMemo, useRef, Suspense, Fragment } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence, motion, useIsPresent } from "framer-motion";
+import { EASE_OUT, useAppReducedMotion } from "@/lib/motion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import OsasOrganizationSwitcher, { OrganizationAvatar, organizationName } from "@/components/student/OsasOrganizationSwitcher";
 import { toast } from "sonner";
 import { formatErrorMessage } from "@/lib/errorUtils";
 import Sidebar from "@/components/shared/Sidebar";
+import ProfileAvatar from "@/components/shared/ProfileAvatar";
 import MyActivityPanel from "@/components/shared/MyActivityPanel";
 import AccountSettingsPanel from "@/components/shared/AccountSettingsPanel";
 import { useLayoutZoom } from "@/hooks/useLayoutZoom";
-import { formatPHDateTime, formatRelativeTime } from "@/lib/timeFormat";
+import { formatManilaCalendarDate, formatPHDateTime, formatRelativeTime, isFutureManilaCalendarDate, isInManilaDateRange } from "@/lib/timeFormat";
 import { Card } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -37,8 +41,8 @@ import {
 import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { getClientSession } from "@/lib/clientAuth";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
+import { getClientSession, invalidateClientSession } from "@/lib/clientAuth";
 import { canAccessPage } from "@/lib/roleUtils";
 import { PhoneSchema, StudentNoSchema } from "@/lib/validationSchemas";
 import {
@@ -66,8 +70,12 @@ import {
   StudentRequestsPaginationSkeleton,
   StudentOsasProposalsListSkeleton,
 } from "@/components/student/skeletons";
+import MissingDocumentsInquiryDialog from "@/components/student/MissingDocumentsInquiryDialog";
+import PortalAccountSetupDialog from "@/components/student/PortalAccountSetupDialog";
 import StudentComplianceTab from "@/components/student/StudentComplianceTab";
 import StudentOverviewTab from "@/components/student/StudentOverviewTab";
+import RequestFeedbackCard, { RequestFeedbackBackdrop } from "@/components/student/RequestFeedbackCard";
+import feedbackStyles from "@/components/student/RequestFeedbackCard.module.css";
 import StudentFeedbackModal from "@/components/student/StudentFeedbackModal";
 import StudentSidebarFeedbackCard from "@/components/student/StudentSidebarFeedbackCard";
 import NarrativeText from "@/components/shared/NarrativeText";
@@ -89,8 +97,8 @@ import FileAttachmentDropzone, { AttachedFileCard } from "@/components/shared/Fi
 import DataViewToolbar from "@/components/shared/DataViewToolbar";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { getListDensityClasses } from "@/lib/tablePresentation";
-import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, CovidInfoIcon, Download01Icon, Loading01Icon, Shield01Icon, StarIcon, Tick01Icon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
-import { getRequestAffiliation, hasLinkedStudentRecord, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
+import { BookOpen01Icon as EmptyBookOpen01Icon, ClipboardIcon as EmptyClipboardIcon, File02Icon as EmptyFile02Icon, InboxIcon as EmptyInboxIcon, Search01Icon as EmptySearch01Icon, AddCircleIcon, Alert01Icon, ArrowDown01Icon, ArrowUpRight01Icon, Attachment01Icon, BookBookmark01Icon, Building01Icon, Calendar01Icon, CalendarCheckIn01Icon, Cancel01Icon, Download01Icon, Loading01Icon, Shield01Icon, StarIcon, Time01Icon, ViewIcon, Search01Icon, ClipboardIcon, File02Icon, BookOpen01Icon } from "hugeicons-react";
+import { getRequestAffiliation, STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import AppIcon from "@/components/ui/app-icon";
 const RATING_LABELS = {
   1: "Poor",
@@ -124,7 +132,7 @@ function formatProposalEventDate(value) {
   return date ? format(date, "MMM d, yyyy") : "To Be Announced";
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, compact = false }) {
   const s = String(status || "").toLowerCase().trim();
   let palette = BADGE_PALETTES.gray;
   let label = status;
@@ -180,7 +188,7 @@ function StatusBadge({ status }) {
   }
 
   return (
-    <span className={cn(BADGE_BASE, palette)}>
+    <span className={cn(compact ? COMPACT_BADGE_BASE : BADGE_BASE, palette)}>
       {label}
     </span>
   );
@@ -200,7 +208,7 @@ function InfoRow({ icon, label, value, children, className }) {
     >
       <div className="text-gray-500 dark:text-zinc-400 font-medium flex items-center gap-2 truncate">
         {icon && (
-          <AppIcon className={cn("text-gray-400 dark:text-zinc-500 text-sm shrink-0", icon)} />
+          <AppIcon icon={icon} aria-hidden="true" className="text-gray-400 dark:text-zinc-500 text-sm shrink-0" />
         )}
         <span className="truncate">{label}</span>
       </div>
@@ -212,10 +220,93 @@ function InfoRow({ icon, label, value, children, className }) {
   );
 }
 
+function SheetReferenceRow({ label, reference, icon = "IdIcon" }) {
+  return (
+    <InfoRow icon={icon} label={label}>
+      {reference && (
+        <div className="flex items-center gap-2">
+          <span className="tabular-nums">{reference}</span>
+          <CopyButton iconOnly variant="ghost" entityName={label} textToCopy={reference} />
+        </div>
+      )}
+    </InfoRow>
+  );
+}
+
+function SheetUpdateCount({ count }) {
+  return (
+    <Badge variant="gray" size="compact" className="tabular-nums">
+      <Time01Icon size={12} aria-hidden="true" />
+      {count} {count === 1 ? "update" : "updates"}
+    </Badge>
+  );
+}
+
+const PROPOSAL_STATUS_NOTICES = {
+  Approved: { title: "Proposal Approved", message: "OSAS has cleared your event proposal." },
+  "Needs Revision": { title: "Revision Required", message: "Review the evaluator notes and upload a revised proposal." },
+  Declined: { title: "Proposal Declined", message: "OSAS did not approve this event proposal." },
+};
+
+function CampusStatusNotice({ title, children, onDismiss, imageSizes = "(max-width: 640px) 100vw, 576px" }) {
+  return (
+    <div className={cn(feedbackStyles.card, "relative isolate flex shrink-0 items-center justify-between gap-3 overflow-hidden px-6 py-1.5 text-xs leading-relaxed text-white")}>
+      <RequestFeedbackBackdrop sizes={imageSizes} />
+      <div className="min-w-0">
+        <strong className="font-semibold">{title}</strong>
+        <span className="text-white/85"> · {children}</span>
+      </div>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-white/85 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+          aria-label="Dismiss notice"
+          title="Dismiss notice"
+        >
+          <Cancel01Icon size={14} aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ExpandablePanel({ children, reduceMotion, contentClassName = "border-b border-border" }) {
+  const isPresent = useIsPresent();
+
+  return (
+    <motion.div
+      inert={!isPresent}
+      initial={reduceMotion ? false : { height: 0, opacity: 0, overflow: "hidden" }}
+      animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+      exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+      transition={{ duration: reduceMotion ? 0 : 0.22, ease: EASE_OUT }}
+      className="bg-gray-50/40 dark:bg-zinc-900/20"
+    >
+      <div className={contentClassName}>{children}</div>
+    </motion.div>
+  );
+}
+
+function StudentHistoryLoadError({ title, onRetry, loading }) {
+  return (
+    <EmptyState
+      icon={Alert01Icon}
+      title={title}
+      description="Try loading the history again."
+    >
+      <Button variant="outline" size="sm" onClick={onRetry} disabled={loading}>
+        Try Again
+      </Button>
+    </EmptyState>
+  );
+}
+
 function StudentDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [me, setMe] = useState(null);
+  const reduceMotion = useAppReducedMotion(me?.id);
   const authUser = me;
 
   useEffect(() => {
@@ -240,7 +331,10 @@ function StudentDashboard() {
   }, []);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [data, setData] = useState({ requests: [], documents: [], proposals: [] });
+  const [requestLoadFailed, setRequestLoadFailed] = useState(false);
+  const [proposalLoadFailed, setProposalLoadFailed] = useState(false);
+  const [postEventLoadFailed, setPostEventLoadFailed] = useState(false);
+  const [data, setData] = useState({ requests: [], proposals: [] });
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [requestForm, setRequestForm] = useState({
@@ -256,11 +350,16 @@ function StudentDashboard() {
   });
   const [proposalForm, setProposalForm] = useState({ title: "", eventDate: "", file: null });
   const [eventDatePickerOpen, setEventDatePickerOpen] = useState(false);
+  const proposalToday = formatManilaCalendarDate(new Date());
+  const proposalDateInvalid = Boolean(proposalForm.eventDate) && proposalForm.eventDate <= proposalToday;
   const [revisionTargetProposal, setRevisionTargetProposal] = useState(null);
   const [myOrganizations, setMyOrganizations] = useState([]);
   const [selectedOsasOrgId, setSelectedOsasOrgId] = useState("");
-  const [view, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
+  const [requestedView, setView] = useState(() => normalizeStudentTab(searchParams?.get("view")) || "overview");
   const isParentAccount = me?.client_type === "Parent";
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const canUseStudentModules = me?.client_type === "Student" && me.portal_setup_complete !== false;
+  const view = me && !canUseStudentModules && ["compliance", "osas"].includes(requestedView) ? "odrs" : requestedView;
   const [complianceData, setComplianceData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
@@ -275,8 +374,8 @@ function StudentDashboard() {
     status: [],
     doc_type: [],
   });
-  const [requestFilterRules, setRequestFilterRules] = useState([]);
-  const [requestGroupBy, setRequestGroupBy] = useState("none");
+  const [requestFilterRules, setRequestFilterRules] = useWorkspaceViewPreference("student_requests", "filterRules", [], { user: me });
+  const [requestGroupBy, setRequestGroupBy] = useWorkspaceViewPreference("student_requests", "groupBy", "none", { user: me });
   const { density } = useTablePreferences();
   const requestListDensity = getListDensityClasses(density);
   const [collapsedRequestGroups, setCollapsedRequestGroups] = useState({});
@@ -285,8 +384,8 @@ function StudentDashboard() {
   };
   const [requestStartDate, setRequestStartDate] = useState("");
   const [requestEndDate, setRequestEndDate] = useState("");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("DESC");
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("student_requests", "sortBy", "created_at", { user: me });
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("student_requests", "sortOrder", "DESC", { user: me });
   const [currentPage, setCurrentPage] = useUrlPage({ enabled: view === "odrs" });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedRequestForDetail, setSelectedRequestForDetail] = useState(null);
@@ -295,28 +394,28 @@ function StudentDashboard() {
   const [selectedCblVersionForDetail, setSelectedCblVersionForDetail] = useState(null);
 
   // Proposals Table & Filter state
-  const [proposalFilterRules, setProposalFilterRules] = useState([]);
-  const [proposalSortBy, setProposalSortBy] = useState("created_at");
-  const [proposalSortOrder, setProposalSortOrder] = useState("DESC");
-  const [proposalGroupBy, setProposalGroupBy] = useState("none");
+  const [proposalFilterRules, setProposalFilterRules] = useWorkspaceViewPreference("student_proposals", "filterRules", [], { user: me });
+  const [proposalSortBy, setProposalSortBy] = useWorkspaceViewPreference("student_proposals", "sortBy", "created_at", { user: me });
+  const [proposalSortOrder, setProposalSortOrder] = useWorkspaceViewPreference("student_proposals", "sortOrder", "DESC", { user: me });
+  const [proposalGroupBy, setProposalGroupBy] = useWorkspaceViewPreference("student_proposals", "groupBy", "none", { user: me });
   const [proposalStartDate, setProposalStartDate] = useState("");
   const [proposalEndDate, setProposalEndDate] = useState("");
 
   // Post-Event Reports Table & Filter state
   const [postEventSearch, setPostEventSearch] = useState("");
-  const [postEventFilterRules, setPostEventFilterRules] = useState([]);
-  const [postEventSortBy, setPostEventSortBy] = useState("created_at");
-  const [postEventSortOrder, setPostEventSortOrder] = useState("DESC");
-  const [postEventGroupBy, setPostEventGroupBy] = useState("none");
+  const [postEventFilterRules, setPostEventFilterRules] = useWorkspaceViewPreference("student_post_events", "filterRules", [], { user: me });
+  const [postEventSortBy, setPostEventSortBy] = useWorkspaceViewPreference("student_post_events", "sortBy", "created_at", { user: me });
+  const [postEventSortOrder, setPostEventSortOrder] = useWorkspaceViewPreference("student_post_events", "sortOrder", "DESC", { user: me });
+  const [postEventGroupBy, setPostEventGroupBy] = useWorkspaceViewPreference("student_post_events", "groupBy", "none", { user: me });
   const [postEventStartDate, setPostEventStartDate] = useState("");
   const [postEventEndDate, setPostEventEndDate] = useState("");
 
   // CBL Versions Table & Filter state
   const [cblSearch, setCblSearch] = useState("");
-  const [cblFilterRules, setCblFilterRules] = useState([]);
-  const [cblSortBy, setCblSortBy] = useState("created_at");
-  const [cblSortOrder, setCblSortOrder] = useState("DESC");
-  const [cblGroupBy, setCblGroupBy] = useState("none");
+  const [cblFilterRules, setCblFilterRules] = useWorkspaceViewPreference("student_cbl", "filterRules", [], { user: me });
+  const [cblSortBy, setCblSortBy] = useWorkspaceViewPreference("student_cbl", "sortBy", "created_at", { user: me });
+  const [cblSortOrder, setCblSortOrder] = useWorkspaceViewPreference("student_cbl", "sortOrder", "DESC", { user: me });
+  const [cblGroupBy, setCblGroupBy] = useWorkspaceViewPreference("student_cbl", "groupBy", "none", { user: me });
   const [cblStartDate, setCblStartDate] = useState("");
   const [cblEndDate, setCblEndDate] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(true);
@@ -352,9 +451,18 @@ function StudentDashboard() {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [feedbackRequest, setFeedbackRequest] = useState(null);
   const [feedbackInitialRating, setFeedbackInitialRating] = useState(0);
+  const [feedbackMinimized, setFeedbackMinimized] = useWorkspaceViewPreference("student_requests", "feedbackMinimized", false, { user: me });
+  const canRateSelectedRequest = !selectedRequestForDetail?.feedback
+    && ["Ready", "Completed"].includes(selectedRequestForDetail?.status);
+
+  function rateSelectedRequest() {
+    setFeedbackRequest(selectedRequestForDetail);
+    setFeedbackInitialRating(0);
+    setFeedbackModalOpen(true);
+  }
 
   // OSAS Multi-Stream Governance States
-  const [osasSubView, setOsasSubView] = useState("proposals"); // "proposals" | "post_event"
+  const [osasSubView, setOsasSubView] = useWorkspaceViewPreference("student_osas", "activeStream", "proposals", { user: me });
   const [postEventReports, setPostEventReports] = useState([]);
   const [pendingPostEvents, setPendingPostEvents] = useState([]);
   const [postEventForm, setPostEventForm] = useState({
@@ -370,6 +478,8 @@ function StudentDashboard() {
   const [cblVersions, setCblVersions] = useState([]);
   const [cblOrgData, setCblOrgData] = useState(null);
   const [cblLoading, setCblLoading] = useState(false);
+  const [cblLoadFailed, setCblLoadFailed] = useState(false);
+  const cblLoadRequest = useRef(0);
   const [cblForm, setCblForm] = useState({
     versionTag: "",
     amendmentSummary: "",
@@ -399,6 +509,10 @@ function StudentDashboard() {
     [pendingPostEvents, selectedOsasOrgId]
   );
   const selectedProposalStatus = normalizeProposalStatus(selectedProposalForDetail?.status);
+  const proposalNotice = PROPOSAL_STATUS_NOTICES[selectedProposalStatus] ?? {
+    title: "Under OSAS Evaluation",
+    message: "OSAS is reviewing your proposal.",
+  };
 
   // Filter state for OSAS Event Proposals
   const [proposalSearch, setProposalSearch] = useState("");
@@ -424,7 +538,9 @@ function StudentDashboard() {
     setProposalFilterRules((prev) => prev.filter((rule) => rule.fieldKey !== "organization"));
     setPostEventFilterRules((prev) => prev.filter((rule) => rule.fieldKey !== "organization"));
     setSelectedPostEventReportForDetail(null);
+    cblLoadRequest.current += 1;
     setCblLoading(true);
+    setCblLoadFailed(false);
     setCblOrgData(null);
     setCblVersions([]);
     setSelectedCblVersionForDetail(null);
@@ -593,12 +709,21 @@ function StudentDashboard() {
   ], []);
 
   const hasActiveFilters =
-    requestSearch !== "" ||
+    requestSearch.trim() !== "" ||
     (requestFilters.status?.length > 0) ||
     (requestFilters.doc_type?.length > 0) ||
     requestFilterRules.length > 0 ||
     Boolean(requestStartDate) ||
     Boolean(requestEndDate);
+
+  const clearRequestFilters = () => {
+    setRequestSearch("");
+    setRequestFilters({ status: [], doc_type: [] });
+    setRequestFilterRules([]);
+    setRequestStartDate("");
+    setRequestEndDate("");
+    setCurrentPage(1);
+  };
 
   const requestFilterGroups = useMemo(() => {
     const reqs = data.requests || [];
@@ -774,19 +899,7 @@ function StudentDashboard() {
         }
       }
 
-      if (requestStartDate) {
-        const s = new Date(requestStartDate).getTime();
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (requestEndDate) {
-        const e = new Date(requestEndDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
+      return isInManilaDateRange(item.created_at, requestStartDate, requestEndDate);
     });
   }, [data.requests, requestSearch, requestFilters, requestFilterRules, requestStartDate, requestEndDate]);
 
@@ -811,7 +924,7 @@ function StudentDashboard() {
       });
     }
     return chips;
-  }, [requestFilterRules, requestFilterFields, requestStartDate, requestEndDate]);
+  }, [requestFilterRules, requestFilterFields, requestStartDate, requestEndDate, setRequestFilterRules]);
 
   const filteredProposals = useMemo(() => {
     const q = (proposalSearch || "").trim().toLowerCase();
@@ -851,19 +964,7 @@ function StudentDashboard() {
         }
       }
 
-      if (proposalStartDate) {
-        const s = new Date(proposalStartDate).getTime();
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (proposalEndDate) {
-        const e = new Date(proposalEndDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
+      return isInManilaDateRange(item.created_at, proposalStartDate, proposalEndDate);
     });
   }, [organizationProposals, proposalSearch, proposalFilters, proposalFilterRules, proposalStartDate, proposalEndDate]);
 
@@ -888,7 +989,7 @@ function StudentDashboard() {
       });
     }
     return chips;
-  }, [proposalFilterRules, proposalFilterFields, proposalStartDate, proposalEndDate]);
+  }, [proposalFilterRules, proposalFilterFields, proposalStartDate, proposalEndDate, setProposalFilterRules]);
 
   const sortedProposals = useMemo(() => {
     return [...filteredProposals].sort((a, b) => {
@@ -951,19 +1052,7 @@ function StudentDashboard() {
         }
       }
 
-      if (postEventStartDate) {
-        const s = new Date(postEventStartDate).getTime();
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (postEventEndDate) {
-        const e = new Date(postEventEndDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
+      return isInManilaDateRange(item.created_at, postEventStartDate, postEventEndDate);
     });
   }, [organizationPostEventReports, postEventSearch, postEventFilterRules, postEventStartDate, postEventEndDate]);
 
@@ -988,7 +1077,7 @@ function StudentDashboard() {
       });
     }
     return chips;
-  }, [postEventFilterRules, postEventFilterFields, postEventStartDate, postEventEndDate]);
+  }, [postEventFilterRules, postEventFilterFields, postEventStartDate, postEventEndDate, setPostEventFilterRules]);
 
   const sortedPostEventReports = useMemo(() => {
     return [...filteredPostEventReports].sort((a, b) => {
@@ -1053,19 +1142,7 @@ function StudentDashboard() {
         }
       }
 
-      if (cblStartDate) {
-        const s = new Date(cblStartDate).getTime();
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (cblEndDate) {
-        const e = new Date(cblEndDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = item.created_at ? new Date(item.created_at).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
+      return isInManilaDateRange(item.created_at, cblStartDate, cblEndDate);
     });
   }, [cblVersions, cblSearch, cblFilterRules, cblStartDate, cblEndDate]);
 
@@ -1090,7 +1167,7 @@ function StudentDashboard() {
       });
     }
     return chips;
-  }, [cblFilterRules, cblFilterFields, cblStartDate, cblEndDate]);
+  }, [cblFilterRules, cblFilterFields, cblStartDate, cblEndDate, setCblFilterRules]);
 
   const sortedCblVersions = useMemo(() => {
     return [...filteredCblVersions].sort((a, b) => {
@@ -1189,6 +1266,9 @@ function StudentDashboard() {
     [totalPages, setCurrentPage]
   );
 
+  const selectedRequestReference = selectedRequestForDetail?.id != null
+    ? `REQ-${selectedRequestForDetail.id}`
+    : null;
   const currentRequestDetailIndex = selectedRequestForDetail
     ? sortedRequests.findIndex((r) => r.id === selectedRequestForDetail.id)
     : -1;
@@ -1307,12 +1387,13 @@ function StudentDashboard() {
   }, []);
 
   const switchView = useCallback((nextView) => {
-    const target = normalizeStudentTab(nextView) || "overview";
+    const requested = normalizeStudentTab(nextView) || "overview";
+    const target = !canUseStudentModules && ["compliance", "osas"].includes(requested) ? "odrs" : requested;
     setView(target);
     const params = new URLSearchParams();
     params.set("view", target);
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
-  }, [router]);
+  }, [router, canUseStudentModules]);
 
   // Synchronize view from switch-view events (Command Palette & deep linking)
   useEffect(() => {
@@ -1331,9 +1412,13 @@ function StudentDashboard() {
     const tab = normalizeStudentTab(searchParams?.get("view"));
     const prefTab = normalizeStudentTab(authUser?.preferences?.default_home_view);
     const target = tab || prefTab || "overview";
-    const timer = setTimeout(() => setView(target), 0);
+    const restricted = me && !canUseStudentModules && ["compliance", "osas"].includes(target);
+    const timer = setTimeout(() => {
+      if (restricted) router.replace("/student?view=odrs", { scroll: false });
+      setView(restricted ? "odrs" : target);
+    }, 0);
     return () => clearTimeout(timer);
-  }, [searchParams, router, authUser?.preferences?.default_home_view]);
+  }, [searchParams, router, authUser?.preferences?.default_home_view, me, canUseStudentModules]);
 
   const load = useCallback(async () => {
     try {
@@ -1348,43 +1433,35 @@ function StudentDashboard() {
         return;
       }
       setMe(session.data);
-      const linkedStudent = hasLinkedStudentRecord(session.data);
       setRequestForm((prev) => ({
         ...prev,
         clientType: session.data.client_type || "Student",
         studentNo: prev.studentNo || (session.data.client_type === "Parent" ? "" : session.data.student_no) || "",
       }));
-      const [requestRes, proposalRes, typesRes, coursesRes, orgsRes, postEventRes, complianceRes] = await Promise.all([
-        fetch("/api/student/document-requests", { cache: "no-store" }),
-        fetch("/api/student/event-proposals", { cache: "no-store" }),
-        fetch("/api/doc-types?scope=requestable", { cache: "no-store" }),
-        fetch("/api/courses", { cache: "no-store" }),
-        fetch("/api/student/organizations", { cache: "no-store" }),
-        fetch("/api/student/post-event-reports", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })),
-        linkedStudent ? fetch("/api/student/compliance", { cache: "no-store" }).catch(() => ({ ok: false, json: async () => ({}) })) : null,
-      ]);
-      const parseJsonSafe = async (res) => {
-        if (!res) return {};
+      const studentModules = session.data.client_type === "Student" && session.data.portal_setup_complete !== false;
+      const fetchDashboardData = async (url) => {
         try {
-          return await res.json();
+          const response = await fetch(url, { cache: "no-store" });
+          return response.ok ? await response.json() : null;
         } catch {
-          return { ok: false, error: res.statusText ? `Server returned ${res.status} (${res.statusText})` : `Server error (${res.status})` };
+          return null;
         }
       };
-
       const [requestJson, proposalJson, typesJson, coursesJson, orgsJson, postEventJson, complianceJson] = await Promise.all([
-        parseJsonSafe(requestRes),
-        parseJsonSafe(proposalRes),
-        parseJsonSafe(typesRes),
-        parseJsonSafe(coursesRes),
-        parseJsonSafe(orgsRes),
-        postEventRes?.ok ? parseJsonSafe(postEventRes) : {},
-        complianceRes?.ok ? parseJsonSafe(complianceRes) : {},
+        fetchDashboardData("/api/student/document-requests"),
+        studentModules ? fetchDashboardData("/api/student/event-proposals") : null,
+        fetchDashboardData("/api/doc-types?scope=requestable"),
+        fetchDashboardData("/api/courses"),
+        studentModules ? fetchDashboardData("/api/student/organizations") : null,
+        studentModules ? fetchDashboardData("/api/student/post-event-reports") : null,
+        studentModules ? fetchDashboardData("/api/student/compliance") : null,
       ]);
-      if (!requestRes.ok || !requestJson?.ok || !proposalRes.ok || !proposalJson?.ok) {
-        throw new Error(requestJson?.error || proposalJson?.error || "Unable to load student records.");
+      const requestsLoaded = requestJson?.ok && Array.isArray(requestJson.data?.requests);
+      setRequestLoadFailed(!requestsLoaded);
+      if (!requestsLoaded) {
+        showToast("Unable to Load Document Requests", "Try refreshing your request history.", true);
       }
-      setComplianceData(complianceJson?.ok ? complianceJson.data : null);
+      setComplianceData(complianceJson?.ok && complianceJson.data?.student ? complianceJson.data : null);
       setDocTypes(Array.isArray(typesJson?.data) ? typesJson.data : []);
       setCourses(Array.isArray(coursesJson?.data) ? coursesJson.data : []);
       const loadedOrgs = Array.isArray(orgsJson?.data) ? orgsJson.data : [];
@@ -1398,14 +1475,23 @@ function StudentDashboard() {
         if (currentOrganizationIsAuthorized) return String(preferredOrganization);
         return loadedOrgs.length === 1 ? String(loadedOrgs[0].organization_id) : "";
       });
-      setPostEventReports(postEventJson?.data?.reports || []);
-      setPendingPostEvents(postEventJson?.data?.pendingEvents || []);
-      setData({ requests: requestJson?.data?.requests || [], documents: requestJson?.data?.documents || [], proposals: proposalJson?.data || [] });
+      const proposalsLoaded = proposalJson?.ok && Array.isArray(proposalJson.data);
+      const postEventsLoaded = postEventJson?.ok && Array.isArray(postEventJson.data?.reports);
+      setProposalLoadFailed(studentModules && !proposalsLoaded);
+      setPostEventLoadFailed(studentModules && !postEventsLoaded);
+      if (postEventsLoaded) {
+        setPostEventReports(postEventJson.data.reports);
+        setPendingPostEvents(postEventJson.data.pendingEvents || []);
+      }
+      setData((current) => ({
+        requests: requestsLoaded ? requestJson.data.requests : current.requests,
+        proposals: proposalsLoaded ? proposalJson.data : current.proposals,
+      }));
     } finally {
       setHasLoaded(true);
       setLoading(false);
     }
-  }, [router]);
+  }, [router, showToast]);
 
   const handlePaymentProofUpload = useCallback(async (requestId, file) => {
     if (file.size > 10 * 1024 * 1024) {
@@ -1671,6 +1757,10 @@ function StudentDashboard() {
       showToast("Event Date Required", "Select the event date before submitting.", true);
       return;
     }
+    if (!isFutureManilaCalendarDate(proposalForm.eventDate)) {
+      showToast("Invalid Event Date", "Select an event date after today in Manila time.", true);
+      return;
+    }
     setProposalSubmitting(true);
     try {
       const selectedOrg = selectedOsasOrganization;
@@ -1822,18 +1912,22 @@ function StudentDashboard() {
 
   const loadCblData = useCallback(async (orgId) => {
     if (!orgId) return;
+    const request = ++cblLoadRequest.current;
     setCblLoading(true);
     try {
       const res = await fetch(`/api/student/organizations/${orgId}/bylaws`, { cache: "no-store" });
       const json = await res.json();
-      if (res.ok && json.ok) {
-        setCblOrgData(json.data?.organization || null);
-        setCblVersions(Array.isArray(json.data?.versions) ? json.data.versions : []);
+      if (!res.ok || !json?.ok || !Array.isArray(json.data?.versions)) {
+        throw new Error("Unable to load charter history.");
       }
-    } catch (err) {
-      console.error("Failed to load CBL versions:", err);
+      if (request !== cblLoadRequest.current) return;
+      setCblOrgData(json.data.organization || null);
+      setCblVersions(json.data.versions);
+      setCblLoadFailed(false);
+    } catch {
+      if (request === cblLoadRequest.current) setCblLoadFailed(true);
     } finally {
-      setCblLoading(false);
+      if (request === cblLoadRequest.current) setCblLoading(false);
     }
   }, []);
 
@@ -1898,7 +1992,7 @@ function StudentDashboard() {
 
   if (!me || (loading && !hasLoaded)) {
     const requestedView = normalizeStudentTab(searchParams?.get("view"));
-    return <StudentDashboardSkeleton view={me ? view : requestedView} />;
+    return <InitialDashboardLoader><StudentDashboardSkeleton view={me ? view : requestedView} /></InitialDashboardLoader>;
   }
 
   const readyRequestsCount = (data.requests || []).filter(
@@ -1922,6 +2016,7 @@ function StudentDashboard() {
       iconClass: " FileUploadIcon",
       badge: readyRequestsCount > 0 ? readyRequestsCount : undefined,
     },
+    ...(canUseStudentModules ? [
     {
       key: "compliance",
       label: "Document Checklist",
@@ -1935,6 +2030,7 @@ function StudentDashboard() {
       iconClass: " StudentIcon",
       badge: osasActionCount > 0 ? osasActionCount : undefined,
     },
+    ] : []),
   ];
 
   async function handleLogout() {
@@ -1944,6 +2040,20 @@ function StudentDashboard() {
 
   return (
     <TooltipProvider delayDuration={200}>
+      {inquiryOpen && ["Parent", "Alumni"].includes(me.client_type) && (
+        <MissingDocumentsInquiryDialog user={me} courses={courses} onClose={() => setInquiryOpen(false)}
+          onSubmitted={() => {
+            setInquiryOpen(false);
+            showToast("Inquiry Submitted", "Follow the Registrar’s review in Document Requests.");
+            load();
+          }} />
+      )}
+      {me.portal_setup_complete === false && (
+        <PortalAccountSetupDialog user={me} required onSave={async () => {
+          invalidateClientSession();
+          await load();
+        }} />
+      )}
       <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30">
         {/* Shared dashboard liquid-gradient background with subtle opacity */}
         <div className="liquid-container pointer-events-none opacity-20 dark:opacity-10">
@@ -1979,7 +2089,7 @@ function StudentDashboard() {
             />
           }
         />
-          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-slate-50/50 dark:bg-zinc-950/50 flex flex-col">
+          <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white dark:bg-zinc-950/50 flex flex-col">
             <div
               className="p-2 md:pl-1 flex flex-[1_0_auto] min-h-full flex-col w-full"
             >
@@ -2012,8 +2122,15 @@ function StudentDashboard() {
                   loading={loading}
                   hasLoaded={hasLoaded}
                 />
-              ) : view === "compliance" ? (
-                <StudentComplianceTab />
+              ) : view === "compliance" && canUseStudentModules ? (
+                <StudentComplianceTab
+                  authUser={me}
+                  onChecklistChange={setComplianceData}
+                  onStudentNumberSaved={(number) => {
+                    invalidateClientSession();
+                    setMe((current) => ({ ...current, checklist_student_no: number }));
+                  }}
+                />
               ) : view === "activity" ? (
                 <MyActivityPanel />
               ) : view === "settings" ? (
@@ -2057,6 +2174,9 @@ function StudentDashboard() {
                             title="Refresh Records"
                           />
                           
+                          {["Parent", "Alumni"].includes(me.client_type) && (
+                            <Button size="sm" variant="outline" onClick={() => setInquiryOpen(true)}>Check for Missing Documents</Button>
+                          )}
                           {!isFormOpen && (
                             <Button
                               type="button"
@@ -2073,255 +2193,242 @@ function StudentDashboard() {
                     />
 
                     {/* 2. Inline Non-Modal Request Form Section */}
-                    {isFormOpen && (
-                      <div className="bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
-                        {/* Dismissable duplicate ticket reminder alert attached to the line */}
-                        {!isDuplicateAlertDismissed && (
-                          <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <CovidInfoIcon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
-                              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                                Please avoid creating duplicate tickets for the same concern to help us process your request promptly.
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleDismissDuplicateAlert}
-                              className="shrink-0 p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-                              aria-label="Dismiss notice"
-                              title="Dismiss notice"
+                    <AnimatePresence initial={false}>
+                      {isFormOpen && (
+                        <ExpandablePanel key="document-request-form" reduceMotion={reduceMotion}>
+                          {!isDuplicateAlertDismissed && (
+                            <CampusStatusNotice
+                              title="Avoid Duplicate Requests"
+                              imageSizes="100vw"
+                              onDismiss={handleDismissDuplicateAlert}
                             >
-                              <Cancel01Icon size="1em" className="text-sm" />
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="p-5 sm:p-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
-                                <AddCircleIcon size="1em" className="text-xl" />
-                              </div>
-                              <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{requestForm.clientType === "Parent" ? "Request on Behalf of a Student" : "New Document Request"}</h2>
-                                <p className="text-xs text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
-                              </div>
-                            </div>
-                          </div>
-
-                        <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
-                          {/* Parent / Legal Guardian Compliance Notice */}
-                          {requestForm.clientType === "Parent" && (
-                            <div className="rounded-xl border border-amber-200/90 bg-amber-50/70 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                              <Shield01Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                              <div className="space-y-1 text-[11px] leading-relaxed">
-                                <span className="font-semibold block text-amber-950 dark:text-amber-100">
-                                  What you need for this request
-                                </span>
-                                <ul className="list-disc space-y-1 pl-4">
-                                  <li>The student’s student number</li>
-                                  <li>A signed authorization letter or Special Power of Attorney (SPA)</li>
-                                  <li>A copy of a valid government ID</li>
-                                </ul>
-                                <p>The Registrar reviews your authorization with the request.</p>
-                              </div>
-                            </div>
+                              Submit one request per concern to help the Registrar process it promptly.
+                            </CampusStatusNotice>
                           )}
 
-                          {/* Top Row: Client Type, Student Number, Academic Program, Document Type */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {/* Client Type */}
-                            <div className="min-w-0">
-                              <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Requesting as
-                              </label>
-                              <Select
-                                id="student-client-type"
-                                value={requestForm.clientType}
-                                disabled={isParentAccount}
-                                onChange={(e) => {
-                                  const clientType = e.target.value;
-                                  setRequestForm((prev) => ({
-                                    ...prev,
-                                    clientType,
-                                    studentNo: clientType === "Parent" ? "" : me?.student_no || "",
-                                    attachments: prev.attachments.filter(({ attachmentType }) =>
-                                      attachmentType !== "spa" && attachmentType !== "valid_id"
-                                    ),
-                                  }));
-                                }}
-                                className="h-10 w-full rounded-xl text-xs font-normal text-gray-800 dark:text-zinc-100 border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                              >
-                                {STUDENT_AFFILIATIONS.map(({ value, label }) => (
-                                  <option key={value} value={value}>{label}</option>
-                                ))}
-                              </Select>
-                            </div>
-
-                            {/* Student Number */}
-                            <div className="min-w-0">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  {requestForm.clientType === "Parent" ? "Student’s Student Number" : "Student Number"} {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
-                                </label>
+                          <div className="p-5 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
+                                  <AddCircleIcon size="1em" className="text-xl" />
+                                </div>
+                                <div>
+                                  <h2 className="text-[15px] font-semibold text-gray-900 dark:text-zinc-50">{requestForm.clientType === "Parent" ? "Request on Behalf of a Student" : "New Document Request"}</h2>
+                                  <p className="text-xs text-gray-500 dark:text-zinc-400">Request an academic document from the Registrar.</p>
+                                </div>
                               </div>
-                              <Input
-                                id="student-id-input"
-                                type="text"
-                                placeholder={
-                                  requestForm.clientType === "Parent"
-                                    ? "Child/Ward ID (YYYY-XXXXX-SJ-0)"
-                                    : requestForm.clientType === "Alumni"
-                                    ? "Optional if forgotten"
-                                    : "YYYY-XXXXX-SJ-0"
-                                }
-                                value={requestForm.studentNo || ""}
-                                readOnly={Boolean(me?.student_no) && requestForm.clientType !== "Parent"}
-                                onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
-                                className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                              />
                             </div>
 
-                            {/* Academic Program (Alumni only) */}
-                            {requestForm.clientType === "Alumni" && (
-                              <div className="min-w-0">
-                                <label htmlFor="student-course-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Academic Program
-                                </label>
-                                <Select
-                                  id="student-course-select"
-                                  value={requestForm.courseCode || ""}
-                                  onChange={(e) => setRequestForm({ ...requestForm, courseCode: e.target.value })}
-                                  className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                                >
-                                  <option value="">Select degree program...</option>
-                                  {courses.map((c) => (
-                                    <option key={c.code} value={c.code}>
-                                      {c.code} - {c.name}
-                                    </option>
-                                  ))}
-                                </Select>
+                          <form onSubmit={createRequest} className="flex flex-col gap-4 mt-4">
+                            {/* Parent / Legal Guardian Compliance Notice */}
+                            {requestForm.clientType === "Parent" && (
+                              <div className="rounded-xl border border-amber-200/90 bg-amber-50/70 p-3.5 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                                <Shield01Icon size="1em" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                <div className="space-y-1 text-[11px] leading-relaxed">
+                                  <span className="font-semibold block text-amber-950 dark:text-amber-100">
+                                    What you need for this request
+                                  </span>
+                                  <ul className="list-disc space-y-1 pl-4">
+                                    <li>The student’s student number</li>
+                                    <li>A signed authorization letter or Special Power of Attorney (SPA)</li>
+                                    <li>A copy of a valid government ID</li>
+                                  </ul>
+                                  <p>The Registrar reviews your authorization with the request.</p>
+                                </div>
                               </div>
                             )}
 
-                            {/* Document Type */}
-                            <div className={cn("min-w-0", requestForm.clientType === "Alumni" ? "lg:col-span-1" : "md:col-span-1 lg:col-span-2")}>
-                              <label htmlFor="student-document-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                Document Type
-                              </label>
-                              <Select
-                                id="student-document-type"
-                                value={requestForm.docType}
-                                placeholder="Select a document type"
-                                onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })}
-                                className={`h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 ${
-                                  !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
-                                }`}
-                              >
-                                {docTypes.map((type) => (
-                                  <option key={type} value={type}>
-                                    {type}
-                                  </option>
-                                ))}
-                              </Select>
-                              {docTypes.length === 0 ? (
-                                <p className="mt-1 text-xs text-amber-600">No active requestable Registrar document types are available.</p>
-                              ) : (
-                                <p className="mt-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-                                  Only university-issued credentials and certifications may be requested here.
-                                  {requestForm.clientType === "Student" && " For enrollment records, open Document Checklist."}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Parent / Legal Guardian Specific Identity Fields */}
-                          {requestForm.clientType === "Parent" && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                            {/* Top Row: Client Type, Student Number, Academic Program, Document Type */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {/* Client Type */}
                               <div className="min-w-0">
-                                <label htmlFor="parent-name-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Parent / Guardian Full Name
-                                </label>
-                                <Input
-                                  id="parent-name-input"
-                                  type="text"
-                                  placeholder="e.g. Maria Santos Dela Cruz"
-                                  value={requestForm.requesterName || ""}
-                                  onChange={(e) => setRequestForm({ ...requestForm, requesterName: e.target.value })}
-                                  required
-                                  className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
-                                />
-                              </div>
-
-                              <div className="min-w-0">
-                                <label htmlFor="parent-relationship-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Relationship to Student
+                                <label htmlFor="student-client-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Requesting as
                                 </label>
                                 <Select
-                                  id="parent-relationship-select"
-                                  value={requestForm.requesterRelationship}
-                                  onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
-                                  className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  id="student-client-type"
+                                  value={requestForm.clientType}
+                                  disabled={isParentAccount}
+                                  onChange={(e) => {
+                                    const clientType = e.target.value;
+                                    setRequestForm((prev) => ({
+                                      ...prev,
+                                      clientType,
+                                      studentNo: clientType === "Parent" ? "" : me?.student_no || "",
+                                      attachments: prev.attachments.filter(({ attachmentType }) =>
+                                        attachmentType !== "spa" && attachmentType !== "valid_id"
+                                      ),
+                                    }));
+                                  }}
+                                  className="h-10 w-full rounded-xl text-xs font-normal text-gray-800 dark:text-zinc-100 border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 >
-                                  <option value="" disabled>Select a relationship</option>
-                                  <option value="Mother">Mother</option>
-                                  <option value="Father">Father</option>
-                                  <option value="Legal Guardian">Legal Guardian</option>
-                                  <option value="Authorized Representative">Authorized Representative</option>
+                                  {STUDENT_AFFILIATIONS.map(({ value, label }) => (
+                                    <option key={value} value={value}>{label}</option>
+                                  ))}
                                 </Select>
                               </div>
 
+                              {/* Student Number */}
                               <div className="min-w-0">
-                                <label htmlFor="parent-contact-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                                  Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
-                                </label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label htmlFor="student-id-input" className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    {requestForm.clientType === "Parent" ? "Student’s Student Number" : "Student Number"} {requestForm.clientType === "Alumni" ? <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span> : ""}
+                                  </label>
+                                </div>
                                 <Input
-                                  id="parent-contact-input"
+                                  id="student-id-input"
                                   type="text"
-                                  placeholder="e.g. 0917-123-4567"
-                                  value={requestForm.requesterContact || ""}
-                                  onChange={(e) => setRequestForm({ ...requestForm, requesterContact: e.target.value })}
+                                  placeholder={
+                                    requestForm.clientType === "Parent"
+                                      ? "Child/Ward ID (YYYY-XXXXX-SJ-0)"
+                                      : requestForm.clientType === "Alumni"
+                                      ? "Optional if forgotten"
+                                      : "YYYY-XXXXX-SJ-0"
+                                  }
+                                  value={requestForm.studentNo || ""}
+                                  readOnly={Boolean(me?.student_no) && requestForm.clientType !== "Parent"}
+                                  onChange={(e) => setRequestForm({ ...requestForm, studentNo: e.target.value })}
                                   className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
                                 />
                               </div>
-                            </div>
-                          )}
 
-                          {/* Description / Purpose */}
-                          <div>
-                            <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                              Description / Purpose
-                            </label>
-                            <Textarea
-                              id="student-request-description"
-                              required
-                              rows={2}
-                              className="min-h-[72px] resize-none"
-                              placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
-                              value={requestForm.notes}
-                              minLength={5}
-                              maxLength={1000}
-                              onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
-                            />
-                          </div>
+                              {/* Academic Program (Alumni only) */}
+                              {requestForm.clientType === "Alumni" && (
+                                <div className="min-w-0">
+                                  <label htmlFor="student-course-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    Academic Program
+                                  </label>
+                                  <Select
+                                    id="student-course-select"
+                                    value={requestForm.courseCode || ""}
+                                    onChange={(e) => setRequestForm({ ...requestForm, courseCode: e.target.value })}
+                                    className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  >
+                                    <option value="">Select degree program...</option>
+                                    {courses.map((c) => (
+                                      <option key={c.code} value={c.code}>
+                                        {c.code} - {c.name}
+                                      </option>
+                                    ))}
+                                  </Select>
+                                </div>
+                              )}
 
-                          {/* Supporting Documents & Attachments Dropzone */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200 flex items-center gap-1.5">
-                                <span>Supporting Documents & Attachments</span>
-                                {requestForm.clientType === "Parent" ? (
-                                  <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">(SPA & Valid ID required)</span>
+                              {/* Document Type */}
+                              <div className={cn("min-w-0", requestForm.clientType === "Alumni" ? "lg:col-span-1" : "md:col-span-1 lg:col-span-2")}>
+                                <label htmlFor="student-document-type" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                  Document Type
+                                </label>
+                                <Select
+                                  id="student-document-type"
+                                  aria-describedby="student-document-type-help"
+                                  disabled={docTypes.length === 0}
+                                  value={requestForm.docType}
+                                  placeholder="Select a document type"
+                                  onChange={(e) => setRequestForm({ ...requestForm, docType: e.target.value })}
+                                  className={`h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80 ${
+                                    !requestForm.docType ? "text-gray-400 dark:text-zinc-500" : "text-gray-800 dark:text-zinc-100"
+                                  }`}
+                                >
+                                  {docTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                      {type}
+                                    </option>
+                                  ))}
+                                </Select>
+                                {docTypes.length === 0 ? (
+                                  <p id="student-document-type-help" className="mt-1 text-xs text-amber-700 dark:text-amber-400">No active requestable Registrar document types are available.</p>
                                 ) : (
-                                  <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  <p id="student-document-type-help" className="mt-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                                    Only university-issued credentials and certifications may be requested here.
+                                    {requestForm.clientType === "Student" && " For enrollment records, open Document Checklist."}
+                                  </p>
                                 )}
-                              </label>
-                              <span className="text-[11px] font-semibold text-pup-maroon dark:text-red-400">
-                                {requestForm.attachments.length}/5 files
-                              </span>
+                              </div>
                             </div>
 
+                            {/* Parent / Legal Guardian Specific Identity Fields */}
+                            {requestForm.clientType === "Parent" && (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                                <div className="min-w-0">
+                                  <label htmlFor="parent-name-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    Parent / Guardian Full Name
+                                  </label>
+                                  <Input
+                                    id="parent-name-input"
+                                    type="text"
+                                    placeholder="e.g. Maria Santos Dela Cruz"
+                                    value={requestForm.requesterName || ""}
+                                    onChange={(e) => setRequestForm({ ...requestForm, requesterName: e.target.value })}
+                                    required
+                                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <label htmlFor="parent-relationship-select" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    Relationship to Student
+                                  </label>
+                                  <Select
+                                    id="parent-relationship-select"
+                                    value={requestForm.requesterRelationship}
+                                    onChange={(e) => setRequestForm({ ...requestForm, requesterRelationship: e.target.value })}
+                                    className="h-10 w-full rounded-xl text-xs font-normal border border-border dark:border-border bg-white dark:bg-zinc-800 shadow-none text-gray-800 dark:text-zinc-100 focus-visible:outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  >
+                                    <option value="" disabled>Select a relationship</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Legal Guardian">Legal Guardian</option>
+                                    <option value="Authorized Representative">Authorized Representative</option>
+                                  </Select>
+                                </div>
+
+                                <div className="min-w-0">
+                                  <label htmlFor="parent-contact-input" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                    Contact / Mobile Number <span className="text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  </label>
+                                  <Input
+                                    id="parent-contact-input"
+                                    type="text"
+                                    placeholder="e.g. 0917-123-4567"
+                                    value={requestForm.requesterContact || ""}
+                                    onChange={(e) => setRequestForm({ ...requestForm, requesterContact: e.target.value })}
+                                    className="h-10 w-full rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 shadow-none outline-none focus-visible:border-pup-maroon focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:border-red-500/80 dark:focus-visible:ring-red-500/80"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Description / Purpose */}
+                            <div>
+                              <label htmlFor="student-request-description" className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                                Description / Purpose
+                              </label>
+                              <Textarea
+                                id="student-request-description"
+                                required
+                                rows={2}
+                                className="min-h-[72px] resize-none"
+                                placeholder="Provide the purpose of your request (e.g. employment verification, board exam, transfer credentials, etc.)"
+                                value={requestForm.notes}
+                                minLength={5}
+                                maxLength={1000}
+                                onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                              />
+                            </div>
+
+                            {/* Supporting Documents & Attachments Dropzone */}
                             <FileAttachmentDropzone
+                              heading={
+                                <div className="text-xs font-semibold text-gray-700 dark:text-zinc-200 flex flex-wrap items-center gap-1.5">
+                                  <span>Supporting Documents & Attachments</span>
+                                  {requestForm.clientType === "Parent" ? (
+                                    <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">(SPA & Valid ID required)</span>
+                                  ) : (
+                                    <span className="text-xs text-gray-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                  )}
+                                </div>
+                              }
                               animateCards={false}
                               value={requestForm.attachments}
                               onChange={(val) => {
@@ -2357,48 +2464,48 @@ function StudentDashboard() {
                               subtitle="PDF, PNG, JPG, or WEBP up to 10MB each (max 5 files)"
                               accept=".pdf,.png,.jpg,.jpeg,.webp"
                             />
-                          </div>
 
-                          {/* Form Actions */}
-                          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-                            <span className="text-xs text-gray-500 dark:text-zinc-400">
-                              Requests are received and reviewed in order by the Registrar Office.
-                            </span>
-                            <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsFormOpen(false)}
-                                className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                              >
-                                Hide
-                              </Button>
-                              <Button
-                                type="submit"
-                                size="sm"
-                                disabled={requestSubmitting || docTypes.length === 0}
-                                title="Submit Request"
-                                className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
-                              >
-                                {requestSubmitting ? (
-                                  <>
-                                    <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
-                                    Submitting...
-                                  </>
-                                ) : (
-                                  "Submit Request"
-                                )}
-                              </Button>
+                            {/* Form Actions */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                              <span className="text-xs text-gray-500 dark:text-zinc-400">
+                                Requests are received and reviewed in order by the Registrar Office.
+                              </span>
+                              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setIsFormOpen(false)}
+                                  className="w-full sm:w-auto h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                                >
+                                  Hide
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  size="sm"
+                                  disabled={requestSubmitting || docTypes.length === 0}
+                                  title="Submit Request"
+                                  className="w-full sm:w-auto h-9 px-4 gap-2 flex items-center justify-center cursor-pointer border-0"
+                                >
+                                  {requestSubmitting ? (
+                                    <>
+                                      <Loading01Icon size="1em"  className="animate-spin text-sm"></Loading01Icon>
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    "Submit Request"
+                                  )}
+                                </Button>
+                              </div>
                             </div>
+                          </form>
                           </div>
-                        </form>
-                        </div>
-                      </div>
-                    )}
+                        </ExpandablePanel>
+                      )}
+                    </AnimatePresence>
 
                     {/* 3. Toolbar & Request History Header */}
-                    <DataViewToolbar label="Request history search and controls" className={cn("p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none", isFormOpen && "border-t border-border")}>
+                    <DataViewToolbar label="Request history search and controls" className="p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
                       {/* Left: DashboardSearch */}
                       <div className="flex min-w-0 items-center gap-2">
                         <DashboardSearch
@@ -2468,66 +2575,49 @@ function StudentDashboard() {
                     {requestActiveChips.length > 0 && (
                       <TableActiveFilterChips
                         chips={requestActiveChips}
-                        onClearAll={() => {
-                          setRequestSearch("");
-                          setRequestFilterRules([]);
-                          setRequestStartDate("");
-                          setRequestEndDate("");
-                          setCurrentPage(1);
-                        }}
+                        onClearAll={clearRequestFilters}
                         className="border-t border-border dark:border-border bg-white dark:bg-card px-6 py-2.5"
                       />
                     )}
 
                     {/* 5. Request History List / Empty State */}
-                    {hasLoaded && sortedRequests.length === 0 ? (
-                      <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full border-t border-border dark:border-border">
-                        <Empty>
-                          <EmptyHeader>
-                            <EmptyMedia>{hasActiveFilters ? <EmptySearch01Icon size="1em" /> : <EmptyInboxIcon size="1em" />}</EmptyMedia>
-                            <EmptyTitle>
-                              {hasActiveFilters ? "No Matches Found" : "No Document Requests Yet"}
-                            </EmptyTitle>
-                            <EmptyDescription>
-                              {hasActiveFilters
-                                ? "Try adjusting your search query or status filter."
-                                : "You haven't submitted any document requests yet. Click the button below to submit your first request."}
-                            </EmptyDescription>
-                          </EmptyHeader>
-                          <EmptyContent>
-                            {hasActiveFilters ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setRequestSearch("");
-                                  setRequestFilters({ status: [], doc_type: [] });
-                                  setCurrentPage(1);
-                                }}
-                                title="Reset Filters"
-                                className="flex h-9 items-center justify-center gap-2 rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
-                              >
-                                Reset Filters
-                              </Button>
-                            ) : (
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => setIsFormOpen(true)}
-                                title="Open Request Form"
-                                className="flex h-9 px-4 disabled:opacity-50 cursor-pointer border-0"
-                              >
-                                Open Request Form
-                              </Button>
-                            )}
-                          </EmptyContent>
-                        </Empty>
+                    {loading && !hasLoaded ? (
+                      <div className="w-full flex-1 border-t border-border">
+                        <StudentRequestsTableRowsSkeleton rowCount={Math.min(itemsPerPage || 6, 6)} />
                       </div>
+                    ) : requestLoadFailed && sortedRequests.length === 0 ? (
+                      <EmptyState
+                        className="border-t border-border"
+                        icon={Alert01Icon}
+                        title="Could Not Load Document Requests"
+                        description="Try loading your request history again."
+                      >
+                        <Button variant="outline" size="sm" onClick={() => load()} disabled={loading}>
+                          Try Again
+                        </Button>
+                      </EmptyState>
+                    ) : sortedRequests.length === 0 ? (
+                      <EmptyState
+                        className="border-t border-border"
+                        icon={hasActiveFilters ? EmptySearch01Icon : EmptyInboxIcon}
+                        title={hasActiveFilters ? "No Matches Found" : "No Document Requests Yet"}
+                        description={hasActiveFilters
+                          ? "Adjust your search or reset your filters."
+                          : "Your submitted document requests will appear here."}
+                      >
+                        {hasActiveFilters ? (
+                          <Button variant="outline" size="sm" onClick={clearRequestFilters}>
+                            Reset Filters
+                          </Button>
+                        ) : !isFormOpen ? (
+                          <Button size="sm" onClick={() => setIsFormOpen(true)}>
+                            Open Request Form
+                          </Button>
+                        ) : null}
+                      </EmptyState>
                     ) : (
-                      <div className="w-full flex-1 border-t border-border dark:border-border divide-y divide-border dark:divide-border bg-white dark:bg-card font-jakarta">
-                        {loading && !hasLoaded ? (
-                          <StudentRequestsTableRowsSkeleton rowCount={Math.min(itemsPerPage || 6, 6)} />
-                        ) : groupedPaginatedRequests.map((group) => {
+                      <div className="w-full flex-1 border-t border-border divide-y divide-border bg-white dark:bg-card font-jakarta">
+                        {groupedPaginatedRequests.map((group) => {
                           const isGrouped = Boolean(group.label && requestGroupBy !== "none");
                           const isCollapsed = Boolean(collapsedRequestGroups[group.key]);
 
@@ -2688,54 +2778,12 @@ function StudentDashboard() {
                     descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
                     actions={
                       <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-                        {myOrganizations.length > 1 ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                aria-label={`Choose organization. Current organization: ${selectedOsasOrganization?.organization_name || "none selected"}.`}
-                                disabled={Boolean(revisionTargetProposal)}
-                                className="group flex h-10 max-w-72 min-w-0 items-center gap-2 rounded-full border border-black/[0.06] bg-white py-1 pl-1 pr-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-white/[0.05]"
-                              >
-                                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-gray-600 dark:bg-white/[0.07] dark:text-zinc-300">
-                                  <Building01Icon size={16} />
-                                </span>
-                                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-800 dark:text-zinc-100">
-                                  {selectedOsasOrganization?.organization_name || "Choose organization"}
-                                </span>
-                                <ArrowDown01Icon size={14} className="shrink-0 text-gray-400 transition-colors group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" sideOffset={6} className="w-80">
-                              {myOrganizations.map((org) => {
-                                const isSelected = String(org.organization_id) === String(selectedOsasOrgId);
-                                return (
-                                  <DropdownMenuItem
-                                    key={org.organization_id}
-                                    onClick={() => handleOsasOrganizationChange(String(org.organization_id))}
-                                    className="min-h-12 px-2 py-2"
-                                  >
-                                    <Building01Icon size={16} className="shrink-0 text-gray-500 dark:text-zinc-400" />
-                                    <span className="flex min-w-0 flex-1 flex-col">
-                                      <span className="truncate">{org.organization_name}{org.acronym ? ` (${org.acronym})` : ""}</span>
-                                      <span className="truncate text-[10px] font-normal text-gray-500 dark:text-zinc-400">{org.officer_position}</span>
-                                    </span>
-                                    {isSelected && <Tick01Icon size={16} className="shrink-0 text-blue-600 dark:text-blue-300" />}
-                                  </DropdownMenuItem>
-                                );
-                              })}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : myOrganizations.length === 1 ? (
-                          <div className="flex h-10 max-w-72 min-w-0 items-center gap-2 rounded-full border border-black/[0.06] bg-white py-1 pl-1 pr-3 dark:border-white/10 dark:bg-zinc-900">
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-gray-600 dark:bg-white/[0.07] dark:text-zinc-300">
-                              <Building01Icon size={16} />
-                            </span>
-                            <span className="truncate text-xs font-semibold text-gray-800 dark:text-zinc-100">
-                              {selectedOsasOrganization?.organization_name || "Organization"}
-                            </span>
-                          </div>
-                        ) : null}
+                        <OsasOrganizationSwitcher
+                          organizations={myOrganizations}
+                          selectedOrganization={selectedOsasOrganization}
+                          onChange={handleOsasOrganizationChange}
+                          selectionLocked={Boolean(revisionTargetProposal)}
+                        />
                         <RefreshButton
                           onRefresh={async () => {
                             setRefreshing(true);
@@ -2769,14 +2817,9 @@ function StudentDashboard() {
                   />
 
                   {myOrganizations.length === 0 && (
-                    <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in transition-all">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <CovidInfoIcon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
-                        <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                          Officer authorization required: Only student officers authorized for a recognized organization may submit proposals, reports, or charter documents. Contact OSAS to authorize your account.
-                        </span>
-                      </div>
-                    </div>
+                    <CampusStatusNotice title="Officer Authorization Required" imageSizes="100vw">
+                      Contact OSAS to authorize your account before submitting on behalf of a recognized organization.
+                    </CampusStatusNotice>
                   )}
 
                   {/* OSAS Stream Switcher */}
@@ -2819,20 +2862,17 @@ function StudentDashboard() {
                     />
                   </div>
 
-                  {selectedOsasOrganization && isFormOpen && (
-                    <div
-                      role="status"
-                      className="flex w-full items-start gap-2.5 border-b border-blue-200 bg-blue-50/80 px-5 py-3 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/25 dark:text-blue-200 sm:px-6"
-                    >
-                      <Building01Icon size={16} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-300" />
-                      <p>
-                        You’re currently submitting for <span className="font-semibold">{selectedOsasOrganization.organization_name}</span>.
-                        <span className="ml-1 text-blue-800/80 dark:text-blue-200/80">
-                          New proposals, reports, and charter submissions will be associated with this organization.
-                        </span>
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {selectedOsasOrganization && isFormOpen && (
+                      <ExpandablePanel key="osas-submitting-organization" reduceMotion={reduceMotion} contentClassName="">
+                        <div role="status">
+                          <CampusStatusNotice title="Submitting For" imageSizes="100vw">
+                            {selectedOsasOrganization.organization_name}. New submissions will be filed under this organization.
+                          </CampusStatusNotice>
+                        </div>
+                      </ExpandablePanel>
+                    )}
+                  </AnimatePresence>
 
                   <ContentSwap
                     id={`osas-${osasSubView}`}
@@ -2842,8 +2882,13 @@ function StudentDashboard() {
                   {osasSubView === "proposals" && (
                     <>
                       {/* Inline Proposal Form Section */}
-                      {isFormOpen && selectedOsasOrganization && (
-                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                      <AnimatePresence initial={false}>
+                        {isFormOpen && selectedOsasOrganization && (
+                          <ExpandablePanel
+                            key="event-proposal-form"
+                            reduceMotion={reduceMotion}
+                            contentClassName="border-t border-border p-5 sm:p-6"
+                          >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -2889,6 +2934,8 @@ function StudentDashboard() {
                                       type="button"
                                       variant="outline"
                                       aria-label="Event date"
+                                      aria-describedby="osas-event-date-help"
+                                      aria-invalid={proposalDateInvalid || undefined}
                                       aria-required="true"
                                       aria-haspopup="dialog"
                                       className="h-10 w-full justify-start gap-2 rounded-xl border border-border bg-white px-3 text-left text-xs font-normal text-gray-900 shadow-none hover:bg-gray-50 dark:border-border dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
@@ -2905,15 +2952,21 @@ function StudentDashboard() {
                                     <Calendar
                                       mode="single"
                                       selected={parseDateLocal(proposalForm.eventDate)}
-                                      defaultMonth={parseDateLocal(proposalForm.eventDate)}
+                                      defaultMonth={parseDateLocal(!proposalDateInvalid && proposalForm.eventDate ? proposalForm.eventDate : proposalToday)}
+                                      today={parseDateLocal(proposalToday)}
+                                      disabled={(date) => formatDateIso(date) <= proposalToday}
                                       onSelect={(date) => {
-                                        if (!date) return;
-                                        setProposalForm((current) => ({ ...current, eventDate: formatDateIso(date) }));
+                                        const eventDate = formatDateIso(date);
+                                        if (!isFutureManilaCalendarDate(eventDate)) return;
+                                        setProposalForm((current) => ({ ...current, eventDate }));
                                         setEventDatePickerOpen(false);
                                       }}
                                     />
                                   </PopoverContent>
                                 </Popover>
+                                <p id="osas-event-date-help" className={cn("mt-1.5 text-[11px]", proposalDateInvalid ? "text-destructive" : "text-muted-foreground")}>
+                                  Select a date after today (Manila time).
+                                </p>
                               </div>
                             </div>
 
@@ -2966,8 +3019,9 @@ function StudentDashboard() {
                               </div>
                             </div>
                           </form>
-                        </div>
-                      )}
+                          </ExpandablePanel>
+                        )}
+                      </AnimatePresence>
 
                       {/* Proposals History Toolbar */}
                       <DataViewToolbar label="Event proposals search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
@@ -3039,6 +3093,8 @@ function StudentDashboard() {
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
+                        ) : proposalLoadFailed && organizationProposals.length === 0 ? (
+                          <StudentHistoryLoadError title="Could Not Load Event Proposals" onRetry={() => load()} loading={loading} />
                         ) : organizationProposals.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty>
@@ -3117,6 +3173,10 @@ function StudentDashboard() {
                                 )}
                                 {group.items.map((item) => {
                                   const latestUpdate = item.updates?.[item.updates.length - 1];
+                                  const submissionUpdate = latestUpdate?.message?.match(
+                                    /^((?:Event proposal|Revised proposal \(Revision \d+\)) submitted by) (.+?) \(([^()]+)\)\.?$/i
+                                  );
+                                  const submitterName = item.student_name || me?.name || submissionUpdate?.[3] || "Student Officer";
                                   return (
                                   <article
                                     key={item.id}
@@ -3124,7 +3184,7 @@ function StudentDashboard() {
                                     className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
                                   >
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                      <h3 className="text-xs font-semibold text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                         {item.title}
                                       </h3>
                                       <div className="flex items-center gap-2">
@@ -3144,9 +3204,17 @@ function StudentDashboard() {
                                       </div>
                                     </div>
                                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                                      <p className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
-                                        {item.organization_name} · {formatProposalEventDate(item.event_date)}
-                                      </p>
+                                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                        <span className="inline-flex min-w-0 items-center gap-1.5 font-medium text-gray-700 dark:text-zinc-200">
+                                          <OrganizationAvatar organization={selectedOsasOrganization} className="size-5" />
+                                          <span className="truncate">
+                                            {selectedOsasOrganization ? organizationName(selectedOsasOrganization) : item.organization_name}
+                                          </span>
+                                        </span>
+                                        <span className="text-gray-500 dark:text-zinc-400">
+                                          · {formatProposalEventDate(item.event_date)}
+                                        </span>
+                                      </div>
                                       {item.status === "Approved" && (
                                         <div className="flex items-center gap-2">
                                           {item.post_event_status === "Cleared" ? (
@@ -3193,8 +3261,25 @@ function StudentDashboard() {
                                               <span className="text-gray-400 dark:text-zinc-500">{formatPHDateTime(latestUpdate.created_at)}</span>
                                             )}
                                           </div>
-                                          <div className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-zinc-400">
-                                            <NarrativeText text={latestUpdate.message || "Status updated by OSAS"} mode="compact" />
+                                          <div className={cn("text-xs leading-relaxed text-gray-600 dark:text-zinc-400", !submissionUpdate && "line-clamp-2")}>
+                                            {submissionUpdate ? (
+                                              <>
+                                                {submissionUpdate[1]} <strong className="font-bold">{submissionUpdate[2]}</strong>{" "}
+                                                  <span className={cn(SETTINGS_STATUS_PILL_SM, "min-w-0 max-w-full pl-0.5 align-middle font-semibold text-gray-900 dark:text-zinc-100")}>
+                                                    <ProfileAvatar
+                                                      id={me?.student_no || me?.id}
+                                                      avatarFilename={me?.avatar_filename}
+                                                      name={submitterName}
+                                                      className="size-5 shrink-0 rounded-full"
+                                                      fallbackClassName="text-[9px] font-semibold"
+                                                    />
+                                                    <span className="truncate" title={submitterName}>{submitterName}</span>
+                                                  </span>
+                                                .
+                                              </>
+                                            ) : (
+                                              <NarrativeText text={latestUpdate.message || "Status updated by OSAS"} mode="compact" />
+                                            )}
                                           </div>
                                         </div>
                                       ) : (
@@ -3229,29 +3314,23 @@ function StudentDashboard() {
                   {osasSubView === "post_event" && (
                     <div className="flex flex-col flex-[1_0_auto] min-h-0">
                       {organizationPendingPostEvents.length > 0 && !isPostEventAlertDismissed && (
-                        <div className="flex items-center justify-between gap-3 border-b border-amber-200/90 bg-amber-50/90 dark:border-amber-900/40 dark:bg-amber-950/25 px-5 sm:px-6 py-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in transition-all">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Alert01Icon size="1em" className="text-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
-                            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                              <strong className="font-semibold text-amber-950 dark:text-amber-100">Pending Post-Event Compliance:</strong> You have{" "}
-                              <strong>{organizationPendingPostEvents.length}</strong> approved event(s) requiring accomplishment narrative reports and financial liquidation.
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleDismissPostEventAlert}
-                            className="shrink-0 p-1 rounded-full text-amber-700 hover:text-amber-950 hover:bg-amber-100/80 dark:text-amber-400 dark:hover:text-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-                            aria-label="Dismiss notice"
-                            title="Dismiss notice"
-                          >
-                            <Cancel01Icon size="1em" className="text-sm" />
-                          </button>
-                        </div>
+                        <CampusStatusNotice
+                          title="Post-Event Reports Due"
+                          imageSizes="100vw"
+                          onDismiss={handleDismissPostEventAlert}
+                        >
+                          {organizationPendingPostEvents.length} approved {organizationPendingPostEvents.length === 1 ? "event requires" : "events require"} narrative and financial liquidation reports.
+                        </CampusStatusNotice>
                       )}
 
                       {/* Post-Event Submission Form */}
-                      {isFormOpen && selectedOsasOrganization && (
-                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                      <AnimatePresence initial={false}>
+                        {isFormOpen && selectedOsasOrganization && (
+                          <ExpandablePanel
+                            key="post-event-report-form"
+                            reduceMotion={reduceMotion}
+                            contentClassName="border-t border-border p-5 sm:p-6"
+                          >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -3386,8 +3465,9 @@ function StudentDashboard() {
                               </div>
                             </div>
                           </form>
-                        </div>
-                      )}
+                          </ExpandablePanel>
+                        )}
+                      </AnimatePresence>
 
                       {/* Post-Event Reports History Toolbar */}
                       <DataViewToolbar label="Post-event reports search and controls" className="border-t border-border dark:border-border p-4 sm:px-5 sm:py-3 gap-2 bg-white dark:bg-card flex flex-wrap items-center justify-between select-none">
@@ -3455,6 +3535,8 @@ function StudentDashboard() {
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
+                        ) : postEventLoadFailed && organizationPostEventReports.length === 0 ? (
+                          <StudentHistoryLoadError title="Could Not Load Post-Event Reports" onRetry={() => load()} loading={loading} />
                         ) : organizationPostEventReports.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty>
@@ -3537,7 +3619,7 @@ function StudentDashboard() {
                                     className="group rounded-xl border border-border p-4 dark:border-border hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors cursor-pointer select-none"
                                   >
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <h3 className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                      <h3 className="text-xs font-semibold text-[#111111] dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                         {report.event_title}
                                       </h3>
                                       <div className="flex items-center gap-2">
@@ -3660,8 +3742,13 @@ function StudentDashboard() {
                       )}
 
                       {/* Inline CBL Submission Form */}
-                      {isFormOpen && selectedOsasOrganization && (
-                        <div className="border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/20 animate-in fade-in slide-in-from-top-2 duration-fast">
+                      <AnimatePresence initial={false}>
+                        {isFormOpen && selectedOsasOrganization && (
+                          <ExpandablePanel
+                            key="charter-submission-form"
+                            reduceMotion={reduceMotion}
+                            contentClassName="border-t border-border p-5 sm:p-6"
+                          >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-border">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -3756,8 +3843,9 @@ function StudentDashboard() {
                               </div>
                             </div>
                           </form>
-                        </div>
-                      )}
+                          </ExpandablePanel>
+                        )}
+                      </AnimatePresence>
 
                       {/* Current Charter Status and Document */}
                       <div className={cn("border-t border-border dark:border-border p-5 sm:p-6 bg-gray-50/40 dark:bg-zinc-900/30", !selectedOsasOrganization && "hidden")}>
@@ -3769,6 +3857,8 @@ function StudentDashboard() {
                               </h3>
                               {cblLoading ? (
                                 <span className={cn(BADGE_BASE, BADGE_PALETTES.gray)}>Checking Status</span>
+                              ) : cblLoadFailed ? (
+                                <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>Status Unavailable</span>
                               ) : cblOrgData?.hasBylaws ? (
                                 <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
                                   Active & Ratified
@@ -3782,6 +3872,8 @@ function StudentDashboard() {
                             <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
                               {cblLoading
                                 ? `Checking the charter on file for ${selectedOsasOrganization?.organization_name || "this organization"}.`
+                                : cblLoadFailed
+                                ? "Could not check the charter on file."
                                 : cblOrgData?.hasBylaws
                                 ? `Official Constitution & By-Laws on file for ${cblOrgData.name}.`
                                 : `No ratified Constitution & By-Laws on file for ${cblOrgData?.name || selectedOsasOrganization?.organization_name || "this organization"}.`}
@@ -3926,6 +4018,12 @@ function StudentDashboard() {
                           <div className="p-5">
                             <StudentOsasProposalsListSkeleton count={3} />
                           </div>
+                        ) : cblLoadFailed ? (
+                          <StudentHistoryLoadError
+                            title="Could Not Load Charter History"
+                            onRetry={() => loadCblData(selectedOsasOrgId)}
+                            loading={cblLoading}
+                          />
                         ) : cblVersions.length === 0 ? (
                           <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
                             <Empty>
@@ -4101,9 +4199,7 @@ function StudentDashboard() {
           <SheetHeader className="shrink-0 p-0">
             <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
               <div>
-                <SheetTitle>
-                  Document Request Details
-                </SheetTitle>
+                <SheetTitle>Document Request Details</SheetTitle>
                 <SheetDescription className="sr-only">
                   Detailed status, documents, and updates for student request
                 </SheetDescription>
@@ -4125,277 +4221,130 @@ function StudentDashboard() {
                   />
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedRequestForDetail(null)}
-                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                  aria-label="Close"
-                  title="Close"
-                >
-                  <Cancel01Icon size="1em" className="text-sm" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRequestForDetail(null)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </SheetHeader>
 
-          {/* Line-Attached Edge-to-Edge Status Notice */}
-          <div
-            className={cn(
-              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-              selectedRequestForDetail?.status === "Ready"
-                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
-                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                : selectedRequestForDetail?.status === "Completed"
-                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
-                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-            )}
-          >
-            <AppIcon
+          {selectedRequestForDetail?.status === "Ready" ? (
+            <CampusStatusNotice title="Ready for Claiming">Pick up at Registrar Window 1.</CampusStatusNotice>
+          ) : (
+            <div
               className={cn(
-                " text-[15px] shrink-0",
-                selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed"
-                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                  : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
-                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                  : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
-                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                  : "Clock01Icon text-blue-600 dark:text-blue-400"
-              )}
-            />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">
-                {selectedRequestForDetail?.status === "Ready"
-                  ? "Ready for Claiming:"
-                  : selectedRequestForDetail?.status === "PendingPayment"
-                  ? "Payment Slip Required:"
-                  : selectedRequestForDetail?.status === "Deficient"
-                  ? "Action Required:"
+                "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
+                  ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
                   : selectedRequestForDetail?.status === "Completed"
-                  ? "Request Completed:"
-                  : selectedRequestForDetail?.status === "InProgress"
-                  ? "Processing In Progress:"
-                  : "Under Review:"}
-              </strong>{" "}
-              {selectedRequestForDetail?.status === "Ready"
-                ? "Official authenticated credential is ready for pickup at Registrar Window 1."
-                : selectedRequestForDetail?.status === "PendingPayment"
-                ? "Please upload your official receipt or payment slip below to initiate document preparation."
-                : selectedRequestForDetail?.status === "Deficient"
-                ? "Please review feedback from the Registrar to resolve requirement deficiencies."
-                : selectedRequestForDetail?.status === "Completed"
-                ? "Document was successfully claimed and recorded in University Archives."
-                : selectedRequestForDetail?.status === "InProgress"
-                ? "Registrar staff is currently preparing and authenticating your document."
-                : "Your request is queued for verification by the Office of the Campus Registrar."}
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-            {/* Request Summary Strip (Unboxed) */}
-            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
-                <File02Icon size={16}  />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
-                    Request {selectedRequestForDetail?.id}
-                  </span>
-                  <StatusBadge status={selectedRequestForDetail?.status} />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                  {selectedRequestForDetail?.doc_type}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                  Submitted on {selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"}
-                </p>
-              </div>
-            </div>
-
-            {/* Essential Request Specification (Unboxed InfoRow List) */}
-            <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Request Specification
-              </h4>
-              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="Building01Icon" label="Verifying Office" value="Office of the Campus Registrar" />
-                <InfoRow icon="Tag01Icon" label="Client Classification" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
-                {selectedRequestForDetail?.status === "Ready" && (
-                  <InfoRow icon="Door01Icon" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
+                  ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
+                  : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
+                  ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                  : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
+              )}
+            >
+              <AppIcon
+                className={cn(
+                  " text-[15px] shrink-0",
+                  selectedRequestForDetail?.status === "Completed"
+                    ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
+                    : selectedRequestForDetail?.status === "PendingPayment" || selectedRequestForDetail?.status === "Deficient"
+                    ? "Alert01Icon text-amber-600 dark:text-amber-400"
+                    : selectedRequestForDetail?.status === "Cancelled" || selectedRequestForDetail?.status === "Declined"
+                    ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
+                    : "Clock01Icon text-blue-600 dark:text-blue-400"
                 )}
+              />
+              <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                <strong className="font-semibold">
+                  {selectedRequestForDetail?.status === "PendingPayment"
+                    ? "Payment Slip Required:"
+                    : selectedRequestForDetail?.status === "Deficient"
+                    ? "Action Required:"
+                    : selectedRequestForDetail?.status === "Completed"
+                    ? "Request Completed:"
+                    : selectedRequestForDetail?.status === "InProgress"
+                    ? "Processing In Progress:"
+                    : "Under Review:"}
+                </strong>{" "}
+                {selectedRequestForDetail?.status === "PendingPayment"
+                  ? "Please upload your official receipt or payment slip below to initiate document preparation."
+                  : selectedRequestForDetail?.status === "Deficient"
+                  ? "Please review feedback from the Registrar to resolve requirement deficiencies."
+                  : selectedRequestForDetail?.status === "Completed"
+                  ? "Document was successfully claimed and recorded in University Archives."
+                  : selectedRequestForDetail?.status === "InProgress"
+                  ? "Registrar staff is currently preparing and authenticating your document."
+                  : "Your request is queued for verification by the Office of the Campus Registrar."}
+              </span>
+            </div>
+          )}
+
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6 scrollbar-thin [&>section]:shrink-0">
+            <section className="space-y-2">
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Request Information" />
+              <div>
+                <SheetReferenceRow label="Request ID" reference={selectedRequestReference} />
+                <InfoRow icon="File02Icon" label="Document Type" value={selectedRequestForDetail?.doc_type} />
+                {selectedRequestForDetail?.status && (
+                  <InfoRow icon="CheckListIcon" label="Status">
+                    <StatusBadge compact status={selectedRequestForDetail.status} />
+                  </InfoRow>
+                )}
+                <InfoRow
+                  icon="Calendar01Icon"
+                  label="Submitted On"
+                  value={selectedRequestForDetail?.created_at ? formatPHDateTime(selectedRequestForDetail.created_at) : "N/A"}
+                />
+                <InfoRow icon="Building01Icon" label="Verifying Office" value="Office of the Campus Registrar" />
+                <InfoRow icon="Tag01Icon" label="Client Type" value={selectedRequestForDetail?.client_type || "Enrolled Student"} />
                 {selectedRequestForDetail?.status === "Ready" && (
-                  <InfoRow icon="Clock01Icon" label="Window Hours" value="Mon – Fri, 8:00 AM – 5:00 PM (Bring Valid ID)" />
+                  <>
+                    <InfoRow icon="Door01Icon" label="Claiming Window" value="Window 1 — Releasing (Room 102)" />
+                    <InfoRow icon="Clock01Icon" label="Window Hours" value="Mon – Fri, 8:00 AM – 5:00 PM (Bring Valid ID)" />
+                  </>
                 )}
                 {selectedRequestForDetail?.status === "Completed" && selectedRequestForDetail?.updated_at && (
                   <InfoRow icon="CalendarCheckIn01Icon" label="Claimed On" value={formatPHDateTime(selectedRequestForDetail.updated_at)} />
                 )}
+                {selectedRequestForDetail?.client_type === "Parent" && (
+                  <>
+                    <InfoRow icon="UserIcon" label="Representative" value={selectedRequestForDetail.requester_name || "N/A"} />
+                    <InfoRow icon="Contact01Icon" label="Relationship" value={selectedRequestForDetail.requester_relationship || "Legal Guardian"} />
+                    <InfoRow icon="CallIcon" label="Contact" value={selectedRequestForDetail.requester_contact || "N/A"} />
+                    <InfoRow icon="Shield01Icon" label="Authorization">
+                      <span className={cn(BADGE_BASE, selectedRequestForDetail.spa_verified ? BADGE_PALETTES.emerald : BADGE_PALETTES.amber)}>
+                        {selectedRequestForDetail.spa_verified ? "SPA Verified" : "SPA Pending"}
+                      </span>
+                    </InfoRow>
+                  </>
+                )}
               </div>
-            </div>
+            </section>
 
-            {/* Purpose / Description (Unboxed) */}
             {selectedRequestForDetail?.notes && (
-              <div className="space-y-1.5 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Purpose / Notes
-                </h4>
-                <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+              <section className="space-y-2">
+                <SheetSectionHeading icon="Message01Icon" title="Purpose & Notes" />
+                <div className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-zinc-300">
                   <NarrativeText text={selectedRequestForDetail.notes} mode="full" />
                 </div>
-              </div>
+              </section>
             )}
-
-            {/* Parent / Legal Guardian Information (Unboxed) */}
-            {selectedRequestForDetail?.client_type === "Parent" && (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Parent / Representative Authorization
-                  </h4>
-                  {selectedRequestForDetail.spa_verified ? (
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
-                      SPA Verified
-                    </span>
-                  ) : (
-                    <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
-                      SPA Pending
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Representative</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_name || "N/A"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Relationship</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_relationship || "Legal Guardian"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block font-medium uppercase">Contact</span>
-                    <span className="font-semibold text-gray-800 dark:text-zinc-200 truncate block">
-                      {selectedRequestForDetail.requester_contact || "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Experience Rating & Feedback (Unboxed) */}
-            {selectedRequestForDetail?.feedback ? (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <StarIcon size="1em" className="text-amber-500 text-xs" />
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                      Your Experience Rating
-                    </h4>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFeedbackRequest(selectedRequestForDetail);
-                      setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
-                      setFeedbackModalOpen(true);
-                    }}
-                    title="Edit Feedback"
-                    className="text-[11px] font-semibold text-pup-maroon hover:underline dark:text-red-400 cursor-pointer"
-                  >
-                    Edit Feedback
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className={cn(
-                          "h-4 w-4",
-                          star <= selectedRequestForDetail.feedback.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-transparent text-gray-300 dark:text-zinc-600"
-                        )}
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                    {selectedRequestForDetail.feedback.rating}/5 · {RATING_LABELS[selectedRequestForDetail.feedback.rating] || ""}
-                  </span>
-                  {selectedRequestForDetail.feedback.created_at && (
-                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 sm:ml-auto">
-                      Submitted on {formatPHDateTime(selectedRequestForDetail.feedback.created_at)}
-                    </span>
-                  )}
-                </div>
-
-                {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className={cn(BADGE_BASE, BADGE_PALETTES.slate)}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {selectedRequestForDetail.feedback.comments && (
-                  <div className="text-xs text-gray-600 dark:text-zinc-400 italic">
-                    &ldquo;<NarrativeText text={selectedRequestForDetail.feedback.comments} mode="full" />&rdquo;
-                  </div>
-                )}
-              </div>
-            ) : (!selectedRequestForDetail?.feedback && (selectedRequestForDetail?.status === "Ready" || selectedRequestForDetail?.status === "Completed")) ? (
-              <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
-                    Experience Feedback
-                  </h4>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                    Help improve registrar services by rating this request.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFeedbackRequest(selectedRequestForDetail);
-                    setFeedbackInitialRating(0);
-                    setFeedbackModalOpen(true);
-                  }}
-                  title="Rate Experience"
-                  className="h-8 px-3 text-xs font-semibold rounded-lg border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
-                >
-                  Rate Service
-                </Button>
-              </div>
-            ) : null}
 
             {/* Payment Proof Upload Notice (if PendingPayment) */}
             {selectedRequestForDetail?.status === "PendingPayment" && (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 mb-1">
-                  <AppIcon className=" Invoice01Icon text-amber-700 dark:text-amber-400 text-base" />
-                  <h4 className="text-xs font-semibold text-amber-950 dark:text-amber-100">
-                    Payment proof required
-                  </h4>
-                </div>
+              <section className="space-y-2">
+                <SheetSectionHeading icon="Invoice01Icon" title="Payment Proof" />
                 <p className="text-xs text-amber-800 dark:text-amber-300">
                   Drop your receipt or payment confirmation slip here or browse to upload (PDF, PNG, JPG, or WEBP up to 10 MB).
                 </p>
@@ -4413,17 +4362,13 @@ function StudentDashboard() {
                     }
                   }}
                 />
-              </div>
+              </section>
             )}
 
             {/* Attached Supporting Documents (Unboxed) */}
             {Array.isArray(selectedRequestForDetail?.attachments) && selectedRequestForDetail.attachments.length > 0 && (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Attached Documents ({selectedRequestForDetail.attachments.length})
-                  </h4>
-                </div>
+              <section className="space-y-2">
+                <SheetSectionHeading icon="Attachment01Icon" title={`Attached Documents (${selectedRequestForDetail.attachments.length})`} />
                 <div className="flex flex-wrap items-start gap-3">
                   {selectedRequestForDetail.attachments.map((att) => {
                     const fileUrl = att.url || `/api/document-requests/${selectedRequestForDetail.id}/attachments/${att.id}`;
@@ -4447,16 +4392,13 @@ function StudentDashboard() {
                     );
                   })}
                 </div>
-              </div>
+              </section>
             )}
 
-            <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-3 flex items-center justify-between">
-                <span>Processing Timeline & Updates</span>
-                <span className="text-[11px] font-normal text-gray-400">
-                  {selectedRequestForDetail?.updates?.length || 0} {selectedRequestForDetail?.updates?.length === 1 ? "update" : "updates"}
-                </span>
-              </h4>
+            <section className="space-y-3">
+              <SheetSectionHeading icon="Clock01Icon" title="Processing Timeline & Updates">
+                <SheetUpdateCount count={selectedRequestForDetail?.updates?.length ?? 0} />
+              </SheetSectionHeading>
 
               {selectedRequestForDetail?.updates && selectedRequestForDetail.updates.length > 0 ? (
                 <div className="relative space-y-4">
@@ -4497,7 +4439,7 @@ function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Follow-Up Notice" : formatStatusLabel(upd.status)}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <StatusBadge status={upd.status} />
+                              <StatusBadge compact status={upd.status} />
                             )}
                           </div>
                           {upd.created_at && (
@@ -4532,7 +4474,7 @@ function StudentDashboard() {
                                 ? "Ready for Claiming"
                                 : selectedRequestForDetail.status}
                             </span>
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald)}>
+                            <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>
                               Current Active Status
                             </span>
                           </div>
@@ -4553,7 +4495,83 @@ function StudentDashboard() {
                   description="Your request is queued for review by the Registrar."
                 />
               )}
-            </div>
+            </section>
+
+            {/* Experience Rating & Feedback (Unboxed) */}
+            {selectedRequestForDetail?.feedback ? (
+              <section className="space-y-2">
+                <SheetSectionHeading icon="StarIcon" title="Experience Feedback">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFeedbackRequest(selectedRequestForDetail);
+                      setFeedbackInitialRating(selectedRequestForDetail.feedback?.rating || 0);
+                      setFeedbackModalOpen(true);
+                    }}
+                  >
+                    Edit Feedback
+                  </Button>
+                </SheetSectionHeading>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg
+                        key={star}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className={cn(
+                          "h-4 w-4",
+                          star <= selectedRequestForDetail.feedback.rating
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-transparent text-gray-300 dark:text-zinc-600"
+                        )}
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    {selectedRequestForDetail.feedback.rating}/5 · {RATING_LABELS[selectedRequestForDetail.feedback.rating] || ""}
+                  </span>
+                  {selectedRequestForDetail.feedback.created_at && (
+                    <span className="text-[11px] text-gray-400 dark:text-zinc-500 sm:ml-auto">
+                      Submitted on {formatPHDateTime(selectedRequestForDetail.feedback.created_at)}
+                    </span>
+                  )}
+                </div>
+
+                {selectedRequestForDetail.feedback.aspect_tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {selectedRequestForDetail.feedback.aspect_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.slate)}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {selectedRequestForDetail.feedback.comments && (
+                  <div className="text-xs text-gray-600 dark:text-zinc-400 italic">
+                    &ldquo;<NarrativeText text={selectedRequestForDetail.feedback.comments} mode="full" />&rdquo;
+                  </div>
+                )}
+              </section>
+            ) : canRateSelectedRequest ? (
+              <RequestFeedbackCard
+                key={selectedRequestForDetail.id}
+                minimized={feedbackMinimized}
+                onToggle={() => setFeedbackMinimized((current) => !current)}
+                onRate={rateSelectedRequest}
+              />
+            ) : null}
           </div>
 
           <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
@@ -4561,10 +4579,15 @@ function StudentDashboard() {
               variant="outline"
               size="sm"
               onClick={() => setSelectedRequestForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4"
             >
               Close
             </Button>
+            {feedbackMinimized && canRateSelectedRequest && (
+              <Button type="button" size="sm" onClick={rateSelectedRequest} className="h-9 px-4 border-0">
+                Rate Service
+              </Button>
+            )}
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -4607,107 +4630,53 @@ function StudentDashboard() {
                   />
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedProposalForDetail(null)}
-                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                  aria-label="Close"
-                  title="Close"
-                >
-                  <Cancel01Icon size="1em" className="text-sm" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProposalForDetail(null)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </SheetHeader>
 
-          {/* Line-Attached Edge-to-Edge Status Notice */}
-          <div
-            className={cn(
-              "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-              selectedProposalStatus === "Approved"
-                ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                : selectedProposalStatus === "Needs Revision"
-                ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                : selectedProposalStatus === "Declined"
-                ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-            )}
-          >
-            <AppIcon
-              className={cn(
-                " text-[15px] shrink-0",
-                selectedProposalStatus === "Approved"
-                  ? "Shield01Icon text-emerald-600 dark:text-emerald-400"
-                  : selectedProposalStatus === "Needs Revision"
-                  ? "Alert01Icon text-amber-600 dark:text-amber-400"
-                  : selectedProposalStatus === "Declined"
-                  ? "CancelCircleIcon text-rose-600 dark:text-rose-400"
-                  : "Clock01Icon text-blue-600 dark:text-blue-400"
-              )}
-            />
-            <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-              <strong className="font-semibold">
-                {selectedProposalStatus === "Approved"
-                  ? "Proposal Sanctioned:"
-                  : selectedProposalStatus === "Needs Revision"
-                  ? "Revision Required:"
-                  : selectedProposalStatus === "Declined"
-                  ? "Proposal Declined:"
-                  : "Under OSAS Evaluation:"}
-              </strong>{" "}
-              {selectedProposalStatus === "Approved"
-                ? "Official event proposal has been sanctioned and cleared by the Office of Student Affairs."
-                : selectedProposalStatus === "Needs Revision"
-                ? "Please review the evaluator notes in the timeline and re-upload an updated event proposal."
-                : selectedProposalStatus === "Declined"
-                ? "This event proposal was not approved for campus staging."
-                : "Your proposal is undergoing administrative and safety review by OSAS."}
-            </span>
-          </div>
+          <CampusStatusNotice title={proposalNotice.title}>{proposalNotice.message}</CampusStatusNotice>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-            {/* Proposal Summary Strip (Unboxed) */}
-            <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-              <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
-                <CalendarCheckIn01Icon size={16}  />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
-                    Proposal {selectedProposalForDetail?.id}
-                  </span>
-                  <StatusBadge status={selectedProposalForDetail?.status} />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                  {selectedProposalForDetail?.title}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                  Submitted on {selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"}
-                </p>
-              </div>
-            </div>
-
-            {/* Proposal Specification (Unboxed InfoRow List) */}
-            <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                Proposal Specification
-              </h4>
-              <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
-                <InfoRow icon="Building01Icon" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
-                <InfoRow icon="Calendar01Icon" label="Target Event Date" value={formatProposalEventDate(selectedProposalForDetail?.event_date)} />
-                <InfoRow icon="PieChartIcon" label="Evaluation Stage">
-                  <StatusBadge status={selectedProposalForDetail?.status} />
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
+            <section className="space-y-2">
+              <SheetSectionHeading icon="SlidersHorizontalIcon" title="Proposal Information" />
+              <div>
+                <SheetReferenceRow
+                  label="Proposal ID"
+                  reference={selectedProposalForDetail?.tracking_number || (selectedProposalForDetail?.id != null ? `EVT-${selectedProposalForDetail.id}` : null)}
+                />
+                <InfoRow icon="File02Icon" label="Event Title" value={selectedProposalForDetail?.title} />
+                <InfoRow icon="PieChartIcon" label="Status">
+                  <StatusBadge compact status={selectedProposalForDetail?.status} />
                 </InfoRow>
+                <InfoRow icon="Calendar01Icon" label="Submitted On" value={selectedProposalForDetail?.created_at ? formatPHDateTime(selectedProposalForDetail.created_at) : "N/A"} />
+                <InfoRow icon="Building01Icon" label="Organization" value={selectedProposalForDetail?.organization_name || "Student Organization"} />
+                <InfoRow icon="CalendarCheckIn01Icon" label="Target Event Date" value={formatProposalEventDate(selectedProposalForDetail?.event_date)} />
               </div>
-            </div>
+            </section>
 
             {/* Attached PDF Proposal File (Unboxed Sleek Row) */}
             {selectedProposalForDetail?.original_filename && (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                  Attached Proposal Document
-                </h4>
-                <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
+              <div className="space-y-2">
+                <SheetSectionHeading icon="Attachment01Icon" title="Attached Proposal Document" />
+                <button
+                  type="button"
+                  onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
+                  aria-label={`Preview ${selectedProposalForDetail.original_filename}`}
+                  className="group/preview flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border/70 bg-gray-50/70 p-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:border-border/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
+                >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
                       <File02Icon size="1em" className="text-base" />
@@ -4723,74 +4692,93 @@ function StudentDashboard() {
                       )}
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenPdfPreview(selectedProposalForDetail)}
-                    className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
-                  >
-                    <ViewIcon size="1em" className="text-xs mr-1" />
-                    <span>{PDF_ACTION_LABELS.preview}</span>
-                  </Button>
-                </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-gray-600 opacity-60 shadow-xs transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:bg-zinc-800 dark:text-zinc-300">
+                        <ViewIcon size={16} aria-hidden="true" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Preview PDF</TooltipContent>
+                  </Tooltip>
+                </button>
               </div>
             )}
 
             {selectedProposalForDetail?.versions?.length > 0 && (
-              <details className="rounded-xl border border-border/70 dark:border-border/60 bg-gray-50/70 dark:bg-zinc-800/40">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                  <span>Submitted PDF versions</span>
-                  <span className="font-sans tabular-nums text-[11px] font-medium text-gray-500 dark:text-zinc-400">
-                    {selectedProposalForDetail.versions.length}
+              <details
+                key={selectedProposalForDetail.id}
+                open
+                className="group rounded-xl border border-border/70 bg-gray-50/70 dark:border-border/60 dark:bg-zinc-800/40"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                  <span className="flex min-w-0 items-center gap-2 text-xs font-semibold text-gray-800 dark:text-zinc-200">
+                    <AppIcon icon="Files01Icon" aria-hidden="true" className="shrink-0 text-sm text-pup-maroon dark:text-red-400" />
+                    Submitted PDF Versions
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <Badge variant="gray" size="compact" className="tabular-nums">
+                      {selectedProposalForDetail.versions.length} {selectedProposalForDetail.versions.length === 1 ? "version" : "versions"}
+                    </Badge>
+                    <ArrowDown01Icon size={16} aria-hidden="true" className="text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" />
                   </span>
                 </summary>
                 <div className="space-y-2 px-3 pb-3">
-                  {[...selectedProposalForDetail.versions].reverse().map((version, index) => (
-                    <div key={version.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 dark:bg-zinc-900/40">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-gray-800 dark:text-zinc-100">
-                          Revision {version.revision_number}{index === 0 ? " · Current" : ""}
-                        </p>
-                        <p className="truncate text-[11px] text-gray-500 dark:text-zinc-400" title={version.original_filename}>
-                          {version.original_filename} · {formatPHDateTime(version.created_at)}
-                        </p>
-                      </div>
-                      {version.file_pruned_at ? (
-                        <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenPdfPreview(null, {
-                            url: `/api/student/event-proposals/${selectedProposalForDetail.id}?file=1&revisionId=${version.id}`,
-                            title: `${selectedProposalForDetail.title} · Revision ${version.revision_number}`,
-                            subtitle: `Submitted for ${selectedProposalForDetail.organization_name || "OSAS"}.`,
-                            studentName: me?.name || "Student",
-                            docType: "Event Proposal",
-                            originalFilename: version.original_filename || "Proposal.pdf",
-                          })}
-                          className="h-8 shrink-0 rounded-lg px-3 text-xs"
-                        >
-                          <ViewIcon size="1em" className="mr-1 text-xs" />
-                          Preview
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                  {[...selectedProposalForDetail.versions].reverse().map((version, index) => {
+                    const available = !version.file_pruned_at;
+                    const Row = available ? "button" : "div";
+                    const previewProps = available ? {
+                      type: "button",
+                      "aria-label": `Preview revision ${version.revision_number}: ${version.original_filename || "Proposal PDF"}`,
+                      onClick: () => handleOpenPdfPreview(null, {
+                        url: `/api/student/event-proposals/${selectedProposalForDetail.id}?file=1&revisionId=${version.id}`,
+                        title: `${selectedProposalForDetail.title} · Revision ${version.revision_number}`,
+                        subtitle: `Submitted for ${selectedProposalForDetail.organization_name || "OSAS"}.`,
+                        studentName: me?.name || "Student",
+                        docType: "Event Proposal",
+                        originalFilename: version.original_filename || "Proposal.pdf",
+                      }),
+                    } : {};
+
+                    return (
+                      <Row
+                        key={version.id}
+                        {...previewProps}
+                        className={cn(
+                          "group/preview flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-white px-2.5 py-2 text-left dark:bg-zinc-900/40",
+                          available && "cursor-pointer transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:hover:bg-zinc-800"
+                        )}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-xs font-semibold text-gray-800 dark:text-zinc-100">
+                            Revision {version.revision_number}{index === 0 ? " · Current" : ""}
+                          </span>
+                          <span className="block truncate text-[11px] text-gray-500 dark:text-zinc-400" title={version.original_filename}>
+                            {version.original_filename} · {formatPHDateTime(version.created_at)}
+                          </span>
+                        </span>
+                        {available ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-gray-600 opacity-60 transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100 dark:text-zinc-300">
+                                <ViewIcon size={16} aria-hidden="true" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Preview PDF</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-zinc-500">PDF removed after approval</span>
+                        )}
+                      </Row>
+                    );
+                  })}
                 </div>
               </details>
             )}
 
-            {/* Review Timeline & Updates */}
-            <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-3 flex items-center justify-between">
-                <span>Evaluation Timeline & Updates</span>
-                <span className="text-[11px] font-normal text-gray-400">
-                  {selectedProposalForDetail?.updates?.length || 0} {selectedProposalForDetail?.updates?.length === 1 ? "update" : "updates"}
-                </span>
-              </h4>
+            <section className="space-y-3">
+              <SheetSectionHeading icon="Clock01Icon" title="Evaluation Timeline & Updates">
+                <SheetUpdateCount count={selectedProposalForDetail?.updates?.length ?? 0} />
+              </SheetSectionHeading>
 
               {selectedProposalForDetail?.updates && selectedProposalForDetail.updates.length > 0 ? (
                 <div className="relative space-y-4">
@@ -4824,7 +4812,7 @@ function StudentDashboard() {
                               {isConsecutiveSameStatus ? "Evaluation Follow-Up" : upd.status}
                             </span>
                             {isConsecutiveSameStatus && (
-                              <StatusBadge status={upd.status} />
+                              <StatusBadge compact status={upd.status} />
                             )}
                           </div>
                           {upd.created_at && (
@@ -4847,7 +4835,7 @@ function StudentDashboard() {
                   description="Your proposal is queued for evaluation by OSAS."
                 />
               )}
-            </div>
+            </section>
           </div>
 
           <SheetFooter className="shrink-0 p-4 px-6 flex flex-row items-center justify-between">
@@ -4855,7 +4843,7 @@ function StudentDashboard() {
               variant="outline"
               size="sm"
               onClick={() => setSelectedProposalForDetail(null)}
-              className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+              className="h-9 px-4"
             >
               Close
             </Button>
@@ -4910,96 +4898,80 @@ function StudentDashboard() {
                   />
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPostEventReportForDetail(null)}
-                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                  aria-label="Close"
-                  title="Close"
-                >
-                  <Cancel01Icon size="1em" className="text-sm" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPostEventReportForDetail(null)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </SheetHeader>
 
           {selectedPostEventReportForDetail && (
             <>
-              <div
-                className={cn(
-                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                  selectedPostEventReportForDetail.status === "Cleared"
-                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                    : selectedPostEventReportForDetail.status === "Needs Revision"
-                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                    : selectedPostEventReportForDetail.status === "Declined"
-                    ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                    : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-                )}
-              >
-                <Shield01Icon
-                  size="1em"
+              {selectedPostEventReportForDetail.status === "Cleared" ? (
+                <CampusStatusNotice title="Post-Event Report Cleared">OSAS cleared the narrative and liquidation report.</CampusStatusNotice>
+              ) : (
+                <div
                   className={cn(
-                    "text-[15px] shrink-0",
-                    selectedPostEventReportForDetail.status === "Cleared"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : selectedPostEventReportForDetail.status === "Needs Revision"
-                      ? "text-amber-600 dark:text-amber-400"
+                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                    selectedPostEventReportForDetail.status === "Needs Revision"
+                      ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
                       : selectedPostEventReportForDetail.status === "Declined"
-                      ? "text-rose-600 dark:text-rose-400"
-                      : "text-blue-600 dark:text-blue-400"
+                      ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
+                      : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
                   )}
-                />
-                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                  <strong className="font-semibold">
-                    {selectedPostEventReportForDetail.status === "Cleared"
-                      ? "Post-Event Report Cleared:"
-                      : selectedPostEventReportForDetail.status === "Needs Revision"
-                      ? "Revision Required:"
+                >
+                  <Shield01Icon
+                    size="1em"
+                    className={cn(
+                      "text-[15px] shrink-0",
+                      selectedPostEventReportForDetail.status === "Needs Revision"
+                        ? "text-amber-600 dark:text-amber-400"
+                        : selectedPostEventReportForDetail.status === "Declined"
+                        ? "text-rose-600 dark:text-rose-400"
+                        : "text-blue-600 dark:text-blue-400"
+                    )}
+                  />
+                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                    <strong className="font-semibold">
+                      {selectedPostEventReportForDetail.status === "Needs Revision"
+                        ? "Revision Required:"
+                        : selectedPostEventReportForDetail.status === "Declined"
+                        ? "Post-Event Report Declined:"
+                        : selectedPostEventReportForDetail.status === "Under Review"
+                        ? "Under OSAS Review:"
+                        : "Post-Event Report Submitted:"}
+                    </strong>{" "}
+                    {selectedPostEventReportForDetail.status === "Needs Revision"
+                      ? "OSAS requested changes to this post-event report."
                       : selectedPostEventReportForDetail.status === "Declined"
-                      ? "Post-Event Report Declined:"
+                      ? "OSAS declined this post-event report."
                       : selectedPostEventReportForDetail.status === "Under Review"
-                      ? "Under OSAS Review:"
-                      : "Post-Event Report Submitted:"}
-                  </strong>{" "}
-                  {selectedPostEventReportForDetail.status === "Cleared"
-                    ? "OSAS has cleared the submitted narrative and liquidation report."
-                    : selectedPostEventReportForDetail.status === "Needs Revision"
-                    ? "OSAS requested changes to this post-event report."
-                    : selectedPostEventReportForDetail.status === "Declined"
-                    ? "OSAS declined this post-event report."
-                    : selectedPostEventReportForDetail.status === "Under Review"
-                    ? "OSAS is reviewing your post-event report and liquidation documents."
-                    : "Your report has been received by OSAS."}
-                </span>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-                <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-                  <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
-                    <ClipboardIcon size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
-                        Report {selectedPostEventReportForDetail.id}
-                      </span>
-                      <StatusBadge status={selectedPostEventReportForDetail.status} />
-                    </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                      {selectedPostEventReportForDetail.event_title}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                      Submitted on {selectedPostEventReportForDetail.created_at ? formatPHDateTime(selectedPostEventReportForDetail.created_at) : "N/A"}
-                    </p>
-                  </div>
+                      ? "OSAS is reviewing your post-event report and liquidation documents."
+                      : "Your report has been received by OSAS."}
+                  </span>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Post-Event Specification
-                  </h4>
-                  <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
+                <section className="space-y-2">
+                  <SheetSectionHeading icon="SlidersHorizontalIcon" title="Post-Event Information" />
+                  <div>
+                    <SheetReferenceRow label="Report ID" reference={selectedPostEventReportForDetail.id != null ? `RPT-${selectedPostEventReportForDetail.id}` : null} />
+                    <InfoRow icon="File02Icon" label="Event Title" value={selectedPostEventReportForDetail.event_title} />
+                    <InfoRow icon="PieChartIcon" label="Status">
+                      <StatusBadge compact status={selectedPostEventReportForDetail.status} />
+                    </InfoRow>
+                    <InfoRow icon="Calendar01Icon" label="Submitted On" value={selectedPostEventReportForDetail.created_at ? formatPHDateTime(selectedPostEventReportForDetail.created_at) : "N/A"} />
                     <InfoRow icon="Building01Icon" label="Organization" value={selectedPostEventReportForDetail.organization_name} />
                     <InfoRow icon="Calendar01Icon" label="Event Date" value={formatProposalEventDate(selectedPostEventReportForDetail.event_date)} />
                     {selectedPostEventReportForDetail.venue && (
@@ -5009,19 +4981,18 @@ function StudentDashboard() {
                     <InfoRow icon="UserSearch01Icon" label="Actual Attendance" value={`${Number(selectedPostEventReportForDetail.actual_attendance ?? selectedPostEventReportForDetail.actual_attendees ?? 0).toLocaleString()} attendees`} />
                     <InfoRow icon="Coins01Icon" label="Liquidated Spend" value={`₱${Number(selectedPostEventReportForDetail.total_expenses ?? selectedPostEventReportForDetail.actual_expenses ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
                     {selectedPostEventReportForDetail.event_proposal_id && (
-                      <InfoRow icon="CalendarCheckIn01Icon" label="Event Proposal" value={`Proposal #${selectedPostEventReportForDetail.event_proposal_id}`} />
+                      <SheetReferenceRow
+                        icon="CalendarCheckIn01Icon"
+                        label="Event Proposal"
+                        reference={selectedPostEventReportForDetail.event_tracking_number || `EVT-${selectedPostEventReportForDetail.event_proposal_id}`}
+                      />
                     )}
-                    <InfoRow icon="PieChartIcon" label="Clearance Status">
-                      <StatusBadge status={selectedPostEventReportForDetail.status} />
-                    </InfoRow>
                   </div>
-                </div>
+                </section>
 
                 {selectedPostEventReportForDetail.narrative_summary && (
-                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                      Accomplishment Summary
-                    </h4>
+                  <div className="space-y-2">
+                    <SheetSectionHeading icon="Message01Icon" title="Accomplishment Summary" />
                     <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                       <NarrativeText text={selectedPostEventReportForDetail.narrative_summary} mode="full" />
                     </div>
@@ -5029,26 +5000,21 @@ function StudentDashboard() {
                 )}
 
                 {selectedPostEventReportForDetail.review_note && (
-                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                        OSAS Review Note
-                      </h4>
+                  <div className="space-y-2">
+                    <SheetSectionHeading icon="Message01Icon" title="OSAS Review Note">
                       <span className="text-[11px] text-gray-500 dark:text-zinc-400">
                         {selectedPostEventReportForDetail.reviewer_name || "OSAS"}
                         {selectedPostEventReportForDetail.reviewed_at && ` · ${formatPHDateTime(selectedPostEventReportForDetail.reviewed_at)}`}
                       </span>
-                    </div>
+                    </SheetSectionHeading>
                     <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                       <NarrativeText text={selectedPostEventReportForDetail.review_note} mode="full" />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Submitted Documents
-                  </h4>
+                <div className="space-y-2">
+                  <SheetSectionHeading icon="Attachment01Icon" title="Submitted Documents" />
                   <div className="space-y-2">
                     {[
                       {
@@ -5091,7 +5057,7 @@ function StudentDashboard() {
                               docType: file.docType,
                               originalFilename: file.filename || `${file.key}.pdf`,
                             })}
-                            className="h-8 shrink-0 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
+                            className="shrink-0"
                           >
                             View {file.key === "narrative" ? "Narrative" : "Liquidation"}
                           </Button>
@@ -5109,7 +5075,7 @@ function StudentDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedPostEventReportForDetail(null)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4"
                 >
                   Close
                 </Button>
@@ -5155,108 +5121,87 @@ function StudentDashboard() {
                   />
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedCblVersionForDetail(null)}
-                  className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
-                  aria-label="Close"
-                  title="Close"
-                >
-                  <Cancel01Icon size="1em" className="text-sm" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCblVersionForDetail(null)}
+                      className="size-8 rounded-full bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-all cursor-pointer active:scale-95 border border-black/[0.04] dark:border-white/[0.08] shadow-2xs"
+                      aria-label="Close"
+                    >
+                      <Cancel01Icon size="1em" className="text-sm" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Close</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </SheetHeader>
 
           {selectedCblVersionForDetail && (
             <>
-              <div
-                className={cn(
-                  "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
-                  selectedCblVersionForDetail.status === "Approved"
-                    ? "border-emerald-200/90 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/25 dark:text-emerald-200"
-                    : selectedCblVersionForDetail.status === "Needs Revision"
-                    ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
-                    : selectedCblVersionForDetail.status === "Declined"
-                    ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
-                    : selectedCblVersionForDetail.status === "Superseded"
-                    ? "border-gray-200/90 bg-gray-50/90 text-gray-800 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
-                    : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
-                )}
-              >
-                <BookBookmark01Icon
-                  size="1em"
+              {selectedCblVersionForDetail.status === "Approved" ? (
+                <CampusStatusNotice title="Charter Approved">OSAS approved this Constitution & By-Laws version.</CampusStatusNotice>
+              ) : (
+                <div
                   className={cn(
-                    "text-[15px] shrink-0",
-                    selectedCblVersionForDetail.status === "Approved"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : selectedCblVersionForDetail.status === "Needs Revision"
-                      ? "text-amber-600 dark:text-amber-400"
+                    "flex items-center gap-2.5 px-6 py-2.5 text-xs border-b transition-colors shrink-0",
+                    selectedCblVersionForDetail.status === "Needs Revision"
+                      ? "border-amber-200/90 bg-amber-50/90 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-200"
                       : selectedCblVersionForDetail.status === "Declined"
-                      ? "text-rose-600 dark:text-rose-400"
+                      ? "border-rose-200/90 bg-rose-50/90 text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200"
                       : selectedCblVersionForDetail.status === "Superseded"
-                      ? "text-gray-500 dark:text-zinc-400"
-                      : "text-blue-600 dark:text-blue-400"
+                      ? "border-gray-200/90 bg-gray-50/90 text-gray-800 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
+                      : "border-blue-200/90 bg-blue-50/90 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-blue-200"
                   )}
-                />
-                <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
-                  <strong className="font-semibold">
-                    {selectedCblVersionForDetail.status === "Approved"
-                      ? "Charter Approved:"
-                      : selectedCblVersionForDetail.status === "Needs Revision"
-                      ? "Revision Requested:"
+                >
+                  <BookBookmark01Icon
+                    size="1em"
+                    className={cn(
+                      "text-[15px] shrink-0",
+                      selectedCblVersionForDetail.status === "Needs Revision"
+                        ? "text-amber-600 dark:text-amber-400"
+                        : selectedCblVersionForDetail.status === "Declined"
+                        ? "text-rose-600 dark:text-rose-400"
+                        : selectedCblVersionForDetail.status === "Superseded"
+                        ? "text-gray-500 dark:text-zinc-400"
+                        : "text-blue-600 dark:text-blue-400"
+                    )}
+                  />
+                  <span className="font-medium text-[11.5px] sm:text-xs leading-normal">
+                    <strong className="font-semibold">
+                      {selectedCblVersionForDetail.status === "Needs Revision"
+                        ? "Revision Requested:"
+                        : selectedCblVersionForDetail.status === "Declined"
+                        ? "Submission Declined:"
+                        : selectedCblVersionForDetail.status === "Superseded"
+                        ? "Superseded:"
+                        : "Pending OSAS Review:"}
+                    </strong>{" "}
+                    {selectedCblVersionForDetail.status === "Needs Revision"
+                      ? "OSAS requested changes to this charter submission."
                       : selectedCblVersionForDetail.status === "Declined"
-                      ? "Submission Declined:"
+                      ? "OSAS did not approve this charter version."
                       : selectedCblVersionForDetail.status === "Superseded"
-                      ? "Superseded:"
-                      : "Pending OSAS Review:"}
-                  </strong>{" "}
-                  {selectedCblVersionForDetail.status === "Approved"
-                    ? "OSAS approved this Constitution & By-Laws version."
-                    : selectedCblVersionForDetail.status === "Needs Revision"
-                    ? "OSAS requested changes to this charter submission."
-                    : selectedCblVersionForDetail.status === "Declined"
-                    ? "OSAS did not approve this charter version."
-                    : selectedCblVersionForDetail.status === "Superseded"
-                    ? "A newer approved charter version has replaced this submission."
-                    : "This charter submission is awaiting review."}
-                </span>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-                <div className="flex items-start gap-3.5 pb-4 border-b border-border/80 dark:border-border">
-                  <div className="w-11 h-11 rounded-full bg-pup-maroon/10 text-pup-maroon dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center text-lg shrink-0 font-bold mt-0.5 shadow-2xs">
-                    <BookBookmark01Icon size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={cn(BADGE_BASE, BADGE_PALETTES.slate, "font-sans tabular-nums")}>
-                        {selectedCblVersionForDetail.version_tag || `v${selectedCblVersionForDetail.version_number || "1.0"}`}
-                      </span>
-                      <StatusBadge status={selectedCblVersionForDetail.status} />
-                    </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-snug break-words">
-                      Constitution &amp; By-Laws
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                      Submitted on {selectedCblVersionForDetail.created_at ? formatPHDateTime(selectedCblVersionForDetail.created_at) : "N/A"}
-                    </p>
-                  </div>
+                      ? "A newer approved charter version has replaced this submission."
+                      : "This charter submission is awaiting review."}
+                  </span>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Charter Specification
-                  </h4>
-                  <div className="divide-y divide-gray-100/70 dark:divide-zinc-800/50">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin">
+                <section className="space-y-2">
+                  <SheetSectionHeading icon="SlidersHorizontalIcon" title="Charter Information" />
+                  <div>
+                    <InfoRow icon="PieChartIcon" label="Status">
+                      <StatusBadge compact status={selectedCblVersionForDetail.status} />
+                    </InfoRow>
+                    <InfoRow icon="Calendar01Icon" label="Submitted On" value={selectedCblVersionForDetail.created_at ? formatPHDateTime(selectedCblVersionForDetail.created_at) : "N/A"} />
                     <InfoRow icon="Building01Icon" label="Organization" value={selectedOsasOrganization?.organization_name || cblOrgData?.name} />
-                    <InfoRow icon="BookBookmark01Icon" label="Version" value={selectedCblVersionForDetail.version_tag || `v${selectedCblVersionForDetail.version_number || "1.0"}`} />
+                    <SheetReferenceRow icon="BookBookmark01Icon" label="Version" reference={selectedCblVersionForDetail.version_tag || `v${selectedCblVersionForDetail.version_number || "1.0"}`} />
                     {selectedCblVersionForDetail.effective_date && (
                       <InfoRow icon="Calendar01Icon" label="Effective Date" value={formatProposalEventDate(selectedCblVersionForDetail.effective_date)} />
                     )}
-                    <InfoRow icon="PieChartIcon" label="Review Status">
-                      <StatusBadge status={selectedCblVersionForDetail.status} />
-                    </InfoRow>
                     <InfoRow icon="UserIcon" label="Submitted By" value={selectedCblVersionForDetail.submitted_by_name || selectedCblVersionForDetail.submitted_by_email || "Student Officer"} />
                     {selectedCblVersionForDetail.submitted_by_student_no && (
                       <InfoRow icon="IdIcon" label="Student Number" value={selectedCblVersionForDetail.submitted_by_student_no} />
@@ -5265,32 +5210,26 @@ function StudentDashboard() {
                       <InfoRow icon="File02Icon" label="File Size" value={`${(selectedCblVersionForDetail.size_bytes / 1024).toFixed(1)} KB`} />
                     )}
                   </div>
-                </div>
+                </section>
 
-                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Amendment Summary
-                  </h4>
+                <div className="space-y-2">
+                  <SheetSectionHeading icon="Message01Icon" title="Amendment Summary" />
                   <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                     <NarrativeText text={selectedCblVersionForDetail.amendment_summary || "No amendment summary was provided."} mode="full" />
                   </div>
                 </div>
 
                 {selectedCblVersionForDetail.review_notes && (
-                  <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                      OSAS Review Feedback
-                    </h4>
+                  <div className="space-y-2">
+                    <SheetSectionHeading icon="Message01Icon" title="OSAS Review Feedback" />
                     <div className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
                       <NarrativeText text={selectedCblVersionForDetail.review_notes} mode="full" />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-                    Submitted Document
-                  </h4>
+                <div className="space-y-2">
+                  <SheetSectionHeading icon="Attachment01Icon" title="Submitted Document" />
                   <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-zinc-800/40 border border-border/70 dark:border-border/60">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:bg-red-950/40 dark:text-red-400">
@@ -5317,19 +5256,23 @@ function StudentDashboard() {
                             docType: "Constitution & By-Laws",
                             originalFilename: selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf",
                           })}
-                          className="h-8 shrink-0 px-3 rounded-lg text-xs font-semibold border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 cursor-pointer shadow-xs active:scale-95 transition-all"
+                          className="shrink-0"
                         >
                           View Document
                         </Button>
-                        <a
-                          href={`/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`}
-                          download={selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf"}
-                          aria-label="Download Constitution & By-Laws document"
-                          title="Download Constitution & By-Laws document"
-                          className="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors"
-                        >
-                          <Download01Icon size={16} aria-hidden="true" />
-                        </a>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <a
+                              href={`/api/student/organizations/${selectedOsasOrgId}/bylaws?file=1&versionId=${selectedCblVersionForDetail.id}`}
+                              download={selectedCblVersionForDetail.original_filename || "Constitution-and-By-Laws.pdf"}
+                              aria-label="Download Constitution & By-Laws document"
+                              className="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-pup-maroon dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-red-400 transition-colors"
+                            >
+                              <Download01Icon size={16} aria-hidden="true" />
+                            </a>
+                          </TooltipTrigger>
+                          <TooltipContent>Download Constitution &amp; By-Laws</TooltipContent>
+                        </Tooltip>
                       </div>
                     ) : (
                       <span className="text-[11px] text-gray-400 dark:text-zinc-500 italic shrink-0">No file</span>
@@ -5343,7 +5286,7 @@ function StudentDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedCblVersionForDetail(null)}
-                  className="h-9 px-4 text-xs font-semibold rounded-xl border border-border dark:border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
+                  className="h-9 px-4"
                 >
                   Close
                 </Button>
@@ -5381,7 +5324,7 @@ function StudentDashboard() {
 
 function StudentPageWithView() {
   const searchParams = useSearchParams();
-  const fallback = <StudentDashboardSkeleton view={normalizeStudentTab(searchParams?.get("view"))} />;
+  const fallback = <InitialDashboardLoader><StudentDashboardSkeleton view={normalizeStudentTab(searchParams?.get("view"))} /></InitialDashboardLoader>;
 
   return (
     <Suspense fallback={fallback}>
@@ -5392,7 +5335,7 @@ function StudentPageWithView() {
 
 export default function StudentPage() {
   return (
-    <Suspense fallback={<StudentDashboardSkeleton view={null} />}>
+    <Suspense fallback={<InitialDashboardLoader><StudentDashboardSkeleton view={null} /></InitialDashboardLoader>}>
       <StudentPageWithView />
     </Suspense>
   );
