@@ -39,6 +39,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
+  EmptyState,
 } from "@/components/ui/empty"
 import { cn } from "@/lib/utils"
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
@@ -190,6 +191,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
   const [scannerHostRoot, setScannerHostRoot] = useState(".local/hot-folder")
   const [availableModules, setAvailableModules] = useState([])
   const [loading, setLoading] = useState(true)
+  const [officesLoadFailed, setOfficesLoadFailed] = useState(false)
   const [isManualLoading, setIsManualLoading] = useState(false)
   // Filters & Search
   const [searchQuery, setSearchQuery] = useViewPreference("offices", "searchQuery", "")
@@ -319,13 +321,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
       const result = await fetchJsonOnce("/api/offices?stats=true")
       if (result.ok && Array.isArray(result.data)) {
         setOffices(result.data)
+        setOfficesLoadFailed(false)
         if (result.storageRoot) setStorageRoot(result.storageRoot)
         if (result.scannerHostRoot) setScannerHostRoot(result.scannerHostRoot)
         setCachedData("systemadmin_offices_stats", result.data, 60000)
-      } else if (!cached) {
-        showToast(result.error || "Failed to fetch offices", true)
+      } else {
+        setOfficesLoadFailed(true)
+        if (!cached) showToast(result.error || "Failed to fetch offices", true)
       }
     } catch {
+      setOfficesLoadFailed(true)
       if (!getCachedData("systemadmin_offices_stats")) {
         showToast("Network error fetching offices", true)
       }
@@ -982,9 +987,9 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
           groupOptions={groupOptions}
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
-          columns={tableColumns.filter((column) => column.key !== "department")}
+          columns={tableColumns}
           visibleColumns={visibleColumns}
-          onVisibleColumnsChange={(keys) => setVisibleColumns(["department", ...keys.filter((key) => key !== "department")])}
+          onVisibleColumnsChange={setVisibleColumns}
           showTableControls={layoutView === "table"}
           scrollControls={{
             scrollContainerRef: tableContainerRef,
@@ -1016,6 +1021,16 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
               statusFilter={statusFilter}
               tableContainerRef={tableContainerRef}
             />
+          ) : officesLoadFailed && filteredOffices.length === 0 ? (
+            <EmptyState
+              icon={EmptyBuilding03Icon}
+              title="Could Not Load Departments"
+              description="Try loading the department directory again."
+            >
+              <Button variant="outline" size="sm" onClick={handleManualRefresh} disabled={isManualLoading}>
+                Try Again
+              </Button>
+            </EmptyState>
           ) : filteredOffices.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -1039,7 +1054,7 @@ export default function OfficeManagementTab({ showToast, onSwitchTab }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => { setSearchQuery(""); setFilterClauses([]) }}
+                      onClick={clearOfficeFilters}
                       title="Reset Filters"
                       className="h-9 px-4 text-xs font-semibold rounded-xl"
                     >

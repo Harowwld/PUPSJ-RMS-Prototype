@@ -9,6 +9,16 @@ describe("NarrativeText Tokenizer & Entity Parser", () => {
     assert.deepStrictEqual(parseNarrativeTokens(undefined), []);
   });
 
+  test("Emphasizes full document names, including names with parentheses", () => {
+    const text = "Submit your CTC Grade 10 Report Card and SAR Form (circled).";
+    const tokens = parseNarrativeTokens(text, ["CTC Grade 10 Report Card", "SAR Form", "SAR Form (circled)"]);
+    assert.deepEqual(
+      tokens.filter((token) => token.type === "quoted_entity").map((token) => token.value),
+      ["CTC Grade 10 Report Card", "SAR Form (circled)"]
+    );
+    assert.equal(tokens.map((token) => token.value).join(""), text);
+  });
+
   test("Identifies person names preceded by student or account for", () => {
     const tokens = parseNarrativeTokens("provisioned new personnel account for 'Marcus Reyes' (ID: PUPREGISTRAR-002)");
     const mention = tokens.find((t) => t.type === "mention");

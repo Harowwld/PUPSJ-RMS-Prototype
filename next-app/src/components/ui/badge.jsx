@@ -3,7 +3,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { BADGE_BASE, BADGE_PALETTES, COMPACT_BADGE_BASE } from "@/lib/badgeStyles"
 
 const badgeVariants = cva(
   `${BADGE_BASE} group/badge w-fit overflow-hidden select-none transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon dark:focus-visible:ring-red-500 [&>svg]:pointer-events-none [&>svg]:size-3!`,
@@ -51,14 +51,16 @@ function Badge({
   className,
   variant = "default",
   render,
+  size,
   ...props
 }) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps({
-      className: cn(badgeVariants({ variant }), className),
+      className: cn(badgeVariants({ variant }), size === "compact" && COMPACT_BADGE_BASE, className),
     }, props),
     render,
+  size,
     state: {
       slot: "badge",
       variant,

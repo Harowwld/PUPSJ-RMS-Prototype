@@ -3,16 +3,23 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLayoutZoom } from "@/hooks/useLayoutZoom"
 
-/**
- * Shell skeleton for dashboard pages that use the shared Sidebar layout.
- * Mirrors the Sidebar structure (logo row, command palette, nav sections,
- * profile row) without the removed page header.
- */
-export default function DashboardShellSkeleton({ items = [], children }) {
+const navigationPlaceholders = [
+  { key: "first" },
+  { type: "header" },
+  { key: "second" },
+  { key: "third" },
+  { type: "header" },
+  { key: "fourth" },
+]
+
+/** Initial dashboard layout with placeholders for navigation and the workspace. */
+export default function DashboardShellSkeleton({ children }) {
   const { zoomStyle } = useLayoutZoom()
 
   return (
     <div className="relative flex h-screen min-h-0 flex-col overflow-hidden bg-slate-50/30 font-jakarta dark:bg-zinc-950/30 select-none">
+      <span role="status" className="sr-only">Loading dashboard</span>
+
       {/* Shared dashboard liquid-gradient background */}
       <div className="liquid-container pointer-events-none opacity-20 dark:opacity-10">
         <div className="liquid-blob liquid-blob-1" />
@@ -22,7 +29,8 @@ export default function DashboardShellSkeleton({ items = [], children }) {
 
       {/* Main Body with Sidebar + Main Workspace (no page header in this layout) */}
       <div
-        className="flex min-h-0 overflow-hidden flex-col md:flex-row"
+        inert
+        className="flex flex-1 min-h-0 overflow-hidden flex-col md:flex-row"
         style={zoomStyle}
       >
         {/* Mobile Top Bar (< md) — shared Sidebar renders this in place of a page header */}
@@ -66,7 +74,7 @@ export default function DashboardShellSkeleton({ items = [], children }) {
 
           {/* 3. Navigation Items */}
           <div className="flex min-h-0 w-full flex-1 flex-col gap-[2px] overflow-y-auto pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {items.map((item, idx) => {
+            {navigationPlaceholders.map((item, idx) => {
               if (item.type === "header") {
                 return (
                   <div key={`header-${idx}`} className="mb-1 mt-3 h-[22px] shrink-0 px-2">
@@ -105,9 +113,21 @@ export default function DashboardShellSkeleton({ items = [], children }) {
         </aside>
 
         {/* Main Content Skeleton Area */}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white/25 dark:bg-zinc-950/25 backdrop-blur-xs flex flex-col">
-          <div className="flex w-full flex-[1_0_auto] flex-col p-4 md:pl-0 [&>*]:flex-[1_0_auto]">
-            {children}
+        <main className="relative w-full min-w-0 min-h-0 flex-1 overflow-y-auto bg-white dark:bg-zinc-950/50 flex flex-col">
+          <div className="flex w-full flex-[1_0_auto] min-h-full flex-col p-2 md:pl-1 [&>*]:flex-[1_0_auto]">
+            {children ?? (
+              <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
+                <div className="space-y-2 border-b border-border p-4 sm:p-6">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-4 w-64 max-w-full" />
+                </div>
+                <div className="space-y-4 p-4 sm:p-6">
+                  <Skeleton className="h-9 w-64 max-w-full rounded-xl" />
+                  <Skeleton className="h-32 w-full rounded-xl" />
+                  <Skeleton className="h-32 w-full rounded-xl" />
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

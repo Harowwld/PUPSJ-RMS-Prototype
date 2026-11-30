@@ -1,11 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
+import { encryptPII } from "../src/lib/piiEncryption.js";
+import { getOfficeUploadsDir } from "../src/lib/officePaths.js";
 
 dotenv.config({ path: ".env" });
 
 const { pool, query, queryOne, transaction } = await import("../src/lib/postgres.js");
-const { generateDocumentPdfByType } = await import("../src/lib/pdfDocumentGenerators.js");
+const { generateSampleCompliancePdf, getSampleComplianceReview } = await import("./sampleDataPdf.mjs");
 const { seedOsasOffice } = await import("./seed-osas-office.mjs");
 
 const CSV_TAXONOMY_PATH = fs.existsSync(path.resolve(process.cwd(), "../_SAMPLE_DATA/registrar_system_data - final.csv"))
@@ -18,7 +20,7 @@ const REAL_PDF_PATH = [
   path.resolve(process.cwd(), "../_SAMPLE_DATA/pdfs/sample pdf.pdf"),
   path.resolve(process.cwd(), "../_SAMPLE_DATA/sample pdf.pdf"),
 ].find(p => fs.existsSync(p)) || path.resolve(process.cwd(), "../_SAMPLE_DATA/pdfs/registrar/sample pdf.pdf");
-const UPLOADS_DIR = path.resolve(process.cwd(), process.env.LOCAL_DATA_DIR || ".local", "uploads");
+const UPLOADS_DIR = getOfficeUploadsDir("registrar");
 
 function normalizeCourseCode(raw) {
   const c = String(raw || "").trim().toUpperCase();
@@ -166,8 +168,11 @@ async function main() {
 
   for (let i = 1; i < studentLines.length; i++) {
     const cols = studentLines[i].split(",").map(c => c.trim());
-    if (cols.length < 8) continue;
-    const [rawStudentNo, rawName, rawCourseCode, academicYear, section, room, cabinet, drawer] = cols;
+    if (cols.length < 9) continue;
+    const [rawStudentNo, rawName, odrsEmail, rawCourseCode, academicYear, section, room, cabinet, drawer] = cols;
+    if (!/^[^\s@]+@[^\s@]+\.com$/i.test(odrsEmail)) {
+      throw new Error(`Invalid .com student email on CSV row ${i + 1}.`);
+    }
     let studentNo = rawStudentNo.replace(/-(MN|IT)-/gi, "-SJ-");
     if (!studentNo.endsWith("-0") && !studentNo.endsWith("-1")) {
       studentNo = `${studentNo}-0`;
@@ -178,35 +183,7 @@ async function main() {
 
     const courseCode = normalizeCourseCode(rawCourseCode);
 
-    // Format student name to "LASTNAME, FIRSTNAME M."
-    const words = rawName.toUpperCase().split(/\s+/).filter(Boolean);
-    let lastName = "";
-    let restWords = [];
-
-    if (words[0] === "DEL" && words[1] === "ROSARIO") {
-      lastName = "DEL ROSARIO";
-      restWords = words.slice(2);
-    } else if (words[0] === "DE" && words[1] === "LEON") {
-      lastName = "DE LEON";
-      restWords = words.slice(2);
-    } else if (words[0] === "DELA" && (words[1] === "PENA" || words[1] === "PEÑA")) {
-      lastName = "DELA PEÑA";
-      restWords = words.slice(2);
-    } else if (words[0] === "DE" || words[0] === "DEL" || words[0] === "DELA") {
-      lastName = words.slice(0, 2).join(" ");
-      restWords = words.slice(2);
-    } else {
-      lastName = words[0];
-      restWords = words.slice(1);
-    }
-
-    let firstName = restWords.join(" ");
-    let mi = "";
-    if (restWords.length > 1 && restWords[restWords.length - 1].length === 1) {
-      mi = restWords.pop() + ".";
-      firstName = restWords.join(" ");
-    }
-    const formattedName = `${lastName}, ${firstName}${mi ? " " + mi : ""}`;
+    const formattedName = rawName.trim();
 
     await query(
       `INSERT INTO students (student_no, name, course_code, year_level, section, status, storage_room, storage_cabinet, storage_drawer)
@@ -239,6 +216,11 @@ async function main() {
        ON CONFLICT (student_no, office_id) DO UPDATE SET status = 'Active', updated_at = NOW()`,
       [studentNo]
     );
+    await query(
+      `INSERT INTO registrar_odrs_contacts (student_no, email) VALUES ($1, $2)
+       ON CONFLICT (student_no) DO UPDATE SET email = EXCLUDED.email`,
+      [studentNo, encryptPII(odrsEmail.toLowerCase())]
+    );
 
     studentsList.push({
       studentNo,
@@ -248,10 +230,10 @@ async function main() {
     });
   }
 
-  console.log(`Loaded ${studentsList.length} real students from CSV.`);
+  console.log(`Loaded ${studentsList.length} students from CSV.`);
 
-  // 3. Create Documents for these students using strictly the 11 Registrar compliance document types
-  console.log("Generating realistic compliance documents for digital records review...");
+  // 3. Create clearly labeled sample files for the 11 Registrar compliance document types
+  console.log("Generating synthetic sample compliance documents...");
 
   const docTypeTemplates = [
     { docType: "CAEPUP 2023 Application Form", code: "CAEPUP" },
@@ -267,78 +249,68 @@ async function main() {
     { docType: "Photocopy of ID", code: "ID" },
   ];
 
-  // Distribute approval statuses
+  // Keep most students fully complete and leave two requirements open for a smaller sample.
   let docCount = 0;
-  let pendingCount = 0;
-  let approvedCount = 0;
-  let declinedCount = 0;
+  const incompleteStudentCount = studentsList.filter((_, index) => index % 4 === 0).length;
+  for (let studentIndex = 0; studentIndex < studentsList.length; studentIndex += 1) {
+    const student = studentsList[studentIndex];
+    const missingTypeIndexes = studentIndex % 4 === 0
+      ? new Set([studentIndex % docTypeTemplates.length, (studentIndex + 3) % docTypeTemplates.length])
+      : new Set();
 
-  for (let idx = 0; idx < Math.min(studentsList.length, 30); idx++) {
-    const student = studentsList[idx];
-    const template = docTypeTemplates[idx % docTypeTemplates.length];
-    
-    let approvalStatus = "Pending";
-    let reviewedBy = null;
-    let reviewedAt = null;
-    let reviewNote = null;
+    for (let typeIndex = 0; typeIndex < docTypeTemplates.length; typeIndex += 1) {
+      if (missingTypeIndexes.has(typeIndex)) continue;
+      const template = docTypeTemplates[typeIndex];
+      const review = getSampleComplianceReview(studentIndex, typeIndex, docTypeTemplates.length);
+      const legacyId = 20000 + studentIndex * docTypeTemplates.length + typeIndex;
+      const storageName = `sample-compliance-${legacyId}.pdf`;
+      const targetFilePath = path.join(UPLOADS_DIR, storageName);
+      const pdfBytes = await generateSampleCompliancePdf({
+        docType: template.docType,
+        studentNo: student.studentNo,
+        studentName: student.name,
+        courseCode: student.courseCode,
+        section: student.section,
+      });
+      fs.writeFileSync(targetFilePath, pdfBytes);
 
-    if (idx >= 18 && idx < 24) {
-      approvalStatus = "Approved";
-      reviewedBy = "PUPREGISTRAR-003";
-      reviewedAt = new Date(Date.now() - (idx * 3600000)).toISOString();
-      reviewNote = "Legible copy, complete student details verified.";
-      approvedCount++;
-    } else if (idx >= 24 && idx < 28) {
-      approvalStatus = "Declined";
-      reviewedBy = "PUPREGISTRAR-003";
-      reviewedAt = new Date(Date.now() - (idx * 3600000)).toISOString();
-      reviewNote = "Scan is too blurry; registrar seal cannot be verified.";
-      declinedCount++;
-    } else {
-      pendingCount++;
+      await query(
+        `INSERT INTO documents (
+          office_id, student_no, student_name, doc_type, original_filename,
+          storage_filename, mime_type, size_bytes, approval_status,
+          reviewed_by, reviewed_at, review_note, created_at, legacy_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+          CASE WHEN $9 <> 'Pending' THEN 'PUPREGISTRAR-003' END,
+          CASE WHEN $9 <> 'Pending' THEN NOW() END, $10, NOW(), $11)
+        ON CONFLICT (office_id, legacy_id) DO UPDATE SET
+          student_no = EXCLUDED.student_no, student_name = EXCLUDED.student_name,
+          doc_type = EXCLUDED.doc_type, original_filename = EXCLUDED.original_filename,
+          storage_filename = EXCLUDED.storage_filename, mime_type = EXCLUDED.mime_type,
+          size_bytes = EXCLUDED.size_bytes, approval_status = EXCLUDED.approval_status,
+          reviewed_by = EXCLUDED.reviewed_by, reviewed_at = EXCLUDED.reviewed_at,
+          review_note = EXCLUDED.review_note`,
+        [
+          "registrar",
+          student.studentNo,
+          student.name,
+          template.docType,
+          `SAMPLE_${student.studentNo}_${template.code}.pdf`,
+          storageName,
+          "application/pdf",
+          pdfBytes.length,
+          review.status,
+          review.note,
+          legacyId,
+        ]
+      );
+
+      docCount++;
     }
-
-    const uniqueStorageName = `real_${student.studentNo}_${template.code}_${Date.now()}.pdf`;
-    const targetFilePath = path.join(UPLOADS_DIR, uniqueStorageName);
-    const pdfBytes = await generateDocumentPdfByType({
-      docType: template.docType,
-      studentNo: student.studentNo,
-      studentName: student.name,
-      courseCode: student.courseCode,
-      section: student.section,
-      dateStr: "AY 2023-2024",
-    });
-    fs.writeFileSync(targetFilePath, pdfBytes);
-
-    const docResult = await query(
-      `INSERT INTO documents (
-        office_id, student_no, student_name, doc_type, original_filename,
-        storage_filename, mime_type, size_bytes, approval_status,
-        reviewed_by, reviewed_at, review_note, created_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW() - ($13 || ' hours')::INTERVAL)
-      RETURNING id`,
-      [
-        "registrar",
-        student.studentNo,
-        student.name,
-        template.docType,
-        `${student.studentNo}_${template.code}.pdf`,
-        uniqueStorageName,
-        "application/pdf",
-        pdfBytes.length,
-        approvalStatus,
-        reviewedBy,
-        reviewedAt,
-        reviewNote,
-        idx * 2,
-      ]
-    );
-
-    docCount++;
   }
 
-  console.log(`Seeded ${docCount} documents (${pendingCount} Pending, ${approvedCount} Approved, ${declinedCount} Declined).`);
+  const expectedDocCount = studentsList.length * docTypeTemplates.length;
+  console.log(`Seeded ${docCount} of ${expectedDocCount} synthetic compliance documents. ${studentsList.length - incompleteStudentCount} students are fully approved. The other ${incompleteStudentCount} have two missing files and one pending or declined review.`);
 
   // Populate OSAS Office (organizations, officers, CBLs, event proposals, post-event reports, documents)
   await seedOsasOffice();

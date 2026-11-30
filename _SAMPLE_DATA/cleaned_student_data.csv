@@ -1,73 +1,325 @@
-studentNo,name,courseCode,academicYear,section,room,cabinet,drawer
-2022-69082-SJ-0,LOPEZ GREGORIO D,BSBA-FM,2022,1-2,1,F,4
-2023-38462-SJ-0,QUIZON CYNTHIA C,BSENT,2023,3-2,1,B,1
-2023-20382-SJ-0,CRUZ DAPHNE P,BSENT,2023,4-2,1,F,1
-2022-25152-SJ-0,REYES CARMELO O,BSEDUC,2022,1-2,1,F,3
-2023-70215-SJ-0,DE LEON ARNEL P,BSENT,2023,3-1,1,C,4
-2023-34236-SJ-0,SISON CYNTHIA T,BSENT,2023,2-1,1,C,2
-2023-99337-SJ-0,PINEDA EDGAR L,BSIT,2023,2-1,1,E,2
-2021-19500-SJ-0,LIM EFREN N,BSPSYCH,2021,3-2,1,C,2
-2024-46619-SJ-0,GONZALES EFREN G,BSEDUC,2024,2-2,1,F,4
-2025-79356-SJ-0,TORRES IMELDA M,BSIT,2025,4-1,1,E,4
-2021-74251-SJ-0,SARMIENTO ANGELO S,BSENT,2021,4-1,1,D,2
-2023-15891-SJ-0,VILLANUEVA ARNEL D,BSPSYCH,2023,2-2,1,B,2
-2025-61833-SJ-0,DEL ROSARIO ISMAEL C,BSENT,2025,4-1,1,A,3
-2021-89377-SJ-0,RAMOS OSCAR M,BSPSYCH,2021,2-1,1,C,2
-2023-40305-SJ-0,BAUTISTA CARMELO M,BSENT,2023,3-2,1,B,2
-2022-45407-SJ-0,REYES GINA W,BSENT,2022,3-2,1,D,2
-2021-96883-SJ-0,CASTRO FELICIDAD M,BSIT,2021,1-2,1,F,1
-2024-27660-SJ-0,DIZON BERNADETTE B,BSIT,2024,2-2,1,E,4
-2021-95252-SJ-0,NAVARRO BENJIE A,BSENT,2021,3-2,1,B,3
-2021-79815-SJ-0,SARMIENTO GABRIEL H,BSENT,2021,2-1,1,A,3
-2021-53293-SJ-0,RAMOS DANTE Y,BSIT,2021,4-1,1,B,2
-2025-44020-SJ-0,REYES OSCAR M,BSEDUC,2025,3-1,1,F,4
-2022-63231-SJ-0,BAUTISTA DANTE O,BSENT,2022,3-1,1,F,1
-2022-95929-SJ-0,AQUINO FELICIDAD N,BSEDUC,2022,3-2,1,A,4
-2021-49473-SJ-0,NAVARRO ANGELO E,BSBA-FM,2021,4-1,1,F,3
-2024-42629-SJ-0,SANTOS NINA D,BSENT,2024,4-1,1,B,1
-2025-26225-SJ-0,VELASCO MARIO W,BSENT,2025,2-2,1,F,4
-2025-81457-SJ-0,SALVADOR TERESA G,BSEDUC,2025,4-2,1,E,1
-2021-90359-SJ-0,DE LEON HAZEL D,DIT,2021,1-2,1,A,3
-2024-75498-SJ-0,BERNARDO BENJIE O,BSENT,2024,4-1,1,C,3
-2024-90065-SJ-0,CASTILLO FELICIDAD A,BSENT,2024,4-2,1,C,3
-2023-49949-SJ-0,PINEDA BERNADETTE P,BSBA-FM,2023,4-2,1,B,2
-2022-23201-SJ-0,BAUTISTA EDGAR G,BSENT,2022,3-2,1,E,2
-2021-30411-SJ-0,GARCIA RICO G,DIT,2021,3-1,1,D,2
-2021-60886-SJ-0,ZUNIGA CYNTHIA F,DIT,2021,1-1,1,E,2
-2022-73723-SJ-0,CASTRO ROWENA A,BSIT,2022,2-1,1,E,2
-2025-87570-SJ-0,PINEDA EDGAR J,BSENT,2025,3-1,1,F,4
-2022-36462-SJ-0,JIMENEZ ROWENA Y,DIT,2022,1-1,1,E,3
-2023-89574-SJ-0,BAUTISTA HAZEL N,BSENT,2023,3-2,1,D,1
-2024-38658-SJ-0,MENDOZA TERESA L,BSENT,2024,3-1,1,B,2
-2024-28499-SJ-0,VELASCO NINA N,BSPSYCH,2024,2-1,1,D,2
-2024-70644-SJ-0,CASTILLO EDGAR B,BSIT,2024,4-1,1,F,4
-2022-86242-SJ-0,CASTRO EDGAR A,BSIT,2022,3-1,1,E,3
-2021-54905-SJ-0,PINEDA PAOLO A,DIT,2021,3-1,1,D,1
-2025-29174-SJ-0,CASTILLO BERNADETTE E,BSIT,2025,3-2,1,F,2
-2025-39624-SJ-0,TORRES HAZEL F,BSBA-FM,2025,3-1,1,D,2
-2021-18918-SJ-0,AQUINO ANGELO E,BSPSYCH,2021,3-1,1,D,3
-2021-72544-SJ-0,DEL ROSARIO CARMELO Y,BSEDUC,2021,3-2,1,C,4
-2023-88388-SJ-0,LOPEZ JOCELYN P,BSENT,2023,4-1,1,B,1
-2023-50683-SJ-0,JIMENEZ ARNEL B,BSENT,2023,4-1,1,C,4
-2025-10001-SJ-0,DELA PEÑA HAROLD PRINCE E,BSIT,2025,4-1,1,A,1
-2025-10002-SJ-0,FLORIDA RJ JACK A,BSIT,2025,4-1,1,A,2
-2025-10003-SJ-0,MARIANO CEDRICK JOSEPH H,BSIT,2025,4-1,1,A,3
-2025-10004-SJ-0,MASULINO PAULO D,BSIT,2025,4-1,1,B,1
-2025-10005-SJ-0,POCHE JOSHUA D,BSIT,2025,4-1,1,B,2
-2025-10006-SJ-0,DELA CRUZ JUAN AQUINO L,BSIT,2025,4-1,1,B,3
-2025-10007-SJ-0,SANTOS MARIA B,BSIT,2025,4-1,1,B,4
-2025-10008-SJ-0,DELA CRUZ JUAN A,BSIT,2025,4-1,1,C,1
-2025-10009-SJ-0,MERCADO LIAM CARTER V,BSIT,2025,4-1,1,C,2
-2025-10010-SJ-0,RAMIREZ GABRIEL MATEO S,BSIT,2025,4-1,1,C,3
-2025-10011-SJ-0,DORSEY KALEB,BSIT,2025,4-1,1,A,1
-2025-10012-SJ-0,WEBB TIAGO,BSIT,2025,4-1,1,A,2
-2025-10013-SJ-0,MORROW AIDEN,BSIT,2025,4-1,1,A,3
-2025-10014-SJ-0,ELLIOTT EDMUND,BSIT,2025,4-1,1,B,1
-2025-10015-SJ-0,CARSON RICHIE,BSIT,2025,4-1,1,B,2
-2016-11005-SJ-0,SHARMA ANIKA R,BSIT,2025,4-1,1,B,3
-2014-11001-SJ-0,CHOUDHURY JAYDEN K,BSIT,2025,4-1,1,B,4
-2021-25001-SJ-0,REYES MARIA L,BSIT,2025,4-1,1,C,1
-2019-14003-SJ-0,CRUZ RAMON T,BSIT,2025,4-1,1,C,2
-2018-13002-SJ-0,KHAN SARAH B,BSIT,2025,4-1,1,C,3
-2017-12001-SJ-0,SHARMA ANIKA R,BSIT,2025,4-1,1,C,4
-2025-10016-SJ-0,SANTOS CARMELA,BSIT,2025,4-1,1,D,1
+studentNo,name,email,courseCode,academicYear,section,room,cabinet,drawer
+2020-50006-SJ-0,Elena F. Flores,elena.f.flores@example.com,BSIT,2020,4-1,1,2020,1
+2020-50007-SJ-0,Blessa Dawn Mabini Abacahin,blessa.abacahin@example.com,BSIT,2020,4-1,1,2020,3
+2020-50008-SJ-0,Gian Carlo Buenacosa Acasio,gacasio@example.com,BSIT,2020,4-1,1,2020,4
+2020-50009-SJ-0,Chelzie Arelle Villarosa Baron,chelziev.baron@example.com,BSIT,2020,4-1,1,2020,1
+2020-50010-SJ-0,Marc Paolo Vasquez Aboga,marc.aboga@example.com,BSIT,2020,4-1,1,2020,2
+2020-50011-SJ-0,Alliyah Cassandra Evangelista Dañulco,adanulco@example.com,BSIT,2020,4-1,1,2020,3
+2020-50012-SJ-0,Raphael Fausto Cristobal Adorna,raphaelc.adorna@example.com,BSIT,2020,4-1,1,2020,4
+2020-50013-SJ-0,Danieca Jhoye Garcia Calica,danieca.calica@example.com,BSIT,2020,4-1,1,2020,1
+2020-50014-SJ-0,Justin Rain Dy Abucay,jabucay@example.com,BSIT,2020,4-1,1,2020,2
+2020-50015-SJ-0,Jamaica Rose Tamayo De Mesa,jamaicat.demesa@example.com,BSIT,2020,4-1,1,2020,3
+2020-50016-SJ-0,Marck Enzo Banguilan Aviso,marck.aviso@example.com,BSIT,2020,4-1,1,2020,4
+2020-50017-SJ-0,Maria Alexa Roy Cinco,mcinco@example.com,BSIT,2020,4-1,1,2020,1
+2020-50018-SJ-0,Adriane Villanueva Alavazo,adrianev.alavazo@example.com,BSIT,2020,4-1,1,2020,2
+2020-50019-SJ-0,Renee Diona Briñas Madrona,renee.madrona@example.com,BSIT,2020,4-1,1,2020,3
+2020-50020-SJ-0,Jed Bryan Raspado Baraya,jbaraya@example.com,BSIT,2020,4-1,1,2020,4
+2020-50021-SJ-0,Stephanie Nicole Plopino Mallari,stephaniep.mallari@example.com,BSIT,2020,4-1,1,2020,1
+2020-50022-SJ-0,John Paul G. Austria,john.austria@example.com,BSIT,2020,4-1,1,2020,2
+2020-50023-SJ-0,Maria Nathalie Martinez,mmartinez@example.com,BSIT,2020,4-1,1,2020,3
+2020-50024-SJ-0,John Paul Rico Benitez,johnr.benitez@example.com,BSIT,2020,4-1,1,2020,4
+2020-50025-SJ-0,Elisha Pasia Modino,elisha.modino@example.com,BSIT,2020,4-1,1,2020,1
+2020-50026-SJ-0,Sheriden Greg Damo Banela,sbanela@example.com,BSIT,2020,4-1,1,2020,2
+2020-50027-SJ-0,Eugene Canete Natividad,eugenec.natividad@example.com,BSIT,2020,4-1,1,2020,3
+2020-50028-SJ-0,Edmer James Quiñonez Cueva,edmer.cueva@example.com,BSIT,2020,4-1,1,2020,4
+2020-50029-SJ-0,Venice Dane Mora Monilla,vmonilla@example.com,BSIT,2020,4-1,1,2020,1
+2020-50030-SJ-0,Gabriel Lobaton Belmoro,gabriell.belmoro@example.com,BSIT,2020,4-1,1,2020,2
+2020-50031-SJ-0,Cassandra Nicole Banton Nevarez,cassandra.nevarez@example.com,BSIT,2020,4-1,1,2020,3
+2020-50032-SJ-0,Allen Orlandez Damole,adamole@example.com,BSIT,2020,4-1,1,2020,4
+2020-50033-SJ-0,Precious Hanna Montalban Ramos,preciousm.ramos@example.com,BSIT,2020,4-1,1,2020,1
+2021-00123-SJ-0,Cedrick Mariano,cedrick.mariano@example.com,BSIT,2021,3-1,1,2021,1
+2021-18918-SJ-0,Angelo E. Aquino,angelo.e.aquino@example.com,BS Psy,2021,3-1,1,2021,2
+2021-19500-SJ-0,Efren N. Lim,efren.n.lim@example.com,BS Psy,2021,3-1,1,2021,3
+2021-25001-SJ-0,Maria L. Reyes,maria.l.reyes@example.com,BSIT,2021,3-1,1,2021,4
+2021-30004-SJ-0,Ana D. Garcia,ana.d.garcia@example.com,BSIT,2021,3-1,1,2021,1
+2021-30411-SJ-0,Rico G. Garcia,rico.g.garcia@example.com,DICT,2021,3-1,1,2021,2
+2021-49473-SJ-0,Angelo E. Navarro,angelo.e.navarro@example.com,BSBA-FM,2021,3-1,1,2021,3
+2021-53293-SJ-0,Dante Y. Ramos,dante.y.ramos@example.com,BSIT,2021,3-1,1,2021,4
+2021-54905-SJ-0,Paolo A. Pineda,paolo.a.pineda@example.com,DICT,2021,3-1,1,2021,1
+2021-60886-SJ-0,Cynthia F. Zuniga,cynthia.f.zuniga@example.com,DICT,2021,3-1,1,2021,2
+2021-72544-SJ-0,Carmelo Y. Del Rosario,carmelo.y.del.rosario@example.com,BSEDEN,2021,3-1,1,2021,3
+2021-74251-SJ-0,Angelo S. Sarmiento,angelo.s.sarmiento@example.com,BSENT,2021,3-1,1,2021,4
+2021-79815-SJ-0,Gabriel H. Sarmiento,gabriel.h.sarmiento@example.com,BSENT,2021,3-1,1,2021,1
+2021-89377-SJ-0,Oscar M. Ramos,oscar.m.ramos@example.com,BS Psy,2021,3-1,1,2021,2
+2021-90359-SJ-0,Hazel D. De Leon,hazel.d.de.leon@example.com,DICT,2021,3-1,1,2021,3
+2021-95252-SJ-0,Benjie A. Navarro,benjie.a.navarro@example.com,BSENT,2021,3-1,1,2021,4
+2021-96883-SJ-0,Felicidad M. Castro,felicidad.m.castro@example.com,BSIT,2021,3-1,1,2021,1
+2021-96884-SJ-0,Ahrold Johnrie Gaddi Buen,ahrold.buen@example.com,BSIT,2021,3-1,1,2021,3
+2021-96885-SJ-0,Niña Vanessa Llaneta Recaña,nrecana@example.com,BSIT,2021,3-1,1,2021,4
+2021-96886-SJ-0,Johan Dale Carlos A. Dantes,johana.dantes@example.com,BSIT,2021,3-1,1,2021,1
+2021-96887-SJ-0,Jerilyn Antonette Capulla Sikat,jerilyn.sikat@example.com,BSIT,2021,3-1,1,2021,2
+2021-96888-SJ-0,Yestin Gabreil Jayme Caccam,ycaccam@example.com,BSIT,2021,3-1,1,2021,3
+2021-96889-SJ-0,Camilla Galang Rivera,camillag.rivera@example.com,BSIT,2021,3-1,1,2021,4
+2021-96890-SJ-0,Max Donbert Dilim David,max.david@example.com,BSIT,2021,3-1,1,2021,1
+2021-96891-SJ-0,Sean Marcus Soriano Cruzado,scruzado@example.com,BSIT,2021,3-1,1,2021,2
+2021-96892-SJ-0,Alliyah Boglosa Samsona,alliyahb.samsona@example.com,BSIT,2021,3-1,1,2021,3
+2021-96893-SJ-0,Andrey D. Del Rosario,andrey.delrosario@example.com,BSIT,2021,3-1,1,2021,4
+2021-96894-SJ-0,John Dan Rave De Guzman,jdeguzman@example.com,BSIT,2021,3-1,1,2021,1
+2022-10001-SJ-0,Juan A. Dela Cruz,juan.a.dela.cruz@example.com,BSIT,2022,3-2,1,2022,1
+2022-10002-SJ-0,Maria B. Santos,maria.b.santos@example.com,BSIT,2022,3-2,1,2022,2
+2022-23201-SJ-0,Edgar G. Bautista,edgar.g.bautista@example.com,BSENT,2022,3-2,1,2022,3
+2022-25152-SJ-0,Carmelo O. Reyes,carmelo.o.reyes@example.com,BSEDEN,2022,3-2,1,2022,4
+2022-36462-SJ-0,Rowena Y. Jimenez,rowena.y.jimenez@example.com,DICT,2022,3-2,1,2022,1
+2022-45407-SJ-0,Gina W. Reyes,gina.w.reyes@example.com,BSENT,2022,3-2,1,2022,2
+2022-63231-SJ-0,Dante O. Bautista,dante.o.bautista@example.com,BSENT,2022,3-2,1,2022,3
+2022-69082-SJ-0,Gregorio D. Lopez,gregorio.d.lopez@example.com,BSBA-FM,2022,3-2,1,2022,4
+2022-73723-SJ-0,Rowena A. Castro,rowena.a.castro@example.com,BSIT,2022,3-2,1,2022,1
+2022-86242-SJ-0,Edgar A. Castro,edgar.a.castro@example.com,BSIT,2022,3-2,1,2022,2
+2022-95929-SJ-0,Felicidad N. Aquino,felicidad.n.aquino@example.com,BSEDEN,2022,3-2,1,2022,3
+2022-95930-SJ-0,Naomi Dorothy Molato Sanchez,naomim.sanchez@example.com,BSIT,2022,3-2,1,2022,1
+2022-95931-SJ-0,Shelmark Neil Dacuyan Delgado,shelmark.delgado@example.com,BSIT,2022,3-2,1,2022,2
+2022-95932-SJ-0,Xavier Kim Zara Decatoria,xdecatoria@example.com,BSIT,2022,3-2,1,2022,3
+2022-95933-SJ-0,Pauleen Ashley Lanang Sotto,pauleenl.sotto@example.com,BSIT,2022,3-2,1,2022,4
+2022-95934-SJ-0,Warren Jay Borromeo Deocades,warren.deocades@example.com,BSIT,2022,3-2,1,2022,1
+2022-95935-SJ-0,Joshua Jace Dela Vega Delfin,jdelfin@example.com,BSIT,2022,3-2,1,2022,2
+2022-95936-SJ-0,Jeremy Camingao Diamzon,jeremyc.diamzon@example.com,BSIT,2022,3-2,1,2022,3
+2022-95937-SJ-0,Yhuwan Howard Mintay Goc,yhuwan.goc@example.com,BSIT,2022,3-2,1,2022,4
+2022-95938-SJ-0,Renz Baritto Espocia,respocia@example.com,BSIT,2022,3-2,1,2022,1
+2022-95939-SJ-0,Lance Kit Lantaca Gom-Os,lancel.gomos@example.com,BSIT,2022,3-2,1,2022,2
+2022-95940-SJ-0,Mark Joseph F. Golosinda,mark.golosinda@example.com,BSIT,2022,3-2,1,2022,3
+2022-95941-SJ-0,Carlo Ligutan Llaneta,cllaneta@example.com,BSIT,2022,3-2,1,2022,4
+2022-95942-SJ-0,Red Caquilala Imperial,redc.imperial@example.com,BSIT,2022,3-2,1,2022,1
+2022-95943-SJ-0,Luis Amiel Asis Martija,luis.martija@example.com,BSIT,2022,3-2,1,2022,2
+2022-95944-SJ-0,Raymart Orolfo Jumagdao,rjumagdao@example.com,BSIT,2022,3-2,1,2022,3
+2022-95945-SJ-0,James Andrie Kanseko Mendoza,jamesk.mendoza@example.com,BSIT,2022,3-2,1,2022,4
+2022-95946-SJ-0,Joshua Gencianos Lupin,joshua.lupin@example.com,BSIT,2022,3-2,1,2022,1
+2023-00001-SJ-0,Maria Clara Santos,maria.clara.santos@example.com,BSIT,2023,2-1,1,2023,1
+2023-15891-SJ-0,Arnel D. Villanueva,arnel.d.villanueva@example.com,BS Psy,2023,2-1,1,2023,2
+2023-20003-SJ-0,Carlos C. Reyes,carlos.c.reyes@example.com,BSIT,2023,2-1,1,2023,3
+2023-20382-SJ-0,Daphne P. Cruz,daphne.p.cruz@example.com,BSENT,2023,2-1,1,2023,4
+2023-34236-SJ-0,Cynthia T. Sison,cynthia.t.sison@example.com,BSENT,2023,2-1,1,2023,1
+2023-38462-SJ-0,Cynthia C. Quizon,cynthia.c.quizon@example.com,BSENT,2023,2-1,1,2023,2
+2023-40305-SJ-0,Carmelo M. Bautista,carmelo.m.bautista@example.com,BSENT,2023,2-1,1,2023,3
+2023-49949-SJ-0,Bernadette P. Pineda,bernadette.p.pineda@example.com,BSBA-FM,2023,2-1,1,2023,4
+2023-50683-SJ-0,Arnel B. Jimenez,arnel.b.jimenez@example.com,BSENT,2023,2-1,1,2023,1
+2023-70215-SJ-0,Arnel P. De Leon,arnel.p.de.leon@example.com,BSENT,2023,2-1,1,2023,2
+2023-88388-SJ-0,Jocelyn P. Lopez,jocelyn.p.lopez@example.com,BSENT,2023,2-1,1,2023,3
+2023-89574-SJ-0,Hazel N. Bautista,hazel.n.bautista@example.com,BSENT,2023,2-1,1,2023,4
+2023-99337-SJ-0,Edgar L. Pineda,edgar.l.pineda@example.com,BSIT,2023,2-1,1,2023,1
+2023-99338-SJ-0,Dominick Raga Oraba,doraba@example.com,BSIT,2023,2-1,1,2023,3
+2023-99339-SJ-0,Phillip Joseph Mejia Pacis,phillipm.pacis@example.com,BSIT,2023,2-1,1,2023,4
+2023-99340-SJ-0,Junmar Bantayan Pabica,junmar.pabica@example.com,BSIT,2023,2-1,1,2023,1
+2023-99341-SJ-0,Michel Josue Olver Lichauco Parreño,mparreno@example.com,BSIT,2023,2-1,1,2023,2
+2023-99342-SJ-0,Mark Angelo Empat Padriquez,marke.padriquez@example.com,BSIT,2023,2-1,1,2023,3
+2023-99343-SJ-0,Julian Paul Cabilin Pedriña,julian.pedrina@example.com,BSIT,2023,2-1,1,2023,4
+2023-99344-SJ-0,Jandrick Apolonio Plata,jplata@example.com,BSIT,2023,2-1,1,2023,1
+2023-99345-SJ-0,Ahmir Batalla Revereza,ahmirb.revereza@example.com,BSIT,2023,2-1,1,2023,2
+2023-99346-SJ-0,Joseph Mari Garcing Quinto,joseph.quinto@example.com,BSIT,2023,2-1,1,2023,3
+2023-99347-SJ-0,Ravi Ralph Villamor Rondina,rrondina@example.com,BSIT,2023,2-1,1,2023,4
+2023-99348-SJ-0,Reivin Dwayne Milan Quizon,reivinm.quizon@example.com,BSIT,2023,2-1,1,2023,1
+2023-99349-SJ-0,Joerge III Joseph Saguindan,joerge.saguindan@example.com,BSIT,2023,2-1,1,2023,2
+2023-99350-SJ-0,Israel Arold Montaño Salino,isalino@example.com,BSIT,2023,2-1,1,2023,3
+2023-99351-SJ-0,Alexis Gabriel Gandionco Siglos,alexisg.siglos@example.com,BSIT,2023,2-1,1,2023,4
+2023-99352-SJ-0,Jaffy Bareja Salvador,jaffy.salvador@example.com,BSIT,2023,2-1,1,2023,1
+2024-27660-SJ-0,Bernadette B. Dizon,bernadette.b.dizon@example.com,BSIT,2024,2-2,1,2024,1
+2024-28499-SJ-0,Nina N. Velasco,nina.n.velasco@example.com,BS Psy,2024,2-2,1,2024,2
+2024-38658-SJ-0,Teresa L. Mendoza,teresa.l.mendoza@example.com,BSENT,2024,2-2,1,2024,3
+2024-40005-SJ-0,Luis E. Torres,luis.e.torres@example.com,BSIT,2024,2-2,1,2024,4
+2024-42629-SJ-0,Nina D. Santos,nina.d.santos@example.com,BSENT,2024,2-2,1,2024,1
+2024-46619-SJ-0,Efren G. Gonzales,efren.g.gonzales@example.com,BSEDEN,2024,2-2,1,2024,2
+2024-70644-SJ-0,Edgar B. Castillo,edgar.b.castillo@example.com,BSIT,2024,2-2,1,2024,3
+2024-75498-SJ-0,Benjie O. Bernardo,benjie.o.bernardo@example.com,BSENT,2024,2-2,1,2024,4
+2024-90065-SJ-0,Felicidad A. Castillo,felicidad.a.castillo@example.com,BSENT,2024,2-2,1,2024,1
+2024-90066-SJ-0,Xyrus Marko Jim Regencia Ureta,xureta@example.com,BSIT,2024,2-2,1,2024,3
+2024-90067-SJ-0,Scott Lance Ocfemia Sanclaria,scotto.sanclaria@example.com,BSIT,2024,2-2,1,2024,4
+2024-90068-SJ-0,Querwind Ged Celario Valenzuela,querwind.valenzuela@example.com,BSIT,2024,2-2,1,2024,1
+2024-90069-SJ-0,Marwin Magan Sapo-An,msapoan@example.com,BSIT,2024,2-2,1,2024,2
+2024-90070-SJ-0,Lawrence Guevarra Sarmiento,lawrenceg.sarmiento@example.com,BSIT,2024,2-2,1,2024,3
+2024-90071-SJ-0,Stephen Lance Vilog Terciño,stephen.tercino@example.com,BSIT,2024,2-2,1,2024,4
+2024-90072-SJ-0,Mhig'z Justine Sunico Tupaz,mtupaz@example.com,BSIT,2024,2-2,1,2024,1
+2024-90073-SJ-0,Christine Kate DG. Alfonso,christined.alfonso@example.com,BSIT,2024,2-2,1,2024,2
+2024-90074-SJ-0,James P. Alvarez,james.alvarez@example.com,BSIT,2024,2-2,1,2024,3
+2024-90075-SJ-0,Ashley Nicole DC. Abayan,aabayan@example.com,BSIT,2024,2-2,1,2024,4
+2024-90076-SJ-0,Paul Joshua V. Almario,paulv.almario@example.com,BSIT,2024,2-2,1,2024,1
+2024-90077-SJ-0,Micah Athena D. Bugayong,micah.bugayong@example.com,BSIT,2024,2-2,1,2024,2
+2024-90078-SJ-0,Virgilio II C. Alvarez,valvarez@example.com,BSIT,2024,2-2,1,2024,3
+2024-90079-SJ-0,Junella Mae R. Andres,junellar.andres@example.com,BSIT,2024,2-2,1,2024,4
+2024-90080-SJ-0,Justine Cholo Andrade,justine.andrade@example.com,BSIT,2024,2-2,1,2024,1
+2024-90081-SJ-0,Daniecy Mariz Angel G. Calica,dcalica@example.com,BSIT,2024,2-2,1,2024,2
+2024-90082-SJ-0,Ralph Cedrick G. Bayanay,ralphg.bayanay@example.com,BSIT,2024,2-2,1,2024,3
+2024-90083-SJ-0,Hayden Norleen P. Benitez,hayden.benitez@example.com,BSIT,2024,2-2,1,2024,4
+2024-90084-SJ-0,Marvin G. Bacaoco,mbacaoco@example.com,BSIT,2024,2-2,1,2024,1
+2024-90085-SJ-0,Sandra Marie O. Francisco,sandrao.francisco@example.com,BSIT,2024,2-2,1,2024,2
+2025-10001-SJ-0,Harold Prince E. Dela Peña,harold.prince.e.dela.pena@example.com,BSIT,2025,1-1,1,2025,1
+2025-10002-SJ-0,Rj Jack A. Florida,rj.jack.a.florida@example.com,BSIT,2025,1-1,1,2025,2
+2025-10003-SJ-0,Cedrick Joseph H. Mariano,cedrick.joseph.h.mariano@example.com,BSIT,2025,1-1,1,2025,3
+2025-10004-SJ-0,Paulo D. Masulino,paulo.d.masulino@example.com,BSIT,2025,1-1,1,2025,4
+2025-10005-SJ-0,Joshua D. Poche,joshua.d.poche@example.com,BSIT,2025,1-1,1,2025,1
+2025-10006-SJ-0,Juan Aquino L. Dela Cruz,juan.aquino.l.dela.cruz@example.com,BSIT,2025,1-1,1,2025,2
+2025-10007-SJ-0,Maria B. Santos,maria.b.santos2@example.com,BSIT,2025,1-1,1,2025,3
+2025-10008-SJ-0,Juan A. Dela Cruz,juan.a.dela.cruz2@example.com,BSIT,2025,1-1,1,2025,4
+2025-10009-SJ-0,Liam Carter V. Mercado,liam.carter.v.mercado@example.com,BSIT,2025,1-1,1,2025,1
+2025-10010-SJ-0,Gabriel Mateo S. Ramirez,gabriel.mateo.s.ramirez@example.com,BSIT,2025,1-1,1,2025,2
+2025-10011-SJ-0,Kaleb Dorsey,kaleb.dorsey@example.com,BSIT,2025,1-1,1,2025,3
+2025-10012-SJ-0,Tiago Webb,tiago.webb@example.com,BSIT,2025,1-1,1,2025,4
+2025-10013-SJ-0,Aiden Morrow,aiden.morrow@example.com,BSIT,2025,1-1,1,2025,1
+2025-10014-SJ-0,Edmund Elliott,edmund.elliott@example.com,BSIT,2025,1-1,1,2025,2
+2025-10015-SJ-0,Richie Carson,richie.carson@example.com,BSIT,2025,1-1,1,2025,3
+2025-10016-SJ-0,Carmela Santos,carmela.santos@example.com,BSIT,2025,1-1,1,2025,4
+2025-26225-SJ-0,Mario W. Velasco,mario.w.velasco@example.com,BSENT,2025,1-1,1,2025,1
+2025-29174-SJ-0,Bernadette E. Castillo,bernadette.e.castillo@example.com,BSIT,2025,1-1,1,2025,2
+2025-39624-SJ-0,Hazel F. Torres,hazel.f.torres@example.com,BSBA-FM,2025,1-1,1,2025,3
+2025-44020-SJ-0,Oscar M. Reyes,oscar.m.reyes@example.com,BSEDEN,2025,1-1,1,2025,4
+2025-60007-SJ-0,Julianne Marie Mercado Bautista,julianne.marie.mercado.bautista@example.com,BSIT,2025,1-1,1,2025,1
+2025-60008-SJ-0,Julian Carlo Santos De Leon,julian.carlo.santos.de.leon@example.com,BSIT,2025,1-1,1,2025,2
+2025-60009-SJ-0,Gabriel Mateo Santos Ramirez,gabriel.mateo.santos.ramirez@example.com,BSIT,2025,1-1,1,2025,3
+2025-60010-SJ-0,Liam Carter Valencia Mercado,liam.carter.valencia.mercado@example.com,BSIT,2025,1-1,1,2025,4
+2025-61833-SJ-0,Ismael C. Del Rosario,ismael.c.del.rosario@example.com,BSENT,2025,1-1,1,2025,1
+2025-79356-SJ-0,Imelda M. Torres,imelda.m.torres@example.com,BSIT,2025,1-1,1,2025,2
+2025-81457-SJ-0,Teresa G. Salvador,teresa.g.salvador@example.com,BSEDEN,2025,1-1,1,2025,3
+2025-87570-SJ-0,Edgar J. Pineda,edgar.j.pineda@example.com,BSENT,2025,1-1,1,2025,4
+2025-90001-SJ-0,Angela M. De La Rosa,angela.m.de.la.rosa@example.com,BSA,2025,1-1,1,2025,1
+2026-10001-SJ-0,Leonardo III R. Catli,leonardo.catli@example.com,BSIT,2026,1-2,1,2026,2
+2026-10002-SJ-0,Winona Shanley N. Camagos,wcamagos@example.com,BSIT,2026,1-2,1,2026,3
+2026-10003-SJ-0,Juan Carlo P. Balili,juanp.balili@example.com,BSIT,2026,1-2,1,2026,4
+2026-10004-SJ-0,Rizza Mae Y. Gonzales,rizza.gonzales@example.com,BSIT,2026,1-2,1,2026,1
+2026-10005-SJ-0,John Cedric M. Concepcion,jconcepcion@example.com,BSIT,2026,1-2,1,2026,2
+2026-10006-SJ-0,NR-Heart Aman R. Cequena,nrr.cequena@example.com,BSIT,2026,1-2,1,2026,3
+2026-10007-SJ-0,Mark Jhaztine V. Bernardo,mark.bernardo@example.com,BSIT,2026,1-2,1,2026,4
+2026-10008-SJ-0,Jhanna Lou Lapido,jlapido@example.com,BSIT,2026,1-2,1,2026,1
+2026-10009-SJ-0,Jannie Ruth S. Pardilla,jannies.pardilla@example.com,BSIT,2026,1-2,1,2026,2
+2026-10010-SJ-0,Felix Christian B. Bontigao,felix.bontigao@example.com,BSIT,2026,1-2,1,2026,3
+2026-10011-SJ-0,Eunice Julianna S. Marquez,emarquez@example.com,BSIT,2026,1-2,1,2026,4
+2026-10012-SJ-0,Johann Gabrielle Ducusin,johanng.ducusin@example.com,BSIT,2026,1-2,1,2026,1
+2026-10013-SJ-0,Ashlie C. Postanes,ashlie.postanes@example.com,BSIT,2026,1-2,1,2026,2
+2026-10014-SJ-0,Jay-r P. Cabreza,jcabreza@example.com,BSIT,2026,1-2,1,2026,3
+2026-10015-SJ-0,Kathleen I. Pinto,kathleeni.pinto@example.com,BSIT,2026,1-2,1,2026,4
+2026-10016-SJ-0,Giselle Mae Rapsing,giselle.rapsing@example.com,BSIT,2026,1-2,1,2026,1
+2026-10017-SJ-0,Brian Gail A. Centeno,bcenteno@example.com,BSIT,2026,1-2,1,2026,2
+2026-10018-SJ-0,Jesalyn S. Segotier,jesalyns.segotier@example.com,BSIT,2026,1-2,1,2026,3
+2026-10019-SJ-0,Joseph L. Maglinte,joseph.maglinte@example.com,BSIT,2026,1-2,1,2026,4
+2026-10020-SJ-0,Shanley Rheyela Joy H. Sarturio,ssarturio@example.com,BSIT,2026,1-2,1,2026,1
+2026-10021-SJ-0,Christian O. Colita,christiano.colita@example.com,BSIT,2026,1-2,1,2026,2
+2026-10022-SJ-0,Trunkszisqa Mae O. Tamalla,trunkszisqa.tamalla@example.com,BSIT,2026,1-2,1,2026,3
+2026-10023-SJ-0,Neil Wayne T. Cruz,ncruz@example.com,BSIT,2026,1-2,1,2026,4
+2026-10024-SJ-0,Cydoel M. Tomas,cydoelm.tomas@example.com,BSIT,2026,1-2,1,2026,1
+2026-10025-SJ-0,Paulo D. Masculino,paulo.masculino@example.com,BSIT,2026,1-2,1,2026,2
+2026-10026-SJ-0,Billy B. Dazo,bdazo@example.com,BSIT,2026,1-2,1,2026,3
+2026-10027-SJ-0,Tyronne Jake S. Medina,tyronnes.medina@example.com,BSIT,2026,1-2,1,2026,4
+2026-10028-SJ-0,Kim S. Escobar,kim.escobar@example.com,BSIT,2026,1-2,1,2026,1
+2026-10029-SJ-0,Borgy Misael Palermo,bpalermo@example.com,BSIT,2026,1-2,1,2026,2
+2026-10030-SJ-0,Jean Brian Garcia,jeanb.garcia@example.com,BSIT,2026,1-2,1,2026,3
+2020-98000-SJ-0,Christian Xander E. Griba,christian.griba@example.com,BSIT,2020,4-1,1,2020,1
+2021-98000-SJ-0,Marc Genesis L. Regis,mregis@example.com,BSIT,2021,3-1,1,2021,1
+2022-98000-SJ-0,Charles Tristan E. Hernandez,charlese.hernandez@example.com,BSIT,2022,3-2,1,2022,1
+2023-98000-SJ-0,Giovanni L. Saavedra,giovanni.saavedra@example.com,BSIT,2023,2-1,1,2023,1
+2020-98001-SJ-0,Angelo Rabi Jarlego,ajarlego@example.com,BSIT,2020,4-1,1,2020,2
+2021-98001-SJ-0,Bernardo III G. Sales,bernardog.sales@example.com,BSIT,2021,3-1,1,2021,2
+2022-98001-SJ-0,Christian Louie R. Lubao,christian.lubao@example.com,BSIT,2022,3-2,1,2022,2
+2023-98001-SJ-0,Ron Aris J. Tañag,rtanag@example.com,BSIT,2023,2-1,1,2023,2
+2024-98000-SJ-0,Virgilio M. Morales,virgiliom.morales@example.com,BSIT,2024,2-2,1,2024,2
+2025-98000-SJ-0,Jim Rusell C. Tejoso,jim.tejoso@example.com,BSIT,2025,1-1,1,2025,2
+2020-98002-SJ-0,Jeffrey Moralla,jmoralla@example.com,BSIT,2020,4-1,1,2020,1
+2021-98002-SJ-0,Alexis D. Ustare,alexisd.ustare@example.com,BSIT,2021,3-1,1,2021,1
+2022-98002-SJ-0,Joseph Rainer N. Pedregal,joseph.pedregal@example.com,BSIT,2022,3-2,1,2022,1
+2023-98002-SJ-0,Juztin Ross Y. Uy,juy@example.com,BSIT,2023,2-1,1,2023,1
+2024-98001-SJ-0,French Jame A. Riano,frencha.riano@example.com,BSIT,2024,2-2,1,2024,1
+2025-98001-SJ-0,Charles Gabriel J. Rola,charles.rola@example.com,BSIT,2025,1-1,1,2025,1
+2026-98000-SJ-0,Charlie Magne J. Rola,crola@example.com,BSIT,2026,1-2,1,2026,1
+2020-98003-SJ-0,Gabriel S. Salabsab,gabriels.salabsab@example.com,BSIT,2020,4-1,1,2020,2
+2021-98003-SJ-0,John Hector Samorin,john.samorin@example.com,BSIT,2021,3-1,1,2021,2
+2022-98003-SJ-0,Jenero F. Santos,jsantos@example.com,BSIT,2022,3-2,1,2022,2
+2023-98003-SJ-0,Francisco Soque,francisco.soque@example.com,BSIT,2023,2-1,1,2023,2
+2024-98002-SJ-0,Laira Anne Agojo,laira.agojo@example.com,BSIT,2024,2-2,1,2024,2
+2025-98002-SJ-0,Justine Apdal,japdal@example.com,BSIT,2025,1-1,1,2025,2
+2026-98001-SJ-0,Kris Ann Bermas,krisa.bermas@example.com,BSIT,2026,1-2,1,2026,2
+2020-98004-SJ-0,Justine Lloyd Bautista,justine.bautista@example.com,BSIT,2020,4-1,1,2020,1
+2021-98004-SJ-0,Luisa Carable,lcarable@example.com,BSIT,2021,3-1,1,2021,1
+2022-98004-SJ-0,Jonathan Banggad,jonathan.banggad@example.com,BSIT,2022,3-2,1,2022,1
+2023-98004-SJ-0,Raven Nicole Dela Cruz,raven.delacruz@example.com,BSIT,2023,2-1,1,2023,1
+2024-98003-SJ-0,Joelo Buenaventura,jbuenaventura@example.com,BSIT,2024,2-2,1,2024,1
+2025-98003-SJ-0,Manilyn Catenza,manilyn.catenza@example.com,BSIT,2025,1-1,1,2025,1
+2026-98002-SJ-0,John Mark Bayrante,john.bayrante@example.com,BSIT,2026,1-2,1,2026,1
+2020-98005-SJ-0,Anna z Divino,adivino@example.com,BSIT,2020,4-1,1,2020,2
+2021-98005-SJ-0,Sebastian Andrei Dacanay,sebastiana.dacanay@example.com,BSIT,2021,3-1,1,2021,2
+2022-98005-SJ-0,Tamara Geronimo,tamara.geronimo@example.com,BSIT,2022,3-2,1,2022,2
+2023-98005-SJ-0,John Romel Canal,jcanal@example.com,BSIT,2023,2-1,1,2023,2
+2024-98004-SJ-0,Rose Ann Gonzaga,rosea.gonzaga@example.com,BSIT,2024,2-2,1,2024,2
+2025-98004-SJ-0,Kobe Fajardo,kobe.fajardo@example.com,BSIT,2025,1-1,1,2025,2
+2026-98003-SJ-0,Abigael Hitosis,ahitosis@example.com,BSIT,2026,1-2,1,2026,2
+2020-98006-SJ-0,Jun Jethro Dancel,junj.dancel@example.com,BSIT,2020,4-1,1,2020,1
+2021-98006-SJ-0,Trisha Mae Lucine,trisha.lucine@example.com,BSIT,2021,3-1,1,2021,1
+2022-98006-SJ-0,Mark Jason Fulguerinas,mfulguerinas@example.com,BSIT,2022,3-2,1,2022,1
+2023-98006-SJ-0,Angel Jasmin Iruguin,angelj.iruguin@example.com,BSIT,2023,2-1,1,2023,1
+2024-98005-SJ-0,Harold Ken De Jesus,harold.dejesus@example.com,BSIT,2024,2-2,1,2024,1
+2025-98005-SJ-0,Trecia Mae Morales,tmorales@example.com,BSIT,2025,1-1,1,2025,1
+2026-98004-SJ-0,Charles Ezra Ilarde,charlese.ilarde@example.com,BSIT,2026,1-2,1,2026,1
+2020-98007-SJ-0,Rie Mabitado,rie.mabitado@example.com,BSIT,2020,4-1,1,2020,2
+2021-98007-SJ-0,Rian Jake Embuido,rembuido@example.com,BSIT,2021,3-1,1,2021,2
+2022-98007-SJ-0,Gaes Franz Masangkay,gaesf.masangkay@example.com,BSIT,2022,3-2,1,2022,2
+2023-98007-SJ-0,Josephine Claire Nogot,josephine.nogot@example.com,BSIT,2023,2-1,1,2023,2
+2024-98006-SJ-0,Gerald Glenn Galero,ggalero@example.com,BSIT,2024,2-2,1,2024,2
+2025-98006-SJ-0,John Gabriel Medrano,johng.medrano@example.com,BSIT,2025,1-1,1,2025,2
+2026-98005-SJ-0,Angel Fhaye Rafanan,angel.rafanan@example.com,BSIT,2026,1-2,1,2026,2
+2020-98008-SJ-0,Justine Gasque,jgasque@example.com,BSIT,2020,4-1,1,2020,1
+2021-98008-SJ-0,Jesse Mari Mirabel,jessem.mirabel@example.com,BSIT,2021,3-1,1,2021,1
+2022-98008-SJ-0,Roselyn Kheem Redillas,roselyn.redillas@example.com,BSIT,2022,3-2,1,2022,1
+2023-98008-SJ-0,Nikou Carlos Gepoleo,ngepoleo@example.com,BSIT,2023,2-1,1,2023,1
+2024-98007-SJ-0,Liam Eiver Isaac O'Toole,liami.otoole@example.com,BSIT,2024,2-2,1,2024,1
+2025-98007-SJ-0,Coleen Faye Sanchez,coleen.sanchez@example.com,BSIT,2025,1-1,1,2025,1
+2026-98006-SJ-0,Breenz Juanillo,bjuanillo@example.com,BSIT,2026,1-2,1,2026,1
+2020-98009-SJ-0,Ahldrn Santos,ahldrn.santos@example.com,BSIT,2020,4-1,1,2020,2
+2021-98009-SJ-0,Nicole Viray,nicole.viray@example.com,BSIT,2021,3-1,1,2021,2
+2022-98009-SJ-0,Amirhussein Macakiling,amacakiling@example.com,BSIT,2022,3-2,1,2022,2
+2023-98009-SJ-0,Jonathan Valladores,jonathan.valladores@example.com,BSIT,2023,2-1,1,2023,2
+2024-98008-SJ-0,Eugene Manahan,eugene.manahan@example.com,BSIT,2024,2-2,1,2024,2
+2025-98008-SJ-0,Andre Thaddeus Villagarcia,avillagarcia@example.com,BSIT,2025,1-1,1,2025,2
+2026-98007-SJ-0,John Louise Martinez,johnl.martinez@example.com,BSIT,2026,1-2,1,2026,2
+2020-98010-SJ-0,Virgil Lito Ortega,virgil.ortega@example.com,BSIT,2020,4-1,1,2020,1
+2021-98010-SJ-0,Aron Pagcaliwagan,apagcaliwagan@example.com,BSIT,2021,3-1,1,2021,1
+2022-98010-SJ-0,Aegean Whinbert Pasia,aegeanw.pasia@example.com,BSIT,2022,3-2,1,2022,1
+2023-98010-SJ-0,Tristan Pingol,tristan.pingol@example.com,BSIT,2023,2-1,1,2023,1
+2024-98009-SJ-0,Anthony Prudente,aprudente@example.com,BSIT,2024,2-2,1,2024,1
+2025-98009-SJ-0,Jeremie Salonga,jeremie.salonga@example.com,BSIT,2025,1-1,1,2025,1
+2026-98008-SJ-0,Carl Louie Semera,carl.semera@example.com,BSIT,2026,1-2,1,2026,1
+2020-98011-SJ-0,John Steven Sy,jsy@example.com,BSIT,2020,4-1,1,2020,2
+2021-98011-SJ-0,Armel John Torres,armelj.torres@example.com,BSIT,2021,3-1,1,2021,2
+2022-98011-SJ-0,France Shellby Valencia,france.valencia@example.com,BSIT,2022,3-2,1,2022,2
+2023-98011-SJ-0,Vin Cyril Vasquez,vvasquez@example.com,BSIT,2023,2-1,1,2023,2
+2024-98010-SJ-0,Ezra Kate Bautista,ezrak.bautista@example.com,BSIT,2024,2-2,1,2024,2
+2025-98010-SJ-0,Adrian Acabo,adrian.acabo@example.com,BSIT,2025,1-1,1,2025,2
+2026-98009-SJ-0,Liana Melicent Cajayon,lcajayon@example.com,BSIT,2026,1-2,1,2026,2
+2020-98012-SJ-0,Rommel D. Acob,rommeld.acob@example.com,BSIT,2020,4-1,1,2020,1
+2021-98012-SJ-0,Mia Carryl V. Capili,mia.capili@example.com,BSIT,2021,3-1,1,2021,1
+2022-98012-SJ-0,Sherwin Alingayao,salingayao@example.com,BSIT,2022,3-2,1,2022,1
+2023-98012-SJ-0,Margarita Domingo,margarita.domingo@example.com,BSIT,2023,2-1,1,2023,1
+2024-98011-SJ-0,Hassan E. Ayonan,hassan.ayonan@example.com,BSIT,2024,2-2,1,2024,1
+2025-98011-SJ-0,Kim Ashley Gutierrez,kgutierrez@example.com,BSIT,2025,1-1,1,2025,1
+2026-98010-SJ-0,Jeremy Balingit,jeremy.balingit@example.com,BSIT,2026,1-2,1,2026,1
+2020-98013-SJ-0,Ma. Angelica Hernani,ma.hernani@example.com,BSIT,2020,4-1,1,2020,2
+2021-98013-SJ-0,Albrecht Carl P. Chavez,achavez@example.com,BSIT,2021,3-1,1,2021,2
+2022-98013-SJ-0,Jicel Ann V. Iyog,jicelv.iyog@example.com,BSIT,2022,3-2,1,2022,2
+2023-98013-SJ-0,Zaki Vishnu Cinco,zaki.cinco@example.com,BSIT,2023,2-1,1,2023,2
+2024-98012-SJ-0,Rica Paula Jordan,rjordan@example.com,BSIT,2024,2-2,1,2024,2
+2025-98012-SJ-0,Jaspher Xyke M. Cortez,jaspherm.cortez@example.com,BSIT,2025,1-1,1,2025,2
+2026-98011-SJ-0,Rona Mae A. Omandam,rona.omandam@example.com,BSIT,2026,1-2,1,2026,2
+2020-98014-SJ-0,Lance Lemuel Crimen,lcrimen@example.com,BSIT,2020,4-1,1,2020,1
+2021-98014-SJ-0,Jiosanna Love Osorio,jiosannal.osorio@example.com,BSIT,2021,3-1,1,2021,1
+2022-98014-SJ-0,Daniel John Datu,daniel.datu@example.com,BSIT,2022,3-2,1,2022,1
+2023-98014-SJ-0,Rena Mae M. Manuel,rmanuel@example.com,BSIT,2023,2-1,1,2023,1
+2024-98013-SJ-0,Cris Daniel Ecalne,crisd.ecalne@example.com,BSIT,2024,2-2,1,2024,1
+2025-98013-SJ-0,Alyssa Marie Mapanao,alyssa.mapanao@example.com,BSIT,2025,1-1,1,2025,1
+2026-98012-SJ-0,Rydel F. Fabellon,rfabellon@example.com,BSIT,2026,1-2,1,2026,1
+2020-98015-SJ-0,El Cherry Mae D. Masibay,eld.masibay@example.com,BSIT,2020,4-1,1,2020,2
+2021-98015-SJ-0,Cogie C. Florida,cogie.florida@example.com,BSIT,2021,3-1,1,2021,2
+2022-98015-SJ-0,Camille Kerstien E. Nakpil,cnakpil@example.com,BSIT,2022,3-2,1,2022,2
+2023-98015-SJ-0,Aron John Gutierrez,aronj.gutierrez@example.com,BSIT,2023,2-1,1,2023,2
+2024-98014-SJ-0,Kissez H. Ureta,kissez.ureta@example.com,BSIT,2024,2-2,1,2024,2
+2025-98014-SJ-0,Jv Ferdinand G. Jocson,jjocson@example.com,BSIT,2025,1-1,1,2025,2
+2026-98013-SJ-0,Jan Vince Ladisla,janv.ladisla@example.com,BSIT,2026,1-2,1,2026,2
+2020-98016-SJ-0,Christian Rey Mante,christian.mante@example.com,BSIT,2020,4-1,1,2020,1
+2021-98016-SJ-0,Vencent Roleo Mañibo,vmanibo@example.com,BSIT,2021,3-1,1,2021,1
+2022-98016-SJ-0,Rock Lawrence Nueva,rockl.nueva@example.com,BSIT,2022,3-2,1,2022,1
+2023-98016-SJ-0,John Dave Obenieta,john.obenieta@example.com,BSIT,2023,2-1,1,2023,1
+2024-98015-SJ-0,Jorhel Ompoy,jompoy@example.com,BSIT,2024,2-2,1,2024,1
+2025-98015-SJ-0,Fhilip Emmanuel Pascual,fhilipe.pascual@example.com,BSIT,2025,1-1,1,2025,1
+2026-98014-SJ-0,Rupert John P. Pastora,rupert.pastora@example.com,BSIT,2026,1-2,1,2026,1
+2020-98017-SJ-0,Marc Nicholson M. Plarisan,mplarisan@example.com,BSIT,2020,4-1,1,2020,2
+2021-98017-SJ-0,Brian P. Rabano,brianp.rabano@example.com,BSIT,2021,3-1,1,2021,2
+2022-98017-SJ-0,John Rey Rebusquillo,john.rebusquillo@example.com,BSIT,2022,3-2,1,2022,2
+2023-98017-SJ-0,Joseph Anthony S. Rosales,jrosales@example.com,BSIT,2023,2-1,1,2023,2
+2024-98016-SJ-0,Karl Andrei Serrano,karla.serrano@example.com,BSIT,2024,2-2,1,2024,2
+2025-98016-SJ-0,Matthew Jericho P. Silva,matthew.silva@example.com,BSIT,2025,1-1,1,2025,2
+2026-98015-SJ-0,Robert James O. Tarriela,rtarriela@example.com,BSIT,2026,1-2,1,2026,2
+2020-98018-SJ-0,John Oliver Villanueva,johno.villanueva@example.com,BSIT,2020,4-1,1,2020,1
+2021-98018-SJ-0,Jessie Jeff Yambao,jessie.yambao@example.com,BSIT,2021,3-1,1,2021,1

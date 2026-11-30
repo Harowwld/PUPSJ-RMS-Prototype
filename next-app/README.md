@@ -75,7 +75,7 @@ For a Windows 10/11 workstation, use the installer in `installer/windows`. It in
 
 The workstation needs internet access for Docker Desktop and the initial container build. Installing a missing Docker Desktop requires Windows Package Manager (`winget`); if it is missing, install or update **App Installer** from Microsoft Store. An existing Docker Desktop is detected through its CLI location, Windows installation records, and standard folders, including installations on another drive. A Docker CLI alone does not count as Docker Desktop. Docker Desktop may ask for first-run approval or a Windows restart. Re-run the installer after restarting if setup did not finish. The scanner inbox is under the chosen installation folder at `hot-folder`.
 
-The installer's `.env` is stored under the chosen installation folder at `app\.env` (normally `C:\ProgramData\PUPSJ-RMS\app\.env`) and access is restricted to Windows administrators and SYSTEM. Windows stores the installation location so updates and Configure Email find the same settings. Keep the chosen staff password private. The initial SuperAdmin account is `superadmin@pup.local`. Start and Stop desktop shortcuts detect Docker's current location when launched.
+The installer's `.env` is stored under the chosen installation folder at `app\.env` (normally `C:\ProgramData\PUPSJ-RMS\app\.env`) and access is restricted to Windows administrators and SYSTEM. Windows stores the installation location so updates and Configure Email find the same settings. Keep the chosen staff password private. The initial SuperAdmin account is `superadmin@pup.com`. Start and Stop desktop shortcuts detect Docker's current location when launched.
 
 The app and database run locally in Docker; database and upload data persist in Docker volumes when the app is stopped. Choosing a different RMS installation folder does not move Docker Desktop's internal storage or migrate an existing installation.
 
@@ -185,7 +185,9 @@ SuperAdmin can find completed signups and see existing student record links unde
 
 SMTP settings enable account notices and staff email recovery. `SMTP_FROM` must be an address permitted by your mail provider. Use port 465 with `SMTP_SECURE=true`, or port 587 with `SMTP_SECURE=false`. Docker Compose passes these values to the app container. Staff creation and office-admin provisioning still succeed with SMTP disabled and report `credentialEmail.sent: false`. When email is configured, newly provisioned accounts receive their assigned password.
 
-For staff password recovery, enter the registered email address or Staff ID, then click **Reset Password** in the recovery email and enter the new password twice. Links expire after 15 minutes and cannot be reused. A new request replaces previous links, and a successful reset invalidates earlier login sessions. Recovery requires configured SMTP and a deliverable registered email address; demo `@pup.local` addresses cannot receive mail through a public email provider. The request response does not disclose whether an account exists.
+New Staff Directory and Personnel Directory accounts require an email address that belongs to the staff member. Registration emails the sign-in details and a six-digit verification code. Staff enter the code at first sign-in and can request another code if it expires. The seven seeded demo accounts and existing personnel retain immediate sign-in.
+
+For staff password recovery, enter the registered email address or Staff ID, then click **Reset Password** in the recovery email and enter the new password twice. Links expire after 15 minutes and cannot be reused. A new request replaces previous links, and a successful reset invalidates earlier login sessions. Recovery requires configured SMTP and a deliverable registered email address; the seven seeded `@pup.com` demo addresses are for sign-in only. The request response does not disclose whether an account exists.
 
 Alternatively, select **Use security questions**, enter the email address or Staff ID, select one of the account's previously answered questions, and provide its answer with the new password. Answers ignore leading/trailing spaces and letter case. This method works without SMTP; accounts with no saved answers must use email recovery or contact an administrator. Both recovery methods enforce password policy and rate limits and invalidate earlier login sessions after a successful reset.
 
@@ -268,12 +270,13 @@ The system includes pre-seeded demo accounts for all administrative, office, and
 
 | Role | Office / Scope | Account ID / Student No | Email Identifier | Default Password | Dashboard Route & Purpose |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` | `superadmin@pup.local` *(or `admin.default@pup.local`)* | `DEFAULT_STAFF_PASSWORD` from `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
-| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
-| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
-| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (OSAS records review, student organization event proposals) |
-| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.local` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
-| **Student** | Student Portal | `2022-10001-SJ-0` (Juan Dela Cruz) | `student@pup.local` *(or `2022-10001-SJ-0`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
+| **SuperAdmin** | Global (`NULL`) | `PUPSUPERADMIN-001` (Ramon Villanueva) | `superadmin@pup.com` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/systemadmin` (System-wide administration, office provisioning, system health) |
+| **Registrar Admin** | Office of the Registrar | `PUPREGISTRAR-003` | `admin.registrar@pup.com` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (Registrar compliance, storage layout, document review, batch scanning) |
+| **Registrar Staff** | Office of the Registrar | `PUPREGISTRAR-002` | `staff.registrar@pup.com` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Digitization, scan & upload, student records, document request fulfillment) |
+| **OSAS Admin** | Office of Student Affairs and Services | `PUPOSAS-001` | `admin.osas@pup.com` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/admin` (OSAS records review, student organization event proposals) |
+| **OSAS Staff** | Office of Student Affairs and Services | `PUPOSAS-002` | `staff.osas@pup.com` | `DEFAULT_STAFF_PASSWORD` from `.env` | `/staff` (Student organization operations and OSAS workflows) |
+| **Student** | Student Portal | `2022-10001-SJ-0` (Juan Dela Cruz) | `student@pup.com` *(or `2022-10001-SJ-0`)* | Set by the seed script | `/student` (Online Document Request System & Student Org Event Submissions) |
+| **Student** | Student Portal | `2023-00001-SJ-0` (Maria Clara Santos) | `test.student@pup.com` | Set by the seed script | `/student` |
 
 </div>
 
@@ -350,18 +353,18 @@ pnpm requests:clear -- --confirm
 
 This preserves students, accounts, official documents, staff, and OSAS event-proposal updates.
 
-Resetting the database is destructive. It also removes **all contents of `LOCAL_DATA_DIR`** (default `next-app/.local`), including scanned documents, legacy uploads, pending scanner files, local backups, and emulated external backups stored there. Backups on a separate external drive are outside that directory and are not removed. Stop scanner output before resetting; the watcher recreates empty office folders when it resumes. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. `pnpm reset-db` clears application data, then restores the demo baseline, including demo staff and student accounts, lookup data, and default storage layouts:
+Resetting the database is destructive. It also removes **all contents of `LOCAL_DATA_DIR`** (default `next-app/.local`), including scanned documents, legacy uploads, pending scanner files, local backups, and emulated external backups stored there. Backups on a separate external drive are outside that directory and are not removed. Stop scanner output before resetting; the watcher recreates empty office folders when it resumes. The local helper connects directly to PostgreSQL using `DATABASE_URL` from `next-app/.env`; only the database needs to be running. It does not require an app login or a running Next.js server. It accepts only local database hosts (`localhost`, `127.0.0.1`, or `::1`) and refuses to run with `NODE_ENV=production`. `pnpm db:reset` clears application data, then restores the demo baseline, including demo staff and student accounts, lookup data, and default storage layouts:
 
 ```bash
-pnpm reset-db
+pnpm db:reset
 ```
 
-The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. After a reset, restart the Next.js server if needed and run `pnpm populate-sample-data` or `node scripts/seed-real-data.mjs` to restore sample records.
+The package command supplies the required `--confirm` flag. Direct invocation also requires confirmation: `node scripts/reset-db.mjs --confirm`. The CLI applies pending migrations before clearing data. After a reset, restart the Next.js server if needed and run `pnpm db:seed:sample` to load the demo dataset.
 
 To clear application data and recreate only the five demo staff accounts (without demo students, lookup data, or storage layouts), run:
 
 ```bash
-pnpm reset-db:demo-accounts
+pnpm db:reset:demo-accounts
 ```
 
 The equivalent system-admin-only API is `POST /api/system/reset-db/demo-accounts` with `{ "confirmation": "RESET_LOCAL_DATABASE" }`.

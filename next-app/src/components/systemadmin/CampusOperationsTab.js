@@ -27,6 +27,7 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
+  EmptyState,
 } from "@/components/ui/empty"
 import {
   Sheet,
@@ -50,6 +51,7 @@ import ServiceStandardsSheet from "./ServiceStandardsSheet"
 import ViewModeIcon from "@/components/shared/ViewModeIcon"
 import CampusOperationsList from "./CampusOperationsList"
 import {
+  COMPACT_BADGE_BASE,
   SUPERADMIN_BADGE_BASE as BADGE_BASE,
   BADGE_PALETTES,
   getDepartmentBadgeClass,
@@ -57,12 +59,12 @@ import {
 } from "@/lib/badgeStyles"
 import { getRequestCharterStatus, buildSlaTiers } from "@/lib/citizenCharter"
 import { generateCampusOperationsPdf } from "@/lib/pdfGenerator"
-import { exportRowsToCsv, generateExportFilename } from "@/lib/exportHelpers"
+import { exportRowsToCsv, formatReportOffice, generateExportFilename } from "@/lib/exportHelpers"
 import usePdfPreviewSession from "@/hooks/usePdfPreviewSession"
 import { useTablePreferences } from "@/components/shared/TablePreferences"
 import { InboxIcon as EmptyInboxIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Cancel01Icon, Certificate01Icon, Copy01Icon, File02Icon, Search01Icon, StudentIcon, Timer01Icon, ViewIcon, Calendar01Icon, Layers01Icon, Tick01Icon, Loading01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
-const OPERATION_COLUMNS = ["department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"]
+const OPERATION_COLUMNS = ["id", "department", "requester", "title", "details", "status", "slaStatus", "submitted", "updatedAt"]
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
@@ -140,6 +142,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
   const slaTiers = useMemo(() => buildSlaTiers(slaStandards), [slaStandards])
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [operationsLoadFailed, setOperationsLoadFailed] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [autoRefreshSecs] = useState(15)
 
@@ -241,11 +244,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
       const url = isManual ? "/api/system/health?force=true" : "/api/system/health"
       const res = await fetch(url, { cache: "no-store" })
       const json = await res.json()
-      if (res.ok && json.ok) {
-        setHealth(json.data)
-        setCachedData("systemadmin_health", json.data, 15000)
-      }
+      if (!res.ok || !json?.ok || !json.data) throw new Error(json?.error || "Unable to load campus operations.")
+      setHealth(json.data)
+      setOperationsLoadFailed(false)
+      setCachedData("systemadmin_health", json.data, 15000)
     } catch (err) {
+      setOperationsLoadFailed(true)
       console.error("[OperationsMonitor] Fetch failed:", err)
     } finally {
       setLoading(false)
@@ -616,7 +620,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
         return [
           formatTransactionId(tx),
-          tx.officeName || (tx.officeId === "registrar" ? "Registrar" : "OSAS"),
+          formatReportOffice(tx.officeId || "osas", tx.officeName),
           tx.studentNo || "N/A",
           formatStudentRequester(tx.studentName, tx.studentNo),
           tx.title || "Untitled",
@@ -680,7 +684,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedTransactions.length / pageSize) || 1
-  const startIndex = (page - 1) * pageSize
+  const startIndex = (Math.min(page, totalPages) - 1) * pageSize
   const endIndex = startIndex + pageSize
   const paginatedTransactions = useMemo(() => {
     return sortedTransactions.slice(startIndex, endIndex)
@@ -844,6 +848,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             {viewMode === "table" && (
               <ColumnsPopover
                 columns={[
+                  { key: "id", label: "ID" },
                   { key: "department", label: "Department" },
                   { key: "requester", label: "Student requester" },
                   { key: "title", label: "Document or proposal" },
@@ -855,7 +860,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 ]}
                 visibleColumns={visibleColumns}
                 onVisibleColumnsChange={setVisibleColumns}
-                minVisible={0}
+                minVisible={2}
               />
             )}
           </div>
@@ -942,6 +947,16 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
         <div className="overflow-hidden rounded-b-2xl border-t border-border dark:border-border bg-white dark:bg-card flex flex-col flex-[1_0_auto]">
           {loading ? (
             viewMode === "list" ? <DataContentSkeleton viewMode="list" /> : <TransactionsTableSkeleton rowCount={6} visibleColumns={visibleTableColumns} groupBy={groupBy} />
+          ) : operationsLoadFailed && sortedTransactions.length === 0 ? (
+            <EmptyState
+              icon={EmptyInboxIcon}
+              title="Could Not Load Campus Operations"
+              description="Try loading campus activity again."
+            >
+              <Button variant="outline" size="sm" onClick={() => fetchHealth(true)} disabled={refreshing}>
+                Try Again
+              </Button>
+            </EmptyState>
           ) : paginatedTransactions.length === 0 ? (
             <div className="rounded-b-2xl flex-1 flex flex-col items-center justify-center min-h-[420px] w-full">
               <Empty>
@@ -985,7 +1000,8 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               ref={tableContainerRef}
               className="flex-[1_0_auto] overflow-x-auto show-scrollbar pb-2 motion-safe:animate-in motion-safe:fade-in-50 duration-200 ease-out select-none"
             >
-                <Table columns={[{ kind: "identifier", maxWidth: 180, growthWeight: 0 }, ...visibleTableColumns.map((key) => {
+                <Table columns={[...visibleTableColumns.map((key) => {
+                  if (key === "id") return { kind: "identifier", maxWidth: 180, growthWeight: 0 }
                   if (key === "department") return { kind: "category", maxWidth: 150, growthWeight: 0 }
                   if (key === "status" || key === "slaStatus") return { kind: "status", maxWidth: 160, growthWeight: 0 }
                   if (key === "submitted" || key === "updatedAt") return { kind: "date", maxWidth: 180, growthWeight: 0 }
@@ -994,7 +1010,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                 <thead className="sticky top-0 z-10 border-b border-border bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs select-none">
                   <tr className="text-left text-xs font-semibold text-gray-500 dark:text-zinc-400 h-11 select-none">
                     {/* ID Header */}
-                    <th
+                    {visibleColumns.includes("id") && <th
                       className={cn(
                         "p-4 pl-6 whitespace-nowrap sticky left-0 z-20 bg-gray-50/90 dark:bg-zinc-900/90 backdrop-blur-xs transition-shadow",
                         isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
@@ -1009,7 +1025,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                       >
                         ID <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                       </button>
-                    </th>
+                    </th>}
 
                     {visibleColumns.includes("department") && <>
                     {/* Department */}
@@ -1157,13 +1173,13 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                     const previousGroup = previous && (groupBy === "department" ? (previous.officeId === "registrar" || previous.type === "document_request" ? "Registrar" : "OSAS") : previous.status)
                     return (
                       <React.Fragment key={tx.id}>
-                      {groupBy !== "none" && groupValue !== previousGroup && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><td colSpan={visibleTableColumns.length + 2} className="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200">{groupValue || "Unspecified"}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{paginatedTransactions.filter((item) => (groupBy === "department" ? (item.officeId === "registrar" ? "Registrar" : "OSAS") : item.status) === groupValue).length}</span></td></tr>}
+                      {groupBy !== "none" && groupValue !== previousGroup && <tr className="bg-gray-50/90 dark:bg-zinc-900/80"><td colSpan={visibleTableColumns.length + 1} className="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-zinc-200">{groupValue || "Unspecified"}<span className="ml-2 font-sans font-normal tabular-nums text-gray-400 dark:text-zinc-500">{paginatedTransactions.filter((item) => (groupBy === "department" ? (item.officeId === "registrar" ? "Registrar" : "OSAS") : item.status) === groupValue).length}</span></td></tr>}
                       <tr
                         onClick={() => handleOpenDetails(tx)}
                         className="group h-[52px] border-b border-border dark:border-border last:border-b-0 transition-colors hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 cursor-pointer select-none"
                       >
                         {/* Transaction ID (Sticky Left) */}
-                        <td
+                        {visibleColumns.includes("id") && <td
                           className={cn(
                             "p-4 pl-6 align-middle whitespace-nowrap sticky left-0 z-10 bg-white dark:bg-card group-hover:bg-gray-50/70 dark:group-hover:bg-zinc-800/40 transition-shadow border-b border-border dark:border-border border-r border-border/70 dark:border-border/70",
                             isScrolled && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
@@ -1172,7 +1188,7 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
                           <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
                             {formatTransactionId(tx)}
                           </span>
-                        </td>
+                        </td>}
 
                         {visibleColumns.includes("department") && <>
                         {/* Department Badge */}
@@ -1413,12 +1429,12 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
+                <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.slate)}>
                   {formatTransactionId(sheetItem)}
                 </span>
                 <span
                   className={cn(
-                    BADGE_BASE,
+                    COMPACT_BADGE_BASE,
                                       statusBadgeClass(sheetItem?.status)
                   )}
                 >
@@ -1655,11 +1671,10 @@ export default function CampusOperationsTab({ showToast, initialStandardsOpen = 
             <div>
               {sheetItem && (
                 <CopyButton
+                  iconOnly
                   textToCopy={() => JSON.stringify(sheetItem, null, 2)}
                   entityName="Record Data"
                   idleLabel="Copy Record Data"
-                  className="h-9 px-4"
-                  title="Copy operation record data"
                 />
               )}
             </div>

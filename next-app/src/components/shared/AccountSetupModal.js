@@ -9,24 +9,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import AccountSetupPreferences from "@/components/shared/AccountSetupPreferences";
+import AccountSetupSteps from "@/components/shared/AccountSetupSteps";
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { DEFAULT_AVATARS, DEFAULT_AVATAR_VISIBLE_COUNT } from "@/lib/defaultAvatars"
-import {
-  NOTIONISTS_AVATARS,
-  NOTIONISTS_BOLD_COLORS,
-  NOTIONISTS_PASTEL_COLORS,
-  generateShuffledNotionist,
-} from "@/lib/notionistsAvatars"
-import {
-  generateShuffledBeam,
-} from "@/lib/beamAvatars"
 import { formatErrorMessage } from "@/lib/errorUtils"
 import { EmptyState } from "@/components/ui/empty"
-import { HelpCircleIcon, CircleIcon, Tick01Icon, DiceFaces03Icon } from "hugeicons-react"
+import { HelpCircleIcon } from "hugeicons-react"
 import AppIcon from "@/components/ui/app-icon";
 import { validateSecurityAnswer } from "@/lib/authSchemas";
 function getCsrfToken() {
@@ -54,28 +46,7 @@ export default function AccountSetupModal({ authUser }) {
   const [secLoading, setSecLoading] = useState(false)
   const [secSubmitting, setSecSubmitting] = useState(false)
 
-  // Avatar state (Step 3)
-  const initialNotionistMatch = authUser?.avatar_filename?.match(/notionist(\d+)/);
-  const initialDefaultMatch = authUser?.avatar_filename?.match(/default(\d+)/);
-
-  const [avatarType, setAvatarType] = useState(() => {
-    if (initialDefaultMatch) return "beam";
-    return "notionists";
-  });
-
-  const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
-    if (initialNotionistMatch) return Number(initialNotionistMatch[1]);
-    if (initialDefaultMatch) return Number(initialDefaultMatch[1]);
-    return 1;
-  });
-
-  const [customShuffled, setCustomShuffled] = useState(null);
-  const [avatarColorMode, setAvatarColorMode] = useState("bold");
-  const [beamColorMode, setBeamColorMode] = useState("classic");
-  const [avatarLoading, setAvatarLoading] = useState(false)
-  const [showAllAvatars, setShowAllAvatars] = useState(() => selectedAvatarId > DEFAULT_AVATAR_VISIBLE_COUNT)
-  const avatarsExpanded = showAllAvatars
-  const visibleAvatars = avatarsExpanded ? DEFAULT_AVATARS : DEFAULT_AVATARS.slice(0, DEFAULT_AVATAR_VISIBLE_COUNT)
+  const [preferencesSaving, setPreferencesSaving] = useState(false)
 
   const fetchQuestions = useCallback(async () => {
     setSecLoading(true)
@@ -258,66 +229,48 @@ export default function AccountSetupModal({ authUser }) {
     window.location.assign(destination)
   }
 
-  const submitAvatar = async () => {
-    if (avatarLoading) return
-    setAvatarLoading(true)
+  const submitPreferences = async ({ avatar, nameFormat }) => {
+    if (preferencesSaving) return
+    setPreferencesSaving(true)
 
     try {
       const csrf = getCsrfToken()
-      let payload;
-      if (customShuffled && selectedAvatarId === "custom") {
-        payload = {
-          avatarType: "custom",
-          svgString: customShuffled.svgString,
-        };
-      } else if (avatarType === "notionists") {
-        payload = {
-          avatarType: "notionists",
-          defaultAvatarId: selectedAvatarId,
-        };
-      } else {
-        payload = {
-          avatarType: "beam",
-          defaultAvatarId: selectedAvatarId,
-        };
+      const headers = {
+        "Content-Type": "application/json",
+        ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+      }
+      if (nameFormat) {
+        const response = await fetch("/api/auth/preferences", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ preferences: { display_name_format: nameFormat } }),
+        })
+        const result = await response.json()
+        if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to save display name format")
+      }
+      if (avatar) {
+        const response = await fetch("/api/account/avatar", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(avatar),
+        })
+        const result = await response.json()
+        if (!response.ok || !result?.ok) throw new Error(result?.error || "Failed to set profile avatar")
+        window.dispatchEvent(new CustomEvent("avatar-changed", {
+          detail: { avatar_filename: result.avatar_filename || null },
+        }))
       }
 
-      const res = await fetch("/api/account/avatar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(csrf ? { "X-CSRF-Token": csrf } : {}),
-        },
-        body: JSON.stringify(payload),
-      })
-      const json = await res.json()
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to set profile avatar")
-      }
-
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("avatar-changed", {
-            detail: { avatar_filename: json.avatar_filename || null },
-          })
-        )
-      }
-
-      toast.success("Account Setup Complete", {
-        description: "Your profile avatar has been set.",
-      })
+      toast.success("Account Setup Complete")
       finishSetup()
     } catch (err) {
       const errInfo = formatErrorMessage(err, {
-        title: "Avatar Update Failed",
-        description: "Failed to set default profile avatar.",
+        title: "Preferences Update Failed",
+        description: "Could not save your account preferences.",
       })
-      toast.error(errInfo.title, {
-        description: errInfo.description,
-        action: errInfo.action,
-      })
+      toast.error(errInfo.title, { description: errInfo.description, action: errInfo.action })
     } finally {
-      setAvatarLoading(false)
+      setPreferencesSaving(false)
     }
   }
 
@@ -334,124 +287,14 @@ export default function AccountSetupModal({ authUser }) {
           <DialogDescription>Complete account setup steps to continue.</DialogDescription>
         </DialogHeader>
 
-        {/* Sidebar Steps */}
-        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-border bg-gray-50/50 p-6 md:w-1/3 dark:border-border dark:bg-card">
-          <div className="mb-5">
-            <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-550">
-              Account Setup
-            </h3>
-            <p className="mt-1 text-[11px] font-normal leading-normal text-gray-900 dark:text-zinc-300">
-              Complete these steps to access your dashboard securely.
-            </p>
-          </div>
-
-          <div className="flex flex-col flex-1 gap-1">
-            {/* Step 1 */}
-            <div
-              className={cn(
-                "flex flex-col gap-1 transition-all rounded-[8px] px-3 py-2.5",
-                step === 1 
-                  ? "bg-gray-100/80 dark:bg-zinc-800/40" 
-                  : "opacity-60"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {needsPassword && step > 1 ? (
-                    <Tick01Icon size="1em"  className="text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></Tick01Icon>
-                  ) : (
-                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
-                  )}
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
-                    Step 1
-                  </span>
-                </div>
-                {needsPassword && step > 1 && (
-                  <span className="text-[10px] font-normal text-gray-400 dark:text-zinc-550">
-                    Done
-                  </span>
-                )}
-              </div>
-              <span className="pl-[22px] text-[13px] font-semibold text-gray-800 dark:text-zinc-200 tracking-[-0.01em]">
-                Change Password
-              </span>
-              <p className="pl-[22px] text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-0.5">
-                Update your default system password.
-              </p>
-            </div>
-
-            {/* Vertical Connector Line */}
-            <div className="w-[0.5px] h-[20px] bg-gray-200 dark:bg-zinc-800 ml-6 shrink-0" />
-
-            {/* Step 2 */}
-            <div
-              className={cn(
-                "flex flex-col gap-1 transition-all rounded-[8px] px-3 py-2.5",
-                step === 2 
-                  ? "bg-gray-100/80 dark:bg-zinc-800/40" 
-                  : "opacity-60"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {step > 2 ? (
-                    <Tick01Icon size="1em"  className="text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></Tick01Icon>
-                  ) : step === 2 ? (
-                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
-                  ) : (
-                    <div className="w-[14px] h-[14px] shrink-0" />
-                  )}
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
-                    Step 2
-                  </span>
-                </div>
-                {step > 2 && (
-                  <span className="text-[10px] font-normal text-gray-400 dark:text-zinc-550">
-                    Done
-                  </span>
-                )}
-              </div>
-              <span className="pl-[22px] text-[13px] font-semibold text-gray-800 dark:text-zinc-200 tracking-[-0.01em]">
-                Security Answers
-              </span>
-              <p className="pl-[22px] text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-0.5">
-                Set up your account recovery questions.
-              </p>
-            </div>
-
-            {/* Vertical Connector Line */}
-            <div className="w-[0.5px] h-[20px] bg-gray-200 dark:bg-zinc-800 ml-6 shrink-0" />
-
-            {/* Step 3 */}
-            <div
-              className={cn(
-                "flex flex-col gap-1 transition-all rounded-[8px] px-3 py-2.5",
-                step === 3 
-                  ? "bg-gray-100/80 dark:bg-zinc-800/40" 
-                  : "opacity-60"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {step === 3 ? (
-                    <CircleIcon size="1em"  className="text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></CircleIcon>
-                  ) : (
-                    <div className="w-[14px] h-[14px] shrink-0" />
-                  )}
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
-                    Step 3
-                  </span>
-                </div>
-              </div>
-              <span className="pl-[22px] text-[13px] font-semibold text-gray-800 dark:text-zinc-200 tracking-[-0.01em]">
-                Profile Avatar
-              </span>
-              <p className="pl-[22px] text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-0.5">
-                Choose your default account avatar.
-              </p>
-            </div>
-          </div>
-        </div>
+        <AccountSetupSteps
+          activeIndex={step - 1}
+          steps={[
+            { title: "Change Password", description: "Update your default system password.", skipped: !needsPassword },
+            { title: "Security Answers", description: "Set up your account recovery questions." },
+            { title: "Preferences", description: "Choose your avatar and display name format." },
+          ]}
+        />
 
         {/* Content Area */}
         <div className="flex w-full flex-col bg-white md:w-2/3 dark:bg-card">
@@ -604,300 +447,7 @@ export default function AccountSetupModal({ authUser }) {
           )}
 
           {step === 3 && (
-            <div className="flex min-h-0 flex-1 flex-col justify-between">
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                <div>
-                  <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
-                    Choose Profile Avatar
-                  </h3>
-                  <p className="mt-1 text-[13px] font-normal text-gray-900 dark:text-zinc-300 leading-normal">
-                    Select an avatar to personalize your profile, or skip to continue with your initials.
-                  </p>
-                </div>
-
-                {/* Avatar Style Switcher Segmented Control */}
-                <div className="flex p-0.5 rounded-xl bg-gray-100 dark:bg-zinc-800 border border-black/[0.04] dark:border-white/5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAvatarType("notionists");
-                      if (selectedAvatarId === "custom") {
-                        // preserve custom
-                      } else if (avatarType !== "notionists") {
-                        setSelectedAvatarId(1);
-                      }
-                    }}
-                    className={cn(
-                      "flex-1 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center",
-                      avatarType === "notionists"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    Notionists ({NOTIONISTS_AVATARS.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAvatarType("beam");
-                      setCustomShuffled(null);
-                      if (avatarType !== "beam" || selectedAvatarId === "custom") {
-                        setSelectedAvatarId(1);
-                      }
-                    }}
-                    className={cn(
-                      "flex-1 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center",
-                      avatarType === "beam"
-                        ? "bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-50 shadow-xs"
-                        : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                    )}
-                  >
-                    Beam Gradients ({DEFAULT_AVATARS.length})
-                  </button>
-                </div>
-
-                {/* Live Stage Preview */}
-                <div className="flex flex-col items-center justify-center gap-2 py-1">
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-inner ring-4 ring-gray-100 dark:ring-zinc-800 flex items-center justify-center bg-gray-50 dark:bg-zinc-800">
-                    <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
-                      {selectedAvatarId === "custom" && customShuffled
-                        ? customShuffled.svg
-                        : avatarType === "notionists"
-                        ? NOTIONISTS_AVATARS.find((a) => a.id === selectedAvatarId)?.svg
-                        : DEFAULT_AVATARS.find((a) => a.id === selectedAvatarId)?.svg}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                      Selected:{" "}
-                      {selectedAvatarId === "custom" && customShuffled
-                        ? "Custom Shuffled Character"
-                        : avatarType === "notionists"
-                        ? NOTIONISTS_AVATARS.find((a) => a.id === selectedAvatarId)?.name || `Avatar ${selectedAvatarId}`
-                        : DEFAULT_AVATARS.find((a) => a.id === selectedAvatarId)?.name || `Avatar ${selectedAvatarId}`}
-                    </span>
-                    {avatarType === "notionists" ? (
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-black/[0.04] dark:border-white/5">
-                          <button
-                            type="button"
-                            onClick={() => setAvatarColorMode("bold")}
-                            className={cn(
-                              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-                              avatarColorMode === "bold"
-                                ? "bg-white dark:bg-zinc-700 text-gray-950 dark:text-zinc-50 shadow-2xs"
-                                : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                            )}
-                          >
-                            Bold
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAvatarColorMode("pastel")}
-                            className={cn(
-                              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-                              avatarColorMode === "pastel"
-                                ? "bg-white dark:bg-zinc-700 text-gray-950 dark:text-zinc-50 shadow-2xs"
-                                : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                            )}
-                          >
-                            Pastel
-                          </button>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const shuffled = generateShuffledNotionist(null, avatarColorMode);
-                            setCustomShuffled(shuffled);
-                            setSelectedAvatarId("custom");
-                          }}
-                          className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
-                        >
-                          <DiceFaces03Icon size="1em" className="text-[13px] text-pup-maroon dark:text-red-400" />
-                          <span>Shuffle</span>
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex p-0.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-black/[0.04] dark:border-white/5">
-                          <button
-                            type="button"
-                            onClick={() => setBeamColorMode("classic")}
-                            className={cn(
-                              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-                              beamColorMode === "classic"
-                                ? "bg-white dark:bg-zinc-700 text-gray-950 dark:text-zinc-50 shadow-2xs"
-                                : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                            )}
-                          >
-                            Classic
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setBeamColorMode("vibrant")}
-                            className={cn(
-                              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-                              beamColorMode === "vibrant"
-                                ? "bg-white dark:bg-zinc-700 text-gray-950 dark:text-zinc-50 shadow-2xs"
-                                : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200"
-                            )}
-                          >
-                            Vibrant
-                          </button>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const shuffled = generateShuffledBeam(null, beamColorMode);
-                            setCustomShuffled(shuffled);
-                            setSelectedAvatarId("custom");
-                          }}
-                          className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-black/[0.08] dark:border-white/10 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
-                        >
-                          <DiceFaces03Icon size="1em" className="text-[13px] text-pup-maroon dark:text-red-400" />
-                          <span>Shuffle</span>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Avatars Grid */}
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
-                      {avatarType === "notionists" ? "Select Notionist Character" : "Select Default Avatar"}
-                    </label>
-                    {avatarType === "notionists" && (
-                      <span className="text-[11px] text-gray-400 dark:text-zinc-500">
-                        18 Curated Styles + Custom Shuffle
-                      </span>
-                    )}
-                  </div>
-
-                  {avatarType === "notionists" ? (
-                    <div className="grid grid-cols-6 gap-2.5 w-full max-h-64 overflow-y-auto p-1 -m-1">
-                      {NOTIONISTS_AVATARS.map((avatar) => {
-                        const isSelected = selectedAvatarId === avatar.id && !customShuffled;
-                        return (
-                          <button
-                            key={avatar.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedAvatarId(avatar.id);
-                              setCustomShuffled(null);
-                            }}
-                            className={cn(
-                              "relative aspect-square rounded-full transition-all p-0 flex items-center justify-center cursor-pointer active:scale-95",
-                              isSelected
-                                ? "ring-2 ring-pup-maroon dark:ring-red-400 ring-offset-2 ring-offset-white dark:ring-offset-card shadow-sm"
-                                : "opacity-75 hover:opacity-100"
-                            )}
-                            title={avatar.name}
-                          >
-                            <div
-                              className={cn(
-                                "w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-gray-50 dark:bg-zinc-800 transition-colors",
-                                isSelected
-                                  ? "border-pup-maroon dark:border-red-400"
-                                  : "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700"
-                              )}
-                            >
-                              <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
-                                {avatar.svg}
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs ring-1 ring-white dark:ring-card">
-                                <Tick01Icon size="1em" className="text-[10px]" />
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-6 gap-2.5 w-full max-h-64 overflow-y-auto p-1 -m-1">
-                        {visibleAvatars.map((avatar) => {
-                          const isSelected = selectedAvatarId === avatar.id;
-                          return (
-                            <button
-                              key={avatar.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedAvatarId(avatar.id);
-                                setCustomShuffled(null);
-                              }}
-                              className={cn(
-                                "relative aspect-square rounded-full transition-all p-0 flex items-center justify-center cursor-pointer active:scale-95",
-                                isSelected
-                                  ? "ring-2 ring-pup-maroon dark:ring-red-400 ring-offset-2 ring-offset-white dark:ring-offset-card shadow-sm"
-                                  : "opacity-75 hover:opacity-100"
-                              )}
-                              title={avatar.name}
-                            >
-                              <div
-                                className={cn(
-                                  "w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-gray-50 dark:bg-zinc-800 transition-colors",
-                                  isSelected
-                                    ? "border-pup-maroon dark:border-red-400"
-                                    : "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700"
-                                )}
-                              >
-                                <div className="w-full h-full flex items-center justify-center [&_svg]:size-full">
-                                  {avatar.svg}
-                                </div>
-                              </div>
-                              {isSelected && (
-                                <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-pup-maroon dark:bg-red-500 text-white flex items-center justify-center shadow-xs ring-1 ring-white dark:ring-card">
-                                  <Tick01Icon size="1em" className="text-[10px]" />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="mt-3 flex justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowAllAvatars((prev) => !prev)}
-                          className="h-8 px-4 text-xs font-semibold rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-xs cursor-pointer active:scale-95 transition-all"
-                        >
-                          {avatarsExpanded ? "Show Fewer Avatars" : "View More Avatars"}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer Actions */}
-              <div className="flex shrink-0 items-center justify-between p-6 bg-transparent">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={avatarLoading}
-                  onClick={finishSetup}
-                  className="h-[36px] px-4 rounded-[8px] text-[13px] font-medium border border-border bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-700 shadow-none cursor-pointer"
-                >
-                  Skip
-                </Button>
-                <Button
-                  type="button"
-                  disabled={avatarLoading || (!selectedAvatarId && !customShuffled)}
-                  onClick={submitAvatar}
-                  className="h-[36px] px-4 cursor-pointer flex items-center justify-center border-none"
-                >
-                  {avatarLoading ? "Saving..." : "Complete"}
-                </Button>
-              </div>
-            </div>
+            <AccountSetupPreferences authUser={authUser} saving={preferencesSaving} onComplete={submitPreferences} />
           )}
         </div>
       </DialogContent>

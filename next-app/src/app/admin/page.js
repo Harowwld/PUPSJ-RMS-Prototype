@@ -1,4 +1,7 @@
 "use client"
+
+import InitialDashboardLoader from "@/components/shared/InitialDashboardLoader";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { BADGE_BASE } from "@/lib/badgeStyles"
 import useCreateAnother from "@/hooks/useCreateAnother"
 
@@ -45,7 +48,14 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ContentSwap } from "@/components/ui/motion"
 
-import WorkspaceLoading from "@/components/shared/WorkspaceLoading"
+import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
+import DigitalRecordsReviewSkeleton from "@/components/admin/skeletons/DigitalRecordsReviewSkeleton"
+import StaffDirectorySkeleton from "@/components/admin/skeletons/StaffDirectorySkeleton"
+import AuditLogsSkeleton from "@/components/admin/skeletons/AuditLogsSkeleton"
+import SystemConfigSkeleton from "@/components/admin/skeletons/SystemConfigSkeleton"
+import StorageLayoutSkeleton from "@/components/admin/skeletons/StorageLayoutSkeleton"
+import DigitizationComplianceSkeleton from "@/components/admin/skeletons/DigitizationComplianceSkeleton"
+import SLAAnalyticsSkeleton from "@/components/admin/skeletons/SLAAnalyticsSkeleton"
 
 
 const ADMIN_VIEWS = ["directory", "create", "logs", "system_data", "review", "digitization", "request_analytics", "system", "backup", "storage_layout", "activity", "settings"]
@@ -78,8 +88,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const initialAuthUser = propAuthUser || contextAuthUser
 
   const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(!initialAuthUser)
-
 
   const initialView = resolveAdminView(
     searchParams?.get("view") || searchParams?.get("tab"),
@@ -151,14 +159,19 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   const [logTotal, setLogTotal] = useState(0)
   const [logsPerPage, setLogsPerPage] = useState(20)
   const [logSearch, setLogSearch] = useState("")
-  const [logRoleFilter, setLogRoleFilter] = useState("All")
-  const [logExcludeRoleFilter, setLogExcludeRoleFilter] = useState("")
-  const [logSeverityFilter, setLogSeverityFilter] = useState("All")
-  const [logExcludeSeverityFilter, setLogExcludeSeverityFilter] = useState("")
-  const [logStartDate, setLogStartDate] = useState("")
-  const [logEndDate, setLogEndDate] = useState("")
-  const [logSortBy, setLogSortBy] = useState("created_at")
-  const [logSortOrder, setLogSortOrder] = useState("DESC")
+  const [logFilterRules, setLogFilterRules] = useWorkspaceViewPreference("audit_logs", "filterRules", [])
+  const auditRoles = (excluded) => logFilterRules
+    .filter((rule) => rule.fieldKey === "role" && (rule.operator === "is_not") === excluded && rule.value)
+    .flatMap((rule) => rule.value)
+    .join(",")
+  const logRoleFilter = auditRoles(false) || "All"
+  const logExcludeRoleFilter = auditRoles(true)
+  const [logSeverityFilter, setLogSeverityFilter] = useWorkspaceViewPreference("audit_logs", "logSeverityFilter", "All")
+  const [logExcludeSeverityFilter, setLogExcludeSeverityFilter] = useWorkspaceViewPreference("audit_logs", "logExcludeSeverityFilter", "")
+  const [logStartDate, setLogStartDate] = useWorkspaceViewPreference("audit_logs", "logStartDate", "")
+  const [logEndDate, setLogEndDate] = useWorkspaceViewPreference("audit_logs", "logEndDate", "")
+  const [logSortBy, setLogSortBy] = useWorkspaceViewPreference("audit_logs", "sortBy", "created_at")
+  const [logSortOrder, setLogSortOrder] = useWorkspaceViewPreference("audit_logs", "sortOrder", "DESC")
   const [logsMineOnly, setLogsMineOnly] = useState(false)
 
   const [reviewLoading, setReviewLoading] = useState(true)
@@ -884,7 +897,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
         name: initialAuthUser.office_name,
       })
     }
-    setLoading(false)
     const timer = setTimeout(() => {
       refreshStaff()
       refreshSystemHealth()
@@ -1227,8 +1239,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
     const section = createForm.section || (createForm.role === "Admin" ? "Administrative" : defaultSection)
 
     const role = createForm.role || "Staff"
-    const cleanLname = String(createForm.lname || "").toLowerCase().replace(/[^a-z0-9]/g, "")
-    const resolvedEmail = (createForm.email || (cleanLname ? `${role.toLowerCase()}.${cleanLname}@pup.local` : "")).trim()
+    const resolvedEmail = createForm.email.trim()
 
     const staffCheck = StaffRegistrationSchema.safeParse({
       fname: createForm.fname,
@@ -1278,7 +1289,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
       setStaffData((prev) => [json.data, ...prev])
       showToast({
         title: "Account Created",
-        description: `Staff account for ${createForm.fname} ${createForm.lname} has been created and is active. ${json.credentialEmail?.sent ? "Credentials were emailed to the account." : "Credentials can be shared securely with the user."}`,
+        description: `Staff account for ${createForm.fname} ${createForm.lname} has been created. ${json.credentialEmail?.sent ? "Sign-in details and a verification code were emailed to the staff member." : "Email delivery failed. Share the sign-in details securely so the staff member can request a new code."}`,
       })
       accountRepeat.complete(() => setCreateForm({
         id: "",
@@ -1820,10 +1831,6 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
 
   const sidebarActiveKey = view === "backup" ? "system" : view
 
-  if (loading) {
-    return <WorkspaceLoading />
-  }
-
   return (
     <div
       className="font-jakarta flex h-screen overflow-hidden flex-col bg-slate-50/30 dark:bg-zinc-950/30 relative transition-colors duration-300"
@@ -1902,7 +1909,7 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
             authUser={authUser}
           />
         )}
-        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-slate-50/50 dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white dark:bg-zinc-950/50 overflow-y-auto flex flex-col">
           <div 
             className={cn(
               "p-2 flex flex-[1_0_auto] min-h-full flex-col w-full [&>*]:flex-[1_0_auto]",
@@ -1980,9 +1987,9 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
               logSearch={logSearch}
               setLogSearch={setLogSearch}
               logRoleFilter={logRoleFilter}
-              setLogRoleFilter={setLogRoleFilter}
+              filterRules={logFilterRules}
+              setFilterRules={setLogFilterRules}
               logExcludeRoleFilter={logExcludeRoleFilter}
-              setLogExcludeRoleFilter={setLogExcludeRoleFilter}
               logSeverityFilter={logSeverityFilter}
               setLogSeverityFilter={setLogSeverityFilter}
               logExcludeSeverityFilter={logExcludeSeverityFilter}
@@ -2453,21 +2460,36 @@ function AdminPageContent({ authUser: propAuthUser = null }) {
   )
 }
 
+const ADMIN_VIEW_SKELETONS = {
+  review: DigitalRecordsReviewSkeleton,
+  directory: StaffDirectorySkeleton,
+  logs: AuditLogsSkeleton,
+  system_data: SystemConfigSkeleton,
+  storage_layout: StorageLayoutSkeleton,
+  digitization: DigitizationComplianceSkeleton,
+  request_analytics: SLAAnalyticsSkeleton,
+}
+
 function AdminPageWithView() {
-  const fallback = <WorkspaceLoading />
+  const searchParams = useSearchParams()
+  const view = resolveRequestedAdminView(searchParams?.get("view") || searchParams?.get("tab"))
+  const ViewSkeleton = ADMIN_VIEW_SKELETONS[view]
+  const fallback = (
+    <InitialDashboardLoader>
+      <DashboardShellSkeleton>{ViewSkeleton ? <ViewSkeleton /> : null}</DashboardShellSkeleton>
+    </InitialDashboardLoader>
+  )
 
   return (
     <AdminGuard fallback={fallback}>
-      <Suspense fallback={fallback}>
-        <AdminPageContent />
-      </Suspense>
+      <AdminPageContent />
     </AdminGuard>
   )
 }
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<WorkspaceLoading />}>
+    <Suspense fallback={<InitialDashboardLoader />}>
       <AdminPageWithView />
     </Suspense>
   )

@@ -46,6 +46,7 @@ import {
   formatPresetRange,
   calculateCoverageDays,
 } from "@/lib/dateRangeUtils"
+import { formatManilaCalendarDate } from "@/lib/timeFormat"
 
 export {
   parseDateLocal,
@@ -81,7 +82,7 @@ export function DateRangePickerContent({
   maxDate,
   showHeader = true,
 }) {
-  const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), [])
+  const todayStr = formatManilaCalendarDate(new Date())
 
   const [tempStart, setTempStart] = useState(startDate || "")
   const [tempEnd, setTempEnd] = useState(endDate || "")
@@ -100,7 +101,7 @@ export function DateRangePickerContent({
   })
 
   const [viewDate, setViewDate] = useState(() => {
-    const initial = parseDateLocal(startDate) || new Date()
+    const initial = parseDateLocal(startDate) || parseDateLocal(todayStr)
     return startOfMonth(initial)
   })
 
@@ -109,8 +110,8 @@ export function DateRangePickerContent({
 
   // Active preset calculation
   const activePresetKey = useMemo(() => {
-    return getMatchingPresetKey(tempStart, tempEnd)
-  }, [tempStart, tempEnd])
+    return getMatchingPresetKey(tempStart, tempEnd, todayStr)
+  }, [tempStart, tempEnd, todayStr])
 
   // Strict start-end validation
   const validation = useMemo(() => {
@@ -180,7 +181,7 @@ export function DateRangePickerContent({
   const handleSelectPreset = useCallback(
     (key) => {
       setManualInputError(null)
-      const range = formatPresetRange(key)
+      const range = formatPresetRange(key, todayStr)
       if (!range) return
 
       setTempStart(range.start)
@@ -797,11 +798,12 @@ export function DateRangeFilterButton({
   variant = "popover", // "popover" (default) or "modal"
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const todayStr = formatManilaCalendarDate(new Date())
 
   const displayLabel = useMemo(() => {
     if (!startDate && !endDate) return placeholder
 
-    const preset = getMatchingPresetKey(startDate, endDate)
+    const preset = getMatchingPresetKey(startDate, endDate, todayStr)
     if (preset === "today") return "Today"
     if (preset === "yesterday") return "Yesterday"
     if (preset === "last7") return "Last 7 days"
@@ -829,7 +831,7 @@ export function DateRangeFilterButton({
     if (endDate && eDt) return `Until ${format(eDt, "MMM d, yyyy")}`
 
     return placeholder
-  }, [startDate, endDate, placeholder])
+  }, [startDate, endDate, placeholder, todayStr])
 
   const hasActiveRange = Boolean(startDate || endDate)
 

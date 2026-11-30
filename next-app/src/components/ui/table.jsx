@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { ArrowLeft01Icon } from "hugeicons-react";
+import TableScrollControls, { hasTableScrollToolbar, tableScrollToolbarChange } from "@/components/shared/TableScrollControls";
+import { moveTableScroll } from "@/hooks/useTableScroll";
 import { cn } from "@/lib/utils";
 import { useTablePreferences } from "@/components/shared/TablePreferences";
 import { TABLE_DENSITIES, normalizeTableDensity, tableStatusTone, sizeContentColumns } from "@/lib/tablePresentation";
@@ -8,7 +11,7 @@ import { TableActions } from "@/components/shared/TableActions";
 import { Badge } from "@/components/ui/badge";
 import { BADGE_BASE } from "@/lib/badgeStyles";
 
-const ColumnsContext = React.createContext({ columns: [], spacerIndex: -1 });
+const ColumnsContext = React.createContext({ columns: [], spacerIndex: -1, identityIndex: -1 });
 const SectionContext = React.createContext("body");
 
 // Native structural children remain supported in existing tables and dynamic matrices.
@@ -32,22 +35,52 @@ function presentationColumn(column) {
 function Table({ className, columns = [], density: overrideDensity, layout = "content", style, children, ...props }) {
   const { density } = useTablePreferences();
   const tableRef = React.useRef(null);
+  const viewportRef = React.useRef(null);
+  const [scroll, setScroll] = React.useState(null);
   const [availableWidth, setAvailableWidth] = React.useState(0);
   const setting = TABLE_DENSITIES[normalizeTableDensity(overrideDensity || density)];
   const matrixWidths = columns.map((column) => (typeof column === "object" && column.width) || 160);
   const matrixWidth = matrixWidths.reduce((sum, width) => sum + width, 0);
   React.useLayoutEffect(() => {
-    if (layout !== "content") return undefined;
-    const viewport = tableRef.current?.parentElement;
-    if (!viewport) return undefined;
-    const measure = () => setAvailableWidth(viewport.clientWidth);
+    const table = tableRef.current;
+    const parent = table?.parentElement;
+    if (!parent) return undefined;
+
+    // Use the existing viewport so toolbar, scrollbar, and header reset share one scroll position.
+    let viewport = parent;
+    while (viewport && getComputedStyle(viewport).overflowX === "visible") {
+      viewport = viewport.parentElement;
+    }
+    if (viewport && !/^(auto|scroll|overlay)$/.test(getComputedStyle(viewport).overflowX)) {
+      viewport = null;
+    }
+    viewportRef.current = viewport;
+    const measure = () => {
+      const width = (viewport ?? parent).clientWidth;
+      if (layout === "content") setAvailableWidth(width);
+      const remaining = viewport ? viewport.scrollWidth - width : 0;
+      const next = remaining > 5 && table.offsetWidth > width + 5 ? {
+        width,
+        backward: viewport.scrollLeft > 5,
+        forward: remaining - viewport.scrollLeft > 5,
+        scrolled: viewport.scrollLeft > 20,
+        hasToolbar: hasTableScrollToolbar(viewport),
+      } : null;
+      setScroll((previous) => previous && next && Object.keys(next).every((key) => next[key] === previous[key]) ? previous : next);
+    };
     measure();
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-    observer?.observe(viewport);
-    window.addEventListener("resize", measure, { passive: true });
+    observer?.observe(viewport ?? parent);
+    observer?.observe(table);
+    viewport?.addEventListener("scroll", measure, { passive: true });
+    viewport?.addEventListener(tableScrollToolbarChange, measure);
+    window.addEventListener("resize", measure);
     return () => {
       observer?.disconnect();
+      viewport?.removeEventListener("scroll", measure);
+      viewport?.removeEventListener(tableScrollToolbarChange, measure);
       window.removeEventListener("resize", measure);
+      viewportRef.current = null;
     };
   }, [layout]);
   const contentWidths = layout === "content" ? getContentColumnWidths(columns, children, availableWidth, className) : [];
@@ -59,11 +92,38 @@ function Table({ className, columns = [], density: overrideDensity, layout = "co
   const spacerIndex = controlsOnly ? (actionIndex < 0 ? columns.length : actionIndex) : -1;
   const colWidths = layout === "matrix" ? matrixWidths : [...contentWidths];
   if (controlsOnly) colWidths.splice(spacerIndex, 0, undefined);
+  const identityIndex = columns.findIndex((column) => !["selection", "actions"].includes(column?.kind ?? column));
+  const hasLeadingSelection = (columns[0]?.kind ?? columns[0]) === "selection";
+  const identityWidth = colWidths[identityIndex];
+  const identityInset = hasLeadingSelection ? 48 : 0;
+  const actionsWidth = actionIndex >= 0 ? 48 : 0;
+  // A wide identity column must leave room to scroll on a phone.
+  const pinnedLeft = scroll && identityWidth
+    ? Math.min(identityInset, scroll.width - identityWidth - actionsWidth - 44)
+    : identityInset;
+  const hasHeader = React.Children.toArray(children).some((child) =>
+    React.isValidElement(child) && (child.type === "thead" || child.type === TableHeader)
+  );
+  const resetScroll = () => moveTableScroll(viewportRef.current);
   return (
-    <ColumnsContext.Provider value={{ columns, spacerIndex }}>
+    <ColumnsContext.Provider value={{ columns, spacerIndex, identityIndex, hasLeadingSelection, showReset: scroll?.scrolled, resetScroll }}>
+      {scroll && !scroll.hasToolbar && hasHeader && identityIndex !== -1 && (
+        <div className="table-inline-scroll-controls" style={{ width: scroll.width }}>
+          <TableScrollControls
+            canScrollLeft={scroll.backward}
+            canScrollRight={scroll.forward}
+            isScrolledX={scroll.scrolled}
+            onResetScroll={resetScroll}
+            onScrollLeft={(amount) => moveTableScroll(viewportRef.current, -amount)}
+            onScrollRight={(amount) => moveTableScroll(viewportRef.current, amount)}
+            controlSize="sm"
+          />
+        </div>
+      )}
       <table ref={tableRef} data-slot="table" data-density={normalizeTableDensity(overrideDensity || density)} data-layout={layout}
+        data-horizontal-overflow={scroll ? "" : undefined} data-scrolled-x={scroll?.scrolled ? "" : undefined}
         className={cn("app-table w-full min-w-0 caption-bottom border-separate border-spacing-0 text-left text-[13px]", className)}
-        style={{ ...style, tableLayout: layout === "matrix" || layout === "fixed" || layout === "content" ? "fixed" : "auto", ...(layout === "matrix" && columns.length ? { width: matrixWidth, minWidth: matrixWidth } : {}), ...(layout === "content" ? { width: controlsOnly || !contentWidth ? "100%" : contentWidth, ...(contentWidth ? { minWidth: contentWidth } : {}) } : {}), "--table-row-height": `${setting.height}px`, "--table-cell-py": `${setting.padding}px` }} {...props}>
+        style={{ ...style, tableLayout: layout === "matrix" || layout === "fixed" || layout === "content" ? "fixed" : "auto", ...(layout === "matrix" && columns.length ? { width: matrixWidth, minWidth: matrixWidth } : {}), ...(layout === "content" ? { width: controlsOnly || !contentWidth ? "100%" : contentWidth, ...(contentWidth ? { minWidth: contentWidth } : {}) } : {}), "--table-row-height": `${setting.height}px`, "--table-cell-py": `${setting.padding}px`, "--table-identity-left": `${pinnedLeft}px` }} {...props}>
         {(layout === "matrix" || layout === "content") && columns.length > 0 && <colgroup>{colWidths.map((width, index) => <col key={index} style={{ width }} />)}</colgroup>}
         {tableChildren(children)}
       </table>
@@ -82,7 +142,7 @@ function TableFooter({ className, children, ...props }) {
 }
 
 function TableRow({ className, children, expanded = false, selected, style, ...props }) {
-  const { columns, spacerIndex } = React.useContext(ColumnsContext);
+  const { columns, spacerIndex, identityIndex, hasLeadingSelection } = React.useContext(ColumnsContext);
   const section = React.useContext(SectionContext);
   let columnIndex = 0;
   const rowChildren = React.Children.toArray(children).flatMap(function flatten(child) {
@@ -99,17 +159,21 @@ function TableRow({ className, children, expanded = false, selected, style, ...p
   });
   const ariaSelected = props["aria-selected"] === true || props["aria-selected"] === "true";
   const rowIsSelected = section === "body" && (selected === undefined ? isSelectionChecked || ariaSelected : selected);
-  const cells = rowChildren.map((child) => {
+  const cells = rowChildren.map((child, cellIndex) => {
     if (!React.isValidElement(child)) return child;
     const index = columnIndex;
     columnIndex += Number(child.props.colSpan) || 1;
     const column = child.props.colSpan > 1 ? {} : columns[index];
     const config = typeof column === "string" ? { kind: column } : (presentationColumn(column) || { kind: "text" });
-    if (!["td", "th", TableCell, TableHead].includes(child.type)) return React.cloneElement(child, { tableColumn: config });
+    const pinned = child.props.colSpan > 1 ? undefined
+      : index === identityIndex ? "identity" : index === 0 && hasLeadingSelection ? "selection" : undefined;
+    if (!["td", "th", TableCell, TableHead].includes(child.type)) {
+      return React.cloneElement(child, { tableColumn: { ...config, "data-table-pin": pinned } });
+    }
     const Cell = child.type === "th" || child.type === TableHead ? TableHead : TableCell;
     const childProps = { ...child.props };
     delete childProps.key;
-    return <Cell {...config} {...childProps} key={child.key} />;
+    return <Cell {...config} {...childProps} data-table-pin={pinned} key={cellIndex} />;
   });
   if (spacerIndex >= 0) {
     const [firstCell] = cells;
@@ -196,7 +260,35 @@ function cellStyle({ kind, align, width, minWidth, maxWidth, style, header = fal
 }
 
 function TableHead({ className, children, kind = "text", align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {
-  return <th data-slot="table-head" data-kind={kind} scope="col" className={cn("px-4 text-xs font-semibold text-gray-600 dark:text-zinc-300", className)} style={cellStyle({ kind, align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, header: true, colSpan: props.colSpan })} {...props}>{kind === "actions" ? <span className="sr-only">Actions</span> : kind === "selection" ? selectionContent(children, "Select all records on this page") : children}</th>;
+  const { showReset, resetScroll } = React.useContext(ColumnsContext);
+  let content = children;
+  if (kind === "actions") content = <span className="sr-only">Actions</span>;
+  else if (kind === "selection") content = selectionContent(children, "Select all records on this page");
+  else if (props["data-table-pin"] === "identity") {
+    content = (
+      <div className="table-header-with-scroll-reset">
+        <div>{children}</div>
+        {showReset && (
+          <button
+            type="button"
+            className="table-header-scroll-reset"
+            aria-label="Reset table scroll"
+            title="Reset table scroll"
+            onClick={(event) => {
+              event.stopPropagation();
+              const header = event.currentTarget.closest("th");
+              const sortButton = header?.querySelector("button:not(.table-header-scroll-reset)");
+              (sortButton ?? header)?.focus({ preventScroll: true });
+              resetScroll();
+            }}
+          >
+            <ArrowLeft01Icon size={10} aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    );
+  }
+  return <th data-slot="table-head" data-kind={kind} scope="col" tabIndex={props["data-table-pin"] === "identity" ? -1 : undefined} className={cn("px-4 text-xs font-semibold text-gray-600 dark:text-zinc-300", className)} style={cellStyle({ kind, align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, header: true, colSpan: props.colSpan })} {...props}>{content}</th>;
 }
 
 function TableCell({ className, children, kind = "text", align, width, minWidth, maxWidth, paddingX, paddingLeft, paddingRight, style, ...props }) {

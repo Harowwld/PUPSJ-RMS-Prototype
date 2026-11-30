@@ -200,7 +200,7 @@ export function SortPopover({ options = [], sortBy, onSortByChange, sortOrder, o
         <PopoverFooter className="justify-center p-2">
           <div role="group" aria-label="Sort direction" className="flex w-full items-center gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-zinc-800">
             {[{ value: "ASC", label: "Ascending", icon: AscendingIcon }, { value: "DESC", label: "Descending", icon: DescendingIcon }].map(({ value, label, icon: Icon }) => {
-              const isSelected = sortOrder === value
+              const isSelected = sortOrder?.toUpperCase() === value
               return <button key={value} type="button" onClick={() => onSortOrderChange(value)} aria-pressed={isSelected} className={cn("inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon cursor-pointer whitespace-nowrap", isSelected ? "bg-white text-gray-900 shadow-xs dark:bg-zinc-700 dark:text-white" : "text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white")}>
                 <Icon size={12} aria-hidden="true" className="shrink-0" />
                 <span className="truncate">{label}</span>
@@ -215,7 +215,12 @@ export function SortPopover({ options = [], sortBy, onSortByChange, sortOrder, o
 
 export function GroupPopover({ options = [], groupBy, onGroupByChange }) {
   const [open, setOpen] = useState(false)
-  const selectedOption = (options || []).find((option) => (option.key ?? option.value) === groupBy) || options[0]
+  const groupOptions = options ?? []
+  const selectedOption = groupOptions.find((option) => (option.key ?? option.value) === groupBy) || groupOptions[0]
+  const orderedOptions = [
+    ...groupOptions.filter((option) => (option.key ?? option.value) !== "none"),
+    ...groupOptions.filter((option) => (option.key ?? option.value) === "none"),
+  ]
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -224,7 +229,7 @@ export function GroupPopover({ options = [], groupBy, onGroupByChange }) {
       <PopoverContent align="start" className="max-h-[calc(100dvh-2rem)] w-[min(14rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl">
         <PopoverHeader className="px-4.5 py-2.5"><PopoverTitle className="text-[10px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-zinc-400">Group by</PopoverTitle></PopoverHeader>
         <div className="space-y-0.5 p-1">
-          {(options || []).map((option) => {
+          {orderedOptions.map((option) => {
             const optionKey = option.key ?? option.value
             const label = option.label
             const Icon = option.icon
@@ -248,11 +253,13 @@ export function ColumnsPopover({ columns, visibleColumns, defaultColumns, onVisi
     : columns.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key)
 
   const activeColumnKeys = columns.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => key)
+  const atMinimum = activeColumnKeys.length <= minVisible
   const isAtDefault =
     activeColumnKeys.length === defaultColumnKeys.length &&
     activeColumnKeys.every((key, index) => key === defaultColumnKeys[index])
 
   const toggleColumn = (key, checked) => {
+    if (!checked && atMinimum) return
     onVisibleColumnsChange(checked
       ? [...visibleColumns, key]
       : visibleColumns.filter((columnKey) => columnKey !== key))
@@ -268,7 +275,7 @@ export function ColumnsPopover({ columns, visibleColumns, defaultColumns, onVisi
         <div className="max-h-[min(60vh,22rem)] space-y-0.5 overflow-y-auto p-1">
           {columns.map(({ key, label }) => (
             <label key={key} className="flex min-h-8 cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs text-gray-800 transition-colors hover:bg-gray-50 dark:text-zinc-200 dark:hover:bg-zinc-800/70">
-              <input type="checkbox" checked={visibleColumns.includes(key)} disabled={visibleColumns.length <= minVisible && visibleColumns.includes(key)} onChange={(event) => toggleColumn(key, event.target.checked)} aria-label={label} className="h-3.5 w-3.5 shrink-0 rounded disabled:cursor-not-allowed" />
+              <input type="checkbox" checked={visibleColumns.includes(key)} disabled={atMinimum && visibleColumns.includes(key)} onChange={(event) => toggleColumn(key, event.target.checked)} aria-label={label} className="h-3.5 w-3.5 shrink-0 rounded disabled:cursor-not-allowed" />
               <span className="min-w-0 flex-1 truncate">{label}</span>
             </label>
           ))}
@@ -316,7 +323,7 @@ export default function OfficeTableControls({
         {showTableControls && <>
           <SortPopover options={sortOptions} sortBy={sortBy} onSortByChange={onSortByChange} sortOrder={sortOrder} onSortOrderChange={onSortOrderChange} />
           <GroupPopover options={groupOptions} groupBy={groupBy} onGroupByChange={onGroupByChange} />
-          <ColumnsPopover columns={columns} visibleColumns={visibleColumns} defaultColumns={defaultColumns} onVisibleColumnsChange={onVisibleColumnsChange} />
+          <ColumnsPopover columns={columns} visibleColumns={visibleColumns} defaultColumns={defaultColumns} onVisibleColumnsChange={onVisibleColumnsChange} minVisible={2} />
         </>}
       </div>
     </DataViewToolbar>

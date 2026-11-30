@@ -4,6 +4,7 @@ import DashboardSearch from "@/components/systemadmin/DashboardSearch"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import SheetPagination from "@/components/shared/SheetPagination";
+import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
 import CreateAnotherToggle from "@/components/shared/CreateAnotherToggle"
 import useCreateAnother from "@/hooks/useCreateAnother"
 
@@ -50,7 +51,7 @@ import {
   EmptyContent,
 } from "@/components/ui/empty"
 import { cn, formatTitleCase } from "@/lib/utils"
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
+import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Skeleton } from "@/components/ui/skeleton"
 import NarrativeText from "@/components/shared/NarrativeText"
 import PersonnelActivityStream from "./PersonnelActivityStream"
@@ -456,37 +457,12 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   })
 
   const [submitLoading, setSubmitLoading] = useState(false)
+  const [registrationChallengeOpen, setRegistrationChallengeOpen] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
   const [pwDialogOpen, setPwDialogOpen] = useState(false)
   const [nextIdPreview, setNextIdPreview] = useState("")
 
   const fnameRef = useRef(null)
-
-  const suggestedEmail = useMemo(() => {
-    if (isEditing) return ""
-    if (!form.lname || !form.role) return ""
-    const role = form.role.toLowerCase().replace(/[^a-z0-9]/g, "")
-    const name = form.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
-    if (!name) return ""
-    return `${role}.${name}@pup.local`
-  }, [isEditing, form.lname, form.role])
-
-  // Auto-fill Email based on name and role when registering
-  useEffect(() => {
-    if (isEditing) return
-    if (suggestedEmail && form.email !== suggestedEmail) {
-      const timer = setTimeout(() => {
-        setForm((f) => ({ ...f, email: suggestedEmail }))
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-    if (!suggestedEmail && form.email !== "") {
-      const timer = setTimeout(() => {
-        setForm((f) => ({ ...f, email: "" }))
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-  }, [isEditing, suggestedEmail, form.email])
 
   useEffect(() => {
     if (formOpen && !isEditing) {
@@ -626,8 +602,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     setFormOpen(true)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e, token) => {
+    e?.preventDefault()
 
     // Existing accounts cannot be changed or promoted to System Admin
     if (isEditing && !targetIsExistingSysAdmin && (form.role === "SystemAdmin" || !form.office_id)) {
@@ -653,24 +629,34 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         lname: form.lname.trim(),
         role: form.role,
         section: (form.section && form.section.trim()) || "Administration",
-        email: (form.email || suggestedEmail).trim(),
+        email: form.email.trim(),
         office_id: form.role === "SystemAdmin" ? null : (form.office_id || null),
         status: form.status
       }
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "X-TOTP-Token": token } : {}),
+        },
         body: JSON.stringify(payload)
       })
 
       const json = await res.json()
+      if (res.status === 403 && json.requiresTOTP) {
+        if (token) throw new Error(json.error)
+        setRegistrationChallengeOpen(true)
+        return
+      }
+      if (token && (!res.ok || !json.ok)) throw new Error(json.error || "Failed to register personnel")
+      setRegistrationChallengeOpen(false)
       if (res.ok && json.ok) {
         showToast(isEditing
           ? "Personnel updated successfully"
           : json.credentialEmail?.sent
-            ? "Personnel account created. Credentials were emailed to the new user."
-            : "Personnel account created, but the credential email was not sent. Check SMTP settings.",
+            ? "Personnel account created. Sign-in details and a verification code were emailed."
+            : "Personnel account created. Email delivery failed. Share the sign-in details securely so the staff member can request a new code.",
           !isEditing && !json.credentialEmail?.sent)
         if (!isEditing) {
           repeat.complete(() => {
@@ -693,7 +679,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       } else {
         showToast(json.error || "Failed to save personnel profile", true)
       }
-    } catch {
+    } catch (error) {
+      if (token) throw error
       showToast("Network error saving personnel", true)
     } finally {
       setSubmitLoading(false)
@@ -1141,9 +1128,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
   const [layoutView, setLayoutView] = useViewPreference("staff", "layoutView", "table")
   const [groupBy, setGroupBy] = useViewPreference("staff", "groupBy", "none")
-  const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["name", "email", "office", "role", "section", "totp_enabled"])
+  const [visibleColumns, setVisibleColumns] = useViewPreference("staff", "visibleColumns", ["id", "name", "email", "office", "role", "section", "totp_enabled"])
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize))
   const optionalColumns = [
+    { key: "id", label: "Employee ID" },
     { key: "name", label: "Staff Name" },
     { key: "email", label: "Email" },
     { key: "office", label: "Office Partition" },
@@ -1171,7 +1159,8 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
   })()
 
-  const staffTableColumns = ["selection", { kind: "identifier", maxWidth: 200, growthWeight: 0 }, ...orderedVisibleColumns.map(({ key }) => {
+  const staffTableColumns = ["selection", ...orderedVisibleColumns.map(({ key }) => {
+    if (key === "id") return { kind: "identifier", maxWidth: 200, growthWeight: 0 }
     if (key === "name" || key === "email") return { kind: "text", maxWidth: 340 }
     if (key === "section") return { kind: "text", maxWidth: 240 }
     if (key === "last_active" || key === "created_at" || key === "updated_at") return { kind: "date", maxWidth: 205, growthWeight: 0 }
@@ -1237,7 +1226,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
             <SortPopover options={[{ key: "name", label: "Name" }, { key: "id", label: "Employee ID" }, { key: "email", label: "Email" }, { key: "office", label: "Office" }, { key: "role", label: "Role" }, { key: "section", label: "Section" }, { key: "last_active", label: "Last Sign-in" }, { key: "totp_enabled", label: "Two-step Verification" }, { key: "created_at", label: "Date Added" }, { key: "updated_at", label: "Last Updated" }]} sortBy={sortBy} onSortByChange={(value) => { setSortBy(value); setSortOrder("ASC") }} sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
             <GroupPopover options={[{ key: "office", label: "Office", icon: Building01Icon }, { key: "role", label: "Role", icon: EmptyUserGroupIcon }, { key: "none", label: "No grouping" }]} groupBy={groupBy} onGroupByChange={setGroupBy} />
             {layoutView === "table" && (
-              <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} />
+              <ColumnsPopover columns={optionalColumns} visibleColumns={visibleColumns} onVisibleColumnsChange={setVisibleColumns} minVisible={2} />
             )}
           </div>
         </DataViewToolbar>
@@ -1432,7 +1421,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           }
                         />
                       </th>
-                      <th className="p-4 w-[22%]">
+                      {visibleColumns.includes("id") && <th className="p-4 w-[22%]">
                         <div className="flex items-center justify-between gap-1">
                           <button
                             onClick={() => handleSort("id")}
@@ -1445,7 +1434,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                             <SortIndicator column="id" sortBy={sortBy} sortOrder={sortOrder} />
                           </button>
                         </div>
-                      </th>
+                      </th>}
                       {visibleColumns.includes("name") && (
                         <th className="p-4 w-[28%]">
                           <button
@@ -1523,7 +1512,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
                     {groupedStaff.map(([groupLabel, members]) => <Fragment key={groupLabel || "all"}>
-                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 3} className="bg-gray-50/90 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">{groupLabel} <span className="ml-2 font-sans tabular-nums font-normal text-gray-400 dark:text-zinc-500">{members.length}</span></td></tr>}
+                      {groupLabel && <tr><td colSpan={orderedVisibleColumns.length + 2} className="bg-gray-50/90 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900/80 dark:text-zinc-200">{groupLabel} <span className="ml-2 font-sans tabular-nums font-normal text-gray-400 dark:text-zinc-500">{members.length}</span></td></tr>}
                       {members.map((member) => {
                         const office = (Array.isArray(offices) ? offices : []).find(o => o.id === member.office_id)
                         const isSelf = member.id === authUser?.id
@@ -1557,11 +1546,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                 />
                               )}
                             </td>
-                            <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
+                            {visibleColumns.includes("id") && <td className="p-4 align-middle whitespace-nowrap border-r border-border/70 dark:border-border/70">
                               <span className={cn(BADGE_BASE, "font-sans tabular-nums bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200")}>
                                 {member.id}
                               </span>
-                            </td>
+                            </td>}
                             {visibleColumns.includes("name") && (
                               <td className="p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70">
                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -1674,6 +1663,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
       </Card>
 
       {/* Register / Edit Form Dialog */}
+      <TOTPChallengeModal
+        open={registrationChallengeOpen}
+        onOpenChange={setRegistrationChallengeOpen}
+        onConfirm={(token) => handleSubmit(null, token)}
+        actionLabel="Register Personnel"
+        isLoading={submitLoading}
+      />
       <Dialog
         open={formOpen}
         onOpenChange={(open) => { if (!submitLoading) setFormOpen(open) }}
@@ -1780,10 +1776,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                    System-Generated Credentials
+                    Account Credentials
                   </span>
                   <span className={cn(BADGE_BASE, BADGE_PALETTES.blue)}>
-                    {isEditing ? "Read-only" : "Auto-assigned"}
+                    {isEditing ? "Read-only" : "Employee ID auto-assigned"}
                   </span>
                 </div>
 
@@ -1802,14 +1798,20 @@ export default function GlobalStaffTab({ authUser, showToast }) {
 
                   {/* Official Email Address */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                    <label htmlFor="personnel-email" className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
                       Official Email Address
                     </label>
-                    <div className="flex h-10 items-center justify-between rounded-xl border border-border bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
-                        {isEditing ? form.email : (form.email || suggestedEmail || `${(form.role || "staff").toLowerCase()}.[lastname]@pup.local`)}
-                      </span>
-                    </div>
+                    <Input
+                      id="personnel-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      disabled={submitLoading}
+                      value={form.email}
+                      onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                      readOnly={isEditing}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -2077,7 +2079,7 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                           {getStaffCleanName(inspectMember)}
                         </span>
                         {isSelf && (
-                          <span className={cn(BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
+                          <span className={cn(COMPACT_BADGE_BASE, "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300")}>
                             You
                           </span>
                         )}
@@ -2091,13 +2093,13 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                   <div className="shrink-0">
                     {office ? (
                       <span
-                        className={cn(BADGE_BASE, "systemadmin-office-badge select-none")}
+                        className={cn(COMPACT_BADGE_BASE, "systemadmin-office-badge select-none")}
                         style={{ "--office-accent": office.accent_color || "#800000" }}
                       >
                         {office.name}
                       </span>
                     ) : (
-                      <span className={cn(BADGE_BASE, "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}>
+                      <span className={cn(COMPACT_BADGE_BASE, "bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-950 select-none")}>
                         Platform Level
                       </span>
                     )}
@@ -2289,11 +2291,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                                   {item.action}
                                 </span>
                                 {item.eventType === "operator" ? (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.emerald, "h-4 min-h-4 px-1.5 py-0 text-[10px] leading-none")}>
+                                  <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>
                                     Operator
                                   </span>
                                 ) : (
-                                  <span className={cn(BADGE_BASE, BADGE_PALETTES.gray, "h-4 min-h-4 px-1.5 py-0 text-[10px] leading-none")}>
+                                  <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.gray)}>
                                     Account
                                   </span>
                                 )}
@@ -2344,13 +2346,11 @@ export default function GlobalStaffTab({ authUser, showToast }) {
                       Close
                     </Button>
                     <CopyButton
+                      iconOnly
                       textToCopy={() => JSON.stringify(inspectMember, null, 2)}
                       entityName="Personnel Data"
                       idleLabel="Copy Personnel Data"
                       copiedLabel="Data Copied!"
-                      size="sm"
-                      title="Copy personnel record data"
-                      className="h-9 px-3.5"
                     />
                   </div>
 

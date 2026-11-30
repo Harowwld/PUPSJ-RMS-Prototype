@@ -7,6 +7,15 @@
 export const BADGE_BASE =
   "inline-flex h-6 min-h-6 max-w-full items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold leading-4 tracking-[-0.01em] shrink-0 whitespace-nowrap border-0 shadow-none"
 
+export const COMPACT_BADGE_BASE =
+  "inline-flex h-5 min-h-5 max-w-full items-center justify-center gap-1 rounded-full px-2 text-[10px] font-semibold leading-none tracking-[-0.01em] shrink-0 whitespace-nowrap border-0 shadow-none"
+
+export const SETTINGS_STATUS_PILL_SM =
+  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none";
+
+export const SETTINGS_DOT_CHECK =
+  "size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0";
+
 export const SUPERADMIN_BADGE_BASE = BADGE_BASE
 
 // Semantic colors stay readable in both themes.

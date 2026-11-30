@@ -28,7 +28,7 @@ const key = (userId, scope, field) => `pup_superadmin_view_v2:${encodeURICompone
 try {
   await page.goto(`${origin}/login`, { waitUntil: "networkidle2" });
   const user = await page.evaluate(async () => {
-    const response = await fetch("/api/auth/demo-login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "superadmin@pup.local" }) });
+    const response = await fetch("/api/auth/demo-login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "superadmin@pup.com" }) });
     const body = await response.json();
     if (!body.ok) throw new Error(body.error);
     return body.data;
@@ -47,7 +47,7 @@ try {
     ["staff", "staff", "Last Updated", "updated_at"],
     ["health", "operations", "Last Updated", "updatedAt"],
     ["logs", "logs", "IP Address", "ip"],
-    ["backups", "backups", "External Copy", "external"],
+    ["backups", "backups", "Actor", "actor"],
   ];
   for (const [view, scope, label, column] of cases) {
     await open(view);
@@ -58,7 +58,10 @@ try {
       const checkbox = [...document.querySelectorAll("label")].find((element) => element.textContent.trim() === label).querySelector("input");
       if (!checkbox.checked) checkbox.click();
     }, label);
-    await page.waitForFunction((storageKey, column) => JSON.parse(localStorage.getItem(storageKey) || "[]").includes(column), {}, key(user.id, scope, "visibleColumns"), column);
+    await page.waitForFunction((storageKey, column) => {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      return (Array.isArray(saved) ? saved : saved.selected).includes(column);
+    }, {}, key(user.id, scope, "visibleColumns"), column);
     await page.keyboard.press("Escape");
     await page.waitForFunction((label) => [...document.querySelectorAll("main thead th")].some((element) => element.textContent.includes(label)), {}, label);
     await open("settings");
@@ -73,6 +76,47 @@ try {
     if (geometry.body) assert.equal(geometry.header, geometry.body, `${view}: column schema and cells`);
     console.log(`PASS ${view}: optional ${label}, navigation, reload, column geometry`);
   }
+
+  await open("health");
+  await clickText("Columns");
+  for (const label of ["ID", "Department", "Student requester", "Organization / details", "Submitted", "Last Updated", "Citizen's Charter SLA"]) {
+    await page.evaluate((name) => {
+      const checkbox = document.querySelector(`input[type="checkbox"][aria-label="${name}"]`);
+      if (!checkbox) throw new Error(`Missing column: ${name}`);
+      if (checkbox.checked) checkbox.click();
+    }, label);
+  }
+  const readColumn = (name) => page.$eval(`input[type="checkbox"][aria-label="${name}"]`, ({ checked, disabled }) => ({ checked, disabled }));
+  assert.deepEqual(await readColumn("ID"), { checked: false, disabled: false });
+  assert.deepEqual(await readColumn("Document or proposal"), { checked: true, disabled: true });
+  assert.deepEqual(await readColumn("Stage status"), { checked: true, disabled: true });
+  await page.reload({ waitUntil: "networkidle2" });
+  await clickText("Columns");
+  assert.deepEqual(await readColumn("ID"), { checked: false, disabled: false });
+  assert.deepEqual(await readColumn("Document or proposal"), { checked: true, disabled: true });
+  await clickText("Reset Columns");
+  assert.deepEqual(await readColumn("ID"), { checked: true, disabled: false });
+  await page.keyboard.press("Escape");
+  console.log("PASS Campus Operations: ID toggle, two-column minimum, reload, and reset");
+
+  await clickText("Sort: Submitted");
+  await clickText("Last Updated");
+  await clickText("Sort: Last Updated");
+  await clickText("Descending");
+  await page.keyboard.press("Escape");
+  await clickText("Group: No grouping");
+  await clickText("Department");
+  await clickText("Filter");
+  await clickText("Queue Risk / SLA");
+  await page.reload({ waitUntil: "networkidle2" });
+  await page.waitForSelector('[aria-label="Active filters"] button[aria-label*="Queue Risk / SLA"]');
+  await clickText("Group: Department");
+  await page.keyboard.press("Escape");
+  await clickText("Sort: Last Updated");
+  assert.equal(await page.$eval('[aria-label="Sort direction"] button[aria-pressed="true"]', (button) => button.textContent.trim()), "Descending");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.evaluate((storageKey) => JSON.parse(localStorage.getItem(storageKey))?.[0]?.fieldKey, key(user.id, "operations", "operationFilters")), "queue_risk");
+  console.log("PASS Campus Operations: SLA filter, sort direction, and grouping survive reload");
 
   await open("staff");
   const input = 'input[aria-label="Search personnel"]';

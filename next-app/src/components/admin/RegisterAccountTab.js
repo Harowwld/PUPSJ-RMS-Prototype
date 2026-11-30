@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -58,29 +58,6 @@ export default function RegisterAccountTab({
       active = false
     }
   }, [open, officeId, authUser?.office_id, createForm.role, setCreateForm, repeat.savedCount])
-
-  const suggestedEmail = useMemo(() => {
-    if (!createForm.lname || !createForm.role) return ""
-    const role = createForm.role.toLowerCase()
-    const name = createForm.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
-    return `${role}.${name}@pup.local`
-  }, [createForm.lname, createForm.role])
-
-  // Auto-fill Email
-  useEffect(() => {
-    if (suggestedEmail && createForm.email !== suggestedEmail) {
-      const timer = setTimeout(() => {
-        setCreateForm(f => ({ ...f, email: suggestedEmail }))
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-    if (!suggestedEmail && createForm.email !== "") {
-      const timer = setTimeout(() => {
-        setCreateForm(f => ({ ...f, email: "" }))
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-  }, [suggestedEmail, createForm.email, setCreateForm])
 
   useEffect(() => {
     if (open) {
@@ -192,10 +169,10 @@ export default function RegisterAccountTab({
               <div className="p-4 rounded-2xl border border-border dark:border-border bg-gray-50/50 dark:bg-zinc-950/40 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
-                    System-Generated Credentials
+                    Account Credentials
                   </span>
                   <span className={cn(BADGE_PALETTES.blue, BADGE_BASE)}>
-                    Auto-assigned
+                    Employee ID auto-assigned
                   </span>
                 </div>
 
@@ -212,14 +189,19 @@ export default function RegisterAccountTab({
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-[10px] font-semibold text-gray-500 dark:text-zinc-400">
+                    <label htmlFor="register-staff-email" className="mb-1 block text-[10px] font-semibold text-gray-500 dark:text-zinc-400">
                       Official Email Address
                     </label>
-                    <div className="flex h-10 items-center justify-between rounded-xl border border-border/80 bg-white/80 px-3.5 text-xs text-gray-700 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-300 shadow-2xs select-none">
-                      <span className="font-sans tabular-nums text-xs font-semibold tracking-wide truncate">
-                        {createForm.email || suggestedEmail || `${(createForm.role || "staff").toLowerCase()}.[lastname]@pup.local`}
-                      </span>
-                    </div>
+                    <Input
+                      id="register-staff-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      disabled={isLoading}
+                      value={createForm.email}
+                      onChange={(event) => setCreateForm((current) => ({ ...current, email: event.target.value }))}
+                      required
+                    />
                   </div>
                 </div>
               </div>

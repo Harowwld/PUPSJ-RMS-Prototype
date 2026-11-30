@@ -4,6 +4,7 @@ import { SUPERADMIN_BADGE_BASE as BADGE_BASE } from "@/lib/badgeStyles"
 import { Textarea } from "@/components/ui/textarea";
 
 
+import useViewPreference from "@/hooks/useViewPreference"
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -71,7 +72,7 @@ const DEFAULT_BENTO = {
 export default function LandingBentoCmsView({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("cards") // 'cards' | 'header' | 'preview'
+  const [activeTab, setActiveTab] = useViewPreference("cms-bento", "activeTab", "cards")
   const [activeCardTab, setActiveCardTab] = useState(1) // 1-5 or null
   const [bentoData, setBentoData] = useState(DEFAULT_BENTO)
   const [resetModalOpen, setResetModalOpen] = useState(false)

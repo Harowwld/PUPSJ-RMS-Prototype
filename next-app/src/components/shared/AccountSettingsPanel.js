@@ -1,5 +1,6 @@
 "use client";
 
+import InitialLoaderSetting from "@/components/shared/InitialLoaderSetting";
 import { STUDENT_AFFILIATIONS } from "@/lib/studentAffiliation";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -58,7 +59,7 @@ import RecoveryCodesModal from "@/components/shared/RecoveryCodesModal";
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, SETTINGS_DOT_CHECK, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
 
 const SETTINGS_GRAY_BADGE =
   "text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] text-gray-800 dark:text-zinc-200";
@@ -66,14 +67,9 @@ const SETTINGS_GRAY_BADGE =
 const SETTINGS_STATUS_PILL =
   "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none";
 
-const SETTINGS_STATUS_PILL_SM =
-  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none";
-
 const SETTINGS_PILL_DIVIDER =
   "h-3.5 w-px bg-black/[0.1] dark:bg-white/15 shrink-0";
 
-const SETTINGS_DOT_CHECK =
-  "size-3.5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white inline-flex items-center justify-center shrink-0";
 import {
   getOfficeRoleLabel,
   isSystemAdminRole,
@@ -332,6 +328,7 @@ export default function AccountSettingsPanel() {
   const [lname, setLname] = useState("");
   const [mname, setMname] = useState("");
   const [studentNo, setStudentNo] = useState("");
+  const [checklistStudentNo, setChecklistStudentNo] = useState("");
   const [clientType, setClientType] = useState("Student");
   const [username, setUsername] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -342,6 +339,7 @@ export default function AccountSettingsPanel() {
     lname: "",
     mname: "",
     studentNo: "",
+    checklistStudentNo: "",
     clientType: "Student",
   });
 
@@ -443,6 +441,7 @@ export default function AccountSettingsPanel() {
         setMname(user.mname || "");
         setUsername(user.email || user.username || "");
         setStudentNo(user.student_no || "");
+        setChecklistStudentNo(user.checklist_student_no || "");
         const derivedClientType = user.client_type || (user.course_code === "ALUMNI" || (user.student_no && user.student_no.startsWith("ALUM-")) ? "Alumni" : "Student");
         setClientType(derivedClientType);
         setInitialProfileValues({
@@ -450,6 +449,7 @@ export default function AccountSettingsPanel() {
           lname: user.lname || "",
           mname: user.mname || "",
           studentNo: user.student_no || "",
+          checklistStudentNo: user.checklist_student_no || "",
           clientType: derivedClientType,
         });
         setUserPreferences(user.preferences || {});
@@ -607,6 +607,10 @@ export default function AccountSettingsPanel() {
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
+      if (key === "initial_loader") {
+        const loaderScope = document.getElementById("dashboard-loader-scope");
+        if (loaderScope) loaderScope.dataset.initialLoader = val;
+      }
       toast.success(successMsg, {
         description: "Your preference settings have been updated.",
       });
@@ -750,7 +754,9 @@ export default function AccountSettingsPanel() {
     if (authUser?.role === "Student") {
       return [
         { id: "default", label: "Overview", desc: "View request status and recent activity" },
-        { id: "compliance", label: "Document Checklist", desc: "Review student enrollment requirements" },
+        ...(authUser.client_type === "Student" && authUser.portal_setup_complete !== false
+          ? [{ id: "compliance", label: "Document Checklist", desc: "Review student enrollment requirements" }]
+          : []),
         { id: "requests", label: "Document Requests", desc: "View and request official academic records" },
       ];
     }
@@ -1249,6 +1255,7 @@ export default function AccountSettingsPanel() {
     setLname(initialProfileValues.lname);
     setMname(initialProfileValues.mname);
     setStudentNo(initialProfileValues.studentNo);
+    setChecklistStudentNo(initialProfileValues.checklistStudentNo);
     setClientType(initialProfileValues.clientType);
     toast.info("Changes Discarded", {
       description: "Reverted profile fields to initial values.",
@@ -1279,11 +1286,13 @@ export default function AccountSettingsPanel() {
     }
   };
 
+  const canSaveChecklistNumber = authUser?.role === "Student" && clientType === "Student" && !studentNo;
   const isDirty = (
     (fname || "").trim() !== (initialProfileValues.fname || "").trim() ||
     (lname || "").trim() !== (initialProfileValues.lname || "").trim() ||
     (mname || "").trim() !== (initialProfileValues.mname || "").trim() ||
     (studentNo || "").trim() !== (initialProfileValues.studentNo || "").trim() ||
+    (canSaveChecklistNumber && checklistStudentNo.trim() !== initialProfileValues.checklistStudentNo) ||
     clientType !== initialProfileValues.clientType
   );
 
@@ -1308,6 +1317,9 @@ export default function AccountSettingsPanel() {
             mname: (mname || "").trim(),
             student_no: (studentNo || "").trim(),
             client_type: clientType,
+            ...(canSaveChecklistNumber && checklistStudentNo.trim() !== initialProfileValues.checklistStudentNo
+              ? { checklist_student_no: checklistStudentNo.trim() }
+              : {}),
           }
         : {
             fname: (fname || "").trim(),
@@ -1330,6 +1342,7 @@ export default function AccountSettingsPanel() {
         lname: (lname || "").trim(),
         mname: (mname || "").trim(),
         studentNo: (studentNo || "").trim(),
+        checklistStudentNo: canSaveChecklistNumber ? checklistStudentNo.trim() : initialProfileValues.checklistStudentNo,
         clientType,
       });
 
@@ -2207,6 +2220,22 @@ export default function AccountSettingsPanel() {
                                   className="h-10 border-0 shadow-none bg-transparent focus-visible:ring-0 text-[13.5px] font-medium font-sans tabular-nums text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 px-1"
                                 />
                               </div>
+                              {canSaveChecklistNumber && (
+                                <div className="flex items-center gap-2 px-4 py-1.5">
+                                  <label htmlFor="profileChecklistStudentNumber" className="w-32 shrink-0 text-xs font-semibold text-muted-foreground sm:w-40">
+                                    Student Number for Check My Records
+                                  </label>
+                                  <Input
+                                    id="profileChecklistStudentNumber"
+                                    value={checklistStudentNo}
+                                    onChange={(event) => setChecklistStudentNo(event.target.value)}
+                                    autoComplete="off"
+                                    spellCheck={false}
+                                    maxLength={31}
+                                    placeholder="Optional"
+                                  />
+                                </div>
+                              )}
                             </div>
                             <p className="text-[12px] text-gray-400 dark:text-zinc-500 mt-2 px-1 font-normal">
                               Optional in your profile. Select whether you are currently enrolled or requesting records as an alumnus.
@@ -2997,6 +3026,11 @@ export default function AccountSettingsPanel() {
                     </div>
                   </div>
                 </div>
+
+                <InitialLoaderSetting
+                  value={userPreferences.initial_loader}
+                  onSave={(value) => handlePreferenceChange("initial_loader", value, "Dashboard Loader Updated")}
+                />
 
                 {/* Section 2: Display Name Format */}
                 <div className="pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">

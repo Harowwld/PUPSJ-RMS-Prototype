@@ -1,6 +1,7 @@
 import { createReportDocument } from "./reportDocument.js"
 import { formatPHDateTime } from "./timeFormat.js"
 import { formatLogDetails } from "./auditLogFormatting.js"
+import { formatReportOffice } from "./exportHelpers.js"
 import { getReportFont } from "./reportFontOptions.js"
 import { getRequestCharterStatus, buildSlaTiers } from "./citizenCharter.js"
 
@@ -38,7 +39,7 @@ export async function generateAuditLogsPdf(logs = [], options = {}) {
   report.table(head, list(logs).map((log) => [
     log?.created_at || log?.time || log?.timestamp ? formatPHDateTime(log.created_at || log.time || log.timestamp) : "Not recorded",
     log?.severity || "INFO", log?.actor_display_name || log?.actor || log?.user || log?.actor_name || "System", log?.role || "Not recorded",
-    ...(scoped ? [log?.officeName || log?.office_name || log?.scope || log?.office_id || "Global"] : []),
+    ...(scoped ? [formatReportOffice(log?.office_id, log?.officeName || log?.office_name || log?.scope) || "Global"] : []),
     log?.action || "Activity", formatLogDetails(log?.details) || "No additional details",
   ]), {
     fontSize: 8.5,
@@ -52,7 +53,13 @@ export async function generateAuditLogsPdf(logs = [], options = {}) {
 
 export async function generateDigitizationCompliancePdf(data = {}, summary = {}, meta = {}, byCourse = []) {
   const report = await createReportDocument({ title: "Digitization Compliance Report", branding: meta.branding, generatedAt: meta.generatedAt })
-  report.metadata([["Office", meta.officeId || "Authorized office"], ["Coverage", "Student records included in the current analysis"]])
+  report.metadata([
+    ["Office", formatReportOffice(meta.officeId, meta.officeName) || "Authorized office"],
+    ["Coverage", "Student records included in the current analysis"],
+    ...(meta.startDate || meta.endDate
+      ? [["Student records created (Manila)", `${meta.startDate || "Any"} to ${meta.endDate || "Any"}`]]
+      : []),
+  ])
   analyticsSection(report, "Summary")
   report.paragraph("This report summarizes student record digitization against the mandatory document types configured for the selected office.")
   report.table(["Measure", "Recorded Result"], [
@@ -316,7 +323,7 @@ export async function generateCampusOperationsPdf(transactions = [], options = {
       ? `#OSAS-${padded}`
       : `#TX-${padded}`
 
-    const dept = tx.officeName || (tx.officeId === "registrar" ? "Registrar" : "OSAS")
+    const dept = formatReportOffice(tx.officeId || "osas", tx.officeName)
     const requester = tx.studentName && !tx.studentName.startsWith("enc:")
       ? tx.studentName
       : (tx.studentNo ? `Student (${tx.studentNo})` : "Student")

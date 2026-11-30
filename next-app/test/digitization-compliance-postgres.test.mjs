@@ -28,7 +28,7 @@ test(
       // Temporary tables shadow application tables on this connection; all fixtures roll back.
       await client.query(`
       CREATE TEMP TABLE students (student_no text, name text, course_code text, year_level int, section text, status text,
-        storage_room int, storage_cabinet text, storage_drawer int);
+        storage_room int, storage_cabinet text, storage_drawer int, created_at timestamptz);
       CREATE TEMP TABLE document_types (id int, name text, office_id text, status text, is_compliance boolean, is_requestable boolean);
       CREATE TEMP TABLE student_office_memberships (student_no text, office_id text, status text);
       CREATE TEMP TABLE documents (id serial, student_no text, office_id text, doc_type text, approval_status text,
@@ -37,6 +37,10 @@ test(
         SELECT lpad(i::text, 4, '0'), 'Student ' || i, 'BSIT', 2025, '1', 'Active' FROM generate_series(1, 205) i;
       INSERT INTO students (student_no, name, course_code, year_level, section, status)
         VALUES ('9999', 'Archived Student', 'BSENT', 2024, '2', 'Archived');
+      UPDATE students SET created_at = '2026-11-11 15:59:59+00';
+      UPDATE students SET created_at = '2026-11-11 19:38:00+00' WHERE student_no IN ('0200', '0201');
+      UPDATE students SET created_at = '2026-11-12 16:00:00+00' WHERE student_no = '0202';
+
       INSERT INTO student_office_memberships SELECT student_no, 'registrar', 'Active' FROM students;
       INSERT INTO document_types VALUES (11, 'Required A', 'registrar', 'Active', true, false),
         (12, 'Required B', 'registrar', 'Active', true, false), (21, 'Required B', 'osas', 'Active', true, false),
@@ -67,6 +71,16 @@ test(
         offset: 200,
         limit: 20,
       })
+      const sameDay = { ...options, startDate: "2026-11-12", endDate: "2026-11-12" }
+      const daySummary = await getDigitizationComplianceSummary(sameDay)
+      const dayRoster = await getStudentComplianceReport({ ...sameDay, exportAll: true })
+      assert.equal(daySummary.summary.totalStudents, 2)
+      assert.equal(daySummary.summary.activeStudentsCount, 2)
+      assert.equal(daySummary.summary.digitizedStudents, 1)
+      assert.equal(dayRoster.total, 1)
+      assert.equal(dayRoster.students[0].studentNo, "0201")
+      assert.equal(dayRoster.meta.startDate, sameDay.startDate)
+      assert.equal(dayRoster.meta.endDate, sameDay.endDate)
       assert.equal(summary.summary.totalStudents, 205)
       assert.equal(summary.summary.notDigitizedStudents, 4)
       assert.equal(roster.total, 4)

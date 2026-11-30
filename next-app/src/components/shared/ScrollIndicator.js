@@ -103,11 +103,7 @@ export default function ScrollIndicator() {
     <div className="fixed top-0 right-0 h-screen w-[3px] z-[9999] pointer-events-none overflow-hidden">
       <div 
         ref={thumbRef}
-        className="w-full bg-black/60 dark:bg-white/60 backdrop-blur-md rounded-l-full transition-opacity duration-300"
-        style={{ 
-          opacity: 0,
-          boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-        }}
+        className="w-full bg-black/60 dark:bg-white/60 backdrop-blur-md rounded-l-full opacity-0 shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-opacity duration-300"
       />
     </div>
   );

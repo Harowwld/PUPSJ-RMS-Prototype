@@ -17,7 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { calculateDeadline, formatCharterDeadline } from "@/lib/citizenCharter";
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import { Add01Icon, Alert02Icon, CalendarCheckIn01Icon, Cancel01Icon, HourglassIcon, LayoutGridIcon, MinusSignIcon, Tick01Icon, Timer01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 const PRESETS = [
@@ -348,7 +348,7 @@ export default function ServiceStandardsSheet({
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-xs font-jakarta select-none">
+                    <span className={cn(COMPACT_BADGE_BASE, "bg-black/[0.04] dark:bg-white/[0.06] select-none")}>
                       {isModified ? (
                         <Alert02Icon size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
                       ) : (
@@ -397,7 +397,7 @@ export default function ServiceStandardsSheet({
                             )}>
                               {p.name}
                             </span>
-                            <span className={cn(BADGE_BASE, BADGE_PALETTES.slate)}>
+                            <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.slate)}>
                               {p.simpleDays}-{p.complexDays}-{p.highlyTechnicalDays}d
                             </span>
                           </div>
@@ -480,7 +480,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Simple Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.green)}>
+                          <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.green)}>
                             Routine
                           </span>
                         </div>
@@ -506,7 +506,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Complex Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.amber)}>
+                          <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.amber)}>
                             Record Search
                           </span>
                         </div>
@@ -532,7 +532,7 @@ export default function ServiceStandardsSheet({
                           <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">
                             Specialized Requests
                           </span>
-                          <span className={cn(BADGE_BASE, BADGE_PALETTES.purple)}>
+                          <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.purple)}>
                             Verification
                           </span>
                         </div>

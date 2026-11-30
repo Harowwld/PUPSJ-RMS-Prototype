@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Skeleton } from "@/components/ui/skeleton"
 import DashboardShellSkeleton from "@/components/shared/DashboardShellSkeleton"
 import { getRoleBranding } from "@/lib/roleBranding"
 import { getClientSession } from "@/lib/clientAuth"
@@ -173,61 +172,8 @@ export function AuthGuard({ children, fallback, redirectTo = "/login", requiredP
     };
   }, []);
 
-  // Show loading skeleton while checking authentication — mirrors the actual
-  // dashboard layout (sidebar + workspace, no page header). Pages pass their
-  // own page-matched skeleton via the `fallback` prop.
   if (isLoading) {
-    if (fallback) {
-      return fallback
-    }
-    return (
-      <DashboardShellSkeleton
-        items={[
-          { key: "overview", label: "Overview" },
-          { type: "header", label: "Records" },
-          { key: "records", label: "Records" },
-          { key: "requests", label: "Requests" },
-          { type: "header", label: "System" },
-          { key: "settings", label: "Settings" },
-        ]}
-      >
-        <div className="flex flex-1 flex-col min-h-full w-full gap-6 animate-fade-up">
-          <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:border-border dark:bg-card flex flex-col flex-1 min-h-[500px] mb-4 isolate">
-            {/* Header */}
-            <div className="p-6 flex items-center justify-between">
-              <div className="space-y-1.5">
-                <Skeleton className="h-5 w-48 rounded dark:bg-muted" />
-                <Skeleton className="h-3.5 w-72 rounded dark:bg-muted" />
-              </div>
-              <Skeleton className="h-9 w-28 rounded-xl dark:bg-muted" />
-            </div>
-
-            {/* Toolbar Row */}
-            <div className="h-14 border-t border-border dark:border-border p-4 px-6 flex items-center justify-between bg-gray-50/40 dark:bg-zinc-900/30">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-9 w-64 rounded-xl dark:bg-muted" />
-                <Skeleton className="h-9 w-32 rounded-xl dark:bg-muted" />
-              </div>
-              <Skeleton className="h-9 w-20 rounded-xl dark:bg-muted" />
-            </div>
-
-            {/* Table Body Rows */}
-            <div className="p-6 space-y-4 flex-1 rounded-b-2xl">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-12 border-b border-border dark:border-border flex items-center justify-between last:border-b-0">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-8 rounded-lg dark:bg-muted" />
-                    <Skeleton className="h-4 w-40 rounded dark:bg-muted" />
-                  </div>
-                  <Skeleton className="h-4 w-24 rounded dark:bg-muted" />
-                  <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </DashboardShellSkeleton>
-    )
+    return fallback ?? <DashboardShellSkeleton />
   }
 
   // Render children if authorized, otherwise render nothing (redirect will happen)

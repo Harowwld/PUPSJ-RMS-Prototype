@@ -438,20 +438,6 @@ export default function DocTypesTab({
                           >
                             Document Type <SortIndicator sortState={sortDoc} column="name" />
                           </button>
-                          {isScrolledX && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                resetScroll();
-                              }}
-                              title="Reset scroll to start"
-                              aria-label="Reset scroll to start"
-                              className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
-                            >
-                              <AppIcon className=" ArrowLeft01Icon text-xs" />
-                            </button>
-                          )}
                         </div>
                       </th>
                       <th className="w-[22%] p-4 px-6 text-xs font-semibold text-gray-500 dark:text-zinc-400">Purpose / Scope</th>

@@ -13,7 +13,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { cn, formatLogDetails } from "@/lib/utils";
-import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { COMPACT_BADGE_BASE, SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 import NarrativeText from "@/components/shared/NarrativeText";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar";
 import { Cancel01Icon, Copy01Icon, GlobeIcon, Shield01Icon, Tick01Icon } from "hugeicons-react";
@@ -233,12 +233,12 @@ export default function LogDetailSheet({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className={cn(BADGE_PALETTES.gray, "font-sans tabular-nums text-xs", BADGE_BASE)}>
+                <span className={cn(BADGE_PALETTES.gray, "font-sans tabular-nums text-xs", COMPACT_BADGE_BASE)}>
                   #LOG-{selectedLog.rawId ?? selectedLog.id}
                 </span>
                 {severityInfo && (
                   <span
-                    className={cn(severityInfo.classes, BADGE_BASE)}
+                    className={cn(severityInfo.classes, COMPACT_BADGE_BASE)}
                   >
                     {severityInfo.label}
                   </span>
@@ -373,26 +373,12 @@ export default function LogDetailSheet({
                       <NarrativeText text={selectedLog.details} mode="full" />
                     </div>
                     {selectedLog.details && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopyField(formatLogDetails(selectedLog.details), "Description", "details")}
-                        aria-live="polite"
-                        className="text-[11px] text-gray-500 hover:text-pup-maroon dark:text-zinc-400 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer pt-0.5"
-                      >
-                        {copiedField === "details" ? (
-                          <Tick01Icon size="1em" className="text-xs text-gray-700 dark:text-zinc-200" />
-                        ) : (
-                          <Copy01Icon size="1em" className="text-xs" />
-                        )}
-                        <span className="inline-grid grid-cols-1 grid-rows-1 items-center">
-                          <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-100" : "opacity-0 pointer-events-none")}>
-                            Narrative Copied!
-                          </span>
-                          <span className={cn("col-start-1 row-start-1 transition-opacity duration-150 select-none", copiedField === "details" ? "opacity-0 pointer-events-none" : "opacity-100")}>
-                            Copy full narrative
-                          </span>
-                        </span>
-                      </button>
+                      <CopyButton
+                        iconOnly
+                        textToCopy={() => formatLogDetails(selectedLog.details)}
+                        entityName="Narrative"
+                        idleLabel="Copy full narrative"
+                      />
                     )}
                   </div>
                 </InfoRow>
@@ -474,10 +460,10 @@ export default function LogDetailSheet({
           <div>
             {selectedLog && (
               <CopyButton
+                iconOnly
                 textToCopy={() => JSON.stringify(selectedLog, null, 2)}
                 entityName="Record Data"
                 idleLabel="Copy Record Data"
-                title="Copy activity record data"
               />
             )}
           </div>

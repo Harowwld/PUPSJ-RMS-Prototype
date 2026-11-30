@@ -10,6 +10,7 @@ import {
   calculateCoverageDays,
 } from "../src/lib/dateRangeUtils.js"
 import { format, subDays, startOfQuarter, startOfYear } from "date-fns"
+import { formatManilaCalendarDate } from "../src/lib/timeFormat.js"
 
 test("DateRangePicker - parseDateLocal", () => {
   const d = parseDateLocal("2026-11-04")
@@ -46,8 +47,8 @@ test("DateRangePicker - parseInputDate flexible formats", () => {
 })
 
 test("DateRangePicker - preset matching and range formatting", () => {
-  const today = new Date()
-  const todayStr = format(today, "yyyy-MM-dd")
+  const todayStr = formatManilaCalendarDate(new Date())
+  const today = parseDateLocal(todayStr)
   const yesterdayStr = format(subDays(today, 1), "yyyy-MM-dd")
   const last7Str = format(subDays(today, 6), "yyyy-MM-dd")
   const last30Str = format(subDays(today, 29), "yyyy-MM-dd")
@@ -73,7 +74,7 @@ test("DateRangePicker - preset matching and range formatting", () => {
 })
 
 test("DateRangePicker - strict start-end validation rules", () => {
-  const todayStr = format(new Date(), "yyyy-MM-dd")
+  const todayStr = formatManilaCalendarDate(new Date())
 
   // Valid range: start <= end
   const resValid = validateDateRange("2026-10-01", "2026-10-31", { disableFutureDates: false })
@@ -122,4 +123,15 @@ test("DateRangePicker - Philippine timezone boundary integrity", () => {
   // Filtering Nov 1 must include it
   const isIncludedInNovember = manilaDateStr >= "2026-11-01" && manilaDateStr <= "2026-11-01"
   assert.equal(isIncludedInNovember, true, "Nov 1 Manila timestamp must fall within Nov 1 - Nov 1")
+})
+
+
+test("DateRangePicker uses Manila midnight for presets and the future-date cutoff", (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-11-11T19:38:00Z") })
+  assert.deepEqual(formatPresetRange("today"), { start: "2026-11-12", end: "2026-11-12" })
+  assert.deepEqual(formatPresetRange("yesterday"), { start: "2026-11-11", end: "2026-11-11" })
+  assert.deepEqual(formatPresetRange("last7"), { start: "2026-11-06", end: "2026-11-12" })
+  assert.equal(getMatchingPresetKey("2026-11-12", "2026-11-12"), "today")
+  assert.equal(validateDateRange("2026-11-12", "2026-11-12").isValid, true)
+  assert.equal(validateDateRange("2026-11-13", "2026-11-13").isValid, false)
 })

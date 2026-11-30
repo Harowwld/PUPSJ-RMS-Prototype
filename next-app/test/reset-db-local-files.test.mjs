@@ -58,17 +58,13 @@ test("development database reset removes local files left by scans and backups",
       LOCAL_DATA_DIR: localDir,
       NODE_ENV: "test",
     };
-    execFileSync(process.execPath, ["scripts/run-migrations.mjs"], { env: testEnv, stdio: "pipe" });
-    const resetScript = `
-      const { resetDatabase } = await import("./src/lib/resetDatabase.js");
-      const { pool } = await import("./src/lib/postgres.js");
-      try { await resetDatabase(); } finally { await pool.end(); }
-    `;
-    execFileSync(process.execPath, ["--input-type=module", "-e", resetScript], {
+    const output = execFileSync(process.execPath, ["scripts/reset-db.mjs", "--confirm"], {
       env: testEnv,
+      encoding: "utf8",
       stdio: "pipe",
     });
 
+    assert.match(output, /Applied 101_staff_email_verification\.sql[\s\S]*Reset completed/);
     assert.deepEqual(await fs.readdir(localDir), [], "reset left local data behind");
     assert.equal(await fs.readFile(outsideFile, "utf8"), "keep");
   } finally {

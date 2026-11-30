@@ -1,6 +1,12 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 
+export function moveTableScroll(viewport, amount) {
+  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+  if (amount === undefined) viewport?.scrollTo({ left: 0, behavior });
+  else viewport?.scrollBy({ left: amount, behavior });
+}
+
 /**
  * Hook to manage horizontal scroll state and smooth scrolling for wide data tables.
  * Follows the pattern established in DocumentsTab.js.
@@ -61,20 +67,20 @@ export function useTableScroll(dependencies = []) {
   const scrollLeft = useCallback((amount = 400) => {
     const px = typeof amount === "number" && !isNaN(amount) ? amount : 400;
     if (containerRef.current) {
-      containerRef.current.scrollBy({ left: -px, behavior: "smooth" });
+      moveTableScroll(containerRef.current, -px);
     }
   }, []);
 
   const scrollRight = useCallback((amount = 400) => {
     const px = typeof amount === "number" && !isNaN(amount) ? amount : 400;
     if (containerRef.current) {
-      containerRef.current.scrollBy({ left: px, behavior: "smooth" });
+      moveTableScroll(containerRef.current, px);
     }
   }, []);
 
   const resetScroll = useCallback(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      moveTableScroll(containerRef.current);
     }
   }, []);
 

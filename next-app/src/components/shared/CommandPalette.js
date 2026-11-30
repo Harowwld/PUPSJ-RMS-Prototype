@@ -1095,7 +1095,12 @@ export default function CommandPalette({
             },
           ],
         },
-      ];
+      ].map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          (authUser?.client_type === "Student" && authUser?.portal_setup_complete !== false) ||
+          !["compliance", "osas"].includes(item.view)),
+      })).filter((group) => group.items.length > 0);
 
     }
 

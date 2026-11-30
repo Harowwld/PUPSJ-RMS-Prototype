@@ -18,6 +18,7 @@ DocumentType,Certificate of Graduation,,false,true,Graduation & Exit Records
 DocumentType,Certificate of Transfer Credentials (Honorable Dismissal),,false,true,Graduation & Exit Records
 DocumentType,Certificate of Enrollment,,false,true,Certificates & Clearances
 DocumentType,Certificate of Registration,,false,true,Certificates & Clearances
+DocumentType,Certificate of Good Moral,,false,true,Certificates & Clearances
 Course,Bachelor of Science in Accountancy,BSA,,,
 Course,Bachelor in Secondary Education major in English,BSEDEN,,,
 Course,Bachelor of Science in Entrepreneurship,BSENT,,,

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import TableScrollControls from "@/components/shared/TableScrollControls"
 import DataViewToolbar from "@/components/shared/DataViewToolbar"
 import useTableScroll from "@/hooks/useTableScroll"
-import { useEffect } from "react"
+import { Fragment, useEffect } from "react"
 import {
   Empty,
   EmptyHeader,
@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"
 import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles"
 import { Database01Icon as EmptyDatabase01Icon, Search01Icon as EmptySearch01Icon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, CheckmarkCircle01Icon, CovidInfoIcon, Delete01Icon, Download01Icon, HardDriveIcon, Plug01Icon, RefreshIcon } from "hugeicons-react";
 import AuditActorAvatar from "@/components/shared/AuditActorAvatar"
-import { PLATFORM_BACKUP_COLUMNS, BackupActionsMenu } from "@/components/systemadmin/PlatformBackupTable"
+import { SYSTEM_BACKUP_COLUMNS, BackupActionsMenu } from "@/components/systemadmin/PlatformBackupTable"
 import AppIcon from "@/components/ui/app-icon";
 
 function SortIndicator({ column, sortBy, sortOrder }) {
@@ -86,6 +86,7 @@ export default function BackupTable({
   handleSort,
   sortBy,
   sortOrder,
+  groupBy = "none",
   localLoading,
   handleSyncExternal,
   onDownloadBackup,
@@ -102,7 +103,7 @@ export default function BackupTable({
   handleItemsPerPageChange,
   scope = "office",
   externalDriveConnected = false,
-  visibleColumns = PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key),
+  visibleColumns = SYSTEM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key),
   tableScrollRef,
   isScrolledX = false,
   resetScroll,
@@ -117,6 +118,7 @@ export default function BackupTable({
   }, [page, sortBy, sortOrder, doResetScroll]);
 
   const showColumn = (key) => !visibleColumns || visibleColumns.includes(key);
+  const columnCount = SYSTEM_BACKUP_COLUMNS.filter(({ key }) => showColumn(key)).length + 2;
 
   return (
     <>
@@ -180,7 +182,7 @@ export default function BackupTable({
             <Table
               columns={[
                 "selection",
-                { kind: "text", growthWeight: 3 },
+                ...(showColumn("filename") ? [{ kind: "text", growthWeight: 3 }] : []),
                 ...(showColumn("actor") ? [{ kind: "text", growthWeight: 1 }] : []),
                 ...(showColumn("type") ? [{ kind: "category", width: 160 }] : []),
                 ...(showColumn("size") ? ["number"] : []),
@@ -208,7 +210,7 @@ export default function BackupTable({
                       disabled={backups.length === 0}
                     />
                   </th>
-                  <th className={cn(
+                  {showColumn("filename") && <th className={cn(
                     "p-4 w-[34%] sticky left-12 z-20 bg-white dark:bg-card border-r border-border/70 dark:border-border/70 transition-shadow duration-200",
                     scrolledX && "shadow-[4px_0_12px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_12px_-2px_rgba(0,0,0,0.4)]"
                   )}>
@@ -227,22 +229,8 @@ export default function BackupTable({
                           sortOrder={sortOrder}
                         />
                       </button>
-                      {scrolledX && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            doResetScroll?.();
-                          }}
-                          title="Reset scroll to start"
-                          aria-label="Reset scroll to start"
-                          className="p-1 rounded-md hover:bg-gray-200/60 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors cursor-pointer ml-auto mr-1"
-                        >
-                          <AppIcon className=" ArrowLeft01Icon text-xs" />
-                        </button>
-                      )}
                     </div>
-                  </th>
+                  </th>}
                   {showColumn("actor") && (
                     <th className="p-4 w-[15%] border-r border-border/70 dark:border-border/70">
                       <button
@@ -342,12 +330,21 @@ export default function BackupTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-border bg-white dark:bg-card">
-                {sortedAndPaginatedBackups.map((b) => {
+                {sortedAndPaginatedBackups.map((b, index) => {
                   if (!b) return null;
                   const isSelected = selectedBackupIds.includes(b.id);
+                  const showGroup = groupBy !== "none" &&
+                    (index === 0 || b[groupBy] !== sortedAndPaginatedBackups[index - 1]?.[groupBy]);
                   return (
+                    <Fragment key={b.id}>
+                    {showGroup && (
+                      <tr>
+                        <td colSpan={columnCount} className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          {b[groupBy] || "Unspecified"}
+                        </td>
+                      </tr>
+                    )}
                     <tr
-                      key={b.id}
                       className={cn(
                         "group hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors select-none cursor-pointer",
                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
@@ -374,7 +371,7 @@ export default function BackupTable({
                           onChange={() => handleToggleRow(b.id)}
                         />
                       </td>
-                      <td className={cn(
+                      {showColumn("filename") && <td className={cn(
                         "p-4 align-middle overflow-hidden border-r border-border/70 dark:border-border/70 sticky left-12 z-10 transition-all duration-200",
                         isSelected
                           ? "bg-blue-50 dark:bg-blue-950"
@@ -387,7 +384,7 @@ export default function BackupTable({
                         >
                           {b.filename}
                         </span>
-                      </td>
+                      </td>}
                       {showColumn("actor") && (
                         <td className="p-4 align-middle border-r border-border/70 dark:border-border/70 text-xs text-gray-700 dark:text-zinc-300">
                           <div className="flex items-center gap-2 min-w-0">
@@ -557,6 +554,7 @@ export default function BackupTable({
                         </div>
                       </td>
                     </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>

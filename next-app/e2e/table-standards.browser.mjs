@@ -103,6 +103,30 @@ try {
       assert.deepEqual(geometry.align, ["center", "left", "left", "center", "center", "right", "center"]);
       assert.equal(geometry.other, density); assert.equal(geometry.overflow, false); assert.equal(geometry.identifier, "24px"); assert.ok(geometry.constrained <= 340); assert.equal(geometry.actionHeading, "Actions"); assert.ok(geometry.actionHeadingBox <= 1); assert.ok(geometry.columnWidths[2] <= 340);
     }
+    if (width === 320) {
+      const viewport = "#viewport";
+      const reset = '#records th[data-table-pin="identity"] [aria-label="Reset table scroll"]';
+      assert.equal(await page.$(reset), null);
+      await page.click(`${viewport} [aria-label="Scroll table right"]`);
+      await page.waitForFunction(() => document.querySelector("#viewport").scrollLeft >= 399);
+      await page.waitForSelector(reset, { visible: true });
+      const readPins = () => page.$eval(viewport, (element) => {
+        const cells = element.querySelector("#records tbody tr").cells;
+        const left = element.getBoundingClientRect().left;
+        return [0, 1].map((index) => Math.round(cells[index].getBoundingClientRect().left - left));
+      });
+      const pins = await readPins();
+      assert.equal(pins[0], 0);
+      assert.ok(pins[1] > 0 && pins[1] <= 48, `Unexpected identity inset ${pins[1]}`);
+      await page.$eval(viewport, (element) => { element.scrollLeft = element.scrollWidth; });
+      assert.deepEqual(await readPins(), pins);
+      await page.focus(reset);
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() => document.querySelector("#viewport").scrollLeft === 0);
+      await page.waitForSelector(reset, { hidden: true });
+      assert.equal(await page.evaluate(() => document.activeElement.getAttribute("data-table-pin")), "identity");
+      assert.equal(await page.$('#other [aria-label="Reset table scroll"]'), null);
+    }
     await page.$eval("#viewport", (element) => { element.scrollLeft = element.scrollWidth; });
     await page.focus('#records [aria-label="Row actions"]'); await page.keyboard.press("ArrowDown"); await page.waitForSelector('[role="menu"]');
     await waitForMenuFocus("View Student"); await page.keyboard.press("Enter");
@@ -149,7 +173,7 @@ try {
   }
   await page.evaluate(() => window.showLazy()); await page.waitForSelector('#lazy-viewport');
   await page.click('[aria-label="Scroll lazy table right"]'); await page.waitForFunction(() => document.querySelector('#lazy-scrolled').textContent === 'true');
-  await page.click('[data-slot="table-scroll-controls"] button[title="Reset horizontal scroll to default"]'); await page.waitForFunction(() => document.querySelector('#lazy-viewport').scrollLeft < 1);
+  await page.click('section:has(#lazy-viewport) [data-slot="table-scroll-controls"] button[title="Reset horizontal scroll to default"]'); await page.waitForFunction(() => document.querySelector('#lazy-viewport').scrollLeft < 1);
   await page.click('[aria-label="Scroll lazy table right"]'); await page.waitForFunction(() => document.querySelector('#lazy-scrolled').textContent === 'true');
   await page.click('[aria-label="Scroll lazy table left"]'); await page.waitForFunction(() => document.querySelector('#lazy-viewport').scrollLeft < 1);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

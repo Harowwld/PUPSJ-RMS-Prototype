@@ -42,3 +42,8 @@ test("empty states preserve conditional recovery actions and escape search text"
   assert.doesNotMatch(initial, /<button|empty-content|empty-description/);
   assert.match(initial, /No Records Yet/);
 });
+
+test("empty states are visible in the initial markup", () => {
+  const markup = renderToStaticMarkup(h(EmptyState, { title: "No Records Yet" }));
+  assert.doesNotMatch(markup, /opacity:\s*0(?:;|")/);
+});

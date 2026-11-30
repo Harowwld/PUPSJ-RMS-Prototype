@@ -29,6 +29,13 @@ export const KNOWN_ACCOUNT_NAMES = {
   "staff.registrar@pup.local": "Marcus Reyes",
   "admin.osas@pup.local": "Sandra Gomez",
   "staff.osas@pup.local": "Juanito Rizal",
+  "student@pup.com": "Juan Dela Cruz",
+  "test.student@pup.com": "Maria Clara Santos",
+  "superadmin@pup.com": "Ramon Villanueva",
+  "admin.registrar@pup.com": "Elias Austria",
+  "staff.registrar@pup.com": "Marcus Reyes",
+  "admin.osas@pup.com": "Sandra Gomez",
+  "staff.osas@pup.com": "Juanito Rizal",
 };
 
 /**
@@ -125,13 +132,18 @@ export function isPersonName(candidate, precedingProse = "") {
 /**
  * Tokenizes audit descriptions and narrative prose into rich structured entity tokens.
  */
-export function parseNarrativeTokens(details) {
+export function parseNarrativeTokens(details, highlightedPhrases = []) {
   const text = formatLogDetails(details) || "";
   if (!text) return [];
+
+  const highlights = highlightedPhrases.filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .map((phrase) => phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
   // Named capture groups regex
   const masterRegex = new RegExp(
     [
+      ...(highlights.length ? [`(?<highlight>${highlights.join("|")})`] : []),
       // 1. Status transition: from → to
       "(?<transition>\\b[A-Za-z]+\\s*(?:→|->)\\s*[A-Za-z]+\\b)",
       // 2. Key-Value: Key: Value (handles common audit attributes)
@@ -167,7 +179,9 @@ export function parseNarrativeTokens(details) {
     const precedingText = text.slice(Math.max(0, matchIndex - 30), matchIndex);
     const groups = match.groups || {};
 
-    if (groups.transition) {
+    if (groups.highlight) {
+      tokens.push({ type: "quoted_entity", value: fullMatch, raw: fullMatch });
+    } else if (groups.transition) {
       const [from, to] = groups.transition.split(/\s*(?:→|->)\s*/);
       tokens.push({
         type: "transition",

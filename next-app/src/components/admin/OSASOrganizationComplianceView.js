@@ -1,4 +1,7 @@
 "use client";
+
+import { isInManilaDateRange } from "@/lib/timeFormat";
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 
@@ -49,12 +52,13 @@ import {
   EmptyMedia,
   EmptyState,
 } from "@/components/ui/empty";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { generateOrganizationCompliancePdf } from "@/lib/pdfGenerator";
 import { downloadOrganizationComplianceCsv, generateExportFilename } from "@/lib/exportHelpers";
 import { cn } from "@/lib/utils";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
-import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, Copy01Icon, File02Icon, Loading01Icon, Mail01Icon, ReloadIcon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon } from "hugeicons-react";
+import CopyButton from "@/components/shared/CopyButton";
+import { COMPACT_BADGE_BASE, BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { Building03Icon as EmptyBuilding03Icon, UserGroupIcon, ArrowDown01Icon, ArrowUp01Icon, ArrowUpDownIcon, Building01Icon, Cancel01Icon, CheckmarkBadge01Icon, File02Icon, Loading01Icon, Search01Icon, Shield01Icon, Tick01Icon, UserMinus01Icon } from "hugeicons-react";
 import AppIcon from "@/components/ui/app-icon";
 function formatChipDate(dateStr) {
   if (!dateStr) return "";
@@ -179,9 +183,9 @@ export default function OSASOrganizationComplianceView({
   const [standingFilters, setStandingFilters] = useState([]);
   const [cblFilters, setCblFilters] = useState([]);
   const [officerFilters, setOfficerFilters] = useState([]);
-  const [filterRules, setFilterRules] = useState([]);
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState([
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("organization_compliance", "filterRules", []);
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("organization_compliance", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("organization_compliance", "visibleColumns", [
     "name",
     "adviser",
     "cbl",
@@ -192,8 +196,8 @@ export default function OSASOrganizationComplianceView({
   const [endDate, setEndDate] = useState("");
 
   // Sorting
-  const [sortBy, setSortBy] = useState("complianceScore");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("organization_compliance", "sortBy", "complianceScore");
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("organization_compliance", "sortOrder", "desc");
 
   // Pagination
   const [page, setPage] = useUrlPage();
@@ -368,7 +372,7 @@ export default function OSASOrganizationComplianceView({
     setStartDate("");
     setEndDate("");
     setPage(1);
-  }, [setPage]);
+  }, [setPage, setFilterRules]);
 
   // Filter Organizations
   const filteredOrganizations = useMemo(() => {
@@ -441,20 +445,7 @@ export default function OSASOrganizationComplianceView({
         }
       }
 
-      // 8. Date Range
-      if (startDate) {
-        const s = new Date(startDate).getTime();
-        const rowDate = org.created_at ? new Date(org.created_at).getTime() : NaN;
-        if (!isNaN(s) && !isNaN(rowDate) && rowDate < s) return false;
-      }
-      if (endDate) {
-        const e = new Date(endDate);
-        e.setHours(23, 59, 59, 999);
-        const rowDate = org.created_at ? new Date(org.created_at).getTime() : NaN;
-        if (!isNaN(rowDate) && rowDate > e.getTime()) return false;
-      }
-
-      return true;
+      return isInManilaDateRange(org.createdAt, startDate, endDate);
     });
   }, [
     organizations,
@@ -746,7 +737,7 @@ export default function OSASOrganizationComplianceView({
       });
     }
     return chips;
-  }, [search, filterRules, filterFields, startDate, endDate, setPage]);
+  }, [search, filterRules, filterFields, startDate, endDate, setPage, setFilterRules]);
 
   // PDF Generation
   const handleOpenPdfReport = async () => {
@@ -1112,21 +1103,6 @@ export default function OSASOrganizationComplianceView({
                             >
                               Organization <SortIndicator column="name" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                            {isScrolledX && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={resetScroll}
-                                    className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                    aria-label="Reset scroll to start"
-                                  >
-                                    <ReloadIcon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                              </Tooltip>
-                            )}
                           </div>
                         </th>
                       )}
@@ -1721,7 +1697,7 @@ export default function OSASOrganizationComplianceView({
                                   {officer.name}
                                 </h5>
                                 <span
-                                  className={cn(roleStyle.badge, BADGE_BASE)}
+                                  className={cn(roleStyle.badge, COMPACT_BADGE_BASE)}
                                 >
                                   {officer.position}
                                 </span>
@@ -1734,30 +1710,19 @@ export default function OSASOrganizationComplianceView({
                                   </span>
                                 )}
                                 {officer.studentNo && <span className="text-gray-300 dark:text-zinc-600">·</span>}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!officer.email) return;
-                                    navigator.clipboard.writeText(officer.email);
-                                    showToast?.({
-                                      title: "Email Copied!",
-                                      description: `${officer.name || "Officer"}'s email copied to clipboard.`,
-                                    });
-                                  }}
-                                  className="group/btn inline-flex items-center gap-1 font-sans tabular-nums text-[10px] text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-                                  title="Click to copy email"
-                                >
-                                  <Mail01Icon size="1em" className="text-[11px] text-gray-400 group-hover/btn:text-pup-maroon dark:group-hover/btn:text-red-400" />
-                                  <span className="truncate max-w-[160px]">{officer.email}</span>
-                                  <Copy01Icon size="1em" className="text-[10px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                                </button>
+                                {officer.email && (
+                                  <>
+                                    <span className="max-w-[160px] truncate select-text">{officer.email}</span>
+                                    <CopyButton iconOnly textToCopy={officer.email} entityName="Officer Email" />
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Right: Authorization Pill */}
                           <div className="shrink-0">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                            <span className={cn(COMPACT_BADGE_BASE, BADGE_PALETTES.emerald)}>
                               <Shield01Icon size="1em" className="text-xs text-emerald-600 dark:text-emerald-400" />
                               <span>Signatory</span>
                             </span>

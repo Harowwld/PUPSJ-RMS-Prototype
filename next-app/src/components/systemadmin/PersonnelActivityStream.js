@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import NarrativeText from "@/components/shared/NarrativeText";
+import useViewPreference from "@/hooks/useViewPreference";
 import { cn } from "@/lib/utils";
 import { SUPERADMIN_BADGE_BASE as BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
 
@@ -30,9 +31,9 @@ export default function PersonnelActivityStream({ member, onNavigateToLogs }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [severity, setSeverity] = useState("All");
+  const [search, setSearch] = useViewPreference("personnel-activity", "search", "");
+  const [debouncedSearch, setDebouncedSearch] = useState(() => search.trim());
+  const [severity, setSeverity] = useViewPreference("personnel-activity", "severity", "All");
   const [offset, setOffset] = useState(0);
   const [expandedLogId, setExpandedLogId] = useState(null);
   const limit = 15;
@@ -54,12 +55,6 @@ export default function PersonnelActivityStream({ member, onNavigateToLogs }) {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, [search]);
-
-  // Reset offset when severity changes
-  const handleSeverityChange = (newSev) => {
-    setSeverity(newSev);
-    setOffset(0);
-  };
 
   // Fetch logs
   const fetchLogs = useCallback(
@@ -87,6 +82,7 @@ export default function PersonnelActivityStream({ member, onNavigateToLogs }) {
             setLogs((prev) => [...prev, ...json.data]);
           } else {
             setLogs(json.data);
+            setOffset(0);
           }
           setTotal(Number(json.total) || 0);
         } else {
@@ -187,7 +183,8 @@ export default function PersonnelActivityStream({ member, onNavigateToLogs }) {
               <button
                 key={sev}
                 type="button"
-                onClick={() => handleSeverityChange(sev)}
+                aria-pressed={isSelected}
+                onClick={() => setSeverity(sev)}
                 className={cn(
                   "px-2.5 py-0.5 text-[11px] font-medium rounded-full border transition-all cursor-pointer active:scale-95",
                   isSelected

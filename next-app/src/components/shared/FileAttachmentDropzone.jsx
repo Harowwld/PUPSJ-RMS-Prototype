@@ -1,5 +1,5 @@
 "use client";
-import { BADGE_BASE, BADGE_PALETTES } from "@/lib/badgeStyles";
+import { BADGE_BASE, BADGE_PALETTES, SETTINGS_STATUS_PILL_SM } from "@/lib/badgeStyles";
 
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -8,10 +8,11 @@ import { downloadDocument } from "@/lib/documentDownload";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty";
-import { Attachment01Icon, Add01Icon, Cancel01Icon, CloudUploadIcon, Delete02Icon, Download01Icon, Image01Icon, ViewIcon } from "hugeicons-react";
+import { Attachment01Icon, Add01Icon, Cancel01Icon, CloudUploadIcon, Download01Icon, Files01Icon, Image01Icon, ViewIcon } from "hugeicons-react";
 
 /**
  * Formats bytes into clean human-readable strings (e.g. 111 KB, 12 MB)
@@ -502,6 +503,7 @@ export default function FileAttachmentDropzone({
   maxSizeBytes = 10 * 1024 * 1024, // 10 MB default
   title,
   subtitle,
+  heading,
   categories = null,
   onPreview = null,
   readOnly = false,
@@ -823,11 +825,33 @@ export default function FileAttachmentDropzone({
     [items, mode, onChange, readOnly, value]
   );
 
+  const removeAllButton = mode === "multiple" && !readOnly && items.length > 1 && (
+    <Button type="button" size="xs" variant="destructive" onClick={handleRemoveAll}>
+      Remove All Files
+    </Button>
+  );
+
+  const attachmentHeader = heading && (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      {heading}
+      {mode === "multiple" && (
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <span className={cn(SETTINGS_STATUS_PILL_SM, "font-semibold tabular-nums text-gray-900 dark:text-zinc-100")}>
+            <Files01Icon size={12} aria-hidden="true" />
+            {items.length}/{maxFiles} files
+          </span>
+          {removeAllButton}
+        </div>
+      )}
+    </div>
+  );
+
   // Real upload progress display (when parent manages uploading state)
   if (isUploading && uploadProgress !== null) {
     const singleName = items[0]?.file?.name || items[0]?.original_filename || "Uploading file...";
     return (
-      <div className={cn("space-y-3", className)}>
+      <div className={cn(heading ? "space-y-2" : "space-y-3", className)}>
+        {attachmentHeader}
         <UploadProgressCard
           filename={singleName}
           progress={uploadProgress}
@@ -840,7 +864,8 @@ export default function FileAttachmentDropzone({
   const hasContent = items.length > 0 || uploadingFiles.length > 0;
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn(heading ? "space-y-2" : "space-y-3", className)}>
+      {attachmentHeader}
       {/* Hidden File Input */}
       {!readOnly && (
         <input
@@ -938,7 +963,7 @@ export default function FileAttachmentDropzone({
           </div>
 
           {/* Bottom action bar in multiple mode: Add more files trigger + Remove All Files action */}
-          {mode === "multiple" && !readOnly && (!isFull || items.length > 1) && (
+          {mode === "multiple" && !readOnly && (!isFull || (!heading && removeAllButton)) && (
             <div className={cn("flex items-center gap-2.5", isFull && "justify-end")}>
               {!isFull && (
                 <div
@@ -971,16 +996,7 @@ export default function FileAttachmentDropzone({
                 </div>
               )}
 
-              {items.length > 1 && (
-                <button
-                  type="button"
-                  onClick={handleRemoveAll}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200/80 dark:border-red-900/50 bg-red-50/60 hover:bg-red-100/80 dark:bg-red-950/25 dark:hover:bg-red-950/45 py-2.5 px-3.5 text-xs font-semibold text-red-700 dark:text-red-300 transition-all cursor-pointer active:scale-95 shrink-0 select-none"
-                >
-                  <Delete02Icon size="1em" className="text-xs" />
-                  <span>Remove All Files</span>
-                </button>
-              )}
+              {!heading && removeAllButton}
             </div>
           )}
         </div>

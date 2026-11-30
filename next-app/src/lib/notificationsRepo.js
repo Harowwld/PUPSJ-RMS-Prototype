@@ -118,6 +118,8 @@ export async function listNotifications({
   type = "",
   decision = "",
   severity = "",
+  startDate = "",
+  endDate = "",
 } = {}) {
   const lim = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
   const off = Math.max(parseInt(offset) || 0, 0);
@@ -149,6 +151,15 @@ export async function listNotifications({
   if (officeId) {
     params.push(officeId);
     filters.push(`n.office_id = $${params.length}`);
+  }
+
+  if (startDate) {
+    params.push(startDate);
+    filters.push(`n.created_at >= ($${params.length}::date::timestamp AT TIME ZONE 'Asia/Manila')`);
+  }
+  if (endDate) {
+    params.push(endDate);
+    filters.push(`n.created_at < (($${params.length}::date + 1)::timestamp AT TIME ZONE 'Asia/Manila')`);
   }
 
   // Tab filtering: unread vs read

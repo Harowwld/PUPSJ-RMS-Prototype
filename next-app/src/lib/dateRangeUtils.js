@@ -6,6 +6,7 @@ import {
   isValid,
   differenceInCalendarDays,
 } from "date-fns"
+import { formatManilaCalendarDate } from "./timeFormat.js"
 
 /**
  * Parse YYYY-MM-DD safely in local timezone without UTC offset shifts
@@ -71,10 +72,9 @@ export function parseInputDate(val) {
 /**
  * Identifies which preset key matches the given range
  */
-export function getMatchingPresetKey(startDate, endDate) {
+export function getMatchingPresetKey(startDate, endDate, todayStr = formatManilaCalendarDate(new Date())) {
   if (!startDate && !endDate) return "all"
-  const today = new Date()
-  const todayStr = format(today, "yyyy-MM-dd")
+  const today = parseDateLocal(todayStr)
   const yesterdayStr = format(subDays(today, 1), "yyyy-MM-dd")
   const last7Str = format(subDays(today, 6), "yyyy-MM-dd")
   const last30Str = format(subDays(today, 29), "yyyy-MM-dd")
@@ -94,9 +94,8 @@ export function getMatchingPresetKey(startDate, endDate) {
 /**
  * Generates ISO start/end date pairs for each preset option
  */
-export function formatPresetRange(key) {
-  const today = new Date()
-  const todayStr = format(today, "yyyy-MM-dd")
+export function formatPresetRange(key, todayStr = formatManilaCalendarDate(new Date())) {
+  const today = parseDateLocal(todayStr)
   switch (key) {
     case "today":
       return { start: todayStr, end: todayStr }
@@ -124,7 +123,7 @@ export function formatPresetRange(key) {
  */
 export function validateDateRange(startDate, endDate, options = {}) {
   const { disableFutureDates = true, minDate, maxDate } = options
-  const todayStr = format(new Date(), "yyyy-MM-dd")
+  const todayStr = formatManilaCalendarDate(new Date())
 
   if (!startDate && !endDate) {
     return { isValid: true, error: null, isEmpty: true }

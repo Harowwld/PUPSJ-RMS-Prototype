@@ -1,5 +1,7 @@
 "use client";
 
+import useWorkspaceViewPreference from "@/hooks/useWorkspaceViewPreference"
+
 import { Table } from "@/components/ui/table";
 import TablePagination from "@/components/shared/TablePagination";
 import useUrlPage from "@/hooks/useUrlPage";
@@ -22,11 +24,6 @@ import {
   ColumnsPopover,
 } from "@/components/systemadmin/OfficeTableControls";
 import { DateRangeFilterButton } from "@/components/shared/DateRangePickerModal";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
@@ -63,7 +60,6 @@ import {
   CheckmarkCircle01Icon,
   Loading01Icon,
   PieChartIcon,
-  ReloadIcon,
   Target01Icon,
   Tick01Icon,
   UserSearch01Icon,
@@ -152,11 +148,11 @@ function DigitizationComplianceContent({
 
   // Filters & Sorting state for the Program Breakdown table
   const [tableSearch, setTableSearch] = useState("");
-  const [filterRules, setFilterRules] = useState([]);
-  const [sortBy, setSortBy] = useState("courseCode");
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [groupBy, setGroupBy] = useState("none");
-  const [visibleColumns, setVisibleColumns] = useState(() => COMPLIANCE_COLUMNS.map((c) => c.key));
+  const [filterRules, setFilterRules] = useWorkspaceViewPreference("digitization_compliance", "filterRules", []);
+  const [sortBy, setSortBy] = useWorkspaceViewPreference("digitization_compliance", "sortBy", "courseCode");
+  const [sortOrder, setSortOrder] = useWorkspaceViewPreference("digitization_compliance", "sortOrder", "asc");
+  const [groupBy, setGroupBy] = useWorkspaceViewPreference("digitization_compliance", "groupBy", "none");
+  const [visibleColumns, setVisibleColumns] = useWorkspaceViewPreference("digitization_compliance", "visibleColumns", COMPLIANCE_COLUMNS.map((c) => c.key));
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -209,8 +205,10 @@ function DigitizationComplianceContent({
     }
     params.set("requireApproved", requireApproved ? "1" : "0");
     if (officeId) params.set("officeId", officeId);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
     return params.toString();
-  }, [statusFilter, courseFilter, requireApproved, officeId]);
+  }, [statusFilter, courseFilter, requireApproved, officeId, startDate, endDate]);
 
   const load = useCallback(async (isManual = false) => {
     loadController.current?.abort();
@@ -513,6 +511,7 @@ function DigitizationComplianceContent({
           "Course filter",
           meta?.courseCode || (Array.isArray(courseFilter) && courseFilter.length > 0 ? courseFilter.join(", ") : "All"),
         ]),
+        ...(meta?.startDate || meta?.endDate ? [row(["Student records created (Manila)", `${meta.startDate || "Any"} to ${meta.endDate || "Any"}`])] : []),
         row(["Require approved only", meta?.requireApproved ? "Yes" : "No"]),
         row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
         "",
@@ -575,9 +574,11 @@ function DigitizationComplianceContent({
   const handleClearAll = useCallback(() => {
     setCourseFilter([]);
     setTableSearch("");
+    setStartDate("");
+    setEndDate("");
     setFilterRules([]);
     setPage(1);
-  }, [setPage]);
+  }, [setPage, setFilterRules]);
 
   // Active filter chips
   const activeChips = useMemo(() => {
@@ -619,8 +620,19 @@ function DigitizationComplianceContent({
       });
     });
 
+    if (startDate || endDate) {
+      chips.push({
+        id: "student-record-date",
+        label: `Records created: ${startDate || "Any"} to ${endDate || "Any"}`,
+        onRemove: () => {
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        },
+      });
+    }
     return chips;
-  }, [filterRules, courseFilter, filterFields, setPage]);
+  }, [filterRules, courseFilter, filterFields, startDate, endDate, setPage, setFilterRules]);
 
   const hasActiveFilters = Boolean(tableSearch.trim() || activeChips.length > 0);
 
@@ -1066,6 +1078,8 @@ function DigitizationComplianceContent({
             />
 
             <DateRangeFilterButton
+              placeholder="Student Record Date"
+              title="Filter by student record creation date (Manila)"
               startDate={startDate}
               endDate={endDate}
               onApply={({ startDate: s, endDate: e }) => {
@@ -1150,21 +1164,6 @@ function DigitizationComplianceContent({
                             >
                               Program <SortIndicator column="courseCode" sortBy={sortBy} sortOrder={sortOrder} />
                             </button>
-                            {isScrolledX && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={resetScroll}
-                                    className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white dark:bg-zinc-800 border border-border/80 text-pup-maroon dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-700 shadow-2xs cursor-pointer transition-all active:scale-95"
-                                    aria-label="Reset scroll to start"
-                                  >
-                                    <ReloadIcon size="1em" className="text-xs" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">Reset Scroll to Start</TooltipContent>
-                              </Tooltip>
-                            )}
                           </div>
                         </th>
                       )}
@@ -1396,7 +1395,14 @@ function DigitizationComplianceContent({
         open={Boolean(missingDialog)}
         onClose={() => setMissingDialog(null)}
         documentType={missingDialog}
-        filters={{ status: statusFilter, courseCode: courseFilter, requireApproved: requireApproved ? "1" : "0", officeId }}
+        filters={{
+          status: meta?.studentStatus ?? statusFilter,
+          courseCode: meta?.courseCodes ?? courseFilter,
+          requireApproved: (meta?.requireApproved ?? requireApproved) ? "1" : "0",
+          officeId,
+          startDate: meta?.startDate,
+          endDate: meta?.endDate,
+        }}
       />
 
       <PDFPreviewModal

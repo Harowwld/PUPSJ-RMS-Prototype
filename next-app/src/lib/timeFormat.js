@@ -6,12 +6,49 @@ function parseToDate(input) {
   let s = String(input).trim();
   if (!s || s === "N/A") return null;
   if (!s.includes("T") && !s.includes("Z")) {
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    if (/^\d{4}-\d{2}-\d{2} /.test(s)) {
       s = s.replace(" ", "T") + "Z";
     }
   }
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
+}
+
+const manilaCalendarFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+export function isValidCalendarDateRange(startDate, endDate) {
+  const validDates = [startDate, endDate].every((value) => {
+    if (!value) return true;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith("0000")) return false;
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  });
+  return validDates && (!startDate || !endDate || startDate <= endDate);
+}
+
+export function formatManilaCalendarDate(dateInput) {
+  const date = parseToDate(dateInput);
+  if (!date) return "";
+
+  const { year, month, day } = Object.fromEntries(
+    manilaCalendarFormatter.formatToParts(date).map(({ type, value }) => [type, value])
+  );
+  return `${year}-${month}-${day}`;
+}
+
+export function isFutureManilaCalendarDate(date, now = new Date()) {
+  return Boolean(date) && isValidCalendarDateRange(date) && date > formatManilaCalendarDate(now);
+}
+
+export function isInManilaDateRange(dateInput, startDate, endDate) {
+  if (!startDate && !endDate) return true;
+  const calendarDate = formatManilaCalendarDate(dateInput);
+  return Boolean(calendarDate) && (!startDate || calendarDate >= startDate) && (!endDate || calendarDate <= endDate);
 }
 
 export function formatPHDateTime(dateInput) {

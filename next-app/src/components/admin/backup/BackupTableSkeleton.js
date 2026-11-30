@@ -1,11 +1,11 @@
 "use client"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { PLATFORM_BACKUP_COLUMNS, platformBackupSchema } from "@/components/systemadmin/PlatformBackupTable"
+import { PLATFORM_BACKUP_COLUMNS, SYSTEM_BACKUP_COLUMNS, platformBackupSchema } from "@/components/systemadmin/PlatformBackupTable"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office", visibleColumns = PLATFORM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key), scrollRef }) {
+export default function BackupTableSkeleton({ rowCount = 8, embedded = false, className = "", scope = "office", visibleColumns = SYSTEM_BACKUP_COLUMNS.filter(({ defaultHidden }) => !defaultHidden).map(({ key }) => key), scrollRef }) {
   const showColumn = (key) => !visibleColumns || visibleColumns.includes(key);
 
   if (scope === "platform") return (
@@ -15,7 +15,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
           <TableHeader>
             <TableRow>
               <TableHead><Skeleton className="mx-auto h-4 w-4" /></TableHead>
-              <TableHead><Skeleton className="h-3.5 w-28" /></TableHead>
+              {showColumn("filename") && <TableHead><Skeleton className="h-3.5 w-28" /></TableHead>}
               {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => (
                 <TableHead key={key}>
                   <Skeleton className={cn("h-3.5", key === "created" ? "w-16" : key === "status" ? "mx-auto w-24" : key === "type" ? "mx-auto w-10" : "ml-auto w-8")} />
@@ -28,7 +28,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
             {Array.from({ length: rowCount }, (_, index) => (
               <TableRow key={index}>
                 <TableCell><Skeleton className="mx-auto h-4 w-4" /></TableCell>
-                <TableCell><Skeleton className={cn("h-4", index % 3 === 0 ? "w-3/4 max-w-72" : index % 2 === 0 ? "w-2/3 max-w-64" : "w-1/2 max-w-52")} /></TableCell>
+                {showColumn("filename") && <TableCell><Skeleton className={cn("h-4", index % 3 === 0 ? "w-3/4 max-w-72" : index % 2 === 0 ? "w-2/3 max-w-64" : "w-1/2 max-w-52")} /></TableCell>}
                 {PLATFORM_BACKUP_COLUMNS.filter(({ key }) => visibleColumns.includes(key)).map(({ key }) => (
                   <TableCell key={key}>
                     <Skeleton className={cn(
@@ -79,7 +79,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
         <Table
           columns={[
             "selection",
-            { kind: "text", growthWeight: 3 },
+            ...(showColumn("filename") ? [{ kind: "text", growthWeight: 3 }] : []),
             ...(showColumn("actor") ? [{ kind: "text", growthWeight: 1 }] : []),
             ...(showColumn("type") ? [{ kind: "category", width: 110 }] : []),
             ...(showColumn("size") ? ["number"] : []),
@@ -94,9 +94,9 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
               <th className="w-12 py-3 px-4 text-center align-middle sticky left-0 z-20 bg-white dark:bg-card border-r border-border/70 dark:border-border/70">
                 <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
               </th>
-              <th className="py-3 px-4 w-[34%] sticky left-12 z-20 bg-white dark:bg-card border-r border-border/70 dark:border-border/70">
+              {showColumn("filename") && <th className="py-3 px-4 w-[34%] sticky left-12 z-20 bg-white dark:bg-card border-r border-border/70 dark:border-border/70">
                 <Skeleton className="h-3.5 w-28 dark:bg-muted" />
-              </th>
+              </th>}
               {showColumn("actor") && (
                 <th className="py-3 px-4 w-[15%] border-r border-border/70 dark:border-border/70">
                   <Skeleton className="h-3.5 w-16 dark:bg-muted" />
@@ -142,7 +142,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
                 <td className="py-3 px-4 align-middle text-center border-r border-border/70 dark:border-border/70 sticky left-0 z-10 bg-white dark:bg-card">
                   <Skeleton className="h-4 w-4 rounded mx-auto dark:bg-muted" />
                 </td>
-                <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
+                {showColumn("filename") && <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70 sticky left-12 z-10 bg-white dark:bg-card">
                   <div className="flex items-center gap-3">
                     <Skeleton
                       className={cn(
@@ -151,7 +151,7 @@ export default function BackupTableSkeleton({ rowCount = 8, embedded = false, cl
                       )}
                     />
                   </div>
-                </td>
+                </td>}
                 {showColumn("actor") && (
                   <td className="py-3 px-4 align-middle border-r border-border/70 dark:border-border/70 bg-white dark:bg-card">
                     <div className="flex items-center gap-2">
